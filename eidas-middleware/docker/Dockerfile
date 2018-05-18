@@ -1,4 +1,4 @@
-FROM governikus/eidas-base-image
+FROM governikus/eidas-base-image:8u172
 MAINTAINER Benny Prange <benny.prange@governikus.de>
 
 # Define the location of the configuration directory inside of the container
