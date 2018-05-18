@@ -1,2 +1,5 @@
 target/
-Jenkinsfile
+packer/
+*Jenkinsfile
+.hg/
+
