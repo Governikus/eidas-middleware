@@ -39,5 +39,7 @@ Please see [CONTRIBUTING.md](CONTRIBUTING.md) for more information on how to sub
 ## License
 Copyright &copy; 2018 Governikus KG
  
-This work is licensed under the EUPL 1.2. See LICENSE.txt and THIRD-PARTY.txt for additional information.
+This work is licensed under the EUPL 1.2. See LICENSE.txt for additional information.
+
+The overview of the used third party dependecies and their licenses is available in the release documents.
  
