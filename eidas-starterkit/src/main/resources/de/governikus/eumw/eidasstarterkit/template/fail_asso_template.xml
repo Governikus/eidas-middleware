@@ -1,0 +1,21 @@
+<saml2:Assertion ID="$AssertionId" IssueInstant="$IssueInstant" Version="2.0" xmlns:saml2="urn:oasis:names:tc:SAML:2.0:assertion" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:eidas="http://eidas.europa.eu/attributes/naturalperson">
+        <saml2:Issuer Format="urn:oasis:names:tc:SAML:2.0:nameid-format:entity">$Issuer</saml2:Issuer>
+        <saml2:Subject>
+            <saml2:NameID Format="$NameFormat">$NameID</saml2:NameID>
+            <saml2:SubjectConfirmation Method="urn:oasis:names:tc:SAML:2.0:cm:bearer"><saml2:SubjectConfirmationData
+            	InResponseTo="$InResponseTo"
+                NotOnOrAfter="$NotOnOrAfter"
+                Recipient="$Recipient"/></saml2:SubjectConfirmation>
+        </saml2:Subject>
+        <saml2:Conditions NotBefore="$NotBefore" NotOnOrAfter="$NotOnOrAfter">
+            <saml2:AudienceRestriction>
+                <saml2:Audience>$Recipient</saml2:Audience>
+            </saml2:AudienceRestriction>
+            <saml2:OneTimeUse/>
+        </saml2:Conditions>
+        <saml2:AuthnStatement AuthnInstant="$AuthnInstant">
+            <saml2:AuthnContext>
+                <saml2:AuthnContextClassRef>$LoA</saml2:AuthnContextClassRef>
+            </saml2:AuthnContext>
+        </saml2:AuthnStatement>
+    </saml2:Assertion>

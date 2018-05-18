@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<endpoints version="2.0"
+	xmlns="http://java.sun.com/xml/ns/jax-ws/ri/runtime">
+   <endpoint implementation="de.governikus.eumw.poseidas.server.eidservice.EIDImpl20"
+      name="eID" url-pattern="/eID" />
+   <endpoint implementation="com.sun.xml.ws.mex.server.MEXEndpoint"
+      name="eID_mex" url-pattern="/eID/mex" />
+
+   <endpoint implementation="de.governikus.eumw.poseidas.server.pki.CertificateReceiverService"
+      name="EAC-TermContr-ProtocolService" url-pattern="/TermAuth/Terminal/IS_termcontr/EACPKITermContr" />
+   <endpoint implementation="com.sun.xml.ws.mex.server.MEXEndpoint"
+      name="EAC-TermContr-ProtocolService_mex" url-pattern="/TermAuth/Terminal/IS_termcontr/EACPKITermContr/mex" />
+</endpoints>

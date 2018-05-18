@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<!--
+  ~ Copyright (c) 2018 Governikus KG. Licensed under the EUPL, Version 1.2 or as soon they will be approved by
+  ~ the European Commission - subsequent versions of the EUPL (the "Licence"); You may not use this work except
+  ~ in compliance with the Licence. You may obtain a copy of the Licence at:
+  ~ http://joinup.ec.europa.eu/software/page/eupl Unless required by applicable law or agreed to in writing,
+  ~ software distributed under the Licence is distributed on an "AS IS" basis, WITHOUT WARRANTIES OR CONDITIONS
+  ~ OF ANY KIND, either express or implied. See the Licence for the specific language governing permissions and
+  ~ limitations under the Licence.
+  -->
+
+<html lang="de">
+
+<head>
+    <meta http-equiv="content-type" content="text/html; charset=UTF-8">
+    <link rel="shortcut icon" href="img/FavIcon.ico" type="image/x-icon; charset=binary">
+    <link rel="icon" href="img/favIcon.ico" type="image/x-icon; charset=binary">
+    <link rel="stylesheet" type="text/css" href="css/bootstrap.min.css">
+    <link rel="stylesheet" type="text/css" href="css/custom.css">
+
+    <title>German eIDAS Middleware</title>
+</head>
+
+<body class="de">
+<div class="card p-2">
+    <div class="card-block">
+        <h4 class="card-title">Nutzen Sie Ihren Ausweis auch für europäische Anwendungen</h4>
+        <h6 class="card-subtitle mb-2 text-muted">Use your German ID Card also for European services</h6>
+
+        <button class="btn btn-primary btn btn-secondary btn-sm" onclick="document.body.className='de'">
+            <img src="img/de.png" height="15" width="20"/> Deutsche Sprache
+        </button>
+        <button class="btn btn-primary btn btn-secondary btn-sm" onclick="document.body.className='en'">
+            <img src="img/gb.png" height="15" width="20"/> English Language
+        </button>
+    </div>
+</div>
+<!-- Deutsch -->
+<div lang="de" class="mainbox">
+    <div class="container">
+
+        <div style="background-color: #fff; padding: 20px; color: #000; opacity: 0.95;z-index: 1;">
+            <h2>Bitte beachten Sie die folgenden Hinweise:</h2>
+            <p>Wie kann ich mich online ausweisen? Kurz erklärt...</p>
+            <p>Um die Online-Ausweisfunktion zu nutzen, müssen Sie folgende Voraussetzungen schaffen:
+            <ol>
+                <li>Online-Ausweisfunktion aktivieren</li>
+                <li>Kartenlesegerät bestellen / mobiles Endgerät ggf. per NFC-Verbindung möglich (siehe Liste)</li>
+                <li> Transport-PIN in persönliche PIN ändern</li>
+                <li> AusweisApp2 installieren und starten</li>
+
+            </ol>
+            Achtung: zum Online-Ausweisen benötigen Sie immer eine Internetverbindung. Die Details können Sie
+            <a href="https://www.ausweisapp.bund.de/fragen-und-antworten/online-ausweisfunktion/"
+               target="_blank">hier</a> nachlesen.
+            </p>
+            <p>
+                <a class="btn btn-primary btn-sm" style="opacity: 1;"
+                   href="http://127.0.0.1:24727/eID-Client?tcTokenURL=TCTOKENURL" role="button">
+                    <img src="img/eid.png" height="30" width="30" hspace="5"/>Verstanden, jetzt online Ausweisen...</a>
+            </p>
+        </div>
+    </div>
+</div>
+<!-- Englisch -->
+<div lang="en" class="mainbox">
+    <div class="container">
+
+        <div style="background-color: #fff; padding: 20px; color: #000; opacity: 0.95;">
+            <h2>Please take note of the following guideline:</h2>
+            <p>How can I identify myself online - briefly explained...</p>
+            <p> To use the online identification function, you have to create the following preconditions:
+            <ol>
+                <li>Activate online identification function</li>
+                <li>Have a card reader or applicable mobile device ready</li>
+                <li> Replace Transport-PIN with personal PIN</li>
+                <li> Have the AusweisApp2 installed and running</li>
+            </ol>
+            Note: You always need an Internet connection for online identification. For more information click
+            <a href="https://www.ausweisapp.bund.de/en/questions-and-answers/online-identification-function/"
+               target="_blank">here</a>.
+
+            </p>
+            <p>
+                <a class="btn btn-primary btn-sm" style="opacity: 1;"
+                   href="http://127.0.0.1:24727/eID-Client?tcTokenURL=TCTOKENURL" role="button">
+                    <img src="img/eid.png" height="30" width="30" hspace="5"/>understood, start online identification...</a>
+            </p>
+        </div>
+    </div>
+</div>
+
+
+<footer class="footer">
+    <div class="container text-center">
+        <p>
+            <small>Die eIDAS Middleware wird im Auftrag des BSI bereitgestellt von Governikus KG</small>
+        </p>
+    </div>
+</footer>
+
+
+</body>
+
+</html>

@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<!--
+  ~ Copyright (c) 2018 Governikus KG. Licensed under the EUPL, Version 1.2 or as soon they will be approved by
+  ~ the European Commission - subsequent versions of the EUPL (the "Licence"); You may not use this work except
+  ~ in compliance with the Licence. You may obtain a copy of the Licence at:
+  ~ http://joinup.ec.europa.eu/software/page/eupl Unless required by applicable law or agreed to in writing,
+  ~ software distributed under the Licence is distributed on an "AS IS" basis, WITHOUT WARRANTIES OR CONDITIONS
+  ~ OF ANY KIND, either express or implied. See the Licence for the specific language governing permissions and
+  ~ limitations under the Licence.
+  -->
+
+<html xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title>POSeIDAS CVC Info</title>
+    <link rel="stylesheet" th:href="@{/webjars/blaze/3.2.0/dist/blaze.min.css}"/>
+    <link rel="stylesheet" th:href="@{/css/main.css}"/>
+</head>
+<body>
+<div class="content">
+
+    <div th:replace="fragments/header :: header"/>
+
+    <h2 th:text="'Selected eID Service Provider: ' + ${entity.getEntityID()}"></h2>
+
+    <div th:if="${success}">
+        <div th:text="${resultMessage}" class="c-alert c-alert--success">
+            <button class="c-button c-button--close">×</button>
+            Success
+        </div>
+    </div>
+    <div th:if="${error}">
+        <div th:text="${resultMessage}" class="c-alert c-alert--error">
+            <button class="c-button c-button--close">×</button>
+            Error
+        </div>
+    </div>
+
+
+    <h3>Check connection to Authorisation CA</h3>
+    <form method="POST" th:action="@{/details/__${entityID}__/check}">
+        <button type="submit" name="submit" value="value">Check connection</button>
+    </form>
+
+    <h3>CVC Data</h3>
+    <table>
+        <tbody>
+        <tr>
+            <td class="description">CHR</td>
+            <td th:text="${entity.getCHR()}"/>
+        </tr>
+        <tr>
+            <td class="description">Subject Name</td>
+            <td th:text="${entity.getSubjectName()}"/>
+        </tr>
+        <tr>
+            <td class="description">Subject URL</td>
+            <td th:text="${entity.getSubjectURL()}"/>
+        </tr>
+        <tr>
+            <td class="description">CAR</td>
+            <td th:text="${entity.getCAR()}"/>
+        </tr>
+        <tr>
+            <td class="description">Issuer Name</td>
+            <td th:text="${entity.getIssuerName()}"/>
+        </tr>
+        <tr>
+            <td class="description">Issuer URL</td>
+            <td th:text="${entity.getIssuerURL()}"/>
+        </tr>
+        <tr>
+            <td class="description">Valid from</td>
+            <td th:text="${entity.getValidFrom()}"/>
+        </tr>
+        <tr>
+            <td class="description">Invalid on</td>
+            <td th:text="${entity.getInvalidOn()}"/>
+        </tr>
+        <tr>
+            <td class="description">Redirect URL</td>
+            <td th:text="${entity.getRedirectURL()}"/>
+        </tr>
+        <tr>
+            <td class="description">Terms of usage</td>
+            <td th:text="${entity.getTermsOfUsagePlanText()}"/>
+        </tr>
+        </tbody>
+    </table>
+
+    <h3>Initial CVC Request to DVCA</h3>
+    <form action="#" th:action="@{/details/__${entityID}__/initialRequest}"
+          th:object="${form}" method="post">
+        <table>
+            <tbody>
+            <tr>
+                <td class="description"><label for="form:countryCode">Country Code</label></td>
+                <td class="description"><input id="form:countryCode" type="text"
+                                               name="form:countryCode" th:field="*{countryCode}"/></td>
+            </tr>
+            <tr>
+                <td class="description"><label for="form:chrMnemonic">CHR Mnemonic</label></td>
+                <td class="description"><input id="form:chrMnemonic" type="text"
+                                               name="form:chrMnemonic" th:field="*{CHRMnemonic}"/></td>
+            </tr>
+            <tr>
+                <td class="description"><label for="form:sequenceNumber">Sequence number</label></td>
+                <td class="description"><input id="form:sequenceNumber" type="number"
+                                               name="form:sequenceNumber" value="0" th:field="*{sequenceNumber}"/></td>
+            </tr>
+            </tbody>
+        </table>
+        <input type="submit" value="Send initial request to DVCA"/>
+    </form>
+
+    <h3>Manual Renewal</h3>
+    <form method="POST"
+          th:action="@{/details/__${entityID}__/renewBlackList}">
+        <button type="submit" name="submit" value="value">Renew Black
+            List
+        </button>
+    </form>
+
+    <form method="POST"
+          th:action="@{/details/__${entityID}__/renewMasterDefectList}">
+        <button type="submit" name="submit" value="value">Renew Master and Defect
+            List
+        </button>
+    </form>
+
+    <form method="POST"
+          th:action="@{/details/__${entityID}__/renewCVC}">
+        <button type="submit" name="submit" value="value">Renew CVC</button>
+    </form>
+</div>
+</body>
+</html>
+

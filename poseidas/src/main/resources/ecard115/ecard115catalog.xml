@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<catalog xmlns="urn:oasis:names:tc:entity:xmlns:xml:catalog"
+	prefer="public">
+	<system systemId="http://docs.oasis-open.org/dss/v1.0/oasis-dss-core-schema-v1.0-os.xsd"
+		uri="oasis-dss-core-schema-v1.0-os.xsd" />
+	<system systemId="http://www.w3.org/TR/xmldsig-core/xmldsig-core-schema.xsd"
+		uri="xmldsig-core-schema.xsd" />
+	<system systemId="http://www.oasis-open.org/committees/download.php/3408/oasis-sstc-saml-schema-protocol-1.1.xsd"
+		uri="oasis-sstc-saml-schema-protocol-1.xsd" />
+	<system systemId="http://www.w3.org/2001/xml.xsd"	
+		uri="xml.xsd" />
+	<system systemId="ISO24727-3.xsd"
+		uri="ISO24727-3.xsd" />
+	<system systemId="ISO24727-Protocols.xsd"
+		uri="ISO24727-Protocols.xsd" />
+	<system systemId="ISOCommon.xsd"
+		uri="ISOCommon.xsd" />
+	<system systemId="ISOIFD.xsd"
+		uri="ISOIFD.xsd" />
+	<system systemId="ecdsa.xsd"
+		uri="ecdsa.xsd" />
+</catalog>

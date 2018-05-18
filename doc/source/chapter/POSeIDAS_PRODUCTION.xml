@@ -1,0 +1,62 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<CoreConfiguration
+    xmlns="http:/www.bos_bremen.de/2009/06/eID-Server-CoreConfig">
+    <ServerUrl>
+        [SERVER URL e.g. https://localhost:443/eidas-middleware]
+    </ServerUrl>
+    <sessionManagerUsesDatabase>true</sessionManagerUsesDatabase>
+    <sessionMaxPendingRequests>500</sessionMaxPendingRequests>
+    <certificateWarningMargin>200</certificateWarningMargin>
+    <TimerConfiguration>
+        <certRenewal length="2" unit="11" />
+        <blacklistRenewal length="2" unit="11" />
+        <masterAndDefectListRenewal length="2"
+            unit="11" />
+    </TimerConfiguration>
+    <ServiceProvider entityID="providerA" enabled="true">
+        <EPAConnectorConfiguration updateCVC="true">
+            <CVCRefID>provider_a</CVCRefID>
+            <PkiConnectorConfiguration>
+                <blackListTrustAnchor>
+                    MIIEMTCCAxmgAwIBAgIDGMKjMA0GCSqGSIb3DQEBCwUAMF0xCzAJBgNVBAYTAkRFMRkwFwYDVQQKExBFQUMgQW53ZW5kZXIgUEtJMRQwEgYDVQQLEwtFQUMgU3lzdGVtZTEdMBsGA1UEAxMURUFDIFN5c3RlbSBDQSAxIDIwMTQwHhcNMTYxMDI2MDkzMDEzWhcNMTkwNjE4MDgyMTM3WjBvMQswCQYDVQQGEwJERTEUMBIGA1UEChMLRUFDIFN5c3RlbWUxEDAOBgNVBAsTB0Fwb2xsb24xIzAhBgNVBAMTGkJDQVAgRFZTRCBCbGFja2xpc3QgU2lnbmVyMRMwEQYDVQQFEwoyODAyNzkwNjkyMIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAiuG9IgN0IGk8eyjDw8tBOkRQiuN6rK/GAh5uE5XD12Nw8QBzdOWaj7c6uzS36BTkb7WhsfQaBPO89Z9de4bBmk8U4j3nRK1stAIchKcfTLqPjVknisZhlNh/TBjDtZ8yxk/SeFmszALA2pNd14vMwuvXjvkLreP9nZmuc8v35JUBPE/YRJpM/py117t36Hy4z0e8uPBnexVp2pTS/lgJx5J79Cj/9BltA0u/WwsSH2BNaARqDY5++73M9+WX5+8pdmswYpCK3LiNVv1u7VlbVajByrMZvpDGPu2DF+IFmENHTlAVUyiWTjZtjq62xM5bxW/dgXg2cWxdhkMGsArB5QIDAQABo4HnMIHkMB8GA1UdIwQYMBaAFK6n9MJdvNI/yYVbvrmrzZnSWCFbMBYGA1UdIAQPMA0wCwYJKoIUAFAHg3QKMHoGA1UdHwRzMHEwb6BtoGuGM2h0dHA6Ly93d3cuZC10cnVzdC5uZXQvY3JsL2VhY19zeXN0ZW1fY2FfMV8yMDE0LmNybIY0aHR0cHM6Ly93d3cuZC10cnVzdC5uZXQvY3JsL2VhY19zeXN0ZW1fY2FfMV8yMDE0LmNybDAdBgNVHQ4EFgQU8csAobRtd+DNeQNuvCmF7PXeBjMwDgYDVR0PAQH/BAQDAgeAMA0GCSqGSIb3DQEBCwUAA4IBAQCgNtj2JidGISyuIdLCaL9xRZmBDGV6fT8Rqzl8DigKyO5fdkrKvfpeTOK983VkiX0v652hfYFl+7JwlgV5g9Daql9aAiw35Qti68Fpr3mIwkZAn/Ee2ZDFVUQBQi1Ka2NKpANniFtldwWnbRORH4OA/KKI0IDmRpe1bkkYvYyvmCwswu3Sb3++8x1c3HRJRdPrSYgTKz6Gi311YR03XI/YJy+4wIpbUY24g4J2ZwND0Q5axJ6qrXO/v3iA+6VMgF+JGlb/PLLy2+RsFQFL5hDIDi5ONcFB8jIc59onvDlLEv0TlvM19iGcL/mvJOlBHO756LNedjg6fHpOhRLR9IaZ
+                </blackListTrustAnchor>
+                <masterListTrustAnchor>
+                    MIIEHjCCA6SgAwIBAgIBVzAKBggqhkjOPQQDAzBPMQswCQYDVQQGEwJERTENMAsGA1UECgwEYnVuZDEMMAoGA1UECwwDYnNpMQwwCgYDVQQFEwMxMDExFTATBgNVBAMMDGNzY2EtZ2VybWFueTAeFw0xNDAxMTQwOTM1NDVaFw0yNDA3MTQyMzU5NTlaMFsxCzAJBgNVBAYTAkRFMQ0wCwYDVQQKDARidW5kMQwwCgYDVQQLDANic2kxDTALBgNVBAUTBDAwMTUxIDAeBgNVBAMMF0NTQ0EgTWFzdGVyIExpc3QgU2lnbmVyMIIBMzCB7AYHKoZIzj0CATCB4AIBATAsBgcqhkjOPQEBAiEAqftX26Huqbw+ZgqQnYONcm479iPVJiAoIBNIHR9uU3cwRAQgfVoJdfwsMFfu9nUwQXr/5/uAVcEm3Fxs6UpLRPMwtdkEICbcXGzpSktE8zC12bvXfL+VhBYpXPfhzmvM3Bj/jAe2BEEEi9Kuuct+V8ssS0gv/IG3r7neJ+HjvSPCOkRTvZrOMmJUfvg1w9rE/Zf4RhoUYR3JwndFEy3tjlRcHVTHLwRplwIhAKn7V9uh7qm8PmYKkJ2DjXGMOXqjtWGm95AeDoKXSFanAgEBA0IABF2wMBq63Bl3GPYLjjfaj5CbyHXmDGSe9PQu1oxCcrQrbj3LIOS5pGf6fb2stvSQVXh0su9WPaqYjIdXfbdU8ZyjggGHMIIBgzAfBgNVHSMEGDAWgBTBe6kV91zd0ms9YJojVN4S7j8OxjAdBgNVHQ4EFgQUFRLOrxV8CYCdWdEKfuideUFg+6QwDgYDVR0PAQH/BAQDAgeAMCsGA1UdEAQkMCKADzIwMTQwMTE0MDkzNTQ1WoEPMjAxNDA1MTQyMzU5NTlaMBYGA1UdIAQPMA0wCwYJBAB/AAcDAQEBMFEGA1UdEQRKMEiBGGNzY2EtZ2VybWFueUBic2kuYnVuZC5kZYYcaHR0cHM6Ly93d3cuYnNpLmJ1bmQuZGUvY3NjYaQOMAwxCjAIBgNVBAcMAUQwUQYDVR0SBEowSIEYY3NjYS1nZXJtYW55QGJzaS5idW5kLmRlhhxodHRwczovL3d3dy5ic2kuYnVuZC5kZS9jc2NhpA4wDDEKMAgGA1UEBwwBRDAUBgNVHSUBAf8ECjAIBgZngQgBAQMwMAYDVR0fBCkwJzAloCOgIYYfaHR0cDovL3d3dy5ic2kuYnVuZC5kZS9jc2NhX2NybDAKBggqhkjOPQQDAwNoADBlAjAPY46Vy2r7CMrorSyDlqu+rZxBMRnElxeP0qOq9zNfqhrJvvmujU9u8cbRj7R9+pACMQCFnUcAsOjHqZb+e0oQ/LHOmukN2eMXmy7zfejQ+FzhDUHgaJooLaXpk+wiEJz9kvs=
+                </masterListTrustAnchor>
+                <defectListTrustAnchor>
+                    MIIEHTCCA6SgAwIBAgIBWDAKBggqhkjOPQQDAzBPMQswCQYDVQQGEwJERTENMAsGA1UECgwEYnVuZDEMMAoGA1UECwwDYnNpMQwwCgYDVQQFEwMxMDExFTATBgNVBAMMDGNzY2EtZ2VybWFueTAeFw0xNDAxMTQwOTM4MDlaFw0yNDA3MTQyMzU5NTlaMFsxCzAJBgNVBAYTAkRFMQ0wCwYDVQQKDARidW5kMQwwCgYDVQQLDANic2kxDTALBgNVBAUTBDAwMTUxIDAeBgNVBAMMF0NTQ0EgRGVmZWN0IExpc3QgU2lnbmVyMIIBMzCB7AYHKoZIzj0CATCB4AIBATAsBgcqhkjOPQEBAiEAqftX26Huqbw+ZgqQnYONcm479iPVJiAoIBNIHR9uU3cwRAQgfVoJdfwsMFfu9nUwQXr/5/uAVcEm3Fxs6UpLRPMwtdkEICbcXGzpSktE8zC12bvXfL+VhBYpXPfhzmvM3Bj/jAe2BEEEi9Kuuct+V8ssS0gv/IG3r7neJ+HjvSPCOkRTvZrOMmJUfvg1w9rE/Zf4RhoUYR3JwndFEy3tjlRcHVTHLwRplwIhAKn7V9uh7qm8PmYKkJ2DjXGMOXqjtWGm95AeDoKXSFanAgEBA0IABDxxoiI6RiEjxED83XfpG5/vrX5QE20ytOcTQFXtpEaCmOQrxCEhWQRbnQkY30FMT2DkrFg4N2MgARQ/ic7rvRKjggGHMIIBgzAfBgNVHSMEGDAWgBTBe6kV91zd0ms9YJojVN4S7j8OxjAdBgNVHQ4EFgQUvLpFCKT7YNs79ffzmzMSYjLRKOowDgYDVR0PAQH/BAQDAgeAMCsGA1UdEAQkMCKADzIwMTQwMTE0MDkzODA5WoEPMjAxNDA1MTQyMzU5NTlaMBYGA1UdIAQPMA0wCwYJBAB/AAcDAQEBMFEGA1UdEQRKMEiBGGNzY2EtZ2VybWFueUBic2kuYnVuZC5kZYYcaHR0cHM6Ly93d3cuYnNpLmJ1bmQuZGUvY3NjYaQOMAwxCjAIBgNVBAcMAUQwUQYDVR0SBEowSIEYY3NjYS1nZXJtYW55QGJzaS5idW5kLmRlhhxodHRwczovL3d3dy5ic2kuYnVuZC5kZS9jc2NhpA4wDDEKMAgGA1UEBwwBRDAUBgNVHSUBAf8ECjAIBgZngQgBAQMwMAYDVR0fBCkwJzAloCOgIYYfaHR0cDovL3d3dy5ic2kuYnVuZC5kZS9jc2NhX2NybDAKBggqhkjOPQQDAwNnADBkAjAx3r+Kcp3MwzbPvtxee3BWvLOia/A6cONUZm4dP1HQlrVWhnaXOXGhNeulPkhbXecCMHNSJuIW42v0Ag/anK1V0YTOtmqTm9pEI9IYJsocNCMAKDeCzoPfJ2Qqs0RGh+Lx6Q==
+                </defectListTrustAnchor>
+                <policyImplementationId>budru</policyImplementationId>
+                <sslKeys id="d-trust">
+                    <serverCertificate>
+                        MIIEODCCAyCgAwIBAgIDGYhHMA0GCSqGSIb3DQEBCwUAMF0xCzAJBgNVBAYTAkRFMRkwFwYDVQQKExBFQUMgQW53ZW5kZXIgUEtJMRQwEgYDVQQLEwtFQUMgU3lzdGVtZTEdMBsGA1UEAxMURUFDIFN5c3RlbSBDQSAxIDIwMTQwHhcNMTcwMzIzMDgyMDIyWhcNMTkwNjE4MDgyMTM3WjBhMQswCQYDVQQGEwJERTEUMBIGA1UEChMLRUFDIFN5c3RlbWUxHTAbBgNVBAMTFGJlcmNhLXBzLmQtdHJ1c3QubmV0MR0wGwYDVQQFExRBUExXTTk5MTIwNDg5MDc5MjE1MDCCASIwDQYJKoZIhvcNAQEBBQADggEPADCCAQoCggEBANoHPo3wdRVBQ9q3EEYvDNi7d9KMic2h94XzdasUuJTj01UaPTrs8TCEoiCRaqPqM+k0MLvA3UXsWyglOsQzwlwoxpTlEbuOgpExaljmYeEsomyuazHwODFO8mhVk6EKTTjD1rNp5pCpTWcv2ibCbF+n1mvF5MkMXIueOHC8ZSQTghAtY1uZLGReFAZQYjfPACTBcYv0x2RAX9DoPlgtlk2Ets4iN/0nurYylF7nWF8uX9ck4++Pmx03Zv18iMfH4H4hxN18VhGpTCt1s2aNfmEzsr1TvWBeGn1SxhT6H5OzPfljPXevIDZXe3LliT/0F5nuG7jxynJVo//SHq6e9OsCAwEAAaOB/DCB+TATBgNVHSUEDDAKBggrBgEFBQcDATAfBgNVHSMEGDAWgBSup/TCXbzSP8mFW765q82Z0lghWzAWBgNVHSAEDzANMAsGCSqCFABQB4N0CjB6BgNVHR8EczBxMG+gbaBrhjNodHRwOi8vd3d3LmQtdHJ1c3QubmV0L2NybC9lYWNfc3lzdGVtX2NhXzFfMjAxNC5jcmyGNGh0dHBzOi8vd3d3LmQtdHJ1c3QubmV0L2NybC9lYWNfc3lzdGVtX2NhXzFfMjAxNC5jcmwwHQYDVR0OBBYEFEfp4XlHCgg794JNrcDv5Db1gExJMA4GA1UdDwEB/wQEAwIFoDANBgkqhkiG9w0BAQsFAAOCAQEAanSwh94d7WNWA1Y1KrDjo80TjWvlPU4gSazXJlXbVbfwHMW+iJjLHXa1LNA5TGq7QPlebL6Cl5RWMRL6Nbt2nFq9lbUUweIF4A+91p5OytcCyHzrWCfbIyh13qqn3KTMTi/cgOsykUqP2cD6mgqWw4NiEPYDr3HuwsZZDCjkvtmbMbxa/6UE1FYLDNxX3ftJHVBhMpdP6/v57i2KFIzA0F/vl2EewFjnTzbYGqFEDZVfs+OG7T56vesSDQklrPdyikysTAm1PhDECU6XNU6kewrqLSIN4lAmEKunEaisc4MpP20TMQLvAv4tKBBG9PgaltVrIVDK8kH33AOYAHqzmw==
+                    </serverCertificate>
+                    <clientCertificate>
+                        [BerCA TLS client certificate as Base64]
+                    </clientCertificate>
+                    <clientKey>
+                        [BerCA TLS client key as Base64]
+                    </clientKey>
+                </sslKeys>
+                <terminalAuthService sslKeysId="d-trust">
+                    <url>https://berca-ps.d-trust.net/ps/dvca-at</url>
+                </terminalAuthService>
+                <restrictedIdService sslKeysId="d-trust">
+                    <url>https://berca-ps.d-trust.net/ps/dvsd_v2</url>
+                </restrictedIdService>
+                <passiveAuthService sslKeysId="d-trust">
+                    <url>https://berca-ps.d-trust.net/ps/scs</url>
+                </passiveAuthService>
+                <dvcaCertDescriptionService sslKeysId="d-trust">
+                    <url>https://berca-ps.d-trust.net/ps/dvca-at-cert-desc</url>
+                </dvcaCertDescriptionService>
+            </PkiConnectorConfiguration>
+            <PaosReceiverURL>
+                [PaosReceiverURL
+                e.g. https://localhost:443/eidas-middleware/paosreceiver
+                - please note you need the port number even if it is the default]
+            </PaosReceiverURL>
+            <hoursRefreshCVCBeforeExpires>48</hoursRefreshCVCBeforeExpires>
+        </EPAConnectorConfiguration>
+    </ServiceProvider>
+</CoreConfiguration> 

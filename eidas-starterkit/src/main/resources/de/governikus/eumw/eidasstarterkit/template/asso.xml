@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<saml2:Assertion ID="_47482789069732322d02d825c9a2fafa" IssueInstant="2015-04-30T19:27:20.159Z"
+    Version="2.0" xmlns:saml2="urn:oasis:names:tc:SAML:2.0:assertion" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xmlns:eidas="http://eidas.europa.eu/attributes/naturalperson">
+    <saml2:Issuer Format="urn:oasis:names:tc:SAML:2.0:nameid-format:entity">https://eidas-service.eu</saml2:Issuer>
+    <saml2:Subject>
+        <saml2:NameID Format="urn:oasis:names:tc:SAML:2.0:nameid-format:persistent">ES/AT/02635542Y</saml2:NameID>
+        <saml2:SubjectConfirmation Method="urn:oasis:names:tc:SAML:2.0:cm:bearer">
+            <saml2:SubjectConfirmationData InResponseTo="_171ccc6b39b1e8f6e762c2e4ee4ded3a"
+                NotOnOrAfter="2015-04-30T19:32:20.157Z"
+                Recipient="https://eidas-connector.eu/post"/>
+        </saml2:SubjectConfirmation>
+    </saml2:Subject>
+    <saml2:Conditions NotBefore="2015-04-30T19:27:20.159Z" NotOnOrAfter="2015-04-30T19:32:20.157Z">
+        <saml2:AudienceRestriction>
+            <saml2:Audience>https://eidas-connector.eu/post</saml2:Audience>
+        </saml2:AudienceRestriction>
+    </saml2:Conditions>
+    <saml2:AuthnStatement AuthnInstant="2015-04-30T19:27:20.159Z"
+        SessionIndex="_5eeb319253e2d7d125e3dcc72806209a">
+        <saml2:AuthnContext>
+            <saml2:AuthnContextClassRef>http://eidas.europa.eu/LoA/high</saml2:AuthnContextClassRef>
+        </saml2:AuthnContext>
+    </saml2:AuthnStatement>
+    <saml2:AttributeStatement>
+    <saml2:Attribute 
+        FriendlyName="PersonIdentifier" 
+        Name="http://eidas.europa.eu/attributes/naturalperson/PersonIdentifier" NameFormat="urn:oasis:names:tc:SAML:2.0:attrnameformat:uri">
+        <saml2:AttributeValue xsi:type="eidas: PersonIdentifierType">
+            ES/AT/02635542Y
+        </saml2:AttributeValue>
+    </saml2:Attribute>
+    <saml2:Attribute 
+        FriendlyName="FamilyName" Name="http://eidas.europa.eu/attributes/naturalperson/CurrentFamilyName" NameFormat="urn:oasis:names:tc:SAML:2.0:attrnameformat:uri">
+        <saml2:AttributeValue languageID="en-GR" xsi:type="eidas:CurrentFamilyNameType">
+            Onasis
+        </saml2:AttributeValue>        
+        <saml2:AttributeValue eidas:Transliterated="true" xsi:type="eidas:CurrentFamilyNameType">
+            Onasis
+        </saml2:AttributeValue>
+    </saml2:Attribute>    
+    <saml2:Attribute 
+        FriendlyName="FirstName" 
+        Name="http://eidas.europa.eu/attributes/naturalperson/CurrentGivenName"
+        NameFormat="urn:oasis:names:tc:SAML:2.0:attrnameformat:uri">
+        <saml2:AttributeValue languageID="en-GB" xsi:type="eidas:CurrentGivenNameType">
+            Sarah
+        </saml2:AttributeValue>
+    </saml2:Attribute>
+    <saml2:Attribute 
+        FriendlyName="DateOfBirth" 
+        Name="http://eidas.europa.eu/attributes/naturalperson/DateOfBirth" NameFormat="urn:oasis:names:tc:SAML:2.0:attrnameformat:uri">
+        <saml2:AttributeValue xsi:type="eidas:DateOfBirthType">
+            1970-05-28
+        </saml2:AttributeValue>
+    </saml2:Attribute>          
+    </saml2:AttributeStatement>
+</saml2:Assertion>

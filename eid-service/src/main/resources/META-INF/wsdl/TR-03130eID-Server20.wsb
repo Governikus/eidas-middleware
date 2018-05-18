@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- possibly the service at the poseidas server which enables callbacks for getting master and defect list --> 
+<jaxws:bindings 
+               xmlns:jaxws="http://java.sun.com/xml/ns/jaxws"
+               xmlns:xs="http://www.w3.org/2001/XMLSchema"
+               wsdlLocation="TR-03130eID-Server20.wsdl">
+               <jaxws:bindings node="wsdl:definitions" xmlns:wsdl="http://schemas.xmlsoap.org/wsdl/">
+               <jaxws:package name="de.bund.bsi.eid20"/>
+               </jaxws:bindings>     
+</jaxws:bindings>

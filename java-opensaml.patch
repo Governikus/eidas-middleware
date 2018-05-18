@@ -1,0 +1,1317 @@
+diff --git a/opensaml-security-api/src/main/java/org/opensaml/security/x509/ECDHCredential.java b/opensaml-security-api/src/main/java/org/opensaml/security/x509/ECDHCredential.java
+new file mode 100644
+index 0000000..84a7d30
+--- /dev/null
++++ b/opensaml-security-api/src/main/java/org/opensaml/security/x509/ECDHCredential.java
+@@ -0,0 +1,66 @@
++/*
++ * Licensed to the University Corporation for Advanced Internet Development,
++ * Inc. (UCAID) under one or more contributor license agreements.  See the
++ * NOTICE file distributed with this work for additional information regarding
++ * copyright ownership. The UCAID licenses this file to You under the Apache
++ * License, Version 2.0 (the "License"); you may not use this file except in
++ * compliance with the License.  You may obtain a copy of the License at
++ *
++ *    http://www.apache.org/licenses/LICENSE-2.0
++ *
++ * Unless required by applicable law or agreed to in writing, software
++ * distributed under the License is distributed on an "AS IS" BASIS,
++ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
++ * See the License for the specific language governing permissions and
++ * limitations under the License.
++ */
++
++package org.opensaml.security.x509;
++
++import java.security.PublicKey;
++import java.security.cert.X509Certificate;
++
++import javax.annotation.Nonnull;
++
++import org.apache.xml.security.binding.xmlenc11.ConcatKDFParamsType;
++import org.opensaml.security.credential.Credential;
++
++/**
++ *
++ */
++public class ECDHCredential extends BasicX509Credential {
++
++    private ConcatKDFParamsType concatKDF;
++
++    private PublicKey senderPubKey;
++
++    /** {@inheritDoc} */
++    @Nonnull public Class<? extends Credential> getCredentialType() {
++        return ECDHCredential.class;
++    }
++
++    /**
++     * Constructor.
++     *
++     * @param entityCertificate
++     */
++    public ECDHCredential(X509Certificate entityCertificate) {
++        super(entityCertificate);
++    }
++
++    public ConcatKDFParamsType getConcatKDF() {
++        return concatKDF;
++    }
++
++    public void setConcatKDF(ConcatKDFParamsType concatKDF) {
++        this.concatKDF = concatKDF;
++    }
++
++    public PublicKey getSenderPubKey() {
++        return senderPubKey;
++    }
++
++    public void setSenderPubKey(PublicKey senderPubKey) {
++        this.senderPubKey = senderPubKey;
++    }
++}
+diff --git a/opensaml-xmlsec-api/src/main/java/org/opensaml/xmlsec/encryption/ConcatKDFParams.java b/opensaml-xmlsec-api/src/main/java/org/opensaml/xmlsec/encryption/ConcatKDFParams.java
+new file mode 100644
+index 0000000..7ed3523
+--- /dev/null
++++ b/opensaml-xmlsec-api/src/main/java/org/opensaml/xmlsec/encryption/ConcatKDFParams.java
+@@ -0,0 +1,84 @@
++/*
++ * Licensed to the University Corporation for Advanced Internet Development,
++ * Inc. (UCAID) under one or more contributor license agreements.  See the
++ * NOTICE file distributed with this work for additional information regarding
++ * copyright ownership. The UCAID licenses this file to You under the Apache
++ * License, Version 2.0 (the "License"); you may not use this file except in
++ * compliance with the License.  You may obtain a copy of the License at
++ *
++ *    http://www.apache.org/licenses/LICENSE-2.0
++ *
++ * Unless required by applicable law or agreed to in writing, software
++ * distributed under the License is distributed on an "AS IS" BASIS,
++ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
++ * See the License for the specific language governing permissions and
++ * limitations under the License.
++ */
++
++package org.opensaml.xmlsec.encryption;
++
++import javax.annotation.Nullable;
++import javax.xml.namespace.QName;
++
++import org.opensaml.core.xml.XMLObject;
++import org.opensaml.xmlsec.encryption.support.EncryptionConstants;
++import org.opensaml.xmlsec.signature.DigestMethod;
++
++/**
++ *
++ */
++public interface ConcatKDFParams extends XMLObject {
++
++    /** Element local name. */
++    public static final String DEFAULT_ELEMENT_LOCAL_NAME = "ConcatKDFParams";
++
++    /** Default element name. */
++    public static final QName DEFAULT_ELEMENT_NAME =
++            new QName(EncryptionConstants.XMLENC11_NS, DEFAULT_ELEMENT_LOCAL_NAME, EncryptionConstants.XMLENC11_PREFIX);
++
++    /** Local name of the XSI type. */
++    public static final String TYPE_LOCAL_NAME = "ConcatKDFParamsType";
++
++    /** QName of the XSI type. */
++    public static final QName TYPE_NAME =
++            new QName(EncryptionConstants.XMLENC11_NS, TYPE_LOCAL_NAME, EncryptionConstants.XMLENC11_PREFIX);
++
++    /** AlgorithmID attribute name. */
++    public static final String ALGORITHMID_ATTRIBUTE_NAME = "AlgorithmID";
++
++    /** PartyUInfo attribute name. */
++    public static final String PARTYUINFO_ATTRIBUTE_NAME = "PartyUInfo";
++
++    /** PartyVInfo attribute name. */
++    public static final String PARTYVINFO_ATTRIBUTE_NAME = "PartyVInfo";
++
++    /** SuppPubInfo attribute name. */
++    public static final String SUPPPUBINFO_ATTRIBUTE_NAME = "SuppPubInfo";
++
++    /** SuppPrivInfo attribute name. */
++    public static final String SUPPPRIVINFO_ATTRIBUTE_NAME = "SuppPrivInfo";
++
++    @Nullable public byte[] getAlgorithmID();
++
++    public void setAlgorithmID(@Nullable byte[] algorithmID);
++
++    @Nullable public byte[] getPartyUInfo();
++
++    public void setPartyUInfo(@Nullable byte[] partyUInfo);
++
++    @Nullable public byte[] getPartyVInfo();
++
++    public void setPartyVInfo(@Nullable byte[] partyVInfo);
++
++    @Nullable public byte[] getSuppPubInfo();
++
++    public void setSuppPubInfo(@Nullable byte[] suppPubInfo);
++
++    @Nullable public byte[] getSuppPrivInfo();
++
++    public void setSuppPrivInfo(@Nullable byte[] suppPrivInfo);
++
++    @Nullable public DigestMethod getDigestMethod();
++
++    public void setDigestMethod(DigestMethod digestMethod);
++}
+diff --git a/opensaml-xmlsec-api/src/main/java/org/opensaml/xmlsec/encryption/KeyDerivationMethod.java b/opensaml-xmlsec-api/src/main/java/org/opensaml/xmlsec/encryption/KeyDerivationMethod.java
+new file mode 100644
+index 0000000..6ba3d11
+--- /dev/null
++++ b/opensaml-xmlsec-api/src/main/java/org/opensaml/xmlsec/encryption/KeyDerivationMethod.java
+@@ -0,0 +1,62 @@
++/*
++ * Licensed to the University Corporation for Advanced Internet Development,
++ * Inc. (UCAID) under one or more contributor license agreements.  See the
++ * NOTICE file distributed with this work for additional information regarding
++ * copyright ownership. The UCAID licenses this file to You under the Apache
++ * License, Version 2.0 (the "License"); you may not use this file except in
++ * compliance with the License.  You may obtain a copy of the License at
++ *
++ *    http://www.apache.org/licenses/LICENSE-2.0
++ *
++ * Unless required by applicable law or agreed to in writing, software
++ * distributed under the License is distributed on an "AS IS" BASIS,
++ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
++ * See the License for the specific language governing permissions and
++ * limitations under the License.
++ */
++
++package org.opensaml.xmlsec.encryption;
++
++import javax.annotation.Nullable;
++import javax.xml.namespace.QName;
++
++import org.opensaml.core.xml.ElementExtensibleXMLObject;
++import org.opensaml.core.xml.XMLObject;
++import org.opensaml.xmlsec.encryption.support.EncryptionConstants;
++
++/**
++ *
++ */
++public interface KeyDerivationMethod extends XMLObject, ElementExtensibleXMLObject {
++
++    /** Element local name. */
++    public static final String DEFAULT_ELEMENT_LOCAL_NAME = "KeyDerivationMethod";
++
++    /** Default element name. */
++    public static final QName DEFAULT_ELEMENT_NAME =
++            new QName(EncryptionConstants.XMLENC11_NS, DEFAULT_ELEMENT_LOCAL_NAME, EncryptionConstants.XMLENC11_PREFIX);
++
++    /** Local name of the XSI type. */
++    public static final String TYPE_LOCAL_NAME = "KeyDerivationMethodType";
++
++    /** QName of the XSI type. */
++    public static final QName TYPE_NAME =
++            new QName(EncryptionConstants.XMLENC11_NS, TYPE_LOCAL_NAME, EncryptionConstants.XMLENC11_PREFIX);
++
++    /** Algorithm attribute name. */
++    public static final String ALGORITHM_ATTRIBUTE_NAME = "Algorithm";
++
++    /**
++     * Gets the algorithm URI attribute value for this agreement method.
++     * 
++     * @return the algorithm URI attribute value
++     */
++    @Nullable public String getAlgorithm();
++
++    /**
++     * Sets the algorithm URI attribute value for this agreement method.
++     * 
++     * @param newAlgorithm the new algorithm URI attribute value
++     */
++    public void setAlgorithm(@Nullable final String newAlgorithm);
++}
+diff --git a/opensaml-xmlsec-api/src/main/java/org/opensaml/xmlsec/encryption/support/ECDHParameters.java b/opensaml-xmlsec-api/src/main/java/org/opensaml/xmlsec/encryption/support/ECDHParameters.java
+new file mode 100644
+index 0000000..226a090
+--- /dev/null
++++ b/opensaml-xmlsec-api/src/main/java/org/opensaml/xmlsec/encryption/support/ECDHParameters.java
+@@ -0,0 +1,43 @@
++/*
++ * Licensed to the University Corporation for Advanced Internet Development,
++ * Inc. (UCAID) under one or more contributor license agreements.  See the
++ * NOTICE file distributed with this work for additional information regarding
++ * copyright ownership. The UCAID licenses this file to You under the Apache
++ * License, Version 2.0 (the "License"); you may not use this file except in
++ * compliance with the License.  You may obtain a copy of the License at
++ *
++ *    http://www.apache.org/licenses/LICENSE-2.0
++ *
++ * Unless required by applicable law or agreed to in writing, software
++ * distributed under the License is distributed on an "AS IS" BASIS,
++ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
++ * See the License for the specific language governing permissions and
++ * limitations under the License.
++ */
++
++package org.opensaml.xmlsec.encryption.support;
++
++/**
++ *
++ */
++public class ECDHParameters {
++
++    /**
++     * key wrapping algorithm.
++     */
++    private String keyWrapMethod;
++
++    /**
++     * @return Returns the keyWrapMethod.
++     */
++    public String getKeyWrapMethod() {
++        return keyWrapMethod;
++    }
++
++    /**
++     * @param keyWrapMethod The keyWrapMethod to set.
++     */
++    public void setKeyWrapMethod(String keyWrapMethod) {
++        this.keyWrapMethod = keyWrapMethod;
++    }
++}
+diff --git a/opensaml-xmlsec-api/src/main/java/org/opensaml/xmlsec/encryption/support/Encrypter.java b/opensaml-xmlsec-api/src/main/java/org/opensaml/xmlsec/encryption/support/Encrypter.java
+index cb955b8..72160b4 100644
+--- a/opensaml-xmlsec-api/src/main/java/org/opensaml/xmlsec/encryption/support/Encrypter.java
++++ b/opensaml-xmlsec-api/src/main/java/org/opensaml/xmlsec/encryption/support/Encrypter.java
+@@ -19,22 +19,35 @@
+ 
+ import java.security.Key;
+ import java.security.KeyException;
++import java.security.KeyPair;
++import java.security.KeyPairGenerator;
+ import java.security.NoSuchAlgorithmException;
++import java.security.Security;
+ import java.security.interfaces.DSAPublicKey;
++import java.security.interfaces.ECKey;
+ import java.security.interfaces.ECPublicKey;
+ import java.util.ArrayList;
+ import java.util.List;
+ 
+ import javax.annotation.Nonnull;
+ import javax.annotation.Nullable;
++import javax.crypto.KeyAgreement;
+ import javax.crypto.SecretKey;
++import javax.crypto.spec.SecretKeySpec;
+ 
+ import net.shibboleth.utilities.java.support.codec.Base64Support;
+ import net.shibboleth.utilities.java.support.logic.Constraint;
+ 
+ import org.apache.xml.security.Init;
++import org.apache.xml.security.binding.xmlenc11.ConcatKDFParamsType;
+ import org.apache.xml.security.encryption.XMLCipher;
+ import org.apache.xml.security.encryption.XMLEncryptionException;
++import org.bouncycastle.crypto.Digest;
++import org.bouncycastle.crypto.agreement.kdf.ConcatenationKDFGenerator;
++import org.bouncycastle.crypto.digests.SHA256Digest;
++import org.bouncycastle.crypto.digests.SHA512Digest;
++import org.bouncycastle.crypto.params.KDFParameters;
++import org.bouncycastle.jce.provider.BouncyCastleProvider;
+ import org.opensaml.core.xml.XMLObject;
+ import org.opensaml.core.xml.XMLObjectBuilderFactory;
+ import org.opensaml.core.xml.config.XMLObjectProviderRegistrySupport;
+@@ -45,6 +58,7 @@
+ import org.opensaml.core.xml.io.UnmarshallingException;
+ import org.opensaml.security.SecurityException;
+ import org.opensaml.security.credential.CredentialSupport;
++import org.opensaml.security.x509.ECDHCredential;
+ import org.opensaml.xmlsec.algorithm.AlgorithmSupport;
+ import org.opensaml.xmlsec.encryption.EncryptedData;
+ import org.opensaml.xmlsec.encryption.EncryptedKey;
+@@ -58,6 +72,7 @@
+ import org.w3c.dom.Element;
+ 
+ import com.google.common.base.Strings;
++import com.google.common.primitives.Bytes;
+ 
+ /**
+  * Supports encryption of XMLObjects, their content and keys, according to the XML Encryption specification, version
+@@ -294,8 +309,64 @@
+ 
+         Key encryptionKey = CredentialSupport.extractEncryptionKey(kekParams.getEncryptionCredential());
+ 
+-        EncryptedKey encryptedKey = encryptKey(key, encryptionKey, kekParams.getAlgorithm(),
+-                kekParams.getRSAOAEPParameters(), containingDocument);
++        boolean ecdh = false;
++        Key agreedKey = null;
++        if (encryptionKey instanceof ECPublicKey
++                && EncryptionConstants.ALGO_ID_KEYAGREEMENT_ECDH_ES.equals(kekParams.getAlgorithm())) {
++
++            if (kekParams.getECDHParameters() == null || !"EC".equals(encryptionKey.getAlgorithm())) {
++                throw new EncryptionException("unable to perform ECDH-ES");
++            }
++
++            ecdh = true;
++            try {
++                Security.addProvider(new BouncyCastleProvider());
++                ECDHCredential cred = (ECDHCredential) kekParams.getEncryptionCredential();
++                
++                KeyPairGenerator kpg = KeyPairGenerator.getInstance("EC", "BC");
++                kpg.initialize(((ECKey) encryptionKey).getParams());
++                KeyPair tempKeyPair = kpg.generateKeyPair();
++                cred.setSenderPubKey(tempKeyPair.getPublic());
++
++                KeyAgreement ka = KeyAgreement.getInstance("ECDH", "BC");
++                ka.init(tempKeyPair.getPrivate());
++                ka.doPhase(encryptionKey, true);
++                byte[] shared = ka.generateSecret();
++
++                int keyLength = AlgorithmSupport.getKeyLength(kekParams.getECDHParameters().getKeyWrapMethod()) / 8;
++                byte[] rawKey = new byte[keyLength];
++
++                ConcatKDFParamsType concatKDFParams = cred.getConcatKDF();
++                byte[] combinedConcatParams = Bytes.concat(concatKDFParams.getAlgorithmID(), concatKDFParams.getPartyUInfo(), concatKDFParams.getPartyVInfo());
++                if (concatKDFParams.getSuppPubInfo() != null) {
++                    combinedConcatParams = Bytes.concat(combinedConcatParams, concatKDFParams.getSuppPubInfo());
++                }
++                if (concatKDFParams.getSuppPrivInfo() != null) {
++                    combinedConcatParams = Bytes.concat(combinedConcatParams, concatKDFParams.getSuppPrivInfo());
++                }
++                Digest dig = null;
++                switch (concatKDFParams.getDigestMethod().getAlgorithm()) {
++                    case EncryptionConstants.ALGO_ID_DIGEST_SHA256:
++                        dig = new SHA256Digest();
++                        break;
++                    case EncryptionConstants.ALGO_ID_DIGEST_SHA512:
++                        dig = new SHA512Digest();
++                        break;
++                }
++
++                ConcatenationKDFGenerator concatKDF = new ConcatenationKDFGenerator(dig);
++                KDFParameters kdfParams = new KDFParameters(shared, combinedConcatParams);
++                concatKDF.init(kdfParams);
++                concatKDF.generateBytes(rawKey, 0, keyLength);
++                agreedKey = new SecretKeySpec(rawKey,
++                        AlgorithmSupport.getKeyAlgorithm(kekParams.getECDHParameters().getKeyWrapMethod()));
++            } catch (Exception e) {
++                throw new EncryptionException(e);
++            }
++        }
++        final EncryptedKey encryptedKey = encryptKey(key, ecdh ? agreedKey : encryptionKey,
++                ecdh ? kekParams.getECDHParameters().getKeyWrapMethod() : kekParams.getAlgorithm(),
++                ecdh ? null : kekParams.getRSAOAEPParameters(), containingDocument);
+ 
+         if (kekParams.getKeyInfoGenerator() != null) {
+             KeyInfoGenerator generator = kekParams.getKeyInfoGenerator();
+@@ -670,7 +741,8 @@
+         } else if (key instanceof DSAPublicKey) {
+             log.error("Attempt made to use DSA key for encrypted key transport");
+             throw new EncryptionException("DSA keys may not be used for encrypted key transport");
+-        } else if (key instanceof ECPublicKey) {
++        } else if (key instanceof ECPublicKey
++                && !EncryptionConstants.ALGO_ID_KEYAGREEMENT_ECDH_ES.equals(kekParams.getAlgorithm())) {
+             log.error("Attempt made to use EC key for encrypted key transport");
+             throw new EncryptionException("EC keys may not be used for encrypted key transport");
+         } else if (Strings.isNullOrEmpty(kekParams.getAlgorithm())) {
+diff --git a/opensaml-xmlsec-api/src/main/java/org/opensaml/xmlsec/encryption/support/EncryptionConstants.java b/opensaml-xmlsec-api/src/main/java/org/opensaml/xmlsec/encryption/support/EncryptionConstants.java
+index 5725042..0396d1c 100644
+--- a/opensaml-xmlsec-api/src/main/java/org/opensaml/xmlsec/encryption/support/EncryptionConstants.java
++++ b/opensaml-xmlsec-api/src/main/java/org/opensaml/xmlsec/encryption/support/EncryptionConstants.java
+@@ -111,8 +111,14 @@
+ 
+     /** XML Encryption 1.1 QName prefix. */
+     public static final String XMLENC11_PREFIX = "xenc11";
+-    
+-    /** Key Transport - OPTIONAL RSA-OAEP.  */
++
++    /** Key Derivation - ConcatKDF. */
++    public static final String ALGO_ID_KEYDERIVATION_CONCAT = XMLENC11_NS + "ConcatKDF";
++
++    /** Key Agreement - ECDH-ES. */
++    public static final String ALGO_ID_KEYAGREEMENT_ECDH_ES = XMLENC11_NS + "ECDH-ES";
++
++    /** Key Transport - OPTIONAL RSA-OAEP. */
+     public static final String ALGO_ID_KEYTRANSPORT_RSAOAEP11 = XMLENC11_NS + "rsa-oaep";
+ 
+     /** Block Encryption - REQUIRED AES128-GCM. */
+diff --git a/opensaml-xmlsec-api/src/main/java/org/opensaml/xmlsec/encryption/support/KeyEncryptionParameters.java b/opensaml-xmlsec-api/src/main/java/org/opensaml/xmlsec/encryption/support/KeyEncryptionParameters.java
+index 04bc9d6..187c8ae 100644
+--- a/opensaml-xmlsec-api/src/main/java/org/opensaml/xmlsec/encryption/support/KeyEncryptionParameters.java
++++ b/opensaml-xmlsec-api/src/main/java/org/opensaml/xmlsec/encryption/support/KeyEncryptionParameters.java
+@@ -35,6 +35,9 @@
+     /** RSA OAEP parameters. */
+     private RSAOAEPParameters rsaOAEPParameters;
+ 
++    /** ECDH parameters. */
++    private ECDHParameters ecdhParameters;
++
+     /**
+      * Constructor.
+      */
+@@ -102,5 +105,22 @@
+     public void setRSAOAEPParameters(@Nullable final RSAOAEPParameters params) {
+         rsaOAEPParameters = params;
+     }
+-    
++
++    /**
++     * Get the instance of {@link ECDHParameters}.
++     * 
++     * @return the parameters instance
++     */
++    @Nullable public ECDHParameters getECDHParameters() {
++        return ecdhParameters;
++    }
++
++    /**
++     * Set the instance of {@link ECDHParameters}.
++     * 
++     * @param params the new parameters instance
++     */
++    public void setECDHParameters(@Nullable final ECDHParameters params) {
++        ecdhParameters = params;
++    }
+ }
+\ No newline at end of file
+diff --git a/opensaml-xmlsec-api/src/main/java/org/opensaml/xmlsec/keyinfo/KeyInfoSupport.java b/opensaml-xmlsec-api/src/main/java/org/opensaml/xmlsec/keyinfo/KeyInfoSupport.java
+index f463935..6ccd82b 100644
+--- a/opensaml-xmlsec-api/src/main/java/org/opensaml/xmlsec/keyinfo/KeyInfoSupport.java
++++ b/opensaml-xmlsec-api/src/main/java/org/opensaml/xmlsec/keyinfo/KeyInfoSupport.java
+@@ -17,6 +17,7 @@
+ 
+ package org.opensaml.xmlsec.keyinfo;
+ 
++import java.io.IOException;
+ import java.math.BigInteger;
+ import java.security.KeyException;
+ import java.security.KeyFactory;
+@@ -31,6 +32,7 @@
+ import java.security.cert.X509Certificate;
+ import java.security.interfaces.DSAParams;
+ import java.security.interfaces.DSAPublicKey;
++import java.security.interfaces.ECPublicKey;
+ import java.security.interfaces.RSAPublicKey;
+ import java.security.spec.DSAParameterSpec;
+ import java.security.spec.DSAPublicKeySpec;
+@@ -38,6 +40,7 @@
+ import java.security.spec.KeySpec;
+ import java.security.spec.RSAPublicKeySpec;
+ import java.security.spec.X509EncodedKeySpec;
++import java.util.Base64;
+ import java.util.LinkedList;
+ import java.util.List;
+ 
+@@ -47,6 +50,10 @@
+ import net.shibboleth.utilities.java.support.codec.Base64Support;
+ import net.shibboleth.utilities.java.support.logic.Constraint;
+ 
++import org.bouncycastle.asn1.ASN1ObjectIdentifier;
++import org.bouncycastle.asn1.ASN1StreamParser;
++import org.bouncycastle.asn1.DERBitString;
++import org.bouncycastle.asn1.DERSequence;
+ import org.opensaml.core.xml.XMLObjectBuilder;
+ import org.opensaml.core.xml.XMLObjectBuilderFactory;
+ import org.opensaml.core.xml.config.XMLObjectProviderRegistrySupport;
+@@ -55,12 +62,14 @@
+ import org.opensaml.xmlsec.algorithm.AlgorithmSupport;
+ import org.opensaml.xmlsec.signature.DEREncodedKeyValue;
+ import org.opensaml.xmlsec.signature.DSAKeyValue;
++import org.opensaml.xmlsec.signature.ECKeyValue;
+ import org.opensaml.xmlsec.signature.Exponent;
+ import org.opensaml.xmlsec.signature.G;
+ import org.opensaml.xmlsec.signature.KeyInfo;
+ import org.opensaml.xmlsec.signature.KeyName;
+ import org.opensaml.xmlsec.signature.KeyValue;
+ import org.opensaml.xmlsec.signature.Modulus;
++import org.opensaml.xmlsec.signature.NamedCurve;
+ import org.opensaml.xmlsec.signature.P;
+ import org.opensaml.xmlsec.signature.Q;
+ import org.opensaml.xmlsec.signature.RSAKeyValue;
+@@ -506,14 +515,14 @@
+         KeyValue keyValue = Constraint.isNotNull(keyValueBuilder, "KeyValue builder not available").buildObject(
+                 KeyValue.DEFAULT_ELEMENT_NAME);
+ 
+-        // TODO handle ECKeyValue
+-        
+         if (pk instanceof RSAPublicKey) {
+             keyValue.setRSAKeyValue(buildRSAKeyValue((RSAPublicKey) pk));
+         } else if (pk instanceof DSAPublicKey) {
+             keyValue.setDSAKeyValue(buildDSAKeyValue((DSAPublicKey) pk));
++        } else if (pk instanceof ECPublicKey) {
++            keyValue.setECKeyValue(buildECKeyValue((ECPublicKey) pk));
+         } else {
+-            throw new IllegalArgumentException("Only RSAPublicKey and DSAPublicKey are supported");
++            throw new IllegalArgumentException("Only RSAPublicKey, DSAPublicKey and ECPublicKey are supported");
+         }
+ 
+         keyInfo.getKeyValues().add(keyValue);
+@@ -556,6 +565,53 @@
+     }
+ 
+     /**
++     * Builds an {@link ECKeyValue} XMLObject from the Java security EC public key type.
++     * 
++     * @param ecPubKey a native Java {@link ECPublicKey}
++     * @return an {@link ECKeyValue} XMLObject
++     */
++    @Nonnull public static ECKeyValue buildECKeyValue(@Nonnull final ECPublicKey ecPubKey) {
++        Constraint.isNotNull(ecPubKey, "RSA public key cannot be null");
++
++        final XMLObjectBuilderFactory builderFactory = XMLObjectProviderRegistrySupport.getBuilderFactory();
++
++        final XMLObjectBuilder<ECKeyValue> ecKeyValueBuilder =
++                (XMLObjectBuilder<ECKeyValue>) builderFactory.getBuilder(ECKeyValue.DEFAULT_ELEMENT_NAME);
++        final ECKeyValue ecKeyValue = Constraint.isNotNull(ecKeyValueBuilder, "ECKeyValue builder not available")
++                .buildObject(ECKeyValue.DEFAULT_ELEMENT_NAME);
++
++        final XMLObjectBuilder<NamedCurve> namedCurveBuilder =
++                (XMLObjectBuilder<NamedCurve>) builderFactory.getBuilder(NamedCurve.DEFAULT_ELEMENT_NAME);
++        final NamedCurve namedCurve = Constraint.isNotNull(namedCurveBuilder, "NamedCurve builder not available")
++                .buildObject(NamedCurve.DEFAULT_ELEMENT_NAME);
++
++        final XMLObjectBuilder<org.opensaml.xmlsec.signature.PublicKey> publicKeyBuilder =
++                (XMLObjectBuilder<org.opensaml.xmlsec.signature.PublicKey>) builderFactory
++                        .getBuilder(org.opensaml.xmlsec.signature.PublicKey.DEFAULT_ELEMENT_NAME);
++        final org.opensaml.xmlsec.signature.PublicKey publicKey =
++                Constraint.isNotNull(publicKeyBuilder, "PublicKey builder not available")
++                        .buildObject(org.opensaml.xmlsec.signature.PublicKey.DEFAULT_ELEMENT_NAME);
++
++        ASN1StreamParser parser = new ASN1StreamParser(ecPubKey.getEncoded());
++        try {
++            DERSequence seq = (DERSequence) parser.readObject().toASN1Primitive();
++            DERSequence innerSeq = (DERSequence) seq.getObjectAt(0).toASN1Primitive();
++            ASN1ObjectIdentifier oid = (ASN1ObjectIdentifier) innerSeq.getObjectAt(1).toASN1Primitive();
++            DERBitString key = (DERBitString) seq.getObjectAt(1).toASN1Primitive();
++
++            namedCurve.setURI(oid.getId());
++            publicKey.setValue(Base64.getEncoder().encodeToString(key.getBytes()));
++        } catch (IOException e) {
++            // TODO
++        }
++
++        ecKeyValue.setNamedCurve(namedCurve);
++        ecKeyValue.setPublicKey(publicKey);
++
++        return ecKeyValue;
++    }
++
++    /**
+      * Builds a {@link DSAKeyValue} XMLObject from the Java security DSA public key type.
+      * 
+      * @param dsaPubKey a native Java {@link DSAPublicKey}
+diff --git a/opensaml-xmlsec-impl/src/main/java/org/opensaml/xmlsec/config/DefaultSecurityConfigurationBootstrap.java b/opensaml-xmlsec-impl/src/main/java/org/opensaml/xmlsec/config/DefaultSecurityConfigurationBootstrap.java
+index e208a8c..76911dc 100644
+--- a/opensaml-xmlsec-impl/src/main/java/org/opensaml/xmlsec/config/DefaultSecurityConfigurationBootstrap.java
++++ b/opensaml-xmlsec-impl/src/main/java/org/opensaml/xmlsec/config/DefaultSecurityConfigurationBootstrap.java
+@@ -40,6 +40,7 @@
+ import org.opensaml.xmlsec.keyinfo.NamedKeyInfoGeneratorManager;
+ import org.opensaml.xmlsec.keyinfo.impl.BasicKeyInfoGeneratorFactory;
+ import org.opensaml.xmlsec.keyinfo.impl.BasicProviderKeyInfoCredentialResolver;
++import org.opensaml.xmlsec.keyinfo.impl.ECDHKeyInfoGeneratorFactory;
+ import org.opensaml.xmlsec.keyinfo.impl.KeyInfoProvider;
+ import org.opensaml.xmlsec.keyinfo.impl.X509KeyInfoGeneratorFactory;
+ import org.opensaml.xmlsec.keyinfo.impl.provider.DEREncodedKeyValueProvider;
+@@ -293,8 +294,13 @@
+         X509KeyInfoGeneratorFactory x509Factory = new X509KeyInfoGeneratorFactory();
+         x509Factory.setEmitEntityCertificate(true);
+         
++        final ECDHKeyInfoGeneratorFactory ecdhFactory = new ECDHKeyInfoGeneratorFactory();
++        ecdhFactory.setEmitX509IssuerSerial(true);
++        ecdhFactory.setEmitPublicKeyValue(true);
++        
+         defaultManager.registerFactory(basicFactory);
+         defaultManager.registerFactory(x509Factory);
++        defaultManager.registerFactory(ecdhFactory);
+         
+         return namedManager;
+     }
+diff --git a/opensaml-xmlsec-impl/src/main/java/org/opensaml/xmlsec/encryption/impl/ConcatKDFParamsBuilder.java b/opensaml-xmlsec-impl/src/main/java/org/opensaml/xmlsec/encryption/impl/ConcatKDFParamsBuilder.java
+new file mode 100644
+index 0000000..b8d71ac
+--- /dev/null
++++ b/opensaml-xmlsec-impl/src/main/java/org/opensaml/xmlsec/encryption/impl/ConcatKDFParamsBuilder.java
+@@ -0,0 +1,41 @@
++/*
++ * Licensed to the University Corporation for Advanced Internet Development,
++ * Inc. (UCAID) under one or more contributor license agreements.  See the
++ * NOTICE file distributed with this work for additional information regarding
++ * copyright ownership. The UCAID licenses this file to You under the Apache
++ * License, Version 2.0 (the "License"); you may not use this file except in
++ * compliance with the License.  You may obtain a copy of the License at
++ *
++ *    http://www.apache.org/licenses/LICENSE-2.0
++ *
++ * Unless required by applicable law or agreed to in writing, software
++ * distributed under the License is distributed on an "AS IS" BASIS,
++ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
++ * See the License for the specific language governing permissions and
++ * limitations under the License.
++ */
++
++package org.opensaml.xmlsec.encryption.impl;
++
++import org.opensaml.core.xml.AbstractXMLObjectBuilder;
++import org.opensaml.xmlsec.encryption.ConcatKDFParams;
++import org.opensaml.xmlsec.encryption.XMLEncryptionBuilder;
++import org.opensaml.xmlsec.encryption.support.EncryptionConstants;
++
++/**
++ *
++ */
++public class ConcatKDFParamsBuilder extends AbstractXMLObjectBuilder<ConcatKDFParams>
++        implements XMLEncryptionBuilder<ConcatKDFParams> {
++
++    /** {@inheritDoc} */
++    public ConcatKDFParams buildObject() {
++        return buildObject(EncryptionConstants.XMLENC11_NS, ConcatKDFParams.DEFAULT_ELEMENT_LOCAL_NAME,
++                EncryptionConstants.XMLENC11_PREFIX);
++    }
++
++    /** {@inheritDoc} */
++    public ConcatKDFParams buildObject(String namespaceURI, String localName, String namespacePrefix) {
++        return new ConcatKDFParamsImpl(namespaceURI, localName, namespacePrefix);
++    }
++}
+diff --git a/opensaml-xmlsec-impl/src/main/java/org/opensaml/xmlsec/encryption/impl/ConcatKDFParamsImpl.java b/opensaml-xmlsec-impl/src/main/java/org/opensaml/xmlsec/encryption/impl/ConcatKDFParamsImpl.java
+new file mode 100644
+index 0000000..f38f337
+--- /dev/null
++++ b/opensaml-xmlsec-impl/src/main/java/org/opensaml/xmlsec/encryption/impl/ConcatKDFParamsImpl.java
+@@ -0,0 +1,114 @@
++/*
++ * Licensed to the University Corporation for Advanced Internet Development,
++ * Inc. (UCAID) under one or more contributor license agreements.  See the
++ * NOTICE file distributed with this work for additional information regarding
++ * copyright ownership. The UCAID licenses this file to You under the Apache
++ * License, Version 2.0 (the "License"); you may not use this file except in
++ * compliance with the License.  You may obtain a copy of the License at
++ *
++ *    http://www.apache.org/licenses/LICENSE-2.0
++ *
++ * Unless required by applicable law or agreed to in writing, software
++ * distributed under the License is distributed on an "AS IS" BASIS,
++ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
++ * See the License for the specific language governing permissions and
++ * limitations under the License.
++ */
++
++package org.opensaml.xmlsec.encryption.impl;
++
++import java.util.ArrayList;
++import java.util.Collections;
++import java.util.List;
++
++import org.opensaml.core.xml.AbstractXMLObject;
++import org.opensaml.core.xml.XMLObject;
++import org.opensaml.xmlsec.encryption.ConcatKDFParams;
++import org.opensaml.xmlsec.signature.DigestMethod;
++
++/**
++ *
++ */
++public class ConcatKDFParamsImpl extends AbstractXMLObject implements ConcatKDFParams {
++
++    private byte[] algorithmID;
++
++    private byte[] partyUInfo;
++
++    private byte[] partyVInfo;
++
++    private byte[] suppPubInfo;
++
++    private byte[] suppPrivInfo;
++
++    private DigestMethod digestMethod;
++
++    /**
++     * Constructor.
++     *
++     * @param namespaceURI
++     * @param elementLocalName
++     * @param namespacePrefix
++     */
++    protected ConcatKDFParamsImpl(String namespaceURI, String elementLocalName, String namespacePrefix) {
++        super(namespaceURI, elementLocalName, namespacePrefix);
++    }
++
++    /** {@inheritDoc} */
++    public List<XMLObject> getOrderedChildren() {
++        if (digestMethod == null) {
++            return null;
++        }
++        List<XMLObject> result = new ArrayList<>();
++        result.add(digestMethod);
++        return Collections.unmodifiableList(result);
++    }
++
++    public byte[] getAlgorithmID() {
++        return algorithmID;
++    }
++
++    public void setAlgorithmID(byte[] algorithmID) {
++        this.algorithmID = algorithmID;
++    }
++
++    public byte[] getPartyUInfo() {
++        return partyUInfo;
++    }
++
++    public void setPartyUInfo(byte[] partyUInfo) {
++        this.partyUInfo = partyUInfo;
++    }
++
++    public byte[] getPartyVInfo() {
++        return partyVInfo;
++    }
++
++    public void setPartyVInfo(byte[] partyVInfo) {
++        this.partyVInfo = partyVInfo;
++    }
++
++    public byte[] getSuppPubInfo() {
++        return suppPubInfo;
++    }
++
++    public void setSuppPubInfo(byte[] suppPubInfo) {
++        this.suppPubInfo = suppPubInfo;
++    }
++
++    public byte[] getSuppPrivInfo() {
++        return suppPrivInfo;
++    }
++
++    public void setSuppPrivInfo(byte[] suppPrivInfo) {
++        this.suppPrivInfo = suppPrivInfo;
++    }
++
++    public DigestMethod getDigestMethod() {
++        return digestMethod;
++    }
++
++    public void setDigestMethod(DigestMethod digestMethod) {
++        this.digestMethod = digestMethod;
++    }
++}
+diff --git a/opensaml-xmlsec-impl/src/main/java/org/opensaml/xmlsec/encryption/impl/ConcatKDFParamsMarshaller.java b/opensaml-xmlsec-impl/src/main/java/org/opensaml/xmlsec/encryption/impl/ConcatKDFParamsMarshaller.java
+new file mode 100644
+index 0000000..39b8f81
+--- /dev/null
++++ b/opensaml-xmlsec-impl/src/main/java/org/opensaml/xmlsec/encryption/impl/ConcatKDFParamsMarshaller.java
+@@ -0,0 +1,56 @@
++/*
++ * Licensed to the University Corporation for Advanced Internet Development,
++ * Inc. (UCAID) under one or more contributor license agreements.  See the
++ * NOTICE file distributed with this work for additional information regarding
++ * copyright ownership. The UCAID licenses this file to You under the Apache
++ * License, Version 2.0 (the "License"); you may not use this file except in
++ * compliance with the License.  You may obtain a copy of the License at
++ *
++ *    http://www.apache.org/licenses/LICENSE-2.0
++ *
++ * Unless required by applicable law or agreed to in writing, software
++ * distributed under the License is distributed on an "AS IS" BASIS,
++ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
++ * See the License for the specific language governing permissions and
++ * limitations under the License.
++ */
++
++package org.opensaml.xmlsec.encryption.impl;
++
++import org.bouncycastle.util.encoders.Hex;
++import org.opensaml.core.xml.XMLObject;
++import org.opensaml.core.xml.io.MarshallingException;
++import org.opensaml.xmlsec.encryption.ConcatKDFParams;
++import org.w3c.dom.Element;
++
++/**
++ *
++ */
++public class ConcatKDFParamsMarshaller extends AbstractXMLEncryptionMarshaller {
++    /** {@inheritDoc} */
++    protected void marshallAttributes(final XMLObject xmlObject, final Element domElement) throws MarshallingException {
++        final ConcatKDFParams kdfParams = (ConcatKDFParams) xmlObject;
++
++        if (kdfParams.getAlgorithmID() != null) {
++            domElement.setAttributeNS(null, ConcatKDFParams.ALGORITHMID_ATTRIBUTE_NAME,
++                    Hex.toHexString(kdfParams.getAlgorithmID()));
++        }
++        if (kdfParams.getPartyUInfo() != null) {
++            domElement.setAttributeNS(null, ConcatKDFParams.PARTYUINFO_ATTRIBUTE_NAME,
++                    Hex.toHexString(kdfParams.getPartyUInfo()));
++        }
++        if (kdfParams.getPartyVInfo() != null) {
++            domElement.setAttributeNS(null, ConcatKDFParams.PARTYVINFO_ATTRIBUTE_NAME,
++                    Hex.toHexString(kdfParams.getPartyVInfo()));
++        }
++        if (kdfParams.getSuppPrivInfo() != null) {
++            domElement.setAttributeNS(null, ConcatKDFParams.SUPPPRIVINFO_ATTRIBUTE_NAME,
++                    Hex.toHexString(kdfParams.getSuppPrivInfo()));
++        }
++        if (kdfParams.getSuppPubInfo() != null) {
++            domElement.setAttributeNS(null, ConcatKDFParams.SUPPPUBINFO_ATTRIBUTE_NAME,
++                    Hex.toHexString(kdfParams.getSuppPubInfo()));
++        }
++    }
++
++}
+diff --git a/opensaml-xmlsec-impl/src/main/java/org/opensaml/xmlsec/encryption/impl/ConcatKDFParamsUnmarshaller.java b/opensaml-xmlsec-impl/src/main/java/org/opensaml/xmlsec/encryption/impl/ConcatKDFParamsUnmarshaller.java
+new file mode 100644
+index 0000000..698042b
+--- /dev/null
++++ b/opensaml-xmlsec-impl/src/main/java/org/opensaml/xmlsec/encryption/impl/ConcatKDFParamsUnmarshaller.java
+@@ -0,0 +1,67 @@
++/*
++ * Licensed to the University Corporation for Advanced Internet Development,
++ * Inc. (UCAID) under one or more contributor license agreements.  See the
++ * NOTICE file distributed with this work for additional information regarding
++ * copyright ownership. The UCAID licenses this file to You under the Apache
++ * License, Version 2.0 (the "License"); you may not use this file except in
++ * compliance with the License.  You may obtain a copy of the License at
++ *
++ *    http://www.apache.org/licenses/LICENSE-2.0
++ *
++ * Unless required by applicable law or agreed to in writing, software
++ * distributed under the License is distributed on an "AS IS" BASIS,
++ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
++ * See the License for the specific language governing permissions and
++ * limitations under the License.
++ */
++
++package org.opensaml.xmlsec.encryption.impl;
++
++import org.apache.commons.codec.DecoderException;
++import org.apache.commons.codec.binary.Hex;
++import org.opensaml.core.xml.XMLObject;
++import org.opensaml.core.xml.io.UnmarshallingException;
++import org.opensaml.xmlsec.encryption.AgreementMethod;
++import org.opensaml.xmlsec.encryption.ConcatKDFParams;
++import org.opensaml.xmlsec.encryption.KANonce;
++import org.opensaml.xmlsec.encryption.OriginatorKeyInfo;
++import org.opensaml.xmlsec.encryption.RecipientKeyInfo;
++import org.opensaml.xmlsec.signature.DigestMethod;
++import org.w3c.dom.Attr;
++
++/**
++ *
++ */
++public class ConcatKDFParamsUnmarshaller extends AbstractXMLEncryptionUnmarshaller {
++
++    /** {@inheritDoc} */
++    protected void processAttribute(XMLObject xmlObject, Attr attribute) throws UnmarshallingException {
++
++        final ConcatKDFParams concat = (ConcatKDFParams) xmlObject;
++        try {
++            if (attribute.getLocalName().equals(ConcatKDFParams.ALGORITHMID_ATTRIBUTE_NAME)) {
++                concat.setAlgorithmID(Hex.decodeHex(attribute.getValue().toCharArray()));
++            } else if (attribute.getLocalName().equals(ConcatKDFParams.PARTYUINFO_ATTRIBUTE_NAME)) {
++                concat.setPartyUInfo(Hex.decodeHex(attribute.getValue().toCharArray()));
++            } else if (attribute.getLocalName().equals(ConcatKDFParams.PARTYVINFO_ATTRIBUTE_NAME)) {
++                concat.setPartyVInfo(Hex.decodeHex(attribute.getValue().toCharArray()));
++            } else if (attribute.getLocalName().equals(ConcatKDFParams.SUPPPRIVINFO_ATTRIBUTE_NAME)) {
++                concat.setSuppPrivInfo(Hex.decodeHex(attribute.getValue().toCharArray()));
++            } else if (attribute.getLocalName().equals(ConcatKDFParams.SUPPPUBINFO_ATTRIBUTE_NAME)) {
++                concat.setSuppPubInfo(Hex.decodeHex(attribute.getValue().toCharArray()));
++            }
++        } catch (DecoderException e) {
++            throw new UnmarshallingException(e);
++        }
++    }
++
++    /** {@inheritDoc} */
++    protected void processChildElement(final XMLObject parentXMLObject, final XMLObject childXMLObject)
++            throws UnmarshallingException {
++        final ConcatKDFParams concat = (ConcatKDFParams) parentXMLObject;
++
++        if (childXMLObject instanceof DigestMethod) {
++            concat.setDigestMethod((DigestMethod) childXMLObject);
++        }
++    }
++}
+diff --git a/opensaml-xmlsec-impl/src/main/java/org/opensaml/xmlsec/encryption/impl/KeyDerivationMethodBuilder.java b/opensaml-xmlsec-impl/src/main/java/org/opensaml/xmlsec/encryption/impl/KeyDerivationMethodBuilder.java
+new file mode 100644
+index 0000000..1b0bc19
+--- /dev/null
++++ b/opensaml-xmlsec-impl/src/main/java/org/opensaml/xmlsec/encryption/impl/KeyDerivationMethodBuilder.java
+@@ -0,0 +1,41 @@
++/*
++ * Licensed to the University Corporation for Advanced Internet Development,
++ * Inc. (UCAID) under one or more contributor license agreements.  See the
++ * NOTICE file distributed with this work for additional information regarding
++ * copyright ownership. The UCAID licenses this file to You under the Apache
++ * License, Version 2.0 (the "License"); you may not use this file except in
++ * compliance with the License.  You may obtain a copy of the License at
++ *
++ *    http://www.apache.org/licenses/LICENSE-2.0
++ *
++ * Unless required by applicable law or agreed to in writing, software
++ * distributed under the License is distributed on an "AS IS" BASIS,
++ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
++ * See the License for the specific language governing permissions and
++ * limitations under the License.
++ */
++
++package org.opensaml.xmlsec.encryption.impl;
++
++import org.opensaml.core.xml.AbstractXMLObjectBuilder;
++import org.opensaml.xmlsec.encryption.KeyDerivationMethod;
++import org.opensaml.xmlsec.encryption.XMLEncryptionBuilder;
++import org.opensaml.xmlsec.encryption.support.EncryptionConstants;
++
++/**
++ *
++ */
++public class KeyDerivationMethodBuilder extends AbstractXMLObjectBuilder<KeyDerivationMethod>
++        implements XMLEncryptionBuilder<KeyDerivationMethod> {
++
++    /** {@inheritDoc} */
++    public KeyDerivationMethod buildObject() {
++        return buildObject(EncryptionConstants.XMLENC11_NS, KeyDerivationMethod.DEFAULT_ELEMENT_LOCAL_NAME,
++                EncryptionConstants.XMLENC11_PREFIX);
++    }
++
++    /** {@inheritDoc} */
++    public KeyDerivationMethod buildObject(String namespaceURI, String localName, String namespacePrefix) {
++        return new KeyDerivationMethodImpl(namespaceURI, localName, namespacePrefix);
++    }
++}
+diff --git a/opensaml-xmlsec-impl/src/main/java/org/opensaml/xmlsec/encryption/impl/KeyDerivationMethodImpl.java b/opensaml-xmlsec-impl/src/main/java/org/opensaml/xmlsec/encryption/impl/KeyDerivationMethodImpl.java
+new file mode 100644
+index 0000000..d3bef7d
+--- /dev/null
++++ b/opensaml-xmlsec-impl/src/main/java/org/opensaml/xmlsec/encryption/impl/KeyDerivationMethodImpl.java
+@@ -0,0 +1,83 @@
++/*
++ * Licensed to the University Corporation for Advanced Internet Development,
++ * Inc. (UCAID) under one or more contributor license agreements.  See the
++ * NOTICE file distributed with this work for additional information regarding
++ * copyright ownership. The UCAID licenses this file to You under the Apache
++ * License, Version 2.0 (the "License"); you may not use this file except in
++ * compliance with the License.  You may obtain a copy of the License at
++ *
++ *    http://www.apache.org/licenses/LICENSE-2.0
++ *
++ * Unless required by applicable law or agreed to in writing, software
++ * distributed under the License is distributed on an "AS IS" BASIS,
++ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
++ * See the License for the specific language governing permissions and
++ * limitations under the License.
++ */
++
++package org.opensaml.xmlsec.encryption.impl;
++
++import java.util.ArrayList;
++import java.util.Collections;
++import java.util.List;
++
++import javax.xml.namespace.QName;
++
++import org.opensaml.core.xml.AbstractXMLObject;
++import org.opensaml.core.xml.XMLObject;
++import org.opensaml.core.xml.util.IndexedXMLObjectChildrenList;
++import org.opensaml.xmlsec.encryption.KeyDerivationMethod;
++
++/**
++ *
++ */
++public class KeyDerivationMethodImpl extends AbstractXMLObject implements KeyDerivationMethod {
++
++    /** Algorithm attribute value. */
++    private String algorithm;
++
++    /** List of wildcard &lt;any&gt; XMLObject children. */
++    private IndexedXMLObjectChildrenList xmlChildren;
++
++    /**
++     * Constructor.
++     *
++     * @param namespaceURI
++     * @param elementLocalName
++     * @param namespacePrefix
++     */
++    protected KeyDerivationMethodImpl(String namespaceURI, String elementLocalName, String namespacePrefix) {
++        super(namespaceURI, elementLocalName, namespacePrefix);
++        xmlChildren = new IndexedXMLObjectChildrenList(this);
++    }
++
++    /** {@inheritDoc} */
++    public List<XMLObject> getOrderedChildren() {
++        final ArrayList<XMLObject> children = new ArrayList<>();
++        children.addAll(xmlChildren);
++        if (children.size() == 0) {
++            return null;
++        }
++        return Collections.unmodifiableList(children);
++    }
++
++    /** {@inheritDoc} */
++    public List<XMLObject> getUnknownXMLObjects() {
++        return (List<XMLObject>) this.xmlChildren;
++    }
++
++    /** {@inheritDoc} */
++    public List<XMLObject> getUnknownXMLObjects(final QName typeOrName) {
++        return (List<XMLObject>) this.xmlChildren.subList(typeOrName);
++    }
++
++    /** {@inheritDoc} */
++    public String getAlgorithm() {
++        return this.algorithm;
++    }
++
++    /** {@inheritDoc} */
++    public void setAlgorithm(final String newAlgorithm) {
++        this.algorithm = prepareForAssignment(this.algorithm, newAlgorithm);
++    }
++}
+diff --git a/opensaml-xmlsec-impl/src/main/java/org/opensaml/xmlsec/encryption/impl/KeyDerivationMethodMarshaller.java b/opensaml-xmlsec-impl/src/main/java/org/opensaml/xmlsec/encryption/impl/KeyDerivationMethodMarshaller.java
+new file mode 100644
+index 0000000..0bfa33d
+--- /dev/null
++++ b/opensaml-xmlsec-impl/src/main/java/org/opensaml/xmlsec/encryption/impl/KeyDerivationMethodMarshaller.java
+@@ -0,0 +1,38 @@
++/*
++ * Licensed to the University Corporation for Advanced Internet Development,
++ * Inc. (UCAID) under one or more contributor license agreements.  See the
++ * NOTICE file distributed with this work for additional information regarding
++ * copyright ownership. The UCAID licenses this file to You under the Apache
++ * License, Version 2.0 (the "License"); you may not use this file except in
++ * compliance with the License.  You may obtain a copy of the License at
++ *
++ *    http://www.apache.org/licenses/LICENSE-2.0
++ *
++ * Unless required by applicable law or agreed to in writing, software
++ * distributed under the License is distributed on an "AS IS" BASIS,
++ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
++ * See the License for the specific language governing permissions and
++ * limitations under the License.
++ */
++
++package org.opensaml.xmlsec.encryption.impl;
++
++import org.opensaml.core.xml.XMLObject;
++import org.opensaml.core.xml.io.MarshallingException;
++import org.opensaml.xmlsec.encryption.KeyDerivationMethod;
++import org.w3c.dom.Element;
++
++/**
++ *
++ */
++public class KeyDerivationMethodMarshaller extends AbstractXMLEncryptionMarshaller {
++
++    /** {@inheritDoc} */
++    protected void marshallAttributes(final XMLObject xmlObject, final Element domElement) throws MarshallingException {
++        final KeyDerivationMethod kdm = (KeyDerivationMethod) xmlObject;
++
++        if (kdm.getAlgorithm() != null) {
++            domElement.setAttributeNS(null, KeyDerivationMethod.ALGORITHM_ATTRIBUTE_NAME, kdm.getAlgorithm());
++        }
++    }
++}
+diff --git a/opensaml-xmlsec-impl/src/main/java/org/opensaml/xmlsec/encryption/impl/KeyDerivationMethodUnmarshaller.java b/opensaml-xmlsec-impl/src/main/java/org/opensaml/xmlsec/encryption/impl/KeyDerivationMethodUnmarshaller.java
+new file mode 100644
+index 0000000..8420bc2
+--- /dev/null
++++ b/opensaml-xmlsec-impl/src/main/java/org/opensaml/xmlsec/encryption/impl/KeyDerivationMethodUnmarshaller.java
+@@ -0,0 +1,50 @@
++/*
++ * Licensed to the University Corporation for Advanced Internet Development,
++ * Inc. (UCAID) under one or more contributor license agreements.  See the
++ * NOTICE file distributed with this work for additional information regarding
++ * copyright ownership. The UCAID licenses this file to You under the Apache
++ * License, Version 2.0 (the "License"); you may not use this file except in
++ * compliance with the License.  You may obtain a copy of the License at
++ *
++ *    http://www.apache.org/licenses/LICENSE-2.0
++ *
++ * Unless required by applicable law or agreed to in writing, software
++ * distributed under the License is distributed on an "AS IS" BASIS,
++ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
++ * See the License for the specific language governing permissions and
++ * limitations under the License.
++ */
++
++package org.opensaml.xmlsec.encryption.impl;
++
++import org.opensaml.core.xml.XMLObject;
++import org.opensaml.core.xml.io.UnmarshallingException;
++import org.opensaml.xmlsec.encryption.AgreementMethod;
++import org.opensaml.xmlsec.encryption.KANonce;
++import org.opensaml.xmlsec.encryption.KeyDerivationMethod;
++import org.opensaml.xmlsec.encryption.OriginatorKeyInfo;
++import org.opensaml.xmlsec.encryption.RecipientKeyInfo;
++import org.w3c.dom.Attr;
++
++/**
++ *
++ */
++public class KeyDerivationMethodUnmarshaller extends AbstractXMLEncryptionUnmarshaller {
++
++    /** {@inheritDoc} */
++    protected void processAttribute(XMLObject xmlObject, Attr attribute) throws UnmarshallingException {
++
++        final KeyDerivationMethod kdm = (KeyDerivationMethod) xmlObject;
++        if (attribute.getLocalName().equals(KeyDerivationMethod.ALGORITHM_ATTRIBUTE_NAME)) {
++            kdm.setAlgorithm(attribute.getValue());
++            attribute.getOwnerElement().setIdAttributeNode(attribute, true);
++        }
++    }
++
++    /** {@inheritDoc} */
++    protected void processChildElement(final XMLObject parentXMLObject, final XMLObject childXMLObject)
++            throws UnmarshallingException {
++        final KeyDerivationMethod am = (KeyDerivationMethod) parentXMLObject;
++        am.getUnknownXMLObjects().add(childXMLObject);
++    }
++}
+diff --git a/opensaml-xmlsec-impl/src/main/java/org/opensaml/xmlsec/keyinfo/impl/ECDHKeyInfoGeneratorFactory.java b/opensaml-xmlsec-impl/src/main/java/org/opensaml/xmlsec/keyinfo/impl/ECDHKeyInfoGeneratorFactory.java
+new file mode 100644
+index 0000000..0a0dd7b
+--- /dev/null
++++ b/opensaml-xmlsec-impl/src/main/java/org/opensaml/xmlsec/keyinfo/impl/ECDHKeyInfoGeneratorFactory.java
+@@ -0,0 +1,125 @@
++/*
++ * Licensed to the University Corporation for Advanced Internet Development,
++ * Inc. (UCAID) under one or more contributor license agreements.  See the
++ * NOTICE file distributed with this work for additional information regarding
++ * copyright ownership. The UCAID licenses this file to You under the Apache
++ * License, Version 2.0 (the "License"); you may not use this file except in
++ * compliance with the License.  You may obtain a copy of the License at
++ *
++ *    http://www.apache.org/licenses/LICENSE-2.0
++ *
++ * Unless required by applicable law or agreed to in writing, software
++ * distributed under the License is distributed on an "AS IS" BASIS,
++ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
++ * See the License for the specific language governing permissions and
++ * limitations under the License.
++ */
++
++package org.opensaml.xmlsec.keyinfo.impl;
++
++import java.util.List;
++
++import javax.annotation.Nonnull;
++
++import org.opensaml.core.xml.XMLObject;
++import org.opensaml.core.xml.XMLObjectBuilder;
++import org.opensaml.core.xml.config.XMLObjectProviderRegistrySupport;
++import org.opensaml.security.SecurityException;
++import org.opensaml.security.credential.BasicCredential;
++import org.opensaml.security.credential.Credential;
++import org.opensaml.security.x509.ECDHCredential;
++import org.opensaml.xmlsec.encryption.AgreementMethod;
++import org.opensaml.xmlsec.encryption.ConcatKDFParams;
++import org.opensaml.xmlsec.encryption.KeyDerivationMethod;
++import org.opensaml.xmlsec.encryption.OriginatorKeyInfo;
++import org.opensaml.xmlsec.encryption.RecipientKeyInfo;
++import org.opensaml.xmlsec.encryption.impl.AgreementMethodBuilder;
++import org.opensaml.xmlsec.encryption.impl.ConcatKDFParamsBuilder;
++import org.opensaml.xmlsec.encryption.impl.KeyDerivationMethodBuilder;
++import org.opensaml.xmlsec.encryption.impl.OriginatorKeyInfoBuilder;
++import org.opensaml.xmlsec.encryption.impl.RecipientKeyInfoBuilder;
++import org.opensaml.xmlsec.encryption.support.EncryptionConstants;
++import org.opensaml.xmlsec.keyinfo.KeyInfoGenerator;
++import org.opensaml.xmlsec.signature.DigestMethod;
++import org.opensaml.xmlsec.signature.KeyInfo;
++import org.opensaml.xmlsec.signature.X509Data;
++import org.opensaml.xmlsec.signature.impl.DigestMethodBuilder;
++import org.opensaml.xmlsec.signature.impl.KeyInfoBuilder;
++
++/**
++ *
++ */
++public class ECDHKeyInfoGeneratorFactory extends X509KeyInfoGeneratorFactory {
++
++    /** {@inheritDoc} */
++    public boolean handles(@Nonnull final Credential credential) {
++        return credential instanceof ECDHCredential;
++    }
++    
++    /** {@inheritDoc} */
++    public Class<? extends Credential> getCredentialType() {
++        return ECDHCredential.class;
++    }
++
++    /** {@inheritDoc} */
++    @Nonnull public KeyInfoGenerator newInstance() {
++        // TODO lock options during cloning ?
++        final X509Options newOptions = super.getOptions().clone();
++        return new ECDHKeyInfoGenerator(newOptions);
++    }
++
++    public class ECDHKeyInfoGenerator extends X509KeyInfoGenerator {
++
++        /**
++         * Constructor.
++         *
++         * @param newOptions
++         */
++        protected ECDHKeyInfoGenerator(X509Options newOptions) {
++            super(newOptions);
++        }
++
++        /** {@inheritDoc} */
++        public KeyInfo generate(Credential credential) throws SecurityException {
++
++            ECDHCredential ecdhCredential = (ECDHCredential) credential;
++
++            AgreementMethod am = new AgreementMethodBuilder().buildObject();
++            am.setAlgorithm(EncryptionConstants.ALGO_ID_KEYAGREEMENT_ECDH_ES);
++
++            KeyDerivationMethod kdm = new KeyDerivationMethodBuilder().buildObject();
++            kdm.setAlgorithm(EncryptionConstants.ALGO_ID_KEYDERIVATION_CONCAT);
++            ConcatKDFParams kdfParams = new ConcatKDFParamsBuilder().buildObject();
++            kdfParams.setAlgorithmID(ecdhCredential.getConcatKDF().getAlgorithmID());
++            kdfParams.setPartyUInfo(ecdhCredential.getConcatKDF().getPartyUInfo());
++            kdfParams.setPartyVInfo(ecdhCredential.getConcatKDF().getPartyVInfo());
++            kdfParams.setSuppPrivInfo(ecdhCredential.getConcatKDF().getSuppPrivInfo());
++            kdfParams.setSuppPubInfo(ecdhCredential.getConcatKDF().getSuppPubInfo());
++            DigestMethod dm = new DigestMethodBuilder().buildObject();
++            dm.setAlgorithm(ecdhCredential.getConcatKDF().getDigestMethod().getAlgorithm());
++            kdfParams.setDigestMethod(dm);
++            kdm.getUnknownXMLObjects().add(kdfParams);
++            am.getUnknownXMLObjects().add(kdm);
++
++            OriginatorKeyInfo oki = new OriginatorKeyInfoBuilder().buildObject();
++            BasicCredential tempCredential = new BasicCredential(ecdhCredential.getSenderPubKey());
++            processPublicKey(oki, tempCredential);
++            am.setOriginatorKeyInfo(oki);
++
++            RecipientKeyInfo rki = new RecipientKeyInfoBuilder().buildObject();
++            XMLObjectBuilder<X509Data> x509DataBuilder = XMLObjectProviderRegistrySupport.getBuilderFactory()
++                    .getBuilderOrThrow(X509Data.DEFAULT_ELEMENT_NAME);
++            final X509Data x509Data = x509DataBuilder.buildObject(X509Data.DEFAULT_ELEMENT_NAME);
++            processEntityCertificate(rki, x509Data, ecdhCredential);
++            final List<XMLObject> x509DataChildren = x509Data.getOrderedChildren();
++            if (x509DataChildren != null && x509DataChildren.size() > 0) {
++                rki.getX509Datas().add(x509Data);
++            }
++            am.setRecipientKeyInfo(rki);
++
++            KeyInfo keyInfo = new KeyInfoBuilder().buildObject();
++            keyInfo.getAgreementMethods().add(am);
++            return keyInfo;
++        }
++    }
++}
+diff --git a/opensaml-xmlsec-impl/src/main/resources/encryption-config.xml b/opensaml-xmlsec-impl/src/main/resources/encryption-config.xml
+index 9ded3a1..549447b 100644
+--- a/opensaml-xmlsec-impl/src/main/resources/encryption-config.xml
++++ b/opensaml-xmlsec-impl/src/main/resources/encryption-config.xml
+@@ -194,6 +194,19 @@
+             <UnmarshallingClass className="org.opensaml.xmlsec.encryption.impl.MGFUnmarshaller"/>
+         </ObjectProvider>
+  
++        <!-- KeyDerivationMethod -->
++        <ObjectProvider qualifiedName="xenc11:KeyDerivationMethod">
++            <BuilderClass className="org.opensaml.xmlsec.encryption.impl.KeyDerivationMethodBuilder"/>
++            <MarshallingClass className="org.opensaml.xmlsec.encryption.impl.KeyDerivationMethodMarshaller"/>
++            <UnmarshallingClass className="org.opensaml.xmlsec.encryption.impl.KeyDerivationMethodUnmarshaller"/>
++        </ObjectProvider>
++
++        <!-- ConcatKDFParams -->
++        <ObjectProvider qualifiedName="xenc11:ConcatKDFParams">
++            <BuilderClass className="org.opensaml.xmlsec.encryption.impl.ConcatKDFParamsBuilder"/>
++            <MarshallingClass className="org.opensaml.xmlsec.encryption.impl.ConcatKDFParamsMarshaller"/>
++            <UnmarshallingClass className="org.opensaml.xmlsec.encryption.impl.ConcatKDFParamsUnmarshaller"/>
++        </ObjectProvider>
+     </ObjectProviders>
+ 
+ </XMLTooling>

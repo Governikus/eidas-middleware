@@ -1,0 +1,18 @@
+
+syntax: regexp
+\.settings$
+\.project$
+\.classpath$
+\.metadata$
+\.idea
+
+target$
+.rej$
+.log$
+.iml
+doc/_build$
+eidas-demo/config$
+eidas-middleware/config$
+poseidas/config$
+poseidasdemo/config$
+

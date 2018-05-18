@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<saml2p:AuthnRequest xmlns:saml2p="urn:oasis:names:tc:SAML:2.0:protocol"
+	xmlns:eidas="http://eidas.europa.eu/saml-extensions" xmlns:stork="urn:eu:stork:names:tc:STORK:1.0:assertion"
+	xmlns:storkp="urn:eu:stork:names:tc:STORK:1.0:protocol" Destination="http://eu-middleware/receiver"
+	ID="_03f3bb1c-af38-4bbc-aa0d-114df57baa7a" IssueInstant="2015-10-12T13:19:04.384Z"
+	Version="2.0">
+	<saml2:Issuer xmlns:saml2="urn:oasis:names:tc:SAML:2.0:assertion"
+		Format="urn:oasis:names:tc:SAML:2.0:nameid-format:entity">http://testSP</saml2:Issuer>
+	<ds:Signature xmlns:ds="http://www.w3.org/2000/09/xmldsig#">
+		<ds:SignedInfo>
+			<ds:CanonicalizationMethod Algorithm="http://www.w3.org/2001/10/xml-exc-c14n#" />
+			<ds:SignatureMethod
+				Algorithm="http://www.w3.org/2007/05/xmldsig-more#sha256-rsa-MGF1" />
+			<ds:Reference URI="#_03f3bb1c-af38-4bbc-aa0d-114df57baa7a">
+				<ds:Transforms>
+					<ds:Transform
+						Algorithm="http://www.w3.org/2000/09/xmldsig#enveloped-signature" />
+					<ds:Transform Algorithm="http://www.w3.org/2001/10/xml-exc-c14n#" />
+				</ds:Transforms>
+				<ds:DigestMethod Algorithm="http://www.w3.org/2001/04/xmlenc#sha256" />
+				<ds:DigestValue>Htpwu+mPtyHJ6lRaJ1g51PXIJPgQV5YPoBlVvveFsos=
+				</ds:DigestValue>
+			</ds:Reference>
+		</ds:SignedInfo>
+		<ds:SignatureValue>VqL9PjY+wxQSHksShjtyCDdwNRCr8PURX9ogtR/Z3SL0Fxnm914Kt2HCvb0dK6EOi32TnmJYRGSVgYbE/OzZFMQQJj1drEJLbbCeKH9Hx3LaHz9w7x5y3iUmiOCPKa7shTLAG6UfZgZi2ppMyKuf9ndeP3nEjTlWKZRmqynwnyp2Yhx99w5qtkY6woh28yS8GHqd+g3+oZrO23NqgcGTSCWwf5wBO8Cic4Lz4UBbV8w/lT2jEOyAkfSLa4wTQrEOGz6BDJ+0ON722JFnqZ4rvpHQwVI95+rnq0L6rUNwpejlEqT/iYMTHjWjnNtvmaVIe1oFTgsDa+a+4PEtmkUipg==
+		</ds:SignatureValue>
+		<ds:KeyInfo>
+			<ds:X509Data>
+				<ds:X509Certificate>MIIELjCCAxagAwIBAgIIOX9rkw1qavIwDQYJKoZIhvcNAQELBQAwVzEnMCUGA1UEAwweYm9zIENBIGVJRCBDb21tdW5pY2F0aW9uIENlcnRzMR8wHQYDVQQKDBZicmVtZW4gb25saW5lIHNlcnZpY2VzMQswCQYDVQQGEwJERTAeFw0xMzA2MDcwODQ1MzJaFw0xNjA2MDYwODQ1MzJaMGUxGzAZBgNVBAMMEmJvcy10ZXN0LnNhbWwtc2lnbjEYMBYGA1UECwwPdGVzdGNlcnRpZmljYXRlMR8wHQYDVQQKDBZicmVtZW4gb25saW5lIHNlcnZpY2VzMQswCQYDVQQGEwJkZTCCASIwDQYJKoZIhvcNAQEBBQADggEPADCCAQoCggEBALMskg70SLmo5iwPzsRz8i6Dg5RTspsFMpNVP/WTKIMDYSKLrF0zT3rwv+6As0KEnVi1NZDUUY1FPF8pGDjiFdhvAmBKIbuK20sY9OzoC0/GxYeHzpllVXtC4EPYNmnu/E3RH8uykqUw4sq4xFRK6Jc7pElw/7Jdbv0affLw2gw1bm2+g5y23M0x/RveaNdR6Ze3WPc4usvYdYHJKhEZMplz0VBa4DRHtaze0mPbZsS+pmsJcmuUWKLdGeqI2pC98hBlmHJBDbC6FZ75CS66QSW5clqbBi1Zag9+1T5enCim5hU04pNPFs+QPe84wJ7ne3WvwB5etORxeJPUtsDrbOkCAwEAAaOB7zCB7DAMBgNVHRMBAf8EAjAAMD8GA1UdJQQ4MDYGCCsGAQUFBwMBBggrBgEFBQcDAgYIKwYBBQUHAwQGCisGAQQBgjcUAgIGCisGAQQBgjcKAwwwHwYDVR0jBBgwFoAUBSKpPPikEf0rWuNy8POXM1SZcY8wDgYDVR0PAQH/BAQDAgSwMB0GA1UdDgQWBBS+7FbnpV8d+6wGLH3BmxAdE7XQSTBLBggrBgEFBQcBAQQ/MD0wOwYIKwYBBQUHMAGGL2h0dHA6Ly9vY3NwLmJvcy1icmVtZW4uZGUvcHVibGljd2ViL3N0YXR1cy9vY3NwMA0GCSqGSIb3DQEBCwUAA4IBAQAqoKn+/Di8zmfTdKFQo9MrdoEjWaW32/28BwxI9387bqKtqGAD6L2UELK13YdmN5jUi0vYQ10ZbKc3WValDYwUZqV2JyXOhGjEk1Co07P4JECScVJDCsJh+l/ce13YK3l/8Kbaq98l8gCgiDqD+bMtvliOEJoQGTO6Tga/oKAD6/KQi9SnSeqNljenZj6hz8Ga6BkC2kZMfzB9qJW2bV7dVKraUlh4NVjJsdOfztSbKuf692NKIIY51Lj1InJqE6otd7iVtOI/vhQbSb/yXyshWNTjBaA3RISm2eHhWB9lPBqn9Rhdagd2Q/s5/EPSXfFltNxIfETl0J7tbUr5rxpT
+				</ds:X509Certificate>
+			</ds:X509Data>
+		</ds:KeyInfo>
+	</ds:Signature>
+	<saml2p:Extensions xmlns:saml2p="urn:oasis:names:tc:SAML:2.0:protocol">
+		<eidas:SPType xmlns:eidas="http://eidas.europa.eu/saml-extensions">private</eidas:SPType>
+		<storkp:RequestedAttributes xmlns:storkp="urn:eu:stork:names:tc:STORK:1.0:protocol">
+			<stork:RequestedAttribute xmlns:stork="urn:eu:stork:names:tc:STORK:1.0:assertion"
+				Name="http://eidas.europa.eu/attributes/naturalperson/PersonIdentifier"
+				NameFormat="urn:oasis:names:tc:SAML:2.0:attrname-format:uri"
+				isRequired="true" />
+			<stork:RequestedAttribute xmlns:stork="urn:eu:stork:names:tc:STORK:1.0:assertion"
+				Name="http://eidas.europa.eu/attributes/naturalperson/CurrentFamilyName"
+				NameFormat="urn:oasis:names:tc:SAML:2.0:attrname-format:uri"
+				isRequired="false" />
+			<stork:RequestedAttribute xmlns:stork="urn:eu:stork:names:tc:STORK:1.0:assertion"
+				Name="http://eidas.europa.eu/attributes/naturalperson/CurrentGivenName"
+				NameFormat="urn:oasis:names:tc:SAML:2.0:attrname-format:uri"
+				isRequired="true" />
+		</storkp:RequestedAttributes>
+	</saml2p:Extensions>
+	<saml2p:NameIDPolicy xmlns:saml2p="urn:oasis:names:tc:SAML:2.0:protocol"
+		AllowCreate="true" Format="urn:oasis:names:tc:SAML:2.0:nameid-format:persistent" />
+	<saml2p:RequestedAuthnContext
+		xmlns:saml2p="urn:oasis:names:tc:SAML:2.0:protocol" Comparison="minimum">
+		<saml2:AuthnContextClassRef xmlns:saml2="urn:oasis:names:tc:SAML:2.0:assertion">http://eidas.europa.eu/LoA/low
+		</saml2:AuthnContextClassRef>
+	</saml2p:RequestedAuthnContext>
+</saml2p:AuthnRequest>

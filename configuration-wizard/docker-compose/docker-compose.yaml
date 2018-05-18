@@ -1,0 +1,11 @@
+version: '3'
+services:
+  configuration-wizard:
+    image: "eidas-configuration-wizard"
+    ports: 
+      - "8080:8080"
+    volumes:
+      - eidas-configuration:/opt/eidas-middleware/configuration
+volumes:
+  eidas-configuration:
+    external: true

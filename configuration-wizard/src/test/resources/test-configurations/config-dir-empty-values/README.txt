@@ -1,0 +1,1 @@
+here we will have a complete empty configuration

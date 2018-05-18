@@ -1,0 +1,14 @@
+version: '3'
+services:
+  middleware-application:
+    image: "eidas-middleware-application"
+    ports: 
+      - "8443:8443"
+    volumes:
+      - eidas-configuration:/opt/eidas-middleware/configuration
+      - eidas-database:/opt/eidas-middleware/database
+volumes:
+  eidas-configuration:
+    external: true
+  eidas-database:
+    external: true

@@ -1,0 +1,12 @@
+[Unit]
+Description=eIDAS-Middleware application
+
+[Service]
+Type=simple
+ExecStart=/opt/java/zulu8.23.0.3-jdk8.0.144-linux_x64/bin/java -jar /opt/application/eidas-middleware-1.0.1.jar
+WorkingDirectory=/opt/application
+User=eidasmw
+Group=eidasmw
+
+[Install]
+WantedBy=multi-user.target

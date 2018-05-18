@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<jaxb:bindings version="2.1"
+               xmlns:xs="http://www.w3.org/2001/XMLSchema"
+               xmlns:jaxb="http://java.sun.com/xml/ns/jaxb"
+>
+    <jaxb:bindings schemaLocation="../xsd/config/eID-Server-CoreConfig.xsd" node="/xs:schema">
+        <jaxb:globalBindings>
+            <jaxb:serializable uid="12345"/>
+        </jaxb:globalBindings>
+    </jaxb:bindings>
+</jaxb:bindings>

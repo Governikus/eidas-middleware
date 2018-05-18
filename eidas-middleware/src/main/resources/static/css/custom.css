@@ -1,0 +1,52 @@
+/*
+ * Copyright (c) 2018 Governikus KG. Licensed under the EUPL, Version 1.2 or as soon they will be approved by
+ * the European Commission - subsequent versions of the EUPL (the "Licence"); You may not use this work except
+ * in compliance with the Licence. You may obtain a copy of the Licence at:
+ * http://joinup.ec.europa.eu/software/page/eupl Unless required by applicable law or agreed to in writing,
+ * software distributed under the Licence is distributed on an "AS IS" basis, WITHOUT WARRANTIES OR CONDITIONS
+ * OF ANY KIND, either express or implied. See the Licence for the specific language governing permissions and
+ * limitations under the Licence.
+ */
+
+.mainbox {
+    background-size: contain;
+    background-repeat: no-repeat;
+    background-color: #18133D;
+    height: 550px;
+    padding: 80px 40px;
+    margin: 0;
+    font-size: 16px;
+    background-position: center;
+    background-image: url("../img/mainbox_back.png");
+    z-index: -1;
+}
+
+.botton-image:before {
+    content: "";
+    width: 16px;
+    height: 16px;
+    display: inline-block;
+    margin-right: 5px;
+    vertical-align: text-top;
+    background-color: transparent;
+    background-position: center;
+    background-repeat: no-repeat;
+}
+
+.de-button:before {
+    background-image: url("../img/de.png");
+}
+
+.en-button:before {
+    background-image: url("../img/gb.png");
+}
+
+body.de>div[lang=en] {
+    display: none;
+    z-index: -2;
+}
+
+body.en>div[lang=de] {
+    display: none;
+    z-index: -2;
+}

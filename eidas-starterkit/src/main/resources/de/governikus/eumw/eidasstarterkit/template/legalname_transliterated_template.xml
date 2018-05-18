@@ -1,0 +1,4 @@
+<saml2:Attribute FriendlyName="LegalName" Name="http://eidas.europa.eu/attributes/legalperson/LegalName" NameFormat="urn:oasis:names:tc:SAML:2.0:attrnameformat:uri">
+	<saml2:AttributeValue languageID="en-GB" xsi:type="eidas:LegalNameType">$latinScript</saml2:AttributeValue>
+	<saml2:AttributeValue xsi:type="eidas:LegalNameType" LatinScript="false">$nonLatinScript</saml2:AttributeValue>
+</saml2:Attribute>

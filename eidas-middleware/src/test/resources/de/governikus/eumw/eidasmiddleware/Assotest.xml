@@ -1,0 +1,69 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<saml2:Assertion ID="_fe642ef2-c74d-45f2-aba3-23a4c4d07c37"
+	IssueInstant="2015-08-19T9:08:04.637Z" Version="2.0"
+	xmlns:saml2="urn:oasis:names:tc:SAML:2.0:assertion" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xmlns:eidas="http://eidas.europa.eu/attributes/naturalperson">
+	<saml2:Issuer Format="urn:oasis:names:tc:SAML:2.0:nameid-format:entity">https://localhost:9443</saml2:Issuer>
+	<saml2:Subject>
+		<saml2:NameID Format="urn:oasis:names:tc:SAML:2.0:nameid-format:persistent">9aaeb4e9702ead0baa26e334031ca9fa37a57763aa44e4df1acde59ce042b4bb
+		</saml2:NameID>
+		<saml2:SubjectConfirmation Method="urn:oasis:names:tc:SAML:2.0:cm:bearer">
+			<saml2:SubjectConfirmationData
+				InResponseTo="_54b18c5a-0d0d-48d4-8e1b-e476c66de8dd" NotOnOrAfter="2015-08-19T9:08:04.646Z"
+				Recipient="https://localhost:9443/AutentSAMLDemo/NewReceiverServlet" />
+		</saml2:SubjectConfirmation>
+	</saml2:Subject>
+	<saml2:Conditions NotBefore="2015-08-19T9:18:04.646Z"
+		NotOnOrAfter="2015-08-19T9:08:04.646Z">
+		<saml2:AudienceRestriction>
+			<saml2:Audience>https://localhost:9443/AutentSAMLDemo/NewReceiverServlet
+			</saml2:Audience>
+		</saml2:AudienceRestriction>
+	</saml2:Conditions>
+	<saml2:AuthnStatement AuthnInstant="2015-08-19T9:08:04.637Z"
+		SessionIndex="_d5672d87-c9da-4f46-8922-bfacb7c03051">
+		<saml2:AuthnContext>
+			<saml2:AuthnContextClassRef>http://eidas.europa.eu/LoA/high
+			</saml2:AuthnContextClassRef>
+		</saml2:AuthnContext>
+	</saml2:AuthnStatement>
+	<saml2:AttributeStatement>
+		<saml2:Attribute FriendlyName="FamilyName"
+			Name="http://eidas.europa.eu/attributes/naturalperson/CurrentFamilyName"
+			NameFormat="urn:oasis:names:tc:SAML:2.0:attrnameformat:uri">
+			<saml2:AttributeValue languageID="de"
+				xsi:type="eidas:CurrentFamilyNameType">
+				von Drebenbusch-Dalgoßen
+			</saml2:AttributeValue>
+		</saml2:Attribute>
+		<saml2:Attribute FriendlyName="FirstName"
+			Name="http://eidas.europa.eu/attributes/naturalperson/CurrentGivenName"
+			NameFormat="urn:oasis:names:tc:SAML:2.0:attrnameformat:uri">
+			<saml2:AttributeValue languageID="de"
+				xsi:type="eidas:CurrentGivenNameType">
+				Hans-Günther
+			</saml2:AttributeValue>
+		</saml2:Attribute>
+		<saml2:Attribute FriendlyName="DateOfBirth"
+			Name="http://eidas.europa.eu/attributes/naturalperson/DateOfBirth"
+			NameFormat="urn:oasis:names:tc:SAML:2.0:attrnameformat:uri">
+			<saml2:AttributeValue xsi:type="eidas:DateOfBirthType">
+				1946-01-25
+			</saml2:AttributeValue>
+		</saml2:Attribute>
+		<saml2:Attribute FriendlyName="PlaceOfBirth"
+			Name=" http://eidas.europa.eu/attributes/naturalperson/PlaceOfBirth"
+			NameFormat="urn:oasis:names:tc:SAML:2.0:attrnameformat:uri">
+			<saml2:AttributeValue xsi:type="eidas:PlaceOfBirthType">
+				BREMERHAVEN
+			</saml2:AttributeValue>
+		</saml2:Attribute>
+		<saml2:Attribute FriendlyName="PersonIdentifier"
+			Name="http://eidas.europa.eu/attributes/naturalperson/PersonIdentifier"
+			NameFormat="urn:oasis:names:tc:SAML:2.0:attrnameformat:uri">
+			<saml2:AttributeValue xsi:type="eidas:PersonIdentifierType">
+				9aaeb4e9702ead0baa26e334031ca9fa37a57763aa44e4df1acde59ce042b4bb
+			</saml2:AttributeValue>
+		</saml2:Attribute>
+	</saml2:AttributeStatement>
+</saml2:Assertion>

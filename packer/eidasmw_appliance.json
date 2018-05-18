@@ -1,0 +1,79 @@
+{
+    "variables": {
+    "username": "eidasmw",
+    "password": "Pleasechangeme!",
+    "version": "{{env `VERSION`}}",
+    "zulu-release": "zulu8.30.0.1-jdk8.0.172-linux_x64"
+    },
+    "builders": [
+        {
+            "boot_wait": "20s",
+            "format": "ova",
+            "guest_additions_mode": "disable",
+            "headless": true,
+            "shutdown_command": "echo '{{user `password`}}' | sudo -S shutdown -P now",
+            "source_path": "http://cop-docker.tf.bos-test.de:9999/eIDAS-Middleware-Template-Clean.ova",
+            "ssh_password": "{{user `password`}}",
+            "ssh_username": "{{user `username`}}",
+            "type": "virtualbox-ovf",
+            "vm_name": "eidas-middleware-{{user `version`}}"
+        }
+    ],
+    "provisioners": [
+        {
+            "type": "file",
+            "source": "./resources",
+            "destination": "/home/eidasmw"
+        },
+        {
+            "inline": [
+                "echo 'Acquire::http::Proxy \"http://10.21.0.8:8080\";' > /etc/apt/apt.conf",
+                "apt-get update && apt-get -y upgrade",
+                "apt-get -y install unzip vim",
+                "mkdir /opt/java",
+                "mkdir /opt/eidas-middleware",
+                "mkdir /opt/configuration-wizard",
+                "mkdir /var/log/eidas-middleware",
+                "chown eidasmw /opt/java /opt/eidas-middleware /opt/configuration-wizard /var/log/eidas-middleware",
+                "chgrp eidasmw /opt/java /opt/eidas-middleware /opt/configuration-wizard /var/log/eidas-middleware",
+                "/bin/rm -v /etc/ssh/ssh_host_*",
+                "mv resources/eidas-middleware.service /etc/systemd/system",
+                "mv resources/iptables /etc/network/if-pre-up.d/iptables",
+                "chmod +x /etc/network/if-pre-up.d/iptables",
+                "mv resources/sources.list /etc/apt/sources.list",
+                "cat /dev/null > /etc/apt/apt.conf"
+            ],
+            "type": "shell",
+            "execute_command": "echo '{{user `password`}}' | sudo -S sh -c '{{ .Vars }} {{ .Path }}'"
+        },
+        {
+            "inline": [
+                "mkdir /opt/eidas-middleware/config",
+                "mkdir /opt/eidas-middleware/database",
+                "echo 'Starting Download of jdk'",
+                "wget -q http://cdn.azul.com/zulu/bin/{{user `zulu-release`}}.tar.gz",
+                "echo 'Finished Download of jdk'",
+                "tar xzf {{user `zulu-release`}}.tar.gz",
+                "echo 'Finished Extraction of jdk'",
+                "mv {{user `zulu-release`}} /opt/java",
+                "echo \"export JAVA_HOME=/opt/java/{{user `zulu-release`}}\" >> ~/.bashrc",
+                "echo \"export PATH=\\$JAVA_HOME/bin:$PATH\" >> ~/.bashrc",
+                "mv resources/eidas-middleware-{{user `version`}}.jar /opt/eidas-middleware",
+                "mv resources/password-generator-{{user `version`}}.jar /opt/eidas-middleware",
+                "mv resources/POSeIDAS*.xml /opt/eidas-middleware/config",
+                "mv resources/eidasmiddleware.properties /opt/eidas-middleware/config",
+                "mv resources/application.properties /opt/eidas-middleware/config",
+                "mv resources/configuration-wizard-{{user `version`}}.jar /opt/configuration-wizard",
+                "rm -rf /home/{{user `username`}}/resources",
+                "rm -rf /home/{{user `username`}}/{{user `zulu-release`}}.tar.gz",
+                "history -cw"
+            ],
+            "environment_vars": [
+                "http_proxy=http://10.21.0.8:8080",
+                "https_proxy=http://10.21.0.8:8080"
+            ],
+            "type": "shell",
+            "inline_shebang": "/bin/bash -e"
+        }
+    ]
+}

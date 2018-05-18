@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<saml2p:AuthnRequest 
+    Destination="$Destination"
+    ID="$Id" IssueInstant="$IssuerInstand" Version="2.0"
+    xmlns:saml2p="urn:oasis:names:tc:SAML:2.0:protocol" xmlns:eidas="http://eidas.europa.eu/saml-extensions" 
+    ProviderName="$ProviderName"
+    ForceAuthn="$ForceAuthn"
+    IsPassive="$IsPassive">
+    <saml2:Issuer Format="urn:oasis:names:tc:SAML:2.0:nameid-format:entity"
+        xmlns:saml2="urn:oasis:names:tc:SAML:2.0:assertion">$Issuer</saml2:Issuer>
+    <saml2p:Extensions>
+        $SPType
+        <eidas:RequestedAttributes>
+			$requestAttributes
+        </eidas:RequestedAttributes>
+    </saml2p:Extensions>
+    <saml2p:NameIDPolicy AllowCreate="true"
+        Format="$NameIDPolicy"/>
+    <saml2p:RequestedAuthnContext Comparison="minimum">
+        <saml2:AuthnContextClassRef xmlns:saml2="urn:oasis:names:tc:SAML:2.0:assertion">$AuthClassRef</saml2:AuthnContextClassRef>
+    </saml2p:RequestedAuthnContext>
+</saml2p:AuthnRequest>

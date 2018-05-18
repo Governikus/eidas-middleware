@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<saml2:Assertion xmlns:eidas="http://eidas.europa.eu/attributes/naturalperson" xmlns:saml2="urn:oasis:names:tc:SAML:2.0:assertion" ID="_e8ac6721-610b-4546-b28b-6bcad901c1f4" IssueInstant="2015-07-22T07:58:55.834Z" Version="2.0">
+    <saml2:Issuer>Idp</saml2:Issuer>
+    <saml2:Subject>
+      <saml2:NameID Format="urn:oasis:names:tc:SAML:1.1:nameid-format:X509SubjectName" NameQualifier="Idp">aaaa</saml2:NameID>
+      <saml2:SubjectConfirmation Method="urn:oasis:names:tc:SAML:2.0:cm:bearer">
+        <saml2:SubjectConfirmationData Address="127.0.0.1" NotOnOrAfter="2015-07-22T08:08:55.894Z"/>
+      </saml2:SubjectConfirmation>
+    </saml2:Subject>
+    <saml2:Conditions NotBefore="2015-07-22T07:58:55.834Z" NotOnOrAfter="2015-07-22T08:08:55.884Z">
+      <saml2:AudienceRestriction>
+        <saml2:Audience>aaaa</saml2:Audience>
+      </saml2:AudienceRestriction>
+      <saml2:OneTimeUse/>
+    </saml2:Conditions>
+    <saml2:AuthnStatement AuthnInstant="2015-07-22T07:58:55.834Z">
+      <saml2:AuthnContext>
+        <saml2:AuthnContextClassRef>urn:oasis:names:tc:SAML:2.0:ac:classes:X509</saml2:AuthnContextClassRef>
+        <saml2:AuthnContextDeclRef>urn:oasis:names:tc:SAML:2.0:assertion</saml2:AuthnContextDeclRef>
+      </saml2:AuthnContext>
+    </saml2:AuthnStatement>
+    <saml2:AttributeStatement>
+      <saml2:Attribute FriendlyName="FamilyName" Name="FamilyName" NameFormat="urn:oasis:names:tc:SAML:2.0:attrnameformat:uri">
+        <saml2:AttributeValue xmlns:cbc="urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2" xmlns:cva="http://www.w3.org/ns/corevocabulary/AggregateComponents" xmlns:cvb="http://www.w3.org/ns/corevocabulary/BasicComponents" xmlns:ext="urn:oasis:names:specification:ubl:schema:xsd:CommonExtensionComponents-2" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" languageID="de-DE" xsi:type="eidas:CurrentFamilyNameType">Meyer</saml2:AttributeValue>
+      </saml2:Attribute>
+      <saml2:Attribute FriendlyName="FirstName" Name="FirstName" NameFormat="urn:oasis:names:tc:SAML:2.0:attrnameformat:uri">
+        <saml2:AttributeValue xmlns:cbc="urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2" xmlns:cva="http://www.w3.org/ns/corevocabulary/AggregateComponents" xmlns:cvb="http://www.w3.org/ns/corevocabulary/BasicComponents" xmlns:ext="urn:oasis:names:specification:ubl:schema:xsd:CommonExtensionComponents-2" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" languageID="de-DE" xsi:type="eidas:CurrentGivenNameType">Hans</saml2:AttributeValue>
+      </saml2:Attribute>
+    </saml2:AttributeStatement>
+  </saml2:Assertion>
