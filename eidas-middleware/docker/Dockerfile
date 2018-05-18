@@ -1,4 +1,4 @@
-FROM governikus/eidas-base-image:8u172
+FROM governikus/eidas-base-container:8u172
 MAINTAINER Benny Prange <benny.prange@governikus.de>
 
 # Define the location of the configuration directory inside of the container
@@ -17,7 +17,7 @@ USER eidas-middleware
 WORKDIR /opt/eidas-middleware
 
 # Download the release from github
-RUN wget https://github.com/Governikus/Test-middleware/releases/download/${VERSION}/eidas-middleware.jar
+RUN wget https://github.com/Governikus/eidas-middleware/releases/download/${VERSION}/eidas-middlewarei-{VERSION}.jar
 
 RUN    mv eidas-middleware*.jar eidas-middleware.jar &&\
     mkdir -p ${CONFIG_DIR}
