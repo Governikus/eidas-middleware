@@ -17,7 +17,7 @@ USER eidas-middleware
 WORKDIR /opt/eidas-middleware
 
 # Download the release from github
-RUN wget https://github.com/Governikus/eidas-middleware/releases/download/${VERSION}/eidas-middleware-{VERSION}.jar
+RUN wget https://github.com/Governikus/eidas-middleware/releases/download/${VERSION}/eidas-middleware-${VERSION}.jar
 
 RUN    mv eidas-middleware*.jar eidas-middleware.jar &&\
     mkdir -p ${CONFIG_DIR}
