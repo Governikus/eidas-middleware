@@ -1,4 +1,4 @@
-FROM governikus/eidas-base-container:8u172
+FROM governikus/eidas-base-container:1.0.4-rc.2
 MAINTAINER Benny Prange <benny.prange@governikus.de>
 
 # NOTE: Some ENV variables are set in the parent "eidas-base-image"

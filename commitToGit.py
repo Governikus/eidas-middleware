@@ -1,3 +1,5 @@
+#!/user/bin/env python
+
 import os.path
 import shutil
 import sys
@@ -68,5 +70,5 @@ pretty_print("Creating single commit in git and push this to github")
 os.chdir(git_local_path)
 call(["git", "add", "-A"])
 call(["git", "commit", "-m Release " + tag])
-call(["git", "push"])
+#call(["git", "push"])
 pretty_print("Finished")

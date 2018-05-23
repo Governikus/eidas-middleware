@@ -3,7 +3,7 @@ FROM governikus/zulu-openjdk:8u172
 MAINTAINER Benny Prange <benny.prange@governikus.de>
 
 # Define the application version for the subsequent application images
-ENV VERSION=1.0.3
+ENV VERSION=1.0.4-rc.2
 # Define the spring boot configuration directory
 ENV CONFIG_DIR=/opt/eidas-middleware/configuration
 
