@@ -14,7 +14,7 @@ pretty_print('Starting to copy mercurial to git')
 pretty_print('Cloning eidas-middleware from git to /tmp/eidas-middleware')
 
 git_local_path = "/tmp/eidas-middleware"
-github_url = "git@github.com:Governikus/TEST-middleware.git"
+github_url = "git@github.com:Governikus/eidas-middleware.git"
 hg_tmp_path = "/tmp/eumw"
 
 if os.path.exists(git_local_path):

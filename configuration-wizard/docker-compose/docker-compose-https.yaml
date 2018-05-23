@@ -1,7 +1,7 @@
 version: '3'
 services:
   configuration-wizard:
-    image: "eidas-configuration-wizard"
+    image: "governikus/eidas-configuration-wizard:1.0.4-rc.1"
     ports: 
       - "443:8080"
     environment:

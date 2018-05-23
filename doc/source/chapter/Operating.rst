@@ -17,13 +17,13 @@ After logging in, you will see your :term:`eID Service Provider`. Click on the n
 At the top you can check the connection to the :term:`Authorisation CA`.
 If this check does not succeed, take a look in the log for more details.
 Possible errors are firewalls that block the connection to the :term:`Authorisation CA` or the :term:`Authorisation CA` has not yet stored your client TLS certificate.
-If the error persists, send the log file and your error description to eidas-support@governikus.com.
+If the error persists, send the log file and your error description to eidas-middleware@governikus.com.
 
 However, after a successful connection make sure that you can request the :term:`Authorisation Certificate`.
 To do that, fill in the form `Initial CVC Request to DVCA` with the values that you should have received from the :term:`Authorisation CA`.
 If the CA did not specify a sequence number, you can start with 1. Then click on `Send initial request to DVCA`.
 If this request was unsuccessful, take a look in the log for more details and double check that the country code and CHR Mnemonic are correct.
-If the error persists, send the log file and your error description to eidas-support@governikus.com.
+If the error persists, send the log file and your error description to eidas-middleware@governikus.com.
 
 After a successful initial request the eIDAS Middleware should be ready to receive eIDAS requests from your eIDAS connector.
 
@@ -46,7 +46,7 @@ If you choose to use just the JAR in your own environment, execute the following
 
 If the configuration files are not located in a subdirectory called `config` of your current working directory, you must specify the location of the configuration directory. Note that the path must end with a `/`::
 
-    java -jar eidas-middleware.jar --spring.config.location=file:/path/to/your/configuration-directory/
+    java -jar eidas-middleware.jar --spring.config.additional-location=file:/path/to/your/configuration-directory/
 
 To stop the eIDAS Middleware execute `CTRL+C`.
 Alternatively you can also send `SIGTERM` with `kill [PID of the middleware]`.

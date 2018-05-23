@@ -1,7 +1,7 @@
 version: '3'
 services:
   middleware-application:
-    image: "eidas-middleware-application"
+    image: "governikus/eidas-middleware-application:1.0.4-rc1"
     ports: 
       - "8443:8443"
     volumes:

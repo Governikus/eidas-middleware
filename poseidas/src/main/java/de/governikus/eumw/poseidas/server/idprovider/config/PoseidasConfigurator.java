@@ -28,7 +28,7 @@ import de.governikus.eumw.eidascommon.Utils;
  * Provides configuration for poseidas. Separate configurations may be needed for project specific
  * business delegates. All "worker" classes in poseidas shall not keep an own copy of the configuration (for
  * instance in serialized form) but re-fetch the configuration object from here if necessary.
- * 
+ *
  * @author TT
  */
 public final class PoseidasConfigurator
@@ -82,19 +82,19 @@ public final class PoseidasConfigurator
 
   /**
    * Return the configuration of a given version
-   * 
+   *
    * @return null if there is no such configuration
    */
   private CoreConfigurationDto loadConfig() throws FileNotFoundException, JAXBException
   {
     File configDir = null;
-    if (!Strings.isNullOrEmpty(System.getProperty("spring.config.location")))
+    if (!Strings.isNullOrEmpty(System.getProperty("spring.config.additional-location")))
     {
-      configDir = new File(Utils.prepareSpringConfigLocation(System.getProperty("spring.config.location")));
+      configDir = new File(Utils.prepareSpringConfigLocation(System.getProperty("spring.config.additional-location")));
     }
-    else if (!Strings.isNullOrEmpty(System.getenv("SPRING_CONFIG_LOCATION")))
+    else if (!Strings.isNullOrEmpty(System.getenv("SPRING_CONFIG_ADDITIONAL_LOCATION")))
     {
-      configDir = new File(Utils.prepareSpringConfigLocation(System.getenv("SPRING_CONFIG_LOCATION")));
+      configDir = new File(Utils.prepareSpringConfigLocation(System.getenv("SPRING_CONFIG_ADDITIONAL_LOCATION")));
     }
     else
     {

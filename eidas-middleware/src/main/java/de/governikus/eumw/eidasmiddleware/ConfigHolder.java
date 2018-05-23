@@ -150,13 +150,13 @@ public class ConfigHolder
       holder = new ConfigHolder();
     }
 
-    if (StringUtil.notNullOrEmpty(System.getProperty("spring.config.location")))
+    if (StringUtil.notNullOrEmpty(System.getProperty("spring.config.additional-location")))
     {
-      holder.configDir = new File(Utils.prepareSpringConfigLocation(System.getProperty("spring.config.location")));
+      holder.configDir = new File(Utils.prepareSpringConfigLocation(System.getProperty("spring.config.additional-location")));
     }
-    else if (StringUtil.notNullOrEmpty(System.getenv("SPRING_CONFIG_LOCATION")))
+    else if (StringUtil.notNullOrEmpty(System.getenv("SPRING_CONFIG_ADDITIONAL_LOCATION")))
     {
-      holder.configDir = new File(Utils.prepareSpringConfigLocation(System.getenv("SPRING_CONFIG_LOCATION")));
+      holder.configDir = new File(Utils.prepareSpringConfigLocation(System.getenv("SPRING_CONFIG_ADDITIONAL_LOCATION")));
     }
     else
     {

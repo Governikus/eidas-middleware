@@ -2,7 +2,7 @@ FROM governikus/eidas-base-container:8u172
 MAINTAINER Benny Prange <benny.prange@governikus.de>
 
 # Define the location of the configuration directory inside of the container
-ENV SPRING_CONFIG_LOCATION=file:${CONFIG_DIR}/
+ENV SPRING_CONFIG_ADDITIONAL_LOCATION=file:${CONFIG_DIR}/
 
 # Expose the ports we're interested in
 EXPOSE 8443

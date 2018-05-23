@@ -14,7 +14,7 @@
 
     <groupId>de.governikus.eumw</groupId>
     <artifactId>eumw</artifactId>
-    <version>1.0.3</version>
+    <version>1.0.4-SNAPSHOT</version>
     <packaging>pom</packaging>
 
     <name>EU Middleware</name>
@@ -37,7 +37,7 @@
     <scm>
         <url>https://github.com/Governikus/${project.artifactId}</url>
         <connection>${governikus.scm.connection}</connection>
-      <tag>eumw-1.0.3</tag>
+      <tag>HEAD</tag>
   </scm>
 
     <developers>
@@ -343,8 +343,8 @@
                         <alias>${globalsign.alias}</alias>
                         <storepass>${globalsign.storepass}</storepass>
                         <arguments>
-                            <argument>-J-Dhttp.proxyHost=localhost</argument>
-                            <argument>-J-Dhttp.proxyPort=3128</argument>
+                            <argument>${sign.proxy.host}</argument>
+                            <argument>${sign.proxy.port}</argument>
                         </arguments>
                     </configuration>
                 </plugin>
