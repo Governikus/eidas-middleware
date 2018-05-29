@@ -3,3 +3,10 @@ packer/
 *Jenkinsfile
 .hg/
 
+# IntelliJ project files
+*.iml
+*.iws
+*.ipr
+.idea/
+
+*/_build
