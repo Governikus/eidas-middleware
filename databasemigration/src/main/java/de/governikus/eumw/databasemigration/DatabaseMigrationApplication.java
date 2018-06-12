@@ -54,6 +54,7 @@ public class DatabaseMigrationApplication implements CommandLineRunner
   {
     log.info("Running the database migration for 1.0.1 and 1.0.2 to 1.0.3.");
     log.info("Using datasource URL: {}", datasourceURL);
+
     // Check that there is only one terminal in the database
     if (connector.getTerminalsFromTerminalpermission().size() != 1)
     {
@@ -62,14 +63,27 @@ public class DatabaseMigrationApplication implements CommandLineRunner
       System.exit(1);
     }
 
-    // remove outdated SectorIDs from Blacklistentry before migrating
-    connector.removeOutdatedSectorIDsFromBlacklistentry();
+    boolean migrationSuccessful;
 
-    // remove outdated BlacklistIDs from Blacklistentry before migrating
-    connector.removeOutdatedVersionsFromBlacklistentry();
+    // Check if the blacklist data can be migrated
+    if (connector.checkPrimaryKey())
+    {
+      // remove outdated SectorIDs from Blacklistentry before migrating
+      connector.removeOutdatedSectorIDsFromBlacklistentry();
 
-    // perform the migration
-    if (connector.performMigration())
+      // remove outdated BlacklistIDs from Blacklistentry before migrating
+      connector.removeOutdatedVersionsFromBlacklistentry();
+
+      // perform the migration
+      migrationSuccessful = connector.performMigrationWithData();
+    }
+    else
+    {
+      log.info("The blacklist data will be deleted. Update the blacklist using the web administration interface afterwards.");
+      migrationSuccessful = connector.performMigrationWithoutData();
+    }
+
+    if (migrationSuccessful)
     {
       log.info("Successfully migrated the database.");
     }

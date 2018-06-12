@@ -11,6 +11,7 @@ Contents
     chapter/Requirements
     chapter/Configuration
     chapter/Operating
+    chapter/DemoApplication
     chapter/Changelog
     chapter/glossary
 

@@ -15,8 +15,8 @@ import java.util.Base64;
 import java.util.Collections;
 import java.util.List;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.jdbc.support.rowset.SqlRowSet;
 import org.springframework.stereotype.Repository;
 
 import lombok.extern.slf4j.Slf4j;
@@ -37,10 +37,9 @@ public class DatabaseConnector
 
   /**
    * Default constructor with dependency injection
-   * 
+   *
    * @param jdbcTemplate Used to access the database
    */
-  @Autowired
   public DatabaseConnector(JdbcTemplate jdbcTemplate)
   {
     this.jdbcTemplate = jdbcTemplate;
@@ -86,13 +85,50 @@ public class DatabaseConnector
   }
 
   /**
+   * Check that only SECTORID and SPECIFICID are used for the primary key
+   *
+   * @return true if only SECTORID and SPECIFICID are used for the primary key
+   */
+  public boolean checkPrimaryKey()
+  {
+    SqlRowSet result = jdbcTemplate.queryForRowSet("SELECT * FROM INFORMATION_SCHEMA.CONSTRAINTS WHERE TABLE_NAME = 'BLACKLISTENTRY'");
+    if (!result.next())
+    {
+      return false;
+    }
+
+    boolean correctPrimaryKey = "SECTORID,SPECIFICID".equals(result.getString("COLUMN_LIST"));
+
+    // There must be only one constraint on this table
+    if (result.next())
+    {
+      correctPrimaryKey = false;
+    }
+
+    return correctPrimaryKey;
+  }
+
+  /**
+   * Truncate BLACKLISTENTRY. Delete the column BLACKLISTVERSION from BLACKLISTENTRY, create the column
+   * BLACKLISTVERSION in TERMINALPERMISSION. This must only be used if there is only one terminal available.
+   */
+  public boolean performMigrationWithoutData()
+  {
+    jdbcTemplate.update("TRUNCATE TABLE BLACKLISTENTRY");
+    jdbcTemplate.update("ALTER TABLE BLACKLISTENTRY DROP PRIMARY KEY");
+    jdbcTemplate.update("ALTER TABLE BLACKLISTENTRY ADD PRIMARY KEY (SECTORID,SPECIFICID)");
+    jdbcTemplate.update("ALTER TABLE BLACKLISTENTRY DROP COLUMN BLACKLISTVERSION");
+    jdbcTemplate.update("ALTER TABLE TERMINALPERMISSION ADD BLACKLISTVERSION BIGINT;");
+    int columnCount = getColumnCountForBlacklistentry();
+    return columnCount == 2;
+  }
+
+  /**
    * Delete the column BLACKLISTVERSION from BLACKLISTENTRY, create the column BLACKLISTVERSION in
    * TERMINALPERMISSION. Copy if available the newest value of BLACKLISTVERSION from BLACKLISTENTRY to
    * TERMINALPERMISSION. This must only be used if there is only one terminal available.
-   * 
-   * @return
    */
-  public boolean performMigration()
+  public boolean performMigrationWithData()
   {
     jdbcTemplate.update("ALTER TABLE TERMINALPERMISSION ADD BLACKLISTVERSION BIGINT;");
     List<Long> blacklistversions = jdbcTemplate.queryForList("SELECT DISTINCT BLACKLISTVERSION FROM BLACKLISTENTRY",

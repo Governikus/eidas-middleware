@@ -7,10 +7,13 @@ MAINTAINER Benny Prange <benny.prange@governikus.de>
 USER eidas-middleware
 WORKDIR /opt/eidas-middleware
 
-# Download the release from github
-RUN wget https://github.com/Governikus/eidas-middleware/releases/download/${VERSION}/configuration-wizard-${VERSION}.jar
+# Create the config directory
+RUN mkdir /opt/eidas-middleware/config
 
-RUN    mv configuration-wizard*.jar configuration-wizard.jar &&\
+# Download the release from github
+RUN wget https://github.com/Governikus/eidas-middleware/releases/download/${VERSION}/eidas-demo-${VERSION}.jar
+
+RUN    mv eidas-demo*.jar eidas-demo.jar &&\
     mkdir -p ${CONFIG_DIR}
 
-ENTRYPOINT ["java", "-jar", "-DconfigDirectory=${CONFIG_DIR}",  "./configuration-wizard.jar"]
+ENTRYPOINT ["java", "-jar", "./eidas-demo.jar"]

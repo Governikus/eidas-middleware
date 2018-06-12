@@ -29,7 +29,7 @@ import net.shibboleth.utilities.java.support.xml.XMLParserException;
 
 /**
  * Loads the first metadata.xml file in the configured service provider folder
- * 
+ *
  * @author hohnholt
  */
 @Slf4j
@@ -63,7 +63,8 @@ public class ServiceProviderConfig
     catch (IOException | CertificateException | XMLParserException | UnmarshallingException
       | InitializationException | ComponentInitializationException | ErrorCodeException e)
     {
-      log.error("Cannot parse Serviceprovider config " + files[0], e);
+      log.error("Cannot parse connector metadata {}", files[0], e);
+      throw new IllegalStateException("Cannot parse connector metadata " + files[0], e);
     }
   }
 

@@ -10,61 +10,61 @@
   -->
 
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
-	<modelVersion>4.0.0</modelVersion>
-	<parent>
-		<groupId>de.governikus.eumw</groupId>
-		<artifactId>eumw</artifactId>
-		<version>1.0.4-SNAPSHOT</version>
-	</parent>
-	<artifactId>eidas-demo</artifactId>
+    <modelVersion>4.0.0</modelVersion>
+    <parent>
+        <groupId>de.governikus.eumw</groupId>
+        <artifactId>eumw</artifactId>
+        <version>1.0.4</version>
+    </parent>
+    <artifactId>eidas-demo</artifactId>
 
-	<name>${project.artifactId}</name>
-	<description>A demo service provider for EUMW</description>
+    <name>${project.artifactId}</name>
+    <description>A demo service provider for EUMW</description>
 
-	<dependencies>
-		<dependency>
-			<groupId>de.governikus.eumw</groupId>
-			<artifactId>eidas-common</artifactId>
-		</dependency>
-		<dependency>
-			<groupId>de.governikus.eumw</groupId>
-			<artifactId>eidas-starterkit</artifactId>
-		</dependency>
+    <dependencies>
+        <dependency>
+            <groupId>de.governikus.eumw</groupId>
+            <artifactId>eidas-common</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>de.governikus.eumw</groupId>
+            <artifactId>eidas-starterkit</artifactId>
+        </dependency>
 
-		<dependency>
-			<groupId>org.projectlombok</groupId>
-			<artifactId>lombok</artifactId>
-		</dependency>
+        <dependency>
+            <groupId>org.projectlombok</groupId>
+            <artifactId>lombok</artifactId>
+        </dependency>
 
-		<dependency>
-			<groupId>org.springframework.boot</groupId>
-			<artifactId>spring-boot-starter-web</artifactId>
-			<exclusions>
-			    <exclusion>
-			        <groupId>ch.qos.logback</groupId>
-			        <artifactId>logback-classic</artifactId>
-			    </exclusion>
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-web</artifactId>
+            <exclusions>
+                <exclusion>
+                    <groupId>ch.qos.logback</groupId>
+                    <artifactId>logback-classic</artifactId>
+                </exclusion>
                 <exclusion>
                     <groupId>org.apache.logging.log4j</groupId>
                     <artifactId>log4j-to-slf4j</artifactId>
                 </exclusion>
-			</exclusions>
-		</dependency>
-        
+            </exclusions>
+        </dependency>
+
         <!-- logging -->
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-log4j2</artifactId>
         </dependency>
 
-		<dependency>
-			<groupId>org.springframework.boot</groupId>
-			<artifactId>spring-boot-devtools</artifactId>
-		</dependency>
-	</dependencies>
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-devtools</artifactId>
+        </dependency>
+    </dependencies>
 
-	<build>
-		<finalName>${project.name}</finalName>
+    <build>
+        <finalName>${project.name}</finalName>
 
         <plugins>
             <plugin>
@@ -79,5 +79,29 @@
                 </executions>
             </plugin>
         </plugins>
-	</build>
+    </build>
+    <profiles>
+        <profile>
+            <id>sign</id>
+            <activation>
+                <activeByDefault>false</activeByDefault>
+            </activation>
+            <build>
+                <plugins>
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-jarsigner-plugin</artifactId>
+                        <executions>
+                            <execution>
+                                <id>sign</id>
+                                <goals>
+                                    <goal>sign</goal>
+                                </goals>
+                            </execution>
+                        </executions>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+    </profiles>
 </project>

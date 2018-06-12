@@ -12,15 +12,20 @@ package de.governikus.eumw.eidasdemo;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
-import org.springframework.boot.web.servlet.ServletComponentScan;
-import org.springframework.context.annotation.ComponentScan;
 
+
+/**
+ * Main class for Spring Boot
+ */
 @SpringBootApplication
-@ServletComponentScan
-@ComponentScan(basePackages = {"de.governikus.eumw.eidasdemo"})
-public class EidasDemoApplication {
+public class EidasDemoApplication
+{
 
-    public static void main(String[] args){
-        SpringApplication.run(EidasDemoApplication.class, args);
-    }
+  /**
+   * Main entry point for this application
+   */
+  public static void main(String[] args)
+  {
+    SpringApplication.run(EidasDemoApplication.class, args);
+  }
 }

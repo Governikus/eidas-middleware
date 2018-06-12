@@ -274,7 +274,7 @@ public class TcToken extends HttpServlet
     {
       signer = new EidasSigner(true, ConfigHolder.getAppSignatureKeyPair().getKey(),
                                ConfigHolder.getAppSignatureKeyPair().getCert());
-      EidasResponse rsp = new EidasResponse(reqSP.getAssertionConsumerURL(), reqSP.getAssertionConsumerURL(),
+      EidasResponse rsp = new EidasResponse(reqSP.getAssertionConsumerURL(), reqSP.getEntityID(),
                                             null, samlReqSession.getReqId(), serverurl, EidasLoA.HIGH, signer,
                                             null);
       byte[] eidasResp = rsp.generateErrorRsp(error, msg);

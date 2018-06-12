@@ -18,10 +18,9 @@ import java.security.cert.X509Certificate;
 import java.util.HashMap;
 import java.util.Map;
 
-import javax.servlet.annotation.WebServlet;
-import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import javax.xml.XMLConstants;
 import javax.xml.bind.DatatypeConverter;
 import javax.xml.transform.OutputKeys;
 import javax.xml.transform.Transformer;
@@ -31,7 +30,10 @@ import javax.xml.transform.stream.StreamResult;
 
 import org.opensaml.core.xml.config.XMLObjectProviderRegistrySupport;
 import org.opensaml.core.xml.io.UnmarshallingException;
-import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Controller;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
 import org.w3c.dom.Document;
 
 import de.governikus.eumw.eidascommon.ErrorCodeException;
@@ -54,13 +56,14 @@ import net.shibboleth.utilities.java.support.xml.XMLParserException;
  * the servlet retrieves the data to the corresponding sessionID and displays the result page.<br>
  * The URL this Sevlet is deployed under must match the same origin of the subject URL in the CVC description
  * (Beschreibung des Berechtigungszertifikats).
- * 
+ *
  * @author hme
  * @author prange
  */
 @Slf4j
-@WebServlet("/NewReceiverServlet")
-public class NewReceiverServlet extends HttpServlet
+@Controller
+@RequestMapping("/NewReceiverServlet")
+public class NewReceiverServlet
 {
 
   private static final String UNPARSED = "unparsed";
@@ -97,21 +100,25 @@ public class NewReceiverServlet extends HttpServlet
   /**
    * Default constructor for spring autowiring
    */
-  @Autowired
   public NewReceiverServlet(SamlExampleHelper helper)
   {
     this.helper = helper;
   }
 
-
-  @Override
-  protected void doGet(HttpServletRequest request, HttpServletResponse response)
+  /**
+   * Show the decrypted eIDAS response after being redirected from this post request
+   */
+  @GetMapping
+  public void doGet(HttpServletRequest request, HttpServletResponse response)
   {
     processRequest(request, response, false);
   }
 
-  @Override
-  protected void doPost(HttpServletRequest req, HttpServletResponse resp)
+  /**
+   * The Middlware ResponseSender performs a post request with the SAML response to this endpoint
+   */
+  @PostMapping
+  public void doPost(HttpServletRequest req, HttpServletResponse resp)
   {
     processRequest(req, resp, true);
   }
@@ -175,9 +182,6 @@ public class NewReceiverServlet extends HttpServlet
 
       extractDataFromResponse(sessionID, samlResponse);
 
-      // forward the browser to the result page. at this position a HTTP 302 is needed you are not allowed
-      // to do a HTTP 200 and show the errorsMap you want to show. The URL this forward shows to will be
-      // opened by the web browser.
       forwardToURL(request, response, sessionID);
     }
     catch (Exception e)
@@ -217,7 +221,7 @@ public class NewReceiverServlet extends HttpServlet
 
   /**
    * Load the data or errors with the sessionID and display this in the user's browser.
-   * 
+   *
    * @param response response object
    * @param sessionID the sessionID
    */
@@ -279,7 +283,7 @@ public class NewReceiverServlet extends HttpServlet
 
   /**
    * Convert the byte array to String containing the xml data
-   * 
+   *
    * @param value the byte array containing the xml data
    * @return the xml data as a String
    */
@@ -288,7 +292,11 @@ public class NewReceiverServlet extends HttpServlet
     try
     {
       Document doc = XMLObjectProviderRegistrySupport.getParserPool().parse(new ByteArrayInputStream(value));
-      Transformer trans = TransformerFactory.newInstance().newTransformer();
+
+      TransformerFactory transformerFactory = TransformerFactory.newInstance();
+      transformerFactory.setFeature(XMLConstants.FEATURE_SECURE_PROCESSING, true);
+
+      Transformer trans = transformerFactory.newTransformer();
       trans.setOutputProperty(OutputKeys.INDENT, "yes");
       ByteArrayOutputStream bout = new ByteArrayOutputStream();
       trans.transform(new DOMSource(doc), new StreamResult(bout));

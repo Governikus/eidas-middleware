@@ -82,15 +82,15 @@ This way you can stop and remove the middleware Docker container and create a ne
 
 To run the eIDAS Middleware, execute the following command.
 It will mount the named volumes containing the database and configuration in the container
-and the application will be available on port 8443 on . ::
+and the application will be available on port 8443. ::
 
-    docker run --rm -it -v eidas-configuration:/opt/eidas-middleware/configuration -v eidas-database:/opt/eidas-middleware/database -p 8443:8443 --name eidas-middleware-application eidas-middleware-application
+    docker run --rm -it -v eidas-configuration:/opt/eidas-middleware/configuration -v eidas-database:/opt/eidas-middleware/database -p 8443:8443 --name eidas-middleware-application governikus/eidas-middleware-application:1.0.4
 
 To stop and remove the container, just hit ``CTRL+C``.
 
 To keep the container running longer without being attached to the STDOUT and STDERR, change the command to the following::
 
-    docker run -d -v eidas-configuration:/opt/eidas-middleware/configuration -v eidas-database:/opt/eidas-middleware/database -p 8443:8443 --name eidas-middleware-application eidas-middleware-application
+    docker run -d -v eidas-configuration:/opt/eidas-middleware/configuration -v eidas-database:/opt/eidas-middleware/database -p 8443:8443 --name eidas-middleware-application governikus/eidas-middleware-application:1.0.4
 
 For more information on starting and stopping containers and viewing the logs,
 see the `Docker Docs <https://docs.docker.com/engine/reference/run/>`_.
@@ -134,7 +134,7 @@ Scalability
 ^^^^^^^^^^^
 The performance of the eIDAS Middleware improves by adding more memory (RAM) and using a faster CPU.
 In case the memory configuration has changed, the server needs to be restarted.
-To start the JVM with more memory, add ``-Xmx`` with the new maximum memory size to the start command, e.g. ``java -Xmx8g -jar eidas-middleware-1.0.3.jar`` for 8 GB.
+To start the JVM with more memory, add ``-Xmx`` with the new maximum memory size to the start command, e.g. ``java -Xmx8g -jar eidas-middleware-1.0.4.jar`` for 8 GB.
 
 
 Monitoring
@@ -161,3 +161,32 @@ The following example will show the total RAM usage:
 
 .. hint::
     If you want to use Nagios please refer to `Nagios Website <https://www.nagios.com/solutions/snmp-monitoring/>`_
+
+
+.. _database_migration:
+
+Migration Instructions
+----------------------
+In version 1.0.3 the database schema was changed to improve the handling of productive blacklists.
+This means that you must perform a database migration when you want to upgrade a previous eIDAS Middleware Application to version 1.0.3 and later.
+
+The database migration tool is included in every release and can be found on github.
+
+The database migration tool needs to be configured before performing the migration.
+Because this tool uses Spring Boot as well, the configuration is done in the ``application.properties`` file that must be present either in the working directory or in a subdirectory of the working directory called ``config``.
+The configuration file must contain the following values. The first three values can be copied from the ``application.properties`` file that is used for the eIDAS Middleware Application. ::
+
+    spring.datasource.url=
+    spring.datasource.username=
+    spring.datasource.password=
+    spring.datasource.driver-class-name=org.h2.Driver
+    spring.jpa.database-platform=org.hibernate.dialect.H2Dialect
+    spring.jpa.hibernate.ddl-auto=update
+    spring.jpa.hibernate.naming.implicit-strategy=org.hibernate.boot.model.naming.ImplicitNamingStrategyLegacyJpaImpl
+    spring.jpa.hibernate.naming.physical-strategy=org.hibernate.boot.model.naming.PhysicalNamingStrategyStandardImpl
+
+Before running the migration tool, please create a backup of your database.
+Stop the eIDAS Middleware Application and copy the database file to your backup location, e.g. ``cp /opt/eidas-middleware/database/eidasmw.mv.db /path/to/your/backup-location/eidasmw.mv.db``.
+
+To perform the migration, copy the database migration JAR file to the directory where your configuration file is available and execute the command ``java -jar database-migration-1.0.4.jar``.
+If there are errors in the log output, please send the complete log output and some information on your environment to eidas-middleware@governikus.com.

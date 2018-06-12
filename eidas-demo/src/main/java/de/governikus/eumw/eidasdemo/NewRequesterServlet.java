@@ -22,8 +22,6 @@ import java.security.cert.CertificateEncodingException;
 import java.util.HashMap;
 import java.util.UUID;
 
-import javax.servlet.annotation.WebServlet;
-import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.xml.transform.TransformerException;
@@ -33,7 +31,8 @@ import org.opensaml.core.config.InitializationException;
 import org.opensaml.core.xml.io.MarshallingException;
 import org.opensaml.core.xml.io.UnmarshallingException;
 import org.opensaml.xmlsec.signature.support.SignatureException;
-import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Controller;
+import org.springframework.web.bind.annotation.GetMapping;
 
 import de.governikus.eumw.eidascommon.HttpRedirectUtils;
 import de.governikus.eumw.eidascommon.Utils;
@@ -47,18 +46,16 @@ import net.shibboleth.utilities.java.support.xml.XMLParserException;
 
 
 /**
- * This is how to send aeIDAS SAML Request in HTTP Redirect binding to the eIDAS Middleware.<br>
+ * This is how to send an eIDAS SAML Request in HTTP Redirect binding to the eIDAS Middleware.<br>
  * This servlet generates a eIDAS SAML Request and the user is forwarded to the eIDAS Middleware in a HTTP
- * redirect. <br>
- * The URL this Sevlet is deployed under must match the same origin of the subject URL in the CVC description
- * (Beschreibung des Berechtigungszertifikats).
- * 
+ * redirect.
+ *
  * @author hme
  * @author prange
  */
 @Slf4j
-@WebServlet("/NewRequesterServlet")
-public class NewRequesterServlet extends HttpServlet
+@Controller
+public class NewRequesterServlet
 {
 
   /**
@@ -67,28 +64,18 @@ public class NewRequesterServlet extends HttpServlet
   private final SamlExampleHelper helper;
 
   /**
-   * This field has nothing to do with SAML: see JAVA doc for meaning
-   */
-  private static final long serialVersionUID = 1L;
-
-  /**
    * Default constructor for spring autowiring
    */
-  @Autowired
   public NewRequesterServlet(SamlExampleHelper helper)
   {
     this.helper = helper;
   }
 
-
   /**
-   * This method is called when a get request for this servlet arrives at the server. It creates a SAML
-   * request and displays a link for the user to get redirected to the eIDAS Middleware.
-   * 
-   * @see HttpServlet#doGet(HttpServletRequest request, HttpServletResponse response)
+   * Start the authorisation procedure
    */
-  @Override
-  protected void doGet(HttpServletRequest request, HttpServletResponse response)
+  @GetMapping("/NewRequesterServlet")
+  public void doGet(HttpServletRequest request, HttpServletResponse response)
   {
     byte[] samlRequest;
 
@@ -128,8 +115,7 @@ public class NewRequesterServlet extends HttpServlet
     try
     {
       // Create the URL used for the HTTP redirect binding. This URL sends the SAML Request to the Governikus
-      // poseidas and contains a signature with the Service providers private key over this Request and an
-      // additional parameter. The SAML request is base64 encoded any inflated.
+      // eIDAS Middleware and contains a signature generated with the demo application's private key.
       String query = HttpRedirectUtils.createQueryString(helper.serverSamlReceiverUrl,
                                                          samlRequest,
                                                          true,
@@ -140,7 +126,7 @@ public class NewRequesterServlet extends HttpServlet
 
 
       String html = "<!DOCTYPE html>\n" + "<html>\n" + "<body>\n" + "\n"
-                    + "<a href=\"EUMWREQUESTRECEIVER\">Go to the eu middleware</a>\n" + "\n" + "</body>\n"
+                    + "<a href=\"EUMWREQUESTRECEIVER\">Go to the eIDAS Middleware</a>\n" + "\n" + "</body>\n"
                     + "</html>";
       InputStream htmlStream = new ByteArrayInputStream(html.getBytes(StandardCharsets.UTF_8));
       BufferedReader reader = new BufferedReader(new InputStreamReader(htmlStream, StandardCharsets.UTF_8));

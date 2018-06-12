@@ -11,6 +11,7 @@
 package de.governikus.eumw.databasemigration;
 
 import static org.hamcrest.CoreMatchers.is;
+import static org.hamcrest.CoreMatchers.nullValue;
 import static org.junit.Assert.assertThat;
 
 import java.nio.charset.StandardCharsets;
@@ -63,9 +64,26 @@ public class DatabaseConnectorTest
   @Test
   public void testMigration()
   {
-    // perform the migration
-    assertThat("Migration is successful", connector.performMigration(), is(true));
+    // Check that the primary key is correct
+    assertThat("Primary key should be correct", connector.checkPrimaryKey(), is(true));
 
+    // perform the migration
+    assertThat("Migration is successful", connector.performMigrationWithData(), is(true));
+
+    checkSchemaChanges();
+
+    // check that the value from the old columns is copied
+    long blacklistversion = jdbcTemplate.queryForObject("SELECT BLACKLISTVERSION FROM TERMINALPERMISSION WHERE REFID = ?",
+                                                        Long.TYPE,
+                                                        "test");
+    assertThat("The old value must be copied", blacklistversion, is(1337L));
+
+    // Check that the primary key is correct
+    assertThat("Primary key should be correct", connector.checkPrimaryKey(), is(true));
+  }
+
+  private void checkSchemaChanges()
+  {
     // check that the column in BLACKLISTENTRY is deleted
     List<String> columnsInBlacklistentry = getColumnsFromTable("SELECT * FROM BLACKLISTENTRY");
     assertThat("Only SECTORID and SPECIFICID must be present",
@@ -77,12 +95,6 @@ public class DatabaseConnectorTest
     assertThat("ONLY REFID, SECTORID and BLACKLISTVERSION must be present",
                columnsInTerminalpermission,
                Matchers.containsInAnyOrder("REFID", "SECTORID", "BLACKLISTVERSION"));
-
-    // check that the value from the old columns is copied
-    long blacklistversion = jdbcTemplate.queryForObject("SELECT BLACKLISTVERSION FROM TERMINALPERMISSION WHERE REFID = ?",
-                                                        Long.TYPE,
-                                                        "test");
-    assertThat("The old value must be copied", blacklistversion, is(1337L));
   }
 
   private List<String> getColumnsFromTable(String query)
@@ -183,4 +195,27 @@ public class DatabaseConnectorTest
     return jdbcTemplate.queryForList("SELECT DISTINCT (BLACKLISTVERSION) FROM BLACKLISTENTRY", Long.TYPE);
   }
 
+  /**
+   * Check the case that the primary key contains all three columns.
+   */
+  @Test
+  public void testFalsePrimaryKey()
+  {
+    jdbcTemplate.update("ALTER TABLE BLACKLISTENTRY DROP PRIMARY KEY");
+    jdbcTemplate.update("ALTER TABLE BLACKLISTENTRY ADD PRIMARY KEY (SECTORID,SPECIFICID,BLACKLISTVERSION)");
+
+    assertThat("Primary key should be corrupted", connector.checkPrimaryKey(), is(false));
+    connector.performMigrationWithoutData();
+
+    checkSchemaChanges();
+
+    // Check that the value for the BLACKLISTVERSION is null
+    Long blacklistversion = jdbcTemplate.queryForObject("SELECT BLACKLISTVERSION FROM TERMINALPERMISSION WHERE REFID = ?",
+                                                        Long.TYPE,
+                                                        "test");
+    assertThat("The old value must be copied", blacklistversion, nullValue());
+
+    // Check that the primary key is correct
+    assertThat("Primary key must be correct", connector.checkPrimaryKey(), is(true));
+  }
 }

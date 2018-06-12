@@ -170,7 +170,7 @@ public class SamlExampleHelper
   /**
    * Return the keystore type. The keystore must be of the type JKS or PKCS12, otherwise an IOException is
    * thrown.
-   * 
+   *
    * @param path Path on the filesystem
    * @return the Keystore type
    * @throws IOException Thrown if the path does not end with jks, p12 or pfx.
@@ -195,7 +195,6 @@ public class SamlExampleHelper
    * @param response HTTPServletResponse object
    * @param errorCode main code or status
    * @param details further information about the error
-   * @throws IOException
    */
   public void showErrorPage(HttpServletResponse response, String errorCode, String... details)
   {
@@ -225,7 +224,7 @@ public class SamlExampleHelper
 
   /**
    * Make sure no exception is thrown for a HTTPServletResponse
-   * 
+   *
    * @param response The response that should be submitted
    */
   void handleResponseException(HttpServletResponse response)

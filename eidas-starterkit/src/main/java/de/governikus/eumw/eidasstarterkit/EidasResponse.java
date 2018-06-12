@@ -131,16 +131,16 @@ public class EidasResponse
   }
 
   EidasResponse(List<EidasAttribute> att,
-                       String destination,
-                       String recipient,
-                       EidasNameId nameid,
-                       String inResponseTo,
-                       String issuer,
-                       EidasLoA loa,
-                       EidasSigner signer,
-                       EidasEncrypter encrypter)
+                String destination,
+                String recipient,
+                EidasNameId nameid,
+                String inResponseTo,
+                String issuer,
+                EidasLoA loa,
+                EidasSigner signer,
+                EidasEncrypter encrypter)
   {
-    id = "" + Utils.generateUniqueID();
+    id = "_" + Utils.generateUniqueID();
     this.nameId = nameid;
     this.destination = destination;
     this.recipient = recipient;
