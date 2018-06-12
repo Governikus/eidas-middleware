@@ -48,7 +48,7 @@ public class EidasSigner
   private final SigEntryType sigType;
 
   static {
-    String envHashSetting = System.getenv("EIDAS_SIGNER_HASH_ALGORITHM");
+    String envHashSetting = System.getenv("EIDAS_SIGNER_DEFAULT_HASH_ALGORITHM");
     defaultHashAlgo = envHashSetting != null ? envHashSetting : defaultHashAlgo;
   }
 
