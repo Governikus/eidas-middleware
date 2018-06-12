@@ -10,7 +10,6 @@
 
 package de.eumw.password_generator;
 
-import org.apache.log4j.BasicConfigurator;
 import org.springframework.security.crypto.bcrypt.BCrypt;
 
 import lombok.extern.slf4j.Slf4j;
@@ -29,7 +28,6 @@ public class BCryptPasswordGenerator
 //Generate password
   public static void main(String[] args)
   {
-    BasicConfigurator.configure();
     if (args.length != 1 || containsHelp(args[0]))
     {
       printUsage();
