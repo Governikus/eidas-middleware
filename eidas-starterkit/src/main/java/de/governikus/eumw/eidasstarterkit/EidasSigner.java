@@ -23,6 +23,11 @@ public class EidasSigner
 {
 
   /**
+   * The default hash algoritm. This value can be overridden by environment variable.
+   */
+  private static String defaultHashAlgo="SHA256-PSS";
+
+  /**
    * signature key
    */
   private final PrivateKey sigKey;
@@ -42,6 +47,11 @@ public class EidasSigner
    */
   private final SigEntryType sigType;
 
+  static {
+    String envHashSetting = System.getenv("EIDAS_SIGNER_DEFAULT_HASH_ALGORITHM");
+    defaultHashAlgo = envHashSetting != null ? envHashSetting : defaultHashAlgo;
+  }
+
   private EidasSigner(boolean includeCert, PrivateKey key, X509Certificate cert, String digestAlg)
   {
     if (key == null || cert == null || digestAlg == null)
@@ -60,14 +70,14 @@ public class EidasSigner
    * using a cert if a RSA Key or http://www.w3.org/2001/04/xmldsig-more#ecdsa-sha256 if using a cert with a
    * EC key. The canonicalization algorithm is set to http://www.w3.org/2001/10/xml-exc-c14n# and the digest
    * algorithm to http://www.w3.org/2001/04/xmlenc#sha256
-   * 
+   *
    * @param includeCert
    * @param key
    * @param cert
    */
   public EidasSigner(boolean includeCert, PrivateKey key, X509Certificate cert)
   {
-    this(includeCert, key, cert, "SHA256-PSS");
+    this(includeCert, key, cert, defaultHashAlgo);
   }
 
   EidasSigner(PrivateKey key, X509Certificate cert)
