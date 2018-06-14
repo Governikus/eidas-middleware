@@ -7,7 +7,7 @@
         <saml2:SubjectConfirmation Method="urn:oasis:names:tc:SAML:2.0:cm:bearer">
             <saml2:SubjectConfirmationData InResponseTo="$InResponseTo"
                 NotOnOrAfter="$NotOnOrAfter"
-                Recipient="$Recipient"/>
+                Recipient="$Destination"/>
         </saml2:SubjectConfirmation>
     </saml2:Subject>
     <saml2:Conditions NotBefore="$NotBefore" NotOnOrAfter="$NotOnOrAfter">

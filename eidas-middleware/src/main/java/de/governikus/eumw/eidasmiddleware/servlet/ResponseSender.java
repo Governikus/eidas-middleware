@@ -421,8 +421,7 @@ public class ResponseSender extends HttpServlet
     UnmarshallingException, EncryptionException, MarshallingException, SignatureException,
     TransformerFactoryConfigurationError, TransformerException, ComponentInitializationException
   {
-    String serverurl = Utils.createOwnURLWithContextPath(req)
-                       + "/Metadata";
+    String serverurl = Utils.getMiddlewareServiceEntityId(req);
 
     EidasSigner signer = new EidasSigner(true, ConfigHolder.getAppSignatureKeyPair().getKey(),
                                          ConfigHolder.getAppSignatureKeyPair().getCert());

@@ -80,7 +80,7 @@ public class Metadata extends HttpServlet
     try
     {
       byte[] out = EidasSaml.createMetaDataService("_eumiddleware",
-                                                   request.getRequestURL().toString(),
+                                                   Utils.getMiddlewareServiceEntityId(request),
                                                    Constants.parse("2020-12-31T0:00:00.000Z"),
                                                    ConfigHolder.getSignatureCert(),
                                                    ConfigHolder.getDecryptionCert(),

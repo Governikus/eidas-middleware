@@ -580,6 +580,15 @@ public final class Utils
     return createOwnUrlPrefix(req) + req.getContextPath();
   }
 
+  public static String getMiddlewareServiceEntityId(HttpServletRequest req){
+    String envEntityId=getMiddlewareServiceEntityId();
+    return envEntityId != null ? envEntityId : createOwnURLWithContextPath(req) + "/Metadata";
+  }
+
+  public static String getMiddlewareServiceEntityId(){
+    return System.getenv("SERVICE_IDP_ENTITY_ID");
+  }
+
   /**
    * Returns an HTML page for an error case.
    */
