@@ -547,8 +547,7 @@ public class ResponseSender extends HttpServlet
     log.warn(requestInfo(reqSP, reqRelayState));
     log.warn(error.toDescription(msg));
     response.setStatus(400);
-    String serverurl = Utils.createOwnURLWithContextPath(req)
-            + "/Metadata";
+    String serverurl = Utils.getMiddlewareServiceEntityId(req);
     EidasSigner signer;
     try
     {
