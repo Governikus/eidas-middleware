@@ -11,6 +11,7 @@
 package de.governikus.eumw.eidasstarterkit;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNull;
 
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
@@ -295,7 +296,7 @@ public class TestEidasSaml
     EidasResponse result = EidasResponse.parse(new ByteArrayInputStream(response), keypair, cert);
 
     assertEquals(result.getDestination(), destination);
-    assertEquals(result.getNameId().getValue(), nameid.getValue());
+    assertNull(result.getNameId());
     assertEquals(result.getIssuer(), issuer);
     assertEquals(result.getInResponseTo(), inResponseTo);
 
