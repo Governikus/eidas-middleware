@@ -22,7 +22,9 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.net.URL;
 import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
+import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.security.KeyStore;
 import java.security.KeyStoreException;
@@ -31,7 +33,6 @@ import java.security.UnrecoverableKeyException;
 import java.security.cert.CertificateException;
 import java.security.cert.X509Certificate;
 import java.util.List;
-import java.util.Locale;
 import java.util.Properties;
 
 import javax.xml.bind.JAXBException;
@@ -46,6 +47,7 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.security.crypto.bcrypt.BCrypt;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 
+import com.gargoylesoftware.htmlunit.WebAssert;
 import com.gargoylesoftware.htmlunit.html.DomElement;
 import com.gargoylesoftware.htmlunit.html.HtmlButton;
 import com.gargoylesoftware.htmlunit.html.HtmlFileInput;
@@ -157,6 +159,11 @@ public class CompleteUserJourneyTest extends AbstractWebTest // NOPMD
   private static final String SERVICEPROVIDER_ENTITY_ID = "myEntityID";
 
   /**
+   * the server url used in the poseidas.xml and the eidasmiddleware.properties
+   */
+  private static final String SERVER_URL = "http://myhost:8443";
+
+  /**
    * password for accessing the keystores in the resources
    */
   private static final String DEFAULT_KEYSTORE_PASSWORD = "123456";
@@ -209,6 +216,51 @@ public class CompleteUserJourneyTest extends AbstractWebTest // NOPMD
     validateApplicationProperties();
     validatePoseidasData();
     validateEidasMiddlewareProperties();
+
+    uploadNewMetadata();
+  }
+
+  private void uploadNewMetadata() throws IOException
+  {
+    // check that there is only one metadata file
+    Path path = Paths.get(getTempDirectory(), "serviceprovider-metadata");
+    assertEquals(path.toFile().listFiles().length,
+                 1,
+                 "There must be exactly one service provider metadata file");
+
+    // Clear cookies to start from the first page
+    getWebClient().getCookieManager().clearCookies();
+    HtmlPage currentPage = getWebClient().getPage(getRequestUrl("/"));
+
+    setTextValue(currentPage, "configDirectory.configDirectory", getTempDirectory());
+    // go to upload existing config
+    currentPage = click(currentPage, Button.NEXT_PAGE);
+    // go to application.properties
+    currentPage = click(currentPage, Button.NEXT_PAGE);
+    // go to POSeIDAS.xml
+    currentPage = click(currentPage, Button.NEXT_PAGE);
+    // go to eidasmiddleware.properties
+    currentPage = click(currentPage, Button.NEXT_PAGE);
+
+    // Upload new metadata
+    String newMetadataContent = "<newMetadata/>";
+    Path newMetadataFile = Files.write(Paths.get(getTempDirectory(), "newMetadata.xml"),
+                                       newMetadataContent.getBytes(StandardCharsets.UTF_8));
+
+    HtmlFileInput metadataFileInput = (HtmlFileInput)currentPage.getElementById("serviceProviderMetadataFile");
+    metadataFileInput.setFiles(newMetadataFile.toFile());
+
+    // go to save page
+    currentPage = click(currentPage, Button.NEXT_PAGE);
+    WebAssert.assertTextPresent(currentPage, "Save location");
+    click(currentPage, Button.SAVE);
+
+    assertEquals(path.toFile().listFiles().length,
+                 1,
+                 "There must be exactly one service provider metadata file");
+    assertEquals(new String(Files.readAllBytes(path.resolveSibling("newMetadata.xml"))),
+                 newMetadataContent,
+                 "New content expected");
   }
 
   /**
@@ -290,7 +342,9 @@ public class CompleteUserJourneyTest extends AbstractWebTest // NOPMD
     setTextValue(currentPageWithKeystore, adminUsernameFieldId, "poseidasUsername");
     setPasswordValue(currentPageWithKeystore, adminPasswordFieldId, "poseidasPassword");
     setTextValue(currentPageWithKeystore, logFileFieldId, "logFilePath");
-    setTextValue(currentPageWithKeystore, additionalPropertiesFieldId, "logging.level.de.governikus=DEBUG\nlogging.level.foo.bar=ERROR");
+    setTextValue(currentPageWithKeystore,
+                 additionalPropertiesFieldId,
+                 "logging.level.de.governikus=DEBUG\nlogging.level.foo.bar=ERROR");
 
     return click(currentPageWithKeystore, Button.NEXT_PAGE);
   }
@@ -351,7 +405,7 @@ public class CompleteUserJourneyTest extends AbstractWebTest // NOPMD
 
     // fill in form
     HtmlPage selectedRadioButtonPage = setRadioButton(allFilesUploaded, dvcaBudruFieldId);
-    setTextValue(selectedRadioButtonPage, serverUrlFieldId, "http://myhost:8443");
+    setTextValue(selectedRadioButtonPage, serverUrlFieldId, SERVER_URL);
     setTextValue(selectedRadioButtonPage, entityIdFieldId, SERVICEPROVIDER_ENTITY_ID);
     setSelectValue(selectedRadioButtonPage, blackListFieldId, blacklist);
     setSelectValue(selectedRadioButtonPage, masterListFieldId, masterlist);
@@ -492,7 +546,7 @@ public class CompleteUserJourneyTest extends AbstractWebTest // NOPMD
                  applicationProperties.remove(ApplicationPropertiesIdentifier.ADMIN_USERNAME.getPropertyName()),
                  VALIDATE_APPLICATION_PROPERTIES_MESSAGE);
     assertTrue(BCrypt.checkpw("poseidasPassword",
-            (String)applicationProperties.remove(ApplicationPropertiesIdentifier.ADMIN_PASSWORD.getPropertyName())),
+                              (String)applicationProperties.remove(ApplicationPropertiesIdentifier.ADMIN_PASSWORD.getPropertyName())),
                VALIDATE_APPLICATION_PROPERTIES_MESSAGE);
     assertEquals("logFilePath",
                  applicationProperties.remove(ApplicationPropertiesIdentifier.LOGGING_FILE.getPropertyName()),
@@ -692,6 +746,9 @@ public class CompleteUserJourneyTest extends AbstractWebTest // NOPMD
       eidasProperties.load(eidasInputStream);
     }
 
+    assertEquals(SERVER_URL,
+                 eidasProperties.getProperty(MiddlewarePropertiesIdentifier.SERVER_URL.name()),
+                 VALIDATE_MIDDLEWARE_PROPERTIES_MESSAGE);
     assertEquals(SERVICEPROVIDER_ENTITY_ID,
                  eidasProperties.getProperty(MiddlewarePropertiesIdentifier.ENTITYID_INT.name()),
                  VALIDATE_MIDDLEWARE_PROPERTIES_MESSAGE);

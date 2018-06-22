@@ -14,7 +14,10 @@ import java.security.Security;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.boot.web.server.WebServerFactoryCustomizer;
 import org.springframework.boot.web.servlet.ServletComponentScan;
+import org.springframework.boot.web.servlet.server.ConfigurableServletWebServerFactory;
+import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.transaction.annotation.EnableTransactionManagement;
 
@@ -28,6 +31,11 @@ import de.governikus.eumw.eidascommon.Utils;
 public class EIDASMiddlewareApplication
 {
 
+  /**
+   * The context path of the eIDAS Middleware
+   */
+  public static final String CONTEXT_PATH = "/eidas-middleware";
+
   public static void main(String[] args)
   {
     System.setProperty("jdk.tls.namedGroups", "secp521r1,secp384r1,secp256r1,secp224r1");
@@ -39,5 +47,14 @@ public class EIDASMiddlewareApplication
     Security.setProperty("crypto.policy", "unlimited");
 
     SpringApplication.run(EIDASMiddlewareApplication.class, args);
+  }
+
+  /**
+   * Set the context path programmatically
+   */
+  @Bean
+  public WebServerFactoryCustomizer<ConfigurableServletWebServerFactory> webServerFactoryCustomizer()
+  {
+    return factory -> factory.setContextPath(CONTEXT_PATH);
   }
 }

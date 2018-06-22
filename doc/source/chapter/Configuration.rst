@@ -147,6 +147,7 @@ You can add these additional properties in the text area at the bottom.
 On the next page the eID server of the eIDAS Middleware is configured.
 
 The server URL is important especially if the middleware is running behind a reverse proxy.
+It will be used for the POSeIDAS.xml and for SERVER_URL in the eidasmiddleware.properties.
 
 The entity ID is used in the web admin of the middleware, you can use something like `providerA`.
 
@@ -258,6 +259,10 @@ Additional details:
 #.  **ENTITYID_INT**
 
     Only change this value if you have changed the value ``entityID`` in the ``POSeIDAS.xml``.
+
+#. **SERVER_URL**
+
+    This value is used for the URL in the Middelware Metadata. Use the following format: https://servername:port
 
 #.  **MIDDLEWARE_SIGN_KEY**
 

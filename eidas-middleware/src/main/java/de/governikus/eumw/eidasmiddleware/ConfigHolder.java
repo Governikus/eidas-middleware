@@ -93,6 +93,11 @@ public class ConfigHolder
   private static final String KEY_ENTITYID_INT = "ENTITYID_INT";
 
   /**
+   * Eu Middleware ENTITYID to be used towards POSeIDAS
+   */
+  private static final String KEY_SERVER_URL = "SERVER_URL";
+
+  /**
    * Country Code (of the country where the middleware is deployed).
    */
   private static final String KEY_COUNTRYCODE = "COUNTRYCODE";
@@ -130,6 +135,8 @@ public class ConfigHolder
   private EidasContactPerson contactPerson = null;
 
   private String entityIdInt = null;
+
+  private String serverURL;
 
   private String countryCode = null;
 
@@ -324,6 +331,18 @@ public class ConfigHolder
       ConfigHolder.holder.entityIdInt = ConfigHolder.holder.properties.getProperty(KEY_ENTITYID_INT);
     }
     return ConfigHolder.holder.entityIdInt;
+  }
+
+  /**
+   * Return the value for SERVER_URL with the default context path
+   */
+  public static synchronized String getServerURLWithContextPath()
+  {
+    if (ConfigHolder.holder.serverURL == null)
+    {
+      ConfigHolder.holder.serverURL = ConfigHolder.holder.properties.getProperty(KEY_SERVER_URL);
+    }
+    return ConfigHolder.holder.serverURL + EIDASMiddlewareApplication.CONTEXT_PATH;
   }
 
   public static synchronized String getCountryCode()

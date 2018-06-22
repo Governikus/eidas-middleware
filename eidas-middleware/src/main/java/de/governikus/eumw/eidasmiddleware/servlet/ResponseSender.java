@@ -81,7 +81,7 @@ import net.shibboleth.utilities.java.support.xml.XMLParserException;
 /**
  * Servlet implementation class ResponseSender
  */
-@WebServlet("/ResponseSender")
+@WebServlet(ResponseSender.RESPONSE_SENDER)
 @Slf4j
 public class ResponseSender extends HttpServlet
 {
@@ -95,6 +95,8 @@ public class ResponseSender extends HttpServlet
   private static final long serialVersionUID = 1L;
 
   private static final String PREFIX_ERROR = "ERROR:";
+
+  public static final String RESPONSE_SENDER = "/ResponseSender";
 
   private final SessionStore store;
 
@@ -421,9 +423,6 @@ public class ResponseSender extends HttpServlet
     UnmarshallingException, EncryptionException, MarshallingException, SignatureException,
     TransformerFactoryConfigurationError, TransformerException, ComponentInitializationException
   {
-    String serverurl = Utils.createOwnURLWithContextPath(req)
-                       + "/Metadata";
-
     EidasSigner signer = new EidasSigner(true, ConfigHolder.getAppSignatureKeyPair().getKey(),
                                          ConfigHolder.getAppSignatureKeyPair().getCert());
     EidasEncrypter encrypter = new EidasEncrypter(true, reqSP.getEncryptionCert());
@@ -432,7 +431,8 @@ public class ResponseSender extends HttpServlet
                                                 reqSP.getAssertionConsumerURL(),
                                                 reqSP.getEntityID(),
                                                 nameId,
-                                                serverurl,
+                                                ConfigHolder.getServerURLWithContextPath()
+                                                        + Metadata.METADATA,
                                                 EidasLoA.HIGH,
                                                 samlReqSession.getReqId(),
                                                 encrypter,
@@ -548,16 +548,15 @@ public class ResponseSender extends HttpServlet
     log.warn(requestInfo(reqSP, reqRelayState));
     log.warn(error.toDescription(msg));
     response.setStatus(400);
-    String serverurl = Utils.createOwnURLWithContextPath(req)
-            + "/Metadata";
     EidasSigner signer;
     try
     {
       signer = new EidasSigner(true, ConfigHolder.getAppSignatureKeyPair().getKey(),
                                ConfigHolder.getAppSignatureKeyPair().getCert());
-      EidasResponse rsp = new EidasResponse(reqSP.getAssertionConsumerURL(), reqSP.getEntityID(),
-                                            null, samlReqSession.getReqId(), serverurl, EidasLoA.HIGH, signer,
-                                            null);
+      EidasResponse rsp = new EidasResponse(reqSP.getAssertionConsumerURL(), reqSP.getEntityID(), null,
+                                            samlReqSession.getReqId(),
+                                            ConfigHolder.getServerURLWithContextPath() + Metadata.METADATA,
+                                            EidasLoA.HIGH, signer, null);
       byte[] eidasResp = rsp.generateErrorRsp(error, msg);
       String content = WebServiceHelper.createForwardToConsumer(eidasResp, reqRelayState, null);
       HttpServerUtils.setPostContent(content, reqSP.getAssertionConsumerURL(), null, response);

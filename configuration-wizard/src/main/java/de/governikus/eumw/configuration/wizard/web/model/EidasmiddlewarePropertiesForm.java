@@ -29,6 +29,7 @@ import javax.validation.constraints.NotBlank;
 
 import org.apache.commons.fileupload.FileItem;
 import org.apache.commons.fileupload.disk.DiskFileItem;
+import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.io.output.DeferredFileOutputStream;
 import org.apache.commons.lang3.StringUtils;
@@ -95,6 +96,11 @@ public class EidasmiddlewarePropertiesForm extends AbstractPropertiesConfigurati
   private String entityIdInt;
 
   /**
+   * The serverURL of the middleware, must match with the URLs in the POSeIDAS.xml
+   */
+  private String serverURL;
+
+  /**
    * keystore containing the middleware signature keypair
    */
   private KeystoreForm middlewareSignKeystore;
@@ -151,6 +157,7 @@ public class EidasmiddlewarePropertiesForm extends AbstractPropertiesConfigurati
     getServiceProviderMetadataFile(middlewareProperties).ifPresent(this::setServiceProviderMetadataFile);
     loadMetadataSignatureCertificate(middlewareProperties).ifPresent(this::setMetadataSignatureCertificate);
     this.entityIdInt = (String)middlewareProperties.get(MiddlewarePropertiesIdentifier.ENTITYID_INT.name());
+    this.serverURL = (String)middlewareProperties.get(MiddlewarePropertiesIdentifier.SERVER_URL.name());
     // @formatter:off
     String keystorePath =
                       (String)middlewareProperties.get(MiddlewarePropertiesIdentifier.MIDDLEWARE_SIGN_KEY.name());
@@ -294,11 +301,10 @@ public class EidasmiddlewarePropertiesForm extends AbstractPropertiesConfigurati
    * save the eidas middleware properties form into directory/eidasmiddleware.properties file
    *
    * @param directory file path
-   * @param entityIdInt EntityID of the corresponding service provider in POSeIDAS.xml
    * @throws IOException
    * @throws CertificateEncodingException
    */
-  public void save(String directory, String entityIdInt) throws IOException, CertificateEncodingException
+  public void save(String directory) throws IOException, CertificateEncodingException
   {
     KeyStoreSupporter.keyStoreToFile(new File(directory),
                                      middlewareSignKeystore.getKeystoreName(),
@@ -310,6 +316,8 @@ public class EidasmiddlewarePropertiesForm extends AbstractPropertiesConfigurati
                                      middlewareCryptKeystore.getKeystorePassword());
 
     Files.createDirectories(Paths.get(directory, SERVICEPROVIDER_METADATA_FOLDERNAME));
+    FileUtils.cleanDirectory(Paths.get(directory,
+            SERVICEPROVIDER_METADATA_FOLDERNAME).toFile());
     Files.write(Paths.get(directory,
                           SERVICEPROVIDER_METADATA_FOLDERNAME,
                           serviceProviderMetadataFile.getOriginalFilename()),
@@ -318,7 +326,6 @@ public class EidasmiddlewarePropertiesForm extends AbstractPropertiesConfigurati
     Files.write(Paths.get(directory, metadataSignatureCertificate.getName() + ".crt"),
                 metadataSignatureCertificate.getCertificate().getEncoded());
 
-    this.entityIdInt = entityIdInt;
     Properties properties = toProperties(directory);
     File file = Paths.get(directory, FileNames.MIDDLEWARE_PROPERTIES.getFileName()).toFile();
     try (FileOutputStream fileOut = new FileOutputStream(file))
@@ -347,6 +354,7 @@ public class EidasmiddlewarePropertiesForm extends AbstractPropertiesConfigurati
     properties.setProperty(MiddlewarePropertiesIdentifier.SERVICE_PROVIDER_METADATA_SIGNATURE_CERT.name(),
                            addPathPrefix(pathPrefix, metadataSignatureCertificate.getName() + ".crt"));
     properties.setProperty(MiddlewarePropertiesIdentifier.ENTITYID_INT.name(), entityIdInt);
+    properties.setProperty(MiddlewarePropertiesIdentifier.SERVER_URL.name(), serverURL);
     // @formatter:off
     properties.setProperty(MiddlewarePropertiesIdentifier.MIDDLEWARE_SIGN_KEY.name(),
                            addPathPrefix(pathPrefix,

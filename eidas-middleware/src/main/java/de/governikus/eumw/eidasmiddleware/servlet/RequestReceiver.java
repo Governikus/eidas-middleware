@@ -39,6 +39,7 @@ import de.governikus.eumw.eidascommon.ErrorCode;
 import de.governikus.eumw.eidascommon.ErrorCodeException;
 import de.governikus.eumw.eidascommon.HttpRedirectUtils;
 import de.governikus.eumw.eidascommon.Utils;
+import de.governikus.eumw.eidasmiddleware.ConfigHolder;
 import de.governikus.eumw.eidasmiddleware.RequestSession;
 import de.governikus.eumw.eidasmiddleware.ServiceProviderConfig;
 import de.governikus.eumw.eidasmiddleware.SessionStore;
@@ -54,11 +55,13 @@ import net.shibboleth.utilities.java.support.xml.XMLParserException;
  * Servlet implementation class RequestReceiver
  */
 @Slf4j
-@WebServlet("/RequestReceiver")
+@WebServlet(RequestReceiver.REQUEST_RECEIVER)
 public class RequestReceiver extends HttpServlet
 {
 
   private static final long serialVersionUID = 1L;
+
+  public static final String REQUEST_RECEIVER = "/RequestReceiver";
 
   private final SessionStore store;
 
@@ -92,7 +95,7 @@ public class RequestReceiver extends HttpServlet
 
   /**
    * Parses the SAML request.
-   * 
+   *
    * @param request request
    * @param response response
    * @param isPost <code>true</code> for HTTP POST, <code>false</code> for HTTP GET
@@ -143,9 +146,7 @@ public class RequestReceiver extends HttpServlet
                                      "Given AssertionConsumerServiceURL ist not valid!");
       }
 
-      String serverurl = Utils.createOwnUrlPrefix(request);
-      String path = request.getRequestURI().replace("RequestReceiver", "TcToken");
-      String link = serverurl + path + "?sessionID=" + sessionID;
+      String link = ConfigHolder.getServerURLWithContextPath() + TcToken.TC_TOKEN + "?sessionID=" + sessionID;
 
       // according to spec, there must be a web page with an activation link for the
       // ausweisapp
@@ -195,7 +196,7 @@ public class RequestReceiver extends HttpServlet
 
   /**
    * Writes the error response in case there is an error message.
-   * 
+   *
    * @param response
    * @param eidasReq
    * @param lastErrorMessage

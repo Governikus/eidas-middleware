@@ -572,15 +572,6 @@ public final class Utils
   }
 
   /**
-   *
-   * Return URL prefix from http request with the context path.
-   */
-  public static String createOwnURLWithContextPath(HttpServletRequest req)
-  {
-    return createOwnUrlPrefix(req) + req.getContextPath();
-  }
-
-  /**
    * Returns an HTML page for an error case.
    */
   public static String createErrorMessage(String errorMessage)

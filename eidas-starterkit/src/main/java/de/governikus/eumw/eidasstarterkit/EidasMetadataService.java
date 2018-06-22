@@ -109,7 +109,7 @@ import net.shibboleth.utilities.java.support.xml.XMLParserException;
 
 /**
  * Use this class to build a service provider metadata.xml
- * 
+ *
  * @author hohnholt
  */
 class EidasMetadataService
@@ -319,7 +319,7 @@ class EidasMetadataService
     ki = new KeyInfoBuilder().buildObject();
     x509 = new X509DataBuilder().buildObject();
     x509Cert = new X509CertificateBuilder().buildObject();
-    x509Cert.setValue(new String(Base64.getEncoder().encode(sigCert.getEncoded()), StandardCharsets.UTF_8));
+    x509Cert.setValue(new String(Base64.getEncoder().encode(encCert.getEncoded()), StandardCharsets.UTF_8));
     x509.getX509Certificates().add(x509Cert);
     ki.getX509Datas().add(x509);
     kd.setKeyInfo(ki);

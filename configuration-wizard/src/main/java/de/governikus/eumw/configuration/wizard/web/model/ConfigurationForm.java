@@ -118,7 +118,7 @@ public class ConfigurationForm implements Observer
   /**
    * this method is used to check if a poseidas xml file is going to be overridden at the current save
    * location
-   * 
+   *
    * @return true if the poseidas.xml does already exist
    */
   public boolean willPoseidasBeOverridden()
@@ -221,8 +221,12 @@ public class ConfigurationForm implements Observer
 
     try
     {
-      getEidasmiddlewareProperties().save(saveLocation,
-                                          getPoseidasConfig().getServiceProvider().getEntityID());
+      // Set missing properties with values from POSeIDAS.xml
+      getEidasmiddlewareProperties().setEntityIdInt(getPoseidasConfig().getServiceProvider().getEntityID());
+      String serverURL = getPoseidasConfig().getCoreConfig().getServerUrl().replace("/eidas-middleware", "");
+      getEidasmiddlewareProperties().setServerURL(serverURL);
+
+      getEidasmiddlewareProperties().save(saveLocation);
     }
     catch (IOException | KeyStoreCreationFailedException | CertificateEncodingException e)
     {
@@ -232,7 +236,7 @@ public class ConfigurationForm implements Observer
 
   /**
    * used in case that the value in the {@link ConfigDirectory} will be set
-   * 
+   *
    * @param configDirectoryObject the {@link ConfigDirectory} instance
    * @param configDirectoryString the argument that has been changed
    */

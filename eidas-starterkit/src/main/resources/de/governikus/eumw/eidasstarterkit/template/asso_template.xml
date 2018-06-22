@@ -12,7 +12,7 @@
     </saml2:Subject>
     <saml2:Conditions NotBefore="$NotBefore" NotOnOrAfter="$NotOnOrAfter">
         <saml2:AudienceRestriction>
-            <saml2:Audience>$Recipient</saml2:Audience>
+            <saml2:Audience>$Destination</saml2:Audience>
         </saml2:AudienceRestriction>
     </saml2:Conditions>
     <saml2:AuthnStatement AuthnInstant="$AuthnInstant"

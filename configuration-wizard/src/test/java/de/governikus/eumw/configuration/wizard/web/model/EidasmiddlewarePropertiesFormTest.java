@@ -123,6 +123,12 @@ public class EidasmiddlewarePropertiesFormTest extends AbstractConfigFileTest
                             overriddenProperties.getProperty(MiddlewarePropertiesIdentifier.ENTITYID_INT.name()));
     EQUAL_NULL_CHECK.accept(entityIdInt,
                             eidasmiddlewarePropertiesForm.getEntityIdInt());
+
+    final String serverURL = "https://localhost:8443";
+    EQUAL_NULL_CHECK.accept(serverURL,
+                            overriddenProperties.getProperty(MiddlewarePropertiesIdentifier.SERVER_URL.name()));
+    EQUAL_NULL_CHECK.accept(serverURL,
+                            eidasmiddlewarePropertiesForm.getServerURL());
     checkContactDetails(overriddenProperties, eidasmiddlewarePropertiesForm);
     // @formatter:on
   }

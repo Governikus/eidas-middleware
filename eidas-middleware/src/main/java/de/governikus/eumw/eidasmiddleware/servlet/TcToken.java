@@ -58,12 +58,14 @@ import net.shibboleth.utilities.java.support.xml.XMLParserException;
 /**
  * Servlet implementation class TcToken
  */
-@WebServlet("/TcToken")
+@WebServlet(TcToken.TC_TOKEN)
 @Slf4j
 public class TcToken extends HttpServlet
 {
 
   private static final long serialVersionUID = 1L;
+
+  public static final String TC_TOKEN = "/TcToken";
 
   private final SessionStore store;
 
@@ -234,10 +236,9 @@ public class TcToken extends HttpServlet
     if (!eidResult.getResultMajor().equals(Constants.EID_MAJOR_OK))
     {
       String errorMessage = "Error while requesting attributes. <br/>Major result: "
-                            + eidResult.getResultMajor()
-                         + " <br/>Minor result: " + eidResult.getResultMinor()
-                         + (eidResult.getResultMessage() == null ? ""
-                           : " <br/>Result message: " + eidResult.getResultMessage());
+                            + eidResult.getResultMajor() + " <br/>Minor result: " + eidResult.getResultMinor()
+                            + (eidResult.getResultMessage() == null ? ""
+                              : " <br/>Result message: " + eidResult.getResultMessage());
       log.error(errorMessage);
       throw new ResultMajorException(errorMessage);
     }
@@ -252,9 +253,7 @@ public class TcToken extends HttpServlet
                         .replace("#{PAOS_RECEIVER_URL}", paosReceiverURL)
                         .replace("#{SESSIONID}", eIDPSKId)
                         .replace("#{REFRESH_ADDRESS}",
-                                 Utils.createOwnUrlPrefix(request)
-                                                       + request.getRequestURI().replace("TcToken",
-                                                                                         "ResponseSender")
+                                 ConfigHolder.getServerURLWithContextPath() + ResponseSender.RESPONSE_SENDER
                                                        + "?refID=" + refID));
   }
 
@@ -268,15 +267,15 @@ public class TcToken extends HttpServlet
   {
     log.warn(error.toDescription(msg));
     response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
-    String serverurl = Utils.createOwnUrlPrefix(request);
     EidasSigner signer;
     try
     {
       signer = new EidasSigner(true, ConfigHolder.getAppSignatureKeyPair().getKey(),
                                ConfigHolder.getAppSignatureKeyPair().getCert());
-      EidasResponse rsp = new EidasResponse(reqSP.getAssertionConsumerURL(), reqSP.getEntityID(),
-                                            null, samlReqSession.getReqId(), serverurl, EidasLoA.HIGH, signer,
-                                            null);
+      EidasResponse rsp = new EidasResponse(reqSP.getAssertionConsumerURL(), reqSP.getEntityID(), null,
+                                            samlReqSession.getReqId(),
+                                            ConfigHolder.getServerURLWithContextPath() + Metadata.METADATA,
+                                            EidasLoA.HIGH, signer, null);
       byte[] eidasResp = rsp.generateErrorRsp(error, msg);
       String content = WebServiceHelper.createForwardToConsumer(eidasResp, relayState, null);
       HttpServerUtils.setPostContent(content, reqSP.getAssertionConsumerURL(), null, response);

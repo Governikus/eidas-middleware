@@ -30,7 +30,6 @@ import org.opensaml.core.config.InitializationException;
 import org.opensaml.core.xml.io.MarshallingException;
 import org.opensaml.xmlsec.signature.support.SignatureException;
 
-import de.governikus.eumw.eidascommon.Utils;
 import de.governikus.eumw.eidasmiddleware.ConfigHolder;
 import de.governikus.eumw.eidasstarterkit.Constants;
 import de.governikus.eumw.eidasstarterkit.EidasNameIdType;
@@ -43,13 +42,18 @@ import de.governikus.eumw.eidasstarterkit.person_attributes.EidasPersonAttribute
 /**
  * Servlet implementation class Metadata
  */
-@WebServlet("/Metadata")
+@WebServlet(Metadata.METADATA)
 public class Metadata extends HttpServlet
 {
 
   private static final long serialVersionUID = 1L;
 
   private static final Log LOG = LogFactory.getLog(Metadata.class);
+
+  /**
+   * The path to this servlet
+   */
+  static final String METADATA = "/Metadata";
 
   /**
    * @see HttpServlet#HttpServlet()
@@ -59,10 +63,8 @@ public class Metadata extends HttpServlet
     super();
   }
 
-  public void sendMetadata(HttpServletRequest request, HttpServletResponse response)
+  public void sendMetadata(HttpServletResponse response)
   {
-    String serverurl = Utils.createOwnUrlPrefix(request);
-    String path = request.getRequestURI().replace("Metadata", "RequestReceiver");
     ArrayList<EidasPersonAttributes> list = new ArrayList<>();
     list.add(EidasNaturalPersonAttributes.FAMILY_NAME);
     list.add(EidasNaturalPersonAttributes.FIRST_NAME);
@@ -80,15 +82,16 @@ public class Metadata extends HttpServlet
     try
     {
       byte[] out = EidasSaml.createMetaDataService("_eumiddleware",
-                                                   request.getRequestURL().toString(),
+                                                   ConfigHolder.getServerURLWithContextPath() + METADATA,
                                                    Constants.parse("2020-12-31T0:00:00.000Z"),
                                                    ConfigHolder.getSignatureCert(),
                                                    ConfigHolder.getDecryptionCert(),
                                                    ConfigHolder.getOrganization(),
                                                    ConfigHolder.getContactPerson(),
                                                    ConfigHolder.getContactPerson(),
-                                                   serverurl + path,
-                                                   serverurl + path,
+                                                   ConfigHolder.getServerURLWithContextPath()
+                                                                                    + RequestReceiver.REQUEST_RECEIVER,
+                                                   ConfigHolder.getServerURLWithContextPath() + RequestReceiver.REQUEST_RECEIVER,
                                                    supportedNameIdTypes,
                                                    list,
                                                    signer);
@@ -112,7 +115,7 @@ public class Metadata extends HttpServlet
   @Override
   protected void doGet(HttpServletRequest request, HttpServletResponse response)
   {
-    sendMetadata(request, response);
+    sendMetadata(response);
   }
 
   /**
@@ -121,6 +124,6 @@ public class Metadata extends HttpServlet
   @Override
   protected void doPost(HttpServletRequest request, HttpServletResponse response)
   {
-    sendMetadata(request, response);
+    sendMetadata(response);
   }
 }
