@@ -161,28 +161,6 @@ public class EidasResponse
     ppMgr.setNamespaceAware(true);
     ppMgr.initialize();
     byte[] returnValue;
-    String notBefore = Constants.format(new Date());
-    String notAfter = Constants.format(new Date(new Date().getTime() + (10 * ONE_MINUTE_IN_MILLIS)));
-
-    String assoTemp = TemplateLoader.getTemplateByName("failasso");
-
-    if (nameId == null)
-    {
-      nameId = new EidasTransientNameId("Error in process, therefore no NameID");
-    }
-
-    assoTemp = assoTemp.replace("$AssertionId", "_" + Utils.generateUniqueID());
-    assoTemp = assoTemp.replace("$IssueInstant", issueInstant);
-    assoTemp = assoTemp.replace("$Issuer", issuer);
-    assoTemp = assoTemp.replace("$NameFormat", nameId.getType().value);
-    assoTemp = assoTemp.replace("$NameID", nameId.getValue());
-    assoTemp = assoTemp.replace("$InResponseTo", inResponseTo);
-    assoTemp = assoTemp.replace("$NotOnOrAfter", notAfter);
-    assoTemp = assoTemp.replace("$Recipient", recipient);
-    assoTemp = assoTemp.replace("$NotBefore", notBefore);
-
-    assoTemp = assoTemp.replace("$AuthnInstant", issueInstant);
-    assoTemp = assoTemp.replace("$LoA", loa.value);
 
     String respTemp = TemplateLoader.getTemplateByName("failresp");
     respTemp = respTemp.replace("$InResponseTo", inResponseTo);
@@ -199,7 +177,6 @@ public class EidasResponse
     {
       respTemp = respTemp.replace("$ErrMsg", code.toDescription(msg));
     }
-    respTemp = respTemp.replace("$Assertion", assoTemp);
 
     List<Signature> sigs = new ArrayList<>();
 
@@ -602,10 +579,14 @@ public class EidasResponse
 
   private static String getAudience(Response resp) throws ErrorCodeException
   {
+    if (resp.getAssertions().isEmpty()){
+      // The process below is only applicable when the response contains at least one Assertion element.
+      return null;
+    }
     return resp.getAssertions()
                .stream()
                .findFirst()
-               .orElseThrow(() -> new ErrorCodeException(ErrorCode.ERROR, "Missing Assertion in response."))
+               .orElseThrow(() -> new ErrorCodeException(ErrorCode.ERROR, "Expected Assertion in response."))
                .getConditions()
                .getAudienceRestrictions()
                .stream()
