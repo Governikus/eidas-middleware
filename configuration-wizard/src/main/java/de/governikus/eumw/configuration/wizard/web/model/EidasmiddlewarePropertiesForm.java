@@ -30,6 +30,7 @@ import javax.validation.constraints.NotBlank;
 import org.apache.commons.fileupload.FileItem;
 import org.apache.commons.fileupload.disk.DiskFileItem;
 import org.apache.commons.io.FileUtils;
+import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.io.output.DeferredFileOutputStream;
 import org.apache.commons.lang3.StringUtils;
@@ -167,7 +168,7 @@ public class EidasmiddlewarePropertiesForm extends AbstractPropertiesConfigurati
                       (String)middlewareProperties.get(MiddlewarePropertiesIdentifier.MIDDLEWARE_SIGN_PIN.name());
     String privateKeyPassword = keystorePassword;
     // @formatter:on
-    loadKeystoreSettings("eidasmw-signature-keystore",
+    loadKeystoreSettings(FilenameUtils.getBaseName(keystorePath),
                          keystorePath,
                          null,
                          keystoreAlias,
@@ -180,7 +181,7 @@ public class EidasmiddlewarePropertiesForm extends AbstractPropertiesConfigurati
     keystorePassword = (String)middlewareProperties.get(MiddlewarePropertiesIdentifier.MIDDLEWARE_CRYPT_PIN.name());
     privateKeyPassword = keystorePassword;
     // @formatter:on
-    loadKeystoreSettings("eidasmw-crypto-keystore",
+    loadKeystoreSettings(FilenameUtils.getBaseName(keystorePath),
                          keystorePath,
                          null,
                          keystoreAlias,
@@ -230,7 +231,7 @@ public class EidasmiddlewarePropertiesForm extends AbstractPropertiesConfigurati
       {
         try (InputStream inputStream = new FileInputStream(signatureCertFile))
         {
-          return getCertificate("metadata-signature-certificate", IOUtils.toByteArray(inputStream));
+          return getCertificate(FilenameUtils.getBaseName(metadataSignatureCertPath), IOUtils.toByteArray(inputStream));
         }
         catch (IOException e)
         {

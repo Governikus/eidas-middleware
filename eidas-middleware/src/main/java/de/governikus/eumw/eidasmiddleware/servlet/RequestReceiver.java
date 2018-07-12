@@ -31,6 +31,7 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.xml.bind.DatatypeConverter;
 
+import org.apache.http.entity.ContentType;
 import org.opensaml.core.config.InitializationException;
 import org.opensaml.core.xml.io.UnmarshallingException;
 import org.xml.sax.SAXException;
@@ -107,10 +108,18 @@ public class RequestReceiver extends HttpServlet
     Exception lastException = null;
 
     byte[] samlRequest = null;
-    String relayState = request.getParameter(HttpRedirectUtils.RELAYSTATE_PARAMNAME);
-    String samlRequestBase64 = request.getParameter(HttpRedirectUtils.REQUEST_PARAMNAME);
+
     try
     {
+      if (request.getParameter(HttpRedirectUtils.RELAYSTATE_PARAMNAME) == null
+          || request.getParameter(HttpRedirectUtils.REQUEST_PARAMNAME) == null)
+      {
+        throw new ErrorCodeException(ErrorCode.ILLEGAL_REQUEST_SYNTAX,
+                                     "Query Parameter 'RelayState' or 'SAMLRequest' is missing");
+      }
+      String relayState = request.getParameter(HttpRedirectUtils.RELAYSTATE_PARAMNAME);
+      String samlRequestBase64 = request.getParameter(HttpRedirectUtils.REQUEST_PARAMNAME);
+
       if (isPost)
       {
         samlRequest = DatatypeConverter.parseBase64Binary(samlRequestBase64);
@@ -218,6 +227,7 @@ public class RequestReceiver extends HttpServlet
       response.setStatus(400);
       try
       {
+        response.setContentType(ContentType.TEXT_HTML.getMimeType());
         response.getWriter().write(Utils.createErrorMessage(lastErrorMessage));
       }
       catch (IOException e1)

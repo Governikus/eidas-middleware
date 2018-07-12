@@ -34,9 +34,11 @@ import java.security.cert.CertificateException;
 import java.security.cert.X509Certificate;
 import java.util.List;
 import java.util.Properties;
+import java.util.stream.Collectors;
 
 import javax.xml.bind.JAXBException;
 
+import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.junit.jupiter.api.DisplayName;
@@ -186,8 +188,12 @@ public class CompleteUserJourneyTest extends AbstractWebTest // NOPMD
     NEXT_PAGE, PREVIOUS_PAGE, SAVE, UPLOAD_CERTIFICATE, UPLOAD_KEYSTORE
   }
 
+  /**
+   * Test the complete user journey without a previous configuration. Afterwards the configuration is loaded
+   * and new metadata is uploaded to check that the old metadata is deleted.
+   */
   @Test
-  public void completeUserJourney() throws IOException, JAXBException, CertificateException,
+  public void testCompleteUserJourney() throws IOException, JAXBException, CertificateException,
     UnrecoverableKeyException, KeyStoreException, NoSuchAlgorithmException
   {
     HtmlPage startPage = getWebClient().getPage(getRequestUrl("/"));
@@ -218,6 +224,65 @@ public class CompleteUserJourneyTest extends AbstractWebTest // NOPMD
     validateEidasMiddlewareProperties();
 
     uploadNewMetadata();
+  }
+
+  /**
+   * Test that SERVER_URL is added to eidasmiddleware.properties when loading a previous configuration
+   * without this property key.
+   */
+  @Test
+  public void testConfigWithoutServerURL() throws IOException, JAXBException, CertificateException,
+    UnrecoverableKeyException, KeyStoreException, NoSuchAlgorithmException
+  {
+    createConfig();
+
+    // Remove SERVER_URL from eidasmiddleware.properties
+    List<String> properties = FileUtils.readLines(Paths.get(getTempDirectory(), "eidasmiddleware.properties")
+                                                       .toFile(),
+                                                  StandardCharsets.UTF_8);
+    properties = properties.stream().filter(property -> !property.startsWith("SERVER_URL")).collect(Collectors.toList());
+
+    FileUtils.writeLines(Paths.get(getTempDirectory(), "eidasmiddleware.properties").toFile(), properties);
+
+
+    // Clear cookies to start from the first page
+    getWebClient().getCookieManager().clearCookies();
+    HtmlPage currentPage = getWebClient().getPage(getRequestUrl("/"));
+
+    setTextValue(currentPage, "configDirectory.configDirectory", getTempDirectory());
+    // go to upload existing config
+    currentPage = click(currentPage, Button.NEXT_PAGE);
+    // go to application.properties
+    currentPage = click(currentPage, Button.NEXT_PAGE);
+    // go to POSeIDAS.xml
+    currentPage = click(currentPage, Button.NEXT_PAGE);
+    // go to eidasmiddleware.properties
+    currentPage = click(currentPage, Button.NEXT_PAGE);
+
+    // go to save page
+    currentPage = click(currentPage, Button.NEXT_PAGE);
+    WebAssert.assertTextPresent(currentPage, "Save location");
+    click(currentPage, Button.SAVE);
+
+    validateApplicationProperties();
+    validatePoseidasData();
+    validateEidasMiddlewareProperties();
+  }
+
+  private void createConfig() throws IOException
+  {
+    HtmlPage startPage = getWebClient().getPage(getRequestUrl("/"));
+
+    HtmlPage uploadOldConfigurationPage = testConfigDirectoryPage(startPage);
+    HtmlPage applicationPropertiesPage = testUploadPage(uploadOldConfigurationPage);
+    HtmlPage poseidasPage = testApplicationPropertiesPage(applicationPropertiesPage);
+    HtmlPage eidasPropertiesPage = testPoseidasPage(poseidasPage);
+
+    HtmlPage saveLocationPage = testEidasMiddlewarePropertiesPage(eidasPropertiesPage);
+
+    setTextValue(saveLocationPage, "coreConfiguration-saveLocation", getTempDirectory());
+
+    click(saveLocationPage, Button.SAVE);
   }
 
   private void uploadNewMetadata() throws IOException

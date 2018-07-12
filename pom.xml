@@ -14,7 +14,7 @@
 
     <groupId>de.governikus.eumw</groupId>
     <artifactId>eumw</artifactId>
-    <version>1.0.5-SNAPSHOT</version>
+    <version>1.0.5</version>
     <packaging>pom</packaging>
 
     <name>EU Middleware</name>
@@ -37,7 +37,7 @@
     <scm>
         <url>https://github.com/Governikus/${project.artifactId}</url>
         <connection>${governikus.scm.connection}</connection>
-      <tag>HEAD</tag>
+      <tag>eumw-1.0.5</tag>
   </scm>
 
     <developers>

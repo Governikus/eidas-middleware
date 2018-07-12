@@ -180,6 +180,12 @@ public class ConfigHolder
     {
       LOG.error("Can not load service properties", e);
     }
+
+    if (holder.properties.getProperty(KEY_SERVER_URL) == null
+        || holder.properties.getProperty(KEY_SERVER_URL).equals(""))
+    {
+      throw new BadConfigurationException("SERVER_URL is not set in the eidasmiddleware.properties");
+    }
   }
 
   static File getProviderConfigDir()

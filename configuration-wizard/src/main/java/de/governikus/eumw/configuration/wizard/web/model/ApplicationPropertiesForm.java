@@ -23,6 +23,7 @@ import java.util.TreeSet;
 
 import javax.validation.constraints.NotBlank;
 
+import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.security.crypto.bcrypt.BCrypt;
@@ -125,7 +126,7 @@ public class ApplicationPropertiesForm extends AbstractPropertiesConfigurationLo
     String privateKeyPassword = (String)applicationProperties.remove(
                                           ApplicationPropertiesIdentifier.SERVER_SSL_KEY_PASSWORD.getPropertyName());
     // @formatter:on
-    loadKeystoreSettings("eidasmw-ssl-server-keystore",
+    loadKeystoreSettings(FilenameUtils.getBaseName(keystorePath),
                          keystorePath,
                          keystoreType,
                          keystoreAlias,

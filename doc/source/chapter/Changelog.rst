@@ -26,3 +26,11 @@ Changelog
     - Fix the project setup of the password generator.
     - Older databases are now also supported in the database migration tool.
     - Other minor fixes and improvements.
+
+* 1.0.5
+
+    - eIDAS Middleware: Fix wrong certificate in the metadata for the encryption part.
+    - eIDAS Middleware: The URL for the entityID in the metadata must now be set in the configuration. Add SERVER_URL=https://host:port to eidasmiddleware.properties.
+    - Configuration Wizard: Adapt for new configuration value. Use the value from the eID configuration page.
+    - Configuration Wizard: Ensure that only one connector metadata file is saved.
+    - Configuration Wizard: Ensure that the original filenames are used when loading and saving a previous configuration.

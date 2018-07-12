@@ -1,8 +1,8 @@
 version: '3'
 services:
   configuration-wizard:
-    image: "governikus/eidas-configuration-wizard:1.0.4"
-    ports: 
+    image: "governikus/eidas-configuration-wizard:1.0.5"
+    ports:
       - "8080:8080"
     volumes:
       - eidas-configuration:/opt/eidas-middleware/configuration
