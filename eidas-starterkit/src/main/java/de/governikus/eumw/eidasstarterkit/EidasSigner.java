@@ -60,7 +60,7 @@ public class EidasSigner
    * using a cert if a RSA Key or http://www.w3.org/2001/04/xmldsig-more#ecdsa-sha256 if using a cert with a
    * EC key. The canonicalization algorithm is set to http://www.w3.org/2001/10/xml-exc-c14n# and the digest
    * algorithm to http://www.w3.org/2001/04/xmlenc#sha256
-   * 
+   *
    * @param includeCert
    * @param key
    * @param cert

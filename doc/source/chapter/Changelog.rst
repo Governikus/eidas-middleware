@@ -34,3 +34,8 @@ Changelog
     - Configuration Wizard: Adapt for new configuration value. Use the value from the eID configuration page.
     - Configuration Wizard: Ensure that only one connector metadata file is saved.
     - Configuration Wizard: Ensure that the original filenames are used when loading and saving a previous configuration.
+
+* 1.0.6
+
+    - eIDAS Middleware: Fix bug introduced with version 1.0.5 where two URLs in the SAML response were switched.
+    - eIDAS Middleware: Improve logging in case of unparsable authentication request.

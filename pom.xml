@@ -14,7 +14,7 @@
 
     <groupId>de.governikus.eumw</groupId>
     <artifactId>eumw</artifactId>
-    <version>1.0.5</version>
+    <version>1.0.6</version>
     <packaging>pom</packaging>
 
     <name>EU Middleware</name>
@@ -37,7 +37,7 @@
     <scm>
         <url>https://github.com/Governikus/${project.artifactId}</url>
         <connection>${governikus.scm.connection}</connection>
-      <tag>eumw-1.0.5</tag>
+      <tag>eumw-1.0.6</tag>
   </scm>
 
     <developers>
@@ -110,14 +110,14 @@
         <!-- Java compiler target version -->
         <maven.compiler.target>1.8</maven.compiler.target>
 
-        <version.bouncycastle>1.59</version.bouncycastle>
+        <version.bouncycastle>1.60</version.bouncycastle>
         <version.cxf>3.2.4</version.cxf>
         <version.jaxb2-basics>1.11.1</version.jaxb2-basics>
         <version.opensaml>3.3.1-GOV3</version.opensaml>
         <version.slf4j>1.7.25</version.slf4j>
-        <version.spring>5.0.5.RELEASE</version.spring>
-        <version.springboot>2.0.1.RELEASE</version.springboot>
-        <version.lombok>1.16.20</version.lombok>
+        <version.spring>5.0.8.RELEASE</version.spring>
+        <version.springboot>2.0.4.RELEASE</version.springboot>
+        <version.lombok>1.18.2</version.lombok>
         <version.commons.lang3>3.7</version.commons.lang3>
         <version.thymeleaf>3.0.9.RELEASE</version.thymeleaf>
         <version.thymeleaf-layout-dialect>2.3.0</version.thymeleaf-layout-dialect>
@@ -126,15 +126,17 @@
 
         <!-- IDE helper -->
         <version.xmlsec>2.1.1</version.xmlsec>
-        <version.jackson>2.9.5</version.jackson>
+        <version.jackson>2.9.6</version.jackson>
         <!-- logging dependencies -->
         <version.log4j2>2.11.0</version.log4j2>
         <version.slf4j>1.7.25</version.slf4j>
         <!-- test dependencies -->
-        <version.junit.platform>1.1.0</version.junit.platform>
-        <version.junit.jupiter>5.1.0</version.junit.jupiter>
-        <version.junit.vintage>5.1.0</version.junit.vintage>
+        <version.junit.platform>1.2.0</version.junit.platform>
+        <version.junit.jupiter>5.2.0</version.junit.jupiter>
+        <version.junit.vintage>5.2.0</version.junit.vintage>
         <version.htmlunit>2.30</version.htmlunit>
+        <version.opentest4j>1.1.0</version.opentest4j>
+        <version.junit-platform-commons>1.2.0</version.junit-platform-commons>
     </properties>
 
     <build>
@@ -719,7 +721,7 @@
             <dependency>
                 <groupId>com.google.guava</groupId>
                 <artifactId>guava</artifactId>
-                <version>24.1-jre</version>
+                <version>25.1-jre</version>
             </dependency>
 
             <dependency>
@@ -768,6 +770,18 @@
                 <groupId>org.slf4j</groupId>
                 <artifactId>slf4j-simple</artifactId>
                 <version>${version.slf4j}</version>
+                <scope>test</scope>
+            </dependency>
+            <dependency>
+                <groupId>org.opentest4j</groupId>
+                <artifactId>opentest4j</artifactId>
+                <version>${version.opentest4j}</version>
+                <scope>test</scope>
+            </dependency>
+            <dependency>
+                <groupId>org.junit.platform</groupId>
+                <artifactId>junit-platform-commons</artifactId>
+                <version>${version.junit-platform-commons}</version>
                 <scope>test</scope>
             </dependency>
 

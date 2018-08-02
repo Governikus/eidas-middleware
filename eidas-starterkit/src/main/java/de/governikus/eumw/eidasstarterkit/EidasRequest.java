@@ -267,7 +267,7 @@ public class EidasRequest
 
   /**
    * running EidasRequest.generate or EidasRequest.Parse creates is object
-   * 
+   *
    * @return the opensaml authnrespuest object or null. if not null, this object provides all information u
    *         can get via opensaml
    */
@@ -420,7 +420,7 @@ public class EidasRequest
   /**
    * Returns {@link EidasPersonAttributes} enum from given {@link Element}. In case enum can not be found null
    * is returned; unknown attributes should be ignored.
-   * 
+   *
    * @param el
    * @return
    */
