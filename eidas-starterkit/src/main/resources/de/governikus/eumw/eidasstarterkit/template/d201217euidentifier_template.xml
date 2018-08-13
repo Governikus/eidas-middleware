@@ -1,5 +1,5 @@
 <saml2:Attribute FriendlyName="D-2012-17-EUIdentifier"
                 Name=" http://eidas.europa.eu/attributes/legalperson/D-2012-17-EUIdentifier"
-                NameFormat="urn:oasis:names:tc:SAML:2.0:attrnameformat:uri">
+                NameFormat="urn:oasis:names:tc:SAML:2.0:attrname-format:uri">
     <saml2:AttributeValue xsi:type="eidas:D-2012-17-EUIdentifierType">$latinScript</saml2:AttributeValue>
 </saml2:Attribute>
