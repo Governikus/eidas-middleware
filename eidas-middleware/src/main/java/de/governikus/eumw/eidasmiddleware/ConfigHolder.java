@@ -114,6 +114,11 @@ public class ConfigHolder
   private static final String KEY_ORGANIZATION_DISPLAY_NAME = "ORGANIZATION_DISPLAY_NAME";
 
   /**
+   * Option to sign assertions
+   */
+  private static final String KEY_SHOULD_SIGN_ASSERTIONS = "SHOULD_SIGN_ASSERTIONS";
+
+  /**
    * Exception Messages
    */
   private static final String CAN_NOT_LOAD_SERVICE_DECRYPTION_CERT = "Can not load Service DecryptionCert";
@@ -372,4 +377,8 @@ public class ConfigHolder
     return ConfigHolder.holder.organization;
   }
 
+  public static synchronized boolean getShouldSignAssertions()
+  {
+    return Boolean.parseBoolean(ConfigHolder.holder.properties.getProperty(KEY_SHOULD_SIGN_ASSERTIONS, "false"));
+  }
 }

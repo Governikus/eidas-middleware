@@ -263,6 +263,7 @@ public class EidasSaml
    * @param inResponseTo the responceTo id
    * @param encrypter the reader of the requested attributes
    * @param signer the author of this message
+   * @param shouldSignAssertions whether the assertions in the response should be signed
    * @return signed encrypted saml xml response as byte array
    * @throws ConfigurationException thrown if the opensaml lib or eidas starterkit lib is not init
    * @throws CertificateEncodingException thrown if there any problems with the used certificates
@@ -285,7 +286,8 @@ public class EidasSaml
                                       EidasLoA loa,
                                       String inResponseTo,
                                       EidasEncrypter encrypter,
-                                      EidasSigner signer)
+                                      EidasSigner signer,
+                                      boolean shouldSignAssertions)
     throws InitializationException, CertificateEncodingException, XMLParserException, IOException,
     UnmarshallingException, EncryptionException, MarshallingException, SignatureException,
     TransformerFactoryConfigurationError, TransformerException, ComponentInitializationException
@@ -293,7 +295,7 @@ public class EidasSaml
     init();
     EidasResponse response = new EidasResponse(att, destination, recipient, nameid, inResponseTo, issuer, loa,
                                                signer, encrypter);
-    return response.generate();
+    return response.generate(shouldSignAssertions);
   }
 
   /**
