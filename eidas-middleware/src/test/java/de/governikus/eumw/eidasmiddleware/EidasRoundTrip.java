@@ -151,7 +151,8 @@ public class EidasRoundTrip
                                           EidasLoA.LOW,
                                           "_inresp",
                                           new EidasEncrypter(true, keyPair2.getCert()),
-                                          signer);
+                                          signer,
+                                          false);
         s = new String(result, StandardCharsets.UTF_8);
         Assert.assertTrue(s != null);
         try (ByteArrayInputStream is = new ByteArrayInputStream(result))

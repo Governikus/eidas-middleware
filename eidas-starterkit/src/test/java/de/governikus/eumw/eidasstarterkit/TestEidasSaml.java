@@ -11,6 +11,7 @@
 package de.governikus.eumw.eidasstarterkit;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotEquals;
 
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
@@ -42,6 +43,7 @@ import org.opensaml.core.config.InitializationException;
 import org.opensaml.core.xml.io.MarshallingException;
 import org.opensaml.core.xml.io.UnmarshallingException;
 import org.opensaml.xmlsec.encryption.support.EncryptionException;
+import org.opensaml.xmlsec.signature.Signature;
 import org.opensaml.xmlsec.signature.support.SignatureException;
 import org.xml.sax.SAXException;
 
@@ -231,7 +233,8 @@ public class TestEidasSaml
                                                loa,
                                                inResponseTo,
                                                encrypter,
-                                               signer);
+                                               signer,
+                                               false);
     System.out.println("-->>Response-->>" + new String(response));
 
     EidasResponse result = EidasResponse.parse(new ByteArrayInputStream(response), keypair, cert);
@@ -240,12 +243,28 @@ public class TestEidasSaml
     assertEquals(result.getNameId().getValue(), nameid.getValue());
     assertEquals(result.getIssuer(), issuer);
     assertEquals(result.getInResponseTo(), inResponseTo);
+    assertEquals(result.getOpenSamlResponse().getAssertions().get(0).getSignature(), null);
     for ( int i = 0 ; i < att.size() ; i++ )
     {
       assertEquals(result.getAttributes().get(i).getLatinScript().replaceAll("\\s+", ""),
                    att.get(i).getLatinScript().replaceAll("\\s+", ""));
     }
 
+    byte[] signedAssResponse = EidasSaml.createResponse(att,
+            destination,
+            recipient,
+            nameid,
+            issuer,
+            loa,
+            inResponseTo,
+            encrypter,
+            signer,
+            true);
+    System.out.println("-->>Response-->>" + new String(response));
+
+    EidasResponse signedAssResult = EidasResponse.parse(new ByteArrayInputStream(signedAssResponse), keypair, cert);
+    Signature signature = signedAssResult.getOpenSamlResponse().getAssertions().get(0).getSignature();
+    assertNotEquals(signature, null);
   }
 
   @Test
