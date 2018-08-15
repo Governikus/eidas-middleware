@@ -4,6 +4,9 @@ FROM maven:3.5.4-jdk-8-alpine as build
 WORKDIR /eumw
 USER root
 
+# Use settings.xml to override maven repos
+COPY settings.xml /usr/share/maven/ref/
+
 # Copy pom in first to get dependencies
 COPY pom.xml .
 COPY configuration-wizard/pom.xml configuration-wizard/pom.xml
