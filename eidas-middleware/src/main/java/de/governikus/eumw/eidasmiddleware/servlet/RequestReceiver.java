@@ -111,11 +111,10 @@ public class RequestReceiver extends HttpServlet
 
     try
     {
-      if (request.getParameter(HttpRedirectUtils.RELAYSTATE_PARAMNAME) == null
-          || request.getParameter(HttpRedirectUtils.REQUEST_PARAMNAME) == null)
+      if (request.getParameter(HttpRedirectUtils.REQUEST_PARAMNAME) == null)
       {
         throw new ErrorCodeException(ErrorCode.ILLEGAL_REQUEST_SYNTAX,
-                                     "Query Parameter 'RelayState' or 'SAMLRequest' is missing");
+                                     "Query Parameter 'SAMLRequest' is missing");
       }
       String relayState = request.getParameter(HttpRedirectUtils.RELAYSTATE_PARAMNAME);
       String samlRequestBase64 = request.getParameter(HttpRedirectUtils.REQUEST_PARAMNAME);
