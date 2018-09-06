@@ -14,6 +14,7 @@ import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 import java.security.cert.CertificateEncodingException;
 import java.security.cert.X509Certificate;
@@ -33,6 +34,7 @@ import javax.xml.transform.TransformerFactoryConfigurationError;
 import javax.xml.transform.dom.DOMSource;
 import javax.xml.transform.stream.StreamResult;
 
+import net.shibboleth.utilities.java.support.xml.SerializeSupport;
 import org.opensaml.core.xml.XMLObject;
 import org.opensaml.core.xml.config.XMLObjectProviderRegistrySupport;
 import org.opensaml.core.xml.io.Marshaller;
@@ -233,6 +235,8 @@ public class EidasResponse
       Signer.signObjects(sigs);
 
       openSamlResp = resp;
+      returnValue = getResonseBytes();
+/*
       Transformer trans = TransformerFactory.newInstance().newTransformer();
       trans.setOutputProperty(OutputKeys.ENCODING, "UTF-8");
       // Please note: you cannot format the output without breaking signature!
@@ -241,6 +245,7 @@ public class EidasResponse
         trans.transform(new DOMSource(all), new StreamResult(bout));
         returnValue = bout.toByteArray();
       }
+*/
     }
     return returnValue;
   }
@@ -341,6 +346,9 @@ public class EidasResponse
       Signer.signObjects(sigs);
 
       openSamlResp = resp;
+      returnValue = getResonseBytes();
+
+/*
       Transformer trans = TransformerFactory.newInstance().newTransformer();
       trans.setOutputProperty(OutputKeys.ENCODING, "UTF-8");
       // Please note: you cannot format the output without breaking signature!
@@ -349,9 +357,17 @@ public class EidasResponse
         trans.transform(new DOMSource(all), new StreamResult(bout));
         returnValue = bout.toByteArray();
       }
+*/
     }
     return returnValue;
   }
+
+  private byte[] getResonseBytes() throws MarshallingException {
+      Element responseElm = XMLObjectProviderRegistrySupport.getMarshallerFactory().getMarshaller(openSamlResp).marshall(openSamlResp);
+      return SerializeSupport.nodeToString(responseElm).getBytes(Charset.forName("UTF-8"));
+  }
+
+
 
   public String getId()
   {
