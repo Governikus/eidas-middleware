@@ -234,7 +234,6 @@ public class EidasResponse
       Signer.signObjects(sigs);
 
       openSamlResp = resp;
-
       Transformer trans = TransformerFactory.newInstance().newTransformer();
       trans.setOutputProperty(OutputKeys.ENCODING, "UTF-8");
       // Please note: you cannot format the output without breaking signature!
@@ -348,7 +347,6 @@ public class EidasResponse
       Signer.signObjects(sigs);
 
       openSamlResp = resp;
-
       Transformer trans = TransformerFactory.newInstance().newTransformer();
       trans.setOutputProperty(OutputKeys.ENCODING, "UTF-8");
       // Please note: you cannot format the output without breaking signature!
@@ -639,14 +637,10 @@ public class EidasResponse
 
   private static String getAudience(Response resp) throws ErrorCodeException
   {
-    if (resp.getAssertions().isEmpty()){
-      // The process below is only applicable when the response contains at least one Assertion element.
-      return null;
-    }
     return resp.getAssertions()
                .stream()
                .findFirst()
-               .orElseThrow(() -> new ErrorCodeException(ErrorCode.ERROR, "Expected Assertion in response."))
+               .orElseThrow(() -> new ErrorCodeException(ErrorCode.ERROR, "Missing Assertion in response."))
                .getConditions()
                .getAudienceRestrictions()
                .stream()
