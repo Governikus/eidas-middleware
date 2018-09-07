@@ -235,7 +235,6 @@ public class EidasResponse
       Signer.signObjects(sigs);
 
       openSamlResp = resp;
-      returnValue = getResonseBytes();
 
       Transformer trans = TransformerFactory.newInstance().newTransformer();
       trans.setOutputProperty(OutputKeys.ENCODING, "UTF-8");
@@ -243,6 +242,7 @@ public class EidasResponse
       try (ByteArrayOutputStream bout = new ByteArrayOutputStream())
       {
         trans.transform(new DOMSource(all), new StreamResult(bout));
+        returnValue = stripCR(bout.toByteArray());
       }
     }
     return returnValue;
@@ -318,7 +318,6 @@ public class EidasResponse
       Unmarshaller unmarshaller = unmarshallerFactory.getUnmarshaller(metadataRoot);
       Response resp = (Response)unmarshaller.unmarshall(metadataRoot);
 
-                                       signer.getSigKey(),
       for ( Assertion a : assertions )
       {
         a.setParent(null);
