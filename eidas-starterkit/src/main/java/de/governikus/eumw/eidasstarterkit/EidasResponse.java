@@ -268,6 +268,7 @@ public class EidasResponse
     }
     String assoTemp = TemplateLoader.getTemplateByName("asso");
     assoTemp = assoTemp.replace("$NameFormat", nameId.getType().value);
+    assoTemp = assoTemp.replace("$NameQualifier", issuer);
     assoTemp = assoTemp.replace("$NameID", nameId.getValue());
     assoTemp = assoTemp.replace("$AssertionId", "_" + Utils.generateUniqueID());
     assoTemp = assoTemp.replace("$Recipient", recipient);
