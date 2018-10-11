@@ -16,10 +16,18 @@ RUN mkdir -p /opt/eidas-middleware/database &&\
 USER eidas-middleware
 WORKDIR /opt/eidas-middleware
 
-# Download the release from github
-RUN wget https://github.com/Governikus/eidas-middleware/releases/download/${VERSION}/eidas-middleware-${VERSION}.jar
+# Re-download zulu-openjdk to obtain jarsigner
+ENV ZULU_ARCH=zulu8.30.0.1-jdk8.0.172-linux_x64
+RUN wget http://cdn.azul.com/zulu/bin/${ZULU_ARCH}.tar.gz -O /tmp/${ZULU_ARCH}.tar.gz \
+    && tar xf /tmp/${ZULU_ARCH}.tar.gz -C /tmp
 
-RUN    mv eidas-middleware*.jar eidas-middleware.jar &&\
-    mkdir -p ${CONFIG_DIR}
+# Download and verify the release from github
+RUN wget https://github.com/Governikus/eidas-middleware/releases/download/${VERSION}/eidas-middleware-${VERSION}.jar \
+    && /tmp/${ZULU_ARCH}/bin/jarsigner -verify -strict -verbose -certs eidas-middleware-${VERSION}.jar \
+    && mv eidas-middleware-${VERSION}.jar eidas-middleware.jar \
+    && mkdir -p ${CONFIG_DIR}
+
+# Cleanup
+RUN rm -fr /tmp/${ZULU_ARCH}*
 
 ENTRYPOINT ["java", "-jar", "./eidas-middleware.jar"]
