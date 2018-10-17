@@ -55,6 +55,7 @@ import de.governikus.eumw.eidasstarterkit.EidasNaturalPersonAttributes;
 import de.governikus.eumw.eidasstarterkit.EidasResponse;
 import de.governikus.eumw.eidasstarterkit.EidasSaml;
 import de.governikus.eumw.eidasstarterkit.EidasSigner;
+import de.governikus.eumw.eidasstarterkit.EidasPersistentNameId;
 import de.governikus.eumw.eidasstarterkit.EidasTransientNameId;
 import de.governikus.eumw.eidasstarterkit.person_attributes.natural_persons_attribute.BirthNameAttribute;
 import de.governikus.eumw.eidasstarterkit.person_attributes.natural_persons_attribute.CurrentAddressAttribute;
@@ -285,7 +286,9 @@ public class ResponseSender extends HttpServlet
                                                                    + Hex.encodeHexString(restrID.getID1())
                                                                         .toUpperCase(Locale.GERMANY));
       attributes.add(pi);
-      nameId = new EidasTransientNameId(pi.getId());
+      //Using persistent Name ID as PersonIdentifier is a persistent identifier.
+      //Ideally this should be checking the SP metadata whether the selected format is requested.
+      nameId = new EidasPersistentNameId(pi.getId());
     }
 
     prepareSAMLResponse(req, resp, reqSP, samlReqSession, reqRelayState, attributes, nameId);

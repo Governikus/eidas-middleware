@@ -106,10 +106,10 @@ public class RequestReceiver extends HttpServlet
       String relayState = request.getParameter(HttpRedirectUtils.RELAYSTATE_PARAMNAME);
       String samlRequestBase64 = request.getParameter(HttpRedirectUtils.REQUEST_PARAMNAME);
 
-      if (relayState == null || samlRequestBase64 == null)
+      if (samlRequestBase64 == null)
       {
         throw new ErrorCodeException(ErrorCode.ILLEGAL_REQUEST_SYNTAX,
-                                     "Query Parameter 'RelayState' or 'SAMLRequest' is missing");
+                                     "Query Parameter 'SAMLRequest' is missing");
       }
 
       byte[] samlRequest = getSAMLRequestBytes(isPost, samlRequestBase64);
