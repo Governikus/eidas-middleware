@@ -69,7 +69,7 @@ public class DefaultPaosHandler extends AbstractPaosHandler
   }
 
   @Override
-  protected String getSessionId(HttpServletRequest request)
+  protected String getSessionId()
   {
     if (conversationObject instanceof StartPAOS)
     {

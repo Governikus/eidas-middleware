@@ -16,7 +16,8 @@ import org.apache.commons.io.IOUtils;
 import org.junit.Assert;
 import org.junit.jupiter.api.Test;
 
-import de.governikus.eumw.poseidas.config.schema.xml.XmlHelper;
+import de.governikus.eumw.utils.xml.XmlHelper;
+
 
 
 /**

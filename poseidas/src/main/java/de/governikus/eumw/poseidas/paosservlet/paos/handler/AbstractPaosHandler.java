@@ -93,7 +93,7 @@ abstract public class AbstractPaosHandler
       throw new IllegalArgumentException("Cannot unmarshal soap message", e);
     }
 
-    sessionId = getSessionId(servletRequest);
+    sessionId = getSessionId();
     // conversationObject == null --> parsing failed, will result in StartPAOSResponse
     if (sessionId == null && conversationObject != null)
     {
@@ -127,9 +127,9 @@ abstract public class AbstractPaosHandler
   }
 
   /**
-   * Determine the session id from servlet request.
+   * Determine the session id.
    */
-  abstract protected String getSessionId(HttpServletRequest request);
+  protected abstract String getSessionId();
 
   /**
    * Return true if the received request contains headers indicating a PAOS request.

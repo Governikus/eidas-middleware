@@ -20,7 +20,6 @@ import javax.xml.bind.JAXBContext;
 import javax.xml.bind.JAXBException;
 import javax.xml.bind.Unmarshaller;
 import javax.xml.parsers.DocumentBuilder;
-import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
 import javax.xml.soap.MessageFactory;
 import javax.xml.soap.SOAPException;
@@ -35,6 +34,8 @@ import org.xml.sax.SAXException;
 
 import com.sun.org.apache.xerces.internal.util.XMLCatalogResolver;
 
+import de.governikus.eumw.eidascommon.Utils;
+
 
 public final class Util
 {
@@ -48,9 +49,7 @@ public final class Util
     // synchronized is not needed, no problem when this happens two times
     if (docBuilder.get() == null)
     {
-      DocumentBuilderFactory dbf = DocumentBuilderFactory.newInstance();
-      dbf.setNamespaceAware(true);
-      docBuilder.set(dbf.newDocumentBuilder());
+      docBuilder.set(Utils.getDocumentBuilder());
     }
     return docBuilder.get().parse(documentStream);
   }
@@ -75,7 +74,9 @@ public final class Util
       {
         JAXBContext context = JAXBContext.newInstance("iso.std.iso_iec._24727.tech.schema");
         Unmarshaller um = context.createUnmarshaller();
-        SchemaFactory sf = SchemaFactory.newInstance(XMLConstants.W3C_XML_SCHEMA_NS_URI);
+        SchemaFactory sf = Utils.getSchemaFactory();
+        // we must permit file access for there are some schema files referenced in the catalog
+        sf.setProperty(XMLConstants.ACCESS_EXTERNAL_SCHEMA, "file");
         String catalogUrlString = Util.class.getResource("/ecard115/ecard115catalog.xml").toString();
 
         URL schemaUrl = Util.class.getResource("/ecard115/ISO24727-Protocols.xsd");

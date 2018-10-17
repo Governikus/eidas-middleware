@@ -28,7 +28,6 @@ import java.util.Set;
 import javax.xml.transform.OutputKeys;
 import javax.xml.transform.Transformer;
 import javax.xml.transform.TransformerException;
-import javax.xml.transform.TransformerFactory;
 import javax.xml.transform.TransformerFactoryConfigurationError;
 import javax.xml.transform.dom.DOMSource;
 import javax.xml.transform.stream.StreamResult;
@@ -110,25 +109,25 @@ public class EidasRequest
   }
 
   EidasRequest(String destination,
-                      EidasRequestSectorType selectorType,
-                      EidasNameIdType nameIdPolicy,
-                      EidasLoA loa,
-                      String issuer,
-                      String providerName,
-                      EidasSigner signer)
+               EidasRequestSectorType selectorType,
+               EidasNameIdType nameIdPolicy,
+               EidasLoA loa,
+               String issuer,
+               String providerName,
+               EidasSigner signer)
   {
     this("_" + Utils.generateUniqueID(), destination, selectorType, nameIdPolicy, loa, issuer, providerName,
          signer);
   }
 
   EidasRequest(String id,
-                      String destination,
-                      EidasRequestSectorType selectorType,
-                      EidasNameIdType nameIdPolicy,
-                      EidasLoA loa,
-                      String issuer,
-                      String providerName,
-                      EidasSigner signer)
+               String destination,
+               EidasRequestSectorType selectorType,
+               EidasNameIdType nameIdPolicy,
+               EidasLoA loa,
+               String issuer,
+               String providerName,
+               EidasSigner signer)
   {
     this.id = id;
     this.destination = destination;
@@ -153,7 +152,7 @@ public class EidasRequest
     for ( Map.Entry<EidasPersonAttributes, Boolean> entry : requestedAttributes.entrySet() )
     {
       attributesBuilder.append(ATTRIBUTE_TEMPLATE.replace("$NAME", entry.getKey().getValue())
-                                                .replace("$ISREQ", entry.getValue().toString()));
+                                                 .replace("$ISREQ", entry.getValue().toString()));
     }
 
     String template = TemplateLoader.getTemplateByName("auth");
@@ -177,9 +176,7 @@ public class EidasRequest
       template = template.replace("$SPType", "");
     }
 
-    BasicParserPool ppMgr = new BasicParserPool();
-    ppMgr.setNamespaceAware(true);
-    ppMgr.initialize();
+    BasicParserPool ppMgr = Utils.getBasicParserPool();
     List<Signature> sigs = new ArrayList<>();
 
     try (InputStream is = new ByteArrayInputStream(template.getBytes(StandardCharsets.UTF_8)))
@@ -204,7 +201,7 @@ public class EidasRequest
         Signer.signObjects(sigs);
       }
 
-      Transformer trans = TransformerFactory.newInstance().newTransformer();
+      Transformer trans = Utils.getTransformer();
       trans.setOutputProperty(OutputKeys.ENCODING, "UTF-8");
       try (ByteArrayOutputStream bout = new ByteArrayOutputStream())
       {
@@ -317,20 +314,16 @@ public class EidasRequest
   }
 
   static EidasRequest parse(InputStream is)
-    throws XMLParserException, UnmarshallingException,
-    ErrorCodeException, ComponentInitializationException
+    throws XMLParserException, UnmarshallingException, ErrorCodeException, ComponentInitializationException
   {
     return parse(is, null);
   }
 
   static EidasRequest parse(InputStream is, List<X509Certificate> authors)
-    throws XMLParserException,
-    UnmarshallingException, ErrorCodeException, ComponentInitializationException
+    throws XMLParserException, UnmarshallingException, ErrorCodeException, ComponentInitializationException
   {
     EidasRequest eidasReq = new EidasRequest();
-    BasicParserPool ppMgr = new BasicParserPool();
-    ppMgr.setNamespaceAware(true);
-    ppMgr.initialize();
+    BasicParserPool ppMgr = Utils.getBasicParserPool();
     Document inCommonMDDoc = ppMgr.parse(is);
 
     Element metadataRoot = inCommonMDDoc.getDocumentElement();

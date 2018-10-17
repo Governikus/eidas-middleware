@@ -14,7 +14,7 @@
 
     <groupId>de.governikus.eumw</groupId>
     <artifactId>eumw</artifactId>
-    <version>1.0.6</version>
+    <version>1.0.7</version>
     <packaging>pom</packaging>
 
     <name>EU Middleware</name>
@@ -37,7 +37,7 @@
     <scm>
         <url>https://github.com/Governikus/${project.artifactId}</url>
         <connection>${governikus.scm.connection}</connection>
-      <tag>eumw-1.0.6</tag>
+      <tag>eumw-1.0.7</tag>
   </scm>
 
     <developers>
@@ -114,6 +114,7 @@
         <version.cxf>3.2.4</version.cxf>
         <version.jaxb2-basics>1.11.1</version.jaxb2-basics>
         <version.opensaml>3.3.1-GOV3</version.opensaml>
+        <version.javasupport>7.3.0</version.javasupport>
         <version.slf4j>1.7.25</version.slf4j>
         <version.spring>5.0.8.RELEASE</version.spring>
         <version.springboot>2.0.4.RELEASE</version.springboot>
@@ -674,6 +675,11 @@
                 <groupId>org.opensaml</groupId>
                 <artifactId>opensaml-saml-impl</artifactId>
                 <version>${version.opensaml}</version>
+            </dependency>
+            <dependency>
+                <groupId>net.shibboleth.utilities</groupId>
+                <artifactId>java-support</artifactId>
+                <version>${version.javasupport}</version>
             </dependency>
 
             <dependency>

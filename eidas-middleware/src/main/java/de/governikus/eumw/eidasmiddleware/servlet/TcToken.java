@@ -74,7 +74,14 @@ public class TcToken extends HttpServlet
     this.store = store;
   }
 
-  private void setErrorMessage(HttpServletResponse resp, String errorMessage)
+  /**
+   * Show an HTML page containing the errorMessage <br>
+   * NOTE: Do not show an error message that could leak user input to prevent XXE attacks
+   *
+   * @param resp The {@link HttpServletResponse} to send the HTML response
+   * @param errorMessage The error message to be shown.
+   */
+  private void displayHTMLErrorMessage(HttpServletResponse resp, String errorMessage)
   {
     try
     {
@@ -102,7 +109,7 @@ public class TcToken extends HttpServlet
       String errormessage = "no SessionID";
       resp.setStatus(HttpServletResponse.SC_BAD_REQUEST);
       log.warn(errormessage);
-      setErrorMessage(resp, errormessage);
+      displayHTMLErrorMessage(resp, errormessage);
       return;
     }
 
@@ -120,10 +127,10 @@ public class TcToken extends HttpServlet
     {
       // status code 400 should be set in case of new eID activation in TR-03130
       // version 2.0 and above.
-      String errormessage = "no SessionObject found for session " + sessionID;
+      String errormessage = "no SessionObject found for this session";
       resp.setStatus(HttpServletResponse.SC_BAD_REQUEST);
-      log.warn(errormessage);
-      setErrorMessage(resp, errormessage);
+      log.warn("no SessionObject found for this session: {}", sessionID);
+      displayHTMLErrorMessage(resp, errormessage);
       return;
     }
     RequestingServiceProvider reqSP = ServiceProviderConfig.getFirstProvider();
@@ -133,7 +140,7 @@ public class TcToken extends HttpServlet
     Exception lastException = null;
     try
     {
-      tcTokenResponse(req, resp, samlReqSession);
+      tcTokenResponse(resp, samlReqSession);
     }
     catch (IOException e)
     {
@@ -157,12 +164,19 @@ public class TcToken extends HttpServlet
       log.warn("Error in request from provider with  ConsumerServiceURL "
                + samlReqSession.getReqDestination());
       log.warn("Request id " + samlReqSession.getReqId());
-      sendSAMLErrorMsg(req, resp, relayState, reqSP, samlReqSession, ErrorCode.EID_ERROR, lastErrorMessage);
+      sendSAMLErrorMsg(resp, relayState, reqSP, samlReqSession, ErrorCode.EID_ERROR, lastErrorMessage);
     }
   }
 
-  protected void tcTokenResponse(HttpServletRequest request,
-                                 HttpServletResponse response,
+  /**
+   * Generate the TCToken and write it to the response.
+   * 
+   * @param response
+   * @param reqParser
+   * @throws IOException
+   * @throws GeneralSecurityException
+   */
+  protected void tcTokenResponse(HttpServletResponse response,
                                  RequestSession reqParser)
     throws IOException, GeneralSecurityException
   {
@@ -257,8 +271,7 @@ public class TcToken extends HttpServlet
                                                        + "?refID=" + refID));
   }
 
-  private void sendSAMLErrorMsg(HttpServletRequest request,
-                                HttpServletResponse response,
+  private void sendSAMLErrorMsg(HttpServletResponse response,
                                 String relayState,
                                 RequestingServiceProvider reqSP,
                                 RequestSession samlReqSession,

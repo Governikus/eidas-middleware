@@ -39,3 +39,14 @@ Changelog
 
     - eIDAS Middleware: Fix bug introduced with version 1.0.5 where two URLs in the SAML response were switched.
     - eIDAS Middleware: Improve logging in case of unparsable authentication request.
+
+* 1.0.7
+  
+    **Security Advisory**
+
+    There were two security issues reported to the German POSC and Governikus. This release fixes these issues.
+    It is strongly recommended to immediately update to this release as the XXE attack allows an unauthenticated remote attacker to read ASCII files from the file system which can be read by the Middleware Java process.
+
+    - eIDAS Middleware: **Security Fix** Endpoints that parse XML content like /RequestReceiver or /paosreceiver were vulnerable to XXE attacks. These endpoints are no longer vulnerable against XXE attacks.
+    - eIDAS Middleware: **Security Fix** The /TcToken endpoint was vulnerable against XXS attacks as requests parameters were inserted in the HTML response. All endpoints that display HTML content no longer insert user input into the HTML content.
+    - eIDAS Middleware: The Master List Trust Anchor for the POSeIDAS_PRODUCTION.xml template is updated.

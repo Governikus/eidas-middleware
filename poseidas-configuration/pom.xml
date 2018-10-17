@@ -3,13 +3,18 @@
     <parent>
         <artifactId>eumw</artifactId>
         <groupId>de.governikus.eumw</groupId>
-        <version>1.0.6</version>
+        <version>1.0.7</version>
     </parent>
     <modelVersion>4.0.0</modelVersion>
 
     <artifactId>poseidas-configuration</artifactId>
 
     <dependencies>
+        <dependency>
+            <groupId>de.governikus.eumw</groupId>
+            <artifactId>utils</artifactId>
+            <scope>test</scope>
+        </dependency>
         <dependency>
             <groupId>org.apache.commons</groupId>
             <artifactId>commons-lang3</artifactId>

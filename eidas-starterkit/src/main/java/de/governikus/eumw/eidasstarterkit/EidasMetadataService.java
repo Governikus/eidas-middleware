@@ -25,7 +25,6 @@ import java.util.List;
 import javax.xml.transform.OutputKeys;
 import javax.xml.transform.Transformer;
 import javax.xml.transform.TransformerException;
-import javax.xml.transform.TransformerFactory;
 import javax.xml.transform.TransformerFactoryConfigurationError;
 import javax.xml.transform.dom.DOMSource;
 import javax.xml.transform.stream.StreamResult;
@@ -145,16 +144,16 @@ class EidasMetadataService
   }
 
   EidasMetadataService(String id,
-                              String entityId,
-                              Date validUntil,
-                              X509Certificate sigCert,
-                              X509Certificate encCert,
-                              EidasOrganisation organisation,
-                              EidasContactPerson technicalContact,
-                              EidasContactPerson supportContact,
-                              String postEndpoint,
-                              String redirectEndpoint,
-                              List<EidasNameIdType> supportedNameIdTypes)
+                       String entityId,
+                       Date validUntil,
+                       X509Certificate sigCert,
+                       X509Certificate encCert,
+                       EidasOrganisation organisation,
+                       EidasContactPerson technicalContact,
+                       EidasContactPerson supportContact,
+                       String postEndpoint,
+                       String redirectEndpoint,
+                       List<EidasNameIdType> supportedNameIdTypes)
   {
     super();
     this.id = id;
@@ -453,7 +452,7 @@ class EidasMetadataService
       Signer.signObjects(sigs);
     }
 
-    Transformer trans = TransformerFactory.newInstance().newTransformer();
+    Transformer trans = Utils.getTransformer();
     trans.setOutputProperty(OutputKeys.ENCODING, "UTF-8");
     try (ByteArrayOutputStream bout = new ByteArrayOutputStream())
     {
@@ -464,12 +463,10 @@ class EidasMetadataService
   }
 
   static EidasMetadataService parse(InputStream is)
-    throws XMLParserException, UnmarshallingException,
-    CertificateException, ComponentInitializationException
+    throws XMLParserException, UnmarshallingException, CertificateException, ComponentInitializationException
   {
     EidasMetadataService eidasMetadataService = new EidasMetadataService();
-    BasicParserPool ppMgr = new BasicParserPool();
-    ppMgr.initialize();
+    BasicParserPool ppMgr = Utils.getBasicParserPool();
     Document inCommonMDDoc = ppMgr.parse(is);
     Element metadataRoot = inCommonMDDoc.getDocumentElement();
     UnmarshallerFactory unmarshallerFactory = XMLObjectProviderRegistrySupport.getUnmarshallerFactory();

@@ -115,9 +115,9 @@ public class CurrentAddressAttribute implements EidasAttribute
    */
   private void parseXML(String xmlString) throws SAXException
   {
-    SAXParserFactory factory = SAXParserFactory.newInstance();
     try
     {
+      SAXParserFactory factory = Utils.getSAXParserFactory();
       String xml = "<root>" + xmlString + "</root>";
       SAXParser saxParser = factory.newSAXParser();
       AddressAttributeXMLHandler handler = new AddressAttributeXMLHandler();
@@ -277,17 +277,17 @@ public class CurrentAddressAttribute implements EidasAttribute
   public String getLatinScript()
   {
     return CV_ADDRESS_TEMP.replace("$locatorDesignator",
-                                 getLocatorDesignator() == null ? "" : getLocatorDesignator())
-                        .replace("$thoroughfare", getThoroughfare() == null ? "" : getThoroughfare())
-                        .replace("$postName", getPostName() == null ? "" : getPostName())
-                        .replace("$postCode", getPostCode() == null ? "" : getPostCode())
-                        .replace("$pOBOX", getpOBOX() == null ? "" : getpOBOX())
-                        .replace("$locatorName", getLocatorName() == null ? "" : getLocatorName())
-                        .replace("$cvaddressArea", getCvaddressArea() == null ? "" : getCvaddressArea())
-                        .replace("$adminunitFirstline",
-                                 getAdminunitFirstline() == null ? "" : getAdminunitFirstline())
-                        .replace("$adminunitSecondline",
-                                 getAdminunitSecondline() == null ? "" : getAdminunitSecondline());
+                                   getLocatorDesignator() == null ? "" : getLocatorDesignator())
+                          .replace("$thoroughfare", getThoroughfare() == null ? "" : getThoroughfare())
+                          .replace("$postName", getPostName() == null ? "" : getPostName())
+                          .replace("$postCode", getPostCode() == null ? "" : getPostCode())
+                          .replace("$pOBOX", getpOBOX() == null ? "" : getpOBOX())
+                          .replace("$locatorName", getLocatorName() == null ? "" : getLocatorName())
+                          .replace("$cvaddressArea", getCvaddressArea() == null ? "" : getCvaddressArea())
+                          .replace("$adminunitFirstline",
+                                   getAdminunitFirstline() == null ? "" : getAdminunitFirstline())
+                          .replace("$adminunitSecondline",
+                                   getAdminunitSecondline() == null ? "" : getAdminunitSecondline());
   }
 
   private class AddressAttributeXMLHandler extends DefaultHandler

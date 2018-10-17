@@ -21,7 +21,6 @@ import java.util.List;
 import java.util.Map;
 
 import javax.naming.ConfigurationException;
-import javax.xml.XMLConstants;
 import javax.xml.transform.TransformerException;
 import javax.xml.transform.TransformerFactoryConfigurationError;
 import javax.xml.transform.stream.StreamSource;
@@ -41,6 +40,7 @@ import org.w3c.dom.DOMException;
 import org.xml.sax.SAXException;
 
 import de.governikus.eumw.eidascommon.ErrorCodeException;
+import de.governikus.eumw.eidascommon.Utils;
 import de.governikus.eumw.eidascommon.Utils.X509KeyPair;
 import de.governikus.eumw.eidasstarterkit.person_attributes.EidasPersonAttributes;
 import de.governikus.eumw.eidasstarterkit.template.TemplateLoader;
@@ -467,8 +467,8 @@ public class EidasSaml
     throws SAXException, IOException
   {
 
-    SchemaFactory sf = SchemaFactory.newInstance(XMLConstants.W3C_XML_SCHEMA_NS_URI);
-
+    SchemaFactory sf = Utils.getSchemaFactory();
+    
     StreamSource s2 = new StreamSource(EidasSaml.class.getResourceAsStream("saml-schema-protocol-2_0.xsd"));
     StreamSource s1 = new StreamSource(EidasSaml.class.getResourceAsStream("saml-schema-assertion-2_0.xsd"));
     StreamSource s3 = new StreamSource(EidasSaml.class.getResourceAsStream("xenc-schema.xsd"));
@@ -476,7 +476,7 @@ public class EidasSaml
     StreamSource s5 = new StreamSource(EidasSaml.class.getResourceAsStream("NaturalPersonShema.xsd"));
 
     Schema schema = sf.newSchema(new StreamSource[]{s5, s4, s3, s1, s2});
-    Validator validator = schema.newValidator();
+    Validator validator = Utils.getValidator(schema);
     validator.validate(new StreamSource(is));
     if (resetStreamAfterValidation)
     {

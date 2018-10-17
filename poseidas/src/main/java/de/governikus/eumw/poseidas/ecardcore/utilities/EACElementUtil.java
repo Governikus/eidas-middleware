@@ -10,12 +10,12 @@
 
 package de.governikus.eumw.poseidas.ecardcore.utilities;
 
-import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
 
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 
+import de.governikus.eumw.eidascommon.Utils;
 import iso.std.iso_iec._24727.tech.schema.DIDAuthenticationDataType;
 
 
@@ -41,9 +41,7 @@ public final class EACElementUtil
   {
     try
     {
-      DocumentBuilderFactory dbf = DocumentBuilderFactory.newInstance();
-      dbf.setNamespaceAware(true);
-      Document doc = dbf.newDocumentBuilder().newDocument();
+      Document doc = Utils.getDocumentBuilder().newDocument();
       Element e = doc.createElementNS("urn:iso:std:iso-iec:24727:tech:schema", name);
       if (type != null)
       {

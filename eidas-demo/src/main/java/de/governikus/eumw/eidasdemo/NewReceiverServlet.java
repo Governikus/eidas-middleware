@@ -20,11 +20,9 @@ import java.util.Map;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-import javax.xml.XMLConstants;
 import javax.xml.bind.DatatypeConverter;
 import javax.xml.transform.OutputKeys;
 import javax.xml.transform.Transformer;
-import javax.xml.transform.TransformerFactory;
 import javax.xml.transform.dom.DOMSource;
 import javax.xml.transform.stream.StreamResult;
 
@@ -293,10 +291,7 @@ public class NewReceiverServlet
     {
       Document doc = XMLObjectProviderRegistrySupport.getParserPool().parse(new ByteArrayInputStream(value));
 
-      TransformerFactory transformerFactory = TransformerFactory.newInstance();
-      transformerFactory.setFeature(XMLConstants.FEATURE_SECURE_PROCESSING, true);
-
-      Transformer trans = transformerFactory.newTransformer();
+      Transformer trans = Utils.getTransformer();
       trans.setOutputProperty(OutputKeys.INDENT, "yes");
       ByteArrayOutputStream bout = new ByteArrayOutputStream();
       trans.transform(new DOMSource(doc), new StreamResult(bout));

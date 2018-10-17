@@ -22,6 +22,7 @@ import org.opensaml.saml.saml2.core.Assertion;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 
+import de.governikus.eumw.eidascommon.Utils;
 import de.governikus.eumw.eidasstarterkit.EidasSaml;
 import net.shibboleth.utilities.java.support.component.ComponentInitializationException;
 import net.shibboleth.utilities.java.support.xml.BasicParserPool;
@@ -41,9 +42,7 @@ public class AssoParseTest
   @Test
   public void test() throws XMLParserException, UnmarshallingException, ComponentInitializationException
   {
-    BasicParserPool ppMgr = new BasicParserPool();
-    ppMgr.setNamespaceAware(true);
-    ppMgr.initialize();
+    BasicParserPool ppMgr = Utils.getBasicParserPool();
     Assertion ass;
     Document inCommonMDDoc = ppMgr.parse(AssoParseTest.class.getResourceAsStream("Assotest.xml"));
     Element metadataRoot = inCommonMDDoc.getDocumentElement();

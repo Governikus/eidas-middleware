@@ -24,7 +24,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.zip.DataFormatException;
 
-import javax.servlet.ServletException;
 import javax.servlet.annotation.WebServlet;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
@@ -79,9 +78,8 @@ public class RequestReceiver extends HttpServlet
    */
   @Override
   protected void doGet(HttpServletRequest request, HttpServletResponse response)
-    throws ServletException, IOException
   {
-    parseSAMLRequest(request, response, false);
+    handleSAMLRequest(request, response, false);
   }
 
   /**
@@ -89,63 +87,42 @@ public class RequestReceiver extends HttpServlet
    */
   @Override
   protected void doPost(HttpServletRequest request, HttpServletResponse response)
-    throws ServletException, IOException
   {
-    parseSAMLRequest(request, response, true);
+    handleSAMLRequest(request, response, true);
   }
 
   /**
-   * Parses the SAML request.
+   * Handles the SAML request.
    *
    * @param request request
    * @param response response
    * @param isPost <code>true</code> for HTTP POST, <code>false</code> for HTTP GET
    */
-  protected void parseSAMLRequest(HttpServletRequest request, HttpServletResponse response, boolean isPost)
+  private void handleSAMLRequest(HttpServletRequest request, HttpServletResponse response, boolean isPost)
   {
     EidasRequest eidasReq = null;
-    String lastErrorMessage = null;
-    Exception lastException = null;
-
-    byte[] samlRequest = null;
-
     try
     {
-      if (request.getParameter(HttpRedirectUtils.RELAYSTATE_PARAMNAME) == null
-          || request.getParameter(HttpRedirectUtils.REQUEST_PARAMNAME) == null)
+      String relayState = request.getParameter(HttpRedirectUtils.RELAYSTATE_PARAMNAME);
+      String samlRequestBase64 = request.getParameter(HttpRedirectUtils.REQUEST_PARAMNAME);
+
+      if (relayState == null || samlRequestBase64 == null)
       {
         throw new ErrorCodeException(ErrorCode.ILLEGAL_REQUEST_SYNTAX,
                                      "Query Parameter 'RelayState' or 'SAMLRequest' is missing");
       }
-      String relayState = request.getParameter(HttpRedirectUtils.RELAYSTATE_PARAMNAME);
-      String samlRequestBase64 = request.getParameter(HttpRedirectUtils.REQUEST_PARAMNAME);
 
-      if (isPost)
-      {
-        samlRequest = DatatypeConverter.parseBase64Binary(samlRequestBase64);
-      }
-      else
-      {
-        samlRequest = HttpRedirectUtils.inflate(samlRequestBase64);
-      }
+      byte[] samlRequest = getSAMLRequestBytes(isPost, samlRequestBase64);
 
-      if (samlRequest == null)
-      {
-        throw new ErrorCodeException(ErrorCode.ILLEGAL_REQUEST_SYNTAX,
-                                     ErrorCode.ILLEGAL_REQUEST_SYNTAX + " cannot resolve encoding of "
-                                                                       + samlRequestBase64);
-      }
+      log.trace("Incoming SAML request: {}", new String(samlRequest, StandardCharsets.UTF_8));
 
-      try (InputStream is = new ByteArrayInputStream(samlRequest))
-      {
-        EidasSaml.validateXMLRequest(is, true);
-        List<X509Certificate> authors = new ArrayList<>();
-        authors.add(ServiceProviderConfig.getFirstProvider().getSignatureCert());
-        eidasReq = EidasSaml.parseRequest(is, authors);
-      }
+      // Validate and parse the SAML request
+      eidasReq = parseSAMLRequest(samlRequest);
+
       String sessionID = eidasReq.getId();
       store.insert(new RequestSession(relayState, eidasReq));
 
+      // Check that the consumer URL is equal with the connector's metadata
       if (!Utils.isNullOrEmpty(eidasReq.getAuthnRequest().getAssertionConsumerServiceURL())
           && !ServiceProviderConfig.getFirstProvider()
                                    .getAssertionConsumerURL()
@@ -155,85 +132,150 @@ public class RequestReceiver extends HttpServlet
                                      "Given AssertionConsumerServiceURL ist not valid!");
       }
 
+      // Prepare the TcToken URL
       String link = ConfigHolder.getServerURLWithContextPath() + TcToken.TC_TOKEN + "?sessionID=" + sessionID;
 
-      // according to spec, there must be a web page with an activation link for the
-      // ausweisapp
-      // and not a redirect
-      InputStream html = RequestReceiver.class.getResourceAsStream("AA2.html");
-      BufferedReader reader = new BufferedReader(new InputStreamReader(html, StandardCharsets.UTF_8));
-      Writer writer = response.getWriter();
-      response.setContentType("text/html");
-      for ( String line = reader.readLine() ; line != null ; line = reader.readLine() )
-      {
-        writer.write(line.replaceAll("TCTOKENURL", URLEncoder.encode(link, StandardCharsets.UTF_8.name())));
-      }
-      writer.close();
+      // show the HTML page with the link to start the AusweisApp2
+      showHTMLPage(response, link);
     }
     catch (InitializationException | ComponentInitializationException e)
     {
-      lastErrorMessage = "Cannot init OPENSAML";
-      lastException = e;
+      produceHTMLErrorResponse(response, eidasReq, "Cannot initialize OPENSAML", e);
     }
     catch (SAXException e)
     {
-      lastErrorMessage = "The saml message is not valid";
-      lastException = e;
+      produceHTMLErrorResponse(response, eidasReq, "The saml message is not valid", e);
     }
     catch (DataFormatException e)
     {
-      lastErrorMessage = "DataFormatException while inflating  samlRequestBase64";
-      lastException = e;
+      produceHTMLErrorResponse(response,
+                               eidasReq,
+                               "DataFormatException while inflating samlRequestBase64",
+                               e);
     }
-    catch (XMLParserException | UnmarshallingException e1)
+    catch (XMLParserException | UnmarshallingException e)
     {
-      lastErrorMessage = "Error parsing saml xml";
-      lastException = e1;
+      produceHTMLErrorResponse(response, eidasReq, "Error parsing saml xml", e);
     }
-    catch (ErrorCodeException | IOException e1)
+    catch (ErrorCodeException e)
     {
-      lastErrorMessage = e1.getMessage();
-      lastException = e1;
+      produceHTMLErrorResponse(response, eidasReq, e.getMessage(), e);
+    }
+    catch (IOException e)
+    {
+      produceHTMLErrorResponse(response, eidasReq, "Received IOException", e);
     }
     catch (SQLException e)
     {
-      lastErrorMessage = "can not store request";
-      lastException = e;
+      produceHTMLErrorResponse(response, eidasReq, "Can not store request", e);
     }
-    produceErrorResponse(response, eidasReq, lastErrorMessage, lastException);
+    catch (Exception e)
+    {
+      produceHTMLErrorResponse(response, eidasReq, "Cannot parse SAML Request", e);
+    }
   }
 
   /**
-   * Writes the error response in case there is an error message.
+   * Return the HTML page to start the AusweisApp2
    *
-   * @param response
-   * @param eidasReq
-   * @param lastErrorMessage
-   * @param lastException
+   * @param response The {@link HttpServletResponse} to return the response
+   * @param link The TcToken URL
    */
-  private static void produceErrorResponse(HttpServletResponse response,
-                                           EidasRequest eidasReq,
-                                           String lastErrorMessage,
-                                           Exception lastException)
+  private void showHTMLPage(HttpServletResponse response, String link) throws IOException
   {
-    if (StringUtil.notNullOrEmpty(lastErrorMessage))
+    InputStream html = RequestReceiver.class.getResourceAsStream("AA2.html");
+    BufferedReader reader = new BufferedReader(new InputStreamReader(html, StandardCharsets.UTF_8));
+    Writer writer = response.getWriter();
+    response.setContentType("text/html");
+    for ( String line = reader.readLine() ; line != null ; line = reader.readLine() )
     {
-      if (eidasReq != null)
+      writer.write(line.replaceAll("TCTOKENURL", URLEncoder.encode(link, StandardCharsets.UTF_8.name())));
+    }
+    writer.close();
+  }
+
+  /**
+   * Validate and parse the SAML request
+   *
+   * @return the parsed {@link EidasRequest}
+   */
+  private EidasRequest parseSAMLRequest(byte[] samlRequest)
+    throws IOException, SAXException, ErrorCodeException, UnmarshallingException, InitializationException,
+    XMLParserException, ComponentInitializationException
+  {
+    try (InputStream is = new ByteArrayInputStream(samlRequest))
+    {
+      EidasSaml.validateXMLRequest(is, true);
+      List<X509Certificate> authors = new ArrayList<>();
+      authors.add(ServiceProviderConfig.getFirstProvider().getSignatureCert());
+      return EidasSaml.parseRequest(is, authors);
+    }
+  }
+
+  /**
+   * Return the SAML request byte array from the base64 encoded string
+   */
+  private byte[] getSAMLRequestBytes(boolean isPost, String samlRequestBase64)
+    throws DataFormatException, ErrorCodeException
+  {
+    byte[] samlRequest;
+
+    if (isPost)
+    {
+      samlRequest = DatatypeConverter.parseBase64Binary(samlRequestBase64);
+    }
+    else
+    {
+      samlRequest = HttpRedirectUtils.inflate(samlRequestBase64);
+    }
+
+    if (samlRequest == null)
+    {
+      log.warn("cannot parse base64 encoded SAML request: {}", samlRequestBase64);
+      throw new ErrorCodeException(ErrorCode.ILLEGAL_REQUEST_SYNTAX,
+                                   "cannot parse base64 encoded SAML request");
+    }
+
+    log.trace("Incoming SAML request: {}", new String(samlRequest, StandardCharsets.UTF_8));
+    return samlRequest;
+  }
+
+  /**
+   * Shows the HTML error response
+   *
+   * @param response The {@link HttpServletResponse} to return the response
+   * @param eidasReq The {@link EidasRequest} of the request or null
+   * @param errorMessage The error message
+   * @param exception The original exception
+   */
+  private static void produceHTMLErrorResponse(HttpServletResponse response,
+                                               EidasRequest eidasReq,
+                                               String errorMessage,
+                                               Exception exception)
+  {
+    if (eidasReq != null)
+    {
+      log.warn("Error in request from provider with ConsumerServiceURL " + eidasReq.getDestination());
+      log.warn("Request id " + eidasReq.getId());
+    }
+    log.warn("Exception during processing of SAML request", exception);
+    response.setStatus(400);
+    try
+    {
+      response.setContentType(ContentType.TEXT_HTML.getMimeType());
+      if (StringUtil.notNullOrEmpty(errorMessage))
       {
-        log.warn("Error in request from provider with ConsumerServiceURL " + eidasReq.getDestination());
-        log.warn("Request id " + eidasReq.getId());
+        response.getWriter().write(Utils.createErrorMessage(errorMessage));
       }
-      log.warn("lastException: " + lastException);
-      response.setStatus(400);
-      try
+      else
       {
-        response.setContentType(ContentType.TEXT_HTML.getMimeType());
-        response.getWriter().write(Utils.createErrorMessage(lastErrorMessage));
+        response.getWriter()
+                .write(Utils.createErrorMessage("Caught exception during SAML request processing"));
       }
-      catch (IOException e1)
-      {
-        log.warn(e1.getLocalizedMessage(), e1);
-      }
+    }
+    catch (IOException e)
+    {
+      log.warn(e.getLocalizedMessage(), e);
     }
   }
 }

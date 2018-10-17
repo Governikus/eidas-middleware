@@ -14,7 +14,7 @@
 	<parent>
 		<groupId>de.governikus.eumw</groupId>
 		<artifactId>eumw</artifactId>
-		<version>1.0.6</version>
+		<version>1.0.7</version>
 	</parent>
 	<artifactId>eidas-common</artifactId>
 
@@ -35,6 +35,11 @@
 		<dependency>
 			<groupId>org.slf4j</groupId>
 			<artifactId>slf4j-api</artifactId>
+		</dependency>
+
+		<dependency>
+			<groupId>net.shibboleth.utilities</groupId>
+			<artifactId>java-support</artifactId>
 		</dependency>
 
 		<!-- only for tests -->

@@ -1,7 +1,7 @@
 version: '3'
 services:
   eidas-demo-application:
-    image: "governikus/eidas-demo-application:1.0.6"
+    image: "governikus/eidas-demo-application:1.0.7"
     ports:
       - "8080:8080"
     volumes:

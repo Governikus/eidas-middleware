@@ -25,7 +25,6 @@ import java.util.List;
 import javax.xml.transform.OutputKeys;
 import javax.xml.transform.Transformer;
 import javax.xml.transform.TransformerException;
-import javax.xml.transform.TransformerFactory;
 import javax.xml.transform.TransformerFactoryConfigurationError;
 import javax.xml.transform.dom.DOMSource;
 import javax.xml.transform.stream.StreamResult;
@@ -95,16 +94,16 @@ public class EidasMetadataNode
   }
 
   EidasMetadataNode(String id,
-                           String entityId,
-                           Date validUntil,
-                           X509Certificate sigCert,
-                           X509Certificate encCert,
-                           EidasOrganisation organisation,
-                           EidasContactPerson technicalcontact,
-                           EidasContactPerson supportContact,
-                           String postEndpoint,
-                           EidasRequestSectorType spType,
-                           List<EidasNameIdType> supportedNameIdTypes)
+                    String entityId,
+                    Date validUntil,
+                    X509Certificate sigCert,
+                    X509Certificate encCert,
+                    EidasOrganisation organisation,
+                    EidasContactPerson technicalcontact,
+                    EidasContactPerson supportContact,
+                    String postEndpoint,
+                    EidasRequestSectorType spType,
+                    List<EidasNameIdType> supportedNameIdTypes)
   {
     super();
     this.id = id;
@@ -245,9 +244,9 @@ public class EidasMetadataNode
    * @throws TransformerException
    * @throws ComponentInitializationException
    */
-  byte[] generate(EidasSigner signer) throws CertificateEncodingException, IOException,
-    XMLParserException, UnmarshallingException, MarshallingException, SignatureException,
-    TransformerFactoryConfigurationError, TransformerException, ComponentInitializationException
+  byte[] generate(EidasSigner signer) throws CertificateEncodingException, IOException, XMLParserException,
+    UnmarshallingException, MarshallingException, SignatureException, TransformerFactoryConfigurationError,
+    TransformerException, ComponentInitializationException
   {
     byte[] result = null;
     String template = TemplateLoader.getTemplateByName("metadatanode");
@@ -288,9 +287,7 @@ public class EidasMetadataNode
     template = template.replace("$SUPPORTED_NAMEIDTYPES", sbSupportNameIDTypes.toString());
 
     List<Signature> sigs = new ArrayList<>();
-    BasicParserPool ppMgr = new BasicParserPool();
-    ppMgr.setNamespaceAware(true);
-    ppMgr.initialize();
+    BasicParserPool ppMgr = Utils.getBasicParserPool();
     try (InputStream is = new ByteArrayInputStream(template.getBytes(StandardCharsets.UTF_8)))
     {
       Document inCommonMDDoc = ppMgr.parse(is);
@@ -313,7 +310,7 @@ public class EidasMetadataNode
         Signer.signObjects(sigs);
       }
 
-      Transformer trans = TransformerFactory.newInstance().newTransformer();
+      Transformer trans = Utils.getTransformer();
       trans.setOutputProperty(OutputKeys.ENCODING, "UTF-8");
       try (ByteArrayOutputStream bout = new ByteArrayOutputStream())
       {
@@ -337,13 +334,11 @@ public class EidasMetadataNode
    * @throws DOMException
    * @throws ComponentInitializationException
    */
-  static EidasMetadataNode parse(InputStream is, X509Certificate signer)
-    throws XMLParserException, UnmarshallingException, CertificateException, ErrorCodeException,
-    ComponentInitializationException
+  static EidasMetadataNode parse(InputStream is, X509Certificate signer) throws XMLParserException,
+    UnmarshallingException, CertificateException, ErrorCodeException, ComponentInitializationException
   {
     EidasMetadataNode eidasMetadataService = new EidasMetadataNode();
-    BasicParserPool ppMgr = new BasicParserPool();
-    ppMgr.initialize();
+    BasicParserPool ppMgr = Utils.getBasicParserPool();
     Document inCommonMDDoc = ppMgr.parse(is);
     Element metadataRoot = inCommonMDDoc.getDocumentElement();
     UnmarshallerFactory unmarshallerFactory = XMLObjectProviderRegistrySupport.getUnmarshallerFactory();

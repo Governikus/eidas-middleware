@@ -31,13 +31,30 @@ import java.security.interfaces.RSAPublicKey;
 import java.util.Arrays;
 import java.util.Base64;
 import java.util.Enumeration;
+import java.util.HashMap;
 import java.util.UUID;
 import java.util.regex.Pattern;
 import java.util.zip.ZipInputStream;
 
 import javax.servlet.http.HttpServletRequest;
+import javax.xml.XMLConstants;
+import javax.xml.parsers.DocumentBuilder;
+import javax.xml.parsers.DocumentBuilderFactory;
+import javax.xml.parsers.ParserConfigurationException;
+import javax.xml.parsers.SAXParserFactory;
+import javax.xml.transform.Transformer;
+import javax.xml.transform.TransformerConfigurationException;
+import javax.xml.transform.TransformerFactory;
+import javax.xml.validation.Schema;
+import javax.xml.validation.SchemaFactory;
+import javax.xml.validation.Validator;
+
+import org.xml.sax.SAXNotRecognizedException;
+import org.xml.sax.SAXNotSupportedException;
 
 import lombok.extern.slf4j.Slf4j;
+import net.shibboleth.utilities.java.support.component.ComponentInitializationException;
+import net.shibboleth.utilities.java.support.xml.BasicParserPool;
 
 
 /**
@@ -79,26 +96,23 @@ public final class Utils
   /**
    * Contains a error page to show if something went wrong.
    */
-  private static final String HTML_ERROR;
+  private static final String HTML_ERROR = loadHTMLErrorPage();
 
   /**
    * Load the error page.
    */
-  static
+  private static String loadHTMLErrorPage()
   {
-    String value = null;
     try
     {
-      value = Utils.readFromStream(Utils.class.getResourceAsStream("error.html"));
+      return Utils.readFromStream(Utils.class.getResourceAsStream("error.html"));
     }
     catch (IOException e)
     {
       // OK, no nice page then
-      value = "${MESSAGE}";
+      return "${MESSAGE}";
     }
-    HTML_ERROR = value;
   }
-
 
   private Utils()
   {
@@ -293,10 +307,10 @@ public final class Utils
    * @param keyPin key password
    */
   private static X509KeyPair readKeyAndCert(InputStream ins,
-                                           String type,
-                                           char[] pin,
-                                           String alias,
-                                           char[] keyPin)
+                                            String type,
+                                            char[] pin,
+                                            String alias,
+                                            char[] keyPin)
     throws IOException, GeneralSecurityException
   {
     if (ins == null)
@@ -533,11 +547,13 @@ public final class Utils
                                   + aliasBuf.toString());
     }
   }
-/**
- * This functions checks if a String is null or zero
- * @param s
- * @return
- */
+
+  /**
+   * This functions checks if a String is null or zero
+   *
+   * @param s
+   * @return
+   */
   public static boolean isNullOrEmpty(String s)
   {
     return s == null ? true : "".equals(s);
@@ -545,6 +561,7 @@ public final class Utils
 
   /**
    * Encodes a string to Base64
+   *
    * @param s A String
    * @return String encoded in Base64
    */
@@ -555,7 +572,8 @@ public final class Utils
 
   /**
    * Decodes a string to Base64
-   * @param s  A String encoded in Base64
+   *
+   * @param s A String encoded in Base64
    * @return A decoded String
    */
   public static String fromBase64(String s)
@@ -650,5 +668,119 @@ public final class Utils
       return location.substring(5, location.length());
     }
     return location;
+  }
+
+  /**
+   * Returns an initialized {@link BasicParserPool} ready to use, configured with security features preventing
+   * several XXE attacks.
+   *
+   * @return the parser pool
+   * @throws ComponentInitializationException
+   */
+  public static BasicParserPool getBasicParserPool() throws ComponentInitializationException
+  {
+    BasicParserPool ppMgr = new BasicParserPool();
+    ppMgr.setNamespaceAware(true);
+
+    final HashMap<String, Boolean> features = new HashMap<>();
+    features.put(XMLConstants.FEATURE_SECURE_PROCESSING, true);
+    features.put("http://apache.org/xml/features/disallow-doctype-decl", true);
+    features.put("http://xml.org/sax/features/external-general-entities", false);
+    features.put("http://xml.org/sax/features/external-parameter-entities", false);
+    features.put("http://apache.org/xml/features/nonvalidating/load-external-dtd", false);
+    ppMgr.setBuilderFeatures(features);
+    ppMgr.setXincludeAware(false);
+    ppMgr.setExpandEntityReferences(false);
+
+    ppMgr.initialize();
+    return ppMgr;
+  }
+
+  /**
+   * Returns an initialized {@link DocumentBuilder} ready to use, configured with security features preventing
+   * several XXE attacks.
+   *
+   * @return the document builder
+   * @throws ParserConfigurationException
+   */
+  public static DocumentBuilder getDocumentBuilder() throws ParserConfigurationException
+  {
+    DocumentBuilderFactory dbf = DocumentBuilderFactory.newInstance();
+    dbf.setFeature(XMLConstants.FEATURE_SECURE_PROCESSING, true);
+    dbf.setFeature("http://apache.org/xml/features/disallow-doctype-decl", true);
+    dbf.setFeature("http://xml.org/sax/features/external-general-entities", false);
+    dbf.setFeature("http://xml.org/sax/features/external-parameter-entities", false);
+    dbf.setFeature("http://apache.org/xml/features/nonvalidating/load-external-dtd", false);
+    dbf.setXIncludeAware(false);
+    dbf.setExpandEntityReferences(false);
+    dbf.setNamespaceAware(true);
+    return dbf.newDocumentBuilder();
+  }
+
+  /**
+   * Returns an initialized {@link Transformer} ready to use, configured with security features preventing
+   * several XXE attacks.
+   *
+   * @return the transformer
+   * @throws TransformerConfigurationException
+   */
+  public static Transformer getTransformer() throws TransformerConfigurationException
+  {
+    TransformerFactory tf = TransformerFactory.newInstance();
+    tf.setFeature(XMLConstants.FEATURE_SECURE_PROCESSING, true);
+    tf.setAttribute(XMLConstants.ACCESS_EXTERNAL_DTD, "");
+    tf.setAttribute(XMLConstants.ACCESS_EXTERNAL_STYLESHEET, "");
+    return tf.newTransformer();
+  }
+
+  /**
+   * Returns an initialized {@link SchemaFactory} ready to use, configured with security features preventing
+   * several XXE attacks.
+   *
+   * @return the schema factory
+   * @throws SAXNotRecognizedException
+   * @throws SAXNotSupportedException
+   */
+  public static SchemaFactory getSchemaFactory() throws SAXNotRecognizedException, SAXNotSupportedException
+  {
+    SchemaFactory sf = SchemaFactory.newInstance(XMLConstants.W3C_XML_SCHEMA_NS_URI);
+    sf.setProperty(XMLConstants.ACCESS_EXTERNAL_DTD, "");
+    sf.setProperty(XMLConstants.ACCESS_EXTERNAL_SCHEMA, "");
+    return sf;
+  }
+
+  /**
+   * Returns an initialized {@link Validator} ready to use, configured with security features preventing
+   * several XXE attacks.
+   *
+   * @return the validator
+   * @throws SAXNotRecognizedException
+   * @throws SAXNotSupportedException
+   */
+  public static Validator getValidator(Schema schema)
+    throws SAXNotRecognizedException, SAXNotSupportedException
+  {
+    Validator v = schema.newValidator();
+    v.setProperty(XMLConstants.ACCESS_EXTERNAL_DTD, "");
+    v.setProperty(XMLConstants.ACCESS_EXTERNAL_SCHEMA, "");
+    return v;
+  }
+
+  /**
+   * Returns an initialized {@link SAXParserFactory} ready to use, configured with security features
+   * preventing several XXE attacks.
+   *
+   * @return the parser factory
+   * @throws SAXNotRecognizedException
+   * @throws SAXNotSupportedException
+   * @throws ParserConfigurationException
+   */
+  public static SAXParserFactory getSAXParserFactory()
+    throws SAXNotRecognizedException, SAXNotSupportedException, ParserConfigurationException
+  {
+    SAXParserFactory spf = SAXParserFactory.newInstance();
+    spf.setFeature("http://xml.org/sax/features/external-general-entities", false);
+    spf.setFeature("http://apache.org/xml/features/disallow-doctype-decl", true);
+    return spf;
   }
 }

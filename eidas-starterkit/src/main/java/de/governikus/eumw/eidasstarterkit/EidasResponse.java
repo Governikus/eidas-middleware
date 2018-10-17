@@ -28,7 +28,6 @@ import java.util.Map.Entry;
 import javax.xml.transform.OutputKeys;
 import javax.xml.transform.Transformer;
 import javax.xml.transform.TransformerException;
-import javax.xml.transform.TransformerFactory;
 import javax.xml.transform.TransformerFactoryConfigurationError;
 import javax.xml.transform.dom.DOMSource;
 import javax.xml.transform.stream.StreamResult;
@@ -157,9 +156,7 @@ public class EidasResponse
     UnmarshallingException, CertificateEncodingException, MarshallingException, SignatureException,
     TransformerFactoryConfigurationError, TransformerException, ComponentInitializationException
   {
-    BasicParserPool ppMgr = new BasicParserPool();
-    ppMgr.setNamespaceAware(true);
-    ppMgr.initialize();
+    BasicParserPool ppMgr = Utils.getBasicParserPool();
     byte[] returnValue;
     String notBefore = Constants.format(new Date());
     String notAfter = Constants.format(new Date(new Date().getTime() + (10 * ONE_MINUTE_IN_MILLIS)));
@@ -233,7 +230,7 @@ public class EidasResponse
       Signer.signObjects(sigs);
 
       openSamlResp = resp;
-      Transformer trans = TransformerFactory.newInstance().newTransformer();
+      Transformer trans = Utils.getTransformer();
       trans.setOutputProperty(OutputKeys.ENCODING, "UTF-8");
       // Please note: you cannot format the output without breaking signature!
       try (ByteArrayOutputStream bout = new ByteArrayOutputStream())
@@ -249,9 +246,6 @@ public class EidasResponse
     CertificateEncodingException, EncryptionException, MarshallingException, SignatureException,
     TransformerFactoryConfigurationError, TransformerException, ComponentInitializationException
   {
-    BasicParserPool ppMgr = new BasicParserPool();
-    ppMgr.setNamespaceAware(true);
-    ppMgr.initialize();
     byte[] returnValue;
 
     String notBefore = Constants.format(new Date());
@@ -285,6 +279,7 @@ public class EidasResponse
 
     String generatedAssertionXML = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>" + assoTemp;
     Assertion ass = null;
+    BasicParserPool ppMgr = Utils.getBasicParserPool();
     try (InputStream is = new ByteArrayInputStream(generatedAssertionXML.getBytes(StandardCharsets.UTF_8)))
     {
       Document inCommonMDDoc = ppMgr.parse(is);
@@ -341,7 +336,7 @@ public class EidasResponse
       Signer.signObjects(sigs);
 
       openSamlResp = resp;
-      Transformer trans = TransformerFactory.newInstance().newTransformer();
+      Transformer trans = Utils.getTransformer();
       trans.setOutputProperty(OutputKeys.ENCODING, "UTF-8");
       // Please note: you cannot format the output without breaking signature!
       try (ByteArrayOutputStream bout = new ByteArrayOutputStream())
@@ -443,9 +438,7 @@ public class EidasResponse
       trustedAnchorList.add(author);
     }
 
-    BasicParserPool ppMgr = new BasicParserPool();
-    ppMgr.setNamespaceAware(true);
-    ppMgr.initialize();
+    BasicParserPool ppMgr = Utils.getBasicParserPool();
     Document inCommonMDDoc = ppMgr.parse(is);
     Element metadataRoot = inCommonMDDoc.getDocumentElement();
     // Get apropriate unmarshaller

@@ -15,11 +15,12 @@ import java.io.StringWriter;
 import javax.xml.transform.OutputKeys;
 import javax.xml.transform.Transformer;
 import javax.xml.transform.TransformerException;
-import javax.xml.transform.TransformerFactory;
 import javax.xml.transform.dom.DOMSource;
 import javax.xml.transform.stream.StreamResult;
 
 import org.w3c.dom.Document;
+
+import de.governikus.eumw.eidascommon.Utils;
 
 
 /**
@@ -30,8 +31,6 @@ import org.w3c.dom.Document;
 
 public class XMLTransformer
 {
-
-  private static TransformerFactory tf = TransformerFactory.newInstance();
 
   private XMLTransformer()
   {}
@@ -44,7 +43,7 @@ public class XMLTransformer
    */
   public static String xmlToString(Document document) throws TransformerException
   {
-    Transformer t = tf.newTransformer();
+    Transformer t = Utils.getTransformer();
     t.setOutputProperty(OutputKeys.INDENT, "yes");
     t.setOutputProperty("{http://xml.apache.org/xslt}indent-amount", "2");
 
