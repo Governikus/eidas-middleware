@@ -3,7 +3,7 @@
     xmlns:eidas="http://eidas.europa.eu/attributes/naturalperson">
     <saml2:Issuer Format="urn:oasis:names:tc:SAML:2.0:nameid-format:entity">$Issuer</saml2:Issuer>
     <saml2:Subject>
-        <saml2:NameID Format="$NameFormat">$NameID</saml2:NameID>
+        <saml2:NameID Format="$NameFormat" NameQualifier="$NameQualifier">$NameID</saml2:NameID>
         <saml2:SubjectConfirmation Method="urn:oasis:names:tc:SAML:2.0:cm:bearer">
             <saml2:SubjectConfirmationData InResponseTo="$InResponseTo"
                 NotOnOrAfter="$NotOnOrAfter"

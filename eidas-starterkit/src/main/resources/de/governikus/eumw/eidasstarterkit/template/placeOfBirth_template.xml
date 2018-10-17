@@ -1,6 +1,6 @@
 <saml2:Attribute 
 FriendlyName="PlaceOfBirth" 
-Name=" http://eidas.europa.eu/attributes/naturalperson/PlaceOfBirth"
-NameFormat="urn:oasis:names:tc:SAML:2.0:attrnameformat:uri">
+Name="http://eidas.europa.eu/attributes/naturalperson/PlaceOfBirth"
+NameFormat="urn:oasis:names:tc:SAML:2.0:attrname-format:uri">
 <saml2:AttributeValue xsi:type="eidas:PlaceOfBirthType">$value</saml2:AttributeValue>
 </saml2:Attribute>
