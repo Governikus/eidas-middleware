@@ -13,9 +13,12 @@ package de.governikus.eumw.eidasstarterkit;
 import java.security.PrivateKey;
 import java.security.cert.CertificateEncodingException;
 import java.security.cert.X509Certificate;
+import java.security.interfaces.RSAPrivateKey;
+import java.util.logging.Logger;
 
 import javax.xml.bind.DatatypeConverter;
 
+import org.apache.xml.security.algorithms.JCEMapper;
 import org.apache.xml.security.signature.XMLSignature;
 import org.opensaml.saml.common.SAMLObjectContentReference;
 import org.opensaml.saml.security.impl.SAMLSignatureProfileValidator;
@@ -85,7 +88,7 @@ final class XMLSignatureHandler
    * @param type specifies how to identify the key in the signature
    * @throws CertificateEncodingException
    */
-  static void addSignature(SignableXMLObject signable,
+  static synchronized void addSignature(SignableXMLObject signable,
                                   PrivateKey key,
                                   X509Certificate cert,
                                   SigEntryType type,
@@ -96,6 +99,17 @@ final class XMLSignatureHandler
     {
       return;
     }
+
+    //Testing if the key is a PKCS#11 key
+    boolean hasProviderId = false;
+    String providerId = null;
+    if (!(key instanceof RSAPrivateKey)){
+      providerId = JCEMapper.getProviderId();
+      hasProviderId = providerId != null;
+      JCEMapper.setProviderId(null);
+      Logger.getLogger(XMLSignatureHandler.class.getName()).info("Signing with PKCS#11 key. Resetting JCEMapper providerId setting");
+    }
+
     Signature sig = new SignatureBuilder().buildObject();
     BasicX509Credential credential = new BasicX509Credential(cert);
     credential.setPrivateKey(key);
@@ -194,6 +208,11 @@ final class XMLSignatureHandler
     {
       ((SAMLObjectContentReference)sig.getContentReferences()
                                       .get(0)).setDigestAlgorithm(EncryptionConstants.ALGO_ID_DIGEST_SHA256);
+    }
+
+    // Restoring the provider value if it was reset to null
+    if (hasProviderId){
+      JCEMapper.setProviderId(providerId);
     }
   }
 

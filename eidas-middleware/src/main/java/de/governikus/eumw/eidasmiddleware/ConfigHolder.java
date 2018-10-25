@@ -20,6 +20,7 @@ import java.security.cert.CertificateException;
 import java.security.cert.X509Certificate;
 import java.util.Properties;
 
+import de.governikus.eumw.eidasmiddleware.pkcs11.EidsaSignerCredentialConfiguration;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
@@ -28,7 +29,7 @@ import de.governikus.eumw.eidascommon.Utils.X509KeyPair;
 import de.governikus.eumw.eidasstarterkit.EidasContactPerson;
 import de.governikus.eumw.eidasstarterkit.EidasOrganisation;
 import de.governikus.eumw.poseidas.cardbase.StringUtil;
-
+import org.opensaml.security.x509.BasicX509Credential;
 
 
 public class ConfigHolder
@@ -263,6 +264,18 @@ public class ConfigHolder
 
   public static X509KeyPair getAppSignatureKeyPair() throws IOException, GeneralSecurityException
   {
+    // Check is a HSM key is configured if so, then read key and cert form PKCS#11 configured token
+    // The key should be read each time from the Credential to allow round robin selection of multiple PKCS#11 keys.
+    BasicX509Credential pkcs11SignCredential = EidsaSignerCredentialConfiguration.getSamlMessageSigningCredential();
+    if (pkcs11SignCredential != null){
+      ConfigHolder.holder.signKey = new X509KeyPair(
+              pkcs11SignCredential.getPrivateKey(),
+              new X509Certificate[]{pkcs11SignCredential.getEntityCertificate()}
+              );
+      return ConfigHolder.holder.signKey;
+    }
+
+    //Legacy configured key on disk.
     if (ConfigHolder.holder.signKey == null)
     {
       synchronized (LOCKOBJECT)
@@ -291,6 +304,18 @@ public class ConfigHolder
 
   private static X509KeyPair getAppDecryptionKeyPair() throws IOException, GeneralSecurityException
   {
+    // Check is a HSM key is configured if so, then read key and cert form PKCS#11 configured token
+    // The key should be read each time from the Credential to allow round robin selection of multiple PKCS#11 keys.
+    // The same key is selected as for signing simply because the decryption key is not used for any producation task.
+    // It is only used in demos
+    BasicX509Credential pkcs11SignCredential = EidsaSignerCredentialConfiguration.getSamlMessageSigningCredential();
+    if (pkcs11SignCredential != null){
+      ConfigHolder.holder.signKey = new X509KeyPair(
+              pkcs11SignCredential.getPrivateKey(),
+              new X509Certificate[]{pkcs11SignCredential.getEntityCertificate()}
+      );
+      return ConfigHolder.holder.signKey;
+    }
     if (ConfigHolder.holder.cryptKey == null)
     {
       synchronized (LOCKOBJECT)
