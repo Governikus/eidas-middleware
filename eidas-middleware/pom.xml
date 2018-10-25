@@ -59,6 +59,12 @@
             <groupId>org.opensaml</groupId>
             <artifactId>opensaml-saml-impl</artifactId>
         </dependency>
+        <!-- PKCS#11 support -->
+        <dependency>
+            <groupId>se.swedenconnect.opensaml</groupId>
+            <artifactId>pkcs11-support</artifactId>
+            <version>0.0.1-SNAPSHOT</version>
+        </dependency>
 
         <!-- logging -->
         <dependency>
