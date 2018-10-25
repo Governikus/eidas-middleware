@@ -306,9 +306,7 @@ public class ConfigHolder
             pkcs11SignCredential.getPrivateKey(),
             new X509Certificate[]{pkcs11SignCredential.getEntityCertificate()}
     );
-    String provider = ((PKCS11Credential)pkcs11SignCredential).getCurrentKeyProvider();
-    JCEMapper.setProviderId(null);
-    LOG.info("Selecting PKCS#11 key from provider: "+ provider);
+    LOG.info("Selecting PKCS#11 key from provider: "+ ((PKCS11Credential)pkcs11SignCredential).getCurrentKeyProvider());
   }
 
   private static X509KeyPair getAppDecryptionKeyPair() throws IOException, GeneralSecurityException

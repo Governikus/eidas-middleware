@@ -1,5 +1,6 @@
 package de.governikus.eumw.eidasmiddleware.pkcs11;
 
+import org.apache.xml.security.algorithms.JCEMapper;
 import org.opensaml.security.x509.BasicX509Credential;
 import se.swedenconnect.opensaml.pkcs11.PKCS11Provider;
 import se.swedenconnect.opensaml.pkcs11.credential.PKCS11NoTestCredential;
@@ -42,6 +43,8 @@ public class EidsaSignerCredentialConfiguration {
                         pkcs11Config.getKeySourcePassMd()
                 );
                 log.info("Loaded Metadata signing key from PKCS#11 provider source");
+                JCEMapper.setProviderId(null);
+
             } catch (Exception e) {
                 e.printStackTrace();
             }
