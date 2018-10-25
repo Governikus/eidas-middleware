@@ -29,7 +29,9 @@ import de.governikus.eumw.eidascommon.Utils.X509KeyPair;
 import de.governikus.eumw.eidasstarterkit.EidasContactPerson;
 import de.governikus.eumw.eidasstarterkit.EidasOrganisation;
 import de.governikus.eumw.poseidas.cardbase.StringUtil;
+import org.apache.xml.security.algorithms.JCEMapper;
 import org.opensaml.security.x509.BasicX509Credential;
+import se.swedenconnect.opensaml.pkcs11.credential.PKCS11Credential;
 
 
 public class ConfigHolder
@@ -268,10 +270,7 @@ public class ConfigHolder
     // The key should be read each time from the Credential to allow round robin selection of multiple PKCS#11 keys.
     BasicX509Credential pkcs11SignCredential = EidsaSignerCredentialConfiguration.getSamlMessageSigningCredential();
     if (pkcs11SignCredential != null){
-      ConfigHolder.holder.signKey = new X509KeyPair(
-              pkcs11SignCredential.getPrivateKey(),
-              new X509Certificate[]{pkcs11SignCredential.getEntityCertificate()}
-              );
+      selectPKCS11Credentials(pkcs11SignCredential);
       return ConfigHolder.holder.signKey;
     }
 
@@ -302,6 +301,16 @@ public class ConfigHolder
     }
   }
 
+  private static void selectPKCS11Credentials(BasicX509Credential pkcs11SignCredential) {
+    ConfigHolder.holder.signKey = new X509KeyPair(
+            pkcs11SignCredential.getPrivateKey(),
+            new X509Certificate[]{pkcs11SignCredential.getEntityCertificate()}
+    );
+    String provider = ((PKCS11Credential)pkcs11SignCredential).getCurrentKeyProvider();
+    JCEMapper.setProviderId(provider);
+    LOG.info("Selecting PKCS#11 key from provider: "+ provider);
+  }
+
   private static X509KeyPair getAppDecryptionKeyPair() throws IOException, GeneralSecurityException
   {
     // Check is a HSM key is configured if so, then read key and cert form PKCS#11 configured token
@@ -310,10 +319,7 @@ public class ConfigHolder
     // It is only used in demos
     BasicX509Credential pkcs11SignCredential = EidsaSignerCredentialConfiguration.getSamlMessageSigningCredential();
     if (pkcs11SignCredential != null){
-      ConfigHolder.holder.signKey = new X509KeyPair(
-              pkcs11SignCredential.getPrivateKey(),
-              new X509Certificate[]{pkcs11SignCredential.getEntityCertificate()}
-      );
+      selectPKCS11Credentials(pkcs11SignCredential);
       return ConfigHolder.holder.signKey;
     }
     if (ConfigHolder.holder.cryptKey == null)
