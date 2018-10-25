@@ -15,19 +15,22 @@ import java.util.logging.Logger;
 
 public class EidsaSignerCredentialConfiguration {
 
+    public static final String PKCS11_CONFIG_LOCATION = "PKCS11_CONFIG_LOCATION";
+    public static final String PKCS11_PIN = "PKCS11_PIN";
     private static final Logger log = Logger.getLogger(EidsaSignerCredentialConfiguration.class.getName());
     private static BasicX509Credential samlMessageSigningCredential;
     private static BasicX509Credential metadataSigningCredential;
-    private static String pkcs11ConfigLocation;
+    private static String pkcs11ConfigLocation, pkcs11Pin;
     private static EidasSignerPKCS11ConfigData pkcs11Config;
 
     static {
-        pkcs11ConfigLocation = System.getenv("PKCS11_CONFIG_LOCATION");
+        pkcs11ConfigLocation = System.getenv(PKCS11_CONFIG_LOCATION);
+        pkcs11Pin = System.getenv(PKCS11_PIN);
         if (pkcs11ConfigLocation == null) {
             log.info("No PKCS#11 config location specified - loading default keys");
         } else {
             try {
-                pkcs11Config = new EidasSignerPKCS11ConfigData(pkcs11ConfigLocation);
+                pkcs11Config = new EidasSignerPKCS11ConfigData(pkcs11ConfigLocation, pkcs11Pin);
                 PKCS11Provider pkcs11Provider = pkcs11Config.getPKCS11Provider();
                 samlMessageSigningCredential = new PKCS11NoTestCredential(
                         getCert(pkcs11Config.getKeySourceCertLocation()),

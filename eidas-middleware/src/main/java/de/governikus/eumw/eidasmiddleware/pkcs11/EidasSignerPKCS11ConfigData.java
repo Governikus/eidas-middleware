@@ -30,12 +30,13 @@ public class EidasSignerPKCS11ConfigData {
     private String keySourcePassMd, keySourceAliasMd, keySourceCertLocationMd, keySourceKeyLocationMd;
     private List<SoftHsmCredentialConfiguration> credentialConfigurationList;
 
-    public EidasSignerPKCS11ConfigData(String pkcs11ConfigLocation) throws IOException {
+    public EidasSignerPKCS11ConfigData(String pkcs11ConfigLocation, String pkcs11Pin) throws IOException {
         log.info("Attempting to load PKCS#11 configuration from: " + pkcs11ConfigLocation);
         Properties prop = new Properties();
         prop.load(new FileInputStream(new File(pkcs11ConfigLocation)));
         hsmExternalCfgLocations = getPropertyArray(prop.getProperty("hsmExternalCfgLocations"),",");
-        hsmPin = prop.getProperty("hsmPin");
+        //Choose pkcs11PIN set through env variable over one set in properties file.
+        hsmPin = pkcs11Pin !=null ? pkcs11Pin : prop.getProperty("hsmPin");
         hsmLib = prop.getProperty("hsmLib");
         hsmProviderName = prop.getProperty("hsmProviderName");
         hsmSlot = prop.getProperty("hsmSlot");
