@@ -307,7 +307,7 @@ public class ConfigHolder
             new X509Certificate[]{pkcs11SignCredential.getEntityCertificate()}
     );
     String provider = ((PKCS11Credential)pkcs11SignCredential).getCurrentKeyProvider();
-    JCEMapper.setProviderId(provider);
+    JCEMapper.setProviderId(null);
     LOG.info("Selecting PKCS#11 key from provider: "+ provider);
   }
 
