@@ -62,8 +62,8 @@
         <!-- PKCS#11 support -->
         <dependency>
             <groupId>se.swedenconnect.opensaml</groupId>
-            <artifactId>pkcs11-support</artifactId>
-            <version>1.0.0</version>
+            <artifactId>opensaml-pkcs11-support</artifactId>
+            <version>1.0.1</version>
         </dependency>
 
         <!-- logging -->

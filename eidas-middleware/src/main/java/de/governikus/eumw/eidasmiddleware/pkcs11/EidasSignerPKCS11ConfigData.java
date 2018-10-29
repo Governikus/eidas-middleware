@@ -27,7 +27,6 @@ public class EidasSignerPKCS11ConfigData {
     int hsmSlotListIndex;
     int hsmSlotListIndexMaxRange;
     private String keySourcePass, keySourceAlias, keySourceCertLocation, keySourceKeyLocation;
-    private String keySourcePassMd, keySourceAliasMd, keySourceCertLocationMd, keySourceKeyLocationMd;
     private List<SoftHsmCredentialConfiguration> credentialConfigurationList;
 
     public EidasSignerPKCS11ConfigData(String pkcs11ConfigLocation, String pkcs11Pin) throws IOException {
@@ -46,13 +45,8 @@ public class EidasSignerPKCS11ConfigData {
         keySourceAlias = prop.getProperty("keySourceAlias");
         keySourceCertLocation = prop.getProperty("keySourceCertLocation");
         keySourceKeyLocation = prop.getProperty("keySourceKeyLocation");
-        keySourcePassMd = prop.getProperty("keySourcePassMd");
-        keySourceAliasMd = prop.getProperty("keySourceAliasMd");
-        keySourceCertLocationMd = prop.getProperty("keySourceCertLocationMd");
-        keySourceKeyLocationMd = prop.getProperty("keySourceKeyLocationMd");
         credentialConfigurationList = Arrays.asList(
-                new SoftHsmCredentialConfiguration(keySourceAlias,keySourceKeyLocation,keySourceCertLocation),
-                new SoftHsmCredentialConfiguration(keySourceAliasMd,keySourceKeyLocationMd,keySourceCertLocationMd)
+                new SoftHsmCredentialConfiguration(keySourceAlias,keySourceKeyLocation,keySourceCertLocation)
         );
 
         log.info("PKCS#11 configuration loaded");
@@ -79,7 +73,7 @@ public class EidasSignerPKCS11ConfigData {
             configuration = new PKCS11ProvidedCfgConfiguration(Arrays.asList(hsmExternalCfgLocations));
             log.info("Setting up PKCS11 configuration based on externally provided PKCS11 config files");
         } else {
-            if (keySourceKeyLocation != null && keySourceKeyLocationMd != null && hsmPin != null) {
+            if (keySourceKeyLocation != null && hsmPin != null) {
                 PKCS11SoftHsmProviderConfiguration softHsmConfig = new PKCS11SoftHsmProviderConfiguration();
                 softHsmConfig.setCredentialConfigurationList(credentialConfigurationList);
                 softHsmConfig.setPin(hsmPin);
@@ -111,17 +105,5 @@ public class EidasSignerPKCS11ConfigData {
 
     public String getKeySourceCertLocation() {
         return keySourceCertLocation;
-    }
-
-    public String getKeySourcePassMd() {
-        return keySourcePassMd;
-    }
-
-    public String getKeySourceAliasMd() {
-        return keySourceAliasMd;
-    }
-
-    public String getKeySourceCertLocationMd() {
-        return keySourceCertLocationMd;
     }
 }

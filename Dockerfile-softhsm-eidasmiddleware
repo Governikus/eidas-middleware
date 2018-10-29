@@ -1,0 +1,43 @@
+FROM docker.sunet.se/openjdk-jre-luna:luna6.2-jre8
+
+# Install pkcs11-tool
+RUN apt-get install -y pcscd libccid libpcsclite-dev libssl-dev libreadline-dev autoconf automake build-essential docbook-xsl xsltproc libtool pkg-config && \
+    wget https://github.com/OpenSC/OpenSC/releases/download/0.17.0/opensc-0.17.0.tar.gz && \
+    tar xfvz opensc-*.tar.gz && \
+    cd opensc-0.17.0 && \
+    ./bootstrap && ./configure --prefix=/usr --sysconfdir=/etc/opensc && \
+    make && make install && \
+    cd .. && rm -rf opensc*
+
+# Setup softhsm
+RUN mkdir /var/lib/softhsm/tokens
+
+#ADD target/se-proxy-service-1.1.14-SNAPSHOT.jar /app.jar
+#COPY src/main/resources/cfg/start.sh /
+
+#ENTRYPOINT /start.sh
+
+#EXPOSE 8080
+#EXPOSE 8443
+#EXPOSE 8009
+#EXPOSE 8008
+
+
+# Define the spring boot configuration directory
+ENV CONFIG_DIR=/opt/eidas-middleware/configuration
+
+# Define the location of the configuration directory inside of the container
+ENV SPRING_CONFIG_ADDITIONAL_LOCATION=file:${CONFIG_DIR}/
+
+# Expose the ports we're interested in
+EXPOSE 8443
+
+RUN mkdir -p /opt/eidas-middleware
+WORKDIR /opt/eidas-middleware
+
+# Add built eidas middleware application
+ADD eidas-middleware/target/eidas-middleware.jar eidas-middleware.jar
+RUN mkdir -p ${CONFIG_DIR}
+
+#ENTRYPOINT ["java", "-jar", "./eidas-middleware.jar"]
+ENTRYPOINT ["java","-agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=8218","-jar","eidas-middleware.jar"]
