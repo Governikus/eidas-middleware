@@ -3,7 +3,7 @@ package de.governikus.eumw.eidasmiddleware.pkcs11;
 import org.apache.xml.security.algorithms.JCEMapper;
 import org.opensaml.security.x509.BasicX509Credential;
 import se.swedenconnect.opensaml.pkcs11.PKCS11Provider;
-import se.swedenconnect.opensaml.pkcs11.credential.PKCS11NoTestCredential;
+import se.swedenconnect.opensaml.pkcs11.credential.PKCS11Credential;
 
 import java.io.FileInputStream;
 import java.io.IOException;
@@ -31,7 +31,7 @@ public class EidsaSignerCredentialConfiguration {
             try {
                 pkcs11Config = new EidasSignerPKCS11ConfigData(pkcs11ConfigLocation, pkcs11Pin);
                 PKCS11Provider pkcs11Provider = pkcs11Config.getPKCS11Provider();
-                samlMessageSigningCredential = new PKCS11NoTestCredential(
+                samlMessageSigningCredential = new PKCS11Credential(
                         getCert(pkcs11Config.getKeySourceCertLocation()),
                         pkcs11Provider.getProviderNameList(),
                         pkcs11Config.getKeySourceAlias(),
