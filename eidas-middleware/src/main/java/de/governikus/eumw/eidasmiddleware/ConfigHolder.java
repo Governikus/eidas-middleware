@@ -29,7 +29,6 @@ import de.governikus.eumw.eidascommon.Utils.X509KeyPair;
 import de.governikus.eumw.eidasstarterkit.EidasContactPerson;
 import de.governikus.eumw.eidasstarterkit.EidasOrganisation;
 import de.governikus.eumw.poseidas.cardbase.StringUtil;
-import org.apache.xml.security.algorithms.JCEMapper;
 import org.opensaml.security.x509.BasicX509Credential;
 import se.swedenconnect.opensaml.pkcs11.credential.PKCS11Credential;
 
@@ -270,7 +269,7 @@ public class ConfigHolder
     // The key should be read each time from the Credential to allow round robin selection of multiple PKCS#11 keys.
     BasicX509Credential pkcs11SignCredential = EidsaSignerCredentialConfiguration.getSamlMessageSigningCredential();
     if (pkcs11SignCredential != null){
-      selectPKCS11Credentials(pkcs11SignCredential);
+      ConfigHolder.holder.signKey = getPKCS11Credentials(pkcs11SignCredential);
       return ConfigHolder.holder.signKey;
     }
 
@@ -301,12 +300,13 @@ public class ConfigHolder
     }
   }
 
-  private static void selectPKCS11Credentials(BasicX509Credential pkcs11SignCredential) {
-    ConfigHolder.holder.signKey = new X509KeyPair(
-            pkcs11SignCredential.getPrivateKey(),
-            new X509Certificate[]{pkcs11SignCredential.getEntityCertificate()}
+  private static X509KeyPair getPKCS11Credentials(BasicX509Credential pkcs11Credential) {
+    X509KeyPair keyPair = new X509KeyPair(
+            pkcs11Credential.getPrivateKey(),
+            new X509Certificate[]{pkcs11Credential.getEntityCertificate()}
     );
-    LOG.info("Selecting PKCS#11 key from provider: "+ ((PKCS11Credential)pkcs11SignCredential).getCurrentKeyProvider());
+    LOG.info("Selecting PKCS#11 key from provider: "+ ((PKCS11Credential)pkcs11Credential).getCurrentKeyProvider());
+    return keyPair;
   }
 
   private static X509KeyPair getAppDecryptionKeyPair() throws IOException, GeneralSecurityException
@@ -315,10 +315,10 @@ public class ConfigHolder
     // The key should be read each time from the Credential to allow round robin selection of multiple PKCS#11 keys.
     // The same key is selected as for signing simply because the decryption key is not used for any producation task.
     // It is only used in demos
-    BasicX509Credential pkcs11SignCredential = EidsaSignerCredentialConfiguration.getSamlMessageSigningCredential();
-    if (pkcs11SignCredential != null){
-      selectPKCS11Credentials(pkcs11SignCredential);
-      return ConfigHolder.holder.signKey;
+    BasicX509Credential pkcs11EncCredential = EidsaSignerCredentialConfiguration.getSamlMessageEncryptionCredential();
+    if (pkcs11EncCredential != null){
+      ConfigHolder.holder.cryptKey = getPKCS11Credentials(pkcs11EncCredential);
+      return ConfigHolder.holder.cryptKey;
     }
     if (ConfigHolder.holder.cryptKey == null)
     {

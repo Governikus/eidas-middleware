@@ -19,6 +19,7 @@ public class EidsaSignerCredentialConfiguration {
     public static final String PKCS11_PIN = "PKCS11_PIN";
     private static final Logger log = Logger.getLogger(EidsaSignerCredentialConfiguration.class.getName());
     private static BasicX509Credential samlMessageSigningCredential;
+    private static BasicX509Credential samlMessageEncryptionCredential;
     private static String pkcs11ConfigLocation, pkcs11Pin;
     private static EidasSignerPKCS11ConfigData pkcs11Config;
 
@@ -38,6 +39,13 @@ public class EidsaSignerCredentialConfiguration {
                         pkcs11Config.getKeySourcePass()
                 );
                 log.info("Loaded SAML signing key from PKCS#11 provider source");
+                samlMessageEncryptionCredential = new PKCS11Credential(
+                        getCert(pkcs11Config.getKeySourceCertLocationEnc()),
+                        pkcs11Provider.getProviderNameList(),
+                        pkcs11Config.getKeySourceAliasEnc(),
+                        pkcs11Config.getKeySourcePassEnc()
+                );
+                log.info("Loaded SAML encryption key from PKCS#11 provider source");
                 JCEMapper.setProviderId(null);
 
             } catch (Exception e) {
@@ -65,5 +73,9 @@ public class EidsaSignerCredentialConfiguration {
 
     public static BasicX509Credential getSamlMessageSigningCredential() {
         return samlMessageSigningCredential;
+    }
+
+    public static BasicX509Credential getSamlMessageEncryptionCredential() {
+        return samlMessageEncryptionCredential;
     }
 }
