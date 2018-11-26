@@ -1,10 +1,10 @@
 FROM docker.sunet.se/openjdk-jre-luna:luna6.2-jre8
 
 # Install pkcs11-tool
-RUN apt-get install -y pcscd libccid libpcsclite-dev libssl-dev libreadline-dev autoconf automake build-essential docbook-xsl xsltproc libtool pkg-config && \
-    wget https://github.com/OpenSC/OpenSC/releases/download/0.17.0/opensc-0.17.0.tar.gz && \
+RUN apt-get update && apt-get install -y pcscd libccid libpcsclite-dev libssl-dev libreadline-dev autoconf automake build-essential docbook-xsl xsltproc libtool pkg-config && \
+    wget https://github.com/OpenSC/OpenSC/releases/download/0.19.0/opensc-0.19.0.tar.gz && \
     tar xfvz opensc-*.tar.gz && \
-    cd opensc-0.17.0 && \
+    cd opensc-0.19.0 && \
     ./bootstrap && ./configure --prefix=/usr --sysconfdir=/etc/opensc && \
     make && make install && \
     cd .. && rm -rf opensc*

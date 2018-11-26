@@ -63,7 +63,7 @@
         <dependency>
             <groupId>se.swedenconnect.opensaml</groupId>
             <artifactId>opensaml-pkcs11-support</artifactId>
-            <version>1.0.1</version>
+            <version>1.1.0</version>
         </dependency>
 
         <!-- logging -->

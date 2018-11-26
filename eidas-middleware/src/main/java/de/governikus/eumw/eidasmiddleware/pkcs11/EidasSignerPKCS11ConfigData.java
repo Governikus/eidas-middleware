@@ -7,10 +7,15 @@ import se.swedenconnect.opensaml.pkcs11.configuration.PKCS11ProvidedCfgConfigura
 import se.swedenconnect.opensaml.pkcs11.configuration.PKCS11ProviderConfiguration;
 import se.swedenconnect.opensaml.pkcs11.configuration.PKCS11SoftHsmProviderConfiguration;
 import se.swedenconnect.opensaml.pkcs11.configuration.SoftHsmCredentialConfiguration;
+import se.swedenconnect.opensaml.pkcs11.providerimpl.PKCS11ProviderInstance;
+import sun.security.pkcs11.SunPKCS11;
 
+import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
+import java.security.Provider;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Properties;
@@ -96,7 +101,13 @@ public class EidasSignerPKCS11ConfigData {
             configuration.setSlotListIndexMaxRange(hsmSlotListIndexMaxRange);
         }
 
-        PKCS11ProviderFactory factory = new PKCS11ProviderFactory(configuration);
+        PKCS11ProviderFactory factory = new PKCS11ProviderFactory(configuration, new PKCS11ProviderInstance() {
+            @Override
+            public Provider getProviderInstance(String configData) {
+                Provider pkcs11provider = new SunPKCS11(new ByteArrayInputStream(configData.getBytes(StandardCharsets.UTF_8)));
+                return pkcs11provider;
+            }
+        });
         PKCS11Provider pkcs11Provider = factory.createInstance();
         return pkcs11Provider;
     }
