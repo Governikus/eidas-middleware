@@ -7,7 +7,7 @@
                 <alg:SigningMethod MinKeySize="256" Algorithm="http://www.w3.org/2001/04/xmldsig-more#ecdsa-sha256"/>
                 <alg:SigningMethod MinKeySize="3072" MaxKeySize="4096"  Algorithm="http://www.w3.org/2001/04/xmldsig-more#rsa-sha256"/>                
             </md:Extensions>
-      <md:SPSSODescriptor AuthnRequestsSigned="true" WantAssertionsSigned="false"
+      <md:SPSSODescriptor AuthnRequestsSigned="true" WantAssertionsSigned="$signAssertions"
             protocolSupportEnumeration="urn:oasis:names:tc:SAML:2.0:protocol">
             <md:KeyDescriptor use="signing">
                 <ds:KeyInfo xmlns:ds="http://www.w3.org/2000/09/xmldsig#">

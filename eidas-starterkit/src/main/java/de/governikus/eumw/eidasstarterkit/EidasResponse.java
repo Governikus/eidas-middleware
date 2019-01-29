@@ -242,7 +242,14 @@ public class EidasResponse
     return returnValue;
   }
 
-  byte[] generate() throws XMLParserException, IOException, UnmarshallingException,
+  byte[] generate() throws IOException, CertificateEncodingException, TransformerException,
+      EncryptionException, UnmarshallingException, MarshallingException, ComponentInitializationException,
+      XMLParserException, SignatureException
+  {
+    return generate(false);
+  }
+
+  byte[] generate(boolean signAssertion) throws XMLParserException, IOException, UnmarshallingException,
     CertificateEncodingException, EncryptionException, MarshallingException, SignatureException,
     TransformerFactoryConfigurationError, TransformerException, ComponentInitializationException
   {
@@ -278,7 +285,7 @@ public class EidasResponse
     assoTemp = assoTemp.replace("$Destination", destination);
 
     String generatedAssertionXML = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>" + assoTemp;
-    Assertion ass = null;
+    Assertion ass;
     BasicParserPool ppMgr = Utils.getBasicParserPool();
     try (InputStream is = new ByteArrayInputStream(generatedAssertionXML.getBytes(StandardCharsets.UTF_8)))
     {
@@ -288,6 +295,23 @@ public class EidasResponse
       UnmarshallerFactory unmarshallerFactory = XMLObjectProviderRegistrySupport.getUnmarshallerFactory();
       Unmarshaller unmarshaller = unmarshallerFactory.getUnmarshaller(metadataRoot);
       ass = (Assertion)unmarshaller.unmarshall(metadataRoot);
+    }
+
+    if (signAssertion) {
+      Marshaller assMarshaller = XMLObjectProviderRegistrySupport.getMarshallerFactory()
+          .getMarshaller(ass.getElementQName());
+
+      XMLSignatureHandler.addSignature(ass,
+          signer.getSigKey(),
+          signer.getSigCert(),
+          signer.getSigType(),
+          signer.getSigDigestAlg());
+
+      assMarshaller.marshall(ass);
+
+      if (ass.getSignature() != null) {
+        Signer.signObject(ass.getSignature());
+      }
     }
 
     Assertion[] assertions = new Assertion[]{ass};

@@ -88,6 +88,8 @@ public class EidasMetadataNode
 
   private List<EidasNameIdType> supportedNameIdTypes = new ArrayList<>();
 
+  private Boolean signAssertions = false;
+
   private EidasMetadataNode()
   {
     super();
@@ -229,6 +231,14 @@ public class EidasMetadataNode
     this.spType = spType;
   }
 
+  public Boolean wantSignedAssertions() {
+    return signAssertions;
+  }
+
+  public void setSignAssertions(Boolean signAssertions) {
+    this.signAssertions = signAssertions;
+  }
+
   /**
    * Creates a metadata.xml as byte array
    * 
@@ -276,6 +286,7 @@ public class EidasMetadataNode
     template = template.replace("$supPersonTel", supportcontact.getTel());
     template = template.replace("$POST_ENDPOINT", postEndpoint);
     template = template.replace("$SPType", spType.value);
+    template = template.replace("$signAssertions", signAssertions.toString());
 
 
 
@@ -378,6 +389,8 @@ public class EidasMetadataNode
         eidasMetadataService.setPostEndpoint(s.getLocation());
       }
     });
+
+    eidasMetadataService.setSignAssertions(ssoDescriptor.getWantAssertionsSigned());
 
     for ( KeyDescriptor k : ssoDescriptor.getKeyDescriptors() )
     {

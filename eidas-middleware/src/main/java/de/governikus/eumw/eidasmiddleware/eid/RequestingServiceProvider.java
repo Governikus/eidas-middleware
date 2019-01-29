@@ -24,6 +24,8 @@ public class RequestingServiceProvider
 
   private X509Certificate encryptionCert = null;
 
+  private Boolean signAssertions = false;
+
   public RequestingServiceProvider(String entityID)
   {
     this.entityID = entityID;
@@ -62,5 +64,13 @@ public class RequestingServiceProvider
   public X509Certificate getEncryptionCert()
   {
     return encryptionCert;
+  }
+
+  public Boolean wantSignedAssertions() {
+    return signAssertions;
+  }
+
+  public void setSignAssertions(Boolean signAssertions) {
+    this.signAssertions = signAssertions;
   }
 }

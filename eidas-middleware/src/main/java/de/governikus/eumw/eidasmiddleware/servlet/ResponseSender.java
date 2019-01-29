@@ -436,7 +436,8 @@ public class ResponseSender extends HttpServlet
                                                 EidasLoA.HIGH,
                                                 samlReqSession.getReqId(),
                                                 encrypter,
-                                                signer);
+                                                signer,
+                                                reqSP.wantSignedAssertions());
     String content = WebServiceHelper.createForwardToConsumer(eidasResp, reqRelayState, null);
 
     HttpServerUtils.setPostContent(content, reqSP.getAssertionConsumerURL(), null, resp);

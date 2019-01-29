@@ -285,7 +285,8 @@ public class EidasSaml
                                       EidasLoA loa,
                                       String inResponseTo,
                                       EidasEncrypter encrypter,
-                                      EidasSigner signer)
+                                      EidasSigner signer,
+                                      Boolean signAssertion)
     throws InitializationException, CertificateEncodingException, XMLParserException, IOException,
     UnmarshallingException, EncryptionException, MarshallingException, SignatureException,
     TransformerFactoryConfigurationError, TransformerException, ComponentInitializationException
@@ -293,7 +294,7 @@ public class EidasSaml
     init();
     EidasResponse response = new EidasResponse(att, destination, recipient, nameid, inResponseTo, issuer, loa,
                                                signer, encrypter);
-    return response.generate();
+    return response.generate(signAssertion);
   }
 
   /**

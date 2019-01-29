@@ -58,6 +58,7 @@ public class ServiceProviderConfig
       rsp.setAssertionConsumerURL(checkMeta.getPostEndpoint());
       rsp.setEncryptionCert(checkMeta.getEncCert());
       rsp.setSignatureCert(checkMeta.getSigCert());
+      rsp.setSignAssertions(checkMeta.wantSignedAssertions());
       firstProvider = rsp;
     }
     catch (IOException | CertificateException | XMLParserException | UnmarshallingException
