@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018 Governikus KG. Licensed under the EUPL, Version 1.2 or as soon they will be approved by
+ * Copyright (c) 2019 Governikus KG. Licensed under the EUPL, Version 1.2 or as soon they will be approved by
  * the European Commission - subsequent versions of the EUPL (the "Licence"); You may not use this work except
  * in compliance with the Licence. You may obtain a copy of the Licence at:
  * http://joinup.ec.europa.eu/software/page/eupl Unless required by applicable law or agreed to in writing,
@@ -36,7 +36,7 @@ import de.governikus.eumw.poseidas.cardbase.crypto.CipherUtil;
 
 /**
  * Implementation of secure messaging related using AES keys as it is used for nPA.
- * 
+ *
  * @see AESKeyMaterial
  * @author Jens Wothe, jw@bos-bremen.de
  * @author Arne Stahlbock, ast@bos-bremen.de
@@ -53,7 +53,7 @@ public class AESSecureMessaging implements SecureMessaging
 
   /**
    * Constructor.
-   * 
+   *
    * @param keyMaterial key material, <code>null</code> not permitted
    * @throws IllegalArgumentException if key material <code>null</code>
    */
@@ -66,7 +66,7 @@ public class AESSecureMessaging implements SecureMessaging
 
   /**
    * Enciphers a single command.
-   * 
+   *
    * @param command command to encipher, <code>null</code> not permitted
    * @return enciphered command
    * @throws IllegalArgumentException if command <code>null</code>
@@ -128,7 +128,7 @@ public class AESSecureMessaging implements SecureMessaging
 
   /**
    * Deciphers a single response.
-   * 
+   *
    * @param response enciphered response, <code>null</code> not permitted
    * @return deciphered response
    * @throws IllegalArgumentException if response <code>null</code>

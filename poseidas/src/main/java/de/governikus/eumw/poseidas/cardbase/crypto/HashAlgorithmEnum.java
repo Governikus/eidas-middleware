@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018 Governikus KG. Licensed under the EUPL, Version 1.2 or as soon they will be approved by
+ * Copyright (c) 2019 Governikus KG. Licensed under the EUPL, Version 1.2 or as soon they will be approved by
  * the European Commission - subsequent versions of the EUPL (the "Licence"); You may not use this work except
  * in compliance with the Licence. You may obtain a copy of the Licence at:
  * http://joinup.ec.europa.eu/software/page/eupl Unless required by applicable law or agreed to in writing,
@@ -15,7 +15,7 @@ import de.governikus.eumw.poseidas.cardbase.asn1.OID;
 
 /**
  * Enum with known hash algorithms.
- * 
+ *
  * @see HashAlgorithm
  * @see HashConstants
  * @see HashInfo
@@ -25,49 +25,49 @@ enum HashAlgorithmEnum implements HashInfo
 {
   /**
    * MD5.
-   * 
+   *
    * @see HashConstants#MD5_ALGORITHM
    */
   MD5(HashConstants.MD5_ALGORITHM),
   /**
    * SHA1.
-   * 
+   *
    * @see HashConstants#SHA1_ALGORITHM
    */
   SHA1(HashConstants.SHA1_ALGORITHM),
   /**
    * SHA526.
-   * 
+   *
    * @see HashConstants#SHA256_ALGORITHM
    */
   SHA256(HashConstants.SHA256_ALGORITHM),
   /**
    * SHA512.
-   * 
+   *
    * @see HashConstants#SHA512_ALGORITHM
    */
   SHA512(HashConstants.SHA512_ALGORITHM),
   /**
    * SHA224.
-   * 
+   *
    * @see HashConstants#SHA224_ALGORITHM
    */
   SHA224(HashConstants.SHA224_ALGORITHM),
   /**
    * SHA384.
-   * 
+   *
    * @see HashConstants#SHA384_ALGORITHM
    */
   SHA384(HashConstants.SHA384_ALGORITHM),
   /**
    * RIPEMD160.
-   * 
+   *
    * @see HashConstants#RIPEMD160_ALGORITHM
    */
   RIPEMD160(HashConstants.RIPEMD160_ALGORITHM),
   /**
    * WHIRLPOOL.
-   * 
+   *
    * @see HashConstants#WHIRLPOOL_ALGORITHM
    */
   WHIRLPOOL(HashConstants.WHIRLPOOL_ALGORITHM);
@@ -77,7 +77,7 @@ enum HashAlgorithmEnum implements HashInfo
 
   /**
    * Constructor.
-   * 
+   *
    * @param hashAlgorithm algorithm
    */
   private HashAlgorithmEnum(HashAlgorithm hashAlgorithm)
@@ -87,7 +87,7 @@ enum HashAlgorithmEnum implements HashInfo
 
   /**
    * Gets hash algorithm.
-   * 
+   *
    * @return algorithm
    */
   public HashAlgorithm getHashAlgoritm()

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018 Governikus KG. Licensed under the EUPL, Version 1.2 or as soon they will be approved by
+ * Copyright (c) 2019 Governikus KG. Licensed under the EUPL, Version 1.2 or as soon they will be approved by
  * the European Commission - subsequent versions of the EUPL (the "Licence"); You may not use this work except
  * in compliance with the Licence. You may obtain a copy of the Licence at:
  * http://joinup.ec.europa.eu/software/page/eupl Unless required by applicable law or agreed to in writing,
@@ -26,7 +26,7 @@ public abstract class HttpPaosServlet extends HttpServlet
 
   /**
    * Informations about a HttpServletRequest
-   * 
+   *
    * @param request the request to get informations from
    * @return string with formatted informations about this request
    */
@@ -54,7 +54,7 @@ public abstract class HttpPaosServlet extends HttpServlet
 
   /**
    * Informations about parameters from a HTTPServletRequest
-   * 
+   *
    * @param request to get the parameters from
    * @return string with a list of all parameters
    */

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018 Governikus KG. Licensed under the EUPL, Version 1.2 or as soon they will be approved by
+ * Copyright (c) 2019 Governikus KG. Licensed under the EUPL, Version 1.2 or as soon they will be approved by
  * the European Commission - subsequent versions of the EUPL (the "Licence"); You may not use this work except
  * in compliance with the Licence. You may obtain a copy of the Licence at:
  * http://joinup.ec.europa.eu/software/page/eupl Unless required by applicable law or agreed to in writing,
@@ -97,6 +97,16 @@ public final class Utils
    * Contains a error page to show if something went wrong.
    */
   private static final String HTML_ERROR = loadHTMLErrorPage();
+
+  /**
+   * XML feature to disallow doctype declarations
+   */
+  private static final String DISALLOW_DOCTYPE_DECL = "http://apache.org/xml/features/disallow-doctype-decl";
+
+  /**
+   * XML feature to disallow external general entities
+   */
+  private static final String EXTERNAL_GENERAL_ENTITIES = "http://xml.org/sax/features/external-general-entities";
 
   /**
    * Load the error page.
@@ -456,25 +466,6 @@ public final class Utils
   }
 
   /**
-   * Prevents XSS attacks. Replaces special characters with their HTML entities.
-   *
-   * @param input
-   */
-  public static String replaceHTMLSymbols(String input)
-  {
-    if (input == null)
-    {
-      return null;
-    }
-    return input.replace("&", "&amp;")
-                .replace("\"", "&quot;")
-                .replace("<", "&lt;")
-                .replace(">", "&gt;")
-                .replace("'", "&#039;")
-                .replace("\\n", "<br/>");
-  }
-
-  /**
    * This line breaks the given string after 76 chars.
    *
    * @param input
@@ -684,8 +675,8 @@ public final class Utils
 
     final HashMap<String, Boolean> features = new HashMap<>();
     features.put(XMLConstants.FEATURE_SECURE_PROCESSING, true);
-    features.put("http://apache.org/xml/features/disallow-doctype-decl", true);
-    features.put("http://xml.org/sax/features/external-general-entities", false);
+    features.put(DISALLOW_DOCTYPE_DECL, true);
+    features.put(EXTERNAL_GENERAL_ENTITIES, false);
     features.put("http://xml.org/sax/features/external-parameter-entities", false);
     features.put("http://apache.org/xml/features/nonvalidating/load-external-dtd", false);
     ppMgr.setBuilderFeatures(features);
@@ -707,8 +698,8 @@ public final class Utils
   {
     DocumentBuilderFactory dbf = DocumentBuilderFactory.newInstance();
     dbf.setFeature(XMLConstants.FEATURE_SECURE_PROCESSING, true);
-    dbf.setFeature("http://apache.org/xml/features/disallow-doctype-decl", true);
-    dbf.setFeature("http://xml.org/sax/features/external-general-entities", false);
+    dbf.setFeature(DISALLOW_DOCTYPE_DECL, true);
+    dbf.setFeature(EXTERNAL_GENERAL_ENTITIES, false);
     dbf.setFeature("http://xml.org/sax/features/external-parameter-entities", false);
     dbf.setFeature("http://apache.org/xml/features/nonvalidating/load-external-dtd", false);
     dbf.setXIncludeAware(false);
@@ -779,8 +770,8 @@ public final class Utils
     throws SAXNotRecognizedException, SAXNotSupportedException, ParserConfigurationException
   {
     SAXParserFactory spf = SAXParserFactory.newInstance();
-    spf.setFeature("http://xml.org/sax/features/external-general-entities", false);
-    spf.setFeature("http://apache.org/xml/features/disallow-doctype-decl", true);
+    spf.setFeature(EXTERNAL_GENERAL_ENTITIES, false);
+    spf.setFeature(DISALLOW_DOCTYPE_DECL, true);
     return spf;
   }
 }

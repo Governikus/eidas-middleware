@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018 Governikus KG. Licensed under the EUPL, Version 1.2 or as soon they will be approved by
+ * Copyright (c) 2019 Governikus KG. Licensed under the EUPL, Version 1.2 or as soon they will be approved by
  * the European Commission - subsequent versions of the EUPL (the "Licence"); You may not use this work except
  * in compliance with the Licence. You may obtain a copy of the Licence at:
  * http://joinup.ec.europa.eu/software/page/eupl Unless required by applicable law or agreed to in writing,
@@ -54,7 +54,7 @@ public class EidasEncrypter
   /**
    * Create a XMLCipher Object. The KeyEncryptionParameters algorithm will be
    * http://www.w3.org/2001/04/xmlenc#rsa-oaep-mgf1p
-   * 
+   *
    * @param includeCert if true the certificate will be a part of the xml
    * @param cert contains the public key for encryption
    * @param cipherAlgo e.g http://www.w3.org/2009/xmlenc11#aes256-gcm
@@ -76,9 +76,9 @@ public class EidasEncrypter
     if (receiverCredential instanceof ECDHCredential)
     {
       ConcatKDFParamsType concatKDFParams = new ConcatKDFParamsType();
-      concatKDFParams.setAlgorithmID(new byte[1]);
-      concatKDFParams.setPartyUInfo(new byte[0]);
-      concatKDFParams.setPartyVInfo(new byte[0]);
+      concatKDFParams.setAlgorithmID(new byte[]{0, 1});
+      concatKDFParams.setPartyUInfo(new byte[]{0, 2});
+      concatKDFParams.setPartyVInfo(new byte[]{0, 3});
       DigestMethodType digestMethod = new DigestMethodType();
       digestMethod.setAlgorithm(EncryptionConstants.ALGO_ID_DIGEST_SHA512);
       concatKDFParams.setDigestMethod(digestMethod);
@@ -109,7 +109,7 @@ public class EidasEncrypter
 
   /**
    * Cipher-Algorithm is set to http://www.w3.org/2009/xmlenc11#aes256-gcm
-   * 
+   *
    * @param includeCert
    * @param cert
    * @throws NoSuchAlgorithmException

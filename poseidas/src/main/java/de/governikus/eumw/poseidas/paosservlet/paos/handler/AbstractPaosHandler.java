@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018 Governikus KG. Licensed under the EUPL, Version 1.2 or as soon they will be approved by
+ * Copyright (c) 2019 Governikus KG. Licensed under the EUPL, Version 1.2 or as soon they will be approved by
  * the European Commission - subsequent versions of the EUPL (the "Licence"); You may not use this work except
  * in compliance with the Licence. You may obtain a copy of the Licence at:
  * http://joinup.ec.europa.eu/software/page/eupl Unless required by applicable law or agreed to in writing,
@@ -27,15 +27,10 @@ import org.apache.commons.logging.LogFactory;
 import org.xml.sax.SAXException;
 
 import de.governikus.eumw.poseidas.ecardcore.utilities.ECardCoreUtil;
-import de.governikus.eumw.poseidas.eidmodel.data.EIDKeys;
 import de.governikus.eumw.poseidas.eidserver.convenience.EIDSequence;
 import de.governikus.eumw.poseidas.eidserver.convenience.session.SessionManager;
 import de.governikus.eumw.poseidas.paosservlet.authentication.AuthenticationConstants;
 import de.governikus.eumw.poseidas.paosservlet.authentication.paos.Util;
-import de.governikus.eumw.poseidas.server.eidservice.EIDInternal;
-import de.governikus.eumw.poseidas.server.eidservice.EIDRequestInput;
-import de.governikus.eumw.poseidas.server.idprovider.config.PoseidasConfigurator;
-import de.governikus.eumw.poseidas.server.idprovider.config.ServiceProviderDto;
 import iso.std.iso_iec._24727.tech.schema.ResponseType;
 import iso.std.iso_iec._24727.tech.schema.StartPAOS;
 
@@ -95,31 +90,14 @@ abstract public class AbstractPaosHandler
 
     sessionId = getSessionId();
     // conversationObject == null --> parsing failed, will result in StartPAOSResponse
-    if (sessionId == null && conversationObject != null)
+    if (conversationObject != null)
     {
-      throw new IllegalArgumentException("PAOS Conversation stopped: Cannot determine session ID");
-    }
-
-    if (getSessionManager().getSessionInput(sessionId) == null)
-    {
-      if ("true".equalsIgnoreCase(System.getProperty("attributeprovider.enabled")))
+      if (sessionId == null)
       {
-        EIDRequestInput requestInput = new EIDRequestInput(false, false);
-        requestInput.setRequestId(this.sessionId);
-        requestInput.addRequiredFields(EIDKeys.PROVIDE_SPECIFIC_ATTRIBUTES);
-        requestInput.addRequiredFields(EIDKeys.PROVIDE_GLOBAL_GENERIC_ATTRIBUTES);
-
-        // attribute provider must have exactly one service provider
-        ServiceProviderDto client = PoseidasConfigurator.getInstance()
-                                                      .getCurrentConfig()
-                                                      .getServiceProvider()
-                                                      .values()
-                                                      .iterator()
-                                                      .next();
-        EIDInternal.getInstance().useID(requestInput, client);
+        throw new IllegalArgumentException("PAOS Conversation stopped: Cannot determine session ID");
       }
-      // conversationObject == null --> parsing failed, will result in StartPAOSResponse
-      else if (conversationObject != null)
+
+      if (getSessionManager().getSessionInput(sessionId) == null)
       {
         throw new PaosHandlerException("Cannot find session for ID : " + sessionId, 403);
       }

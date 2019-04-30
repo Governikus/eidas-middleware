@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018 Governikus KG. Licensed under the EUPL, Version 1.2 or as soon they will be approved by
+ * Copyright (c) 2019 Governikus KG. Licensed under the EUPL, Version 1.2 or as soon they will be approved by
  * the European Commission - subsequent versions of the EUPL (the "Licence"); You may not use this work except
  * in compliance with the Licence. You may obtain a copy of the Licence at:
  * http://joinup.ec.europa.eu/software/page/eupl Unless required by applicable law or agreed to in writing,
@@ -20,7 +20,7 @@ import iso.std.iso_iec._24727.tech.schema.InputAPDUInfoType;
 
 /**
  * Interface for creator of a transmit command.
- * 
+ *
  * @author Jens Wothe, jw@bos-bremen.de
  */
 public interface TransmitCommandCreator<S extends FunctionParameter> extends APDUCountRestricted
@@ -29,7 +29,7 @@ public interface TransmitCommandCreator<S extends FunctionParameter> extends APD
   /**
    * Creates list of transmit commands for parameter (one or more plain commands, accepting all response
    * codes).
-   * 
+   *
    * @param parameter parameter
    * @return transmit commands
    * @throws Exception when creating fails, exception according internal creation steps
@@ -38,7 +38,7 @@ public interface TransmitCommandCreator<S extends FunctionParameter> extends APD
 
   /**
    * Creates list of transmit commands for parameter (one or more plain commands).
-   * 
+   *
    * @param parameter parameter
    * @param acceptedResponseList optional list of only acceptable responses, batch execution is to be stopped
    *          on first not acceptable response code

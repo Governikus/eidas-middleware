@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018 Governikus KG. Licensed under the EUPL, Version 1.2 or as soon they will be approved by
+ * Copyright (c) 2019 Governikus KG. Licensed under the EUPL, Version 1.2 or as soon they will be approved by
  * the European Commission - subsequent versions of the EUPL (the "Licence"); You may not use this work except
  * in compliance with the Licence. You may obtain a copy of the Licence at:
  * http://joinup.ec.europa.eu/software/page/eupl Unless required by applicable law or agreed to in writing,
@@ -18,7 +18,7 @@ import de.governikus.eumw.poseidas.cardbase.AssertUtil;
 
 /**
  * Abstract encoder for ASN.1 structures as part of {@link ASN1Path}.
- * 
+ *
  * @author Jens Wothe, jw@bos-bremen.de
  */
 public class AbstractASN1Encoder extends ASN1 implements ASN1Encoder
@@ -26,7 +26,7 @@ public class AbstractASN1Encoder extends ASN1 implements ASN1Encoder
 
   /**
    * Constructor.
-   * 
+   *
    * @param tag simple tag without further ASN.1 informations, null
    * @param valueBytes bytes of value
    * @see ASN1#ASN1(byte, byte[])
@@ -38,7 +38,7 @@ public class AbstractASN1Encoder extends ASN1 implements ASN1Encoder
 
   /**
    * Constructor.
-   * 
+   *
    * @param bytes bytes of ASN.1
    * @throws IOException if reading of stream fails
    * @see ASN1#ASN1(byte[])
@@ -50,14 +50,14 @@ public class AbstractASN1Encoder extends ASN1 implements ASN1Encoder
 
   /**
    * Default encoder constructor.
-   * 
+   *
    * @see ASN1#ASN1(byte, byte[])
    */
   public AbstractASN1Encoder()
   {
     super(0, new byte[0]);
   }
-  
+
   public AbstractASN1Encoder(byte[] dTagBytes, byte[] valueBytes)
   {
     super(dTagBytes, valueBytes);
@@ -98,5 +98,5 @@ public class AbstractASN1Encoder extends ASN1 implements ASN1Encoder
     }
     this.copy(asn1);
     return this;
-  }  
+  }
 }

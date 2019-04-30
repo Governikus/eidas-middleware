@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018 Governikus KG. Licensed under the EUPL, Version 1.2 or as soon they will be approved by
+ * Copyright (c) 2019 Governikus KG. Licensed under the EUPL, Version 1.2 or as soon they will be approved by
  * the European Commission - subsequent versions of the EUPL (the "Licence"); You may not use this work except
  * in compliance with the Licence. You may obtain a copy of the Licence at:
  * http://joinup.ec.europa.eu/software/page/eupl Unless required by applicable law or agreed to in writing,
@@ -12,21 +12,11 @@ package de.governikus.eumw.poseidas.server.idprovider.accounting;
 
 /**
  * Class to send SNMP traps
- * 
+ *
  * @author tautenhahn
  */
 public final class SNMPDelegate
 {
-
-  private static SNMPDelegate instance = new SNMPDelegate();
-
-  /**
-   * singleton getter
-   */
-  public static SNMPDelegate getInstance()
-  {
-    return instance;
-  }
 
   private static final String BOS_OID = "1.3.6.1.4.1.28939";
 
@@ -51,6 +41,18 @@ public final class SNMPDelegate
   public static final String CERT_RENEWAL_ASYNCHRONOUS = "poseidas has requested the renewal of an expired certificate. The administrator should get into contact with the BerCA about that process.";
 
   public static final String PUBLIC_SECTOR_KEY_REQUEST_FAILED = "The Request for the public sector key failed";
+
+  public static final String HSM_NOT_AVAILABLE = "HSM not available - cannot make certificate renewals.";
+
+  private static SNMPDelegate instance = new SNMPDelegate();
+
+  /**
+   * singleton getter
+   */
+  public static SNMPDelegate getInstance()
+  {
+    return instance;
+  }
 
   /**
    * Enumeration of OIDs to send SMNP traps for
@@ -135,7 +137,7 @@ public final class SNMPDelegate
 
   /**
    * Send an SNMP trap
-   * 
+   *
    * @param oid
    * @param message optional
    */

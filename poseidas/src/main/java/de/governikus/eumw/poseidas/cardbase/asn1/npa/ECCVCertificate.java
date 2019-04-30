@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018 Governikus KG. Licensed under the EUPL, Version 1.2 or as soon they will be approved by
+ * Copyright (c) 2019 Governikus KG. Licensed under the EUPL, Version 1.2 or as soon they will be approved by
  * the European Commission - subsequent versions of the EUPL (the "Licence"); You may not use this work except
  * in compliance with the Licence. You may obtain a copy of the Licence at:
  * http://joinup.ec.europa.eu/software/page/eupl Unless required by applicable law or agreed to in writing,
@@ -60,12 +60,6 @@ public class ECCVCertificate extends AbstractASN1Encoder
 
   private byte[] sectorPublicKeyHash;
 
-  private ATEidAccess eidAccess;
-
-  private ATSpecialFunctions specialFunctions;
-
-  private ATSpecificAttributes specificAttributes;
-
   /**
    * Constructor.
    *
@@ -97,9 +91,6 @@ public class ECCVCertificate extends AbstractASN1Encoder
     this.effectiveDate = null;
     this.expirationDate = null;
     this.sectorPublicKeyHash = null;
-    this.eidAccess = null;
-    this.specialFunctions = null;
-    this.specificAttributes = null;
 
     if (!Arrays.equals(ECCVCPath.CV_CERTIFICATE.getTag().toByteArray(), this.getDTagBytes()))
     {
@@ -110,8 +101,8 @@ public class ECCVCertificate extends AbstractASN1Encoder
     {
       List<ASN1> bodyChildList = checkBody();
 
-      if (!Arrays.equals(ECCVCPath.PROFILE_IDENTIFIER.getTag().toByteArray(), bodyChildList.get(0)
-                                                                                           .getDTagBytes()))
+      if (!Arrays.equals(ECCVCPath.PROFILE_IDENTIFIER.getTag().toByteArray(),
+                         bodyChildList.get(0).getDTagBytes()))
       {
         throw new IllegalArgumentException(ERROR_MESSAGE_NO_CVC);
       }
@@ -129,8 +120,8 @@ public class ECCVCertificate extends AbstractASN1Encoder
       }
       this.publicKey = new ECPublicKey(bodyChildList.get(2).getEncoded());
 
-      if (!Arrays.equals(ECCVCPath.HOLDER_REFERENCE.getTag().toByteArray(), bodyChildList.get(3)
-                                                                                         .getDTagBytes()))
+      if (!Arrays.equals(ECCVCPath.HOLDER_REFERENCE.getTag().toByteArray(),
+                         bodyChildList.get(3).getDTagBytes()))
       {
         throw new IllegalArgumentException(ERROR_MESSAGE_NO_CVC);
       }
@@ -143,14 +134,15 @@ public class ECCVCertificate extends AbstractASN1Encoder
       }
       this.chat = new CertificateHolderAuthorizationTemplate(bodyChildList.get(4).getEncoded());
 
-      if (!Arrays.equals(ECCVCPath.EFFECTIVE_DATE.getTag().toByteArray(), bodyChildList.get(5).getDTagBytes()))
+      if (!Arrays.equals(ECCVCPath.EFFECTIVE_DATE.getTag().toByteArray(),
+                         bodyChildList.get(5).getDTagBytes()))
       {
         throw new IllegalArgumentException(ERROR_MESSAGE_NO_CVC);
       }
       this.effectiveDate = this.getDate(bodyChildList.get(5).getValue());
 
-      if (!Arrays.equals(ECCVCPath.EXPIRATION_DATE.getTag().toByteArray(), bodyChildList.get(6)
-                                                                                        .getDTagBytes()))
+      if (!Arrays.equals(ECCVCPath.EXPIRATION_DATE.getTag().toByteArray(),
+                         bodyChildList.get(6).getDTagBytes()))
       {
         throw new IllegalArgumentException(ERROR_MESSAGE_NO_CVC);
       }
@@ -159,26 +151,6 @@ public class ECCVCertificate extends AbstractASN1Encoder
       calendar.setTime(date);
       calendar.add(Calendar.DATE, 1);
       this.expirationDate = calendar.getTime();
-
-      ASN1 eidAccessASN1 = this.getChildElementByPath(ECCVCPath.EXTENSIONS_DISCRETIONARY_DATA_EID_ACCESS);
-      if (eidAccessASN1 != null)
-      {
-        this.eidAccess = new ATEidAccess(eidAccessASN1.getChildElementList().get(1).getEncoded());
-      }
-      ASN1 specialFunctionASN1 = this.getChildElementByPath(ECCVCPath.EXTENSIONS_DISCRETIONARY_DATA_SPECIAL_FUNCTIONS);
-      if (specialFunctionASN1 != null)
-      {
-        this.specialFunctions = new ATSpecialFunctions(specialFunctionASN1.getChildElementList()
-                                                                          .get(1)
-                                                                          .getEncoded());
-      }
-      ASN1 specificAttributesASN1 = this.getChildElementByPath(ECCVCPath.EXTENSIONS_DISCRETIONARY_DATA_SPECIFIC_ATTRIBUTES);
-      if (specificAttributesASN1 != null)
-      {
-        this.specificAttributes = new ATSpecificAttributes(specificAttributesASN1.getChildElementList()
-                                                                                 .get(1)
-                                                                                 .getEncoded());
-      }
     }
     catch (IOException | ParseException e)
     {
@@ -324,21 +296,6 @@ public class ECCVCertificate extends AbstractASN1Encoder
   public CertificateHolderAuthorizationTemplate getChat()
   {
     return this.chat;
-  }
-
-  public ATEidAccess getEidAccess()
-  {
-    return this.eidAccess;
-  }
-
-  public ATSpecialFunctions getSpecialFunctions()
-  {
-    return this.specialFunctions;
-  }
-
-  public ATSpecificAttributes getSpecificAttributes()
-  {
-    return this.specificAttributes;
   }
 
   /**

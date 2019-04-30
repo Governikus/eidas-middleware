@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018 Governikus KG. Licensed under the EUPL, Version 1.2 or as soon they will be approved by
+ * Copyright (c) 2019 Governikus KG. Licensed under the EUPL, Version 1.2 or as soon they will be approved by
  * the European Commission - subsequent versions of the EUPL (the "Licence"); You may not use this work except
  * in compliance with the Licence. You may obtain a copy of the Licence at:
  * http://joinup.ec.europa.eu/software/page/eupl Unless required by applicable law or agreed to in writing,
@@ -16,7 +16,7 @@ import de.governikus.eumw.poseidas.cardserver.eac.functions.FunctionResult;
 
 /**
  * Implementation of RestrictedIdentification output parameter.
- * 
+ *
  * @see RestrictedIdentificationParameter
  * @author Jens Wothe, jw@bos-bremen.de
  * @author Arne Stahlbock, ast@bos-bremen.de
@@ -52,7 +52,7 @@ public class RestrictedIdentificationResult extends AbstractResult<byte[]> imple
 
   /**
    * Gets first ID.
-   * 
+   *
    * @return first ID, may be <code>null</code>
    */
   public byte[] getFirstID()
@@ -62,7 +62,7 @@ public class RestrictedIdentificationResult extends AbstractResult<byte[]> imple
 
   /**
    * Sets first ID.
-   * 
+   *
    * @param firstID first ID
    */
   public void setFirstID(byte[] firstID)
@@ -72,7 +72,7 @@ public class RestrictedIdentificationResult extends AbstractResult<byte[]> imple
 
   /**
    * Gets second ID.
-   * 
+   *
    * @return second ID, may be <code>null</code>
    */
   public byte[] getSecondID()
@@ -82,7 +82,7 @@ public class RestrictedIdentificationResult extends AbstractResult<byte[]> imple
 
   /**
    * Sets second ID.
-   * 
+   *
    * @param secondID second ID
    */
   public void setSecondID(byte[] secondID)

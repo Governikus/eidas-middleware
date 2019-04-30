@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018 Governikus KG. Licensed under the EUPL, Version 1.2 or as soon they will be approved by
+ * Copyright (c) 2019 Governikus KG. Licensed under the EUPL, Version 1.2 or as soon they will be approved by
  * the European Commission - subsequent versions of the EUPL (the "Licence"); You may not use this work except
  * in compliance with the Licence. You may obtain a copy of the Licence at:
  * http://joinup.ec.europa.eu/software/page/eupl Unless required by applicable law or agreed to in writing,
@@ -20,7 +20,7 @@ import de.governikus.eumw.poseidas.cardbase.constants.Constants;
 
 /**
  * Implementation of byte[]-array wrapper and of convenience methods for creating or parsing hex-Strings.
- * 
+ *
  * @author Arne Stahlbock, ast@bos-bremen.de
  * @author Jens Wothe, jw@bos-bremen.de
  */
@@ -32,14 +32,14 @@ public final class Hex
 
   /**
    * Constant of empty HEX-String.
-   * 
+   *
    * @see Constants#EMPTY_STRING
    */
   private static final String EMPTY_HEXSTRING = Constants.EMPTY_STRING;
 
   /**
    * Constant of default indent - empty String.
-   * 
+   *
    * @see Constants#EMPTY_STRING
    * @see #dump(byte[])
    */
@@ -47,14 +47,14 @@ public final class Hex
 
   /**
    * Constant of default bytes per line: <code>16</code>.
-   * 
+   *
    * @see #dump(byte[])
    */
   private static final int DEFAULT_LINE_SIZE = 16;
 
   /**
    * Hexify a byte value.
-   * 
+   *
    * @param value byte value
    * @return hex-String
    */
@@ -65,7 +65,7 @@ public final class Hex
 
   /**
    * Hexify an int value.
-   * 
+   *
    * @param value int value
    * @return hex-String
    */
@@ -76,7 +76,7 @@ public final class Hex
 
   /**
    * Hexify BigInteger.
-   * 
+   *
    * @param bi BigInteger
    * @return hex-String of BigInteger
    * @see #hexify(byte[])
@@ -92,7 +92,7 @@ public final class Hex
 
   /**
    * Hexifies byte[]-array.
-   * 
+   *
    * @param bytes bytes to hexified
    * @return hex-String of bytes
    * @see #hexify(byte[])
@@ -104,7 +104,7 @@ public final class Hex
 
   /**
    * Hexifies byte[]-array.
-   * 
+   *
    * @param bytes bytes to hexified
    * @param separator separator String for hex representation, <code>null</code> or empty String permitted
    * @return hex-String of bytes
@@ -139,7 +139,7 @@ public final class Hex
 
   /**
    * Parses hex-String to bytes.
-   * 
+   *
    * @param hexString hex-String, <code>null</code> or empty String permitted
    * @return bytes of hex-String, empty array, if <code>null</code> or empty String permitted is parsed
    * @throws IllegalArgumentException if hexString has not even length
@@ -182,7 +182,7 @@ public final class Hex
 
   /**
    * Parses hex-String into a BigInteger.
-   * 
+   *
    * @param hexString hex-String, <code>null</code> or empty String permitted, otherwise only Strings with
    *          even length permitted, line breaks or white spaces are ignored,
    * @return positive BigInteger, <code>null</code>, if String <code>null</code> or empty
@@ -204,7 +204,7 @@ public final class Hex
 
   /**
    * Removes blanks and returns from string.
-   * 
+   *
    * @param src string to be cleaned
    * @return cleaned string
    */
@@ -217,7 +217,7 @@ public final class Hex
 
   /**
    * Dumps a String representation of bytes with default indent and bytes per line.
-   * 
+   *
    * @param data data to be dumped, <code>null</code> or empty array permitted
    * @return String representation with dump
    * @see #DEFAULT_INDENT
@@ -231,7 +231,7 @@ public final class Hex
 
   /**
    * Dumps a String representation of bytes with given count of bytes for each line.
-   * 
+   *
    * @param indent indent for dump, <code>null</code> or empty String permitted
    * @param data data to be dumped, <code>null</code> or empty array permitted
    * @param lineSize bytes at each line of dump, size greater equals 1 only permitted

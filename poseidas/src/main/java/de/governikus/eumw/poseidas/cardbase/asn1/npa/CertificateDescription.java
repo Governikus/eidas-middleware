@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018 Governikus KG. Licensed under the EUPL, Version 1.2 or as soon they will be approved by
+ * Copyright (c) 2019 Governikus KG. Licensed under the EUPL, Version 1.2 or as soon they will be approved by
  * the European Commission - subsequent versions of the EUPL (the "Licence"); You may not use this work except
  * in compliance with the Licence. You may obtain a copy of the Licence at:
  * http://joinup.ec.europa.eu/software/page/eupl Unless required by applicable law or agreed to in writing,
@@ -28,7 +28,7 @@ import de.governikus.eumw.poseidas.cardbase.crypto.DigestUtil;
 
 /**
  * Implementation of CertificateDescription.
- * 
+ *
  * @author Jens Wothe, jw@bos-bremen.de
  */
 public class CertificateDescription extends AbstractASN1Encoder
@@ -38,7 +38,7 @@ public class CertificateDescription extends AbstractASN1Encoder
 
   /**
    * Sets OID.
-   * 
+   *
    * @param oid OID as String, normally "0.4.0.127.0.7.3.1.3.1" as defined at TC-03110 (version 2.02) in
    *          appendix C.3.1, <code>null</code> not permitted
    * @throws UnsupportedOperationException if adding child not supported
@@ -55,7 +55,7 @@ public class CertificateDescription extends AbstractASN1Encoder
 
   /**
    * Sets subject.
-   * 
+   *
    * @param subject subject, encoded as UTF-8, <code>null</code> not permitted
    * @throws UnsupportedOperationException if adding child not supported
    * @throws IOException if internal recoding fails
@@ -74,7 +74,7 @@ public class CertificateDescription extends AbstractASN1Encoder
 
   /**
    * Sets subject URL.
-   * 
+   *
    * @param subjectURL subject URL, <code>null</code> not permitted
    * @throws UnsupportedOperationException if adding child not supported
    * @throws IOException if internal recoding fails
@@ -93,7 +93,7 @@ public class CertificateDescription extends AbstractASN1Encoder
 
   /**
    * Sets issuer.
-   * 
+   *
    * @param issuer issuer, encoded as UTF-8, <code>null</code> not permitted
    * @throws UnsupportedOperationException if adding child not supported
    * @throws IOException if internal recoding fails
@@ -112,7 +112,7 @@ public class CertificateDescription extends AbstractASN1Encoder
 
   /**
    * Sets issuer URL.
-   * 
+   *
    * @param issuerURL issuer URL, <code>null</code> not permitted
    * @throws UnsupportedOperationException if adding child not supported
    * @throws IOException if internal recoding fails
@@ -131,7 +131,7 @@ public class CertificateDescription extends AbstractASN1Encoder
 
   /**
    * Sets redirect URL.
-   * 
+   *
    * @param redirectURL redirect URL, <code>null</code> not permitted
    * @throws UnsupportedOperationException if adding child not supported
    * @throws IOException if internal recoding fails
@@ -150,7 +150,7 @@ public class CertificateDescription extends AbstractASN1Encoder
 
   /**
    * Sets communication certificates.
-   * 
+   *
    * @param commCertificates byte-array containing subsequent ASN.1-encoded octet strings, each of which is
    *          the hash of one communication certificate, <code>null</code> or empty not permitted
    * @throws UnsupportedOperationException
@@ -171,7 +171,7 @@ public class CertificateDescription extends AbstractASN1Encoder
 
   /**
    * Constructor using bytes of ASN.1 (already full encoding).
-   * 
+   *
    * @param bytes bytes of ASN.1
    * @throws IOException if reading of stream fails
    * @see ASN1#ASN1(byte[])
@@ -187,7 +187,7 @@ public class CertificateDescription extends AbstractASN1Encoder
 
   /**
    * Checks if object really represents certificate description.
-   * 
+   *
    * @throws IllegalArgumentException if check fails
    */
   private void check()
@@ -212,7 +212,7 @@ public class CertificateDescription extends AbstractASN1Encoder
 
   /**
    * Gets part of CertificateDescription by path.
-   * 
+   *
    * @param path path to part
    * @return part of ASN.1 if found, otherwise <code>null</code>
    * @throws IOException if fails
@@ -235,7 +235,7 @@ public class CertificateDescription extends AbstractASN1Encoder
 
   /**
    * Hashes a certificate description.
-   * 
+   *
    * @param rootCert root CVC (provides algorithm to be used), <code>null</code> not permitted
    * @param cd certificate description to be hashed, <code>null</code> not permitted
    * @return hash value

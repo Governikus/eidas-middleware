@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018 Governikus KG. Licensed under the EUPL, Version 1.2 or as soon they will be approved by
+ * Copyright (c) 2019 Governikus KG. Licensed under the EUPL, Version 1.2 or as soon they will be approved by
  * the European Commission - subsequent versions of the EUPL (the "Licence"); You may not use this work except
  * in compliance with the Licence. You may obtain a copy of the Licence at:
  * http://joinup.ec.europa.eu/software/page/eupl Unless required by applicable law or agreed to in writing,
@@ -14,12 +14,10 @@ import java.net.MalformedURLException;
 import java.net.URISyntaxException;
 import java.net.URL;
 import java.security.GeneralSecurityException;
+import java.security.KeyStore;
 import java.util.Arrays;
 
 import javax.xml.bind.DatatypeConverter;
-
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 
 import de.governikus.eumw.eidascommon.Utils;
 import de.governikus.eumw.poseidas.config.schema.PkiServiceType;
@@ -33,32 +31,34 @@ import de.governikus.eumw.poseidas.server.idprovider.config.SslKeysDto;
 import de.governikus.eumw.poseidas.server.pki.caserviceaccess.PKIServiceConnector;
 import de.governikus.eumw.poseidas.server.pki.caserviceaccess.PassiveAuthServiceWrapper;
 import de.governikus.eumw.poseidas.server.pki.caserviceaccess.ServiceWrapperFactory;
+import lombok.extern.slf4j.Slf4j;
 
 
 /**
  * Process of getting and storing the master and defect lists.
- * 
+ *
  * @author tautenhahn, hme
  */
+@Slf4j
 public class MasterAndDefectListHandler extends BerCaRequestHandlerBase
 {
 
-  private static final Log LOG = LogFactory.getLog(MasterAndDefectListHandler.class);
-
   /**
    * Create new instance for current configuration
-   * 
+   *
    * @param facade must be obtained by client
    */
-  MasterAndDefectListHandler(EPAConnectorConfigurationDto nPaConf, TerminalPermissionAO facade)
+  MasterAndDefectListHandler(EPAConnectorConfigurationDto nPaConf,
+                             TerminalPermissionAO facade,
+                             KeyStore hsmKeyStore)
     throws GovManagementException
   {
-    super(nPaConf, facade);
+    super(nPaConf, facade, hsmKeyStore);
   }
 
   /**
    * Get and
-   * 
+   *
    * @throws GovManagementException
    */
   void updateLists() throws GovManagementException
@@ -72,27 +72,24 @@ public class MasterAndDefectListHandler extends BerCaRequestHandlerBase
       try
       {
         PKIServiceConnector.getContextLock();
-        LOG.debug(entityId + ": obtained lock on SSL context for downloading master and defect list");
+        log.debug("{}: obtained lock on SSL context for downloading master and defect list", cvcRefId);
         PassiveAuthServiceWrapper wrapper = createWrapper();
         masterList = getMasterList(wrapper);
         defectList = getDefectList(wrapper);
-        if (LOG.isDebugEnabled())
+        if (masterList != null)
         {
-          if (masterList != null)
-          {
-            LOG.debug("MasterList:\n"
-                      + Utils.breakAfter76Chars(DatatypeConverter.printBase64Binary(masterList)));
-          }
-          if (defectList != null)
-          {
-            LOG.debug("DefectList:\n"
-                      + Utils.breakAfter76Chars(DatatypeConverter.printBase64Binary(defectList)));
-          }
+          log.debug("MasterList:\n{}",
+                    Utils.breakAfter76Chars(DatatypeConverter.printBase64Binary(masterList)));
+        }
+        if (defectList != null)
+        {
+          log.debug("DefectList:\n{}",
+                    Utils.breakAfter76Chars(DatatypeConverter.printBase64Binary(defectList)));
         }
       }
       catch (MalformedURLException e)
       {
-        LOG.error(entityId + ": Can not parse service URL", e);
+        log.error("{}: Can not parse service URL", cvcRefId, e);
         throw new GovManagementException(GlobalManagementCodes.INTERNAL_ERROR);
       }
       catch (GovManagementException e)
@@ -101,7 +98,7 @@ public class MasterAndDefectListHandler extends BerCaRequestHandlerBase
       }
       catch (Throwable t)
       {
-        LOG.error(entityId + ": cannot renew master and defect list", t);
+        log.error("{}: cannot renew master and defect list", cvcRefId, t);
         throw new GovManagementException(GlobalManagementCodes.INTERNAL_ERROR);
       }
       finally
@@ -114,23 +111,23 @@ public class MasterAndDefectListHandler extends BerCaRequestHandlerBase
       try
       {
         // unsupported master and defect list service so we "emulate" it
-        TerminalPermission tp = facade.getTerminalPermission(entityId);
+        TerminalPermission tp = facade.getTerminalPermission(cvcRefId);
         masterList = Arrays.copyOf(tp.getMasterList(), tp.getMasterList().length);
         defectList = Arrays.copyOf(tp.getDefectList(), tp.getDefectList().length);
       }
       catch (Throwable t)
       {
-        LOG.error(entityId + ": cannot fetch master and defect list", t);
+        log.error("{}: cannot fetch master and defect list", cvcRefId, t);
         throw new GovManagementException(GlobalManagementCodes.INTERNAL_ERROR);
       }
     }
     if (masterList != null)
     {
-      facade.storeMasterList(entityId, masterList);
+      facade.storeMasterList(cvcRefId, masterList);
     }
     if (defectList != null)
     {
-      facade.storeDefectList(entityId, defectList);
+      facade.storeDefectList(cvcRefId, defectList);
     }
   }
 
@@ -145,14 +142,21 @@ public class MasterAndDefectListHandler extends BerCaRequestHandlerBase
 
     try
     {
-      PKIServiceConnector connector = new PKIServiceConnector(60, keys.getServerCertificate(),
-                                                              keys.getClientKey(),
-                                                              keys.getClientCertificateChain(), entityId);
+      PKIServiceConnector connector;
+      if (hsmKeyStore == null)
+      {
+        connector = new PKIServiceConnector(60, keys.getServerCertificate(), keys.getClientKey(),
+                                            keys.getClientCertificateChain(), cvcRefId);
+      }
+      else
+      {
+        connector = new PKIServiceConnector(60, keys.getServerCertificate(), hsmKeyStore, null, cvcRefId);
+      }
       return ServiceWrapperFactory.createPassiveAuthServiceWrapper(connector, serviceUrl, version);
     }
     catch (GeneralSecurityException e)
     {
-      LOG.error(entityId + ": problem with crypto data of SP for cvcRefID " + entityId, e);
+      log.error("{}: problem with crypto data of SP", cvcRefId, e);
       throw new GovManagementException(GlobalManagementCodes.EC_UNEXPECTED_ERROR, e.getMessage());
     }
     catch (URISyntaxException e)
@@ -167,7 +171,7 @@ public class MasterAndDefectListHandler extends BerCaRequestHandlerBase
     if (!isLocalZip(masterList))
     {
       CmsSignatureChecker checker = new CmsSignatureChecker(pkiConfig.getMasterListTrustAnchor());
-      if (!checker.checkEnvelopedSignature(masterList, entityId))
+      if (!checker.checkEnvelopedSignature(masterList, cvcRefId))
       {
         SNMPDelegate.getInstance()
                     .sendSNMPTrap(OID.MASTERLIST_SIGNATURE_WRONG,
@@ -186,7 +190,7 @@ public class MasterAndDefectListHandler extends BerCaRequestHandlerBase
     if (!isLocalZip(defectList))
     {
       CmsSignatureChecker checker = new CmsSignatureChecker(pkiConfig.getDefectListTrustAnchor());
-      if (!checker.checkEnvelopedSignature(defectList, entityId))
+      if (!checker.checkEnvelopedSignature(defectList, cvcRefId))
       {
         SNMPDelegate.getInstance()
                     .sendSNMPTrap(OID.DEFECTLIST_SIGNATURE_WRONG,

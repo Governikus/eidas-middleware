@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8" ?>
 <!--
-  ~ Copyright (c) 2018 Governikus KG. Licensed under the EUPL, Version 1.2 or as soon they will be approved by
+  ~ Copyright (c) 2019 Governikus KG. Licensed under the EUPL, Version 1.2 or as soon they will be approved by
   ~ the European Commission - subsequent versions of the EUPL (the "Licence"); You may not use this work except
   ~ in compliance with the Licence. You may obtain a copy of the Licence at:
   ~ http://joinup.ec.europa.eu/software/page/eupl Unless required by applicable law or agreed to in writing,
@@ -10,42 +10,43 @@
   -->
 
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
-<html xmlns="http://www.w3.org/1999/xhtml">
+<html xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:th="http://www.thymeleaf.org" lang="de">
 <head>
-<meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
-<meta http-equiv="cache-control" content="no-cache" />
-<meta http-equiv="pragma" content="no-cache" />
-<link rel="stylesheet" type="text/css" href="${CSS_URL}" />
-<title>Forward to Secure Page</title>
-<script type="text/javascript">
-	window.onload = function() {
-		document.forms[0].submit();
-	}
-</script>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>
+    <meta http-equiv="cache-control" content="no-cache"/>
+    <meta http-equiv="pragma" content="no-cache"/>
+    <link rel="stylesheet" type="text/css" href="${CSS_URL}"/>
+    <title>Forward to Secure Page</title>
+    <script type="text/javascript">
+        window.onload = function () {
+            document.forms[0].submit();
+        }
+    </script>
 </head>
 <body>
-	<div class="top"></div>
-	<h1 class="English">Forward to Secure Page</h1>
-	<h1 class="German">Weiterleitung zur gesch&uuml;tzten Seite</h1>
-	<noscript>
-		<p class="English">The SAML-Response should be transmitted to the
-			consumer via a HTTP Post request. Since your browser does not support
-			Java Script, please push the following button to create such request.
-		</p>
-		<p class="German">Die erzeugte SAML-Response muss nun per HTTP
-			Post an das Portal &uuml;bermittelt werden. Da Ihr Browser kein
-			Java-Script ausf&uuml;hrt, klicken Sie bitte auf den folgenden
-			Button, um fortzufahren.</p>
-	</noscript>
-	<form action="${ACTION}" method="post"
-		enctype="application/x-www-form-urlencoded">
-		<p>
-			<input type="hidden" name="SAMLResponse" value="${SAML}" /> <input
-				type="hidden" name="RelayState" value="${RELAY_STATE}" /> <input
-				class="English" type="submit" value="Continue" /> <input
-				class="German" type="submit" value="Weiter" />
-		</p>
-	</form>
-	<div class="bottom"></div>
+<div class="top"></div>
+<h1 class="English">Forward to Secure Page</h1>
+<h1 class="German">Weiterleitung zur gesch&uuml;tzten Seite</h1>
+<noscript>
+    <p class="English">The SAML-Response should be transmitted to the
+        consumer via a HTTP Post request. Since your browser does not support
+        Java Script, please push the following button to create such request.
+    </p>
+    <p class="German">Die erzeugte SAML-Response muss nun per HTTP
+        Post an das Portal &uuml;bermittelt werden. Da Ihr Browser kein
+        Java-Script ausf&uuml;hrt, klicken Sie bitte auf den folgenden
+        Button, um fortzufahren.</p>
+</noscript>
+<form action="${ACTION}" method="post"
+      enctype="application/x-www-form-urlencoded">
+    <p>
+        <input type="hidden" name="SAMLResponse" th:value="${SAML}"/>
+        <!--        ${RELAY_STATE}-->
+        <input class="English" type="submit" value="Continue"/>
+        <input class="German" type="submit" value="Weiter"/>
+    </p>
+</form>
+<div class="bottom"></div>
 </body>
 </html>

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018 Governikus KG. Licensed under the EUPL, Version 1.2 or as soon they will be approved by
+ * Copyright (c) 2019 Governikus KG. Licensed under the EUPL, Version 1.2 or as soon they will be approved by
  * the European Commission - subsequent versions of the EUPL (the "Licence"); You may not use this work except
  * in compliance with the Licence. You may obtain a copy of the Licence at:
  * http://joinup.ec.europa.eu/software/page/eupl Unless required by applicable law or agreed to in writing,
@@ -23,7 +23,7 @@ import de.governikus.eumw.poseidas.cardbase.asn1.npa.SecurityInfosPath;
 
 /**
  * Implementation of the <code>ChipAuthenticationPublicKeyInfo</code> structure in {@link SecurityInfos}.
- * 
+ *
  * @author Arne Stahlbock, ast@bos-bremen.de
  */
 public class ChipAuthenticationPublicKeyInfo extends SecurityInfo
@@ -36,7 +36,7 @@ public class ChipAuthenticationPublicKeyInfo extends SecurityInfo
 
   /**
    * Constructor.
-   * 
+   *
    * @param bytes byte-array containing ASN.1 description of a {@link ChipAuthenticationPublicKeyInfo}.
    * @throws IOException if reading bytes fails
    */
@@ -47,7 +47,7 @@ public class ChipAuthenticationPublicKeyInfo extends SecurityInfo
 
   /**
    * Gets the child element <code>chipAuthenticationPublicKey</code>.
-   * 
+   *
    * @return {@link SubjectPublicKeyInfo} instance containing <code>chipAuthenticationPublicKey</code>,
    *         <code>null</code> possible
    * @throws IOException if error in getting
@@ -63,7 +63,7 @@ public class ChipAuthenticationPublicKeyInfo extends SecurityInfo
 
   /**
    * Gets key ID if applicable.
-   * 
+   *
    * @return key ID, <code>null</code> if not present
    * @throws IOException
    */

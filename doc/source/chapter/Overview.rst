@@ -18,9 +18,9 @@ The source code of the eIDAS Middleware is hosted on `github <https://github.com
 
 The Docker Images are hosted on the `Docker Hub <https://hub.docker.com/u/governikus>`_.
 
-| :ref:`introduction` is meant to give you an overview over the German eID system.
+| :ref:`introduction` is meant to give you an overview of the German eID system.
 | In the chapter :ref:`requirements` you will find some requirements regarding hardware, software and networking.
 | The chapter :ref:`configuration-mw` will guide you through the first time configuration of the middleware.
 | The chapter :ref:`operating` will guide you on how to operate the middleware.
-| The :ref:`changelog` will list all the changes of the different releases and will advise you for possible migration problems.
+| The :ref:`changelog` lists all the changes of the different releases and will advise you for possible migration problems.
 | At the end you will find the :ref:`glossary`.

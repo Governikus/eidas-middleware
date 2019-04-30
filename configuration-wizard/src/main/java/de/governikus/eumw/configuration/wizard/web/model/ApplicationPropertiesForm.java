@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018 Governikus KG. Licensed under the EUPL, Version 1.2 or as soon they will be approved by
+ * Copyright (c) 2019 Governikus KG. Licensed under the EUPL, Version 1.2 or as soon they will be approved by
  * the European Commission - subsequent versions of the EUPL (the "Licence"); You may not use this work except
  * in compliance with the Licence. You may obtain a copy of the Licence at:
  * http://joinup.ec.europa.eu/software/page/eupl Unless required by applicable law or agreed to in writing,
@@ -31,6 +31,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 import de.governikus.eumw.configuration.wizard.identifier.ApplicationPropertiesIdentifier;
 import de.governikus.eumw.configuration.wizard.identifier.FileNames;
+import de.governikus.eumw.configuration.wizard.identifier.HSMTypeIdentifier;
 import de.governikus.eumw.utils.key.KeyStoreSupporter;
 import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
@@ -59,6 +60,11 @@ public class ApplicationPropertiesForm extends AbstractPropertiesConfigurationLo
    */
   @NotBlank
   private String serverPort;
+
+  /**
+   * This port is optional and can be used to punlish the admin interface on a different port
+   */
+  private String adminInterfacePort;
 
   /**
    * TLS keystore
@@ -107,6 +113,32 @@ public class ApplicationPropertiesForm extends AbstractPropertiesConfigurationLo
   private String additionalProperties;
 
   /**
+   * type of hsm that sould be used
+   */
+  private String hsmType;
+
+  /**
+   * Days a key should be deleted, after it expired
+   */
+  private String hsmKeysDelete;
+
+  /**
+   * option to save a Key into a Database before its deletion
+   */
+  private boolean hsmKeysArchive;
+
+  /**
+   * Path to the config-file for the SUN-PKCS11-Provider
+   */
+  private String pkcs11ConfigProviderPath;
+
+  /**
+   * Password to login into the hsm
+   */
+  private String pkcs11HsmPassword;
+
+
+  /**
    * {@inheritDoc}
    */
   @Override
@@ -115,16 +147,11 @@ public class ApplicationPropertiesForm extends AbstractPropertiesConfigurationLo
     String port = (String)applicationProperties.remove(ApplicationPropertiesIdentifier.SERVER_PORT.getPropertyName());
     this.serverPort = StringUtils.isNotBlank(port) && port.matches("\\d+") ? port : null;
     // @formatter:off
-    String keystorePath = (String)applicationProperties.remove(
-                                          ApplicationPropertiesIdentifier.SERVER_SSL_KEYSTORE.getPropertyName());
-    String keystoreAlias = (String)applicationProperties.remove(
-                                          ApplicationPropertiesIdentifier.SERVER_SSL_KEY_ALIAS.getPropertyName());
-    String keystorePassword = (String)applicationProperties.remove(
-                                          ApplicationPropertiesIdentifier.SERVER_SSL_KEYSTORE_PASSWORD.getPropertyName());
-    String keystoreType = (String)applicationProperties.remove(
-                                          ApplicationPropertiesIdentifier.SERVER_SSL_KEYSTORE_TYPE.getPropertyName());
-    String privateKeyPassword = (String)applicationProperties.remove(
-                                          ApplicationPropertiesIdentifier.SERVER_SSL_KEY_PASSWORD.getPropertyName());
+    String keystorePath = (String)applicationProperties.remove(ApplicationPropertiesIdentifier.SERVER_SSL_KEYSTORE.getPropertyName());
+    String keystoreAlias = (String)applicationProperties.remove(ApplicationPropertiesIdentifier.SERVER_SSL_KEY_ALIAS.getPropertyName());
+    String keystorePassword = (String)applicationProperties.remove(ApplicationPropertiesIdentifier.SERVER_SSL_KEYSTORE_PASSWORD.getPropertyName());
+    String keystoreType = (String)applicationProperties.remove(ApplicationPropertiesIdentifier.SERVER_SSL_KEYSTORE_TYPE.getPropertyName());
+    String privateKeyPassword = (String)applicationProperties.remove(ApplicationPropertiesIdentifier.SERVER_SSL_KEY_PASSWORD.getPropertyName());
     // @formatter:on
     loadKeystoreSettings(FilenameUtils.getBaseName(keystorePath),
                          keystorePath,
@@ -134,20 +161,28 @@ public class ApplicationPropertiesForm extends AbstractPropertiesConfigurationLo
                          privateKeyPassword).ifPresent(this::setServerSslKeystore);
 
     // @formatter:off
-    this.datasourceUrl = (String)applicationProperties.remove(
-                                          ApplicationPropertiesIdentifier.DATASOURCE_URL.getPropertyName());
-    this.datasourceUsername = (String)applicationProperties.remove(
-                                          ApplicationPropertiesIdentifier.DATASOURCE_USERNAME.getPropertyName());
-    this.datasourcePassword = (String)applicationProperties.remove(
-                                          ApplicationPropertiesIdentifier.DATASOURCE_PASSWORD.getPropertyName());
+    this.datasourceUrl = (String)applicationProperties.remove(ApplicationPropertiesIdentifier.DATASOURCE_URL.getPropertyName());
+    this.datasourceUsername = (String)applicationProperties.remove(ApplicationPropertiesIdentifier.DATASOURCE_USERNAME.getPropertyName());
+    this.datasourcePassword = (String)applicationProperties.remove(ApplicationPropertiesIdentifier.DATASOURCE_PASSWORD.getPropertyName());
 
-    this.adminUsername = (String)applicationProperties.remove(
-                                          ApplicationPropertiesIdentifier.ADMIN_USERNAME.getPropertyName());
-    this.adminPassword = (String)applicationProperties.remove(
-                                          ApplicationPropertiesIdentifier.ADMIN_PASSWORD.getPropertyName());
+    this.adminUsername = (String)applicationProperties.remove(ApplicationPropertiesIdentifier.ADMIN_USERNAME.getPropertyName());
+    this.adminPassword = (String)applicationProperties.remove(ApplicationPropertiesIdentifier.ADMIN_PASSWORD.getPropertyName());
 
-    this.logFile = (String)applicationProperties.remove(
-                                          ApplicationPropertiesIdentifier.LOGGING_FILE.getPropertyName());
+    this.logFile = (String)applicationProperties.remove(ApplicationPropertiesIdentifier.LOGGING_FILE.getPropertyName());
+
+    this.adminInterfacePort = (String)applicationProperties.remove(ApplicationPropertiesIdentifier.ADMIN_INTERFACE_PORT.getPropertyName());
+
+    this.hsmType = (String)applicationProperties.remove(ApplicationPropertiesIdentifier.HSM_TYPE.getPropertyName());
+
+    this.hsmKeysDelete = (String)applicationProperties.remove(ApplicationPropertiesIdentifier.HSM_KEYS_DELETE.getPropertyName());
+
+    this.hsmKeysArchive = Boolean.valueOf((String)applicationProperties.remove(ApplicationPropertiesIdentifier.HSM_KEYS_ARCHIVE.getPropertyName()));
+
+
+    this.pkcs11ConfigProviderPath = (String)applicationProperties.remove(ApplicationPropertiesIdentifier.PKCS11_SUN_CONFIG_PROVIDER_FILE_PATH.getPropertyName());
+
+    this.pkcs11HsmPassword = (String)applicationProperties.remove(ApplicationPropertiesIdentifier.PKCS11_HSM_PASSWORD.getPropertyName());
+
 
     StringBuilder addPropBuilder = new StringBuilder();
     applicationProperties.forEach((key, value) -> addPropBuilder.append(key)
@@ -197,6 +232,8 @@ public class ApplicationPropertiesForm extends AbstractPropertiesConfigurationLo
     };
 
     properties.setProperty(ApplicationPropertiesIdentifier.SERVER_PORT.getPropertyName(), serverPort);
+    properties.setProperty(ApplicationPropertiesIdentifier.ADMIN_INTERFACE_PORT.getPropertyName(),
+                           adminInterfacePort);
     properties.setProperty(ApplicationPropertiesIdentifier.SERVER_SSL_KEYSTORE.getPropertyName(),
                            "file:" + Paths.get(pathPrefix,
                                                serverSslKeystore.getKeystoreName() + "."
@@ -222,6 +259,30 @@ public class ApplicationPropertiesForm extends AbstractPropertiesConfigurationLo
     properties.setProperty(ApplicationPropertiesIdentifier.ADMIN_PASSWORD.getPropertyName(),
                            hashIfNecessary(adminPassword));
     properties.setProperty(ApplicationPropertiesIdentifier.LOGGING_FILE.getPropertyName(), logFile);
+
+    properties.setProperty(ApplicationPropertiesIdentifier.HSM_TYPE.getPropertyName(), hsmType);
+
+    if (hsmType.equals(HSMTypeIdentifier.PKCS11.name()))
+    {
+
+      if (StringUtils.isNotEmpty(hsmKeysDelete))
+      {
+        properties.setProperty(ApplicationPropertiesIdentifier.HSM_KEYS_DELETE.getPropertyName(),
+                               hsmKeysDelete);
+      }
+
+      properties.setProperty(ApplicationPropertiesIdentifier.HSM_KEYS_ARCHIVE.getPropertyName(),
+                             String.valueOf(hsmKeysArchive));
+
+
+      properties.setProperty(ApplicationPropertiesIdentifier.PKCS11_SUN_CONFIG_PROVIDER_FILE_PATH.getPropertyName(),
+                             pkcs11ConfigProviderPath);
+
+      properties.setProperty(ApplicationPropertiesIdentifier.PKCS11_HSM_PASSWORD.getPropertyName(),
+                             pkcs11HsmPassword);
+    }
+
+
 
     try
     {

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018 Governikus KG. Licensed under the EUPL, Version 1.2 or as soon they will be approved by
+ * Copyright (c) 2019 Governikus KG. Licensed under the EUPL, Version 1.2 or as soon they will be approved by
  * the European Commission - subsequent versions of the EUPL (the "Licence"); You may not use this work except
  * in compliance with the Licence. You may obtain a copy of the Licence at:
  * http://joinup.ec.europa.eu/software/page/eupl Unless required by applicable law or agreed to in writing,
@@ -16,7 +16,6 @@ import java.lang.management.ManagementFactory;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.nio.ByteBuffer;
-import java.security.Security;
 import java.security.cert.X509Certificate;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -41,7 +40,6 @@ import javax.management.MalformedObjectNameException;
 import javax.management.NotCompliantMBeanException;
 import javax.management.ObjectName;
 
-import org.bouncycastle.jce.provider.BouncyCastleProvider;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.Scope;
@@ -59,10 +57,10 @@ import de.governikus.eumw.poseidas.gov2server.constants.admin.ManagementMessage;
 import de.governikus.eumw.poseidas.server.eidservice.EIDInternal;
 import de.governikus.eumw.poseidas.server.idprovider.accounting.SNMPDelegate;
 import de.governikus.eumw.poseidas.server.idprovider.accounting.SNMPDelegate.OID;
-import de.governikus.eumw.poseidas.server.idprovider.config.PoseidasConfigurator;
 import de.governikus.eumw.poseidas.server.idprovider.config.CoreConfigurationDto;
 import de.governikus.eumw.poseidas.server.idprovider.config.EPAConnectorConfigurationDto;
 import de.governikus.eumw.poseidas.server.idprovider.config.PkiConnectorConfigurationDto;
+import de.governikus.eumw.poseidas.server.idprovider.config.PoseidasConfigurator;
 import de.governikus.eumw.poseidas.server.idprovider.config.ServiceProviderDto;
 import de.governikus.eumw.poseidas.server.idprovider.config.SslKeysDto;
 import de.governikus.eumw.poseidas.server.pki.caserviceaccess.PKIServiceConnector;
@@ -104,7 +102,7 @@ public class PermissionDataHandling implements PermissionDataHandlingMBean
   private CVCRequestHandler getCvcRequestHandler(EPAConnectorConfigurationDto nPaConf)
     throws GovManagementException
   {
-    return new CVCRequestHandler(nPaConf, facade, aplicationContext);
+    return new CVCRequestHandler(nPaConf, facade, aplicationContext, hsmServiceHolder.getKeyStore());
   }
 
   private EPAConnectorConfigurationDto getnPaConfig(String entityID) throws GovManagementException
@@ -236,7 +234,8 @@ public class PermissionDataHandling implements PermissionDataHandlingMBean
         log.error(NO_TERMINAL_PERMISSION_ENTRY_AVAILABLE, prov.getEntityID());
         return IDManagementCodes.MISSING_TERMINAL_CERTIFICATE.createMessage(npaConf.getCVCRefID());
       }
-      MasterAndDefectListHandler handler = new MasterAndDefectListHandler(npaConf, facade);
+      MasterAndDefectListHandler handler = new MasterAndDefectListHandler(npaConf, facade,
+                                                                          hsmServiceHolder.getKeyStore());
       handler.updateLists();
       return GlobalManagementCodes.OK.createMessage();
     }
@@ -358,7 +357,8 @@ public class PermissionDataHandling implements PermissionDataHandlingMBean
       {
         return IDManagementCodes.DATABASE_ENTRY_EXISTS.createMessage(tp.getRefID());
       }
-      RestrictedIdHandler riHandler = new RestrictedIdHandler(npaConf, facade);
+      RestrictedIdHandler riHandler = new RestrictedIdHandler(npaConf, facade,
+                                                              hsmServiceHolder.getKeyStore());
       if (alreadyRenewed != null)
       {
         alreadyRenewed.addAll(riHandler.requestBlackList(all, delta));
@@ -409,7 +409,8 @@ public class PermissionDataHandling implements PermissionDataHandlingMBean
         return IDManagementCodes.MISSING_TERMINAL_CERTIFICATE.createMessage(npaConf.getCVCRefID());
       }
 
-      RestrictedIdHandler riHandler = new RestrictedIdHandler(npaConf, facade);
+      RestrictedIdHandler riHandler = new RestrictedIdHandler(npaConf, facade,
+                                                              hsmServiceHolder.getKeyStore());
       riHandler.requestPublicSectorKeyIfNeeded();
       return GlobalManagementCodes.OK.createMessage();
     }
@@ -685,11 +686,6 @@ public class PermissionDataHandling implements PermissionDataHandlingMBean
   @PostConstruct
   public void registerInJMX()
   {
-    if (Security.getProvider(BouncyCastleProvider.PROVIDER_NAME) == null)
-    {
-      Security.addProvider(new BouncyCastleProvider());
-    }
-
     EIDInternal.getInstance().setCVCFacade(facade);
 
     try
@@ -774,10 +770,6 @@ public class PermissionDataHandling implements PermissionDataHandlingMBean
     {
       log.error("can not unregister MBean", e);
       throw new IllegalStateException("can not unregister MBean", e);
-    }
-    if (Security.getProvider(BouncyCastleProvider.PROVIDER_NAME) != null)
-    {
-      Security.removeProvider(BouncyCastleProvider.PROVIDER_NAME);
     }
   }
 
@@ -958,9 +950,17 @@ public class PermissionDataHandling implements PermissionDataHandlingMBean
     {
       PKIServiceConnector.getContextLock();
       log.debug("{}: obtained lock on SSL context for connection check", entityID);
-      PKIServiceConnector connector = new PKIServiceConnector(30, keys.getServerCertificate(),
-                                                              keys.getClientKey(),
-                                                              keys.getClientCertificateChain(), entityID);
+      PKIServiceConnector connector;
+      if (hsmServiceHolder.getKeyStore() == null)
+      {
+        connector = new PKIServiceConnector(30, keys.getServerCertificate(), keys.getClientKey(),
+                                            keys.getClientCertificateChain(), entityID);
+      }
+      else
+      {
+        connector = new PKIServiceConnector(30, keys.getServerCertificate(), hsmServiceHolder.getKeyStore(),
+                                            null, entityID);
+      }
       connector.getFile(service.getUrl() + "?wsdl");
     }
     catch (Exception e)

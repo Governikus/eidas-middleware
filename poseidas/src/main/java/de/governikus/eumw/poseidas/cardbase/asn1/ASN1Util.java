@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018 Governikus KG. Licensed under the EUPL, Version 1.2 or as soon they will be approved by
+ * Copyright (c) 2019 Governikus KG. Licensed under the EUPL, Version 1.2 or as soon they will be approved by
  * the European Commission - subsequent versions of the EUPL (the "Licence"); You may not use this work except
  * in compliance with the Licence. You may obtain a copy of the Licence at:
  * http://joinup.ec.europa.eu/software/page/eupl Unless required by applicable law or agreed to in writing,
@@ -21,7 +21,7 @@ import java.util.List;
  * <p>
  * Notice: full support of ASN.1 encoding rules for tags with multiple bytes.
  * </p>
- * 
+ *
  * @author Jens Wothe, jw@bos-bremen.de
  */
 final class ASN1Util
@@ -29,7 +29,7 @@ final class ASN1Util
 
   /**
    * Checks bytes of ASN.1 with description and tag define a sequence.
-   * 
+   *
    * @param dTagBytes bytes with description and tag of ASN.1 - including ASN.1 bit coded informations about
    *          class and content, <code>null</code> or empty array not permitted
    * @return <code>true</code>, if sequence
@@ -43,7 +43,7 @@ final class ASN1Util
 
   /**
    * Checks bytes of ASN.1 with description and tag define a set.
-   * 
+   *
    * @param dTagBytes bytes with description and tag of ASN.1 - including ASN.1 bit coded informations about
    *          class and content, <code>null</code> or empty array not permitted
    * @return <code>true</code>, if set
@@ -57,7 +57,7 @@ final class ASN1Util
 
   /**
    * Checks bytes of ASN.1 with description and tag defines a universal tag.
-   * 
+   *
    * @param dTagBytes bytes with description and tag of ASN.1 - including ASN.1 bit coded informations about
    *          class and content, <code>null</code> or empty array not permitted
    * @return <code>true</code>, if universal
@@ -72,7 +72,7 @@ final class ASN1Util
 
   /**
    * Checks bytes of ASN.1 with description and tag defines a application tag.
-   * 
+   *
    * @param dTagBytes bytes with description and tag of ASN.1 - including ASN.1 bit coded informations about
    *          class and content, <code>null</code> or empty array not permitted
    * @return <code>true</code>, if application
@@ -87,7 +87,7 @@ final class ASN1Util
 
   /**
    * Checks bytes of ASN.1 with description and tag defines a context specific tag.
-   * 
+   *
    * @param dTagBytes bytes with description and tag of ASN.1 - including ASN.1 bit coded informations about
    *          class and content, <code>null</code> or empty array not permitted
    * @return <code>true</code>, if application
@@ -102,7 +102,7 @@ final class ASN1Util
 
   /**
    * Checks bytes of ASN.1 with description and tag defines a private tag.
-   * 
+   *
    * @param dTagBytes bytes with description and tag of ASN.1 - including ASN.1 bit coded informations about
    *          class and content, <code>null</code> or empty array not permitted
    * @return <code>true</code>, if private
@@ -117,7 +117,7 @@ final class ASN1Util
 
   /**
    * Checks bytes of ASN.1 with description and tag define a primitive.
-   * 
+   *
    * @param dTagBytes bytes with description and tag of ASN.1 - including ASN.1 bit coded informations about
    *          class and content, <code>null</code> or empty array not permitted
    * @throws IllegalArgumentException if dTagBytes <code>null</code> or empty
@@ -131,7 +131,7 @@ final class ASN1Util
 
   /**
    * Gets list of all child elements of an ASN.1
-   * 
+   *
    * @param asn1 ASN.1, <code>null</code> not permitted
    * @return list ofchild elements
    * @throws IOException if value of ASN.1 contains inconsistent data
@@ -149,7 +149,7 @@ final class ASN1Util
 
   /**
    * Filter array of child elements for elements with given tag.
-   * 
+   *
    * @param asn1s array of ASN.1, <code>null</code> and empty array permitted
    * @param tag tag for filtering
    * @return filtered array of child elements, {@link ASN1Constants#EMPTY_ASN1_ARRAY} for no child element
@@ -162,7 +162,7 @@ final class ASN1Util
 
   /**
    * Filter array of child elements for elements with given tag of tag with description and tag.
-   * 
+   *
    * @param asn1s array of ASN.1, <code>null</code> and empty array permitted (leading to empty result)
    * @param dTag description and tag for filtering - including ASN.1 bit coded informations about class and
    *          content, <code>null</code> not permitted
@@ -178,7 +178,7 @@ final class ASN1Util
 
   /**
    * Filter array of child elements for elements with given description and tag.
-   * 
+   *
    * @param asn1Objects array of ASN.1, <code>null</code> and empty array permitted (leading to empty result)
    * @param dTag description and tag for filtering - including ASN.1 bit coded informations about class and
    *          content, <code>null</code> not permitted
@@ -194,7 +194,7 @@ final class ASN1Util
 
   /**
    * Filter array of child elements for elements with given bytes of description and tag.
-   * 
+   *
    * @param asn1s array of ASN.1, <code>null</code> and empty array permitted (leading to empty result)
    * @param dTagBytes bytes with description and tag of ASN.1 - including ASN.1 bit coded informations about
    *          class and content, <code>null</code> or empty array not permitted
@@ -209,7 +209,7 @@ final class ASN1Util
 
   /**
    * Gets length bytes for a value.
-   * 
+   *
    * @param value bytes of value, <code>null</code> not permitted
    * @return bytes of length, determined encoding, <code>null</code> if argument empty
    * @throws IllegalArgumentException if value <code>null</code>
@@ -221,7 +221,7 @@ final class ASN1Util
 
   /**
    * Gets length.
-   * 
+   *
    * @param bytesOfLength bytes of length, <code>null</code> or empty array not permitted
    * @return length
    * @throws IllegalArgumentException if length <code>null</code> or content of length of bytes does fits
@@ -234,7 +234,7 @@ final class ASN1Util
 
   /**
    * Gets bytes of value from stream for given bytes with description and tag and length.
-   * 
+   *
    * @param dTagBytes bytes with description and tag, <code>null</code> or empty array not permitted
    * @param length length, <code>null</code> not permitted
    * @param stream stream to read, <code>null</code> not permitted
@@ -252,7 +252,7 @@ final class ASN1Util
   /**
    * Gets bytes of description and tag from stream - bytes of description and tag includes bit encoded
    * informations about ASN.1 object.
-   * 
+   *
    * @param stream stream, <code>null</code> not permitted
    * @return byte[]-array of description and tag
    * @throws IOException if reading of stream fails
@@ -266,7 +266,7 @@ final class ASN1Util
 
   /**
    * Gets bytes of length from stream.
-   * 
+   *
    * @param stream stream, <code>null</code> not permitted
    * @return byte[]-array of length
    * @throws IOException if reading of stream fails
@@ -280,7 +280,7 @@ final class ASN1Util
 
   /**
    * Checks tag bytes are valid
-   * 
+   *
    * @param dTagBytes tag descriptor bytes (class and tag bits, etc.), <code>null</code> or empty not
    *          permitted, if all bits of {@link ASN1Constants#TAG_BITS_FIRST_BYTE_MASK} set at first byte, the
    *          following bytes building tag are only valid, if second byte up to next to last most significant
@@ -298,7 +298,7 @@ final class ASN1Util
   /**
    * Extracts clean tag from bytes with description and tag of ASN.1 - including ASN.1 bit coded informations
    * about class and content.
-   * 
+   *
    * @param dTagBytes bytes of Description and Tag, <code>null</code> or empty array not permitted
    * @return tag
    * @throws IllegalArgumentException if dTagBytes <code>null</code> or too short
@@ -310,7 +310,7 @@ final class ASN1Util
 
   /**
    * Appends hex-String representation of bytes to buffer using indents.
-   * 
+   *
    * @param buffer buffer, <code>null</code> not permitted
    * @param indent indent for byte-dump, <code>null</code> not permitted
    * @param bytes bytes to be encoded, <code>null</code> or empty array permitted

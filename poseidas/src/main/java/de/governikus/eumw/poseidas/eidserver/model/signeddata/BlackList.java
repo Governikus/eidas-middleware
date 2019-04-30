@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018 Governikus KG. Licensed under the EUPL, Version 1.2 or as soon they will be approved by
+ * Copyright (c) 2019 Governikus KG. Licensed under the EUPL, Version 1.2 or as soon they will be approved by
  * the European Commission - subsequent versions of the EUPL (the "Licence"); You may not use this work except
  * in compliance with the Licence. You may obtain a copy of the Licence at:
  * http://joinup.ec.europa.eu/software/page/eupl Unless required by applicable law or agreed to in writing,
@@ -29,7 +29,7 @@ import org.bouncycastle.cms.CMSSignedData;
  * BlackList The Blacklist as defined in TR-03129, Appendix B.
  * <p>
  * Will parse a ASN1 structure and provide access to the parsed values.
- * 
+ *
  * @author Thomas Chojecki
  * @author Alexander Funk
  * @author Hauke Mehrtens
@@ -71,7 +71,7 @@ public class BlackList
    * BlackList asn1 parser.
    * <p>
    * Parse the given asn1 structure and extract the BlackList informations.
-   * 
+   *
    * @param bytes is the asn1 structure
    * @throws IllegalArgumentException if the asn1 structure can't be parse.
    */
@@ -160,7 +160,7 @@ public class BlackList
   /**
    * Will return a list with BlackListDetails which provides the SectorID and the related SectorSpecificIDs.
    * Note this list is not a copy.
-   * 
+   *
    * @return A List with BlackListDetails.
    */
   public List<BlackListDetails> getBlacklistDetails()
@@ -179,7 +179,7 @@ public class BlackList
    * Return the Blacklist version.
    * <p>
    * For more version details take a look at the static fields starting with VERSION.
-   * 
+   *
    * @return the version as int. Use the static fields to compare different versions.
    */
   public int getVersion()
@@ -191,7 +191,7 @@ public class BlackList
    * Return the Blacklist type
    * <p>
    * For more type details take a look at the static fields starting with TYPE.
-   * 
+   *
    * @return the type as int. Use the static fields to compare different types.
    */
   public int getType()
@@ -201,7 +201,7 @@ public class BlackList
 
   /**
    * Return the Blacklist ID.
-   * 
+   *
    * @return a byte[] with the Blacklist ID information.
    */
   public byte[] getListID()

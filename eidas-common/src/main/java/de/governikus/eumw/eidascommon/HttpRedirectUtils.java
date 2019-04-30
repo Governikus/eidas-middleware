@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018 Governikus KG. Licensed under the EUPL, Version 1.2 or as soon they will be approved by
+ * Copyright (c) 2019 Governikus KG. Licensed under the EUPL, Version 1.2 or as soon they will be approved by
  * the European Commission - subsequent versions of the EUPL (the "Licence"); You may not use this work except
  * in compliance with the Licence. You may obtain a copy of the Licence at:
  * http://joinup.ec.europa.eu/software/page/eupl Unless required by applicable law or agreed to in writing,
@@ -76,7 +76,7 @@ public final class HttpRedirectUtils
 
   /**
    * In the past (before 3.7.1.0) we had a wrong constant here, this is the old wrong version
-   * 
+   *
    * @Deprecated use {@link #SIGALG_RSA_SHA256}.
    */
   @Deprecated
@@ -129,7 +129,7 @@ public final class HttpRedirectUtils
   /**
    * deflate and base64-encode the input, making it effectively almost by a third longer.
    */
-  private static String deflate(byte[] input)
+  public static String deflate(byte[] input)
   {
     byte[] output = new byte[2 * input.length];
     Deflater compresser = new Deflater(3, true);
@@ -143,7 +143,7 @@ public final class HttpRedirectUtils
 
   /**
    * reverse method for {@link #deflate(byte[])}
-   * 
+   *
    * @throws DataFormatException
    */
   public static byte[] inflate(String input) throws DataFormatException
@@ -160,7 +160,7 @@ public final class HttpRedirectUtils
 
   /**
    * Builds a query string, using default JCE provider
-   * 
+   *
    * @param url URL of the identity provider
    * @param data SAML request or response data, not encoded or deflated yet
    * @param isRequest true to indicate that data is a SAML request
@@ -185,7 +185,7 @@ public final class HttpRedirectUtils
 
   /**
    * Builds a query string
-   * 
+   *
    * @param url URL of the identity provider
    * @param data SAML request or response data, not encoded or deflated yet
    * @param relayState transparent value which is returned unchanged with the response
@@ -326,7 +326,7 @@ public final class HttpRedirectUtils
 
   /**
    * Checks the signature of a query string.
-   * 
+   *
    * @param input complete URL like https://examle.com?parameter=...
    * @param sigCert certificate the parameters are signed with
    * @return true if contained signature was valid.
@@ -396,7 +396,7 @@ public final class HttpRedirectUtils
 
   /**
    * Returns a hap with the get parameters given to this function.
-   * 
+   *
    * @param url full url or just the query
    * @param doUrlDecode if true the parameters will also be url decoded
    * @return Map containing the parameters

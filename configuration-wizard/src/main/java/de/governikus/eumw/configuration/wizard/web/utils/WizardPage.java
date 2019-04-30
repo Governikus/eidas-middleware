@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018 Governikus KG. Licensed under the EUPL, Version 1.2 or as soon they will be approved by
+ * Copyright (c) 2019 Governikus KG. Licensed under the EUPL, Version 1.2 or as soon they will be approved by
  * the European Commission - subsequent versions of the EUPL (the "Licence"); You may not use this work except
  * in compliance with the Licence. You may obtain a copy of the Licence at:
  * http://joinup.ec.europa.eu/software/page/eupl Unless required by applicable law or agreed to in writing,
@@ -15,7 +15,7 @@ import java.util.Arrays;
 import de.governikus.eumw.configuration.wizard.web.controller.validators.ApplicationPropertiesValidator;
 import de.governikus.eumw.configuration.wizard.web.controller.validators.BasePathValidator;
 import de.governikus.eumw.configuration.wizard.web.controller.validators.ConfigurationFileValidator;
-import de.governikus.eumw.configuration.wizard.web.controller.validators.ContactInformationValidator;
+import de.governikus.eumw.configuration.wizard.web.controller.validators.EidasPropertiesValidator;
 import de.governikus.eumw.configuration.wizard.web.controller.validators.PoseidasCoreConfigValidator;
 import de.governikus.eumw.configuration.wizard.web.controller.validators.SaveLocationValidator;
 import de.governikus.eumw.configuration.wizard.web.controller.validators.ViewValidator;
@@ -66,7 +66,7 @@ public enum WizardPage
    * this view is to enter the eidasmiddleware.properties configuration
    */
   EIDAS_PROPERTIES_VIEW(Identifier.EIDAS_PROPERTIES,
-                        new ContactInformationValidator(),
+                        new EidasPropertiesValidator(),
                         Identifier.POSEIDAS_CORE,
                         Identifier.SAVE_LOCATION),
 
@@ -137,7 +137,7 @@ public enum WizardPage
 
   /**
    * this method tells us which pagenumber this page represents
-   * 
+   *
    * @return the page number of the current page
    */
   public int getPageNumber()

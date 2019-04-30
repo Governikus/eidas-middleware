@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018 Governikus KG. Licensed under the EUPL, Version 1.2 or as soon they will be approved by
+ * Copyright (c) 2019 Governikus KG. Licensed under the EUPL, Version 1.2 or as soon they will be approved by
  * the European Commission - subsequent versions of the EUPL (the "Licence"); You may not use this work except
  * in compliance with the Licence. You may obtain a copy of the Licence at:
  * http://joinup.ec.europa.eu/software/page/eupl Unless required by applicable law or agreed to in writing,
@@ -20,7 +20,6 @@ import javax.servlet.annotation.WebListener;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.opensaml.core.config.InitializationException;
-import org.springframework.beans.factory.annotation.Autowired;
 
 import de.governikus.eumw.eidasstarterkit.EidasSaml;
 import de.governikus.eumw.poseidas.server.eidservice.EIDInternal;
@@ -35,10 +34,8 @@ public class StartUpListener implements ServletContextListener
 
   private static final Log LOG = LogFactory.getLog(StartUpListener.class);
 
-  @Autowired
   private SessionStore store;
 
-  @Autowired
   private SessionStoreCleanUpTask task;
 
   /**
@@ -55,9 +52,11 @@ public class StartUpListener implements ServletContextListener
   /**
    * Default constructor.
    */
-  public StartUpListener()
+  public StartUpListener(SessionStore sessionStore, SessionStoreCleanUpTask sessionStoreCleanUpTask)
   {
     super();
+    this.store = sessionStore;
+    this.task = sessionStoreCleanUpTask;
   }
 
   /**
@@ -97,8 +96,6 @@ public class StartUpListener implements ServletContextListener
 
     SCHEDULER.schedule(task, MINUTE, SessionStore.DAY_IN_MILLISECONDS);
 
-    ConfigHolder.loadProperties();
-    ServiceProviderConfig.getConfig();
     EIDInternal.getInstance().init();
   }
 }

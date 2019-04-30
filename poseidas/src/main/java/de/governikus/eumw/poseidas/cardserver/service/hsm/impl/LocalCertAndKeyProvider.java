@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018 Governikus KG. Licensed under the EUPL, Version 1.2 or as soon they will be approved by
+ * Copyright (c) 2019 Governikus KG. Licensed under the EUPL, Version 1.2 or as soon they will be approved by
  * the European Commission - subsequent versions of the EUPL (the "Licence"); You may not use this work except
  * in compliance with the Licence. You may obtain a copy of the Licence at:
  * http://joinup.ec.europa.eu/software/page/eupl Unless required by applicable law or agreed to in writing,
@@ -22,7 +22,7 @@ import de.governikus.eumw.poseidas.cardserver.eac.ta.CertAndKeyProvider;
 /**
  * Implementation of {@link CertAndKeyProvider} used for forwarding a key to the signature handler in case no
  * HSM is used.
- * 
+ *
  * @author Arne Stahlbock, ast@bos-bremen.de
  */
 public class LocalCertAndKeyProvider implements CertAndKeyProvider
@@ -48,7 +48,7 @@ public class LocalCertAndKeyProvider implements CertAndKeyProvider
 
   /**
    * Gets single instance.
-   * 
+   *
    * @return single instance
    */
   public static LocalCertAndKeyProvider getInstance()
@@ -78,7 +78,7 @@ public class LocalCertAndKeyProvider implements CertAndKeyProvider
 
   /**
    * Adds a key to the map.
-   * 
+   *
    * @param holder holder of key, <code>null</code> not permitted
    * @param key key as byte-array
    * @throws IllegalArgumentException if holder <code>null</code>
@@ -92,7 +92,7 @@ public class LocalCertAndKeyProvider implements CertAndKeyProvider
 
   /**
    * Removes a key from the map.
-   * 
+   *
    * @param holder holder of key, <code>null</code> not permitted
    * @throws IllegalArgumentException if holder <code>null</code>
    */

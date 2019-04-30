@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018 Governikus KG. Licensed under the EUPL, Version 1.2 or as soon they will be approved by
+ * Copyright (c) 2019 Governikus KG. Licensed under the EUPL, Version 1.2 or as soon they will be approved by
  * the European Commission - subsequent versions of the EUPL (the "Licence"); You may not use this work except
  * in compliance with the Licence. You may obtain a copy of the Licence at:
  * http://joinup.ec.europa.eu/software/page/eupl Unless required by applicable law or agreed to in writing,
@@ -13,7 +13,7 @@ package de.governikus.eumw.poseidas.cardbase.constants;
 
 /**
  * Constants for eID application.
- * 
+ *
  * @author Jens Wothe, jw@bos-bremen.de
  * @author Arne Stahlbock, arne.stahlbock@governikus.com
  */
@@ -27,7 +27,7 @@ public final class EIDConstants
 
   /**
    * Name of DG01: Document Type.
-   * 
+   *
    * @see #EID_FID_DG01_DOCUMENT_TYPE
    * @see #EID_SFID_DG01_DOCUMENT_TYPE
    */
@@ -35,7 +35,7 @@ public final class EIDConstants
 
   /**
    * Name of DG02: Issuing State.
-   * 
+   *
    * @see #EID_FID_DG02_ISSUING_STATE
    * @see #EID_SFID_DG02_ISSUING_STATE
    */
@@ -43,7 +43,7 @@ public final class EIDConstants
 
   /**
    * Name of DG03: Date of Expiry.
-   * 
+   *
    * @see #EID_FID_DG03_DATE_OF_EXPIRY
    * @see #EID_SFID_DG03_DATE_OF_EXPIRY
    */
@@ -51,7 +51,7 @@ public final class EIDConstants
 
   /**
    * Name of DG04: Given Names.
-   * 
+   *
    * @see #EID_FID_DG04_GIVEN_NAMES
    * @see #EID_SFID_DG04_GIVEN_NAMES
    */
@@ -59,7 +59,7 @@ public final class EIDConstants
 
   /**
    * Name of DG05: Family Names.
-   * 
+   *
    * @see #EID_FID_DG05_FAMILY_NAMES
    * @see #EID_SFID_DG05_FAMILY_NAMES
    */
@@ -67,7 +67,7 @@ public final class EIDConstants
 
   /**
    * Name of DG06: Nom de Plume.
-   * 
+   *
    * @see #EID_FID_DG06_NOM_DE_PLUME
    * @see #EID_SFID_DG06_NOM_DE_PLUME
    */
@@ -75,7 +75,7 @@ public final class EIDConstants
 
   /**
    * Name of DG07: Academic Title.
-   * 
+   *
    * @see #EID_FID_DG07_ACADEMIC_TITLE
    * @see #EID_SFID_DG07_ACADEMIC_TITLE
    */
@@ -83,7 +83,7 @@ public final class EIDConstants
 
   /**
    * Name of DG08: Date of Birth.
-   * 
+   *
    * @see #EID_FID_DG08_DATE_OF_BIRTH
    * @see #EID_SFID_DG08_DATE_OF_BIRTH
    */
@@ -91,7 +91,7 @@ public final class EIDConstants
 
   /**
    * Name of DG09: Place of Birth.
-   * 
+   *
    * @see #EID_FID_DG09_PLACE_OF_BIRTH
    * @see #EID_SFID_DG09_PLACE_OF_BIRTH
    */
@@ -99,7 +99,7 @@ public final class EIDConstants
 
   /**
    * Name of DG10: Nationality.
-   * 
+   *
    * @see #EID_FID_DG10_NATIONALITY
    * @see #EID_SFID_DG10_NATIONALITY
    */
@@ -107,7 +107,7 @@ public final class EIDConstants
 
   /**
    * Name of DG11: Sex.
-   * 
+   *
    * @see #EID_FID_DG11_SEX
    * @see #EID_SFID_DG11_SEX
    */
@@ -115,7 +115,7 @@ public final class EIDConstants
 
   /**
    * Name of DG12: Optional Data R.
-   * 
+   *
    * @see #EID_FID_DG12_OPTIONAL_DATA_R
    * @see #EID_SFID_DG12_OPTIONAL_DATA_R
    */
@@ -123,7 +123,7 @@ public final class EIDConstants
 
   /**
    * Name of DG13: Birth Name.
-   * 
+   *
    * @see #EID_FID_DG13_BIRTH_NAME
    * @see #EID_SFID_DG13_BIRTH_NAME
    */
@@ -131,7 +131,7 @@ public final class EIDConstants
 
   /**
    * Name of DG14: Written Signature.
-   * 
+   *
    * @see #EID_FID_DG14_WRITTEN_SIGNATURE
    * @see #EID_SFID_DG14_WRITTEN_SIGNATURE
    */
@@ -139,7 +139,7 @@ public final class EIDConstants
 
   /**
    * Name of DG15: Date of Issuance.
-   * 
+   *
    * @see #EID_FID_DG15_DATE_OF_ISSUANCE
    * @see #EID_SFID_DG15_DATE_OF_ISSUANCE
    */
@@ -147,7 +147,7 @@ public final class EIDConstants
 
   /**
    * Name of DG16: RFU 4.
-   * 
+   *
    * @see #EID_FID_DG16_RFU04
    * @see #EID_SFID_DG16_RFU04
    */
@@ -155,7 +155,7 @@ public final class EIDConstants
 
   /**
    * Name of DG17: Normal Place Of Residence.
-   * 
+   *
    * @see #EID_FID_DG17_PLACE_OF_RESIDENCE
    * @see #EID_SFID_DG17_PLACE_OF_RESIDENCE
    */
@@ -163,7 +163,7 @@ public final class EIDConstants
 
   /**
    * Name of DG18: Municipality ID.
-   * 
+   *
    * @see #EID_FID_DG18_MUNICIPALITY_ID
    * @see #EID_SFID_DG18_MUNICIPALITY_ID
    */
@@ -171,7 +171,7 @@ public final class EIDConstants
 
   /**
    * Name of DG19: Residence Permit I.
-   * 
+   *
    * @see #EID_FID_DG19_RESIDENCE_PERMIT_I
    * @see #EID_SFID_DG19_RESIDENCE_PERMIT_I
    */
@@ -179,7 +179,7 @@ public final class EIDConstants
 
   /**
    * Name of DG20: Residence Permit II.
-   * 
+   *
    * @see #EID_FID_DG20_RESIDENCE_PERMIT_II
    * @see #EID_SFID_DG20_RESIDENCE_PERMIT_II
    */
@@ -187,7 +187,7 @@ public final class EIDConstants
 
   /**
    * Name of DG21: Phone Number.
-   * 
+   *
    * @see #EID_FID_DG21_PHONE_NUMBER
    * @see #EID_SFID_DG21_PHONE_NUMBER
    */
@@ -195,7 +195,7 @@ public final class EIDConstants
 
   /**
    * Name of DG22: Email Address.
-   * 
+   *
    * @see #EID_FID_DG22_EMAIL_ADDRESS
    * @see #EID_SFID_DG22_EMAIL_ADDRESS
    */
@@ -203,7 +203,7 @@ public final class EIDConstants
 
   /**
    * FID of DG01: 0101.
-   * 
+   *
    * @see #EID_NAME_DG01_DOCUMENT_TYPE
    * @see #EID_SFID_DG01_DOCUMENT_TYPE
    */
@@ -211,7 +211,7 @@ public final class EIDConstants
 
   /**
    * FID of DG02: 0102.
-   * 
+   *
    * @see #EID_NAME_DG02_ISSUING_STATE
    * @see #EID_SFID_DG02_ISSUING_STATE
    */
@@ -219,7 +219,7 @@ public final class EIDConstants
 
   /**
    * FID of DG03: 0103.
-   * 
+   *
    * @see #EID_NAME_DG03_DATE_OF_EXPIRY
    * @see #EID_SFID_DG03_DATE_OF_EXPIRY
    */
@@ -227,7 +227,7 @@ public final class EIDConstants
 
   /**
    * FID of DG04: 0104.
-   * 
+   *
    * @see #EID_NAME_DG04_GIVEN_NAMES
    * @see #EID_SFID_DG04_GIVEN_NAMES
    */
@@ -235,7 +235,7 @@ public final class EIDConstants
 
   /**
    * FID of DG05: 0105.
-   * 
+   *
    * @see #EID_NAME_DG05_FAMILY_NAMES
    * @see #EID_SFID_DG05_FAMILY_NAMES
    */
@@ -243,7 +243,7 @@ public final class EIDConstants
 
   /**
    * FID of DG06: 0106.
-   * 
+   *
    * @see #EID_NAME_DG06_NOM_DE_PLUME
    * @see #EID_SFID_DG06_NOM_DE_PLUME
    */
@@ -251,7 +251,7 @@ public final class EIDConstants
 
   /**
    * FID of DG07: 0107.
-   * 
+   *
    * @see #EID_NAME_DG07_ACADEMIC_TITLE
    * @see #EID_SFID_DG07_ACADEMIC_TITLE
    */
@@ -259,7 +259,7 @@ public final class EIDConstants
 
   /**
    * FID of DG08: 0108.
-   * 
+   *
    * @see #EID_NAME_DG08_DATE_OF_BIRTH
    * @see #EID_SFID_DG08_DATE_OF_BIRTH
    */
@@ -267,7 +267,7 @@ public final class EIDConstants
 
   /**
    * FID of DG09: 0109.
-   * 
+   *
    * @see #EID_NAME_DG09_PLACE_OF_BIRTH
    * @see #EID_SFID_DG09_PLACE_OF_BIRTH
    */
@@ -275,7 +275,7 @@ public final class EIDConstants
 
   /**
    * FID of DG10: 010a.
-   * 
+   *
    * @see #EID_NAME_DG10_NATIONALITY
    * @see #EID_SFID_DG10_NATIONALITY
    */
@@ -283,7 +283,7 @@ public final class EIDConstants
 
   /**
    * FID of DG11: 010b.
-   * 
+   *
    * @see #EID_NAME_DG11_SEX
    * @see #EID_SFID_DG11_SEX
    */
@@ -291,7 +291,7 @@ public final class EIDConstants
 
   /**
    * FID of DG12: 010c.
-   * 
+   *
    * @see #EID_NAME_DG12_OPTIONAL_DATA_R
    * @see #EID_SFID_DG12_OPTIONAL_DATA_R
    */
@@ -299,7 +299,7 @@ public final class EIDConstants
 
   /**
    * FID of DG13: 010d.
-   * 
+   *
    * @see #EID_NAME_DG13_BIRTH_NAME
    * @see #EID_SFID_DG13_BIRTH_NAME
    */
@@ -307,7 +307,7 @@ public final class EIDConstants
 
   /**
    * FID of DG14: 010e.
-   * 
+   *
    * @see #EID_NAME_DG14_WRITTEN_SIGNATURE
    * @see #EID_SFID_DG14_WRITTEN_SIGNATURE
    */
@@ -315,7 +315,7 @@ public final class EIDConstants
 
   /**
    * FID of DG15: 010f.
-   * 
+   *
    * @see #EID_NAME_DG15_DATE_OF_ISSUANCE
    * @see #EID_SFID_DG15_DATE_OF_ISSUANCE
    */
@@ -323,7 +323,7 @@ public final class EIDConstants
 
   /**
    * FID of DG16: 0110
-   * 
+   *
    * @see #EID_NAME_DG16_RFU04
    * @see #EID_SFID_DG16_RFU04
    */
@@ -331,7 +331,7 @@ public final class EIDConstants
 
   /**
    * FID of DG17: 0111.
-   * 
+   *
    * @see #EID_NAME_DG17_PLACE_OF_RESIDENCE
    * @see #EID_SFID_DG17_PLACE_OF_RESIDENCE
    */
@@ -339,7 +339,7 @@ public final class EIDConstants
 
   /**
    * FID of DG18: 0112.
-   * 
+   *
    * @see #EID_NAME_DG18_MUNICIPALITY_ID
    * @see #EID_SFID_DG18_MUNICIPALITY_ID
    */
@@ -347,7 +347,7 @@ public final class EIDConstants
 
   /**
    * FID of DG19: 0113.
-   * 
+   *
    * @see #EID_NAME_DG19_RESIDENCE_PERMIT_I
    * @see #EID_SFID_DG19_RESIDENCE_PERMIT_I
    */
@@ -355,7 +355,7 @@ public final class EIDConstants
 
   /**
    * FID of DG20: 0114.
-   * 
+   *
    * @see #EID_NAME_DG20_RESIDENCE_PERMIT_II
    * @see #EID_SFID_DG20_RESIDENCE_PERMIT_II
    */
@@ -363,7 +363,7 @@ public final class EIDConstants
 
   /**
    * FID of DG21: 0115.
-   * 
+   *
    * @see #EID_NAME_DG21_PHONE_NUMBER
    * @see #EID_SFID_DG21_PHONE_NUMBER
    */
@@ -371,7 +371,7 @@ public final class EIDConstants
 
   /**
    * FID of DG22: 0116.
-   * 
+   *
    * @see #EID_NAME_DG22_EMAIL_ADDRESS
    * @see #EID_SFID_DG22_EMAIL_ADDRESS
    */
@@ -379,7 +379,7 @@ public final class EIDConstants
 
   /**
    * SFID of DG01: 01.
-   * 
+   *
    * @see #EID_NAME_DG01_DOCUMENT_TYPE
    * @see #EID_FID_DG01_DOCUMENT_TYPE
    */
@@ -387,7 +387,7 @@ public final class EIDConstants
 
   /**
    * SFID of DG02: 02.
-   * 
+   *
    * @see #EID_NAME_DG02_ISSUING_STATE
    * @see #EID_FID_DG02_ISSUING_STATE
    */
@@ -395,7 +395,7 @@ public final class EIDConstants
 
   /**
    * SFID of DG03: 03.
-   * 
+   *
    * @see #EID_NAME_DG03_DATE_OF_EXPIRY
    * @see #EID_FID_DG03_DATE_OF_EXPIRY
    */
@@ -403,7 +403,7 @@ public final class EIDConstants
 
   /**
    * SFID of DG04: 04.
-   * 
+   *
    * @see #EID_NAME_DG04_GIVEN_NAMES
    * @see #EID_FID_DG04_GIVEN_NAMES
    */
@@ -411,7 +411,7 @@ public final class EIDConstants
 
   /**
    * SFID of DG05: 05.
-   * 
+   *
    * @see #EID_NAME_DG05_FAMILY_NAMES
    * @see #EID_FID_DG05_FAMILY_NAMES
    */
@@ -419,7 +419,7 @@ public final class EIDConstants
 
   /**
    * SFID of DG06: 06.
-   * 
+   *
    * @see #EID_NAME_DG06_NOM_DE_PLUME
    * @see #EID_FID_DG06_NOM_DE_PLUME
    */
@@ -427,7 +427,7 @@ public final class EIDConstants
 
   /**
    * SFID of DG07: 07.
-   * 
+   *
    * @see #EID_NAME_DG07_ACADEMIC_TITLE
    * @see #EID_FID_DG07_ACADEMIC_TITLE
    */
@@ -435,7 +435,7 @@ public final class EIDConstants
 
   /**
    * SFID of DG08: 08.
-   * 
+   *
    * @see #EID_NAME_DG08_DATE_OF_BIRTH
    * @see #EID_FID_DG08_DATE_OF_BIRTH
    */
@@ -443,7 +443,7 @@ public final class EIDConstants
 
   /**
    * SFID of DG09: 09.
-   * 
+   *
    * @see #EID_NAME_DG09_PLACE_OF_BIRTH
    * @see #EID_FID_DG09_PLACE_OF_BIRTH
    */
@@ -451,7 +451,7 @@ public final class EIDConstants
 
   /**
    * SFID of DG10: 0a.
-   * 
+   *
    * @see #EID_NAME_DG10_NATIONALITY
    * @see #EID_FID_DG10_NATIONALITY
    */
@@ -459,7 +459,7 @@ public final class EIDConstants
 
   /**
    * SFID of DG11: 0b.
-   * 
+   *
    * @see #EID_NAME_DG11_SEX
    * @see #EID_FID_DG11_SEX
    */
@@ -467,7 +467,7 @@ public final class EIDConstants
 
   /**
    * SFID of DG12: 0c.
-   * 
+   *
    * @see #EID_NAME_DG12_OPTIONAL_DATA_R
    * @see #EID_FID_DG12_OPTIONAL_DATA_R
    */
@@ -475,7 +475,7 @@ public final class EIDConstants
 
   /**
    * SFID of DG13: 0d.
-   * 
+   *
    * @see #EID_NAME_DG13_BIRTH_NAME
    * @see #EID_FID_DG13_BIRTH_NAME
    */
@@ -483,7 +483,7 @@ public final class EIDConstants
 
   /**
    * SFID of DG14: 0e.
-   * 
+   *
    * @see #EID_NAME_DG14_WRITTEN_SIGNATURE
    * @see #EID_FID_DG14_WRITTEN_SIGNATURE
    */
@@ -491,7 +491,7 @@ public final class EIDConstants
 
   /**
    * SFID of DG15: 0f.
-   * 
+   *
    * @see #EID_NAME_DG15_DATE_OF_ISSUANCE
    * @see #EID_FID_DG15_DATE_OF_ISSUANCE
    */
@@ -499,7 +499,7 @@ public final class EIDConstants
 
   /**
    * SFID of DG16: 10.
-   * 
+   *
    * @see #EID_NAME_DG16_RFU04
    * @see #EID_FID_DG16_RFU04
    */
@@ -507,7 +507,7 @@ public final class EIDConstants
 
   /**
    * SFID of DG17: 11.
-   * 
+   *
    * @see #EID_NAME_DG17_PLACE_OF_RESIDENCE
    * @see #EID_FID_DG17_PLACE_OF_RESIDENCE
    */
@@ -515,7 +515,7 @@ public final class EIDConstants
 
   /**
    * SFID of DG18: 12.
-   * 
+   *
    * @see #EID_NAME_DG18_MUNICIPALITY_ID
    * @see #EID_FID_DG18_MUNICIPALITY_ID
    */
@@ -523,7 +523,7 @@ public final class EIDConstants
 
   /**
    * SFID of DG19: 13.
-   * 
+   *
    * @see #EID_NAME_DG19_RESIDENCE_PERMIT_I
    * @see #EID_FID_DG19_RESIDENCE_PERMIT_I
    */
@@ -531,7 +531,7 @@ public final class EIDConstants
 
   /**
    * SFID of DG20: 14.
-   * 
+   *
    * @see #EID_NAME_DG20_RESIDENCE_PERMIT_II
    * @see #EID_FID_DG20_RESIDENCE_PERMIT_II
    */
@@ -539,7 +539,7 @@ public final class EIDConstants
 
   /**
    * SFID of DG21: 15.
-   * 
+   *
    * @see #EID_NAME_DG21_PHONE_NUMBER
    * @see #EID_FID_DG21_PHONE_NUMBER
    */
@@ -547,7 +547,7 @@ public final class EIDConstants
 
   /**
    * SFID of DG22: 16.
-   * 
+   *
    * @see #EID_NAME_DG22_EMAIL_ADDRESS
    * @see #EID_FID_DG22_EMAIL_ADDRESS
    */

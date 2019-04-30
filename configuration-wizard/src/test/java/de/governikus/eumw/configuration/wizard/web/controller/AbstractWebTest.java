@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018 Governikus KG. Licensed under the EUPL, Version 1.2 or as soon they will be approved by
+ * Copyright (c) 2019 Governikus KG. Licensed under the EUPL, Version 1.2 or as soon they will be approved by
  * the European Commission - subsequent versions of the EUPL (the "Licence"); You may not use this work except
  * in compliance with the Licence. You may obtain a copy of the Licence at:
  * http://joinup.ec.europa.eu/software/page/eupl Unless required by applicable law or agreed to in writing,
@@ -12,6 +12,8 @@ package de.governikus.eumw.configuration.wizard.web.controller;
 
 import java.io.File;
 import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.util.Locale;
 
 import org.apache.commons.io.FileUtils;
@@ -25,7 +27,7 @@ import com.gargoylesoftware.htmlunit.WebClient;
 import de.governikus.eumw.configuration.wizard.projectconfig.ConfigDirectory;
 import de.governikus.eumw.configuration.wizard.springboot.SpringBootControllerTest;
 import de.governikus.eumw.configuration.wizard.web.handler.HandlerHolder;
-import lombok.Data;
+import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
 
@@ -38,7 +40,6 @@ import lombok.extern.slf4j.Slf4j;
  * be closed after each test
  */
 @Slf4j
-@Data
 public abstract class AbstractWebTest extends SpringBootControllerTest
 {
 
@@ -61,6 +62,7 @@ public abstract class AbstractWebTest extends SpringBootControllerTest
   /**
    * will be used to execute requests with the application
    */
+  @Getter
   private WebClient webClient;
 
   /**
@@ -83,9 +85,10 @@ public abstract class AbstractWebTest extends SpringBootControllerTest
    * In order to run builds on jenkins in parallel, the temp dirs should be unique and random.
    */
   @BeforeEach
-  public void generateRandomTempDir()
+  public void generateRandomTempDir() throws IOException
   {
     tempDirectory = JAVA_IO_TMPDIR + "-" + (int)(Math.random() * 1000000);
+    Files.createDirectory(Paths.get(tempDirectory));
     log.trace("Generated random temp dir: {}", tempDirectory);
   }
 
@@ -140,7 +143,7 @@ public abstract class AbstractWebTest extends SpringBootControllerTest
   /**
    * for lazy code reduction :-)
    */
-  public String getMessage(String key, String... parameters)
+  String getMessage(String key, String... parameters)
   {
     return messageSource.getMessage(key, parameters, Locale.GERMAN);
   }

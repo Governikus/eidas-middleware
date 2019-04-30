@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018 Governikus KG. Licensed under the EUPL, Version 1.2 or as soon they will be approved by
+ * Copyright (c) 2019 Governikus KG. Licensed under the EUPL, Version 1.2 or as soon they will be approved by
  * the European Commission - subsequent versions of the EUPL (the "Licence"); You may not use this work except
  * in compliance with the Licence. You may obtain a copy of the Licence at:
  * http://joinup.ec.europa.eu/software/page/eupl Unless required by applicable law or agreed to in writing,
@@ -28,7 +28,7 @@ import oasis.names.tc.dss._1_0.core.schema.Result;
  * handles the callbacks from the eCard and starts writes the resulting data into the correct session. This
  * class allows using the listener pattern even though the listener objects themselves are serialized into the
  * database.
- * 
+ *
  * @author hme
  */
 public final class EIDSessionCallbackHandler implements ECardIDCallback
@@ -57,7 +57,7 @@ public final class EIDSessionCallbackHandler implements ECardIDCallback
 
   /**
    * Create a response with given status codes. Called explicitly in error case.
-   * 
+   *
    * @param resultMajor
    * @param resultMinor
    */
@@ -76,7 +76,7 @@ public final class EIDSessionCallbackHandler implements ECardIDCallback
 
   /**
    * Handles the Callback. The given eID container is stored in the correct session and the data is handled.
-   * 
+   *
    * @param eIDSessionId
    * @param container
    */

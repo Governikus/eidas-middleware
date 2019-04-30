@@ -5,7 +5,8 @@ Introduction to the German eID System
 
 The eIDAS Middleware performs the server side of the authentication procedure with the German eID.
 It is an eIDAS Service providing cross-border authentication.
-In contrast to the eIDAS Proxy Service which is operated by the Sending MS, the eIDAS Middleware is provided by the Sending MS and every Receiving MS operates it is own eIDAS Middleware instance.
+In contrast to the eIDAS Proxy Service which is operated by the Sending MS, the eIDAS Middleware
+is provided by the Sending MS and every Receiving MS operates its own eIDAS Middleware instance.
 
 The eIDAS Middleware consists of two parts:
 Firstly, the middleware contains an eID server to communicate with German eID backend systems and with the user's browser and eID client.
@@ -23,10 +24,11 @@ For additional information see the page about the `eIDAS Notification of the Ger
 
 The following brief description facilitates the understanding and configuration of the eIDAS Middleware.
 
-Currently, a single eIDAS Middleware only supports a single :term:`eID Service Provider` and a single eIDAS connector.
+A single eIDAS Middleware supports a multiple :term:`eID Service Provider` s and multiple eIDAS connectors.
 An :term:`eID Service Provider` needs an :term:`Authorisation Certificate` to access data on the eID Card.
 The Authorisation Certificate is issued to the :term:`eID Service Provider` by the :term:`Authorisation CA`, also called :term:`BerCA`.
-The eIDAS Middleware technically receives the :term:`Authorisation Certificate` via SOAP requests from the :term:`Authorisation CA`.
+The eIDAS Middleware technically receives the :term:`Authorisation Certificate` via SOAP requests
+to the :term:`Authorisation CA`.
 These requests are secured by TLS client authentication.
 Therefore the public certificates of the :term:`Authorisation CA` and your eIDAS Middleware must be exchanged before the eIDAS Middleware can request the first Authorisation Certificate.
 For more information on how to get in contact with the :term:`Authorisation CA`, see the document `Three Steps to integrate the German eIDAS Middleware <https://ec.europa.eu/cefdigital/wiki/display/EIDIMPL/eIDAS-Middleware?preview=/37773440/51020051/2017_08_23_German%20eID_MW-Integration_v1_0.pdf>`_.
@@ -53,8 +55,8 @@ For information on running Docker containers, see the `Docker Docs <https://docs
 
 We provide two different Docker images:
 
-#. governikus/eidas-configuration-wizard (`Docker Hub <https://hub.docker.com/u/governikus/eidas-configuration-wizard>`_)
-#. governikus/eidas-middleware-application (`Docker Hub <https://hub.docker.com/u/governikus/eidas-middleware-application>`_)
+#. governikus/eidas-configuration-wizard (`Docker Hub <https://hub.docker.com/r/governikus/eidas-configuration-wizard>`_)
+#. governikus/eidas-middleware-application (`Docker Hub <https://hub.docker.com/r/governikus/eidas-middleware-application>`_)
 
 Two volumes are necessary to run the middleware and the configuration wizard:
 
@@ -82,12 +84,12 @@ First time login via console
 In order to configure network you have to login via console first.
 Use ``eidasmw`` as username and ``Pleasechangeme!`` as password.
 To change the system settings, you will have to use the ``sudo`` command.
-Please reboot the system after configuration according to your environment and login via ssh.
+Please reboot the system after configuration according to your environment and login via ``ssh``.
 
 Regenerate the SSH server key
 --------------------------------------------------
-The virtual machine is shipped without ssh server keys. You must generate new keys before using the ssh server. To generate new
-server keys execute the following commands:
+The virtual machine is shipped without SSH server keys. You must generate new keys before using the SSH server.
+To generate new server keys execute the following commands:
 ::
 
     sudo dpkg-reconfigure openssh-server

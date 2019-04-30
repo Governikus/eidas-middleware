@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018 Governikus KG. Licensed under the EUPL, Version 1.2 or as soon they will be approved by
+ * Copyright (c) 2019 Governikus KG. Licensed under the EUPL, Version 1.2 or as soon they will be approved by
  * the European Commission - subsequent versions of the EUPL (the "Licence"); You may not use this work except
  * in compliance with the Licence. You may obtain a copy of the Licence at:
  * http://joinup.ec.europa.eu/software/page/eupl Unless required by applicable law or agreed to in writing,
@@ -56,7 +56,7 @@ import de.governikus.eumw.eidascommon.ErrorCodeException;
  * </p>
  * <p>
  * </p>
- * 
+ *
  * @author TT / AHO
  */
 final class XMLSignatureHandler
@@ -78,7 +78,7 @@ final class XMLSignatureHandler
   /**
    * Add a signature to a SignableXMLObject. Please note that this adds everything except the signature value
    * itself. Make sure to add that after marshalling the XML object.
-   * 
+   *
    * @param signable object to sign
    * @param key signature key
    * @param cert certificate matching the signature key
@@ -218,7 +218,7 @@ final class XMLSignatureHandler
 
   /**
    * Check the contained signature against a given trusted anchor.
-   * 
+   *
    * @param trustedAnchor
    * @param sig
    * @return the index of the key that was used for the successful check

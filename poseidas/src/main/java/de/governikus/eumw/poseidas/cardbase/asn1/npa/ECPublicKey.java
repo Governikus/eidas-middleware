@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018 Governikus KG. Licensed under the EUPL, Version 1.2 or as soon they will be approved by
+ * Copyright (c) 2019 Governikus KG. Licensed under the EUPL, Version 1.2 or as soon they will be approved by
  * the European Commission - subsequent versions of the EUPL (the "Licence"); You may not use this work except
  * in compliance with the Licence. You may obtain a copy of the Licence at:
  * http://joinup.ec.europa.eu/software/page/eupl Unless required by applicable law or agreed to in writing,
@@ -22,7 +22,7 @@ import de.governikus.eumw.poseidas.cardbase.asn1.OID;
 
 /**
  * ASN.1 structure for ECPublicKey.
- * 
+ *
  * @author Arne Stahlbock, ast@bos-bremen.de
  */
 public class ECPublicKey extends AbstractASN1Encoder
@@ -105,7 +105,7 @@ public class ECPublicKey extends AbstractASN1Encoder
 
   /**
    * Default Encoder Constructor.
-   * 
+   *
    * @throws IOException if parsing fails
    */
   public ECPublicKey() throws IOException
@@ -115,7 +115,7 @@ public class ECPublicKey extends AbstractASN1Encoder
 
   /**
    * Constructor.
-   * 
+   *
    * @param bytes bytes of complete key, <code>null</code> or empty not permitted
    * @throws IOException if reading of stream fails
    * @throws IllegalArgumentException if bytes <code>null</code> or empty or if bytes contain structure not
@@ -130,7 +130,7 @@ public class ECPublicKey extends AbstractASN1Encoder
 
   /**
    * Checks if key structure requirements are fulfilled.
-   * 
+   *
    * @throws IllegalArgumentException if requirements not fulfilled
    */
   private void check()
@@ -174,7 +174,7 @@ public class ECPublicKey extends AbstractASN1Encoder
 
   /**
    * Checks full form of public key with all curve point and optional cofactor.
-   * 
+   *
    * @param childList list of children
    * @param size count of children
    */
@@ -220,7 +220,7 @@ public class ECPublicKey extends AbstractASN1Encoder
 
   /**
    * Checks short form of public key with public point and optional cofactor.
-   * 
+   *
    * @param childList list of children
    * @param size count of children
    */

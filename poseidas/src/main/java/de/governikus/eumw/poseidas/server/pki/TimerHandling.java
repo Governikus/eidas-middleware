@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018 Governikus KG. Licensed under the EUPL, Version 1.2 or as soon they will be approved by
+ * Copyright (c) 2019 Governikus KG. Licensed under the EUPL, Version 1.2 or as soon they will be approved by
  * the European Commission - subsequent versions of the EUPL (the "Licence"); You may not use this work except
  * in compliance with the Licence. You may obtain a copy of the Licence at:
  * http://joinup.ec.europa.eu/software/page/eupl Unless required by applicable law or agreed to in writing,
@@ -36,7 +36,7 @@ import lombok.extern.slf4j.Slf4j;
 /**
  * Set and execute all the timers needed for permission data renewal. The timers are scheduled with odd
  * offsets to avoid two timers being executed simultaneously.
- * 
+ *
  * @author tautenhahn
  */
 @Slf4j
@@ -44,7 +44,7 @@ public class TimerHandling implements TimerHandlingMBean
 {
 
   private ObjectName oname;
-  
+
   private ObjectName timerOname;
 
   private final PermissionDataHandlingMBean permissionDataHandling;
@@ -80,13 +80,13 @@ public class TimerHandling implements TimerHandlingMBean
 
   /**
    * Create new instance
-   * 
+   *
    * @param permissionDataHandling object to be called by the timers
    * @param hsmServiceHolder
    */
   TimerHandling(PermissionDataHandlingMBean permissionDataHandling,
-                       HSMServiceHolder hsmServiceHolder,
-                       TerminalPermissionAO facade)
+                HSMServiceHolder hsmServiceHolder,
+                TerminalPermissionAO facade)
   {
     this.permissionDataHandling = permissionDataHandling;
     this.facade = facade;
@@ -154,6 +154,7 @@ public class TimerHandling implements TimerHandlingMBean
           break;
         case RENEW_CVCS:
           permissionDataHandling.renewOutdatedCVCs();
+          hsmServiceHolder.deleteOutdatedKeys();
           break;
         case RENEW_MASTER_AND_DEFECT_LIST:
           permissionDataHandling.renewMasterAndDefectList();
@@ -230,14 +231,14 @@ public class TimerHandling implements TimerHandlingMBean
 
   /**
    * Returns the configuration for the given timer type.
-   * 
+   *
    * @param type
    */
   private TimerType getTimerForNotification(NotificationType type)
   {
     TimerConfigurationType timerConfig = PoseidasConfigurator.getInstance()
-                                                           .getCurrentConfig()
-                                                           .getTimerConfiguration();
+                                                             .getCurrentConfig()
+                                                             .getTimerConfiguration();
     switch (type)
     {
       case RENEW_BLACKLIST:
@@ -272,12 +273,12 @@ public class TimerHandling implements TimerHandlingMBean
    * should satisfy:
    * <ul>
    * <li>the time between 2 consecutive schedule dates of one type is exactly the specified interval</li>
-   * <li>on the same instance of poseidas, tho timers of different type are never started simultaneously, there
-   * is some time left for each timer to finish before the next starts.</li>
+   * <li>on the same instance of poseidas, tho timers of different type are never started simultaneously,
+   * there is some time left for each timer to finish before the next starts.</li>
    * <li>different instances of poseidas do not automatically start their timers of same type at the same
    * time.</li>
    * </ul>
-   * 
+   *
    * @param type
    * @param calendar
    */

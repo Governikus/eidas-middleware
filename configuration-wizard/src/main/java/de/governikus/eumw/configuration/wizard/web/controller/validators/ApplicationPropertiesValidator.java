@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018 Governikus KG. Licensed under the EUPL, Version 1.2 or as soon they will be approved by
+ * Copyright (c) 2019 Governikus KG. Licensed under the EUPL, Version 1.2 or as soon they will be approved by
  * the European Commission - subsequent versions of the EUPL (the "Licence"); You may not use this work except
  * in compliance with the Licence. You may obtain a copy of the Licence at:
  * http://joinup.ec.europa.eu/software/page/eupl Unless required by applicable law or agreed to in writing,
@@ -12,6 +12,7 @@ package de.governikus.eumw.configuration.wizard.web.controller.validators;
 
 import org.springframework.validation.BindingResult;
 
+import de.governikus.eumw.configuration.wizard.identifier.HSMTypeIdentifier;
 import de.governikus.eumw.configuration.wizard.web.model.ApplicationPropertiesForm;
 import de.governikus.eumw.configuration.wizard.web.model.ConfigurationForm;
 
@@ -36,7 +37,8 @@ public class ApplicationPropertiesValidator extends ViewValidator
     checkPort("applicationProperties.serverPort", appProperties.getServerPort(), bindingResult);
     checkNamedObject("applicationProperties.serverSslKeystore",
                      appProperties.getServerSslKeystore(),
-                     bindingResult, false);
+                     bindingResult,
+                     false);
     checkNonBlankString("applicationProperties.datasourceUrl",
                         appProperties.getDatasourceUrl(),
                         bindingResult);
@@ -52,5 +54,21 @@ public class ApplicationPropertiesValidator extends ViewValidator
     checkNonBlankString("applicationProperties.adminPassword",
                         appProperties.getAdminPassword(),
                         bindingResult);
+
+    if (HSMTypeIdentifier.isUsingHSM(appProperties.getHsmType()))
+    {
+
+      checkFieldIsInt("applicationProperties.hsmKeysDelete",
+                      appProperties.getHsmKeysDelete(),
+                      bindingResult);
+
+      checkNonBlankString("applicationProperties.pkcs11ConfigProviderPath",
+                          appProperties.getPkcs11ConfigProviderPath(),
+                          bindingResult);
+
+      checkNonBlankString("applicationProperties.pkcs11HsmPassword",
+                          appProperties.getPkcs11HsmPassword(),
+                          bindingResult);
+    }
   }
 }

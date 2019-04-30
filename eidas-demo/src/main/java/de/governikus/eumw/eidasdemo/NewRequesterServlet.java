@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018 Governikus KG. Licensed under the EUPL, Version 1.2 or as soon they will be approved by
+ * Copyright (c) 2019 Governikus KG. Licensed under the EUPL, Version 1.2 or as soon they will be approved by
  * the European Commission - subsequent versions of the EUPL (the "Licence"); You may not use this work except
  * in compliance with the Licence. You may obtain a copy of the Licence at:
  * http://joinup.ec.europa.eu/software/page/eupl Unless required by applicable law or agreed to in writing,
@@ -10,11 +10,7 @@
 
 package de.governikus.eumw.eidasdemo;
 
-import java.io.BufferedReader;
-import java.io.ByteArrayInputStream;
 import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
 import java.io.Writer;
 import java.nio.charset.StandardCharsets;
 import java.security.GeneralSecurityException;
@@ -27,6 +23,7 @@ import javax.servlet.http.HttpServletResponse;
 import javax.xml.transform.TransformerException;
 import javax.xml.transform.TransformerFactoryConfigurationError;
 
+import org.apache.commons.io.IOUtils;
 import org.opensaml.core.config.InitializationException;
 import org.opensaml.core.xml.io.MarshallingException;
 import org.opensaml.core.xml.io.UnmarshallingException;
@@ -35,7 +32,6 @@ import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.GetMapping;
 
 import de.governikus.eumw.eidascommon.HttpRedirectUtils;
-import de.governikus.eumw.eidascommon.Utils;
 import de.governikus.eumw.eidasstarterkit.EidasNaturalPersonAttributes;
 import de.governikus.eumw.eidasstarterkit.EidasSaml;
 import de.governikus.eumw.eidasstarterkit.EidasSigner;
@@ -98,8 +94,9 @@ public class NewRequesterServlet
       EidasSaml.init();
       EidasSigner signer = new EidasSigner(true, helper.demoSignatureKey, helper.demoSignatureCertificate);
 
-      samlRequest = EidasSaml.createRequest(Utils.createOwnUrlPrefix(request),
-                                            Utils.createOwnUrlPrefix(request) + "/NewReceiverServlet",
+      final String ownURL = request.getRequestURL().toString();
+      samlRequest = EidasSaml.createRequest(ownURL.replace("NewRequesterServlet", "Metadata"),
+                                            ownURL.replace("NewRequesterServlet", "NewReceiverServlet"),
                                             signer,
                                             reqAtt);
     }
@@ -122,21 +119,27 @@ public class NewRequesterServlet
                                                          relayState,
                                                          helper.demoSignatureKey,
                                                          "SHA256");
-      query += "&sessionID=" + UUID.randomUUID() + "&providerID=1";
+
+      String emptyRelayState = HttpRedirectUtils.createQueryString(helper.serverSamlReceiverUrl,
+                                                                   samlRequest,
+                                                                   true,
+                                                                   "",
+                                                                   helper.demoSignatureKey,
+                                                                   "SHA256");
+      String withoutRelayState = emptyRelayState.replace("&RelayState=", "");
+
+      String html = IOUtils.toString(this.getClass().getResourceAsStream("/NewRequesterServlet.html"),
+                                     StandardCharsets.UTF_8);
+      html = html.replace("DEFAULTREQUEST", response.encodeURL(query));
+      html = html.replace("CURRENTRELAYSTATE", relayState);
+      html = html.replace("EMPTYRELAYSTATE", response.encodeURL(emptyRelayState));
+      html = html.replace("WITHOUTRELAYSTATE", response.encodeURL(withoutRelayState));
 
 
-      String html = "<!DOCTYPE html>\n" + "<html>\n" + "<body>\n" + "\n"
-                    + "<a href=\"EUMWREQUESTRECEIVER\">Go to the eIDAS Middleware</a>\n" + "\n" + "</body>\n"
-                    + "</html>";
-      InputStream htmlStream = new ByteArrayInputStream(html.getBytes(StandardCharsets.UTF_8));
-      BufferedReader reader = new BufferedReader(new InputStreamReader(htmlStream, StandardCharsets.UTF_8));
 
       Writer writer = response.getWriter();
       response.setContentType("text/html");
-      for ( String line = reader.readLine() ; line != null ; line = reader.readLine() )
-      {
-        writer.write(line.replaceAll("EUMWREQUESTRECEIVER", response.encodeURL(query)));
-      }
+      writer.write(html);
       writer.close();
     }
     catch (GeneralSecurityException | IOException e)

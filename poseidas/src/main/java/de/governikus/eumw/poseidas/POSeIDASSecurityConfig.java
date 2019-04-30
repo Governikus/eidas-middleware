@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018 Governikus KG. Licensed under the EUPL, Version 1.2 or as soon they will be approved by
+ * Copyright (c) 2019 Governikus KG. Licensed under the EUPL, Version 1.2 or as soon they will be approved by
  * the European Commission - subsequent versions of the EUPL (the "Licence"); You may not use this work except
  * in compliance with the Licence. You may obtain a copy of the Licence at:
  * http://joinup.ec.europa.eu/software/page/eupl Unless required by applicable law or agreed to in writing,
@@ -16,34 +16,52 @@ import org.springframework.security.config.annotation.authentication.builders.Au
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.WebSecurityConfigurerAdapter;
 
+import de.governikus.eumw.eidascommon.ContextPaths;
+
+
 /**
- * This configuration ensures that only authenticated users can access the admin
- * interface.
- * 
- * @author bpr
+ * This configuration ensures that only authenticated users can access the admin interface.
  *
+ * @author bpr
  */
 @Configuration
-public class POSeIDASSecurityConfig extends WebSecurityConfigurerAdapter {
-	
-	@Autowired
-	PasswordFileAuthenticationProvider authenticationProvider;
+public class POSeIDASSecurityConfig extends WebSecurityConfigurerAdapter
+{
 
-	@Override
-	protected void configure(HttpSecurity http) throws Exception {
-		http.csrf().disable()
-		.authorizeRequests()
-		.antMatchers("/list/**", "/details/**").authenticated()
-		.antMatchers("/**").permitAll()
-		.and()
-		.formLogin()
-		.loginPage("/login").permitAll()
-		.and()
-		.logout().permitAll();
-	}
-	
-    @Autowired
-    public void configureGlobal(AuthenticationManagerBuilder auth) throws Exception {
-        auth.authenticationProvider(authenticationProvider);
-    }
+  @Autowired
+  PasswordFileAuthenticationProvider authenticationProvider;
+
+  @Override
+  protected void configure(HttpSecurity http) throws Exception
+  {
+    http.csrf()
+        .disable()
+        .authorizeRequests()
+        .antMatchers(ContextPaths.ADMIN_CONTEXT_PATH + "/list/**",
+                     ContextPaths.ADMIN_CONTEXT_PATH + "/details/**")
+        .authenticated()
+        .antMatchers("/**")
+        .permitAll()
+        .and()
+        .formLogin()
+        .loginPage(ContextPaths.ADMIN_CONTEXT_PATH + "/login")
+        .defaultSuccessUrl(ContextPaths.ADMIN_CONTEXT_PATH + "/list")
+        .permitAll()
+        .and()
+        .logout()
+        .logoutUrl(ContextPaths.ADMIN_CONTEXT_PATH + "/logout")
+        .logoutSuccessUrl(ContextPaths.ADMIN_CONTEXT_PATH + "/login?success")
+        .permitAll()
+        .and()
+        .headers()
+        // TODO: Change to scrip-src 'self' as soon as thymeleaf is used in the middleware and JS is loaded
+        // via URL and not inline
+            .contentSecurityPolicy("script-src 'self'");
+  }
+
+  @Autowired
+  public void configureGlobal(AuthenticationManagerBuilder auth) throws Exception
+  {
+    auth.authenticationProvider(authenticationProvider);
+  }
 }

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018 Governikus KG. Licensed under the EUPL, Version 1.2 or as soon they will be approved by
+ * Copyright (c) 2019 Governikus KG. Licensed under the EUPL, Version 1.2 or as soon they will be approved by
  * the European Commission - subsequent versions of the EUPL (the "Licence"); You may not use this work except
  * in compliance with the Licence. You may obtain a copy of the Licence at:
  * http://joinup.ec.europa.eu/software/page/eupl Unless required by applicable law or agreed to in writing,
@@ -18,7 +18,7 @@ import java.util.ResourceBundle;
  * respective module and the receiver of the SAML response itself) should be able to display a comprehensive
  * message for each of these codes or handle the respective situation automatically. Please note that the SAML
  * status codes are insufficient to cover all specific situations in sufficient detail.
- * 
+ *
  * @author TT
  */
 public enum ErrorCode
@@ -192,7 +192,7 @@ public enum ErrorCode
 
   /**
    * Return human-readable text describing this code.
-   * 
+   *
    * @param details additional information to use in the text.
    */
   public String toDescription(String... details)

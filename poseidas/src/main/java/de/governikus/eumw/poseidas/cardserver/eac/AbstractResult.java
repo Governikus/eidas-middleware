@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018 Governikus KG. Licensed under the EUPL, Version 1.2 or as soon they will be approved by
+ * Copyright (c) 2019 Governikus KG. Licensed under the EUPL, Version 1.2 or as soon they will be approved by
  * the European Commission - subsequent versions of the EUPL (the "Licence"); You may not use this work except
  * in compliance with the Licence. You may obtain a copy of the Licence at:
  * http://joinup.ec.europa.eu/software/page/eupl Unless required by applicable law or agreed to in writing,
@@ -15,7 +15,7 @@ package de.governikus.eumw.poseidas.cardserver.eac;
 
 /**
  * Abstract result.
- * 
+ *
  * @author Arne Stahlbock, ast@bos-bremen.de
  * @author Jens Wothe, jw@bos-bremen.de
  */
@@ -36,7 +36,7 @@ public abstract class AbstractResult<T extends Object> implements Result<T>
 
   /**
    * Copy-Constructor.
-   * 
+   *
    * @param toBeCopied result to be copied
    * @throws NullPointerException if result to be copied <code>null</code>
    */
@@ -47,7 +47,7 @@ public abstract class AbstractResult<T extends Object> implements Result<T>
 
   /**
    * Constructor.
-   * 
+   *
    * @param throwable throwable
    */
   public AbstractResult(Throwable throwable)
@@ -57,7 +57,7 @@ public abstract class AbstractResult<T extends Object> implements Result<T>
 
   /**
    * Constructor.
-   * 
+   *
    * @param data data
    * @param throwable throwable
    */
@@ -69,7 +69,7 @@ public abstract class AbstractResult<T extends Object> implements Result<T>
 
   /**
    * Constructor.
-   * 
+   *
    * @param data data
    */
   public AbstractResult(T data)
@@ -79,7 +79,7 @@ public abstract class AbstractResult<T extends Object> implements Result<T>
 
   /**
    * Gets throwable of result.
-   * 
+   *
    * @return throwable if error occured, otherwise <code>null</code>
    */
   @Override
@@ -90,7 +90,7 @@ public abstract class AbstractResult<T extends Object> implements Result<T>
 
   /**
    * Gets data.
-   * 
+   *
    * @return data, maybe <code>null</code>
    */
   @Override

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018 Governikus KG. Licensed under the EUPL, Version 1.2 or as soon they will be approved by
+ * Copyright (c) 2019 Governikus KG. Licensed under the EUPL, Version 1.2 or as soon they will be approved by
  * the European Commission - subsequent versions of the EUPL (the "Licence"); You may not use this work except
  * in compliance with the Licence. You may obtain a copy of the Licence at:
  * http://joinup.ec.europa.eu/software/page/eupl Unless required by applicable law or agreed to in writing,
@@ -25,7 +25,7 @@ import de.governikus.eumw.poseidas.cardbase.crypto.CipherUtil;
 
 /**
  * Special IvParameterSpec for generation of IV by additional encrypting of increased SSC.
- * 
+ *
  * @author Jens Wothe, jw@bos-bremen.de
  */
 public class AESEncSSCIvParameterSpec extends IvParameterSpec
@@ -33,7 +33,7 @@ public class AESEncSSCIvParameterSpec extends IvParameterSpec
 
   /**
    * Constant for default increment used during increasing SSC: 1.
-   * 
+   *
    * @see #increaseSSC()
    */
   private static final BigInteger DEFAULT_INCREMENT = BigInteger.valueOf(1);
@@ -64,7 +64,7 @@ public class AESEncSSCIvParameterSpec extends IvParameterSpec
    * <p>
    * Notice: implementation must secure ssc initialization value is untouched by increasing.
    * </p>
-   * 
+   *
    * @param ssc initial send sequence counter as byte[]-array, <code>null</code> or empty array not permitted
    * @param keyEnc encryption key for generation of IV by encrypting SSC, <code>null</code> not permitted,
    *          only AES keys permitted
@@ -118,7 +118,7 @@ public class AESEncSSCIvParameterSpec extends IvParameterSpec
 
   /**
    * Gets encrypted IV.
-   * 
+   *
    * @return encrypted IV
    */
   public synchronized IvParameterSpec getEncryptedIV()
@@ -151,7 +151,7 @@ public class AESEncSSCIvParameterSpec extends IvParameterSpec
 
   /**
    * Gets length of IV.
-   * 
+   *
    * @return length of IV
    */
   public final int getLength()

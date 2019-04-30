@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018 Governikus KG. Licensed under the EUPL, Version 1.2 or as soon they will be approved by
+ * Copyright (c) 2019 Governikus KG. Licensed under the EUPL, Version 1.2 or as soon they will be approved by
  * the European Commission - subsequent versions of the EUPL (the "Licence"); You may not use this work except
  * in compliance with the Licence. You may obtain a copy of the Licence at:
  * http://joinup.ec.europa.eu/software/page/eupl Unless required by applicable law or agreed to in writing,
@@ -12,7 +12,15 @@ package de.governikus.eumw.eidasmiddleware.eid;
 
 import java.security.cert.X509Certificate;
 
+import de.governikus.eumw.eidasstarterkit.EidasRequestSectorType;
+import lombok.Getter;
+import lombok.Setter;
 
+/**
+ * Class to hold data of requesting service providers.
+ */
+@Getter
+@Setter
 public class RequestingServiceProvider
 {
 
@@ -24,43 +32,10 @@ public class RequestingServiceProvider
 
   private X509Certificate encryptionCert = null;
 
+  private EidasRequestSectorType sectorType;
+
   public RequestingServiceProvider(String entityID)
   {
     this.entityID = entityID;
-  }
-
-  public void setSignatureCert(X509Certificate signatureCert)
-  {
-    this.signatureCert = signatureCert;
-  }
-
-  public void setEncryptionCert(X509Certificate encryptionCert)
-  {
-    this.encryptionCert = encryptionCert;
-  }
-
-  public void setAssertionConsumerURL(String location)
-  {
-    this.assertionConsumerURL = location;
-  }
-
-  public String getEntityID()
-  {
-    return entityID;
-  }
-
-  public String getAssertionConsumerURL()
-  {
-    return assertionConsumerURL;
-  }
-
-  public X509Certificate getSignatureCert()
-  {
-    return signatureCert;
-  }
-
-  public X509Certificate getEncryptionCert()
-  {
-    return encryptionCert;
   }
 }

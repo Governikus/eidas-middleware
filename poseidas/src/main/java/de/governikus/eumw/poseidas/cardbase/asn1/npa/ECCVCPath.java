@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018 Governikus KG. Licensed under the EUPL, Version 1.2 or as soon they will be approved by
+ * Copyright (c) 2019 Governikus KG. Licensed under the EUPL, Version 1.2 or as soon they will be approved by
  * the European Commission - subsequent versions of the EUPL (the "Licence"); You may not use this work except
  * in compliance with the Licence. You may obtain a copy of the Licence at:
  * http://joinup.ec.europa.eu/software/page/eupl Unless required by applicable law or agreed to in writing,
@@ -21,7 +21,7 @@ import de.governikus.eumw.poseidas.cardbase.asn1.OID;
 
 /**
  * Path for child elements of an {@link ECCVCertificate}.
- * 
+ *
  * @see ECCVCertificate
  * @author Arne Stahlbock, ast@bos-bremen.de
  * @author Jens Wothe, jw@bos-bremen.de
@@ -31,7 +31,7 @@ public class ECCVCPath extends ASN1Path
 
   /**
    * Constructor.
-   * 
+   *
    * @param name name
    * @param tag tag byte of child element
    * @param filter filter of child element
@@ -55,7 +55,7 @@ public class ECCVCPath extends ASN1Path
 
   /**
    * Constructor.
-   * 
+   *
    * @param name name
    * @param tagByte tag of child element
    * @param filter filter of child element
@@ -69,7 +69,7 @@ public class ECCVCPath extends ASN1Path
 
   /**
    * Constructor.
-   * 
+   *
    * @param name name
    * @param tag tag byte of child element
    * @param index index of child element
@@ -93,7 +93,7 @@ public class ECCVCPath extends ASN1Path
 
   /**
    * Constructor.
-   * 
+   *
    * @param name name
    * @param tagBytes tag bytes of child element
    * @param index index of child element
@@ -117,7 +117,7 @@ public class ECCVCPath extends ASN1Path
 
   /**
    * Constructor.
-   * 
+   *
    * @param name name
    * @param tagBytes tag bytes of child element
    * @param index index of child element
@@ -131,7 +131,7 @@ public class ECCVCPath extends ASN1Path
 
   /**
    * Constructor.
-   * 
+   *
    * @param name name
    * @param tagByte tag of child element
    * @param index index of child element
@@ -145,7 +145,7 @@ public class ECCVCPath extends ASN1Path
 
   /**
    * Constructor.
-   * 
+   *
    * @param name name
    * @param tagByteString tag of child element as Hex-String
    * @param index index of child element
@@ -296,21 +296,6 @@ public class ECCVCPath extends ASN1Path
   private static final Filter<ASN1> TERMINAL_SECTOR_RI_FILTER = new FindElementByOIDChildFilter(OID_TERMINAL_SECTOR_RI);
 
   /**
-   * Filter for eID Access content at certificate extensions.
-   */
-  private static final Filter<ASN1> EID_ACCESS_FILTER = new FindElementByOIDChildFilter(ATEidAccessConstants.OID_ACCESS_ROLE_AND_RIGHTS_AUTHENTICATION_TERMINAL_EID_ACCESS);
-
-  /**
-   * Filter for special functions content at certificate extensions.
-   */
-  private static final Filter<ASN1> SPECIAL_FUNCTION_FILTER = new FindElementByOIDChildFilter(ATSpecialConstants.OID_ACCESS_ROLE_AND_RIGHTS_AUTHENTICATION_TERMINAL_SPECIAL_FUNCTIONS);
-
-  /**
-   * Filter for specific attributes content at certificate extensions.
-   */
-  private static final Filter<ASN1> SPECIFIC_ATTRIBUTES_FILTER = new FindElementByOIDChildFilter(ATSpecificAttributesConstants.OID_ACCESS_ROLE_AND_RIGHTS_AUTHENTICATION_TERMINAL_SPECIFIC_ATTRIBUTES);
-
-  /**
    * Path to certificate description as certificate discretionary data of certificate at certificate
    * extensions. extensions.
    */
@@ -352,28 +337,4 @@ public class ECCVCPath extends ASN1Path
   static final ECCVCPath EXTENSIONS_DISCRETIONARY_DATA_TERMINAL_SECTOR_RI_SECOND_HASH = new ECCVCPath("EXTENSIONS_DISCRETIONARY_DATA_TERMINAL_SECTOR_RI_SECOND_HASH",
                                                                                                       "81", 0,
                                                                                                       EXTENSIONS_DISCRETIONARY_DATA_TERMINAL_SECTOR_RI);
-
-  /**
-   * Path to eID Access matrix as certificate discretionary data.
-   */
-  static final ECCVCPath EXTENSIONS_DISCRETIONARY_DATA_EID_ACCESS = new ECCVCPath("EXTENSIONS_DISCRETIONARY_DATA_SPECIAL_FUNCTIONS",
-                                                                                  ASN1EidConstants.TAG_DISCRETIONARY_DATA_TEMPLATE,
-                                                                                  ECCVCPath.EID_ACCESS_FILTER,
-                                                                                  ECCVCPath.CERTIFICATE_EXTENSIONS);
-
-  /**
-   * Path to special functions matrix as certificate discretionary data.
-   */
-  static final ECCVCPath EXTENSIONS_DISCRETIONARY_DATA_SPECIAL_FUNCTIONS = new ECCVCPath("EXTENSIONS_DISCRETIONARY_DATA_SPECIAL_FUNCTIONS",
-                                                                                         ASN1EidConstants.TAG_DISCRETIONARY_DATA_TEMPLATE,
-                                                                                         ECCVCPath.SPECIAL_FUNCTION_FILTER,
-                                                                                         ECCVCPath.CERTIFICATE_EXTENSIONS);
-
-  /**
-   * Path to specific attributes matrix as certificate discretionary data.
-   */
-  static final ECCVCPath EXTENSIONS_DISCRETIONARY_DATA_SPECIFIC_ATTRIBUTES = new ECCVCPath("EXTENSIONS_DISCRETIONARY_DATA_SPECIFIC_ATTRIBUTES",
-                                                                                           ASN1EidConstants.TAG_DISCRETIONARY_DATA_TEMPLATE,
-                                                                                           ECCVCPath.SPECIFIC_ATTRIBUTES_FILTER,
-                                                                                           ECCVCPath.CERTIFICATE_EXTENSIONS);
 }

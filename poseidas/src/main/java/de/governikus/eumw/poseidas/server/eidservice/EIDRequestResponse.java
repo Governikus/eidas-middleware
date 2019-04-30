@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018 Governikus KG. Licensed under the EUPL, Version 1.2 or as soon they will be approved by
+ * Copyright (c) 2019 Governikus KG. Licensed under the EUPL, Version 1.2 or as soon they will be approved by
  * the European Commission - subsequent versions of the EUPL (the "Licence"); You may not use this work except
  * in compliance with the Licence. You may obtain a copy of the Licence at:
  * http://joinup.ec.europa.eu/software/page/eupl Unless required by applicable law or agreed to in writing,
@@ -18,7 +18,7 @@ import oasis.names.tc.dss._1_0.core.schema.Result;
 /**
  * A object of this class contains the response for a eID Request like a useID Request. This data is provided
  * by the {@link EIDInternal} class an then handled by the SAML validator or the eID-Webservice.
- * 
+ *
  * @author Hauke Mehrtens
  */
 public class EIDRequestResponse
@@ -27,8 +27,6 @@ public class EIDRequestResponse
   private final String sessionId;
 
   private final String requestId;
-
-  private final byte[] psk;
 
   private final String eCardServerAddress;
 
@@ -46,7 +44,6 @@ public class EIDRequestResponse
                             String resultMajor,
                             String resultMinor,
                             String resultMessage,
-                            byte[] psk,
                             String eCardServerAddress,
                             String logPrefix)
   {
@@ -55,7 +52,6 @@ public class EIDRequestResponse
     this.resultMajor = resultMajor;
     this.resultMinor = resultMinor;
     this.resultMessage = resultMessage;
-    this.psk = psk;
     this.eCardServerAddress = eCardServerAddress;
     this.logPrefix = logPrefix;
   }
@@ -68,11 +64,6 @@ public class EIDRequestResponse
   public String getRequestId()
   {
     return requestId;
-  }
-
-  public byte[] getPsk()
-  {
-    return psk;
   }
 
   public Result getResult()
@@ -108,5 +99,4 @@ public class EIDRequestResponse
   {
     return logPrefix;
   }
-
 }

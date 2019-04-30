@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018 Governikus KG. Licensed under the EUPL, Version 1.2 or as soon they will be approved by
+ * Copyright (c) 2019 Governikus KG. Licensed under the EUPL, Version 1.2 or as soon they will be approved by
  * the European Commission - subsequent versions of the EUPL (the "Licence"); You may not use this work except
  * in compliance with the Licence. You may obtain a copy of the Licence at:
  * http://joinup.ec.europa.eu/software/page/eupl Unless required by applicable law or agreed to in writing,
@@ -26,7 +26,7 @@ import de.governikus.eumw.poseidas.cardbase.asn1.npa.si.GeneralDomainParameterIn
 
 /**
  * Interface for key operation handlers.
- * 
+ *
  * @author Arne Stahlbock, ast@bos-bremen.de
  */
 public interface KeyHandler
@@ -34,7 +34,7 @@ public interface KeyHandler
 
   /**
    * Generates a key pair.
-   * 
+   *
    * @param params {@link GeneralDomainParameterInfo} to use in generation, <code>null</code> not permitted
    * @return generated {@link KeyPair}
    * @throws IllegalArgumentException if params <code>null</code>
@@ -48,7 +48,7 @@ public interface KeyHandler
 
   /**
    * Generates a key pair.
-   * 
+   *
    * @param spec {@link AlgorithmParameterSpec} to use in generation, <code>null</code> not permitted
    * @return generated {@link KeyPair}
    * @throws IllegalArgumentException if spec <code>null</code> or of wrong type
@@ -61,7 +61,7 @@ public interface KeyHandler
 
   /**
    * Builds {@link PublicKey} object from byte-array encoding the key.
-   * 
+   *
    * @param params domain parameters as {@link GeneralDomainParameterInfo}, <code>null</code> not permitted
    * @param keyBytes key data as byte-array, <code>null</code> or empty not permitted
    * @return generated {@link PublicKey}
@@ -76,7 +76,7 @@ public interface KeyHandler
 
   /**
    * Builds {@link PublicKey} object from byte-array encoding the key.
-   * 
+   *
    * @param spec domain parameters as {@link AlgorithmParameterSpec}, <code>null</code> not permitted
    * @param keyBytes key data as byte-array, <code>null</code> or empty not permitted
    * @return generated {@link PublicKey}
@@ -89,7 +89,7 @@ public interface KeyHandler
 
   /**
    * Calculates shared secret and delivers result in format required for next step.
-   * 
+   *
    * @param priv own {@link PrivateKey}, <code>null</code> not permitted
    * @param pub received {@link PublicKey}, <code>null</code> not permitted
    * @return shared secret as byte-array
@@ -99,7 +99,7 @@ public interface KeyHandler
 
   /**
    * Converts {@link PublicKey} key to bytes.
-   * 
+   *
    * @param key {@link PublicKey} to be converted, <code>null</code> not permitted
    * @return key as byte-array
    * @throws IllegalArgumentException if given key <code>null</code> or of wrong type
@@ -109,7 +109,7 @@ public interface KeyHandler
   /**
    * Generate the structure to be used for calculating authentication token. Structure is defined in BSI
    * TR-03110.
-   * 
+   *
    * @param key the key to be converted, <code>null</code> not permitted
    * @param oid {@link OID} to use in structure, <code>null</code> not permitted
    * @param fullStructure flag indicating if the structure shall contain optional data or not
@@ -123,7 +123,7 @@ public interface KeyHandler
 
   /**
    * Compresses a public key.
-   * 
+   *
    * @param key key to be compressed, <code>null</code> not permitted
    * @return compressed key as byte-array
    * @throws IllegalArgumentException if given key <code>null</code>
@@ -132,7 +132,7 @@ public interface KeyHandler
 
   /**
    * Compresses a public key given as byte-array.
-   * 
+   *
    * @param key key to be compressed, <code>null</code> or empty not permitted
    * @return compressed key as byte-array
    * @throws IllegalArgumentException if given key <code>null</code> or empty
@@ -141,7 +141,7 @@ public interface KeyHandler
 
   /**
    * Generates byte-array representation of key related object (exact type depending on implementation).
-   * 
+   *
    * @param o object to be encoded, <code>null</code> not permitted
    * @return byte-array containing object representation
    * @throws IllegalArgumentException if o <code>null</code> or of wrong type

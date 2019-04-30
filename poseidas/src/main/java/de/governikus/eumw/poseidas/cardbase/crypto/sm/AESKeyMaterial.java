@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018 Governikus KG. Licensed under the EUPL, Version 1.2 or as soon they will be approved by
+ * Copyright (c) 2019 Governikus KG. Licensed under the EUPL, Version 1.2 or as soon they will be approved by
  * the European Commission - subsequent versions of the EUPL (the "Licence"); You may not use this work except
  * in compliance with the Licence. You may obtain a copy of the Licence at:
  * http://joinup.ec.europa.eu/software/page/eupl Unless required by applicable law or agreed to in writing,
@@ -19,7 +19,7 @@ import de.governikus.eumw.poseidas.cardbase.crypto.CipherUtil;
 /**
  * Implementation of key material based on AES keys used for data field encryption and CMAC calculation as it
  * is used for nPA.
- * 
+ *
  * @author Arne Stahlbock, ast@bos-bremen.de
  * @author Jens Wothe, jw@bos-bremen.de
  */
@@ -34,7 +34,7 @@ public class AESKeyMaterial
 
   /**
    * Constructor.
-   * 
+   *
    * @param aesEncKey AES key for encryption and decryption of data field, <code>null</code> or keys other
    *          than AES not permitted, encryption key and mac calculation key must be of same strength
    * @param aesMacKey AES key for CMAC calculation, <code>null</code> or keys other than AES not permitted,
@@ -75,7 +75,7 @@ public class AESKeyMaterial
 
   /**
    * Gets the IvParameterSpec for MAC calculation.
-   * 
+   *
    * @return the sscIvParameterSpec
    */
   public AESEncSSCIvParameterSpec getIvParameterSpec()
@@ -85,7 +85,7 @@ public class AESKeyMaterial
 
   /**
    * Gets AES key for encryption and decryption of data field.
-   * 
+   *
    * @return the AES key
    */
   public SecretKey getAESEncKey()
@@ -95,7 +95,7 @@ public class AESKeyMaterial
 
   /**
    * Gets AES key for CMAC calculation.
-   * 
+   *
    * @return the AES key for MAC calculation
    */
   public SecretKey getAESMacKey()

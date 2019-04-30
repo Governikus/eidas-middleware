@@ -1,5 +1,5 @@
 <!--
-  ~ Copyright (c) 2018 Governikus KG. Licensed under the EUPL, Version 1.2 or as soon they will be approved by
+  ~ Copyright (c) 2019 Governikus KG. Licensed under the EUPL, Version 1.2 or as soon they will be approved by
   ~ the European Commission - subsequent versions of the EUPL (the "Licence"); You may not use this work except
   ~ in compliance with the Licence. You may obtain a copy of the Licence at:
   ~ http://joinup.ec.europa.eu/software/page/eupl Unless required by applicable law or agreed to in writing,
@@ -92,6 +92,43 @@
            class="field-description-message"></p>
         <input data-th-id="${#strings.isEmpty(idBase) ? '' : idBase + '-'} + ${fieldName}"
                class="text-area-input" type="text" data-th-field="*{__${fieldName}__}">
+    </div>
+</div>
+<!-- -------------------------------------------------------------------------------------------------------------- -->
+<div data-th-fragment="checkboxRow(idBase, fieldName, description, message)"
+     class="table-row">
+    <label data-th-for="${#strings.isEmpty(idBase) ? '' : idBase + '-'} + ${fieldName}"
+           class="table-cell description" data-th-text="${description}"></label>
+    <div class="table-cell">
+        <p data-th-id="${#strings.isEmpty(idBase) ? '' : idBase + '-'} + ${fieldName} + -error"
+           data-th-if="${#fields.hasErrors('__${fieldName}__')}" data-th-errors="*{__${fieldName}__}"
+           class="validation-error">
+            fieldName error
+        </p>
+        <p data-th-unless="${#strings.isEmpty(message)}" data-th-utext="${message}"
+           class="field-description-message"></p>
+        <input type="checkbox" data-th-id="${#strings.isEmpty(idBase) ? '' : idBase + '-'} + ${fieldName}"
+               data-th-field="*{__${fieldName}__}">
+    </div>
+</div>
+<!-- -------------------------------------------------------------------------------------------------------------- -->
+<div data-th-fragment="staticDropDownRow(idBase, fieldName, description, message, staticEnum)"
+     class="table-row">
+    <label data-th-for="${#strings.isEmpty(idBase) ? '' : idBase + '-'} + ${fieldName}"
+           class="table-cell description" data-th-text="${description}"></label>
+    <div class="table-cell">
+        <p data-th-id="${#strings.isEmpty(idBase) ? '' : idBase + '-'} + ${fieldName} + -error"
+           data-th-if="${#fields.hasErrors('__${fieldName}__')}" data-th-errors="*{__${fieldName}__}"
+           class="validation-error">
+            fieldName error
+        </p>
+        <p data-th-unless="${#strings.isEmpty(message)}" data-th-utext="${message}"
+           class="field-description-message"></p>
+		<select  data-th-id="${#strings.isEmpty(idBase) ? '' : idBase + '-'} + ${fieldName}"
+               data-th-field="*{__${fieldName}__}">
+			<option th:each="state : ${staticEnum.values()}"
+				th:value="${state}" th:text="${state}"></option>
+		</select>
     </div>
 </div>
 <!-- -------------------------------------------------------------------------------------------------------------- -->
@@ -222,31 +259,31 @@
 <div data-th-fragment="uploadKeystoreForm()" class="table">
 
     <div
-        data-th-replace="fragments/view-components.html :: textInputRow(
+            data-th-replace="fragments/view-components.html :: textInputRow(
                                               idBase        = keystore,
                                               fieldName     = keystoreName,
                                               description   = #{keystore.name},
                                               message       = #{keystore.message})"></div>
     <div
-        data-th-replace="fragments/view-components.html :: textInputRow(
+            data-th-replace="fragments/view-components.html :: textInputRow(
                                               idBase        = keystore,
                                               fieldName     = alias,
                                               description   = #{keystore.alias},
                                               message       = #{keystore.alias.message})"></div>
     <div
-        data-th-replace="fragments/view-components.html :: passwordInputRow(
+            data-th-replace="fragments/view-components.html :: passwordInputRow(
                                               idBase        = keystore,
                                               fieldName     = keystorePassword,
                                               description   = #{keystore.password},
                                               message       = #{keystore.password.message})"></div>
     <div
-        data-th-replace="fragments/view-components.html :: passwordInputRow(
+            data-th-replace="fragments/view-components.html :: passwordInputRow(
                                               idBase        = keystore,
                                               fieldName     = privateKeyPassword,
                                               description   = #{keystore.private.password},
                                               message       = #{keystore.private.password.message})"></div>
     <div
-        data-th-replace="fragments/view-components.html :: fileInputRow(
+            data-th-replace="fragments/view-components.html :: fileInputRow(
                                               idBase        = keystore,
                                               fieldName     = keystoreFile,
                                               description   = #{keystore.file},
@@ -255,11 +292,11 @@
         <span class="table-cell"></span>
         <div class="table-cell">
             <button id="keystore-upload-button" class="gov-button position-right"
-                type="submit" name="upload" value="keystore" data-th-text="#{button.upload}">
+                    type="submit" name="upload" value="keystore" data-th-text="#{button.upload}">
             </button>
             <span data-th-if="${keystoreUploadSuccess}"
-                id="keystoreUploadSuccess" class="success-message"
-                data-th-text="#{wizard.status.upload.successful}"></span>
+                  id="keystoreUploadSuccess" class="success-message"
+                  data-th-text="#{wizard.status.upload.successful}"></span>
         </div>
     </div>
 </div>
@@ -306,7 +343,7 @@
         </select>
 
         <p data-th-if="${#lists.isEmpty(certificateList)}"
-            class="warning" data-th-text="#{wizard.status.warning.no.certs}" />
+           class="warning" data-th-text="#{wizard.status.warning.no.certs}"/>
 
         <data-th-block data-th-if="*{__${fieldName}__ != null}">
             <div data-th-replace="fragments/view-components.html :: certificate(*{__${fieldName}__}, null)"></div>
@@ -345,8 +382,39 @@
         </select>
 
         <p data-th-if="${#lists.isEmpty(keystoreList)}"
-            data-th-text="#{wizard.status.warning.no.keystores}"
-            class="warning" />
+           data-th-text="#{wizard.status.warning.no.keystores}"
+           class="warning"/>
+
+        <data-th-block data-th-if="*{__${fieldName}__ != null}">
+            <div data-th-replace="fragments/view-components.html :: certificate(*{__${fieldName}__.asCertificate()},
+                                                                          *{__${fieldName}__.alias})"></div>
+        </data-th-block>
+    </div>
+</div>
+<!-- -------------------------------------------------------------------------------------------------------------- -->
+<div data-th-fragment="keystoreSelectionWithoutValidation(description, keystoreList, fieldName)"
+     class="table-row"
+     data-th-with="current_keystore=*{__${fieldName}__}">
+
+    <span class="table-cell description" data-th-utext="${description}"></span>
+
+    <div class="table-cell">
+        <select data-th-field="*{__${fieldName}__}"
+                data-th-unless="${#lists.isEmpty(keystoreList)}">
+
+            <option value="0" selected></option>
+            <option data-th-each="keystore : ${keystoreList}"
+                    data-th-value="${keystore.name}"
+                    data-th-utext="${keystore.name}"
+                    data-th-selected="${#strings.equals((current_keystore != null ? current_keystore.name : null),
+                                                   keystore.name)}"
+            ></option>
+
+        </select>
+
+        <p data-th-if="${#lists.isEmpty(keystoreList)}"
+           data-th-text="#{wizard.status.warning.no.keystores}"
+           class="warning"/>
 
         <data-th-block data-th-if="*{__${fieldName}__ != null}">
             <div data-th-replace="fragments/view-components.html :: certificate(*{__${fieldName}__.asCertificate()},

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018 Governikus KG. Licensed under the EUPL, Version 1.2 or as soon they will be approved by
+ * Copyright (c) 2019 Governikus KG. Licensed under the EUPL, Version 1.2 or as soon they will be approved by
  * the European Commission - subsequent versions of the EUPL (the "Licence"); You may not use this work except
  * in compliance with the Licence. You may obtain a copy of the Licence at:
  * http://joinup.ec.europa.eu/software/page/eupl Unless required by applicable law or agreed to in writing,
@@ -37,7 +37,7 @@ import de.governikus.eumw.poseidas.eidmodel.TerminalData;
 /**
  * Entity to persist the terminal permission data needed to access an ePA. That data contains the access data
  * for the PKI which issues the terminal certificates as well because it is needed in the renewal process.
- * 
+ *
  * @author TT
  */
 @Entity
@@ -107,7 +107,7 @@ public class TerminalPermission implements Serializable
 
   /**
    * Create an instance setting the always requested attributes
-   * 
+   *
    * @param refID artificial primary key
    */
   TerminalPermission(String refID)
@@ -228,7 +228,7 @@ public class TerminalPermission implements Serializable
   {
     this.psKey = psKey;
   }
-  
+
   /**
    * Return information about a certificate request which has been created but not yet answered by the trust
    * center - you may want to send this request again.

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018 Governikus KG. Licensed under the EUPL, Version 1.2 or as soon they will be approved by
+ * Copyright (c) 2019 Governikus KG. Licensed under the EUPL, Version 1.2 or as soon they will be approved by
  * the European Commission - subsequent versions of the EUPL (the "Licence"); You may not use this work except
  * in compliance with the Licence. You may obtain a copy of the Licence at:
  * http://joinup.ec.europa.eu/software/page/eupl Unless required by applicable law or agreed to in writing,
@@ -27,7 +27,7 @@ import de.governikus.eumw.poseidas.cardbase.ByteUtil;
 
 /**
  * Implementation of some EC calculations.
- * 
+ *
  * @author Arne Stahlbock, ast@bos-bremen.de
  * @author Jens Wothe, jw@bos-bremen.de
  */
@@ -44,7 +44,7 @@ public final class ECMath
 
   /**
    * Calculates shared secret as an {@link ECPoint}.
-   * 
+   *
    * @param priv own private key, <code>null</code> not permitted
    * @param pub received public key, <code>null</code> not permitted
    * @return shared secret as an {@link ECPoint}
@@ -66,7 +66,7 @@ public final class ECMath
    * </p>
    * Note: to be removed as soon as Java provides (usable) own implementation. This version is actually not
    * especially efficient.
-   * 
+   *
    * @param spec parameter specification, <code>null</code> not permitted
    * @return generated keypair
    * @throws IllegalArgumentException if spec <code>null</code>
@@ -94,7 +94,7 @@ public final class ECMath
    * </p>
    * Note: to be removed as soon as Java provides (usable) own implementation. This version is actually not
    * especially efficient.
-   * 
+   *
    * @param p point, <code>null</code> not permitted
    * @param factor factor, <code>null</code> not permitted, must be positive
    * @param a first coefficient (domain parameters), <code>null</code> not permitted
@@ -133,7 +133,7 @@ public final class ECMath
    * <p>
    * </p>
    * Note: to be removed as soon as Java provides own (usable) implementation.
-   * 
+   *
    * @param p point
    * @param a first coefficient (domain parameters)
    * @param prime prime integer (domain parameters)
@@ -157,7 +157,7 @@ public final class ECMath
    * <p>
    * </p>
    * Note: to be removed as soon as Java provides own (usable) implementation.
-   * 
+   *
    * @param p first point, <code>null</code> not permitted
    * @param q second point, <code>null</code> not permitted
    * @param a first coefficient (domain parameters), <code>null</code> not permitted
@@ -191,7 +191,7 @@ public final class ECMath
 
   /**
    * Generates {@link ECPoint} object from byte-array representation of EC point
-   * 
+   *
    * @param pointBytes EC point in byte-array representation, <code>null</code> or empty not permitted, length
    *          must be exactly one plus double fieldSize
    * @param fieldSize size of field (domain parameters) (in bytes), must be positive
@@ -215,7 +215,7 @@ public final class ECMath
   /**
    * Verifies EC signature. (Note: not tuned for efficiency, to be replaced as soon as Java provides own
    * usable implementation.)
-   * 
+   *
    * @param signature raw signature, no ASN.1 structure, <code>null</code> or empty not permitted
    * @param signedData data which was signed, <code>null</code> not permitted
    * @param pubKey public key of signer, <code>null</code> not permitted
@@ -269,7 +269,7 @@ public final class ECMath
 
   /**
    * Conversion from octet string to integer.
-   * 
+   *
    * @param os octet string as byte-array
    * @return {@link BigInteger} representing converted octet string
    * @throws IllegalArgumentException if <code>null</code> given as octet string
@@ -289,7 +289,7 @@ public final class ECMath
 
   /**
    * Checks if a given EC point is on a given EC curve.
-   * 
+   *
    * @param w point
    * @param ecSpec parameters containing curve of Fp type
    * @return <code>true</code> if point on curve, <code>false</code> otherwise

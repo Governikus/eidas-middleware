@@ -1,11 +1,10 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<md:EntityDescriptor xmlns:md="urn:oasis:names:tc:SAML:2.0:metadata" xmlns:eidas="http://eidas.europa.eu/saml-extensions" 
+<md:EntityDescriptor xmlns:md="urn:oasis:names:tc:SAML:2.0:metadata" xmlns:eidas="http://eidas.europa.eu/saml-extensions"
     xmlns:alg="urn:oasis:names:tc:SAML:metadata:algsupport" ID="$Id" entityID="$entityID" validUntil="$validUntil">
             <md:Extensions>
-                <eidas:SPType>$SPType</eidas:SPType>
                 <alg:DigestMethod  Algorithm="http://www.w3.org/2001/04/xmlenc#sha256"/>
                 <alg:SigningMethod MinKeySize="256" Algorithm="http://www.w3.org/2001/04/xmldsig-more#ecdsa-sha256"/>
-                <alg:SigningMethod MinKeySize="3072" MaxKeySize="4096"  Algorithm="http://www.w3.org/2001/04/xmldsig-more#rsa-sha256"/>                
+                <alg:SigningMethod MinKeySize="3072" MaxKeySize="4096"  Algorithm="http://www.w3.org/2001/04/xmldsig-more#rsa-sha256"/>
             </md:Extensions>
       <md:SPSSODescriptor AuthnRequestsSigned="true" WantAssertionsSigned="false"
             protocolSupportEnumeration="urn:oasis:names:tc:SAML:2.0:protocol">

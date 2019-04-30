@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018 Governikus KG. Licensed under the EUPL, Version 1.2 or as soon they will be approved by
+ * Copyright (c) 2019 Governikus KG. Licensed under the EUPL, Version 1.2 or as soon they will be approved by
  * the European Commission - subsequent versions of the EUPL (the "Licence"); You may not use this work except
  * in compliance with the Licence. You may obtain a copy of the Licence at:
  * http://joinup.ec.europa.eu/software/page/eupl Unless required by applicable law or agreed to in writing,
@@ -26,9 +26,6 @@ import org.apache.commons.logging.LogFactory;
 
 import de.governikus.eumw.poseidas.cardbase.asn1.ASN1;
 import de.governikus.eumw.poseidas.cardbase.asn1.OID;
-import de.governikus.eumw.poseidas.cardbase.asn1.npa.ATEidAccess;
-import de.governikus.eumw.poseidas.cardbase.asn1.npa.ATSpecialFunctions;
-import de.governikus.eumw.poseidas.cardbase.asn1.npa.ATSpecificAttributes;
 import de.governikus.eumw.poseidas.cardbase.asn1.npa.CertificateDescription;
 import de.governikus.eumw.poseidas.cardbase.asn1.npa.CertificateHolderAuthorizationTemplate;
 import de.governikus.eumw.poseidas.cardbase.asn1.npa.ECCVCPath;
@@ -258,25 +255,9 @@ public class TerminalData
     return cvcWrapper.getChat();
   }
 
-  public ATEidAccess getATEidAccess()
-  {
-    return cvcWrapper.getEidAccess();
-  }
-
-  public ATSpecialFunctions getATSpecialFunctions()
-  {
-    return cvcWrapper.getSpecialFunctions();
-  }
-
-  public ATSpecificAttributes getATSpecificAttributes()
-  {
-    return cvcWrapper.getSpecificAttributes();
-  }
-
   public Authorizations getAuthorizations()
   {
-    return new Authorizations(this.cvcWrapper.getChat(), this.cvcWrapper.getEidAccess(),
-                              this.cvcWrapper.getSpecialFunctions(), this.cvcWrapper.getSpecificAttributes());
+    return new Authorizations(this.cvcWrapper.getChat());
   }
 
   /**

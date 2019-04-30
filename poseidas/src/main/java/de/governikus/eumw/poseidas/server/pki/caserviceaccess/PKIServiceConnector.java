@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018 Governikus KG. Licensed under the EUPL, Version 1.2 or as soon they will be approved by
+ * Copyright (c) 2019 Governikus KG. Licensed under the EUPL, Version 1.2 or as soon they will be approved by
  * the European Commission - subsequent versions of the EUPL (the "Licence"); You may not use this work except
  * in compliance with the Licence. You may obtain a copy of the Licence at:
  * http://joinup.ec.europa.eu/software/page/eupl Unless required by applicable law or agreed to in writing,
@@ -21,16 +21,20 @@ import java.security.GeneralSecurityException;
 import java.security.Key;
 import java.security.KeyStore;
 import java.security.KeyStoreException;
+import java.security.Principal;
+import java.security.PrivateKey;
 import java.security.SecureRandom;
 import java.security.cert.X509Certificate;
 import java.util.List;
 
 import javax.net.ssl.HttpsURLConnection;
+import javax.net.ssl.KeyManager;
 import javax.net.ssl.KeyManagerFactory;
 import javax.net.ssl.SSLContext;
 import javax.net.ssl.SSLSocket;
 import javax.net.ssl.SSLSocketFactory;
 import javax.net.ssl.TrustManagerFactory;
+import javax.net.ssl.X509KeyManager;
 import javax.xml.ws.BindingProvider;
 import javax.xml.ws.WebServiceException;
 
@@ -40,8 +44,7 @@ import org.apache.cxf.configuration.jsse.TLSClientParameters;
 import org.apache.cxf.frontend.ClientProxy;
 import org.apache.cxf.transport.http.HTTPConduit;
 import org.apache.cxf.transports.http.configuration.HTTPClientPolicy;
-
-import com.sun.xml.ws.developer.JAXWSProperties;
+import org.bouncycastle.jce.provider.BouncyCastleProvider;
 
 import de.governikus.eumw.eidascommon.Utils;
 
@@ -110,7 +113,9 @@ public class PKIServiceConnector
     {
       return null;
     }
-    KeyStore clientKeyStore = KeyStore.getInstance("jks");
+
+    // Must use bouncy as SUN Provider changes alias to lower case
+    KeyStore clientKeyStore = KeyStore.getInstance("pkcs12", BouncyCastleProvider.PROVIDER_NAME);
     try
     {
       clientKeyStore.load(null);
@@ -120,7 +125,7 @@ public class PKIServiceConnector
       LOG.error(entityID + ": KeyStore.load threw IOException even though no load was attempted", e);
     }
     X509Certificate[] clientCertChain = sslClientCert.toArray(new X509Certificate[sslClientCert.size()]);
-    clientKeyStore.setKeyEntry("alias", sslClientKey, DUMMY_KEYPASS, clientCertChain);
+    clientKeyStore.setKeyEntry(entityID, sslClientKey, DUMMY_KEYPASS, clientCertChain);
     return clientKeyStore;
   }
 
@@ -134,7 +139,7 @@ public class PKIServiceConnector
    * @param storePass
    * @throws GeneralSecurityException
    */
-  private PKIServiceConnector(int timeout,
+  public PKIServiceConnector(int timeout,
                              X509Certificate sslServersCert,
                              KeyStore clientCertAndKey,
                              char[] storePass,
@@ -186,12 +191,15 @@ public class PKIServiceConnector
   {
     SSLContext ctx = SSLContext.getInstance("TLSv1.2");
 
-    KeyManagerFactory kmf = null;
+    KeyManager km = null;
     TrustManagerFactory tmf = TrustManagerFactory.getInstance(TrustManagerFactory.getDefaultAlgorithm());
-    if (clientCertAndKey != null && storePass != null)
+    if (clientCertAndKey != null)
     {
-      kmf = KeyManagerFactory.getInstance(KeyManagerFactory.getDefaultAlgorithm());
+      KeyManagerFactory kmf = KeyManagerFactory.getInstance(KeyManagerFactory.getDefaultAlgorithm());
       kmf.init(clientCertAndKey, storePass);
+      X509KeyManager origKM = (X509KeyManager)kmf.getKeyManagers()[0];
+      // force the key manager to use a defined key in case there is more than one
+      km = new AliasKeyManager(origKM, entityID);
     }
 
     KeyStore trustStore = KeyStore.getInstance("jks");
@@ -199,7 +207,7 @@ public class PKIServiceConnector
     trustStore.setCertificateEntry("alias", sslServersCert);
     tmf.init(trustStore);
 
-    ctx.init((kmf != null) ? kmf.getKeyManagers() : null, tmf.getTrustManagers(), new SecureRandom());
+    ctx.init(km == null ? null : new KeyManager[]{km}, tmf.getTrustManagers(), new SecureRandom());
     return new PoseidasSSLSocketFactory(ctx.getSocketFactory());
   }
 
@@ -365,60 +373,21 @@ public class PKIServiceConnector
     }
     try
     {
-      port.getRequestContext().put(BindingProvider.ENDPOINT_ADDRESS_PROPERTY, uri);
-
-      // configure metro connection (POSeIDAS stand-alone)
-      try
-      {
-        port.getRequestContext().put(JAXWSProperties.CONNECT_TIMEOUT, Integer.valueOf(1000 * timeout));
-        port.getRequestContext().put(JAXWSProperties.REQUEST_TIMEOUT, Integer.valueOf(1000 * timeout));
-      }
-      catch (NoClassDefFoundError e)
-      {
-        // expected for EUMW (metro not available)
-      }
-
-      // configure CXF connection (EUMW)
-      try
-      {
-        HTTPConduit conduit = (HTTPConduit)ClientProxy.getClient(port).getConduit();
-        HTTPClientPolicy policy = new HTTPClientPolicy();
-        policy.setConnectionTimeout(MILLISECOND_FACTOR * timeout);
-        policy.setReceiveTimeout(MILLISECOND_FACTOR * timeout);
-        conduit.setClient(policy);
-      }
-      catch (NoClassDefFoundError | ClassCastException e)
-      {
-        // expected for POSeIDAS stand-alone (CXF not available)
-      }
-
       if (uri.startsWith("http://"))
       {
         return;
       }
 
-      // configure metro connection (POSeIDAS stand-alone)
-      try
-      {
-        port.getRequestContext().put(JAXWSProperties.SSL_SOCKET_FACTORY, getSSLFactory());
-      }
-      catch (NoClassDefFoundError e)
-      {
-        // expected for EUMW (metro not available)
-      }
+      port.getRequestContext().put(BindingProvider.ENDPOINT_ADDRESS_PROPERTY, uri);
 
-      // configure CXF connection (EUMW)
-      try
-      {
-        HTTPConduit conduit = (HTTPConduit)ClientProxy.getClient(port).getConduit();
-        TLSClientParameters tlsClientParameters = new TLSClientParameters();
-        tlsClientParameters.setSSLSocketFactory(getSSLFactory());
-        conduit.setTlsClientParameters(tlsClientParameters);
-      }
-      catch (NoClassDefFoundError | ClassCastException e)
-      {
-        // expected for POSeIDAS stand-alone (CXF not available)
-      }
+      HTTPConduit conduit = (HTTPConduit)ClientProxy.getClient(port).getConduit();
+      HTTPClientPolicy policy = new HTTPClientPolicy();
+      policy.setConnectionTimeout(MILLISECOND_FACTOR * timeout);
+      policy.setReceiveTimeout(MILLISECOND_FACTOR * timeout);
+      conduit.setClient(policy);
+      TLSClientParameters tlsClientParameters = new TLSClientParameters();
+      tlsClientParameters.setSSLSocketFactory(getSSLFactory());
+      conduit.setTlsClientParameters(tlsClientParameters);
     }
     catch (WebServiceException e)
     {
@@ -430,7 +399,7 @@ public class PKIServiceConnector
     }
     catch (GeneralSecurityException e)
     {
-      LOG.error(entityID + ": should not have happened because certs and keys where already parsed", e);
+      LOG.error(entityID + ": should not have happened because certs and keys were already parsed", e);
     }
     catch (IOException e)
     {
@@ -482,5 +451,76 @@ public class PKIServiceConnector
                      + "\n");
     sslContextLocked = false;
     PKIServiceConnector.class.notifyAll();
+  }
+
+  /**
+   * Wrap a {@link KeyManager} in order to force use of a defined key as client key.
+   */
+  private static final class AliasKeyManager implements X509KeyManager
+  {
+
+    /**
+     * Wrapped {@link KeyManager}.
+     */
+    private final X509KeyManager wrapped;
+
+    /**
+     * Alias of the client key.
+     */
+    private final String alias;
+
+    /**
+     * Constructor.
+     *
+     * @param wrapped the wrapped {@link KeyManager}
+     * @param alias alias of the client key to be used
+     */
+    private AliasKeyManager(X509KeyManager wrapped, String alias)
+    {
+      this.wrapped = wrapped;
+      this.alias = alias;
+    }
+
+    /** {@inheritDoc} */
+    @Override
+    public String chooseClientAlias(String[] keyType, Principal[] issuers, Socket socket)
+    {
+      return alias;
+    }
+
+    /** {@inheritDoc} */
+    @Override
+    public String chooseServerAlias(String keyType, Principal[] issuers, Socket socket)
+    {
+      return wrapped.chooseServerAlias(keyType, issuers, socket);
+    }
+
+    /** {@inheritDoc} */
+    @Override
+    public X509Certificate[] getCertificateChain(String alias)
+    {
+      return wrapped.getCertificateChain(alias);
+    }
+
+    /** {@inheritDoc} */
+    @Override
+    public String[] getClientAliases(String keyType, Principal[] issuers)
+    {
+      return wrapped.getClientAliases(keyType, issuers);
+    }
+
+    /** {@inheritDoc} */
+    @Override
+    public PrivateKey getPrivateKey(String alias)
+    {
+      return wrapped.getPrivateKey(alias);
+    }
+
+    /** {@inheritDoc} */
+    @Override
+    public String[] getServerAliases(String keyType, Principal[] issuers)
+    {
+      return wrapped.getServerAliases(keyType, issuers);
+    }
   }
 }

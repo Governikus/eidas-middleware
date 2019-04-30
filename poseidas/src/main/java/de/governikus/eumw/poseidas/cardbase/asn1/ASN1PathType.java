@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018 Governikus KG. Licensed under the EUPL, Version 1.2 or as soon they will be approved by
+ * Copyright (c) 2019 Governikus KG. Licensed under the EUPL, Version 1.2 or as soon they will be approved by
  * the European Commission - subsequent versions of the EUPL (the "Licence"); You may not use this work except
  * in compliance with the Licence. You may obtain a copy of the Licence at:
  * http://joinup.ec.europa.eu/software/page/eupl Unless required by applicable law or agreed to in writing,
@@ -14,7 +14,7 @@ package de.governikus.eumw.poseidas.cardbase.asn1;
 
 /**
  * Enum for types of ASN1Path - for validity checks of ASN.1 objects by checking existing of child elements.
- * 
+ *
  * @see ASN1Path
  * @author Jens Wothe, jw@bos-bremen.de
  */
@@ -54,7 +54,7 @@ public enum ASN1PathType
 
   /**
    * Constructor.
-   * 
+   *
    * @param abbreviation abbreviation
    * @param keyWord1 key word (variant 1)
    * @param keyWord2 key word (variant 2)
@@ -69,7 +69,7 @@ public enum ASN1PathType
 
   /**
    * Gets abbreviation.
-   * 
+   *
    * @return abbreviation
    */
   public String getAbbreviation()
@@ -79,7 +79,7 @@ public enum ASN1PathType
 
   /**
    * Gets key word (variant 1).
-   * 
+   *
    * @return key word
    */
   public String getKeyWord1()
@@ -90,7 +90,7 @@ public enum ASN1PathType
 
   /**
    * Gets key word (variant 2).
-   * 
+   *
    * @return key word
    */
   public String getKeyWord2()

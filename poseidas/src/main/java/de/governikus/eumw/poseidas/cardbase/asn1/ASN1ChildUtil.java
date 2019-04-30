@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018 Governikus KG. Licensed under the EUPL, Version 1.2 or as soon they will be approved by
+ * Copyright (c) 2019 Governikus KG. Licensed under the EUPL, Version 1.2 or as soon they will be approved by
  * the European Commission - subsequent versions of the EUPL (the "Licence"); You may not use this work except
  * in compliance with the Licence. You may obtain a copy of the Licence at:
  * http://joinup.ec.europa.eu/software/page/eupl Unless required by applicable law or agreed to in writing,
@@ -25,7 +25,7 @@ import de.governikus.eumw.poseidas.cardbase.Hex;
 
 /**
  * Implementation of convenience methods for children of ASN.1.
- * 
+ *
  * @author Jens Wothe, jw@bos-bremen.de
  */
 final class ASN1ChildUtil
@@ -43,7 +43,7 @@ final class ASN1ChildUtil
 
   /**
    * Gets list of all child elements of an ASN.1
-   * 
+   *
    * @param asn1 ASN.1, <code>null</code> not permitted
    * @return list ofchild elements
    * @throws IOException if value of ASN.1 contains inconsistent data
@@ -93,7 +93,7 @@ final class ASN1ChildUtil
 
   /**
    * Gets all child elements of an ASN.1.
-   * 
+   *
    * @param stream stream with ASN.1, <code>null</code> permitted
    * @param close <code>true</code> for closing stream after reading, <code>false</code> otherwise
    * @return array with child elements, empty array if no elements found
@@ -108,7 +108,7 @@ final class ASN1ChildUtil
 
   /**
    * Gets all child elements of an ASN.1.
-   * 
+   *
    * @param stream stream with ASN.1 (value part only), <code>null</code> permitted
    * @param endValue optional ASN.1 for end of child search, e. g. as {@link ASN1Constants#EOC_ASN1} in case
    *          of undetermined length encoding

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018 Governikus KG. Licensed under the EUPL, Version 1.2 or as soon they will be approved by
+ * Copyright (c) 2019 Governikus KG. Licensed under the EUPL, Version 1.2 or as soon they will be approved by
  * the European Commission - subsequent versions of the EUPL (the "Licence"); You may not use this work except
  * in compliance with the Licence. You may obtain a copy of the Licence at:
  * http://joinup.ec.europa.eu/software/page/eupl Unless required by applicable law or agreed to in writing,
@@ -15,6 +15,7 @@ import java.io.IOException;
 import java.net.URISyntaxException;
 import java.nio.charset.StandardCharsets;
 import java.security.GeneralSecurityException;
+import java.security.KeyStore;
 import java.security.SignatureException;
 import java.security.cert.CertificateException;
 import java.util.ArrayList;
@@ -30,8 +31,6 @@ import java.util.Set;
 import javax.xml.bind.DatatypeConverter;
 import javax.xml.ws.WebServiceException;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.springframework.context.ApplicationContext;
 
 import de.governikus.eumw.eidascommon.Utils;
@@ -58,6 +57,7 @@ import de.governikus.eumw.poseidas.server.pki.caserviceaccess.DvcaCertDescriptio
 import de.governikus.eumw.poseidas.server.pki.caserviceaccess.PKIServiceConnector;
 import de.governikus.eumw.poseidas.server.pki.caserviceaccess.ServiceWrapperFactory;
 import de.governikus.eumw.poseidas.server.pki.caserviceaccess.TermAuthServiceWrapper;
+import lombok.extern.slf4j.Slf4j;
 
 
 /**
@@ -65,10 +65,9 @@ import de.governikus.eumw.poseidas.server.pki.caserviceaccess.TermAuthServiceWra
  *
  * @author tautenhahn
  */
+@Slf4j
 public class CVCRequestHandler extends BerCaRequestHandlerBase
 {
-
-  private static final Log LOG = LogFactory.getLog(CVCRequestHandler.class);
 
   private static final Map<String, TerminalData> KNOWN_ROOT_CERTS = new HashMap<>();
 
@@ -114,14 +113,14 @@ public class CVCRequestHandler extends BerCaRequestHandlerBase
   /**
    * Create new Object which can be used for one service provider only as long as configuration is not
    * changed.
-   * 
+   *
    * @param epaConfig The connection configuration for the terminal
    * @param facade The terminal configuration
    */
-  CVCRequestHandler(EPAConnectorConfigurationDto epaConfig, TerminalPermissionAO facade)
+  CVCRequestHandler(EPAConnectorConfigurationDto epaConfig, TerminalPermissionAO facade, KeyStore hsmKeyStore)
     throws GovManagementException
   {
-    this(epaConfig, facade, facade.getApplicationContext());
+    this(epaConfig, facade, facade.getApplicationContext(), hsmKeyStore);
   }
 
   /**
@@ -133,11 +132,12 @@ public class CVCRequestHandler extends BerCaRequestHandlerBase
    * @param applicationContext The spring application context
    */
   CVCRequestHandler(EPAConnectorConfigurationDto epaConfig,
-                           TerminalPermissionAO facade,
-                           ApplicationContext applicationContext)
+                    TerminalPermissionAO facade,
+                    ApplicationContext applicationContext,
+                    KeyStore hsmKeyStore)
     throws GovManagementException
   {
-    super(epaConfig, facade);
+    super(epaConfig, facade, hsmKeyStore);
     policy = PolicyImplementationFactory.getInstance().getPolicy(pkiConfig.getBerCaPolicyId());
     this.applicationContext = applicationContext;
   }
@@ -151,22 +151,19 @@ public class CVCRequestHandler extends BerCaRequestHandlerBase
    * @param chrMnemonic
    * @param sequenceNumber
    */
-  void makeInitialRequest(byte[] cvcDescription,
-                                 String countryCode,
-                                 String chrMnemonic,
-                                 int sequenceNumber)
+  void makeInitialRequest(byte[] cvcDescription, String countryCode, String chrMnemonic, int sequenceNumber)
     throws GovManagementException
   {
     try
     {
       byte[][] encodedCvcs = getCACertificates(null);
-      TerminalPermission tp = facade.getTerminalPermission(entityId);
+      TerminalPermission tp = facade.getTerminalPermission(cvcRefId);
       if (tp == null)
       {
-        facade.create(entityId);
+        facade.create(cvcRefId);
       }
-      PoseidasCertificateRequestGenerator generator = new PoseidasCertificateRequestGenerator(entityId, policy,
-                                                                                          facade);
+      PoseidasCertificateRequestGenerator generator = new PoseidasCertificateRequestGenerator(cvcRefId,
+                                                                                              policy, facade);
       generator.setDataForFirstRequest(selectRootCert(encodedCvcs),
                                        cvcDescription,
                                        countryCode,
@@ -174,20 +171,20 @@ public class CVCRequestHandler extends BerCaRequestHandlerBase
                                        sequenceNumber);
       CertificateRequestResponse response = generator.create();
       String messageId = "#" + Utils.generateUniqueID();
-      storeRequestData(entityId,
+      storeRequestData(cvcRefId,
                        messageId,
                        response.getCertificateRequest(),
                        response.getCertificateDescription(),
                        encodedCvcs,
                        response.getPKCS8PrivateKey());
-      LOG.info(entityId + ": Created and stored certificate request \n" + response.getCertificateRequest());
+      log.info("{}: Created and stored certificate request \n{}", cvcRefId, response.getCertificateRequest());
       if (policy.isInitialRequestAsynchron())
       {
         sendCertificateRequest(messageId,
                                pkiConfig.getAutentURL()
                                           + "/eID-Server/TermAuth/Terminal/IS_termcontr/EACPKITermContr",
                                response.getCertificateRequest().getEncoded());
-        facade.storeCVCRequestSent(entityId);
+        facade.storeCVCRequestSent(cvcRefId);
       }
       else
       {
@@ -203,7 +200,7 @@ public class CVCRequestHandler extends BerCaRequestHandlerBase
 
   private void internalError(String msg, Exception e) throws GovManagementException
   {
-    LOG.error(entityId + ": " + msg, e);
+    log.error("{}: {}", cvcRefId, msg, e);
     throw new GovManagementException(GlobalManagementCodes.INTERNAL_ERROR);
   }
 
@@ -224,8 +221,8 @@ public class CVCRequestHandler extends BerCaRequestHandlerBase
    * @return null if successful, technical error message otherwise
    */
   ManagementMessage makeSubsequentRequest(TerminalPermission tp,
-                                                 byte[] newCvcDescription,
-                                                 boolean forceAsyncron)
+                                          byte[] newCvcDescription,
+                                          boolean forceAsyncron)
   {
     return this.makeSubsequentRequest(tp, newCvcDescription, forceAsyncron, false);
   }
@@ -237,11 +234,11 @@ public class CVCRequestHandler extends BerCaRequestHandlerBase
    * @return null if successful, technical error message otherwise
    */
   ManagementMessage makeSubsequentRequest(TerminalPermission tp,
-                                                 byte[] newCvcDescription,
-                                                 boolean forceAsyncron,
-                                                 boolean forceSendAgain)
+                                          byte[] newCvcDescription,
+                                          boolean forceAsyncron,
+                                          boolean forceSendAgain)
   {
-    LOG.debug(entityId + ": started makeSubsequentRequest");
+    log.debug("{}: started makeSubsequentRequest", cvcRefId);
     try
     {
       byte[] cvcRequestData = null;
@@ -258,28 +255,29 @@ public class CVCRequestHandler extends BerCaRequestHandlerBase
             && !forceSendAgain)
         {
           String message = "cannot request a new certificate as long as there is a pending request for same data with status "
-                           + requestStatus + " for " + entityId;
-          LOG.error(entityId + ": " + message);
+                           + requestStatus + " for " + cvcRefId;
+          log.error("{}: {}", cvcRefId, message);
           SNMPDelegate.getInstance().sendSNMPTrap(SNMPDelegate.OID.CERT_RENEWAL_FAILED,
                                                   SNMPDelegate.CERT_RENEWAL_FAILED + " " + message);
 
           return GlobalManagementCodes.EC_UNEXPECTED_ERROR.createMessage("cannot request a new certificate as long as there is a pending request for same data for "
-                                                                         + entityId);
+                                                                         + cvcRefId);
         }
         if (Status.Created.equals(requestStatus) || Status.Sent.equals(requestStatus))
         {
           messageId = pendingRequest.getMessageID();
           cvcRequestData = pendingRequest.getRequestData();
-          LOG.warn(entityId + ": Will send existing subsequent certificate request (again), messageID="
-                   + messageId + "\n");
+          log.warn("{}: Will send existing subsequent certificate request (again), messageID={}",
+                   cvcRefId,
+                   messageId);
         }
         else
         {
           String message = "cannot re-send certificate request as there is already a result with status "
-                           + requestStatus + " for " + entityId;
-          LOG.error(entityId + ": " + message);
+                           + requestStatus + " for " + cvcRefId;
+          log.error("{}: {}", cvcRefId, message);
           return GlobalManagementCodes.EC_UNEXPECTED_ERROR.createMessage("cannot re-send certificate request as there is already a result for "
-                                                                         + entityId);
+                                                                         + cvcRefId);
         }
       }
       if (cvcRequestData == null)
@@ -291,11 +289,11 @@ public class CVCRequestHandler extends BerCaRequestHandlerBase
         }
         catch (GovManagementException e)
         {
-          LOG.error(entityId + ": cannot download ca certificates, will keep old certificate chain");
+          log.error("{}: cannot download ca certificates, will keep old certificate chain", cvcRefId);
           SNMPDelegate.getInstance()
                       .sendSNMPTrap(SNMPDelegate.OID.CERT_RENEWAL_FAILED,
                                     SNMPDelegate.CERT_RENEWAL_FAILED + " " + "cannot download ca certificates for generting a new CVC for "
-                                                                          + entityId
+                                                                          + cvcRefId
                                                                           + ", will use old cert chain");
         }
 
@@ -310,20 +308,21 @@ public class CVCRequestHandler extends BerCaRequestHandlerBase
 
         CertificateRequestResponse response = createRequest(tp, chain, newCvcDescription);
         messageId = (forceAsyncron ? "as" : "s") + Utils.generateUniqueID();
-        storeRequestData(entityId,
+        storeRequestData(cvcRefId,
                          messageId,
                          response.getCertificateRequest(),
                          response.getCertificateDescription(),
                          null,
                          response.getPKCS8PrivateKey());
-        LOG.info(entityId + ": Created and stored subsequent certificate request:\n"
-                 + response.getCertificateRequest());
+        log.info("{}: Created and stored subsequent certificate request:\n{}",
+                 cvcRefId,
+                 response.getCertificateRequest());
         cvcRequestData = response.getCertificateRequest().getEncoded();
       }
 
       String chr = new ECCVCertificate(tp.getCvc()).getHolderReferenceString();
       this.facade.archiveCVC(chr, tp.getCvc());
-      LOG.debug(entityId + ": CVC " + chr + " successfully archived");
+      log.debug("{}: CVC {} successfully archived", cvcRefId, chr);
 
       if (forceAsyncron)
       {
@@ -331,26 +330,26 @@ public class CVCRequestHandler extends BerCaRequestHandlerBase
                                pkiConfig.getAutentURL()
                                           + "/eID-Server/TermAuth/Terminal/IS_termcontr/EACPKITermContr",
                                cvcRequestData);
-        LOG.debug(entityId + ": made an asynchronous subsequent request because cvc has expired");
+        log.debug("{}: made an asynchronous subsequent request because cvc has expired", cvcRefId);
       }
       else
       {
         byte[] newCert = sendCertificateRequest(null, null, cvcRequestData);
         installNewCertificate(newCert);
-        LOG.debug(entityId + ": successfully finished makeSubsequentRequest");
+        log.debug("{}: successfully finished makeSubsequentRequest", cvcRefId);
       }
       return null;
     }
     catch (GovManagementException e)
     {
-      LOG.error(entityId + ": cannot renew certificate", e);
+      log.error("{}: cannot renew certificate", cvcRefId, e);
       SNMPDelegate.getInstance().sendSNMPTrap(SNMPDelegate.OID.CERT_RENEWAL_FAILED,
                                               SNMPDelegate.CERT_RENEWAL_FAILED + " " + e.getMessage());
       return e.getManagementMessage();
     }
     catch (Throwable t)
     {
-      LOG.error(entityId + ": cannot renew certificate", t);
+      log.error("{}: cannot renew certificate", cvcRefId, t);
       SNMPDelegate.getInstance().sendSNMPTrap(SNMPDelegate.OID.CERT_RENEWAL_FAILED,
                                               SNMPDelegate.CERT_RENEWAL_FAILED + " " + t.getMessage());
       return GlobalManagementCodes.EC_UNEXPECTED_ERROR.createMessage(t.getMessage());
@@ -362,8 +361,8 @@ public class CVCRequestHandler extends BerCaRequestHandlerBase
                                                    byte[] newCvcDescription)
     throws IOException, SignatureException
   {
-    PoseidasCertificateRequestGenerator generator = new PoseidasCertificateRequestGenerator(entityId, policy,
-                                                                                        facade);
+    PoseidasCertificateRequestGenerator generator = new PoseidasCertificateRequestGenerator(cvcRefId, policy,
+                                                                                            facade);
     generator.prepareSubsequentRequest(selectRootCert(chain),
                                        tp.getCvc(),
                                        tp.getCvcPrivateKey(),
@@ -397,11 +396,11 @@ public class CVCRequestHandler extends BerCaRequestHandlerBase
     }
     catch (GovManagementException e)
     {
-      LOG.error(entityId + ": cannot download ca certificates, will keep old certificate chain");
+      log.error("{}: cannot download ca certificates, will keep old certificate chain", cvcRefId);
       SNMPDelegate.getInstance()
                   .sendSNMPTrap(SNMPDelegate.OID.CERT_RENEWAL_FAILED,
                                 SNMPDelegate.CERT_RENEWAL_FAILED + " " + "cannot download ca certificates, storing new CVC for  "
-                                                                      + entityId + " anyway");
+                                                                      + cvcRefId + " anyway");
     }
 
     if (policy.isCertDescriptionFetch())
@@ -409,7 +408,7 @@ public class CVCRequestHandler extends BerCaRequestHandlerBase
       certDescription = getCertDescriptionIfNeeded(cert);
     }
 
-    TerminalPermission tp = facade.getTerminalPermission(entityId);
+    TerminalPermission tp = facade.getTerminalPermission(cvcRefId);
 
     try
     {
@@ -436,24 +435,26 @@ public class CVCRequestHandler extends BerCaRequestHandlerBase
         publicKey = publicKeys[0];
       }
       ASN1 holderReference = certificateRequest.getChildElementByPath(CertificateRequestPath.HOLDER_REFERENCE);
-      checkCVC(cert, tp.getCvc(), chainForCheck, publicKey, holderReference, new Date(), entityId);
+      checkCVC(cert, tp.getCvc(), chainForCheck, publicKey, holderReference, new Date(), cvcRefId);
     }
     catch (Throwable e)
     {
-      LOG.error(entityId + ": check of new CVC failed. Reason: " + e.getMessage() + ". CVC Data:\n"
-                + Utils.breakAfter76Chars(DatatypeConverter.printBase64Binary(cert)));
-      facade.storeCVCObtainedError(entityId, e.getMessage());
+      log.error("{}: check of new CVC failed. Reason: {}. CVC Data:\n{}",
+                cvcRefId,
+                e.getMessage(),
+                Utils.breakAfter76Chars(DatatypeConverter.printBase64Binary(cert)));
+      facade.storeCVCObtainedError(cvcRefId, e.getMessage());
       // restart timer
       handler.registerTimerHandling();
       throw new GovManagementException(GlobalManagementCodes.EC_INVALIDCERTIFICATEDATA);
     }
 
-    facade.storeCVCObtained(entityId, cert, chain, certDescription);
-    LOG.debug("Stored new CVC for " + entityId + ":\n" + Hex.dump(cert));
+    facade.storeCVCObtained(cvcRefId, cert, chain, certDescription);
+    log.debug("Stored new CVC for {}:\n{}", cvcRefId, Hex.dump(cert));
     RestrictedIdHandler riHandler;
     try
     {
-      riHandler = new RestrictedIdHandler(nPaConf, facade);
+      riHandler = new RestrictedIdHandler(nPaConf, facade, hsmKeyStore);
     }
     catch (GovManagementException e)
     {
@@ -469,11 +470,11 @@ public class CVCRequestHandler extends BerCaRequestHandlerBase
       }
       catch (GovManagementException e)
       {
-        LOG.error(entityId + ": cannot fetch blacklist", e);
+        log.error("{}: cannot fetch blacklist", cvcRefId, e);
         SNMPDelegate.getInstance()
                     .sendSNMPTrap(SNMPDelegate.OID.BLACKLIST_RENEWAL_FAILED,
                                   SNMPDelegate.BLACKLIST_RENEWAL_FAILED + " " + "cannot fetch blacklist for "
-                                                                             + entityId);
+                                                                             + cvcRefId);
       }
     }
     try
@@ -482,16 +483,16 @@ public class CVCRequestHandler extends BerCaRequestHandlerBase
     }
     catch (GovManagementException e)
     {
-      LOG.error(entityId + ": cannot fetch public sector key", e);
+      log.error("{}: cannot fetch public sector key", cvcRefId, e);
       SNMPDelegate.getInstance()
                   .sendSNMPTrap(SNMPDelegate.OID.PUBLIC_SECTOR_KEY_REQUEST_FAILED,
                                 SNMPDelegate.PUBLIC_SECTOR_KEY_REQUEST_FAILED + " " + "cannot fetch public sector key for "
-                                                                                   + entityId);
+                                                                                   + cvcRefId);
     }
 
     try
     {
-      MasterAndDefectListHandler mslHandler = new MasterAndDefectListHandler(nPaConf, facade);
+      MasterAndDefectListHandler mslHandler = new MasterAndDefectListHandler(nPaConf, facade, hsmKeyStore);
       mslHandler.updateLists();
     }
     catch (GovManagementException e)
@@ -506,12 +507,12 @@ public class CVCRequestHandler extends BerCaRequestHandlerBase
   }
 
   private static void checkCVC(byte[] newCvcBytes,
-                       byte[] oldCvcBytes,
-                       byte[][] chain,
-                       ASN1 publicKey,
-                       ASN1 holderReference,
-                       Date actualDate,
-                       String cvcRefId)
+                               byte[] oldCvcBytes,
+                               byte[][] chain,
+                               ASN1 publicKey,
+                               ASN1 holderReference,
+                               Date actualDate,
+                               String cvcRefId)
     throws CertificateException, GovManagementException
   {
     try
@@ -561,8 +562,9 @@ public class CVCRequestHandler extends BerCaRequestHandlerBase
         // check if chain is present
         if (chain == null)
         {
-          LOG.warn(cvcRefId + ": no chain present to check new cvc: "
-                   + new String(newCVC.getCAReference(), StandardCharsets.UTF_8));
+          log.warn("{}: no chain present to check new cvc: {}",
+                   cvcRefId,
+                   new String(newCVC.getCAReference(), StandardCharsets.UTF_8));
           String detail = String.format("no chain present to check new cvc '%s'", newCVC);
           throw new CertificateException(detail);
         }
@@ -671,7 +673,7 @@ public class CVCRequestHandler extends BerCaRequestHandlerBase
                                                   List<byte[]> cvcChain,
                                                   String cvcRefId)
   {
-    LOG.debug(cvcRefId + ": Parse session input CVC list with size: " + cvcChain.size());
+    log.debug("{}: Parse session input CVC list with size: {}", cvcRefId, cvcChain.size());
     List<TerminalData> formattedChain = new ArrayList<>();
 
     // Check the terminal CVC and add it to the list as first element
@@ -683,8 +685,10 @@ public class CVCRequestHandler extends BerCaRequestHandlerBase
     TerminalData check = terminalCertificate;
     while (true)
     {
-      LOG.debug(cvcRefId + ": Check CVC: " + check.getHolderReferenceString() + "/"
-                + new String(check.getCAReference(), StandardCharsets.UTF_8));
+      log.debug("{}: Check CVC: {}/{}",
+                cvcRefId,
+                check.getHolderReferenceString(),
+                new String(check.getCAReference(), StandardCharsets.UTF_8));
       TerminalData holderCVC = getReference(check, cvcChain);
       if (holderCVC != null)
       {
@@ -701,7 +705,7 @@ public class CVCRequestHandler extends BerCaRequestHandlerBase
         break;
       }
     }
-    LOG.debug(cvcRefId + ": Parsed session input and set new list with size: " + formattedChain.size());
+    log.debug("{}: Parsed session input and set new list with size: {}", cvcRefId, formattedChain.size());
     return formattedChain;
   }
 
@@ -731,7 +735,7 @@ public class CVCRequestHandler extends BerCaRequestHandlerBase
    */
   private byte[] getCertDescriptionIfNeeded(byte[] cert)
   {
-    TerminalPermission tp = facade.getTerminalPermission(entityId);
+    TerminalPermission tp = facade.getTerminalPermission(cvcRefId);
     try
     {
       if (tp.getCvcDescription() == null)
@@ -747,8 +751,8 @@ public class CVCRequestHandler extends BerCaRequestHandlerBase
     }
     catch (Throwable e)
     {
-      LOG.error(entityId
-                + ": A problem occurred while parsing cvc or cvc description. This could cause problems later",
+      log.error("{}: A problem occurred while parsing cvc or cvc description. This could cause problems later",
+                cvcRefId,
                 e);
     }
     return null;
@@ -783,7 +787,7 @@ public class CVCRequestHandler extends BerCaRequestHandlerBase
 
     if (returnUrl != null)
     {
-      facade.storeCVCRequestSent(entityId);
+      facade.storeCVCRequestSent(cvcRefId);
     }
     return obtainedCert;
   }
@@ -819,19 +823,27 @@ public class CVCRequestHandler extends BerCaRequestHandlerBase
 
     try
     {
-      PKIServiceConnector connector = new PKIServiceConnector(600, keys.getServerCertificate(),
-                                                              keys.getClientKey(),
-                                                              keys.getClientCertificateChain(), entityId);
+      PKIServiceConnector connector;
+      if (hsmKeyStore == null)
+      {
+        connector = new PKIServiceConnector(600, keys.getServerCertificate(), keys.getClientKey(),
+                                            keys.getClientCertificateChain(), cvcRefId);
+
+      }
+      else
+      {
+        connector = new PKIServiceConnector(600, keys.getServerCertificate(), hsmKeyStore, null, cvcRefId);
+      }
       return ServiceWrapperFactory.createTermAuthServiceWrapper(connector, serviceUrl, wsdlVersion);
     }
     catch (GeneralSecurityException e)
     {
-      LOG.error(entityId + ": problem with crypto data", e);
+      log.error("{}: problem with crypto data", cvcRefId, e);
       throw new GovManagementException(GlobalManagementCodes.EC_UNEXPECTED_ERROR, e.getMessage());
     }
     catch (URISyntaxException e)
     {
-      LOG.error(entityId + ": problem with crypto data", e);
+      log.error("{}: problem with crypto data", cvcRefId, e);
       throw new GovManagementException(IDManagementCodes.INVALID_URL, "ID.value.service.termAuth.url");
     }
   }
@@ -845,19 +857,26 @@ public class CVCRequestHandler extends BerCaRequestHandlerBase
 
     try
     {
-      PKIServiceConnector connector = new PKIServiceConnector(600, keys.getServerCertificate(),
-                                                              keys.getClientKey(),
-                                                              keys.getClientCertificateChain(), entityId);
+      PKIServiceConnector connector;
+      if (hsmKeyStore == null)
+      {
+        connector = new PKIServiceConnector(600, keys.getServerCertificate(), keys.getClientKey(),
+                                            keys.getClientCertificateChain(), cvcRefId);
+      }
+      else
+      {
+        connector = new PKIServiceConnector(600, keys.getServerCertificate(), hsmKeyStore, null, cvcRefId);
+      }
       return ServiceWrapperFactory.createDvcaCertDescriptionWrapper(connector, serviceUrl, wsdlVersion);
     }
     catch (GeneralSecurityException e)
     {
-      LOG.error(entityId + ": problem with crypto data", e);
+      log.error("{}: problem with crypto data", cvcRefId, e);
       throw new GovManagementException(GlobalManagementCodes.EC_UNEXPECTED_ERROR, e.getMessage());
     }
     catch (URISyntaxException e)
     {
-      LOG.error(entityId + ": problem with crypto data", e);
+      log.error("{}: problem with crypto data", cvcRefId, e);
       throw new GovManagementException(IDManagementCodes.INVALID_URL, "ID.value.service.termAuth.url");
     }
   }
@@ -877,13 +896,13 @@ public class CVCRequestHandler extends BerCaRequestHandlerBase
     try
     {
       PKIServiceConnector.getContextLock();
-      LOG.debug(entityId + ": obtained lock on SSL context for downloading CACerts");
+      log.debug("{}: obtained lock on SSL context for downloading CACerts", cvcRefId);
       TermAuthServiceWrapper wrapper = createWrapper();
       result = wrapper.getCACertificates();
     }
     catch (WebServiceException e)
     {
-      LOG.error(entityId + ": cannot get certificates", e);
+      log.error("{}: cannot get certificates", cvcRefId, e);
       throw new GovManagementException(GlobalManagementCodes.EC_UNEXPECTED_ERROR, e.getMessage());
     }
     finally
@@ -923,8 +942,8 @@ public class CVCRequestHandler extends BerCaRequestHandlerBase
     if (notSigningCVCs.isEmpty())
     {
 
-      LOG.error(entityId
-                + ": Can not find the DVCA certificate in the GetCACertificates output, we searched for a certificate which is not used to sign any other certificate.");
+      log.error("{}: Can not find the DVCA certificate in the GetCACertificates output, we searched for a certificate which is not used to sign any other certificate.",
+                cvcRefId);
       return result;
     }
     else if (notSigningCVCs.size() == 1)
@@ -933,9 +952,9 @@ public class CVCRequestHandler extends BerCaRequestHandlerBase
     }
     else
     {
-      LOG.error(entityId
-                + ": It looks like there is more than one DVCA certificate in the GetCACertificates output, use the newest one: "
-                + notSigningCVCs);
+      log.error("{}: It looks like there is more than one DVCA certificate in the GetCACertificates output, use the newest one: {}",
+                cvcRefId,
+                notSigningCVCs);
       Date issued = new Date(0);
       String recentCHR = null;
       for ( String chr : notSigningCVCs )
@@ -972,7 +991,7 @@ public class CVCRequestHandler extends BerCaRequestHandlerBase
       }
       if (cvc == null)
       {
-        LOG.error(entityId + ": can not find CVC with CHR: " + recentCHR);
+        log.error("{}: can not find CVC with CHR: {}", cvcRefId, recentCHR);
         break;
       }
       cvcChain.addLast(cvc.getEncoded());
@@ -1018,7 +1037,7 @@ public class CVCRequestHandler extends BerCaRequestHandlerBase
    */
   ManagementMessage deletePendingRequest()
   {
-    facade.deleteCVCRequest(entityId);
+    facade.deleteCVCRequest(cvcRefId);
     return GlobalManagementCodes.OK.createMessage();
   }
 }

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018 Governikus KG. Licensed under the EUPL, Version 1.2 or as soon they will be approved by
+ * Copyright (c) 2019 Governikus KG. Licensed under the EUPL, Version 1.2 or as soon they will be approved by
  * the European Commission - subsequent versions of the EUPL (the "Licence"); You may not use this work except
  * in compliance with the Licence. You may obtain a copy of the Licence at:
  * http://joinup.ec.europa.eu/software/page/eupl Unless required by applicable law or agreed to in writing,
@@ -23,7 +23,7 @@ import de.governikus.eumw.poseidas.cardbase.asn1.ASN1;
 /**
  * Abstract base for access role and rights implementation used by
  * {@link CertificateHolderAuthorizationTemplate}.
- * 
+ *
  * @see BaseAccessRoleAndRights
  * @see InspectionSystems
  * @see AuthenticationTerminals
@@ -35,7 +35,7 @@ public abstract class AccessRoleAndRights extends ASN1
 
   /**
    * Base OID of access roles and rights: <tt>0.4.0.127.0.7.3.1.2</tt>.
-   * 
+   *
    * @see InspectionSystems#getOIDString()
    * @see AuthenticationTerminals#getOIDString()
    * @see SignatureTerminals#getOIDString()
@@ -54,7 +54,7 @@ public abstract class AccessRoleAndRights extends ASN1
 
   /**
    * Constant of role CVCA: <code>0xc0</code>.
-   * 
+   *
    * @see #ACCESS_ROLE_MASK
    * @see InspectionSystems.AccessRoleEnum#CVCA
    * @see AuthenticationTerminals.AccessRoleEnum#CVCA
@@ -64,7 +64,7 @@ public abstract class AccessRoleAndRights extends ASN1
 
   /**
    * Constant of role name CVCA: <tt>CVCA</tt>.
-   * 
+   *
    * @see InspectionSystems.AccessRoleEnum#CVCA
    * @see AuthenticationTerminals.AccessRoleEnum#CVCA
    * @see SignatureTerminals.AccessRoleEnum#CVCA
@@ -88,7 +88,7 @@ public abstract class AccessRoleAndRights extends ASN1
 
   /**
    * Role identifier CVCA.
-   * 
+   *
    * @see BitIdentifierImpl#BitIdentifierImpl(String, int, byte)
    * @see AccessRoleAndRights#ACCESS_ROLE_NAME_CVCA
    * @see AccessRoleAndRights#ACCESS_ROLE_BYTE_INDEX
@@ -114,7 +114,7 @@ public abstract class AccessRoleAndRights extends ASN1
 
   /**
    * Constructor.
-   * 
+   *
    * @param bytes bytes of
    * @param valueByteCount count of value bytes expected by implementation
    * @param definedAccessRolesIdentifierList list of defined access roles, <code>null</code> or empty list not
@@ -195,7 +195,7 @@ public abstract class AccessRoleAndRights extends ASN1
 
   /**
    * Gets list of all known, defined rights.
-   * 
+   *
    * @return list of defined rights
    */
   public List<BitIdentifier> getDefinedAccessRightsList()
@@ -205,7 +205,7 @@ public abstract class AccessRoleAndRights extends ASN1
 
   /**
    * Gets list of all known, defined roles.
-   * 
+   *
    * @return list of defined roles
    */
   public List<BitIdentifier> getDefinedAccessRolesList()
@@ -215,7 +215,7 @@ public abstract class AccessRoleAndRights extends ASN1
 
   /**
    * Gets list of rights.
-   * 
+   *
    * @return list of rights
    */
   public List<BitIdentifier> getAccessRightsList()
@@ -225,7 +225,7 @@ public abstract class AccessRoleAndRights extends ASN1
 
   /**
    * Gets list of roles.
-   * 
+   *
    * @return list of roles
    */
   public List<BitIdentifier> getAccessRolesList()
@@ -235,7 +235,7 @@ public abstract class AccessRoleAndRights extends ASN1
 
   /**
    * Checks access right of certificate holder authorization exists.
-   * 
+   *
    * @param accessRight access right to be checked
    * @return <code>true</code>, if access right present, otherwise <code>false</code>
    */
@@ -246,7 +246,7 @@ public abstract class AccessRoleAndRights extends ASN1
 
   /**
    * Checks role of certificate holder authorization.
-   * 
+   *
    * @param accessRole access role to be checked
    * @return <code>true</code>, if access role present, otherwise <code>false</code>
    */

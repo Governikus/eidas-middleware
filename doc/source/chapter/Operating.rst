@@ -7,12 +7,14 @@ Operating the server
 
 First time startup
 ------------------
-After the middleware was configured successfully (see :ref:`configuration-mw`) you can start the application.
+After the middleware was configured successfully (see :ref:`configuration-mw`) you can start
+the application. If you are using an HSM, please make sure it is running before starting the middleware
+as failing to connect to the HSM will cause errors.
 
-To check the connection to the :term:`Authorisation CA` and to receive the :term:`Authorisation Certificate`, open https://<YOUR_SERVERURL>/eidas-middleware/list in your Browser.
+To check the connection to the :term:`Authorisation CA` and to receive the :term:`Authorisation Certificate`, open https://<YOUR_SERVERURL>/admin-interface/list in your Browser.
 Enter the login credentials that you have configured earlier.
 
-After logging in, you will see your :term:`eID Service Provider`. Click on the name to open the details.
+After logging in, you will see your :term:`eID Service Provider` s. Click on the name to open the details.
 
 At the top you can check the connection to the :term:`Authorisation CA`.
 If this check does not succeed, take a look in the log for more details.
@@ -44,19 +46,19 @@ If you choose to use just the JAR in your own environment, execute the following
     # cd into the folder where the eidas-middleware.jar is located in
     java -jar eidas-middleware.jar
 
-If the configuration files are not located in a subdirectory called `config` of your current working directory, you must specify the location of the configuration directory. Note that the path must end with a `/`::
+If the configuration files are not located in a subdirectory called ``config`` of your current working directory, you must specify the location of the configuration directory. Note that the path must end with a `/`::
 
     java -jar eidas-middleware.jar --spring.config.additional-location=file:/path/to/your/configuration-directory/
 
-To stop the eIDAS Middleware execute `CTRL+C`.
-Alternatively you can also send `SIGTERM` with `kill [PID of the middleware]`.
+To stop the eIDAS Middleware execute ``CTRL+C``.
+Alternatively you can also send ``SIGTERM`` with ``kill [PID of the middleware]``.
 
 Based on these commands you can write your own scripts for starting and stopping.
 
 VirtualBox Image
 ^^^^^^^^^^^^^^^^
 In the image you can execute the same commands as for the plain eIDAS Middleware JAR.
-The JAR file is located in `/opt/eidas-middleware`.
+The JAR file is located in ``/opt/eidas-middleware``.
 
 In addition to starting the middleware directly, you can use systemd to start and stop the application.
 
@@ -84,13 +86,13 @@ To run the eIDAS Middleware, execute the following command.
 It will mount the named volumes containing the database and configuration in the container
 and the application will be available on port 8443. ::
 
-    docker run --rm -it -v eidas-configuration:/opt/eidas-middleware/configuration -v eidas-database:/opt/eidas-middleware/database -p 8443:8443 --name eidas-middleware-application governikus/eidas-middleware-application:1.0.7
+    docker run --rm -it -v eidas-configuration:/opt/eidas-middleware/configuration -v eidas-database:/opt/eidas-middleware/database -p 8443:8443 --name eidas-middleware-application governikus/eidas-middleware-application:1.1.0
 
 To stop and remove the container, just hit ``CTRL+C``.
 
 To keep the container running longer without being attached to the STDOUT and STDERR, change the command to the following::
 
-    docker run -d -v eidas-configuration:/opt/eidas-middleware/configuration -v eidas-database:/opt/eidas-middleware/database -p 8443:8443 --name eidas-middleware-application governikus/eidas-middleware-application:1.0.7
+    docker run -d -v eidas-configuration:/opt/eidas-middleware/configuration -v eidas-database:/opt/eidas-middleware/database -p 8443:8443 --name eidas-middleware-application governikus/eidas-middleware-application:1.1.0
 
 For more information on starting and stopping containers and viewing the logs,
 see the `Docker Docs <https://docs.docker.com/engine/reference/run/>`_.
@@ -134,7 +136,8 @@ Scalability
 ^^^^^^^^^^^
 The performance of the eIDAS Middleware improves by adding more memory (RAM) and using a faster CPU.
 In case the memory configuration has changed, the server needs to be restarted.
-To start the JVM with more memory, add ``-Xmx`` with the new maximum memory size to the start command, e.g. ``java -Xmx8g -jar eidas-middleware-1.0.7.jar`` for 8 GB.
+To start the JVM with more memory, add ``-Xmx`` with the new maximum memory size to the start command,
+e.g. ``java -Xmx8g -jar eidas-middleware-1.1.0.jar`` for 8 GB.
 
 
 Monitoring
@@ -188,5 +191,6 @@ The configuration file must contain the following values. The first three values
 Before running the migration tool, please create a backup of your database.
 Stop the eIDAS Middleware Application and copy the database file to your backup location, e.g. ``cp /opt/eidas-middleware/database/eidasmw.mv.db /path/to/your/backup-location/eidasmw.mv.db``.
 
-To perform the migration, copy the database migration JAR file to the directory where your configuration file is available and execute the command ``java -jar database-migration-1.0.7.jar``.
+To perform the migration, copy the database migration JAR file to the directory where your
+configuration file is available and execute the command ``java -jar database-migration-1.1.0.jar``.
 If there are errors in the log output, please send the complete log output and some information on your environment to eidas-middleware@governikus.com.

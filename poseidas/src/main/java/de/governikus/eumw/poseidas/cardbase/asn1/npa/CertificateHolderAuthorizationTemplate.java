@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018 Governikus KG. Licensed under the EUPL, Version 1.2 or as soon they will be approved by
+ * Copyright (c) 2019 Governikus KG. Licensed under the EUPL, Version 1.2 or as soon they will be approved by
  * the European Commission - subsequent versions of the EUPL (the "Licence"); You may not use this work except
  * in compliance with the Licence. You may obtain a copy of the Licence at:
  * http://joinup.ec.europa.eu/software/page/eupl Unless required by applicable law or agreed to in writing,
@@ -29,7 +29,7 @@ import de.governikus.eumw.poseidas.cardbase.npa.CVCPermission;
  * <p>
  * Notice: see details at TC-03110, version 2.02, appendix C.
  * </p>
- * 
+ *
  * @see AccessRoleAndRights
  * @author Jens Wothe, jw@bos-bremen.de
  */
@@ -42,7 +42,7 @@ public class CertificateHolderAuthorizationTemplate extends AbstractASN1Encoder 
   /**
    * Default encoder constructor (created ASN.1 is not initialized internally, use {@link #decode(ASN1)} for
    * complete initialization).
-   * 
+   *
    * @see AbstractASN1Encoder#AbstractASN1Encoder()
    */
   public CertificateHolderAuthorizationTemplate()
@@ -52,7 +52,7 @@ public class CertificateHolderAuthorizationTemplate extends AbstractASN1Encoder 
 
   /**
    * Constructor.
-   * 
+   *
    * @param bytes bytes of complete CHAT, <code>null</code> or empty not permitted
    * @throws IOException if reading of stream fails
    * @throws IllegalArgumentException if bytes <code>null</code> or empty or if bytes contain structure not
@@ -67,7 +67,7 @@ public class CertificateHolderAuthorizationTemplate extends AbstractASN1Encoder 
 
   /**
    * Constructor.
-   * 
+   *
    * @param oidAccessRoleAndRights OID of access role and rights, <code>null</code> not permitted, OID must be
    *          one of {@link AuthenticationTerminals#OID_AUTHENTICATION_TERMINALS},
    *          {@link SignatureTerminals#OID_SIGNATURE_TERMINAL} or
@@ -85,13 +85,11 @@ public class CertificateHolderAuthorizationTemplate extends AbstractASN1Encoder 
     super();
     AssertUtil.notNull(oidAccessRoleAndRights, "OID");
     AssertUtil.notNullOrEmpty(chatMatrix, "chat matrix bytes");
-    ASN1 resultRolesAndRights = new ASN1(
-                                         CertificateHolderAuthorizationTemplatePath.HAT_ACCESS_ROLE_AND_RIGHTS.getTag()
+    ASN1 resultRolesAndRights = new ASN1(CertificateHolderAuthorizationTemplatePath.HAT_ACCESS_ROLE_AND_RIGHTS.getTag()
                                                                                                               .toByteArray(),
                                          chatMatrix);
     byte[] value = ByteUtil.combine(oidAccessRoleAndRights.getEncoded(), resultRolesAndRights.getEncoded());
-    ASN1 asn1 = new ASN1(
-                         CertificateHolderAuthorizationTemplatePath.CERTIFICATE_HOLDER_AUTHORIZATION_TEMPLATE.getTag()
+    ASN1 asn1 = new ASN1(CertificateHolderAuthorizationTemplatePath.CERTIFICATE_HOLDER_AUTHORIZATION_TEMPLATE.getTag()
                                                                                                              .toByteArray(),
                          value);
     this.decode(asn1.getEncoded());
@@ -103,8 +101,7 @@ public class CertificateHolderAuthorizationTemplate extends AbstractASN1Encoder 
   {
     super();
     AssertUtil.notNull(options, "chat options");
-    if (type != ChatTerminalType.AUTHENTICATION_TERMINAL && type != ChatTerminalType.INSPECTION_SYSTEM
-        && type != ChatTerminalType.SIGNATURE_TERMINAL)
+    if (type != ChatTerminalType.AUTHENTICATION_TERMINAL)
     {
       throw new IllegalArgumentException("unknown type");
     }
@@ -115,17 +112,9 @@ public class CertificateHolderAuthorizationTemplate extends AbstractASN1Encoder 
       {
         throw new IllegalArgumentException("given options not matching type");
       }
-      if (o.getAccessRightEnum() instanceof ATSpecialFunctions.AccessRightEnum
-          || o.getAccessRightEnum() instanceof ATEidAccess.AccessRightEnum
-          || o.getAccessRightEnum() instanceof ATSpecificAttributes.AccessRightEnum)
-      {
-        continue;
-      }
       matrixBytes[o.getByteIndex()] = (byte)(matrixBytes[o.getByteIndex()] | o.getByteMask());
     }
-    OID oid = type == ChatTerminalType.AUTHENTICATION_TERMINAL
-      ? ATConstants.OID_AUTHENTICATION_TERMINALS : type == ChatTerminalType.INSPECTION_SYSTEM
-        ? ISConstants.OID_INSPECTION_SYSTEMS : STConstants.OID_SIGNATURE_TERMINAL;
+    OID oid = ATConstants.OID_AUTHENTICATION_TERMINALS;
     ASN1 resultRolesAndRights = new ASN1(ASN1EidConstants.TAG_DISCRETIONARY_DATA, matrixBytes);
     byte[] value = ByteUtil.combine(oid.getEncoded(), resultRolesAndRights.getEncoded());
     ASN1 asn1 = new ASN1(ASN1EidConstants.TAG_CERTIFICATE_HOLDER_AUTHORIZATION_TEMPLATE.toArray(), value);
@@ -146,26 +135,15 @@ public class CertificateHolderAuthorizationTemplate extends AbstractASN1Encoder 
         throw new IllegalArgumentException("incompatible ASN.1 object");
       }
 
-      if (oidChild.getOIDString().equals(InspectionSystems.getOIDString()))
-      {
-        this.accessRoleAndRights = new InspectionSystems(accessRoleAndRightsChild.getEncoded());
-      }
-      else if (oidChild.getOIDString().equals(AuthenticationTerminals.getOIDString()))
+      if (oidChild.getOIDString().equals(AuthenticationTerminals.getOIDString()))
       {
         this.accessRoleAndRights = new AuthenticationTerminals(accessRoleAndRightsChild.getEncoded());
       }
-      else if (oidChild.getOIDString().equals(SignatureTerminals.getOIDString()))
-      {
-        this.accessRoleAndRights = new SignatureTerminals(accessRoleAndRightsChild.getEncoded());
-      }
       else
       {
-        throw new IllegalArgumentException("not acceptable OID used, possible OIDs are "
+        throw new IllegalArgumentException("not acceptable OID used, possible OID is "
                                            + AuthenticationTerminals.getOIDString()
-                                           + " for AuthenticationTerminals, "
-                                           + SignatureTerminals.getOIDString() + " for SignatureTerminals, "
-                                           + " and " + InspectionSystems.getOIDString()
-                                           + "  for InspectionSystems");
+                                           + " for AuthenticationTerminals");
       }
     }
     catch (IOException e)
@@ -176,7 +154,7 @@ public class CertificateHolderAuthorizationTemplate extends AbstractASN1Encoder 
 
   /**
    * Gets Access Role and Rights of Certificate Holder Authorization.
-   * 
+   *
    * @return access role and rights
    */
   public AccessRoleAndRights getAccessRoleAndRights()
@@ -195,15 +173,9 @@ public class CertificateHolderAuthorizationTemplate extends AbstractASN1Encoder 
   public enum ChatTerminalType
   {
     NONE("none", 0, null),
-    SIGNATURE_TERMINAL("Signature Terminal",
-                       STConstants.VALUE_BYTE_COUNT,
-                       STConstants.OID_SIGNATURE_TERMINAL),
     AUTHENTICATION_TERMINAL("Authentication Terminal",
                             ATConstants.VALUE_BYTE_COUNT,
-                            ATConstants.OID_AUTHENTICATION_TERMINALS),
-    INSPECTION_SYSTEM("Inspection System",
-                      ISConstants.VALUE_BYTE_COUNT,
-                      ISConstants.OID_INSPECTION_SYSTEMS);
+                            ATConstants.OID_AUTHENTICATION_TERMINALS),;
 
     private int byteMatrixCount = -1;
 
@@ -216,15 +188,13 @@ public class CertificateHolderAuthorizationTemplate extends AbstractASN1Encoder 
 
   /**
    * get an array of all ChatOptions that are allowed by this CHAT
-   * 
+   *
    * @return an array.
    */
   public Set<CVCPermission> getAllRights()
   {
     Collection<CVCPermission> options = CVCPermission.getOptions(this.accessRoleAndRights instanceof AuthenticationTerminals
-      ? ChatTerminalType.AUTHENTICATION_TERMINAL : this.accessRoleAndRights instanceof InspectionSystems
-        ? ChatTerminalType.INSPECTION_SYSTEM : this.accessRoleAndRights instanceof SignatureTerminals
-          ? ChatTerminalType.SIGNATURE_TERMINAL : ChatTerminalType.NONE);
+      ? ChatTerminalType.AUTHENTICATION_TERMINAL : ChatTerminalType.NONE);
     Set<CVCPermission> result = new HashSet<>();
     for ( CVCPermission chatOption : options )
     {
@@ -238,7 +208,7 @@ public class CertificateHolderAuthorizationTemplate extends AbstractASN1Encoder 
 
   /**
    * Checks if bits are set for the given <code>ChatOption</code>
-   * 
+   *
    * @param chatOption to check
    * @return true if bits are set, false if not
    */
@@ -249,7 +219,7 @@ public class CertificateHolderAuthorizationTemplate extends AbstractASN1Encoder 
 
   /**
    * Checks if bits are set for the given <code>ChatOption</code>
-   * 
+   *
    * @param chatOption to check
    * @return true if bits are set, false if not
    */
@@ -393,12 +363,7 @@ public class CertificateHolderAuthorizationTemplate extends AbstractASN1Encoder 
     return areBitsSet(AuthenticationTerminals.AccessRightEnum.INSTALL_QUALIFIED_CERTIFICATE);
   }
 
-  public boolean isInstallQualifiedCertificate()
-  {
-    return areBitsSet(AuthenticationTerminals.AccessRightEnum.INSTALL_QUALIFIED_CERTIFICATE);
-  }
-
-  public boolean isAccessRightInstallPINManagement()
+  public boolean isAccessRightPINManagement()
   {
     return areBitsSet(AuthenticationTerminals.AccessRightEnum.PIN_MANAGEMENT);
   }
@@ -416,21 +381,6 @@ public class CertificateHolderAuthorizationTemplate extends AbstractASN1Encoder 
   public boolean isAuthenticatePrivilegedTerminal()
   {
     return areBitsSet(AuthenticationTerminals.AccessRightEnum.PRIVILEGED_TERMINAL);
-  }
-
-  public boolean isReadEIDApplication()
-  {
-    return areBitsSet(InspectionSystems.AccessRightEnum.READ_ACCESS_EID_APPLICATION);
-  }
-
-  public boolean isReadEPassportDG3()
-  {
-    return areBitsSet(InspectionSystems.AccessRightEnum.READ_ACCESS_EPASSPORT_DG3);
-  }
-
-  public boolean isReadEPassportDG4()
-  {
-    return areBitsSet(InspectionSystems.AccessRightEnum.READ_ACCESS_EPASSPORT_DG4);
   }
 
   @Override
@@ -511,14 +461,8 @@ public class CertificateHolderAuthorizationTemplate extends AbstractASN1Encoder 
       stringBuilder.append(CVCPermission.AUT_MUNICIPALITY_ID_VERIFICATION.getDescription() + ": ")
                    .append(isAuthenticateMunicipalityIDVerification())
                    .append("\n");
-      stringBuilder.append(CVCPermission.AUT_INSTALL_CERTIFICATE.getDescription() + ": ")
-                   .append(isAccessRightInstallCertificate())
-                   .append("\n");
-      stringBuilder.append(CVCPermission.AUT_INSTALL_QUALIFIED_CERTIFICATE.getDescription() + ": ")
-                   .append(isAccessRightInstallQualifiedCertificate())
-                   .append("\n");
       stringBuilder.append(CVCPermission.AUT_INSTALL_PIN_MANAGEMENT.getDescription() + ": ")
-                   .append(isAccessRightInstallPINManagement())
+                   .append(isAccessRightPINManagement())
                    .append("\n");
       stringBuilder.append(CVCPermission.AUT_CAN_ALLOWED.getDescription() + ": ")
                    .append(isAuthenticateCANAllowed())
@@ -529,24 +473,6 @@ public class CertificateHolderAuthorizationTemplate extends AbstractASN1Encoder 
       stringBuilder.append(CVCPermission.AUT_PRIVILEGED_TERMINAL.getDescription() + ": ")
                    .append(isAuthenticatePrivilegedTerminal())
                    .append("\n");
-    }
-    else if (this.accessRoleAndRights instanceof InspectionSystems)
-    {
-      stringBuilder.append(CVCPermission.INT_READ_EID_APPLICATION.getDescription() + ": ")
-                   .append(isReadEIDApplication())
-                   .append("\n");
-      stringBuilder.append(CVCPermission.INT_READ_EPASSPORT_DG3.getDescription() + ": ")
-                   .append(isReadEPassportDG3())
-                   .append("\n");
-      stringBuilder.append(CVCPermission.INT_READ_EPASSPORT_DG4.getDescription() + ": ")
-                   .append(isReadEPassportDG4())
-                   .append("\n");
-    }
-    else if (this.accessRoleAndRights instanceof SignatureTerminals)
-    {
-      throw new IllegalArgumentException("ChatTerminalType: '"
-                                         + this.accessRoleAndRights.getClass().getName()
-                                         + "' not implemented yet.");
     }
     else
     {

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018 Governikus KG. Licensed under the EUPL, Version 1.2 or as soon they will be approved by
+ * Copyright (c) 2019 Governikus KG. Licensed under the EUPL, Version 1.2 or as soon they will be approved by
  * the European Commission - subsequent versions of the EUPL (the "Licence"); You may not use this work except
  * in compliance with the Licence. You may obtain a copy of the Licence at:
  * http://joinup.ec.europa.eu/software/page/eupl Unless required by applicable law or agreed to in writing,
@@ -31,7 +31,7 @@ import de.governikus.eumw.poseidas.cardserver.service.hsm.impl.HSMService;
 
 /**
  * Wrapper for generating a certificate request
- * 
+ *
  * @author tautenhahn
  */
 class PoseidasCertificateRequestGenerator
@@ -57,7 +57,7 @@ class PoseidasCertificateRequestGenerator
 
   /**
    * Create instance for one-time use on behalf of specified service provider
-   * 
+   *
    * @param entityID
    */
   PoseidasCertificateRequestGenerator(String entityID, BerCaPolicy policy, TerminalPermissionAO facade)
@@ -82,7 +82,7 @@ class PoseidasCertificateRequestGenerator
    * the issuer. In this case, you should skip the call of
    * {@link #setIssuerForFirstRequest(String, String, byte[])} and
    * {@link #setDataForFirstRequest(String, boolean, boolean, String, String, String, int)}
-   * 
+   *
    * @param encodedRootCvc
    * @param encodedDescription
    * @param countryCode
@@ -110,7 +110,7 @@ class PoseidasCertificateRequestGenerator
 
   /**
    * Set the data needed for a subsequent request. All the data should be available from database.
-   * 
+   *
    * @param encodedRootCVC
    * @param encodedOldCVC
    * @param oldPrivateKey can be null if old private key is in the HSM
@@ -136,7 +136,7 @@ class PoseidasCertificateRequestGenerator
   /**
    * Create certificate request. As a side effect, the private key created in the process is stored within the
    * HSM if HSM connection is available.
-   * 
+   *
    * @return request and, if no HSM is available, private key
    * @throws IllegalArgumentException
    * @throws IOException

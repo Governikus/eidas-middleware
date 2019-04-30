@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018 Governikus KG. Licensed under the EUPL, Version 1.2 or as soon they will be approved by
+ * Copyright (c) 2019 Governikus KG. Licensed under the EUPL, Version 1.2 or as soon they will be approved by
  * the European Commission - subsequent versions of the EUPL (the "Licence"); You may not use this work except
  * in compliance with the Licence. You may obtain a copy of the Licence at:
  * http://joinup.ec.europa.eu/software/page/eupl Unless required by applicable law or agreed to in writing,
@@ -19,7 +19,7 @@ import java.util.Formatter;
 /**
  * Utilities for general testing of arguments and generating {@link IllegalArgumentException} with unified
  * messages.
- * 
+ *
  * @author Jens Wothe, jw@bos-bremen.de
  */
 public final class AssertUtil
@@ -34,7 +34,7 @@ public final class AssertUtil
 
   /**
    * Constant used as default name of arguments during check: <tt>values</tt>.
-   * 
+   *
    * @see #greaterEquals(int, int, String)
    * @see #equals(BigInteger, BigInteger, String)
    * @see #equals(Class, Class, String)
@@ -45,42 +45,42 @@ public final class AssertUtil
   /**
    * Constant of error message for check numeric value is zero or positive (greater equals than <code>0</code>
    * ).
-   * 
+   *
    * @see #zeroOrPositive(int, String)
    */
   private static final String MESSAGE_CHECK_FAILED_ZERO_OR_POSITIVE = "%1s expected to be zero or positive, expected: value >= 0, found: %2s < 0";
 
   /**
    * Constant of error message for equality check of two values failed because values are not equal.
-   * 
+   *
    * @see #equals(long, long, String)
    */
   private static final String MESSAGE_CHECK_FAILED_EQUALS = "%1s expected to be equal, %2s <> %3s, expected: %4s";
 
   /**
    * Constant of error message for checkNotNull failed because Object is <code>null</code>.
-   * 
+   *
    * @see #notNull(Object, String)
    */
   private static final String MESSAGE_CHECK_FAILED_OBJECT_NULL = "%1s not permitted as null";
 
   /**
    * Constant of error message for check notNullOrEmpty failed because array is <code>null</code> or empty.
-   * 
+   *
    * @see #notNullOrEmpty(byte[], String)
    */
   private static final String MESSAGE_CHECK_FAILED_ARRAY_NULL_OR_EMPTY = "%1s not permitted as null or empty array";
 
   /**
    * Constant of error message for check notNullOrEmpty failed because String is <code>null</code> or empty.
-   * 
+   *
    * @see #notNullOrEmpty(String, String)
    */
   private static final String MESSAGE_CHECK_FAILED_STRING_NULL_OR_EMPTY = "%1s not permitted as null or empty String";
 
   /**
    * Constant of error message for check numeric value A is greater equals than value B (A >= B).
-   * 
+   *
    * @see #greaterEquals(int, int, String)
    */
   private static final String MESSAGE_CHECK_FAILED_NUM_GREATER_EQUALS = "%1s not as expected, expected relation '>=', found: %2s < %3s";
@@ -88,7 +88,7 @@ public final class AssertUtil
   /**
    * Constant of error message for check notNullOrEmpty failed because Collection is <code>null</code> or
    * empty.
-   * 
+   *
    * @see #notNullOrEmpty(Collection, String)
    */
   private static final String MESSAGE_CHECK_FAILED_COLLECTION_NULL_OR_EMPTY = "Collection%1sis not permitted as null or empty Collection";
@@ -103,7 +103,7 @@ public final class AssertUtil
 
   /**
    * Checks Object is not <code>null</code>.
-   * 
+   *
    * @param object Object to check
    * @param message optional message to used as argument for formatting message, <code>null</code> or empty
    *          String is permitted
@@ -121,7 +121,7 @@ public final class AssertUtil
 
   /**
    * Checks array is not <code>null</code> or empty and returns array if not.
-   * 
+   *
    * @param array array
    * @param message optional message to used as argument for formatting message, <code>null</code> or empty
    *          String is permitted
@@ -141,7 +141,7 @@ public final class AssertUtil
 
   /**
    * Checks String is not <code>null</code> or empty.
-   * 
+   *
    * @param s String
    * @param message optional message to used as argument for formatting message, <code>null</code> or empty
    *          String is permitted
@@ -161,7 +161,7 @@ public final class AssertUtil
 
   /**
    * Checks Collection is not <code>null</code> or empty.
-   * 
+   *
    * @param collection Collection
    * @param message optional message to used as argument for formatting message, <code>null</code> or empty
    *          String is permitted
@@ -180,7 +180,7 @@ public final class AssertUtil
 
   /**
    * Checks array is not <code>null</code> or empty and returns array if not.
-   * 
+   *
    * @param array array
    * @param message optional message to used as argument for formatting message, <code>null</code> or empty
    *          String is permitted
@@ -202,7 +202,7 @@ public final class AssertUtil
 
   /**
    * Checks Object is not <code>null</code> and returns Object if not.
-   * 
+   *
    * @param <T> type of object
    * @param object Object to check
    * @param message optional message to used as argument for formatting message, <code>null</code> or empty
@@ -223,7 +223,7 @@ public final class AssertUtil
 
   /**
    * Checks value A is greater than or equal to value B.
-   * 
+   *
    * @param a value A
    * @param b value B
    * @param message message to used as argument for formatting message, <code>null</code> or empty String is
@@ -248,7 +248,7 @@ public final class AssertUtil
 
   /**
    * Checks value1 equals value2.
-   * 
+   *
    * @param value1 value1
    * @param value2 value2
    * @param message optional message to used as argument for formatting message, <code>null</code> or empty
@@ -269,7 +269,7 @@ public final class AssertUtil
 
   /**
    * Checks value1 equals value2.
-   * 
+   *
    * @param value1 value1
    * @param value2 value2
    * @param message optional message to used as argument for formatting message, <code>null</code> or empty
@@ -290,7 +290,7 @@ public final class AssertUtil
 
   /**
    * Checks value1 equals value2.
-   * 
+   *
    * @param value1 value1
    * @param value2 value2
    * @param message optional message to used as argument for formatting message, <code>null</code> or empty
@@ -316,7 +316,7 @@ public final class AssertUtil
 
   /**
    * Checks value is zero or positive.
-   * 
+   *
    * @param value value
    * @param message message to used as argument for formatting message, <code>null</code> or empty String is
    *          permitted
@@ -334,7 +334,7 @@ public final class AssertUtil
 
   /**
    * Formats string using format and arguments.
-   * 
+   *
    * @param format format
    * @param args arguments
    * @return formatted String, <code>null</code> if format failed
@@ -360,7 +360,7 @@ public final class AssertUtil
    * <p>
    * Note: <code>null</code> value representing infinite ({@link NumInfo#UNKNOWN_INFINITY}) is not positive.
    * </p>
-   * 
+   *
    * @param <T> type of number
    * @param value value, <code>null</code> permitted
    * @param message message to used as argument for formatting message, <code>null</code> or empty String is

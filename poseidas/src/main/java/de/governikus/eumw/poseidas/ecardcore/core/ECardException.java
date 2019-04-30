@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018 Governikus KG. Licensed under the EUPL, Version 1.2 or as soon they will be approved by
+ * Copyright (c) 2019 Governikus KG. Licensed under the EUPL, Version 1.2 or as soon they will be approved by
  * the European Commission - subsequent versions of the EUPL (the "Licence"); You may not use this work except
  * in compliance with the Licence. You may obtain a copy of the Licence at:
  * http://joinup.ec.europa.eu/software/page/eupl Unless required by applicable law or agreed to in writing,
@@ -30,7 +30,7 @@ import oasis.names.tc.dss._1_0.core.schema.Result;
  * manually. They can be either created from an ECardException or from an ECardErrorCode by using the
  * ECardExceptionMapper.
  * </p>
- * 
+ *
  * @author Alexander Funk
  * @author Thomas Chojecki
  */
@@ -64,7 +64,7 @@ public class ECardException extends Exception
 
   /**
    * recreate an ECardException from an Result, useful for checkResult function.
-   * 
+   *
    * @param result
    */
   public ECardException(Result result)
@@ -84,7 +84,7 @@ public class ECardException extends Exception
 
   /**
    * Create a new Exception with a ResultMajor.ERROR and the given ResultMinor code.
-   * 
+   *
    * @param minorCode the ResultMinor that should be use.
    * @param message a custom message that will describe the problem.
    * @deprecated use an defined ECardErrorCode
@@ -105,7 +105,7 @@ public class ECardException extends Exception
 
   /**
    * Create a new Exception with a ResultMajor.ERROR and the given ResultMinor code.
-   * 
+   *
    * @param minorCode the ResultMinor that should be use.
    * @param cause the throwable that lead to the problem.
    * @deprecated the minor code
@@ -125,7 +125,7 @@ public class ECardException extends Exception
 
   /**
    * Create a new Exception with a ResultMajor.ERROR and the given ResultMinor code.
-   * 
+   *
    * @param minorCode the ResultMinor that should be use.
    * @param message a custom message that will describe the problem.
    * @param cause the throwable that lead to the problem.
@@ -149,7 +149,7 @@ public class ECardException extends Exception
 
   /**
    * Return the ResultMinor code associated with the ECardException
-   * 
+   *
    * @return the ResultMinor code associated with the ECardException
    */
   public ResultMinor getMinorCode()
@@ -161,7 +161,7 @@ public class ECardException extends Exception
    * An ECardException can be turned into a eCard-API result, with the given minor code and the message. Use
    * this when handling an ECardException. The stackTrace is logged here as a info to trace down probable
    * causes.
-   * 
+   *
    * @return the Result associated with the ECardException
    */
   public Result getResult()
@@ -193,7 +193,7 @@ public class ECardException extends Exception
 
   /**
    * return the error code that identifies this exception uniquely
-   * 
+   *
    * @return the error code
    */
   public ECardErrorCode getErrorCode()

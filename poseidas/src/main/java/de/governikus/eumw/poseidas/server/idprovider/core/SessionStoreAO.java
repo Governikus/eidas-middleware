@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018 Governikus KG. Licensed under the EUPL, Version 1.2 or as soon they will be approved by
+ * Copyright (c) 2019 Governikus KG. Licensed under the EUPL, Version 1.2 or as soon they will be approved by
  * the European Commission - subsequent versions of the EUPL (the "Licence"); You may not use this work except
  * in compliance with the Licence. You may obtain a copy of the Licence at:
  * http://joinup.ec.europa.eu/software/page/eupl Unless required by applicable law or agreed to in writing,
@@ -17,7 +17,7 @@ import de.governikus.eumw.eidascommon.ErrorCodeException;
 
 /**
  * Interface for AuthenticationSession Storage.
- * 
+ *
  * @author mehrtens
  */
 public interface SessionStoreAO
@@ -25,7 +25,7 @@ public interface SessionStoreAO
 
   /**
    * Returns the session for a given session ID from the storage.
-   * 
+   *
    * @param sessionId
    * @param type The class the session to get is from.
    */
@@ -33,7 +33,7 @@ public interface SessionStoreAO
 
   /**
    * Returns the session for a given request ID from the storage.
-   * 
+   *
    * @param requestId
    * @param type The class the session to get is from.
    */
@@ -41,7 +41,7 @@ public interface SessionStoreAO
 
   /**
    * Stores the session into the storage.
-   * 
+   *
    * @param session
    * @throws ErrorCodeException
    */
@@ -49,14 +49,14 @@ public interface SessionStoreAO
 
   /**
    * Removes the session and the request ID used for this session from the storage.
-   * 
+   *
    * @param session, <code>null</code> permitted and resulting in no operation.
    */
   void removeSession(StoreableSession session);
 
   /**
    * Adds a request ID into the storage.
-   * 
+   *
    * @param requestID
    * @throws ErrorCodeException thrown in case this id is already in the storage.
    */
@@ -65,7 +65,7 @@ public interface SessionStoreAO
   /**
    * Triggers a clean up of the stored session. Old sessions will be removed. A cleanup is also triggered from
    * time to time when a new session is stored. Clients are not requested to call this method.
-   * 
+   *
    * @return The number of sessions stored after running cleanup.
    * @throws ErrorCodeException
    */
@@ -73,7 +73,7 @@ public interface SessionStoreAO
 
   /**
    * Return a list with all sessions of the given type.
-   * 
+   *
    * @param type
    */
   <T extends StoreableSession> Collection<T> getAllSessions(Class<T> type);

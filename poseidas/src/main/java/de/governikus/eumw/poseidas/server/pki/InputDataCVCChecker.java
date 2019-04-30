@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018 Governikus KG. Licensed under the EUPL, Version 1.2 or as soon they will be approved by
+ * Copyright (c) 2019 Governikus KG. Licensed under the EUPL, Version 1.2 or as soon they will be approved by
  * the European Commission - subsequent versions of the EUPL (the "Licence"); You may not use this work except
  * in compliance with the Licence. You may obtain a copy of the Licence at:
  * http://joinup.ec.europa.eu/software/page/eupl Unless required by applicable law or agreed to in writing,
@@ -28,7 +28,7 @@ import de.governikus.eumw.poseidas.gov2server.constants.admin.IDManagementCodes;
 
 /**
  * Helper class to perform plausibility checks for imported CVC-related data
- * 
+ *
  * @author tautenhahn
  */
 public class InputDataCVCChecker
@@ -38,7 +38,7 @@ public class InputDataCVCChecker
 
   /**
    * Perform various consistency checks on given data.
-   * 
+   *
    * @param cvc serialized CVC
    * @param cvcDescription ASN1 encoded description
    * @param cvcPrivateKey
@@ -84,7 +84,7 @@ public class InputDataCVCChecker
   /**
    * Check if given value either can be parsed as master list or looks like some other data type. Importing
    * master lists in different formats is supported.
-   * 
+   *
    * @param masterList
    * @throws GovManagementException
    */
@@ -105,7 +105,7 @@ public class InputDataCVCChecker
 
   /**
    * Make sure given value can be parsed as defect list
-   * 
+   *
    * @param defectList
    * @throws GovManagementException
    */
@@ -184,7 +184,7 @@ public class InputDataCVCChecker
 
   /**
    * parse black list and check sector ID
-   * 
+   *
    * @param input
    * @param sectorIdCvc
    * @throws GovManagementException

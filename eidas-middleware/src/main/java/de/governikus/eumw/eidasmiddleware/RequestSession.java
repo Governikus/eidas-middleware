@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018 Governikus KG. Licensed under the EUPL, Version 1.2 or as soon they will be approved by
+ * Copyright (c) 2019 Governikus KG. Licensed under the EUPL, Version 1.2 or as soon they will be approved by
  * the European Commission - subsequent versions of the EUPL (the "Licence"); You may not use this work except
  * in compliance with the Licence. You may obtain a copy of the Licence at:
  * http://joinup.ec.europa.eu/software/page/eupl Unless required by applicable law or agreed to in writing,
@@ -12,17 +12,21 @@ package de.governikus.eumw.eidasmiddleware;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Optional;
 
 import de.governikus.eumw.eidasstarterkit.EidasRequest;
+import de.governikus.eumw.eidasstarterkit.EidasRequestSectorType;
 import de.governikus.eumw.eidasstarterkit.person_attributes.EidasPersonAttributes;
+import lombok.Getter;
 
 
 
 /**
  * Just a holder class for a request from a provider
- * 
+ *
  * @author hohnholt
  */
+@Getter
 public class RequestSession
 {
 
@@ -32,54 +36,52 @@ public class RequestSession
 
   private String reqDestination;
 
+  private String reqProviderName;
+
+  private String reqProviderEntityId;
+
   private final Map<EidasPersonAttributes, Boolean> requestedAttributes = new HashMap<>();
 
-  RequestSession(String relayState, String reqId, String reqDestination)
+  RequestSession(String relayState,
+                 String reqId,
+                 String reqDestination,
+                 String reqProviderName,
+                 String reqProviderEntityId)
   {
     super();
     this.relayState = relayState;
     this.reqId = reqId;
     this.reqDestination = reqDestination;
+    this.reqProviderName = reqProviderName;
+    this.reqProviderEntityId = reqProviderEntityId;
+  }
+
+
+  public RequestSession(String reqId,
+                        String reqDestination,
+                        String reqProviderName,
+                        String reqProviderEntityId)
+  {
+    this(null, reqId, reqDestination, reqProviderName, reqProviderEntityId);
   }
 
   public RequestSession(String relayState, EidasRequest eidasRequest)
   {
-    this(relayState, eidasRequest.getId(), eidasRequest.getDestination());
+    this(relayState, eidasRequest.getId(), eidasRequest.getDestination(),
+         eidasRequest.getSectorType() == EidasRequestSectorType.PRIVATE ? eidasRequest.getProviderName()
+           : null,
+         eidasRequest.getIssuer());
     this.requestedAttributes.putAll(eidasRequest.getRequestedAttributesMap());
   }
 
-  public String getRelayState()
+  public RequestSession(EidasRequest eidasRequest)
   {
-    return relayState;
+    this(null, eidasRequest);
   }
 
-  public void setRelayState(String relayState)
+  public Optional<String> getRelayState()
   {
-    this.relayState = relayState;
+    return Optional.ofNullable(relayState);
   }
 
-  public String getReqId()
-  {
-    return reqId;
-  }
-
-  public void setReqId(String reqId)
-  {
-    this.reqId = reqId;
-  }
-
-  public String getReqDestination()
-  {
-    return reqDestination;
-  }
-
-  public void setReqDestination(String reqDestination)
-  {
-    this.reqDestination = reqDestination;
-  }
-
-  public Map<EidasPersonAttributes, Boolean> getRequestedAttributes()
-  {
-    return requestedAttributes;
-  }
 }

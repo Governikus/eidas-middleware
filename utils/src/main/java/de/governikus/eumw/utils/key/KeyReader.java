@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018 Governikus KG. Licensed under the EUPL, Version 1.2 or as soon they will be approved by
+ * Copyright (c) 2019 Governikus KG. Licensed under the EUPL, Version 1.2 or as soon they will be approved by
  * the European Commission - subsequent versions of the EUPL (the "Licence"); You may not use this work except
  * in compliance with the Licence. You may obtain a copy of the Licence at:
  * http://joinup.ec.europa.eu/software/page/eupl Unless required by applicable law or agreed to in writing,
@@ -44,21 +44,21 @@ public final class KeyReader
   {
     super();
   }
-  
+
   /**
-   * will read a private rsa key from a given byte-array of a {@link PKCS8EncodedKeySpec}
-   * 
-   * @param privateKey the bytes of the rsa key
-   * @return the private-key interface implementation of rsa
+   * will read a private rsa or ec key from a given byte-array of a {@link PKCS8EncodedKeySpec}
+   *
+   * @param privateKey the bytes of the rsa or ec key
+   * @return the private-key interface implementation of rsa or ec
    * @throws KeyGenerationException if the private key could not be created from the given byte-array
    */
-  public static PrivateKey readPrivateRSAKey(byte[] privateKey)
+  public static PrivateKey readPrivateKey(byte[] privateKey)
   {
     if (log.isTraceEnabled())
     {
       log.trace("trying to create private key. privateKey.length: {}-bytes", privateKey.length);
     }
-    KeyFactory keyFactory = null;
+    KeyFactory keyFactory;
     try
     {
       keyFactory = KeyFactory.getInstance("RSA", SecurityProvider.BOUNCY_CASTLE_PROVIDER);
@@ -75,8 +75,28 @@ public final class KeyReader
     }
     catch (InvalidKeySpecException e)
     {
-      throw new KeyGenerationException("could not read a private rsa key from the given byte-array", e);
+      log.debug("could not read a private rsa key from the given byte-array", e);
     }
+
+    try
+    {
+      keyFactory = KeyFactory.getInstance("EC", SecurityProvider.BOUNCY_CASTLE_PROVIDER);
+    }
+    catch (NoSuchAlgorithmException e)
+    {
+      throw new KeyGenerationException("could not create private key since the EC algorithm was not found.",
+                                       e);
+    }
+    privateKeySpec = new PKCS8EncodedKeySpec(privateKey);
+    try
+    {
+      return keyFactory.generatePrivate(privateKeySpec);
+    }
+    catch (InvalidKeySpecException e)
+    {
+      log.debug("could not read a private ec key from the given byte-array", e);
+    }
+    throw new KeyGenerationException("could not read a private rsa or ec key from the given byte-array");
   }
 
   /**
@@ -114,7 +134,7 @@ public final class KeyReader
 
   /**
    * should read a X509 certificate from the given byte-array
-   * 
+   *
    * @param certificateBytes the bytes of the certificate
    * @return the X509 certificate
    * @throws CertificateCreationException if the certificate could not be created from the given data.

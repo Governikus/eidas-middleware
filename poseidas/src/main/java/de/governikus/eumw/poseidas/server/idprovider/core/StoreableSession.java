@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018 Governikus KG. Licensed under the EUPL, Version 1.2 or as soon they will be approved by
+ * Copyright (c) 2019 Governikus KG. Licensed under the EUPL, Version 1.2 or as soon they will be approved by
  * the European Commission - subsequent versions of the EUPL (the "Licence"); You may not use this work except
  * in compliance with the Licence. You may obtain a copy of the Licence at:
  * http://joinup.ec.europa.eu/software/page/eupl Unless required by applicable law or agreed to in writing,
@@ -16,7 +16,7 @@ import java.io.Serializable;
 /**
  * This interface must be implemented by Session which should be stored in the session store and be management
  * by the AuthenticationSessionManager.
- * 
+ *
  * @author mehrtens
  */
 public interface StoreableSession extends Serializable
@@ -43,7 +43,7 @@ public interface StoreableSession extends Serializable
   /**
    * This method gets called when this session gets removed from the session store. Do some cleanup or
    * accounting stuff here.
-   * 
+   *
    * @param cleanup if set to true this was called while the old sessions are getting removed.
    */
   void removed(boolean cleanup);

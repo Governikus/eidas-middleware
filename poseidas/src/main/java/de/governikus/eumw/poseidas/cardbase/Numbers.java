@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018 Governikus KG. Licensed under the EUPL, Version 1.2 or as soon they will be approved by
+ * Copyright (c) 2019 Governikus KG. Licensed under the EUPL, Version 1.2 or as soon they will be approved by
  * the European Commission - subsequent versions of the EUPL (the "Licence"); You may not use this work except
  * in compliance with the Licence. You may obtain a copy of the Licence at:
  * http://joinup.ec.europa.eu/software/page/eupl Unless required by applicable law or agreed to in writing,
@@ -14,7 +14,7 @@ package de.governikus.eumw.poseidas.cardbase;
 
 /**
  * Utilties around number instances.
- * 
+ *
  * @author Jens Wothe, jw@bos-bremen.de
  */
 public class Numbers
@@ -27,7 +27,7 @@ public class Numbers
    * {@link NumInfo#UNKNOWN_NAN}) is a negative infinity, positive infinity and NaN, but not a minimum or
    * maximum. Additionally it is positive and negative and not zero.
    * </p>
-   * 
+   *
    * @param <T> type of number
    * @param value value, <code>null</code> permitted, unknown number type not permitted
    * @return <code>true</code> for positive value, <code>false</code> otherwise (especially for
@@ -59,7 +59,7 @@ public class Numbers
    * to {@link NumInfo#UNKNOWN_NAN}) is greater and less than every other value, negative infinity is less
    * than an every other value and positive infinity is greater than an every other value.
    * </p>
-   * 
+   *
    * @param <T> type of number
    * @param a value A, <code>null</code> permitted
    * @param b value B, <code>null</code> permitted
@@ -93,7 +93,7 @@ public class Numbers
    * Note: <code>null</code> value representing infinite ({@link NumInfo#UNKNOWN_INFINITY}) is greater than
    * every other value.
    * </p>
-   * 
+   *
    * @param <T> type of number
    * @param a value A, <code>null</code> permitted representing negative infinity
    * @param b value B, <code>null</code> permitted representing positive infinity
@@ -163,7 +163,7 @@ public class Numbers
    * Note: <code>null</code> for <code>null</code> value representing infinite (
    * {@link NumInfo#UNKNOWN_INFINITY}) or NaN.
    * </p>
-   * 
+   *
    * @param <T> type of number
    * @param value value, <code>null</code> permitted, unknown number type not permitted
    * @return number informations, <code>null</code> for <code>null</code> value
@@ -183,7 +183,7 @@ public class Numbers
 
   /**
    * Cast a number extending Class to a Class extending Number and implementing Comparable.
-   * 
+   *
    * @param <T> type of Class extending Number and implementing Comparable
    * @param typeClass typeClass, <code>null</code> not permitted, Class must be assignable from {@link Number}
    *          and {@link Comparable}

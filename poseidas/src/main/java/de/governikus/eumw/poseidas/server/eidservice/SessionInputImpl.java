@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018 Governikus KG. Licensed under the EUPL, Version 1.2 or as soon they will be approved by
+ * Copyright (c) 2019 Governikus KG. Licensed under the EUPL, Version 1.2 or as soon they will be approved by
  * the European Commission - subsequent versions of the EUPL (the "Licence"); You may not use this work except
  * in compliance with the Licence. You may obtain a copy of the Licence at:
  * http://joinup.ec.europa.eu/software/page/eupl Unless required by applicable law or agreed to in writing,
@@ -11,19 +11,12 @@
 package de.governikus.eumw.poseidas.server.eidservice;
 
 import java.security.cert.X509Certificate;
-import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
-import de.bund.bsi.eid20.PSCRequestType;
-import de.bund.bsi.eid20.SpecificAttributeRequestType;
-import de.governikus.eumw.poseidas.cardbase.Hex;
-import de.governikus.eumw.poseidas.cardbase.asn1.npa.ATEidAccess.AccessRightEnum;
-import de.governikus.eumw.poseidas.cardbase.npa.CVCPermission;
 import de.governikus.eumw.poseidas.eidmodel.TerminalData;
 import de.governikus.eumw.poseidas.eidmodel.data.EIDKeys;
-import de.governikus.eumw.poseidas.eidserver.convenience.CAConnection;
 import de.governikus.eumw.poseidas.eidserver.ecardid.BlackListConnector;
 import de.governikus.eumw.poseidas.eidserver.ecardid.SessionInput;
 
@@ -33,7 +26,7 @@ import de.governikus.eumw.poseidas.eidserver.ecardid.SessionInput;
  * required to build the EACSessionInputType object which is needed by the eCard API (see BSI TR-03112-7 page
  * 39). This is part of the eCardAPIs interface but AF does not want an interface which can be used without
  * defining extra classes.
- * 
+ *
  * @author tt
  */
 public class SessionInputImpl implements SessionInput
@@ -45,7 +38,7 @@ public class SessionInputImpl implements SessionInput
 
   /**
    * Return the required age if age verification should be performed
-   * 
+   *
    * @return null if not
    */
   @Override
@@ -56,7 +49,7 @@ public class SessionInputImpl implements SessionInput
 
   /**
    * Return the required community ID if place verification should be performed
-   * 
+   *
    * @return null if not
    */
   @Override
@@ -110,16 +103,6 @@ public class SessionInputImpl implements SessionInput
   }
 
   /**
-   * Return the pre-shared key to be used in the PAOS HTTPs communication. Feel free to change the result type
-   * of this method to something more suitable.
-   */
-  @Override
-  public byte[] getPresharedKey()
-  {
-    return presharedKey.clone();
-  }
-
-  /**
    * Return a unique session ID. The eCardAPI does not define any restrictions for this value but might
    * require some. (length, format ...)
    */
@@ -138,15 +121,6 @@ public class SessionInputImpl implements SessionInput
     return blackListConnector;
   }
 
-  /**
-   * Returns the SHA256ofSAMLRequest as a binary byte array. This will be included inside the object tag
-   */
-  @Override
-  public byte[] getSHA256ofSAMLRequest()
-  {
-    return sHA256ofSAMLRequest == null ? null : sHA256ofSAMLRequest.clone();
-  }
-
   /** {@inheritDoc} */
   @Override
   public String getTransactionInfo()
@@ -163,12 +137,9 @@ public class SessionInputImpl implements SessionInput
    */
   private SessionInputImpl(TerminalData cvc,
                            List<TerminalData> cvcChain,
-                           byte[] presharedKey,
                            String sessionID,
-                           byte[] sHA256ofSAMLRequest,
                            BlackListConnector blackListConnector,
                            String refreshAddress,
-                           String commErrorAddress,
                            String serverAddress,
                            byte[] masterList,
                            List<X509Certificate> masterListCerts,
@@ -179,12 +150,9 @@ public class SessionInputImpl implements SessionInput
     super();
     this.cvc = cvc;
     this.cvcChain = cvcChain;
-    this.presharedKey = presharedKey.clone();
     this.sessionID = sessionID;
-    this.sHA256ofSAMLRequest = sHA256ofSAMLRequest;
     this.blackListConnector = blackListConnector;
     this.refreshAddress = refreshAddress;
-    this.commErrorAddress = commErrorAddress;
     this.serverAddress = serverAddress;
     this.masterList = masterList;
     this.masterListCerts = masterListCerts;
@@ -197,47 +165,41 @@ public class SessionInputImpl implements SessionInput
    * Create new instance giving the CVC, pre-shared key and sessionID
    */
   SessionInputImpl(TerminalData cvc,
-                          List<TerminalData> cvcChain,
-                          byte[] presharedKey,
-                          String sessionID,
-                          byte[] sHA256ofSAMLRequest,
-                          BlackListConnector blackListConnector,
-                          String refreshAddress,
-                          String commErrorAddress,
-                          String serverAddress,
-                          byte[] masterList,
-                          byte[] defectedList,
-                          String transactionInfo,
-                          String logPrefix)
+                   List<TerminalData> cvcChain,
+                   String sessionID,
+                   BlackListConnector blackListConnector,
+                   String refreshAddress,
+                   String serverAddress,
+                   byte[] masterList,
+                   byte[] defectedList,
+                   String transactionInfo,
+                   String logPrefix)
   {
-    this(cvc, cvcChain, presharedKey, sessionID, sHA256ofSAMLRequest, blackListConnector, refreshAddress,
-         commErrorAddress, serverAddress, masterList, null, defectedList, transactionInfo, logPrefix);
+    this(cvc, cvcChain, sessionID, blackListConnector, refreshAddress, serverAddress, masterList, null,
+         defectedList, transactionInfo, logPrefix);
   }
 
   /**
    * Create new instance giving the CVC, pre-shared key and sessionID
    */
   SessionInputImpl(TerminalData cvc,
-                          List<TerminalData> cvcChain,
-                          byte[] presharedKey,
-                          String sessionID,
-                          byte[] sHA256ofSAMLRequest,
-                          BlackListConnector blackListConnector,
-                          String refreshAddress,
-                          String commErrorAddress,
-                          String serverAddress,
-                          List<X509Certificate> masterListCerts,
-                          byte[] defectedList,
-                          String transactionInfo,
-                          String logPrefix)
+                   List<TerminalData> cvcChain,
+                   String sessionID,
+                   BlackListConnector blackListConnector,
+                   String refreshAddress,
+                   String serverAddress,
+                   List<X509Certificate> masterListCerts,
+                   byte[] defectedList,
+                   String transactionInfo,
+                   String logPrefix)
   {
-    this(cvc, cvcChain, presharedKey, sessionID, sHA256ofSAMLRequest, blackListConnector, refreshAddress,
-         commErrorAddress, serverAddress, null, masterListCerts, defectedList, transactionInfo, logPrefix);
+    this(cvc, cvcChain, sessionID, blackListConnector, refreshAddress, serverAddress, null, masterListCerts,
+         defectedList, transactionInfo, logPrefix);
   }
 
   /**
    * Request an age verification
-   * 
+   *
    * @param age
    */
   void setAgeVerification(int age, boolean required)
@@ -255,7 +217,7 @@ public class SessionInputImpl implements SessionInput
 
   /**
    * request a place verification
-   * 
+   *
    * @param value
    */
   void setCommunityIDVerification(String value, boolean required)
@@ -272,164 +234,8 @@ public class SessionInputImpl implements SessionInput
   }
 
   /**
-   * request specific attributes
-   */
-  void setSpecificAttributes(EIDKeys key, boolean required, SpecificAttributeRequestType sart)
-  {
-    if (required)
-    {
-      this.requiredFields.add(key);
-    }
-    else
-    {
-      this.optionalFields.add(key);
-    }
-    this.specificAccessAll = sart != null && sart.isAccessAll() != null && sart.isAccessAll();
-    this.specificRequests = sart == null ? null : sart.getAttributeRequest();
-  }
-
-  /**
-   * request a pseudonymous signature of a message
-   * 
-   * @param message
-   */
-  void setPSM(byte[] message, boolean required)
-  {
-    psMessage = message;
-    if (required)
-    {
-      requiredFields.add(EIDKeys.PSM);
-    }
-    else
-    {
-      optionalFields.add(EIDKeys.PSM);
-    }
-  }
-
-  void setPSC(PSCRequestType parameters, boolean required)
-  {
-    if (parameters.isDocumentType() != null && parameters.isDocumentType())
-    {
-      this.pscFidList.add(Hex.parse(CVCPermission.AUT_READ_DG01.getFID()));
-      this.pscAccessRightSet.add(AccessRightEnum.PSC_DG01);
-    }
-    if (parameters.isIssuingState() != null && parameters.isIssuingState())
-    {
-      this.pscFidList.add(Hex.parse(CVCPermission.AUT_READ_DG02.getFID()));
-      this.pscAccessRightSet.add(AccessRightEnum.PSC_DG02);
-    }
-    if (parameters.isDateOfExpiry() != null && parameters.isDateOfExpiry())
-    {
-      this.pscFidList.add(Hex.parse(CVCPermission.AUT_READ_DG03.getFID()));
-      this.pscAccessRightSet.add(AccessRightEnum.PSC_DG03);
-    }
-    if (parameters.isGivenNames() != null && parameters.isGivenNames())
-    {
-      this.pscFidList.add(Hex.parse(CVCPermission.AUT_READ_DG04.getFID()));
-      this.pscAccessRightSet.add(AccessRightEnum.PSC_DG04);
-    }
-    if (parameters.isFamilyNames() != null && parameters.isFamilyNames())
-    {
-      this.pscFidList.add(Hex.parse(CVCPermission.AUT_READ_DG05.getFID()));
-      this.pscAccessRightSet.add(AccessRightEnum.PSC_DG05);
-    }
-    if (parameters.isArtisticName() != null && parameters.isArtisticName())
-    {
-      this.pscFidList.add(Hex.parse(CVCPermission.AUT_READ_DG06.getFID()));
-      this.pscAccessRightSet.add(AccessRightEnum.PSC_DG06);
-    }
-    if (parameters.isAcademicTitle() != null && parameters.isAcademicTitle())
-    {
-      this.pscFidList.add(Hex.parse(CVCPermission.AUT_READ_DG07.getFID()));
-      this.pscAccessRightSet.add(AccessRightEnum.PSC_DG07);
-    }
-    if (parameters.isDateOfBirth() != null && parameters.isDateOfBirth())
-    {
-      this.pscFidList.add(Hex.parse(CVCPermission.AUT_READ_DG08.getFID()));
-      this.pscAccessRightSet.add(AccessRightEnum.PSC_DG08);
-    }
-    if (parameters.isPlaceOfBirth() != null && parameters.isPlaceOfBirth())
-    {
-      this.pscFidList.add(Hex.parse(CVCPermission.AUT_READ_DG09.getFID()));
-      this.pscAccessRightSet.add(AccessRightEnum.PSC_DG09);
-    }
-    if (parameters.isNationality() != null && parameters.isNationality())
-    {
-      this.pscFidList.add(Hex.parse(CVCPermission.AUT_READ_DG10.getFID()));
-      this.pscAccessRightSet.add(AccessRightEnum.PSC_DG10);
-    }
-    if (parameters.isSex() != null && parameters.isSex())
-    {
-      this.pscFidList.add(Hex.parse(CVCPermission.AUT_READ_DG11.getFID()));
-      this.pscAccessRightSet.add(AccessRightEnum.PSC_DG11);
-    }
-    if (parameters.isOptionalDataR() != null && parameters.isOptionalDataR())
-    {
-      this.pscFidList.add(Hex.parse(CVCPermission.AUT_READ_DG12.getFID()));
-      this.pscAccessRightSet.add(AccessRightEnum.PSC_DG12);
-    }
-    if (parameters.isBirthName() != null && parameters.isBirthName())
-    {
-      this.pscFidList.add(Hex.parse(CVCPermission.AUT_READ_DG13.getFID()));
-      this.pscAccessRightSet.add(AccessRightEnum.PSC_DG13);
-    }
-    if (parameters.isWrittenSignature() != null && parameters.isWrittenSignature())
-    {
-      this.pscFidList.add(Hex.parse(CVCPermission.AUT_READ_DG14.getFID()));
-      this.pscAccessRightSet.add(AccessRightEnum.PSC_DG14);
-    }
-    if (parameters.isDateOfIssuance() != null && parameters.isDateOfIssuance())
-    {
-      this.pscFidList.add(Hex.parse(CVCPermission.AUT_READ_DG15.getFID()));
-      this.pscAccessRightSet.add(AccessRightEnum.PSC_DG15);
-    }
-    if (parameters.isPlaceOfResidence() != null && parameters.isPlaceOfResidence())
-    {
-      this.pscFidList.add(Hex.parse(CVCPermission.AUT_READ_DG17.getFID()));
-      this.pscAccessRightSet.add(AccessRightEnum.PSC_DG17);
-    }
-    if (parameters.isMunicipalityID() != null && parameters.isMunicipalityID())
-    {
-      this.pscFidList.add(Hex.parse(CVCPermission.AUT_READ_DG18.getFID()));
-      this.pscAccessRightSet.add(AccessRightEnum.PSC_DG18);
-    }
-    if (parameters.isResidencePermitI() != null && parameters.isResidencePermitI())
-    {
-      this.pscFidList.add(Hex.parse(CVCPermission.AUT_READ_DG19.getFID()));
-      this.pscAccessRightSet.add(AccessRightEnum.PSC_DG19);
-    }
-    if (parameters.isResidencePermitII() != null && parameters.isResidencePermitII())
-    {
-      this.pscFidList.add(Hex.parse(CVCPermission.AUT_READ_DG20.getFID()));
-      this.pscAccessRightSet.add(AccessRightEnum.PSC_DG20);
-    }
-    if (parameters.isPhoneNumber() != null && parameters.isPhoneNumber())
-    {
-      this.pscFidList.add(Hex.parse(CVCPermission.AUT_READ_DG21.getFID()));
-      this.pscAccessRightSet.add(AccessRightEnum.PSC_DG21);
-    }
-    if (parameters.isEmailAddress() != null && parameters.isEmailAddress())
-    {
-      this.pscFidList.add(Hex.parse(CVCPermission.AUT_READ_DG22.getFID()));
-      this.pscAccessRightSet.add(AccessRightEnum.PSC_DG22);
-    }
-    if (parameters.isSpecificAttribute() != null && parameters.isSpecificAttribute())
-    {
-      this.pscIncludeSpecific = true;
-    }
-    if (required)
-    {
-      requiredFields.add(EIDKeys.PSC);
-    }
-    else
-    {
-      optionalFields.add(EIDKeys.PSC);
-    }
-  }
-
-  /**
    * Request reading (or computing) a field. If value cannot be accessed, the process continues.
-   * 
+   *
    * @param key must not be age or place verification - use above methods to request these.
    */
   void addOptionalField(EIDKeys key)
@@ -439,7 +245,7 @@ public class SessionInputImpl implements SessionInput
 
   /**
    * Request reading (or computing) a field. If value cannot be accessed, the process should abort.
-   * 
+   *
    * @param key must not be age or place verification - use above methods to request these.
    */
   void addRequiredField(EIDKeys key)
@@ -459,8 +265,6 @@ public class SessionInputImpl implements SessionInput
 
   private String requiredCommunity;
 
-  private final byte[] sHA256ofSAMLRequest;
-
   private final Set<EIDKeys> requiredFields = new HashSet<>();
 
   private final Set<EIDKeys> optionalFields = new HashSet<>();
@@ -469,13 +273,9 @@ public class SessionInputImpl implements SessionInput
 
   private final TerminalData cvc;
 
-  private final byte[] presharedKey;
-
   private final String sessionID;
 
   private final String refreshAddress;
-
-  private final String commErrorAddress;
 
   private final String serverAddress;
 
@@ -488,20 +288,6 @@ public class SessionInputImpl implements SessionInput
   private String transactionInfo = null;
 
   private final String logPrefix;
-
-  private CAConnection caConnection;
-
-  private byte[] psMessage;
-
-  private final List<byte[]> pscFidList = new ArrayList<>();
-
-  private final Set<AccessRightEnum> pscAccessRightSet = new HashSet<>();
-
-  private boolean pscIncludeSpecific = false;
-
-  private boolean specificAccessAll = false;
-
-  private byte[] specificRequests = null;
 
   private void addField(Set<EIDKeys> keyset, EIDKeys key)
   {
@@ -567,61 +353,8 @@ public class SessionInputImpl implements SessionInput
   }
 
   @Override
-  public String getCommunicationErrorAddress()
-  {
-    return commErrorAddress;
-  }
-
-  @Override
   public String getLogPrefix()
   {
     return logPrefix;
-  }
-
-  @Override
-  public CAConnection getCAConnection()
-  {
-    return this.caConnection;
-  }
-
-  public void setCAConnection(CAConnection connection)
-  {
-    this.caConnection = connection;
-  }
-
-  @Override
-  public byte[] getPsMessage()
-  {
-    return this.psMessage;
-  }
-
-  @Override
-  public List<byte[]> getPscFidList()
-  {
-    return this.pscFidList;
-  }
-
-  @Override
-  public Set<AccessRightEnum> getPscAccessRightSet()
-  {
-    return this.pscAccessRightSet;
-  }
-
-  @Override
-  public boolean isPscIncludeSpecific()
-  {
-    return this.pscIncludeSpecific;
-  }
-
-  @Override
-  public boolean isAccessAllSpecificAttributes()
-  {
-    return this.specificAccessAll;
-  }
-
-  @Override
-  public byte[] getSpecificRequests()
-  {
-    return this.specificRequests;
   }
 }

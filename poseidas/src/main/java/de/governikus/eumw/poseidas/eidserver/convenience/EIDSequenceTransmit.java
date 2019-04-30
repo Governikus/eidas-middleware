@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018 Governikus KG. Licensed under the EUPL, Version 1.2 or as soon they will be approved by
+ * Copyright (c) 2019 Governikus KG. Licensed under the EUPL, Version 1.2 or as soon they will be approved by
  * the European Commission - subsequent versions of the EUPL (the "Licence"); You may not use this work except
  * in compliance with the Licence. You may obtain a copy of the Licence at:
  * http://joinup.ec.europa.eu/software/page/eupl Unless required by applicable law or agreed to in writing,
@@ -16,50 +16,25 @@ import java.io.IOException;
 import java.math.BigInteger;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
-import java.util.EnumMap;
-import java.util.HashSet;
 import java.util.List;
-import java.util.Map;
-import java.util.Set;
 import java.util.zip.DataFormatException;
 import java.util.zip.Inflater;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
-
 import de.governikus.eumw.poseidas.cardbase.ArrayUtil;
-import de.governikus.eumw.poseidas.cardbase.ByteUtil;
 import de.governikus.eumw.poseidas.cardbase.Hex;
 import de.governikus.eumw.poseidas.cardbase.asn1.ASN1;
-import de.governikus.eumw.poseidas.cardbase.asn1.ASN1Constants;
 import de.governikus.eumw.poseidas.cardbase.asn1.npa.SecurityInfos;
-import de.governikus.eumw.poseidas.cardbase.asn1.npa.si.PSAInfo;
-import de.governikus.eumw.poseidas.cardbase.asn1.npa.si.PSInfo;
 import de.governikus.eumw.poseidas.cardbase.asn1.npa.si.RestrictedIdentificationInfo;
 import de.governikus.eumw.poseidas.cardbase.card.SecureMessagingException;
 import de.governikus.eumw.poseidas.cardbase.constants.EIDConstants;
-import de.governikus.eumw.poseidas.cardbase.constants.ESignConstants;
 import de.governikus.eumw.poseidas.cardbase.npa.CVCPermission;
-import de.governikus.eumw.poseidas.cardbase.npa.InfoSelector;
 import de.governikus.eumw.poseidas.cardbase.npa.NPAUtil;
 import de.governikus.eumw.poseidas.cardserver.eac.functions.batch.Batch;
 import de.governikus.eumw.poseidas.cardserver.eac.functions.batch.BatchParameter;
-import de.governikus.eumw.poseidas.cardserver.eac.functions.genkeypair.GenerateKeyPair;
-import de.governikus.eumw.poseidas.cardserver.eac.functions.genkeypair.GenerateKeyPairParameter;
-import de.governikus.eumw.poseidas.cardserver.eac.functions.genkeypair.GenerateKeyPairResult;
 import de.governikus.eumw.poseidas.cardserver.eac.functions.impl.FileParameter;
-import de.governikus.eumw.poseidas.cardserver.eac.functions.ps.PseudonymousSignature;
-import de.governikus.eumw.poseidas.cardserver.eac.functions.ps.PseudonymousSignatureParameter;
-import de.governikus.eumw.poseidas.cardserver.eac.functions.ps.PseudonymousSignatureResult;
 import de.governikus.eumw.poseidas.cardserver.eac.functions.read.Read;
 import de.governikus.eumw.poseidas.cardserver.eac.functions.read.ReadParameter;
 import de.governikus.eumw.poseidas.cardserver.eac.functions.read.ReadResult;
-import de.governikus.eumw.poseidas.cardserver.eac.functions.readattr.ReadAttribute;
-import de.governikus.eumw.poseidas.cardserver.eac.functions.readattr.ReadAttributeParameter;
-import de.governikus.eumw.poseidas.cardserver.eac.functions.readattr.ReadAttributeResult;
-import de.governikus.eumw.poseidas.cardserver.eac.functions.readattrreq.ReadAttributeRequest;
-import de.governikus.eumw.poseidas.cardserver.eac.functions.readattrreq.ReadAttributeRequestParameter;
-import de.governikus.eumw.poseidas.cardserver.eac.functions.readattrreq.ReadAttributeRequestResult;
 import de.governikus.eumw.poseidas.cardserver.eac.functions.ri.RestrictedIdentification;
 import de.governikus.eumw.poseidas.cardserver.eac.functions.ri.RestrictedIdentificationParameter;
 import de.governikus.eumw.poseidas.cardserver.eac.functions.ri.RestrictedIdentificationResult;
@@ -68,9 +43,6 @@ import de.governikus.eumw.poseidas.cardserver.eac.functions.select.SelectFile;
 import de.governikus.eumw.poseidas.cardserver.eac.functions.select.SelectResult;
 import de.governikus.eumw.poseidas.cardserver.eac.functions.transmitAPDU.TransmitAPDU;
 import de.governikus.eumw.poseidas.cardserver.eac.functions.transmitAPDU.TransmitAPDUResult;
-import de.governikus.eumw.poseidas.cardserver.eac.functions.update.Update;
-import de.governikus.eumw.poseidas.cardserver.eac.functions.update.UpdateParameter;
-import de.governikus.eumw.poseidas.cardserver.eac.functions.update.UpdateResult;
 import de.governikus.eumw.poseidas.cardserver.eac.functions.verification.ValidityVerificationResult;
 import de.governikus.eumw.poseidas.cardserver.eac.functions.verification.age.AgeVerification;
 import de.governikus.eumw.poseidas.cardserver.eac.functions.verification.age.AgeVerificationParameter;
@@ -78,31 +50,28 @@ import de.governikus.eumw.poseidas.cardserver.eac.functions.verification.communi
 import de.governikus.eumw.poseidas.cardserver.eac.functions.verification.community.CommunityIDVerificationParameter;
 import de.governikus.eumw.poseidas.cardserver.eac.functions.verification.documentValidity.DocumentValidityVerification;
 import de.governikus.eumw.poseidas.cardserver.eac.functions.verification.documentValidity.DocumentValidityVerificationParameter;
-import de.governikus.eumw.poseidas.cardserver.eac.functions.writeattr.WriteAttribute;
-import de.governikus.eumw.poseidas.cardserver.eac.functions.writeattr.WriteAttributeParameter;
-import de.governikus.eumw.poseidas.cardserver.eac.functions.writeattr.WriteAttributeResult;
-import de.governikus.eumw.poseidas.cardserver.eac.functions.writeattrreq.WriteAttributeRequest;
-import de.governikus.eumw.poseidas.cardserver.eac.functions.writeattrreq.WriteAttributeRequestParameter;
-import de.governikus.eumw.poseidas.cardserver.eac.functions.writeattrreq.WriteAttributeRequestResult;
 import de.governikus.eumw.poseidas.ecardcore.core.ECardException;
 import de.governikus.eumw.poseidas.ecardcore.model.ResultMinor;
 import de.governikus.eumw.poseidas.eidmodel.data.EIDKeys;
 import de.governikus.eumw.poseidas.eidserver.ecardid.BlackListConnector;
 import de.governikus.eumw.poseidas.eidserver.ecardid.EIDInfoContainer.EIDStatus;
-import de.governikus.eumw.poseidas.eidserver.ecardid.SessionInput;
 import iso.std.iso_iec._24727.tech.schema.ConnectionHandleType;
 import iso.std.iso_iec._24727.tech.schema.InputAPDUInfoType;
 import iso.std.iso_iec._24727.tech.schema.TransmitResponse;
+import lombok.extern.slf4j.Slf4j;
 
 
+/**
+ * Perform the communication with the eID card after the EAC protocol has finished, i.e. read fields and run
+ * functions.
+ */
+@Slf4j
 public class EIDSequenceTransmit
 {
 
   /**
    * LOGGER for this class. Note: Data should be logged only for LEVEL.TRACE
    */
-  private static final Log LOG = LogFactory.getLog(EIDSequenceTransmit.class.getName());
-
   private static final String LOG_SELECT = "[Transmit select] ";
 
   private static final String LOG_COMMAND = "[Transmit command] ";
@@ -155,11 +124,6 @@ public class EIDSequenceTransmit
   private RestrictedIdentification restrictedIdentification;
 
   /**
-   * Command for pseudonymous signatures.
-   */
-  private PseudonymousSignature pseudonymousSignature;
-
-  /**
    * Command for the community ID
    */
   private CommunityIDVerification communityIDVerification;
@@ -168,46 +132,6 @@ public class EIDSequenceTransmit
    * Command for document validity
    */
   private DocumentValidityVerification documentValidityVerification;
-
-  /**
-   * Command for key pair generation.
-   */
-  private final GenerateKeyPair generateKeyPair;
-
-  /**
-   * Command for writing to already existing files.
-   */
-  private Update update;
-
-  /**
-   * Command for writing attribute request.
-   */
-  private WriteAttributeRequest writeAttributeRequest;
-
-  /**
-   * Command for reading attribute request.
-   */
-  private ReadAttributeRequest readAttributeRequest;
-
-  /**
-   * Command for writing attributes.
-   */
-  private WriteAttribute writeAttribute;
-
-  /**
-   * Command for reading attributes.
-   */
-  private ReadAttribute readAttribute;
-
-  /**
-   * Instance for connecting the CA (submit public key, receive signed certificate).
-   */
-  private CAConnection caConnection = null;
-
-  /**
-   * {@link PSAInfo} selected to use.
-   */
-  private PSAInfo selectedPSAInfo = null;
 
   /**
    * Fields allowed to be read selected by the user on client side. Note: it is imperative that the field
@@ -221,26 +145,13 @@ public class EIDSequenceTransmit
   private List<VerificationCommand> verifications;
 
   /**
-   * Stores the parameters used for different versions of pseudonymous signature.
-   */
-  private final Map<VerificationCommand, PseudonymousSignatureParameter> psParameterMap = new EnumMap<>(VerificationCommand.class);
-
-  /**
    * State of transmit process
    */
   private SequenceState state;
 
   public enum SequenceState
   {
-    BATCH_COMMANDS,
-    BATCH_DATA,
-    READ_PROVIDED_ATTRIBUTES,
-    QES_READ_CIA,
-    QES_EXAMINE_FILES,
-    QES_ERASE_OLD_CERTS,
-    QES_GENERATE_KEY,
-    QES_WRITE_NEW_CERTS,
-    TRANSMIT_DONE
+    BATCH_COMMANDS, BATCH_DATA, TRANSMIT_DONE,
   }
 
   private enum VerificationCommand
@@ -249,99 +160,20 @@ public class EIDSequenceTransmit
     AGE_VERIFICATION,
     RESTRICTED_IDENTIFICATION,
     BLOCKING_IDENTIFICATION,
-    MUNICIPALITY_ID_VERIFICATION,
-    PSEUDONYMOUS_SIGNATURE_CREDENTIALS,
-    PSEUDONYMOUS_SIGNATURE_MESSAGE,
-    PSEUDONYMOUS_SIGNATURE_AUTHENTICATION
+    MUNICIPALITY_ID_VERIFICATION
   }
-
-  /**
-   * Flag indicating if QES is to be installed on the card.
-   */
-  private boolean installQES;
-
-  /**
-   * File ID of EF.PrKD (information about private keys on card).
-   */
-  private byte[] fidEFPrKD;
-
-  /**
-   * File ID of EF.CD (information about certificates on card).
-   */
-  private byte[] fidEFCD;
-
-  /**
-   * ID of private key (on card).
-   */
-  private byte[] prKID;
-
-  /**
-   * ID of CA certificate file (on card).
-   */
-  private byte[] fidCACert;
-
-  /**
-   * Length of CA certificate file.
-   */
-  private byte[] caFileLength;
-
-  /**
-   * Newly received CA certificate.
-   */
-  private byte[] caCert;
-
-  /**
-   * ID of certificate file (on card).
-   */
-  private byte[] fidCert;
-
-  /**
-   * Length of certificate file.
-   */
-  private byte[] certFileLength;
-
-  /**
-   * Newly received certificate.
-   */
-  private byte[] cert;
-
-  /**
-   * Attribute request.
-   */
-  private byte[] attributeRequest;
-
-  /**
-   * List of requests for specific attributes.
-   */
-  private List<ASN1> specificAttributesToRead = null;
-
-  /**
-   * Number of commands for writing generic attributes.
-   */
-  private int numGenericWrites = 0;
-
-  /**
-   * Number of commands for writing specific attributes.
-   */
-  private int numSpecificWrites = 0;
-
-  /**
-   * Set of specific attributes already read.
-   */
-  private final Set<BigInteger> attributesCollected = new HashSet<>();
 
   /**
    * Instance to handle all transmits for a EIDSequence
    *
    * @param sequence
    */
-  EIDSequenceTransmit(EIDSequence sequence, CAConnection caConnection)
+  EIDSequenceTransmit(EIDSequence sequence)
   {
     parent = sequence;
     ConnectionHandleType connectionHandle = parent.getConnectionHandle();
     byte[] slotHandleFromConnectionHandle = connectionHandle.getSlotHandle();
     slotHandle = slotHandleFromConnectionHandle == null ? new byte[]{0} : slotHandleFromConnectionHandle;
-    this.caConnection = caConnection;
     transmit = new TransmitAPDU(parent.getEACFinal().getSM());
 
     // Create all objects required for transmit commands
@@ -349,12 +181,6 @@ public class EIDSequenceTransmit
     selectFile = new SelectFile(transmit);
     readFile = new Read(transmit);
     transmitBatch = new Batch(transmit);
-    generateKeyPair = new GenerateKeyPair(transmit);
-    update = new Update(transmit);
-    writeAttributeRequest = new WriteAttributeRequest(transmit);
-    readAttributeRequest = new ReadAttributeRequest(transmit);
-    writeAttribute = new WriteAttribute(transmit);
-    readAttribute = new ReadAttribute(transmit);
   }
 
   /**
@@ -395,7 +221,7 @@ public class EIDSequenceTransmit
   public Object handle(TransmitResponse response) throws ECardException
   {
     TransmitAPDUResult transmitResult = new TransmitAPDUResult(response);
-    LOG.debug(parent.getLogPrefix() + "[Transmit] Handle response: " + state.name());
+    log.debug("{} [Transmit] Handle response: {}", parent.getLogPrefix(), state.name());
     // Handle the converted result from eCard by result step to be able to handle mCard batch
     transmitResult = transmitBatch.resultStep(transmitResult.getData());
     if (transmitResult.getThrowable() != null
@@ -411,18 +237,6 @@ public class EIDSequenceTransmit
         return handleBatchCommands(transmitResult);
       case BATCH_DATA:
         return handleBatchData(transmitResult);
-      case READ_PROVIDED_ATTRIBUTES:
-        return handleReadProvidedAttributes(transmitResult);
-      case QES_READ_CIA:
-        return handleQESReadCIA(transmitResult);
-      case QES_EXAMINE_FILES:
-        return handleQESExamineFiles(transmitResult);
-      case QES_ERASE_OLD_CERTS:
-        return handleQESEraseCerts(transmitResult);
-      case QES_GENERATE_KEY:
-        return handleQESGenerateKey(transmitResult);
-      case QES_WRITE_NEW_CERTS:
-        return handleQESWriteCerts(transmitResult);
       case TRANSMIT_DONE:
         return null;
       default:
@@ -435,71 +249,30 @@ public class EIDSequenceTransmit
     // Collect all commands here, so mCard can handle internal encrypt/decrypt counter
     List<InputAPDUInfoType> listBatches = new ArrayList<>();
 
-    if (verifications.contains(VerificationCommand.PSEUDONYMOUS_SIGNATURE_AUTHENTICATION))
-    {
-      listBatches.addAll(getCommandPseudonymousSignature(VerificationCommand.PSEUDONYMOUS_SIGNATURE_AUTHENTICATION));
-    }
-
     // Always select application to be able to handle commands on card
     listBatches.addAll(select.create(getFileParameterSelectApplication()));
 
-    if ("true".equalsIgnoreCase(System.getProperty("attributeprovider.enabled")))
+    // Add all commands to be done
+    for ( VerificationCommand verification : verifications )
     {
-      listBatches.addAll(getCommandReadAttributeRequest());
-    }
-    else
-    {
-      // Add all commands to be done
-      for ( VerificationCommand verification : verifications )
+      switch (verification)
       {
-        switch (verification)
-        {
-          case AGE_VERIFICATION:
-            listBatches.addAll(getCommandAgeVerification());
-            break;
-          case BLOCKING_IDENTIFICATION:
-            listBatches.addAll(getCommandBlockingIdentification());
-            break;
-          case MUNICIPALITY_ID_VERIFICATION:
-            listBatches.addAll(getCommandCommunityIdentification());
-            break;
-          case DOCUMENT_VALIDITY:
-            listBatches.addAll(getCommandDocumentValidity());
-            break;
-          case RESTRICTED_IDENTIFICATION:
-            listBatches.addAll(getCommandRestrictedIdentification());
-            break;
-          case PSEUDONYMOUS_SIGNATURE_CREDENTIALS:
-          case PSEUDONYMOUS_SIGNATURE_MESSAGE:
-            listBatches.addAll(getCommandPseudonymousSignature(verification));
-            break;
-          case PSEUDONYMOUS_SIGNATURE_AUTHENTICATION:
-            // already handled
-            break;
-        }
-      }
-
-      // try to read specific and generic attributes
-      listBatches.addAll(getCommandReadSpecificAttributes());
-      for ( CVCPermission field : fields )
-      {
-        // do not read fields other than generic attributes here
-        if (field.getSFID() != null && Hex.parse(field.getSFID())[0] >= 0x17)
-        {
-          ReadParameter readParameter = new ReadParameter(0, 65536, Hex.parse(field.getSFID())[0]);
-          LOG.debug(parent.getLogPrefix() + LOG_DATA + "Create read for " + field.getDataFieldName());
-          listBatches.addAll(readFile.create(readParameter));
-        }
-        // do not read fields other than generic attributes here
-        else if (field.getFID() != null && new BigInteger(Hex.parse(field.getFID())).intValue() >= 0x0117)
-        {
-          FileParameter file = new FileParameter(Hex.parse(EIDConstants.EID_APPLICATION_AID),
-                                                 Hex.parse(field.getFID()), true);
-          LOG.debug(parent.getLogPrefix() + LOG_DATA + "Create select for " + field.getDataFieldName());
-          listBatches.addAll(selectFile.create(file));
-          LOG.debug(parent.getLogPrefix() + LOG_DATA + "Create read for this field");
-          listBatches.addAll(readFile.create(null));
-        }
+        case AGE_VERIFICATION:
+          listBatches.addAll(getCommandAgeVerification());
+          break;
+        case BLOCKING_IDENTIFICATION:
+          listBatches.addAll(getCommandBlockingIdentification());
+          break;
+        case MUNICIPALITY_ID_VERIFICATION:
+          listBatches.addAll(getCommandCommunityIdentification());
+          break;
+        case DOCUMENT_VALIDITY:
+          listBatches.addAll(getCommandDocumentValidity());
+          break;
+        case RESTRICTED_IDENTIFICATION:
+          listBatches.addAll(getCommandRestrictedIdentification());
+          break;
+        default:
       }
     }
 
@@ -512,254 +285,63 @@ public class EIDSequenceTransmit
     // Batch list to be filled
     List<InputAPDUInfoType> batchList = new ArrayList<>();
 
-    if ("true".equalsIgnoreCase(System.getProperty("attributeprovider.enabled")))
+    StringBuilder tempInfo = new StringBuilder("FIELDS:\n");
+    for ( CVCPermission field : fields )
     {
-      batchList.addAll(getCommandWriteGenericAttributes());
-      batchList.addAll(getCommandWriteSpecificAttributes());
+      tempInfo.append(" o " + field.getDataFieldName());
     }
-    else
-    {
-      StringBuilder tempInfo = new StringBuilder("FIELDS:\n");
-      for ( CVCPermission field : fields )
-      {
-        tempInfo.append(" o " + field.getDataFieldName());
-      }
-      LOG.debug(parent.getLogPrefix() + LOG_DATA + tempInfo.toString());
+    log.debug("{}{}{}", parent.getLogPrefix(), LOG_DATA, tempInfo.toString());
 
-      for ( CVCPermission field : fields )
+    for ( CVCPermission field : fields )
+    {
+      if (field != null)
       {
-        if (field != null)
+        switch (field)
         {
-          switch (field)
-          {
           // These fields should not be read again because they were checked by verification and will not
           // return
           // a data result
-            case AUT_SF_AGE_VERIFICATION:
-            case AUT_AGE_VERIFICATION:
-            case AUT_SF_MUNICIPALITY_ID_VERIFICATION:
-            case AUT_MUNICIPALITY_ID_VERIFICATION:
-            case AUT_SF_RESTRICTED_IDENTIFICATION:
-            case AUT_RESTRICTED_IDENTIFICATION:
-            case AUT_SF_PSA:
-            case AUT_PSA:
-            case AUT_SF_PSC:
-            case AUT_SF_PSM:
-              continue;
-            default:
-          }
+          case AUT_AGE_VERIFICATION:
+          case AUT_MUNICIPALITY_ID_VERIFICATION:
+          case AUT_RESTRICTED_IDENTIFICATION:
+            continue;
+          default:
+        }
 
-          // do not read fields with generic attributes here
-          if (field.getSFID() != null && Hex.parse(field.getSFID())[0] < 0x17)
-          {
-            ReadParameter readParameter = new ReadParameter(0, 65536, Hex.parse(field.getSFID())[0]);
-            LOG.debug(parent.getLogPrefix() + LOG_DATA + "Create read for " + field.getDataFieldName());
-            batchList.addAll(readFile.create(readParameter));
-          }
-          // do not read fields with generic attributes here
-          else if (field.getFID() != null && new BigInteger(Hex.parse(field.getFID())).intValue() < 0x0117)
-          {
-            FileParameter file = new FileParameter(Hex.parse(EIDConstants.EID_APPLICATION_AID),
-                                                   Hex.parse(field.getFID()), true);
-            LOG.debug(parent.getLogPrefix() + LOG_DATA + "Create select for " + field.getDataFieldName());
-            batchList.addAll(selectFile.create(file));
-            LOG.debug(parent.getLogPrefix() + LOG_DATA + "Create read for this field");
-            batchList.addAll(readFile.create(null));
-          }
-          else if (field == CVCPermission.AUT_INSTALL_QUALIFIED_CERTIFICATE)
-          {
-            // first step of QES installment: read EF.OD in CIA
-            FileParameter file = new FileParameter(ESignConstants.AID_CIA_ESIGN.toArray(),
-                                                   ESignConstants.EF_OD.toArray(), true);
-            batchList.addAll(select.create(file));
-            batchList.addAll(selectFile.create(file));
-            batchList.addAll(readFile.create(null));
-          }
-          else
-          {
-            LOG.debug(parent.getLogPrefix() + LOG_DATA + "Unknown handle on: " + field.getDataFieldName());
-          }
+        // do not read fields with generic attributes here
+        if (field.getSFID() != null && Hex.parse(field.getSFID())[0] < 0x17)
+        {
+          ReadParameter readParameter = new ReadParameter(0, 65536, Hex.parse(field.getSFID())[0]);
+          log.debug("{}{}Create read for {}", parent.getLogPrefix(), LOG_DATA, field.getDataFieldName());
+          batchList.addAll(readFile.create(readParameter));
+        }
+        // do not read fields with generic attributes here
+        else if (field.getFID() != null && new BigInteger(Hex.parse(field.getFID())).intValue() < 0x0117)
+        {
+          FileParameter file = new FileParameter(Hex.parse(EIDConstants.EID_APPLICATION_AID),
+                                                 Hex.parse(field.getFID()), true);
+          log.debug("{}{}Create select for {}", parent.getLogPrefix(), LOG_DATA, field.getDataFieldName());
+          batchList.addAll(selectFile.create(file));
+          log.debug("{}{}Create read for this field", parent.getLogPrefix(), LOG_DATA);
+          batchList.addAll(readFile.create(null));
         }
         else
         {
-          LOG.debug(parent.getLogPrefix() + LOG_DATA + "Empty field");
+          log.debug("{}{}Unknown handle on: {}", parent.getLogPrefix(), LOG_DATA, field.getDataFieldName());
         }
       }
-      batchList.addAll(getCommandWriteAttributeRequest());
+      else
+      {
+        log.debug("{}{}Empty field", parent.getLogPrefix(), LOG_DATA);
+      }
     }
 
     if (batchList.isEmpty())
     {
-      LOG.debug(parent.getLogPrefix() + LOG_DATA + "No data field to be read");
+      log.debug("{}{}No data field to be read", parent.getLogPrefix(), LOG_DATA);
       state = SequenceState.TRANSMIT_DONE;
       return getTransmitRequest();
     }
-    BatchParameter batchParameter = new BatchParameter(batchList);
-    return transmitBatch.parameterStep(batchParameter, slotHandle);
-  }
-
-  private Object getReadProvidedAttributes() throws ECardException
-  {
-    // Batch list to be filled
-    List<InputAPDUInfoType> batchList = new ArrayList<>();
-    batchList.addAll(getCommandReadSpecificAttributes());
-
-    for ( CVCPermission field : fields )
-    {
-      // only try to read values not already there
-      if (checkParentPresent(EIDKeys.valueOf(field.getDataFieldName())))
-      {
-        continue;
-      }
-
-      // do not read fields other than generic attributes here
-      if (field.getSFID() != null && Hex.parse(field.getSFID())[0] >= 0x17)
-      {
-        ReadParameter readParameter = new ReadParameter(0, 65536, Hex.parse(field.getSFID())[0]);
-        LOG.debug(parent.getLogPrefix() + LOG_DATA + "Create read for " + field.getDataFieldName());
-        batchList.addAll(readFile.create(readParameter));
-      }
-      // do not read fields other than generic attributes here
-      else if (field.getFID() != null && new BigInteger(Hex.parse(field.getFID())).intValue() >= 0x0117)
-      {
-        FileParameter file = new FileParameter(Hex.parse(EIDConstants.EID_APPLICATION_AID),
-                                               Hex.parse(field.getFID()), true);
-        LOG.debug(parent.getLogPrefix() + LOG_DATA + "Create select for " + field.getDataFieldName());
-        batchList.addAll(selectFile.create(file));
-        LOG.debug(parent.getLogPrefix() + LOG_DATA + "Create read for this field");
-        batchList.addAll(readFile.create(null));
-      }
-    }
-
-    BatchParameter batchParameter = new BatchParameter(batchList);
-    return transmitBatch.parameterStep(batchParameter, slotHandle);
-  }
-
-  private Object getQESReadCIA()
-  {
-    List<InputAPDUInfoType> batchList = new ArrayList<>();
-    FileParameter file = new FileParameter(ESignConstants.AID_CIA_ESIGN.toArray(), this.fidEFPrKD, true);
-    batchList.addAll(selectFile.create(file));
-    batchList.addAll(readFile.create(null));
-    file = new FileParameter(ESignConstants.AID_CIA_ESIGN.toArray(), this.fidEFCD, true);
-    batchList.addAll(selectFile.create(file));
-    batchList.addAll(readFile.create(null));
-    BatchParameter batchParameter = new BatchParameter(batchList);
-    return transmitBatch.parameterStep(batchParameter, slotHandle);
-  }
-
-  private Object getQESExamineFiles()
-  {
-    List<InputAPDUInfoType> batchList = new ArrayList<>();
-    FileParameter file = new FileParameter(ESignConstants.AID_ESIGN.toArray(), this.fidCACert, true, true);
-    batchList.addAll(select.create(file));
-    batchList.addAll(selectFile.create(file));
-    file = new FileParameter(ESignConstants.AID_ESIGN.toArray(), this.fidCert, true, true);
-    batchList.addAll(selectFile.create(file));
-    BatchParameter batchParameter = new BatchParameter(batchList);
-    return transmitBatch.parameterStep(batchParameter, slotHandle);
-  }
-
-  private Object getQESEraseCerts()
-  {
-    List<InputAPDUInfoType> batchList = new ArrayList<>();
-    FileParameter file = new FileParameter(ESignConstants.AID_ESIGN.toArray(), this.fidCACert, true);
-    batchList.addAll(selectFile.create(file));
-
-    BigInteger caFLength = new BigInteger(1, this.caFileLength);
-    int remaining = caFLength.intValue();
-    do
-    {
-      int numBytes = Math.min(ESignConstants.RW_BLOCK_SIZE, remaining);
-      byte[] input = new byte[numBytes];
-      ByteUtil.fill(input, (byte)0, 0, numBytes);
-      UpdateParameter writeParameter = new UpdateParameter(input);
-      batchList.addAll(update.create(writeParameter));
-      remaining -= numBytes;
-    }
-    while (remaining > 0);
-
-    file = new FileParameter(ESignConstants.AID_ESIGN.toArray(), this.fidCert, true);
-    batchList.addAll(selectFile.create(file));
-
-    BigInteger certFLength = new BigInteger(1, this.certFileLength);
-    remaining = certFLength.intValue();
-    do
-    {
-      int numBytes = Math.min(ESignConstants.RW_BLOCK_SIZE, remaining);
-      byte[] input = new byte[numBytes];
-      ByteUtil.fill(input, (byte)0, 0, numBytes);
-      UpdateParameter writeParameter = new UpdateParameter(input);
-      batchList.addAll(update.create(writeParameter));
-      remaining -= numBytes;
-    }
-    while (remaining > 0);
-
-    BatchParameter batchParameter = new BatchParameter(batchList);
-    return transmitBatch.parameterStep(batchParameter, slotHandle);
-  }
-
-  private Object getQESGenerateKey()
-  {
-    List<InputAPDUInfoType> batchList = new ArrayList<>();
-    GenerateKeyPairParameter gkpParameter = new GenerateKeyPairParameter(this.prKID);
-    batchList.addAll(generateKeyPair.create(gkpParameter));
-    BatchParameter batchParameter = new BatchParameter(batchList);
-    return transmitBatch.parameterStep(batchParameter, slotHandle);
-  }
-
-  private Object getQESWriteCert() throws ECardException
-  {
-    BigInteger caFLength = new BigInteger(1, this.caFileLength);
-    BigInteger certFLength = new BigInteger(1, this.certFileLength);
-
-    if (this.caCert.length > caFLength.intValue())
-    {
-      throw new ECardException(ResultMinor.KEY_KEY_GENERATION_NOT_POSSIBLE,
-                               "CA certificate is too long for storage on card");
-    }
-    if (this.cert.length > certFLength.intValue())
-    {
-      throw new ECardException(ResultMinor.KEY_KEY_GENERATION_NOT_POSSIBLE,
-                               "Certificate is too long for storage on card");
-    }
-
-    List<InputAPDUInfoType> batchList = new ArrayList<>();
-    FileParameter file = new FileParameter(ESignConstants.AID_ESIGN.toArray(), this.fidCACert, true);
-    batchList.addAll(selectFile.create(file));
-
-    int remaining = this.caCert.length;
-    int i = 0;
-    do
-    {
-      int numBytes = Math.min(ESignConstants.RW_BLOCK_SIZE, remaining);
-      byte[] input = ByteUtil.subbytes(this.caCert,
-                                       i * ESignConstants.RW_BLOCK_SIZE,
-                                       i * ESignConstants.RW_BLOCK_SIZE + numBytes);
-      UpdateParameter writeParameter = new UpdateParameter(input, i * ESignConstants.RW_BLOCK_SIZE);
-      batchList.addAll(update.create(writeParameter));
-      remaining -= numBytes;
-      i++;
-    }
-    while (remaining > 0);
-
-    file = new FileParameter(ESignConstants.AID_ESIGN.toArray(), this.fidCert, true);
-    batchList.addAll(selectFile.create(file));
-    remaining = this.cert.length;
-    i = 0;
-    do
-    {
-      int numBytes = Math.min(ESignConstants.RW_BLOCK_SIZE, remaining);
-      byte[] input = ByteUtil.subbytes(this.cert,
-                                       i * ESignConstants.RW_BLOCK_SIZE,
-                                       i * ESignConstants.RW_BLOCK_SIZE + numBytes);
-      UpdateParameter writeParameter = new UpdateParameter(input, i * ESignConstants.RW_BLOCK_SIZE);
-      batchList.addAll(update.create(writeParameter));
-      remaining -= numBytes;
-      i++;
-    }
-    while (remaining > 0);
-
     BatchParameter batchParameter = new BatchParameter(batchList);
     return transmitBatch.parameterStep(batchParameter, slotHandle);
   }
@@ -819,180 +401,6 @@ public class EIDSequenceTransmit
     }
   }
 
-  private List<InputAPDUInfoType> getCommandPseudonymousSignature(VerificationCommand v)
-    throws ECardException
-  {
-    if (this.pseudonymousSignature == null)
-    {
-      this.pseudonymousSignature = new PseudonymousSignature(this.transmit);
-    }
-    SessionInput si = this.parent.getSessionInput();
-    try
-    {
-      SecurityInfos cardSecurity = NPAUtil.fromCardSecurityBytes(parent.getEACFinal().getCardSecurityBytes());
-      this.selectedPSAInfo = InfoSelector.selectPSAInfo(cardSecurity.getPSAInfo(), this.parent.getEACFinal()
-                                                                                              .getCaData()
-                                                                                              .getCaInfo());
-      // select PSInfo
-      PSInfo psInfo = v == VerificationCommand.PSEUDONYMOUS_SIGNATURE_AUTHENTICATION ? this.selectedPSAInfo
-        : v == VerificationCommand.PSEUDONYMOUS_SIGNATURE_CREDENTIALS ? cardSecurity.getPSCInfo().get(0)
-          : cardSecurity.getPSMInfo().get(0);
-      PseudonymousSignatureParameter psParam = new PseudonymousSignatureParameter(
-                                                                                  psInfo,
-                                                                                  InfoSelector.selectPSPublicKeyInfo(cardSecurity.getPSPublicKeyInfo(),
-                                                                                                                     psInfo),
-                                                                                  this.parent.getCVC()
-                                                                                             .getPSKey(),
-                                                                                  v == VerificationCommand.PSEUDONYMOUS_SIGNATURE_AUTHENTICATION
-                                                                                    ? new ASN1(
-                                                                                               (byte)0x81,
-                                                                                               this.parent.getEACFinal()
-                                                                                                          .getEphemeralCardKey()).getEncoded()
-                                                                                    : v == VerificationCommand.PSEUDONYMOUS_SIGNATURE_MESSAGE
-                                                                                      ? si.getPsMessage()
-                                                                                      : null,
-                                                                                  v == VerificationCommand.PSEUDONYMOUS_SIGNATURE_CREDENTIALS
-                                                                                    ? si.getPscFidList()
-                                                                                    : null,
-                                                                                  v == VerificationCommand.PSEUDONYMOUS_SIGNATURE_CREDENTIALS
-                                                                                    ? si.isPscIncludeSpecific()
-                                                                                    : false);
-      this.psParameterMap.put(v, psParam);
-      return this.pseudonymousSignature.create(psParam);
-    }
-    catch (Exception e)
-    {
-      throw new ECardException(ResultMinor.SAL_SECURITY_CONDITION_NOT_SATISFIED,
-                               "Unable to create command for pseudonymous signature identification", e);
-    }
-  }
-
-  private boolean mustWriteAttributeRequest()
-  {
-    if (!this.fields.contains(CVCPermission.AUT_WRITE_ATT_REQUEST))
-    {
-      return false;
-    }
-
-    return this.specificAttributesToRead != null && !this.specificAttributesToRead.isEmpty();
-  }
-
-  private List<InputAPDUInfoType> getCommandWriteAttributeRequest()
-  {
-    if (!this.mustWriteAttributeRequest())
-    {
-      return new ArrayList<>(0);
-    }
-
-    ASN1 set;
-    try
-    {
-      set = new ASN1(ASN1Constants.UNIVERSAL_TAG_SET_CONSTRUCTED, new byte[0]);
-      if (this.specificAttributesToRead != null)
-      {
-        set.addChildElements(this.specificAttributesToRead, set);
-      }
-    }
-    catch (IOException e)
-    {
-      return new ArrayList<>(0);
-    }
-
-    if (this.writeAttributeRequest == null)
-    {
-      this.writeAttributeRequest = new WriteAttributeRequest(this.transmit);
-    }
-
-    WriteAttributeRequestParameter parameter = new WriteAttributeRequestParameter(
-                                                                                  parent.getCVC()
-                                                                                        .getSectorPublicKeyHash(),
-                                                                                  set.getEncoded());
-    return this.writeAttributeRequest.create(parameter);
-  }
-
-  private List<InputAPDUInfoType> getCommandReadAttributeRequest()
-  {
-    if (this.readAttributeRequest == null)
-    {
-      this.readAttributeRequest = new ReadAttributeRequest(this.transmit);
-    }
-    ReadAttributeRequestParameter parameter = new ReadAttributeRequestParameter();
-    return this.readAttributeRequest.create(parameter);
-  }
-
-  private List<InputAPDUInfoType> getCommandWriteGenericAttributes()
-  {
-    if (this.update == null)
-    {
-      this.update = new Update(this.transmit);
-    }
-
-    List<InputAPDUInfoType> returnList = new ArrayList<>();
-
-    if (this.attributeRequest != null)
-    {
-      // attribute provider logic
-    }
-
-    this.numGenericWrites = returnList.size();
-    return returnList;
-  }
-
-  private List<InputAPDUInfoType> getCommandWriteSpecificAttributes()
-  {
-    if (this.writeAttribute == null)
-    {
-      this.writeAttribute = new WriteAttribute(this.transmit);
-    }
-
-    List<byte[]> attributeList = new ArrayList<>();
-
-    if (this.attributeRequest != null)
-    {
-      // attribute provider logic
-    }
-
-    WriteAttributeParameter parameter = new WriteAttributeParameter(attributeList);
-    List<InputAPDUInfoType> returnList = this.writeAttribute.create(parameter);
-    this.numSpecificWrites = returnList.size();
-    return returnList;
-  }
-
-  private List<InputAPDUInfoType> getCommandReadSpecificAttributes()
-  {
-    byte[] requests = parent.getSessionInput().getSpecificRequests();
-    if (!this.fields.contains(CVCPermission.AUT_READ_SPEC_ATT) || requests == null || requests.length == 0)
-    {
-      return new ArrayList<>(0);
-    }
-
-    if (this.specificAttributesToRead == null)
-    {
-      this.specificAttributesToRead = new ArrayList<>();
-      try
-      {
-        ASN1 set = new ASN1(requests);
-        this.specificAttributesToRead.addAll(set.getChildElementList());
-      }
-      catch (IOException e)
-      {
-        this.specificAttributesToRead.clear();
-      }
-    }
-
-    if (this.specificAttributesToRead.isEmpty())
-    {
-      return new ArrayList<>(0);
-    }
-
-    if (this.readAttribute == null)
-    {
-      this.readAttribute = new ReadAttribute(this.transmit);
-    }
-    ReadAttributeParameter parameter = new ReadAttributeParameter(parent.getCVC().getSectorPublicKeyHash());
-    return this.readAttribute.create(parameter);
-  }
-
   private FileParameter getFileParameterSelectApplication()
   {
     return new FileParameter(Hex.parse(EIDConstants.EID_APPLICATION_AID),
@@ -1017,25 +425,13 @@ public class EIDSequenceTransmit
 
   private Object getTransmitRequest() throws ECardException
   {
-    LOG.debug(parent.getLogPrefix() + "[Transmit] Get next transmit: " + state.name());
+    log.debug("{}[Transmit] Get next transmit: {}", parent.getLogPrefix(), state.name());
     switch (state)
     {
       case BATCH_COMMANDS:
         return getBatchCommands();
       case BATCH_DATA:
         return getBatchData();
-      case READ_PROVIDED_ATTRIBUTES:
-        return getReadProvidedAttributes();
-      case QES_READ_CIA:
-        return getQESReadCIA();
-      case QES_EXAMINE_FILES:
-        return getQESExamineFiles();
-      case QES_ERASE_OLD_CERTS:
-        return getQESEraseCerts();
-      case QES_GENERATE_KEY:
-        return getQESGenerateKey();
-      case QES_WRITE_NEW_CERTS:
-        return getQESWriteCert();
       case TRANSMIT_DONE:
         return null;
       default:
@@ -1123,7 +519,7 @@ public class EIDSequenceTransmit
             catch (DataFormatException e)
             {
               throw new IOException("Unexpected text format: "
-                                    + new String(textASN.getValue(), StandardCharsets.UTF_8));
+                                    + new String(textASN.getValue(), StandardCharsets.UTF_8), e);
             }
             baos.write(buf, 0, len);
           }
@@ -1147,12 +543,12 @@ public class EIDSequenceTransmit
       ASN1 simpleASN = new ASN1(asn1.getValue());
       String fieldValue = new String(simpleASN.getValue(), StandardCharsets.UTF_8);
       result.append(fieldValue);
-      LOG.debug(parent.getLogPrefix() + LOG_DATA + "[ASN1 Simple] : " + fieldValue);
+      log.debug("{}{}[ASN1 Simple] : {}", parent.getLogPrefix(), LOG_DATA, fieldValue);
       return new EIDInfoResultString(result.toString());
     }
     catch (IOException e)
     {
-      LOG.error(parent.getLogPrefix() + LOG_DATA + "Can't get FileContent for field: " + dataFieldName, e);
+      log.error("{}{}Can't get FileContent for field: {}", parent.getLogPrefix(), LOG_DATA, dataFieldName, e);
     }
     return null;
   }
@@ -1190,133 +586,114 @@ public class EIDSequenceTransmit
   private Object handleBatchCommands(TransmitAPDUResult transmitResult) throws ECardException
   {
     int additionalResults = 0;
-    if (verifications.contains(VerificationCommand.PSEUDONYMOUS_SIGNATURE_AUTHENTICATION))
-    {
-      handleBatchCommandPseudonymousSignature(transmitResult,
-                                              additionalResults,
-                                              VerificationCommand.PSEUDONYMOUS_SIGNATURE_AUTHENTICATION);
-      additionalResults += 2;
-    }
     // Check if select application was successful
     SelectResult selected = select.evaluate(transmitResult, new int[]{additionalResults});
     // Select is the first additional result to count for commands
     additionalResults++;
     if (selected.isSelected())
     {
-      LOG.debug(parent.getLogPrefix() + LOG_SELECT + "Select application successful");
+      log.debug("{}{}Select application successful", parent.getLogPrefix(), LOG_SELECT);
 
-      if ("true".equalsIgnoreCase(System.getProperty("attributeprovider.enabled")))
+      for ( VerificationCommand verification : verifications )
       {
-        handleCommandReadAttributeRequest(transmitResult, additionalResults);
+        log.debug("{}{}Command checked: {} at position {}",
+                  parent.getLogPrefix(),
+                  LOG_COMMAND,
+                  verification.name(),
+                  additionalResults);
+        switch (verification)
+        {
+          case AGE_VERIFICATION:
+            handleBatchCommandAgeVerification(transmitResult, additionalResults);
+            additionalResults++;
+            break;
+          case BLOCKING_IDENTIFICATION:
+            // Restricted identifications return two result. First is only that result is OK
+            log.debug("{}{}Start: {}", parent.getLogPrefix(), LOG_COMMAND, verification.name());
+            additionalResults++;
+            handleBatchCommandBlockingIdentification(transmitResult, additionalResults);
+            if (parent.getEIDInfoContainer().getStatus() == EIDStatus.REVOKED)
+            {
+              state = SequenceState.TRANSMIT_DONE;
+              return getTransmitRequest();
+            }
+            additionalResults++;
+            break;
+          case MUNICIPALITY_ID_VERIFICATION:
+            handleBatchCommandCommunityIdentification(transmitResult, additionalResults);
+            additionalResults++;
+            break;
+          case DOCUMENT_VALIDITY:
+            handleBatchCommandDocumentValidity(transmitResult, additionalResults);
+            if (parent.getEIDInfoContainer().getStatus() == EIDStatus.EXPIRED)
+            {
+              state = SequenceState.TRANSMIT_DONE;
+              return getTransmitRequest();
+            }
+            additionalResults++;
+            break;
+          case RESTRICTED_IDENTIFICATION:
+            additionalResults++;
+            handleBatchCommandRestrictedIdentification(transmitResult, additionalResults);
+            additionalResults++;
+            break;
+          default:
+        }
+        log.debug("{}{}NEXT >>> ", parent.getLogPrefix(), LOG_COMMAND);
       }
-      else
+
+      for ( CVCPermission field : fields )
       {
-        for ( VerificationCommand verification : verifications )
+        if ((field.getFID() == null || new BigInteger(Hex.parse(field.getFID())).intValue() < 0x0117)
+            && (field.getSFID() == null || Hex.parse(field.getSFID())[0] < 0x17))
         {
-          LOG.debug(parent.getLogPrefix() + LOG_COMMAND + "Command checked: " + verification.name()
-                    + " at position " + additionalResults);
-          switch (verification)
-          {
-            case AGE_VERIFICATION:
-              handleBatchCommandAgeVerification(transmitResult, additionalResults);
-              additionalResults++;
-              break;
-            case BLOCKING_IDENTIFICATION:
-              // Restricted identifications return two result. First is only that result is OK
-              LOG.debug(parent.getLogPrefix() + LOG_COMMAND + "Start: " + verification.name());
-              additionalResults++;
-              handleBatchCommandBlockingIdentification(transmitResult, additionalResults);
-              if (parent.getEIDInfoContainer().getStatus() == EIDStatus.REVOKED)
-              {
-                state = SequenceState.TRANSMIT_DONE;
-                return getTransmitRequest();
-              }
-              additionalResults++;
-              break;
-            case MUNICIPALITY_ID_VERIFICATION:
-              handleBatchCommandCommunityIdentification(transmitResult, additionalResults);
-              additionalResults++;
-              break;
-            case DOCUMENT_VALIDITY:
-              handleBatchCommandDocumentValidity(transmitResult, additionalResults);
-              if (parent.getEIDInfoContainer().getStatus() == EIDStatus.EXPIRED)
-              {
-                state = SequenceState.TRANSMIT_DONE;
-                return getTransmitRequest();
-              }
-              additionalResults++;
-              break;
-            case RESTRICTED_IDENTIFICATION:
-              additionalResults++;
-              handleBatchCommandRestrictedIdentification(transmitResult, additionalResults);
-              additionalResults++;
-              break;
-            case PSEUDONYMOUS_SIGNATURE_CREDENTIALS:
-            case PSEUDONYMOUS_SIGNATURE_MESSAGE:
-              handleBatchCommandPseudonymousSignature(transmitResult, additionalResults, verification);
-              additionalResults += 2;
-              break;
-            case PSEUDONYMOUS_SIGNATURE_AUTHENTICATION:
-              // already handled
-              break;
-          }
-          LOG.debug(parent.getLogPrefix() + LOG_COMMAND + "NEXT >>> ");
+          // only handle generic attributes here
+          continue;
         }
-
-        if (this.canReadSpecificAttributes())
+        else
         {
-          handleCommandReadSpecificAttributes(transmitResult, additionalResults);
-          additionalResults += 2;
-        }
+          log.debug("{}READ field{}", parent.getLogPrefix(), field.getDataFieldName());
 
-        for ( CVCPermission field : fields )
-        {
-          if ((field.getFID() == null || new BigInteger(Hex.parse(field.getFID())).intValue() < 0x0117)
-              && (field.getSFID() == null || Hex.parse(field.getSFID())[0] < 0x17))
+          SelectResult file = null;
+          boolean withoutSelect = false;
+          if (field.getSFID() == null)
           {
-            // only handle generic attributes here
-            continue;
+            file = selectFile.evaluate(transmitResult, new int[]{additionalResults++});
           }
           else
           {
-            LOG.debug(parent.getLogPrefix() + "READ field" + field.getDataFieldName());
+            withoutSelect = true;
+          }
 
-            SelectResult file = null;
-            boolean withoutSelect = false;
-            if (field.getSFID() == null)
+          if (withoutSelect || file.isSelected())
+          {
+            ReadResult result = readFile.evaluate(transmitResult, new int[]{additionalResults++});
+            if (result.getThrowable() != null)
             {
-              file = selectFile.evaluate(transmitResult, new int[]{additionalResults++});
+              if (result.getThrowable() instanceof FileNotFoundException)
+              {
+                setParentPut(EIDKeys.valueOf(field.getDataFieldName()), new EIDInfoResultNotOnChip());
+              }
+              log.debug("{}{}Could not read file for {}",
+                        parent.getLogPrefix(),
+                        LOG_DATA,
+                        field.getDataFieldName());
+            }
+            else if (ArrayUtil.isNullOrEmpty(result.getFileContent()) || result.getFileContent()[0] == 0x00)
+            {
+              log.debug("{}{}No result (read) for file {}",
+                        parent.getLogPrefix(),
+                        LOG_DATA,
+                        field.getDataFieldName());
             }
             else
             {
-              withoutSelect = true;
-            }
-
-            if (withoutSelect || file.isSelected())
-            {
-              ReadResult result = readFile.evaluate(transmitResult, new int[]{additionalResults++});
-              if (result.getThrowable() != null)
-              {
-                if (result.getThrowable() instanceof FileNotFoundException)
-                {
-                  setParentPut(EIDKeys.valueOf(field.getDataFieldName()), new EIDInfoResultNotOnChip());
-                }
-                LOG.debug(parent.getLogPrefix() + LOG_DATA + "Could not read file for "
-                          + field.getDataFieldName());
-              }
-              else if (!ArrayUtil.isNullOrEmpty(result.getFileContent())
-                       && result.getFileContent()[0] != 0x00)
-              {
-                EIDInfoResult value = getASN1Value(result, field.getDataFieldName());
-                LOG.debug(parent.getLogPrefix() + LOG_DATA + field.getDataFieldName()
-                          + "' added to eidInfoContainer.");
-                setParentPut(EIDKeys.valueOf(field.getDataFieldName()), value);
-              }
-              else
-              {
-                LOG.debug(parent.getLogPrefix() + LOG_DATA + "No result (read) for file "
-                          + field.getDataFieldName());
-              }
+              EIDInfoResult value = getASN1Value(result, field.getDataFieldName());
+              log.debug("{}{}{} added to eidInfoContainer.",
+                        parent.getLogPrefix(),
+                        LOG_DATA,
+                        field.getDataFieldName());
+              setParentPut(EIDKeys.valueOf(field.getDataFieldName()), value);
             }
           }
         }
@@ -1341,12 +718,12 @@ public class EIDSequenceTransmit
   private void handleBatchCommandBlockingIdentification(TransmitAPDUResult transmitResult, int index)
     throws ECardException
   {
-    LOG.debug(parent.getLogPrefix() + LOG_COMMAND + "Evaluate RI with MCard");
+    log.debug("{}{}Evaluate RI with MCard", parent.getLogPrefix(), LOG_COMMAND);
     RestrictedIdentificationResult result = restrictedIdentification.evaluate(transmitResult,
                                                                               new int[]{index});
-    LOG.debug(parent.getLogPrefix() + LOG_COMMAND + "Result from MCard: " + result);
+    log.debug("{}{}Result from MCard: {}", parent.getLogPrefix(), LOG_COMMAND, result);
     checkBlockingIdentification(result);
-    LOG.debug(parent.getLogPrefix() + LOG_COMMAND + "check BlockingIdentification done");
+    log.debug("{}{}check BlockingIdentification done", parent.getLogPrefix(), LOG_COMMAND);
   }
 
   private void handleBatchCommandCommunityIdentification(TransmitAPDUResult transmitResult, int index)
@@ -1373,529 +750,27 @@ public class EIDSequenceTransmit
     checkRestrictedIdentification(result);
   }
 
-  private void handleBatchCommandPseudonymousSignature(TransmitAPDUResult transmitResult,
-                                                       int index,
-                                                       VerificationCommand v) throws ECardException
-  {
-    PseudonymousSignatureResult result = this.pseudonymousSignature.evaluate(transmitResult,
-                                                                             new int[]{index, index + 1});
-    if (result.getThrowable() != null)
-    {
-      throw new ECardException(ResultMinor.COMMON_INTERNAL_ERROR, "Pseudonymous signature failed: "
-                                                                 + result.getThrowable());
-    }
-
-    PseudonymousSignatureParameter psp = this.psParameterMap.get(v);
-    // verification for PSC (how if we do not have all credentials?)
-    Boolean verified = null;
-    if (v != VerificationCommand.PSEUDONYMOUS_SIGNATURE_CREDENTIALS)
-    {
-      if (PseudonymousSignature.checkSignature(psp, result))
-      {
-        verified = true;
-      }
-      else
-      {
-        verified = false;
-      }
-    }
-
-    if (v == VerificationCommand.PSEUDONYMOUS_SIGNATURE_AUTHENTICATION)
-    {
-      byte[] blockingID = null;
-      byte[] restrictedID = null;
-      try
-      {
-        blockingID = this.selectedPSAInfo.getPS1AuthInfoInt() == 0 ? result.getFirstKey()
-          : this.selectedPSAInfo.getPS2AuthInfoInt() == 0 ? result.getSecondKey() : null;
-        restrictedID = this.selectedPSAInfo.getPS1AuthInfoInt() == 1 ? result.getFirstKey()
-          : this.selectedPSAInfo.getPS2AuthInfoInt() == 1 ? result.getSecondKey() : null;
-      }
-      catch (IOException e)
-      {
-        // nothing
-      }
-      if (blockingID == null)
-      {
-        throw new ECardException(ResultMinor.COMMON_INTERNAL_ERROR,
-                                 "Blocking identification verification failed: "
-                                   + "Result contains no ID to use");
-      }
-      this.checkBlockingIdentification(blockingID);
-      this.checkRestrictedIdentification(restrictedID, null);
-    }
-    try
-    {
-      this.setParentPut(v == VerificationCommand.PSEUDONYMOUS_SIGNATURE_AUTHENTICATION ? EIDKeys.PSA
-                          : v == VerificationCommand.PSEUDONYMOUS_SIGNATURE_CREDENTIALS ? EIDKeys.PSC
-                            : EIDKeys.PSM,
-                        new EIDInfoResultPseudonymousSignature(result.getFirstKey(), result.getSecondKey(),
-                                                               result.getSignature(), psp, verified));
-    }
-    catch (IOException e)
-    {
-      throw new ECardException(ResultMinor.COMMON_INTERNAL_ERROR,
-                               "Results from pseudonymous signature could not be extracted");
-    }
-  }
-
-  private boolean handleCommandWriteAttributeRequest(TransmitAPDUResult transmitResult, int index)
-    throws ECardException
-  {
-    if (!this.mustWriteAttributeRequest())
-    {
-      return false;
-    }
-
-    WriteAttributeRequestResult result = writeAttributeRequest.evaluate(transmitResult, new int[]{index,
-                                                                                                  index + 1,
-                                                                                                  index + 2});
-    if (result.getThrowable() != null)
-    {
-      throw new ECardException(ResultMinor.COMMON_INTERNAL_ERROR,
-                               "Write attribute request failed and threw an exception: "
-                                 + result.getThrowable());
-    }
-    if (!result.getData())
-    {
-      throw new ECardException(ResultMinor.COMMON_INTERNAL_ERROR, "Write attribute request returned false");
-    }
-    return true;
-  }
-
-  private void handleCommandReadAttributeRequest(TransmitAPDUResult transmitResult, int index)
-    throws ECardException
-  {
-    ReadAttributeRequestResult result = readAttributeRequest.evaluate(transmitResult, new int[]{index});
-    if (result.getThrowable() != null)
-    {
-      throw new ECardException(ResultMinor.COMMON_INTERNAL_ERROR,
-                               "Read attribute request failed and threw an exception: "
-                                 + result.getThrowable());
-    }
-
-    byte[] attributeRequest = result.getData();
-    if (attributeRequest == null || attributeRequest.length == 0)
-    {
-      throw new ECardException(ResultMinor.COMMON_INTERNAL_ERROR, "Read attribute request returned nothing");
-    }
-    this.attributeRequest = attributeRequest;
-  }
-
-  private void handleCommandWriteSpecificAttributes(TransmitAPDUResult transmitResult, int index)
-    throws ECardException
-  {
-    int[] indices = new int[this.numSpecificWrites];
-    for ( int i = 0 ; i < this.numSpecificWrites ; i++ )
-    {
-      indices[i] = index + i;
-    }
-    WriteAttributeResult result = writeAttribute.evaluate(transmitResult, indices);
-    if (result.getThrowable() != null)
-    {
-      throw new ECardException(ResultMinor.COMMON_INTERNAL_ERROR,
-                               "Write attribute failed and threw an exception: " + result.getThrowable());
-    }
-
-    if (!result.getData())
-    {
-      throw new ECardException(ResultMinor.COMMON_INTERNAL_ERROR, "Write attribute returned false");
-    }
-  }
-
-  private void handleCommandWriteGenericAttributes(TransmitAPDUResult transmitResult, int index)
-    throws ECardException
-  {
-    int[] indices = new int[this.numGenericWrites];
-    for ( int i = 0 ; i < this.numGenericWrites ; i++ )
-    {
-      indices[i] = index + i;
-    }
-    UpdateResult result = update.evaluate(transmitResult, indices);
-    if (result.getThrowable() != null)
-    {
-      throw new ECardException(ResultMinor.COMMON_INTERNAL_ERROR, "Write failed and threw an exception: "
-                                                                 + result.getThrowable());
-    }
-
-    if (!result.getData())
-    {
-      throw new ECardException(ResultMinor.COMMON_INTERNAL_ERROR, "Write returned false");
-    }
-  }
-
-  private void handleCommandReadSpecificAttributes(TransmitAPDUResult transmitResult, int index)
-    throws ECardException
-  {
-    if (!this.canReadSpecificAttributes())
-    {
-      return;
-    }
-
-    ReadAttributeResult result = readAttribute.evaluate(transmitResult, new int[]{index, index + 1});
-    if (result.getThrowable() != null)
-    {
-      throw new ECardException(ResultMinor.COMMON_INTERNAL_ERROR,
-                               "Read specific attributes failed and threw an exception: "
-                                 + result.getThrowable());
-    }
-
-    List<byte[]> resultData = result.getData();
-    if (resultData == null || resultData.isEmpty())
-    {
-      LOG.debug(parent.getLogPrefix() + LOG_DATA + "Read specific attributes returned no data");
-      return;
-    }
-
-    try
-    {
-      List<ASN1> attributes = new ArrayList<>();
-      for ( byte[] singleResult : resultData )
-      {
-        attributes.add(new ASN1(singleResult));
-        // add a 0x01 byte to avoid leading zeroes being cut
-        this.attributesCollected.add(new BigInteger(ByteUtil.combine(new byte[]{1}, singleResult)));
-      }
-
-      List<ASN1> tempAttributes = new ArrayList<>(this.specificAttributesToRead);
-      for ( ASN1 singleRequest : tempAttributes )
-      {
-        for ( ASN1 singleResult : attributes )
-        {
-          // NOTE this is only a hint that the request is already fulfilled
-          if (singleRequest.getChildElementsByTag(0x06)[0].equals(singleResult.getChildElementsByTag(0x06)[0]))
-          {
-            this.specificAttributesToRead.remove(singleRequest);
-          }
-        }
-      }
-    }
-    catch (IOException e)
-    {
-      // nothing yet
-    }
-
-    List<byte[]> resultList = new ArrayList<>();
-    for ( BigInteger b : this.attributesCollected )
-    {
-      // remove the 0x01 byte at the beginning
-      resultList.add(ByteUtil.subbytes(b.toByteArray(), 1));
-    }
-
-    setParentPut(EIDKeys.SPECIFIC_ATTRIBUTES, new EIDInfoResultListByteArray(resultList));
-  }
-
-  private Object handleQESReadCIA(TransmitAPDUResult transmitResult) throws ECardException
-  {
-    SelectResult file = selectFile.evaluate(transmitResult, new int[]{0});
-    if (file.isSelected())
-    {
-      ReadResult result = readFile.evaluate(transmitResult, new int[]{1});
-      try
-      {
-        this.prKID = NPAUtil.evaluateEFPrKD(new ASN1(0x30, result.getFileContent()));
-      }
-      catch (IOException e)
-      {
-        throw new ECardException(ResultMinor.KEY_KEY_GENERATION_NOT_POSSIBLE, e.getMessage(), e);
-      }
-    }
-
-    file = selectFile.evaluate(transmitResult, new int[]{2});
-    if (file.isSelected())
-    {
-      ReadResult result = readFile.evaluate(transmitResult, new int[]{3});
-      Map<String, byte[]> resultMap = null;
-      try
-      {
-        resultMap = NPAUtil.evaluateEFCD(new ASN1(0x30, result.getFileContent()));
-      }
-      catch (IOException e)
-      {
-        throw new ECardException(ResultMinor.KEY_KEY_GENERATION_NOT_POSSIBLE, e.getMessage(), e);
-      }
-      this.fidCACert = resultMap.get(NPAUtil.FID_CACERT);
-      this.fidCert = resultMap.get(NPAUtil.FID_CERT);
-    }
-
-    state = SequenceState.QES_EXAMINE_FILES;
-    return getTransmitRequest();
-  }
-
-  private Object handleQESExamineFiles(TransmitAPDUResult transmitResult) throws ECardException
-  {
-    SelectResult app = select.evaluate(transmitResult, new int[]{0});
-    if (!app.isSelected())
-    {
-      throw new ECardException(ResultMinor.KEY_KEY_GENERATION_NOT_POSSIBLE, "Could not select eSign application");
-    }
-    SelectResult file = selectFile.evaluate(transmitResult, new int[]{1});
-    if (!file.isSelected())
-    {
-      throw new ECardException(ResultMinor.KEY_KEY_GENERATION_NOT_POSSIBLE,
-                               "Could not select CA certificate file");
-    }
-    try
-    {
-      this.caFileLength = NPAUtil.evaluateFCP(file.getFCP());
-    }
-    catch (IOException e)
-    {
-      throw new ECardException(ResultMinor.KEY_KEY_GENERATION_NOT_POSSIBLE, e.getMessage(), e);
-    }
-
-    file = selectFile.evaluate(transmitResult, new int[]{2});
-    if (!file.isSelected())
-    {
-      throw new ECardException(ResultMinor.KEY_KEY_GENERATION_NOT_POSSIBLE, "Could not select certificate file");
-    }
-    try
-    {
-      this.certFileLength = NPAUtil.evaluateFCP(file.getFCP());
-    }
-    catch (IOException e)
-    {
-      throw new ECardException(ResultMinor.KEY_KEY_GENERATION_NOT_POSSIBLE, e.getMessage(), e);
-    }
-
-
-    state = SequenceState.QES_ERASE_OLD_CERTS;
-    return getTransmitRequest();
-  }
-
-  private Object handleQESEraseCerts(TransmitAPDUResult transmitResult) throws ECardException
-  {
-    for ( byte[] rAPDU : transmitResult.getData().getOutputAPDU() )
-    {
-      if (rAPDU == null || rAPDU.length != 2 || rAPDU[0] != (byte)0x90 || rAPDU[1] != 0x00)
-      {
-        throw new ECardException(ResultMinor.KEY_KEY_GENERATION_NOT_POSSIBLE,
-                                 "Error in erasing old certificates");
-      }
-    }
-
-    state = SequenceState.QES_GENERATE_KEY;
-    return getTransmitRequest();
-  }
-
-  private Object handleQESGenerateKey(TransmitAPDUResult transmitResult) throws ECardException
-  {
-    GenerateKeyPairResult key = generateKeyPair.evaluate(transmitResult, new int[]{0});
-    byte[] keyData = key.getData();
-    if (keyData == null || keyData.length == 0)
-    {
-      throw new ECardException(ResultMinor.KEY_KEY_GENERATION_NOT_POSSIBLE,
-                               "Generation of key failed - no public key returned");
-    }
-
-    // submit key to CA and receive certificates, extend (probably many more parameters required...)
-    String dn;
-    try
-    {
-      Map<EIDKeys, EIDInfoResult> data = parent.getEIDInfoContainer().getInfoMap();
-      dn = "CN=" + ((EIDInfoResultString)data.get(EIDKeys.GIVEN_NAMES)).getResult() + " "
-           + ((EIDInfoResultString)data.get(EIDKeys.FAMILY_NAMES)).getResult();
-      EIDInfoResult residence = data.get(EIDKeys.PLACE_OF_RESIDENCE);
-      if (residence instanceof EIDInfoResultPlaceStructured)
-      {
-        EIDInfoResultPlaceStructured structuredPlace = (EIDInfoResultPlaceStructured)residence;
-        if (structuredPlace.getCity() != null)
-        {
-          dn += ",L=" + structuredPlace.getCity();
-        }
-        if (structuredPlace.getState() != null)
-        {
-          dn += ",ST=" + structuredPlace.getState();
-        }
-        dn += ",C=" + (structuredPlace.getCountry() == null ? "DE" : structuredPlace.getCountry());
-      }
-    }
-    catch (Exception e)
-    {
-      dn = null;
-    }
-    List<byte[]> receivedCerts = this.caConnection.submitPublicKey(keyData, dn);
-
-    if (receivedCerts == null || receivedCerts.size() != 2)
-    {
-      throw new ECardException(ResultMinor.KEY_KEY_GENERATION_NOT_POSSIBLE,
-                               "CA did not deliver two certificates");
-    }
-    this.caCert = receivedCerts.get(0);
-    this.cert = receivedCerts.get(1);
-
-    state = SequenceState.QES_WRITE_NEW_CERTS;
-    return getTransmitRequest();
-  }
-
-  private Object handleQESWriteCerts(TransmitAPDUResult transmitResult) throws ECardException
-  {
-    for ( byte[] rAPDU : transmitResult.getData().getOutputAPDU() )
-    {
-      if (rAPDU == null || rAPDU.length != 2 || rAPDU[0] != (byte)0x90 || rAPDU[1] != 0x00)
-      {
-        this.caConnection.reportWrite(false);
-        throw new ECardException(ResultMinor.KEY_KEY_GENERATION_NOT_POSSIBLE,
-                                 "Error in writing new certificates");
-      }
-    }
-    this.caConnection.reportWrite(true);
-    state = SequenceState.TRANSMIT_DONE;
-    return getTransmitRequest();
-  }
-
   private Object handleBatchData(TransmitAPDUResult transmitResult) throws ECardException
   {
     int position = 0;
 
-    if ("true".equalsIgnoreCase(System.getProperty("attributeprovider.enabled")))
-    {
-      handleCommandWriteGenericAttributes(transmitResult, position);
-      position += this.numGenericWrites;
-      handleCommandWriteSpecificAttributes(transmitResult, position);
-      state = SequenceState.TRANSMIT_DONE;
-    }
-    else
-    {
-      this.installQES = false;
-      for ( CVCPermission field : fields )
-      {
-        if (field == CVCPermission.AUT_INSTALL_QUALIFIED_CERTIFICATE)
-        {
-          SelectResult app = select.evaluate(transmitResult, new int[]{position++});
-          if (app.isSelected())
-          {
-            SelectResult file = selectFile.evaluate(transmitResult, new int[]{position++});
-            if (file.isSelected())
-            {
-              ReadResult result = readFile.evaluate(transmitResult, new int[]{position++});
-              if (!ArrayUtil.isNullOrEmpty(result.getFileContent()))
-              {
-                Map<String, byte[]> evalResult = null;
-                try
-                {
-                  evalResult = NPAUtil.evaluateEFOD(result.getFileContent());
-                }
-                catch (IOException e)
-                {
-                  throw new ECardException(ResultMinor.KEY_KEY_GENERATION_NOT_POSSIBLE, e.getMessage(), e);
-                }
-                this.fidEFCD = evalResult.get(NPAUtil.FID_EFCD);
-                this.fidEFPrKD = evalResult.get(NPAUtil.FID_EFPRKD);
-                this.fidCACert = evalResult.get(NPAUtil.FID_CACERT);
-                this.fidCert = evalResult.get(NPAUtil.FID_CERT);
-                this.prKID = evalResult.get(NPAUtil.PRK_ID);
-                installQES = true;
-                continue;
-              }
-            }
-          }
-          throw new ECardException(ResultMinor.KEY_KEY_GENERATION_NOT_POSSIBLE,
-                                   "Could not read cryptographic information file from card");
-        }
-        else if ((field.getFID() == null || new BigInteger(Hex.parse(field.getFID())).intValue() >= 0x0117)
-                 && (field.getSFID() == null || Hex.parse(field.getSFID())[0] >= 0x17))
-        {
-          // there is nothing we can read
-          continue;
-        }
-        else
-        {
-          LOG.debug(parent.getLogPrefix() + "READ field" + field.getDataFieldName());
-
-          SelectResult file = null;
-          boolean withoutSelect = false;
-          if (field.getSFID() == null)
-          {
-            file = selectFile.evaluate(transmitResult, new int[]{position++});
-          }
-          else
-          {
-            withoutSelect = true;
-          }
-
-          if (withoutSelect || file.isSelected())
-          {
-            ReadResult result = readFile.evaluate(transmitResult, new int[]{position++});
-            if (result.getThrowable() != null)
-            {
-              if (result.getThrowable() instanceof FileNotFoundException)
-              {
-                setParentPut(EIDKeys.valueOf(field.getDataFieldName()), new EIDInfoResultNotOnChip());
-              }
-              LOG.debug(parent.getLogPrefix() + LOG_DATA + "Could not read file for "
-                        + field.getDataFieldName());
-            }
-            else if (!ArrayUtil.isNullOrEmpty(result.getFileContent()) && result.getFileContent()[0] != 0x00)
-            {
-              EIDInfoResult value = getASN1Value(result, field.getDataFieldName());
-              LOG.debug(parent.getLogPrefix() + LOG_DATA + field.getDataFieldName()
-                        + "' added to eidInfoContainer.");
-              setParentPut(EIDKeys.valueOf(field.getDataFieldName()), value);
-            }
-            else
-            {
-              LOG.debug(parent.getLogPrefix() + LOG_DATA + "No result (read) for file "
-                        + field.getDataFieldName());
-            }
-          }
-          else
-          {
-            setParentPut(EIDKeys.valueOf(field.getDataFieldName()), new EIDInfoResultNotOnChip());
-            LOG.debug(parent.getLogPrefix() + LOG_DATA + "Could not select file for "
-                      + field.getDataFieldName());
-          }
-        }
-      }
-      if (handleCommandWriteAttributeRequest(transmitResult, position))
-      {
-        state = SequenceState.READ_PROVIDED_ATTRIBUTES;
-      }
-      else if (this.installQES)
-      {
-        if (this.fidCACert == null || this.fidCert == null || this.prKID == null)
-        {
-          state = SequenceState.QES_READ_CIA;
-        }
-        else
-        {
-          state = SequenceState.QES_EXAMINE_FILES;
-        }
-      }
-      else
-      {
-        state = SequenceState.TRANSMIT_DONE;
-      }
-    }
-    return getTransmitRequest();
-  }
-
-  private Object handleReadProvidedAttributes(TransmitAPDUResult transmitResult) throws ECardException
-  {
-    int index = 0;
-    if (this.canReadSpecificAttributes())
-    {
-      handleCommandReadSpecificAttributes(transmitResult, index);
-      index += 2;
-    }
-
     for ( CVCPermission field : fields )
     {
-      if (((field.getFID() == null || new BigInteger(Hex.parse(field.getFID())).intValue() < 0x0117) && (field.getSFID() == null || Hex.parse(field.getSFID())[0] < 0x17))
-          || checkParentPresent(EIDKeys.valueOf(field.getDataFieldName())))
+      if ((field.getFID() == null || new BigInteger(Hex.parse(field.getFID())).intValue() >= 0x0117)
+          && (field.getSFID() == null || Hex.parse(field.getSFID())[0] >= 0x17))
       {
-        // only handle generic attributes that have not been read
+        // there is nothing we can read
         continue;
       }
       else
       {
-        LOG.debug(parent.getLogPrefix() + "READ field" + field.getDataFieldName());
+        log.debug("{}READ field{}", parent.getLogPrefix(), field.getDataFieldName());
 
         SelectResult file = null;
         boolean withoutSelect = false;
         if (field.getSFID() == null)
         {
-          file = selectFile.evaluate(transmitResult, new int[]{index++});
+          file = selectFile.evaluate(transmitResult, new int[]{position++});
         }
         else
         {
@@ -1904,47 +779,46 @@ public class EIDSequenceTransmit
 
         if (withoutSelect || file.isSelected())
         {
-          ReadResult result = readFile.evaluate(transmitResult, new int[]{index++});
+          ReadResult result = readFile.evaluate(transmitResult, new int[]{position++});
           if (result.getThrowable() != null)
           {
             if (result.getThrowable() instanceof FileNotFoundException)
             {
               setParentPut(EIDKeys.valueOf(field.getDataFieldName()), new EIDInfoResultNotOnChip());
             }
-            LOG.debug(parent.getLogPrefix() + LOG_DATA + "Could not read file for "
-                      + field.getDataFieldName());
+            log.debug("{}{}Could not read file for {}",
+                      parent.getLogPrefix(),
+                      LOG_DATA,
+                      field.getDataFieldName());
           }
           else if (!ArrayUtil.isNullOrEmpty(result.getFileContent()) && result.getFileContent()[0] != 0x00)
           {
             EIDInfoResult value = getASN1Value(result, field.getDataFieldName());
-            LOG.debug(parent.getLogPrefix() + LOG_DATA + field.getDataFieldName()
-                      + "' added to eidInfoContainer.");
+            log.debug("{}{}{} added to eidInfoContainer.",
+                      parent.getLogPrefix(),
+                      LOG_DATA,
+                      field.getDataFieldName());
             setParentPut(EIDKeys.valueOf(field.getDataFieldName()), value);
           }
           else
           {
-            LOG.debug(parent.getLogPrefix() + LOG_DATA + "No result (read) for file "
-                      + field.getDataFieldName());
+            log.debug("{}{}No result (read) for file {}",
+                      parent.getLogPrefix(),
+                      LOG_DATA,
+                      field.getDataFieldName());
           }
+        }
+        else
+        {
+          setParentPut(EIDKeys.valueOf(field.getDataFieldName()), new EIDInfoResultNotOnChip());
+          log.debug("{}{}Could not select file for {}",
+                    parent.getLogPrefix(),
+                    LOG_DATA,
+                    field.getDataFieldName());
         }
       }
     }
-
-    if (this.installQES)
-    {
-      if (this.fidCACert == null || this.fidCert == null || this.prKID == null)
-      {
-        state = SequenceState.QES_READ_CIA;
-      }
-      else
-      {
-        state = SequenceState.QES_EXAMINE_FILES;
-      }
-    }
-    else
-    {
-      state = SequenceState.TRANSMIT_DONE;
-    }
+    state = SequenceState.TRANSMIT_DONE;
     return getTransmitRequest();
   }
 
@@ -1965,49 +839,52 @@ public class EIDSequenceTransmit
   private void checkBlockingIdentification(byte[] id) throws ECardException
   {
     BlackListConnector connector = parent.getConnector();
-    LOG.debug(parent.getLogPrefix() + LOG_COMMAND + "Got Blacklist connector");
+    log.debug("{}{}Got Blacklist connector", parent.getLogPrefix(), LOG_COMMAND);
     if (connector == null)
     {
       throw new ECardException(ResultMinor.COMMON_INTERNAL_ERROR, "No Blacklist connector available");
     }
 
-    LOG.debug(parent.getLogPrefix() + LOG_COMMAND + "Try check...");
+    log.debug("{}{}Try check...", parent.getLogPrefix(), LOG_COMMAND);
     try
     {
       boolean documentValidityVerificationFailed = connector.contains(id);
-      LOG.debug(parent.getLogPrefix() + LOG_COMMAND + "Check done");
+      log.debug("{}{}Check done", parent.getLogPrefix(), LOG_COMMAND);
       if (documentValidityVerificationFailed)
       {
-        LOG.debug(parent.getLogPrefix() + LOG_COMMAND + "Found Card on BlackList");
+        log.debug("{}{}Found Card on BlackList", parent.getLogPrefix(), LOG_COMMAND);
         setParentClear();
         parent.getEIDInfoContainer().setStatus(EIDStatus.REVOKED);
       }
-      LOG.debug(parent.getLogPrefix() + LOG_COMMAND + "Card not found on BlackList");
+      log.debug("{}{}Card not found on BlackList", parent.getLogPrefix(), LOG_COMMAND);
     }
     catch (IOException e)
     {
-      LOG.error(parent.getLogPrefix() + LOG_COMMAND + "BlackList defect: " + e, e);
+      if (log.isErrorEnabled())
+      {
+        log.error(parent.getLogPrefix() + LOG_COMMAND + "BlackList defect: " + e, e);
+      }
     }
     finally
     {
-      LOG.debug(parent.getLogPrefix() + LOG_COMMAND + "Leave Blacklist connector usage");
+      log.debug("{}{}Leave Blacklist connector usage", parent.getLogPrefix(), LOG_COMMAND);
     }
   }
 
   private void checkBlockingIdentification(RestrictedIdentificationResult result) throws ECardException
   {
-    LOG.debug(parent.getLogPrefix() + LOG_COMMAND + "check BlockingIdentification...");
+    log.debug("{}{}check BlockingIdentification...", parent.getLogPrefix(), LOG_COMMAND);
     if (result.getThrowable() == null && result.getFirstID() != null)
     {
-      LOG.debug(parent.getLogPrefix() + LOG_COMMAND + "Result from MCard ok");
+      log.debug("{}{}Result from MCard ok", parent.getLogPrefix(), LOG_COMMAND);
       // Checking card for blacklist
       byte[] currentSectorSpecificID = result.getFirstID();
-      LOG.debug(parent.getLogPrefix() + LOG_COMMAND + "First ID OK");
+      log.debug("{}{}First ID OK", parent.getLogPrefix(), LOG_COMMAND);
       this.checkBlockingIdentification(currentSectorSpecificID);
     }
     else
     {
-      LOG.debug(parent.getLogPrefix() + LOG_COMMAND + "Exception!!!");
+      log.debug("{}{}Exception!!!", parent.getLogPrefix(), LOG_COMMAND);
       if (result.getThrowable() != null)
       {
         throw new ECardException(ResultMinor.COMMON_INTERNAL_ERROR,
@@ -2015,9 +892,9 @@ public class EIDSequenceTransmit
       }
       throw new ECardException(ResultMinor.COMMON_INTERNAL_ERROR,
                                "Blocking identification verification failed: "
-                                 + "Result contains no ID to use");
+                                                                  + "Result contains no ID to use");
     }
-    LOG.debug(parent.getLogPrefix() + LOG_COMMAND + "Leave method");
+    log.debug("{}{}Leave method", parent.getLogPrefix(), LOG_COMMAND);
   }
 
   private void checkCommunityIdentification(ValidityVerificationResult result) throws ECardException
@@ -2035,7 +912,6 @@ public class EIDSequenceTransmit
     }
   }
 
-
   private void checkDocumentValidity(ValidityVerificationResult result) throws ECardException
   {
     if (result.getThrowable() == null)
@@ -2048,9 +924,10 @@ public class EIDSequenceTransmit
       }
       else
       {
-        LOG.error(parent.getLogPrefix() + "[SERVER] Document Validity negative");
-        LOG.debug(parent.getLogPrefix() + "  Response > Create Transmit failed (DocumentValidity): "
-                  + result.getData().toString());
+        log.error("{}[SERVER] Document Validity negative", parent.getLogPrefix());
+        log.debug("{}  Response > Create Transmit failed (DocumentValidity): {}",
+                  parent.getLogPrefix(),
+                  result.getData().toString());
         setParentClear();
         setParentPut(EIDKeys.DOCUMENT_VALIDITY, new EIDInfoResultVerification(result.getData()));
         parent.getEIDInfoContainer().setStatus(EIDStatus.EXPIRED);
@@ -2097,82 +974,37 @@ public class EIDSequenceTransmit
     parent.getEIDInfoContainer().getInfoMap().put(key, value);
   }
 
-  private boolean checkParentPresent(EIDKeys key)
-  {
-    return parent.getEIDInfoContainer().getInfoMap().get(key) != null;
-  }
-
   /**
    * Method to set the checks that should be done on card
    */
   private void setVerificationStates(List<CVCPermission> fieldList)
   {
-    // sort fields so that AUT_INSTALL_QUALIFIED_CERTIFIACTE is last if present
-    if (fieldList.remove(CVCPermission.AUT_INSTALL_QUALIFIED_CERTIFICATE))
-    {
-      fieldList.add(CVCPermission.AUT_INSTALL_QUALIFIED_CERTIFICATE);
-    }
     this.fields = fieldList;
 
     // Initialize the verification list
     verifications = new ArrayList<>();
-    try
-    {
-      if (fieldList.remove(CVCPermission.AUT_SF_PSA) || fieldList.remove(CVCPermission.AUT_PSA)
-          || this.parent.getEACFinal().getCaData().getCaInfo().getVersion() == 3)
-      {
-        verifications.add(VerificationCommand.PSEUDONYMOUS_SIGNATURE_AUTHENTICATION);
-      }
-      // if we do not use CA version 3, we must perform blocking identification (in CA v3 it is done via PSA)
-      if (this.parent.getEACFinal().getCaData().getCaInfo().getVersion() != 3)
-      {
-        verifications.add(VerificationCommand.BLOCKING_IDENTIFICATION);
-      }
-    }
-    catch (IOException e)
-    {
-      verifications.add(VerificationCommand.BLOCKING_IDENTIFICATION);
-    }
 
+    // Always check for blacklisted ID
+    verifications.add(VerificationCommand.BLOCKING_IDENTIFICATION);
     // Always check for document validity
     verifications.add(VerificationCommand.DOCUMENT_VALIDITY);
 
-    if (this.fields.remove(CVCPermission.AUT_AGE_VERIFICATION)
-        || this.fields.remove(CVCPermission.AUT_SF_AGE_VERIFICATION))
+    if (this.fields.remove(CVCPermission.AUT_AGE_VERIFICATION))
     {
       verifications.add(VerificationCommand.AGE_VERIFICATION);
-      this.fields.remove(CVCPermission.AUT_SF_AGE_VERIFICATION);
     }
-    if (this.fields.remove(CVCPermission.AUT_RESTRICTED_IDENTIFICATION)
-        || this.fields.remove(CVCPermission.AUT_SF_RESTRICTED_IDENTIFICATION))
+    if (this.fields.remove(CVCPermission.AUT_RESTRICTED_IDENTIFICATION))
     {
       verifications.add(VerificationCommand.RESTRICTED_IDENTIFICATION);
-      this.fields.remove(CVCPermission.AUT_SF_RESTRICTED_IDENTIFICATION);
     }
-    if (this.fields.remove(CVCPermission.AUT_MUNICIPALITY_ID_VERIFICATION)
-        || this.fields.remove(CVCPermission.AUT_SF_MUNICIPALITY_ID_VERIFICATION))
+    if (this.fields.remove(CVCPermission.AUT_MUNICIPALITY_ID_VERIFICATION))
     {
       verifications.add(VerificationCommand.MUNICIPALITY_ID_VERIFICATION);
-      this.fields.remove(CVCPermission.AUT_SF_MUNICIPALITY_ID_VERIFICATION);
-    }
-    if (this.fields.remove(CVCPermission.AUT_SF_PSC))
-    {
-      verifications.add(VerificationCommand.PSEUDONYMOUS_SIGNATURE_CREDENTIALS);
-    }
-    if (this.fields.remove(CVCPermission.AUT_SF_PSM))
-    {
-      verifications.add(VerificationCommand.PSEUDONYMOUS_SIGNATURE_MESSAGE);
     }
 
     // Output which checks are done
     StringBuilder debug = new StringBuilder(LOG_COMMAND + "VerificationStates set - Checks to be done: \n");
     verifications.stream().forEach(s -> debug.append("    o " + s.name() + "\n"));
-    LOG.debug(parent.getLogPrefix() + debug.toString());
-  }
-
-  private boolean canReadSpecificAttributes()
-  {
-    return this.fields.contains(CVCPermission.AUT_READ_SPEC_ATT) && this.specificAttributesToRead != null
-           && !this.specificAttributesToRead.isEmpty();
+    log.debug("{}{}", parent.getLogPrefix(), debug.toString());
   }
 }

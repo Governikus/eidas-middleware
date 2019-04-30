@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018 Governikus KG. Licensed under the EUPL, Version 1.2 or as soon they will be approved by
+ * Copyright (c) 2019 Governikus KG. Licensed under the EUPL, Version 1.2 or as soon they will be approved by
  * the European Commission - subsequent versions of the EUPL (the "Licence"); You may not use this work except
  * in compliance with the Licence. You may obtain a copy of the Licence at:
  * http://joinup.ec.europa.eu/software/page/eupl Unless required by applicable law or agreed to in writing,
@@ -15,7 +15,7 @@ import java.math.BigInteger;
 
 /**
  * Interface of informations about number instances.
- * 
+ *
  * @param <T>
  * @author Jens Wothe, jw@bos-bremen.de
  */
@@ -24,7 +24,7 @@ public interface NumInfo<T extends Number & Comparable<T>>
 
   /**
    * Constant representing zero:<code>0</code>.
-   * 
+   *
    * @see #getZero()
    * @see #ZERO_BYTE
    * @see #ZERO_SHORT
@@ -38,7 +38,7 @@ public interface NumInfo<T extends Number & Comparable<T>>
 
   /**
    * Constant representing zero byte: <code>0x00</code>.
-   * 
+   *
    * @see #UNKNOWN_ZERO
    * @see #ZERO_SHORT
    * @see #ZERO_INTEGER
@@ -51,7 +51,7 @@ public interface NumInfo<T extends Number & Comparable<T>>
 
   /**
    * Constant representing zero short: <code>0</code>.
-   * 
+   *
    * @see #UNKNOWN_ZERO
    * @see #ZERO_BYTE
    * @see #ZERO_INTEGER
@@ -64,7 +64,7 @@ public interface NumInfo<T extends Number & Comparable<T>>
 
   /**
    * Constant representing zero integer: <code>0</code>.
-   * 
+   *
    * @see #UNKNOWN_ZERO
    * @see #ZERO_BYTE
    * @see #ZERO_SHORT
@@ -77,7 +77,7 @@ public interface NumInfo<T extends Number & Comparable<T>>
 
   /**
    * Constant representing zero long: <code>0</code>.
-   * 
+   *
    * @see #UNKNOWN_ZERO
    * @see #ZERO_BYTE
    * @see #ZERO_SHORT
@@ -90,7 +90,7 @@ public interface NumInfo<T extends Number & Comparable<T>>
 
   /**
    * Constant representing zero BigInteger: <code>0</code>.
-   * 
+   *
    * @see BigInteger#ZERO
    * @see #ZERO_BYTE
    * @see #ZERO_SHORT
@@ -103,7 +103,7 @@ public interface NumInfo<T extends Number & Comparable<T>>
 
   /**
    * Constant representing zero float: <code>0.0</code>.
-   * 
+   *
    * @see #UNKNOWN_ZERO
    * @see #ZERO_BYTE
    * @see #ZERO_SHORT
@@ -116,7 +116,7 @@ public interface NumInfo<T extends Number & Comparable<T>>
 
   /**
    * Constant representing zero double: <code>0.0</code>.
-   * 
+   *
    * @see #UNKNOWN_ZERO
    * @see #ZERO_BYTE
    * @see #ZERO_SHORT
@@ -129,7 +129,7 @@ public interface NumInfo<T extends Number & Comparable<T>>
 
   /**
    * Constant indicating size unknown.
-   * 
+   *
    * @see #getSize(Number)
    */
   public static final int UNKNOWN_SIZE = 0;
@@ -137,7 +137,7 @@ public interface NumInfo<T extends Number & Comparable<T>>
   /**
    * Constant representing unknown infinity value (general, for all numeric types no explicit positive or
    * negative infinity value is defined): <code>null</code>.
-   * 
+   *
    * @see #NEGATIVE_INFINITY_BYTE
    * @see #NEGATIVE_INFINITY_SHORT
    * @see #NEGATIVE_INFINITY_INTEGER
@@ -157,7 +157,7 @@ public interface NumInfo<T extends Number & Comparable<T>>
 
   /**
    * Constant representing negative infinity Byte: <code>null</code>.
-   * 
+   *
    * @see #UNKNOWN_INFINITY
    * @see #NEGATIVE_INFINITY_SHORT
    * @see #NEGATIVE_INFINITY_INTEGER
@@ -170,7 +170,7 @@ public interface NumInfo<T extends Number & Comparable<T>>
 
   /**
    * Constant representing negative infinity Short: <code>null</code>.
-   * 
+   *
    * @see #UNKNOWN_INFINITY
    * @see #NEGATIVE_INFINITY_BYTE
    * @see #NEGATIVE_INFINITY_INTEGER
@@ -183,7 +183,7 @@ public interface NumInfo<T extends Number & Comparable<T>>
 
   /**
    * Constant representing negative infinity Integer: <code>null</code>.
-   * 
+   *
    * @see #UNKNOWN_INFINITY
    * @see #NEGATIVE_INFINITY_BYTE
    * @see #NEGATIVE_INFINITY_SHORT
@@ -196,7 +196,7 @@ public interface NumInfo<T extends Number & Comparable<T>>
 
   /**
    * Constant representing negative infinity Long: <code>null</code>.
-   * 
+   *
    * @see #UNKNOWN_INFINITY
    * @see #NEGATIVE_INFINITY_BYTE
    * @see #NEGATIVE_INFINITY_SHORT
@@ -209,7 +209,7 @@ public interface NumInfo<T extends Number & Comparable<T>>
 
   /**
    * Constant representing negative infinity BigInteger: <code>null</code>.
-   * 
+   *
    * @see #UNKNOWN_INFINITY
    * @see #NEGATIVE_INFINITY_BYTE
    * @see #NEGATIVE_INFINITY_SHORT
@@ -222,7 +222,7 @@ public interface NumInfo<T extends Number & Comparable<T>>
 
   /**
    * Constant representing negative infinity Float: <code>{@link Double#NEGATIVE_INFINITY}</code>.
-   * 
+   *
    * @see Float#NEGATIVE_INFINITY
    * @see #UNKNOWN_INFINITY
    * @see #NEGATIVE_INFINITY_BYTE
@@ -236,7 +236,7 @@ public interface NumInfo<T extends Number & Comparable<T>>
 
   /**
    * Constant representing negative infinity Double: <code>{@link Double#NEGATIVE_INFINITY}</code>.
-   * 
+   *
    * @see Double#NEGATIVE_INFINITY
    * @see #UNKNOWN_INFINITY
    * @see #NEGATIVE_INFINITY_BYTE
@@ -250,7 +250,7 @@ public interface NumInfo<T extends Number & Comparable<T>>
 
   /**
    * Constant representing positive infinity BigInteger: <code>null</code>.
-   * 
+   *
    * @see #UNKNOWN_INFINITY
    * @see #POSITIVE_INFINITY_BYTE
    * @see #POSITIVE_INFINITY_SHORT
@@ -263,7 +263,7 @@ public interface NumInfo<T extends Number & Comparable<T>>
 
   /**
    * Constant representing positive infinity Float: <code>{@link Float#POSITIVE_INFINITY}</code>.
-   * 
+   *
    * @see Float#POSITIVE_INFINITY
    * @see #UNKNOWN_INFINITY
    * @see #POSITIVE_INFINITY_BYTE
@@ -277,7 +277,7 @@ public interface NumInfo<T extends Number & Comparable<T>>
 
   /**
    * Constant representing positive infinity Double: <code>{@link Double#POSITIVE_INFINITY}</code>.
-   * 
+   *
    * @see Double#POSITIVE_INFINITY
    * @see #UNKNOWN_INFINITY
    * @see #POSITIVE_INFINITY_BYTE
@@ -293,7 +293,7 @@ public interface NumInfo<T extends Number & Comparable<T>>
   /**
    * Constant representing unknown NaN - not a number value (general, for all numeric types no explicit NaN
    * value is defined): <code>null</code>.
-   * 
+   *
    * @see #NAN_BYTE
    * @see #NAN_SHORT
    * @see #NAN_INTEGER
@@ -306,7 +306,7 @@ public interface NumInfo<T extends Number & Comparable<T>>
 
   /**
    * Constant representing NaN Short: <code>null</code>.
-   * 
+   *
    * @see #UNKNOWN_NAN
    * @see #NAN_BYTE
    * @see #NAN_INTEGER
@@ -319,7 +319,7 @@ public interface NumInfo<T extends Number & Comparable<T>>
 
   /**
    * Constant representing NaN Integer: <code>null</code>.
-   * 
+   *
    * @see #UNKNOWN_NAN
    * @see #NAN_BYTE
    * @see #NAN_SHORT
@@ -332,7 +332,7 @@ public interface NumInfo<T extends Number & Comparable<T>>
 
   /**
    * Constant representing NaN Long: <code>null</code>.
-   * 
+   *
    * @see #UNKNOWN_NAN
    * @see #NAN_BYTE
    * @see #NAN_SHORT
@@ -345,7 +345,7 @@ public interface NumInfo<T extends Number & Comparable<T>>
 
   /**
    * Constant representing NaN BigInteger: <code>null</code>.
-   * 
+   *
    * @see #UNKNOWN_NAN
    * @see #NAN_BYTE
    * @see #NAN_SHORT
@@ -358,7 +358,7 @@ public interface NumInfo<T extends Number & Comparable<T>>
 
   /**
    * Constant representing NaN Float: <code>{@link Float#NaN}</code>.
-   * 
+   *
    * @see Float#NaN
    * @see #UNKNOWN_NAN
    * @see #NAN_BYTE
@@ -372,7 +372,7 @@ public interface NumInfo<T extends Number & Comparable<T>>
 
   /**
    * Constant representing NaN Double: <code>{@link Double#NaN}</code>.
-   * 
+   *
    * @see Double#NaN
    * @see #UNKNOWN_NAN
    * @see #NAN_BYTE
@@ -387,7 +387,7 @@ public interface NumInfo<T extends Number & Comparable<T>>
   /**
    * Constant representing unknown minimum value (general, for all numeric types no explicit maximum value is
    * defined): <code>null</code>.
-   * 
+   *
    * @see #UNKNOWN_MIN
    * @see #MIN_SHORT
    * @see #MIN_INTEGER
@@ -400,7 +400,7 @@ public interface NumInfo<T extends Number & Comparable<T>>
 
   /**
    * Constant representing minimum Byte: <code>{@link Byte#MIN_VALUE}</code>.
-   * 
+   *
    * @see Byte#MIN_VALUE
    * @see #UNKNOWN_MIN
    * @see #MIN_SHORT
@@ -414,7 +414,7 @@ public interface NumInfo<T extends Number & Comparable<T>>
 
   /**
    * Constant representing minimum Short: <code>{@link Short#MIN_VALUE}</code>.
-   * 
+   *
    * @see Short#MIN_VALUE
    * @see #UNKNOWN_MIN
    * @see #MIN_SHORT
@@ -428,7 +428,7 @@ public interface NumInfo<T extends Number & Comparable<T>>
 
   /**
    * Constant representing minimum Integer: <code>{@link Integer#MIN_VALUE}</code>.
-   * 
+   *
    * @see Integer#MIN_VALUE
    * @see #UNKNOWN_MIN
    * @see #MIN_SHORT
@@ -442,7 +442,7 @@ public interface NumInfo<T extends Number & Comparable<T>>
 
   /**
    * Constant representing minimum Long: <code>{@link Long#MIN_VALUE}</code>.
-   * 
+   *
    * @see Long#MIN_VALUE
    * @see #UNKNOWN_MIN
    * @see #MIN_SHORT
@@ -456,7 +456,7 @@ public interface NumInfo<T extends Number & Comparable<T>>
 
   /**
    * Constant representing minimum BigInteger: <code>null</code>.
-   * 
+   *
    * @see #UNKNOWN_MIN
    * @see #MIN_SHORT
    * @see #MIN_INTEGER
@@ -469,7 +469,7 @@ public interface NumInfo<T extends Number & Comparable<T>>
 
   /**
    * Constant representing minimum Float: <code>{@link Float#MIN_VALUE}</code>.
-   * 
+   *
    * @see Float#MIN_VALUE
    * @see #UNKNOWN_MIN
    * @see #MIN_SHORT
@@ -483,7 +483,7 @@ public interface NumInfo<T extends Number & Comparable<T>>
 
   /**
    * Constant representing minimum Double: <code>{@link Double#MIN_VALUE}</code>.
-   * 
+   *
    * @see Double#MIN_VALUE
    * @see #UNKNOWN_MIN
    * @see #MIN_SHORT
@@ -498,7 +498,7 @@ public interface NumInfo<T extends Number & Comparable<T>>
   /**
    * Constant representing unknown maximum value (general, for all numeric types no explicit maximum value is
    * defined): <code>null</code>.
-   * 
+   *
    * @see #MAX_SHORT
    * @see #MAX_INTEGER
    * @see #MAX_LONG
@@ -510,7 +510,7 @@ public interface NumInfo<T extends Number & Comparable<T>>
 
   /**
    * Constant representing maximum Byte: <code>{@link Byte#MAX_VALUE}</code>.
-   * 
+   *
    * @see Byte#MAX_VALUE
    * @see #UNKNOWN_MAX
    * @see #MAX_SHORT
@@ -524,7 +524,7 @@ public interface NumInfo<T extends Number & Comparable<T>>
 
   /**
    * Constant representing maximum Short: <code>{@link Short#MAX_VALUE}</code>.
-   * 
+   *
    * @see Short#MAX_VALUE
    * @see #UNKNOWN_MAX
    * @see #MAX_BYTE
@@ -538,7 +538,7 @@ public interface NumInfo<T extends Number & Comparable<T>>
 
   /**
    * Constant representing maximum Integer: <code>{@link Integer#MAX_VALUE}</code>.
-   * 
+   *
    * @see Integer#MAX_VALUE
    * @see #UNKNOWN_MAX
    * @see #MAX_BYTE
@@ -552,7 +552,7 @@ public interface NumInfo<T extends Number & Comparable<T>>
 
   /**
    * Constant representing maximum Long: <code>{@link Long#MAX_VALUE}</code>.
-   * 
+   *
    * @see Long#MAX_VALUE
    * @see #UNKNOWN_MAX
    * @see #MAX_BYTE
@@ -566,7 +566,7 @@ public interface NumInfo<T extends Number & Comparable<T>>
 
   /**
    * Constant representing maximum BigInteger: <code>null</code>.
-   * 
+   *
    * @see #UNKNOWN_MAX
    * @see #MAX_BYTE
    * @see #MAX_SHORT
@@ -579,7 +579,7 @@ public interface NumInfo<T extends Number & Comparable<T>>
 
   /**
    * Constant representing maximum Float: <code>{@link Float#MAX_VALUE}</code>.
-   * 
+   *
    * @see Float#MAX_VALUE
    * @see #UNKNOWN_MAX
    * @see #MAX_BYTE
@@ -593,7 +593,7 @@ public interface NumInfo<T extends Number & Comparable<T>>
 
   /**
    * Constant representing maximum Double: <code>{@link Double#MAX_VALUE}</code>.
-   * 
+   *
    * @see Double#MAX_VALUE
    * @see #UNKNOWN_MAX
    * @see #MAX_BYTE
@@ -607,56 +607,56 @@ public interface NumInfo<T extends Number & Comparable<T>>
 
   /**
    * Gets number class.
-   * 
+   *
    * @return number class
    */
   public Class<T> getNumClass();
 
   /**
    * Gets zero.
-   * 
+   *
    * @return zero
    */
   public T getZero();
 
   /**
    * Gets negative infinity.
-   * 
+   *
    * @return negative infinity
    */
   public T getNegativeInfinity();
 
   /**
    * Gets positive infinity.
-   * 
+   *
    * @return positive infinity
    */
   public T getPositiveInfinity();
 
   /**
    * Gets maximum.
-   * 
+   *
    * @return maximum
    */
   public T getMax();
 
   /**
    * Gets minimum.
-   * 
+   *
    * @return minimum
    */
   public T getMin();
 
   /**
    * Gets NaN (not a number value).
-   * 
+   *
    * @return NaN
    */
   public T getNaN();
 
   /**
    * Gets size.
-   * 
+   *
    * @param value value, <code>null</code> permitted
    * @return size
    */

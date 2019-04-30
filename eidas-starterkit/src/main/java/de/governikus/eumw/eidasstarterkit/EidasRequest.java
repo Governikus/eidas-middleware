@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018 Governikus KG. Licensed under the EUPL, Version 1.2 or as soon they will be approved by
+ * Copyright (c) 2019 Governikus KG. Licensed under the EUPL, Version 1.2 or as soon they will be approved by
  * the European Commission - subsequent versions of the EUPL (the "Licence"); You may not use this work except
  * in compliance with the Licence. You may obtain a copy of the Licence at:
  * http://joinup.ec.europa.eu/software/page/eupl Unless required by applicable law or agreed to in writing,
@@ -79,7 +79,7 @@ public class EidasRequest
 
   private boolean isPassive;
 
-  private EidasRequestSectorType selectorType = EidasRequestSectorType.PUBLIC;
+  private EidasRequestSectorType sectorType;
 
   private EidasNameIdType nameIdPolicy = EidasNameIdType.TRANSIENT;
 
@@ -122,7 +122,7 @@ public class EidasRequest
 
   EidasRequest(String id,
                String destination,
-               EidasRequestSectorType selectorType,
+               EidasRequestSectorType sectorType,
                EidasNameIdType nameIdPolicy,
                EidasLoA loa,
                String issuer,
@@ -134,7 +134,7 @@ public class EidasRequest
     this.issuer = issuer;
     this.providerName = providerName;
     this.signer = signer;
-    this.selectorType = selectorType;
+    this.sectorType = sectorType;
     this.nameIdPolicy = nameIdPolicy;
     this.authClassRef = loa;
     issueInstant = Constants.format(new Date());
@@ -167,13 +167,13 @@ public class EidasRequest
     template = template.replace("$NameIDPolicy", nameIdPolicy.value);
     template = template.replace("$AuthClassRef", authClassRef.value);
 
-    if (null != selectorType)
+    if (sectorType == null)
     {
-      template = template.replace("$SPType", "<eidas:SPType>" + selectorType.value + "</eidas:SPType>");
+      template = template.replace("$SPType", "");
     }
     else
     {
-      template = template.replace("$SPType", "");
+      template = template.replace("$SPType", "<eidas:SPType>" + sectorType.value + "</eidas:SPType>");
     }
 
     BasicParserPool ppMgr = Utils.getBasicParserPool();
@@ -273,14 +273,14 @@ public class EidasRequest
     return request;
   }
 
-  public EidasRequestSectorType getSelectorType()
+  public EidasRequestSectorType getSectorType()
   {
-    return selectorType;
+    return sectorType;
   }
 
-  public void setSelectorType(EidasRequestSectorType selectorType)
+  public void setSectorType(EidasRequestSectorType sectorType)
   {
-    this.selectorType = selectorType;
+    this.sectorType = sectorType;
   }
 
   public EidasNameIdType getNameIdPolicy()
@@ -385,7 +385,6 @@ public class EidasRequest
       throw new ErrorCodeException(ErrorCode.ILLEGAL_REQUEST_SYNTAX, "No providerName attribute.");
     }
 
-    eidasReq.selectorType = null;
     for ( XMLObject extension : eidasReq.request.getExtensions().getOrderedChildren() )
     {
       if ("RequestedAttributes".equals(extension.getElementQName().getLocalPart()))
@@ -403,7 +402,7 @@ public class EidasRequest
       }
       else if ("SPType".equals(extension.getElementQName().getLocalPart()))
       {
-        eidasReq.selectorType = EidasRequestSectorType.getValueOf(extension.getDOM().getTextContent());
+        eidasReq.sectorType = EidasRequestSectorType.getValueOf(extension.getDOM().getTextContent());
       }
     }
 
@@ -438,7 +437,7 @@ public class EidasRequest
     return eidasPersonAttributes;
   }
 
-  private static void checkSignature(Signature sig, List<X509Certificate> trustedAnchorList)
+  static void checkSignature(Signature sig, List<X509Certificate> trustedAnchorList)
     throws ErrorCodeException
   {
     if (sig == null)

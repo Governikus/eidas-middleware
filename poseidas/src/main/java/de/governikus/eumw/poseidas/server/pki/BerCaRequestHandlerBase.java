@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018 Governikus KG. Licensed under the EUPL, Version 1.2 or as soon they will be approved by
+ * Copyright (c) 2019 Governikus KG. Licensed under the EUPL, Version 1.2 or as soon they will be approved by
  * the European Commission - subsequent versions of the EUPL (the "Licence"); You may not use this work except
  * in compliance with the Licence. You may obtain a copy of the Licence at:
  * http://joinup.ec.europa.eu/software/page/eupl Unless required by applicable law or agreed to in writing,
@@ -10,6 +10,8 @@
 
 package de.governikus.eumw.poseidas.server.pki;
 
+import java.security.KeyStore;
+
 import de.governikus.eumw.poseidas.gov2server.GovManagementException;
 import de.governikus.eumw.poseidas.gov2server.constants.admin.IDManagementCodes;
 import de.governikus.eumw.poseidas.server.idprovider.config.EPAConnectorConfigurationDto;
@@ -18,11 +20,16 @@ import de.governikus.eumw.poseidas.server.idprovider.config.PkiConnectorConfigur
 
 /**
  * Base class for the objects handling the BerCA requests.
- * 
+ *
  * @author tautenhahn
  */
 class BerCaRequestHandlerBase
 {
+
+  /**
+   * Optional HSM-based keystore containing TLS client key.
+   */
+  final KeyStore hsmKeyStore;
 
   /**
    * Persistence layer access
@@ -32,7 +39,7 @@ class BerCaRequestHandlerBase
   /**
    * ID of the persistence entry
    */
-  protected final String entityId;
+  protected final String cvcRefId;
 
   /**
    * configuration of the BerCa connection
@@ -46,20 +53,22 @@ class BerCaRequestHandlerBase
 
   /**
    * Create new instance for current configuration
-   * 
+   *
    * @param facade must be obtained by client
    */
-  protected BerCaRequestHandlerBase(EPAConnectorConfigurationDto nPaConf, TerminalPermissionAO facade)
+  protected BerCaRequestHandlerBase(EPAConnectorConfigurationDto nPaConf,
+                                    TerminalPermissionAO facade,
+                                    KeyStore hsmKeyStore)
     throws GovManagementException
   {
+    this.hsmKeyStore = hsmKeyStore;
     this.facade = facade;
     this.nPaConf = nPaConf;
     if (nPaConf == null)
     {
-      throw new GovManagementException(
-                                       IDManagementCodes.INVALID_INPUT_DATA.createMessage("this is not configurated for nPA"));
+      throw new GovManagementException(IDManagementCodes.INVALID_INPUT_DATA.createMessage("this is not configurated for nPA"));
     }
     pkiConfig = nPaConf.getPkiConnectorConfiguration();
-    this.entityId = nPaConf.getCVCRefID();
+    this.cvcRefId = nPaConf.getCVCRefID();
   }
 }

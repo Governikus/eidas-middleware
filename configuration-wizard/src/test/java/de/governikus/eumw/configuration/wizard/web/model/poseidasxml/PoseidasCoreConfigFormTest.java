@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018 Governikus KG. Licensed under the EUPL, Version 1.2 or as soon they will be approved by
+ * Copyright (c) 2019 Governikus KG. Licensed under the EUPL, Version 1.2 or as soon they will be approved by
  * the European Commission - subsequent versions of the EUPL (the "Licence"); You may not use this work except
  * in compliance with the Licence. You may obtain a copy of the Licence at:
  * http://joinup.ec.europa.eu/software/page/eupl Unless required by applicable law or agreed to in writing,
@@ -47,8 +47,8 @@ public class PoseidasCoreConfigFormTest extends AbstractConfigFileTest
 {
 
   /**
-   * will return the fully quallified URL to the poseidas xml based on the given configuration
-   * directory in the test-resources
+   * will return the fully quallified URL to the poseidas xml based on the given configuration directory in
+   * the test-resources
    *
    * @param configDir the configuration directory that holds the test-resources
    * @return the URL to the xml file
@@ -70,7 +70,7 @@ public class PoseidasCoreConfigFormTest extends AbstractConfigFileTest
    * @param poseidasXmlUrl the url to the poseidas.xml file
    * @return the unmarshalled POJO
    */
-  private PoseidasCoreConfiguration getPoseidasCoreConfiguration(URL poseidasXmlUrl)
+  public static PoseidasCoreConfiguration getPoseidasCoreConfiguration(URL poseidasXmlUrl)
   {
     return XmlHelper.unmarshal(new File(poseidasXmlUrl.getFile()), PoseidasCoreConfiguration.class);
   }
@@ -86,26 +86,21 @@ public class PoseidasCoreConfigFormTest extends AbstractConfigFileTest
     PoseidasCoreConfigForm poseidasCoreConfigForm = new PoseidasCoreConfigForm();
     poseidasCoreConfigForm.loadConfiguration(new File(poseidasXmlUrl.getFile()));
 
-    final String serverUrl = "https://localhost:443/eidas-middleware";
+    final String serverUrl = "https://myhost:8443/eidas-middleware";
     EQUAL_NULL_CHECK.accept(serverUrl, poseidasCoreConfiguration.getServerUrl());
     EQUAL_NULL_CHECK.accept(poseidasCoreConfiguration.getServerUrl().trim(),
                             poseidasCoreConfigForm.getCoreConfig().getServerUrl());
 
-    Assertions.assertNull(poseidasCoreConfiguration.getSignatureCertWebService());
-    Assertions.assertNull(poseidasCoreConfiguration.getSignatureKeyWebService());
-
     final int maxPendingRequests = 500;
     Assertions.assertEquals(maxPendingRequests, poseidasCoreConfiguration.getSessionMaxPendingRequests());
-    final int certificateWarningMargin = 200;
-    Assertions.assertEquals(certificateWarningMargin,
-                            poseidasCoreConfiguration.getCertificateWarningMargin());
 
     checkTimerConfigurationForConfigDir1(poseidasCoreConfiguration, poseidasCoreConfigForm);
 
-    Assertions.assertNotNull(poseidasCoreConfigForm.getServiceProvider());
+    Assertions.assertTrue(poseidasCoreConfigForm.getServiceProviders().size() == 1);
+    Assertions.assertNotNull(poseidasCoreConfigForm.getServiceProviders().get(0));
     Assertions.assertEquals(1, poseidasCoreConfiguration.getServiceProvider().size());
     checkThatServiceProviderTypesAreEqualForConfigDir1(poseidasCoreConfiguration.getServiceProvider().get(0),
-                                                       poseidasCoreConfigForm.getServiceProvider());
+                                                       poseidasCoreConfigForm.getServiceProviders().get(0));
   }
 
   /**
@@ -133,7 +128,7 @@ public class PoseidasCoreConfigFormTest extends AbstractConfigFileTest
     EQUAL_NULL_CHECK.accept(cvcRefId, epaConnectorConfiguration2.getCVCRefID());
     EQUAL_NULL_CHECK.accept(epaConnectorConfiguration1.getCVCRefID(),
                             epaConnectorConfiguration2.getCVCRefID());
-    final String paosReceiverUrl = "https://localhost:443/eidas-middleware/paosreceiver";
+    final String paosReceiverUrl = "https://myhost:8443/eidas-middleware/paosreceiver";
     EQUAL_NULL_CHECK.accept(paosReceiverUrl, epaConnectorConfiguration2.getPaosReceiverURL());
     EQUAL_NULL_CHECK.accept(epaConnectorConfiguration1.getPaosReceiverURL(),
                             epaConnectorConfiguration2.getPaosReceiverURL());

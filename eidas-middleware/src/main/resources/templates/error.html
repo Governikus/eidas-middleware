@@ -1,0 +1,83 @@
+<!--
+  ~ Copyright (c) 2019 Governikus KG. Licensed under the EUPL, Version 1.2 or as soon they will be approved by
+  ~ the European Commission - subsequent versions of the EUPL (the "Licence"); You may not use this work except
+  ~ in compliance with the Licence. You may obtain a copy of the Licence at:
+  ~ http://joinup.ec.europa.eu/software/page/eupl Unless required by applicable law or agreed to in writing,
+  ~ software distributed under the Licence is distributed on an "AS IS" basis, WITHOUT WARRANTIES OR CONDITIONS
+  ~ OF ANY KIND, either express or implied. See the Licence for the specific language governing permissions and
+  ~ limitations under the Licence.
+  -->
+
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:th="http://www.thymeleaf.org" lang="de">
+<head>
+    <title th:text="#{title.title}">German eIDAS Middleware</title>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta charset="utf-8">
+    <!-- Viewport Meta Tag -->
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <!-- Bootstrap -->
+    <link rel="stylesheet" type="text/css" th:href="@{/css/bootstrap.css}">
+    <!-- Main Style -->
+    <link rel="stylesheet" type="text/css" th:href="@{/css/main.css}">
+    <!-- custom Style -->
+    <link rel="stylesheet" type="text/css" th:href="@{/css/custom.css}">
+    <!-- Slicknav CSS -->
+    <link rel="stylesheet" type="text/css" th:href="@{/css/slicknav.css}">
+    <!-- Responsive Style -->
+    <link rel="stylesheet" type="text/css" th:href="@{/css/responsive.css}">
+    <!--Fonts-->
+    <link rel="stylesheet" media="screen" th:href="@{/css/font-awesome.css}">
+    <link rel="stylesheet" media="screen" th:href="@{/css/simple-line-icons.css}">
+    <!-- Extras -->
+    <link rel="stylesheet" type="text/css" th:href="@{/css/owl.css}">
+    <link rel="stylesheet" type="text/css" th:href="@{/css/owl_002.css}">
+    <link rel="stylesheet" type="text/css" th:href="@{/css/animate.css}">
+    <link rel="stylesheet" type="text/css" th:href="@{/css/normalize.css}">
+    <!-- Color CSS Styles  -->
+    <link rel="stylesheet" type="text/css" th:href="@{/css/mblue.css}" media="screen">
+    <!-- HTML5 Shim and Respond.js IE8 support of HTML5 elements and media queries -->
+</head>
+<body>
+<!-- Header area wrapper Start -->
+<!-- Page Header End -->
+<section class="split section" style="margin-top: -32px;">
+    <!-- Container Starts -->
+    <div class="container">
+        <div><h5 th:text="#{content.title}">Use your identity card for European applications as well</h5></div>
+
+        <!-- Disable language selection for now -->
+        <!--        <div th:text="#{content.language}">Choose your language</div>-->
+        <!--        <a th:href="${linkToSelf} + '&lang=en'" title="Change language to english.">-->
+        <!--            <img src="../../img/english.jpg"-->
+        <!--                 alt="english flag"-->
+        <!--                 th:attr="src=@{/img/english.jpg}"-->
+        <!--                 style="float: left; height: 25px; margin-right:10px; margin-top: 0px; margin-bottom: 5px; position: relative;">-->
+        <!--        </a>-->
+        <!--        <a th:href="${linkToSelf} + '&lang=de'" title="Seite auf Deutsch anzeigen.">-->
+        <!--            <img src="../../img/german.png"-->
+        <!--                 alt="german flag"-->
+        <!--                 th:attr="src=@{/img/german.png}"-->
+        <!--                 style="float: left; height: 25px; margin-top: 0px; margin-bottom: 5px; position: relative;">-->
+        <!--        </a>-->
+        <br/><br/>
+        <div class="alert alert-danger" role="alert">
+            <h4 class="alert-heading" th:text="#{error.title}">An error occurred</h4>
+            <p th:utext="#{error.general}">There was an error during the processing of your request. Please try
+                again.<br>In case this error persists contact your local service provider with the information provided
+                below.</p>
+            <hr>
+            <p class="mb-0" th:if="${errorMessage}" th:text="${errorMessage}"></p>
+            <p class="mb-0" th:unless="${errorMessage}" th:text="#{error.noinfo}"></p>
+        </div>
+        <!-- Nav-Buttons End -->
+    </div>
+    <!-- Container End -->
+</section>
+<footer>
+    <div align="center" th:text="#{footer.footer}">eIDAS Middleware provided by Governikus KG on behalf of BSI</div>
+</footer>
+</body>
+</html>

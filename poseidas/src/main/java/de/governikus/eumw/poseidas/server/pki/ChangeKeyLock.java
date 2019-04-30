@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018 Governikus KG. Licensed under the EUPL, Version 1.2 or as soon they will be approved by
+ * Copyright (c) 2019 Governikus KG. Licensed under the EUPL, Version 1.2 or as soon they will be approved by
  * the European Commission - subsequent versions of the EUPL (the "Licence"); You may not use this work except
  * in compliance with the Licence. You may obtain a copy of the Licence at:
  * http://joinup.ec.europa.eu/software/page/eupl Unless required by applicable law or agreed to in writing,
@@ -21,7 +21,7 @@ import de.governikus.eumw.poseidas.cardbase.AssertUtil;
 /**
  * Lock for synchronizing changes in keys stored in HSM instances.
 
- * 
+ *
  * @author Arne Stahlbock, ast@bos-bremen.de
  */
 @Entity
@@ -63,7 +63,7 @@ public class ChangeKeyLock implements Serializable
 
   /**
    * Constructor setting the key name.
-   * 
+   *
    * @param keyName name of key to be locked, <code>null</code> or empty not permitted
    * @param autentIP identifier for Autent instance holding lock, <code>null</code> or empty not permitted
    * @param lockedAt timestamp
@@ -94,7 +94,7 @@ public class ChangeKeyLock implements Serializable
 
   /**
    * Get name of locked key.
-   * 
+   *
    * @return name of locked key
    */
   public String getKeyName()
@@ -104,7 +104,7 @@ public class ChangeKeyLock implements Serializable
 
   /**
    * Get IP of poseidas instance which controls the lock.
-   * 
+   *
    * @return IP of lock controlling instance
    */
   public String getAutentIP()
@@ -114,7 +114,7 @@ public class ChangeKeyLock implements Serializable
 
   /**
    * Set IP of poseidas instance which controls the lock.
-   * 
+   *
    * @param autentIP IP of lock controlling instance
    */
   public void setAutentIP(String autentIP)
@@ -124,7 +124,7 @@ public class ChangeKeyLock implements Serializable
 
   /**
    * Get timestamp of lock.
-   * 
+   *
    * @return timestamp
    */
   public long getLockedAt()
@@ -134,7 +134,7 @@ public class ChangeKeyLock implements Serializable
 
   /**
    * Set timestamp of lock.
-   * 
+   *
    * @param lockedAt timestamp
    */
   public void setLockedAt(long lockedAt)
@@ -144,7 +144,7 @@ public class ChangeKeyLock implements Serializable
 
   /**
    * Gets type of lock.
-   * 
+   *
    * @return type
    */
   public int getType()

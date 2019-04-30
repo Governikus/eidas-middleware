@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018 Governikus KG. Licensed under the EUPL, Version 1.2 or as soon they will be approved by
+ * Copyright (c) 2019 Governikus KG. Licensed under the EUPL, Version 1.2 or as soon they will be approved by
  * the European Commission - subsequent versions of the EUPL (the "Licence"); You may not use this work except
  * in compliance with the Licence. You may obtain a copy of the Licence at:
  * http://joinup.ec.europa.eu/software/page/eupl Unless required by applicable law or agreed to in writing,
@@ -20,7 +20,7 @@ import de.governikus.eumw.poseidas.cardbase.AssertUtil;
 
 /**
  * ASN.1 object for OID.
- * 
+ *
  * @author Jens Wothe, jw@bos-bremen.de
  */
 public class OID extends AbstractASN1Encoder implements ASN1Encoder
@@ -51,7 +51,7 @@ public class OID extends AbstractASN1Encoder implements ASN1Encoder
 
   /**
    * Default Encoder Constructor.
-   * 
+   *
    * @throws IOException if parsing fails
    */
   public OID() throws IOException
@@ -62,7 +62,7 @@ public class OID extends AbstractASN1Encoder implements ASN1Encoder
 
   /**
    * Constructor.
-   * 
+   *
    * @param oidString String representation, <code>null</code> or empty String not permitted, String
    *          containing only decimal digits and OID separator permitted
    * @see #toBytes(String)
@@ -77,7 +77,7 @@ public class OID extends AbstractASN1Encoder implements ASN1Encoder
 
   /**
    * Constructor.
-   * 
+   *
    * @param bytes bytes of ASN.1, tag must be {@link ASN1Constants#UNIVERSAL_TAG_OID}
    * @throws IOException if reading of stream fails
    * @throws IllegalArgumentException if tag not {@link ASN1Constants#UNIVERSAL_TAG_OID}
@@ -96,7 +96,7 @@ public class OID extends AbstractASN1Encoder implements ASN1Encoder
 
   /**
    * Gets String representation of OID.
-   * 
+   *
    * @return String representation
    */
   public String getOIDString()
@@ -118,7 +118,7 @@ public class OID extends AbstractASN1Encoder implements ASN1Encoder
 
   /**
    * Convenience method to get bytes for OID String representation.
-   * 
+   *
    * @param oidString String representation, <code>null</code> or empty String not permitted, String
    *          containing only decimal digits and OID separator permitted
    * @return OID as byte[]-array
@@ -174,7 +174,7 @@ public class OID extends AbstractASN1Encoder implements ASN1Encoder
 
   /**
    * Convenience method to get OID String representation for bytes of OID.
-   * 
+   *
    * @param oidValueBytes value bytes of an OID, <code>null</code> or empty array not permitted
    * @return OID String representation
    * @throws IllegalArgumentException if oidValueBytes <code>null</code> or empty

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018 Governikus KG. Licensed under the EUPL, Version 1.2 or as soon they will be approved by
+ * Copyright (c) 2019 Governikus KG. Licensed under the EUPL, Version 1.2 or as soon they will be approved by
  * the European Commission - subsequent versions of the EUPL (the "Licence"); You may not use this work except
  * in compliance with the Licence. You may obtain a copy of the Licence at:
  * http://joinup.ec.europa.eu/software/page/eupl Unless required by applicable law or agreed to in writing,
@@ -16,6 +16,7 @@ import java.security.InvalidKeyException;
 import java.security.KeyFactory;
 import java.security.KeyPair;
 import java.security.KeyPairGenerator;
+import java.security.KeyStore;
 import java.security.KeyStoreException;
 import java.security.NoSuchAlgorithmException;
 import java.security.NoSuchProviderException;
@@ -26,15 +27,11 @@ import java.security.SignatureException;
 import java.security.UnrecoverableKeyException;
 import java.security.cert.CertificateException;
 import java.security.spec.AlgorithmParameterSpec;
-import java.security.spec.ECPrivateKeySpec;
 import java.security.spec.InvalidKeySpecException;
 import java.security.spec.PKCS8EncodedKeySpec;
-import java.security.spec.RSAKeyGenParameterSpec;
-import java.security.spec.RSAPrivateKeySpec;
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
-import java.util.Set;
-import java.util.TreeSet;
 
 import org.bouncycastle.jce.provider.BouncyCastleProvider;
 
@@ -45,7 +42,7 @@ import de.governikus.eumw.poseidas.cardserver.SignatureUtil;
 
 /**
  * Implementation of {@link HSMService} for using no HSM.
- * 
+ *
  * @author Arne Stahlbock, ast@bos-bremen.de
  */
 public class BOSHSMSimulatorService implements HSMService
@@ -71,7 +68,7 @@ public class BOSHSMSimulatorService implements HSMService
 
   /**
    * Gets single instance.
-   * 
+   *
    * @return single instance
    */
   static BOSHSMSimulatorService getInstance()
@@ -138,47 +135,10 @@ public class BOSHSMSimulatorService implements HSMService
 
   /** {@inheritDoc} */
   @Override
-  public AlgorithmParameterSpec getParameterSpec(String alias)
-    throws NoSuchAlgorithmException, NoSuchProviderException
-  {
-    AssertUtil.notNullOrEmpty(alias, "alias of key");
-
-    byte[] keyBytes = this.lcakp.getKeyByHolder(alias);
-    AssertUtil.notNullOrEmpty(keyBytes, "bytes of received key");
-
-    PKCS8EncodedKeySpec keySpec = new PKCS8EncodedKeySpec(keyBytes);
-
-    KeyFactory kf = KeyFactory.getInstance("EC", BouncyCastleProvider.PROVIDER_NAME);
-
-    try
-    {
-      PrivateKey privSignKey = kf.generatePrivate(keySpec);
-      return kf.getKeySpec(privSignKey, ECPrivateKeySpec.class).getParams();
-    }
-    catch (InvalidKeySpecException e)
-    {
-      // nothing
-    }
-
-    try
-    {
-      kf = KeyFactory.getInstance("RSA", BouncyCastleProvider.PROVIDER_NAME);
-      PrivateKey privSignKey = kf.generatePrivate(keySpec);
-      RSAPrivateKeySpec spec = kf.getKeySpec(privSignKey, RSAPrivateKeySpec.class);
-      return new RSAKeyGenParameterSpec(spec.getModulus().bitLength(), null);
-    }
-    catch (InvalidKeySpecException e)
-    {
-      // nothing
-    }
-    return null;
-  }
-
-  /** {@inheritDoc} */
-  @Override
   public List<String> getAliases()
   {
-    throw new UnsupportedOperationException("there is no permanent key store connected");
+    // there is no permanent key store connected
+    return new ArrayList<>();
   }
 
   /** {@inheritDoc} */
@@ -197,7 +157,7 @@ public class BOSHSMSimulatorService implements HSMService
 
   /** {@inheritDoc} */
   @Override
-  public void init(DatabaseCallback dbCallback)
+  public void init(HSMConfiguration config)
   {
     throw new UnsupportedOperationException("init not required");
   }
@@ -240,13 +200,6 @@ public class BOSHSMSimulatorService implements HSMService
 
   /** {@inheritDoc} */
   @Override
-  public Set<String> getErroneousHSM()
-  {
-    return new TreeSet<>();
-  }
-
-  /** {@inheritDoc} */
-  @Override
   public PublicKey getPublicKey(String alias)
   {
     throw new UnsupportedOperationException("public key is not stored");
@@ -270,6 +223,13 @@ public class BOSHSMSimulatorService implements HSMService
   @Override
   public byte[] exportKey(String alias)
   {
-    throw new UnsupportedOperationException("no export possible");
+    return lcakp.getKeyByHolder(alias);
+  }
+
+  /** {@inheritDoc} */
+  @Override
+  public KeyStore getKeyStore()
+  {
+    return null;
   }
 }

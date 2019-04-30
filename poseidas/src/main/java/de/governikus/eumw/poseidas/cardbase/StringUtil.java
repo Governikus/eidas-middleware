@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018 Governikus KG. Licensed under the EUPL, Version 1.2 or as soon they will be approved by
+ * Copyright (c) 2019 Governikus KG. Licensed under the EUPL, Version 1.2 or as soon they will be approved by
  * the European Commission - subsequent versions of the EUPL (the "Licence"); You may not use this work except
  * in compliance with the Licence. You may obtain a copy of the Licence at:
  * http://joinup.ec.europa.eu/software/page/eupl Unless required by applicable law or agreed to in writing,
@@ -17,7 +17,7 @@ import java.util.Formatter;
 
 /**
  * Some convenience functions for Strings.
- * 
+ *
  * @see ArrayUtil
  * @see ByteUtil
  * @see AssertUtil
@@ -31,7 +31,7 @@ public final class StringUtil
 
   /**
    * Constant of error message for isEmpty failed because String is <code>null</code>.
-   * 
+   *
    * @see #isEmpty(String)
    */
   private static final String MESSAGE_IS_EMPTY_FAILED_STRING_NULL = "String not permitted as null";
@@ -46,7 +46,7 @@ public final class StringUtil
 
   /**
    * Checks a String is empty.
-   * 
+   *
    * @param s String to check, <code>null</code> not permitted
    * @return <code>true</code>, if String is empty, otherwise <code>false</code>
    * @throws IllegalArgumentException if String is <code>null</code>
@@ -66,7 +66,7 @@ public final class StringUtil
 
   /**
    * Checks a String is not empty.
-   * 
+   *
    * @param s String to check, <code>null</code> not permitted
    * @return <code>true</code>, if String is not empty, otherwise <code>false</code>
    * @throws IllegalArgumentException if String is <code>null</code>
@@ -80,7 +80,7 @@ public final class StringUtil
 
   /**
    * Checks a String is <code>null</code>.
-   * 
+   *
    * @param s String to check
    * @return <code>true</code>, if String is <code>null</code>, otherwise <code>false</code>
    * @see #isEmpty(String)
@@ -93,7 +93,7 @@ public final class StringUtil
 
   /**
    * Checks a String is <code>null</code> or empty.
-   * 
+   *
    * @param s String to check
    * @return <code>true</code>, if String is <code>null</code> or empty, otherwise <code>false</code>
    * @see #isNull(String)
@@ -106,7 +106,7 @@ public final class StringUtil
 
   /**
    * Checks a String is not <code>null</code> or empty.
-   * 
+   *
    * @param s String to check
    * @return <code>true</code>, if String is not <code>null</code> or empty, otherwise <code>false</code>
    * @see #notNull(String)
@@ -119,7 +119,7 @@ public final class StringUtil
 
   /**
    * Formats string using format and arguments.
-   * 
+   *
    * @param format format
    * @param args arguments
    * @return formatted String, <code>null</code> if format failed

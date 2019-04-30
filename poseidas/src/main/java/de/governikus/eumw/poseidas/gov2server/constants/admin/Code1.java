@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018 Governikus KG. Licensed under the EUPL, Version 1.2 or as soon they will be approved by
+ * Copyright (c) 2019 Governikus KG. Licensed under the EUPL, Version 1.2 or as soon they will be approved by
  * the European Commission - subsequent versions of the EUPL (the "Licence"); You may not use this work except
  * in compliance with the Licence. You may obtain a copy of the Licence at:
  * http://joinup.ec.europa.eu/software/page/eupl Unless required by applicable law or agreed to in writing,
@@ -21,7 +21,7 @@ public class Code1 extends ManagementCode
   /**
    * FIXME: the sole purpose of this class is that it is not possible just to create instances somewhere!
    * Creates a new Code1 object.
-   * 
+   *
    * @param code DOCUMENT ME!
    */
   Code1(String code)
@@ -31,7 +31,7 @@ public class Code1 extends ManagementCode
 
   /**
    * Create a new ManagementErrorMessage with this error code and given details
-   * 
+   *
    * @param det1 depends on error code
    */
   public ManagementMessage createMessage(String det1)

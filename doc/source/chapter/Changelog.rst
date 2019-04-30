@@ -47,6 +47,24 @@ Changelog
     There were two security issues reported to the German POSC and Governikus. This release fixes these issues.
     It is strongly recommended to immediately update to this release as the XXE attack allows an unauthenticated remote attacker to read ASCII files from the file system which can be read by the Middleware Java process.
 
-    - eIDAS Middleware: **Security Fix** Endpoints that parse XML content like /RequestReceiver or /paosreceiver were vulnerable to XXE attacks. These endpoints are no longer vulnerable against XXE attacks.
-    - eIDAS Middleware: **Security Fix** The /TcToken endpoint was vulnerable against XXS attacks as requests parameters were inserted in the HTML response. All endpoints that display HTML content no longer insert user input into the HTML content.
-    - eIDAS Middleware: The Master List Trust Anchor for the POSeIDAS_PRODUCTION.xml template is updated.
+    - eIDAS Middleware: **Security Fix** Endpoints that parse XML content like ``/RequestReceiver`` or ``/paosreceiver`` were vulnerable to XXE attacks. These endpoints are no longer vulnerable against XXE attacks.
+    - eIDAS Middleware: **Security Fix** The ``/TcToken`` endpoint was vulnerable against XXS attacks as requests parameters were inserted in the HTML response. All endpoints that display HTML content no longer insert user input into the HTML content.
+    - eIDAS Middleware: The Master List Trust Anchor for the ``POSeIDAS_PRODUCTION.xml`` template is updated.
+
+* 1.1.0
+
+    - eIDAS Middleware: Support multiple metadata files as well as multiple :term:`eID Service Provider` s.
+    - Configuration Wizard: Support multiple metadata files and multiple :term:`eID Service Provider` s.
+    - eIDAS Middleware: Implement the recommendations from the latest pen test.
+    - eIDAS Middleware: The admin interface can listen on a different port than the actual application endpoints. The admin interface is now available on a different context path, e.g. ``https://[host]:[port]/admin-interface/list``
+    - eIDAS Middleware: New HTML designs for starting the AusweisApp2 and error messages.
+    - eIDAS Middleware: A HSM Module can be used via the PKCS11 interface for different cryptographic actions.
+    - Configuration Wizard: Support HSM configuration.
+    - eIDAS Middleware: Fix padding and OID identifier in case ECDH encryption is used.
+    - eIDAS Middleware: Add whitelist for allowed document signer types which can be extended using the configuration.
+    - eIDAS Middleware: The validity of the metadata is now configurable, the default value is 30 days.
+
+    Known Issue:
+    The SUN PKCS11 security provider that is shipped with JAVA 8 does not support RSA-PSS signatures.
+    In order to use a HSM module and stay in line with the eIDAS cryptographic requirements, the use of EC cryptography for the SAML signature is mandatory.
+    This issue will be resolved when the eIDAS Middleware supports JAVA 11 as this version comes with a newer SUN PKCS11 security provider.

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018 Governikus KG. Licensed under the EUPL, Version 1.2 or as soon they will be approved by
+ * Copyright (c) 2019 Governikus KG. Licensed under the EUPL, Version 1.2 or as soon they will be approved by
  * the European Commission - subsequent versions of the EUPL (the "Licence"); You may not use this work except
  * in compliance with the Licence. You may obtain a copy of the Licence at:
  * http://joinup.ec.europa.eu/software/page/eupl Unless required by applicable law or agreed to in writing,
@@ -40,7 +40,7 @@ import de.governikus.eumw.poseidas.cardserver.service.hsm.impl.HSMService;
 
 /**
  * ASN.1 structure for Certificate Requests.
- * 
+ *
  * @see CertificateRequestPath
  * @author Jens Wothe, jw@bos-bremen.de
  * @author Arne Stahlbock, ast@bos-bremen.de
@@ -50,7 +50,7 @@ public class CertificateRequest extends AbstractASN1Encoder
 
   /**
    * Constructor.
-   * 
+   *
    * @param valueBytes value bytes of ASN.1
    * @throws IOException if reading of stream fails
    * @see ASN1#ASN1(byte[])
@@ -66,7 +66,7 @@ public class CertificateRequest extends AbstractASN1Encoder
 
   /**
    * Constructor.
-   * 
+   *
    * @param stream stream with ASN.1 bytes
    * @throws IOException if reading of stream fails
    * @see ASN1#ASN1(InputStream, boolean)
@@ -79,7 +79,7 @@ public class CertificateRequest extends AbstractASN1Encoder
 
   /**
    * Constructor.
-   * 
+   *
    * @param stream stream with ASN.1 bytes
    * @param close <code>true</code>, if stream is to be closed after reading
    * @throws IOException if reading of stream fails
@@ -113,7 +113,7 @@ public class CertificateRequest extends AbstractASN1Encoder
 
   /**
    * Gets part of request by path.
-   * 
+   *
    * @param path path to part
    * @return part of ASN.1 if found, otherwise <code>null</code>
    * @throws IOException if fails
@@ -136,7 +136,7 @@ public class CertificateRequest extends AbstractASN1Encoder
 
   /**
    * Signs certificate of request (mandatory).
-   * 
+   *
    * @param publicKey, <code>null</code> not permitted, must be instance of {@link OIDPublicKey}
    * @param alias alias of signature key, <code>null</code> or empty not permitted
    * @throws IOException
@@ -179,7 +179,7 @@ public class CertificateRequest extends AbstractASN1Encoder
 
   /**
    * Sets public key.
-   * 
+   *
    * @param publicKey public key, <code>null</code> not permitted, must be instance of {@link OIDPublicKey}
    * @throws UnsupportedOperationException
    * @throws IOException
@@ -200,7 +200,7 @@ public class CertificateRequest extends AbstractASN1Encoder
 
   /**
    * Sets inner (mandatory) signature.
-   * 
+   *
    * @param signature signature as byte-array, <code>null</code> or empty not permitted
    * @throws UnsupportedOperationException
    * @throws IOException
@@ -217,7 +217,7 @@ public class CertificateRequest extends AbstractASN1Encoder
 
   /**
    * Signs request (conditional outer signature). Note: call this only after outer CAR has been set.
-   * 
+   *
    * @param oldPrivKeyAlias alias of old certificate, <code>null</code> or empty not permitted
    * @param algOID OID of signature algorithm, <code>null</code> not permitted
    * @param useGivenKey flag indicating whether to use a key given as file instead of a key stored in HSM
@@ -262,7 +262,7 @@ public class CertificateRequest extends AbstractASN1Encoder
 
   /**
    * Sets outer signature.
-   * 
+   *
    * @param signature signature as byte-array, <code>null</code> or empty array not permitted
    * @throws IOException
    * @throws UnsupportedOperationException

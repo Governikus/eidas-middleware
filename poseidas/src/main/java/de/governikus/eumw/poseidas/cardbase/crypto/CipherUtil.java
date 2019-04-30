@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018 Governikus KG. Licensed under the EUPL, Version 1.2 or as soon they will be approved by
+ * Copyright (c) 2019 Governikus KG. Licensed under the EUPL, Version 1.2 or as soon they will be approved by
  * the European Commission - subsequent versions of the EUPL (the "Licence"); You may not use this work except
  * in compliance with the Licence. You may obtain a copy of the Licence at:
  * http://joinup.ec.europa.eu/software/page/eupl Unless required by applicable law or agreed to in writing,
@@ -34,7 +34,7 @@ import de.governikus.eumw.poseidas.cardbase.crypto.mac.CMACFactory;
 
 /**
  * Some convenience methods for encrypting/decrypting purposes.
- * 
+ *
  * @author Jens Wothe, jw@bos-bremen.de
  */
 public final class CipherUtil
@@ -52,14 +52,14 @@ public final class CipherUtil
 
   /**
    * Constant of AES CMAC minimum length (count of bytes): <tt>1</tt>.
-   * 
+   *
    * @see #AES_CMAC_MAXIMUM_LENGTH
    */
   private static final int AES_CMAC_MINIMUM_LENGTH = 1;
 
   /**
    * Constant of AES CMAC maximum length (same as initialization vector length, count of bytes): <tt>16</tt>.
-   * 
+   *
    * @see #AES_IV_LENGTH
    * @see #AES_CMAC_MINIMUM_LENGTH
    */
@@ -83,7 +83,7 @@ public final class CipherUtil
   /**
    * Gets cipher for SecretKey, mode and initialization vector, maybe usable for DES, 3DES and AES supporting
    * IvParameterSpec only.
-   * 
+   *
    * @param algorithm algorithm, <code>null</code> or empty String not permitted
    * @param key key, <code>null</code> not permitted
    * @param mode mode of Cipher, {@link Cipher#ENCRYPT_MODE}, {@link Cipher#DECRYPT_MODE},
@@ -153,7 +153,7 @@ public final class CipherUtil
 
   /**
    * Checks arguments at {@link #getCipher(String, SecretKey, int, IvParameterSpec, String)}.
-   * 
+   *
    * @param algorithm algorithm, <code>null</code> or empty String not permitted
    * @param key key, <code>null</code> not permitted
    * @param mode mode of Cipher, {@link Cipher#ENCRYPT_MODE}, {@link Cipher#DECRYPT_MODE},
@@ -210,7 +210,7 @@ public final class CipherUtil
 
   /**
    * Performs simple checks for secret key as not <code>null</code> and algorithm is as expected.
-   * 
+   *
    * @param key key to check, <code>null</code> not permitted, only key of expected algorithm is permitted
    * @param algorithm expected algorithm, algorithm
    * @param keySizeList optional List of permitted key sizes
@@ -232,7 +232,7 @@ public final class CipherUtil
 
   /**
    * Perform simple checks for mode used for ciphering data.
-   * 
+   *
    * @param mode mode of Cipher, {@link Cipher#ENCRYPT_MODE} or {@link Cipher#DECRYPT_MODE} only permitted
    * @throws IllegalArgumentException if cipher mode not permitted
    */
@@ -248,7 +248,7 @@ public final class CipherUtil
   /**
    * Perform simple checks for data to be ciphered: data not <code>null</code> or empty array and length of
    * data is multiple of key size.
-   * 
+   *
    * @param data data to be ciphered and checked, <code>null</code> or empty array not permitted, length of
    *          data must be multiple of key size
    * @param algorithm algorithm of key
@@ -267,7 +267,7 @@ public final class CipherUtil
 
   /**
    * Constant of separator String for algorithm, block mode and padding at transformation: <tt>/</tt>.
-   * 
+   *
    * @see #getTransformationParts(String)
    */
   private static final String TRANSFORMATION_SEPARATOR = "/";
@@ -275,7 +275,7 @@ public final class CipherUtil
   /**
    * Constant of index for name of transformation at result of {@link #getTransformationParts(String)}:
    * <tt>0</tt>.
-   * 
+   *
    * @see #getTransformationParts(String)
    * @see #IDX_TRANSFORMATION_BLOCKMODE
    * @see #IDX_TRANSFORMATION_PADDING
@@ -285,7 +285,7 @@ public final class CipherUtil
   /**
    * Constant of index for block mode of transformation at result of {@link #getTransformationParts(String)}:
    * <tt>1</tt>.
-   * 
+   *
    * @see #getTransformationParts(String)
    * @see #IDX_TRANSFORMATION_ALGORITHM_NAME
    * @see #IDX_TRANSFORMATION_PADDING
@@ -295,7 +295,7 @@ public final class CipherUtil
   /**
    * Constant of index for padding of transformation at result of {@link #getTransformationParts(String)}:
    * <tt>2</tt>.
-   * 
+   *
    * @see #getTransformationParts(String)
    * @see #IDX_TRANSFORMATION_ALGORITHM_NAME
    * @see #IDX_TRANSFORMATION_BLOCKMODE
@@ -310,7 +310,7 @@ public final class CipherUtil
   /**
    * Gets the different parts of transformation specifications as used by JCE: algorithm name, block mode and
    * padding, e. g. 'DES/CBC/NoPadding'.
-   * 
+   *
    * @param transformation transformation, <code>null</code> or empty String not permitted, transformation
    *          expected as String containing as maximum the three parts for name of algorithm, block mode and
    *          padding separated by {@link #TRANSFORMATION_SEPARATOR}
@@ -348,7 +348,7 @@ public final class CipherUtil
 
   /**
    * Encipher bytes of data with AES key.
-   * 
+   *
    * @param algorithm algorithm, <code>null</code> or empty String not permitted
    * @param key key, <code>null</code> not permitted, only AES keys permitted
    * @param iv initialization vector, <code>null</code> not permitted or specification with <code>null</code>
@@ -377,7 +377,7 @@ public final class CipherUtil
 
   /**
    * Decipher bytes of data with AES key.
-   * 
+   *
    * @param algorithm algorithm, <code>null</code> or empty String not permitted
    * @param key key, <code>null</code> not permitted, only AES keys permitted
    * @param iv initialization vector, <code>null</code> not permitted or specification with <code>null</code>
@@ -406,7 +406,7 @@ public final class CipherUtil
 
   /**
    * Encipher/Decipher bytes of data with AES key.
-   * 
+   *
    * @param algorithm algorithm, <code>null</code> or empty String not permitted
    * @param key key, <code>null</code> not permitted, only AES keys permitted
    * @param mode mode of Cipher, {@link Cipher#ENCRYPT_MODE} or {@link Cipher#DECRYPT_MODE} only permitted
@@ -437,7 +437,7 @@ public final class CipherUtil
 
   /**
    * Calculates CMAC of data (used for smartcards with AES based Secure messaging).
-   * 
+   *
    * @param bytes bytes to calculate checksum, <code>null</code> not permitted, empty array permitted,
    *          byte-array not multiple of AES block size permitted
    * @param macKey key for MAC calculation, <code>null</code> or other than AES key not permitted
@@ -481,7 +481,7 @@ public final class CipherUtil
 
   /**
    * Plain CMAC calculation without SSC operating on data with key only.
-   * 
+   *
    * @param bytes bytes to calculate checksum, <code>null</code> not permitted, empty array permitted,
    *          byte-array not multiple of AES block size permitted
    * @param macKey key for MAC calculation, <code>null</code> or other than AES key not permitted

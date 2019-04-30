@@ -1,0 +1,112 @@
+<!--
+  ~ Copyright (c) 2019 Governikus KG. Licensed under the EUPL, Version 1.2 or as soon they will be approved by
+  ~ the European Commission - subsequent versions of the EUPL (the "Licence"); You may not use this work except
+  ~ in compliance with the Licence. You may obtain a copy of the Licence at:
+  ~ http://joinup.ec.europa.eu/software/page/eupl Unless required by applicable law or agreed to in writing,
+  ~ software distributed under the Licence is distributed on an "AS IS" basis, WITHOUT WARRANTIES OR CONDITIONS
+  ~ OF ANY KIND, either express or implied. See the Licence for the specific language governing permissions and
+  ~ limitations under the Licence.
+  -->
+
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:th="http://www.thymeleaf.org" lang="de">
+<head>
+    <title th:text="#{title.title}">German eIDAS Middleware</title>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta charset="utf-8">
+    <!-- Viewport Meta Tag -->
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <!-- Bootstrap -->
+    <link rel="stylesheet" type="text/css" th:href="@{/css/bootstrap.css}">
+    <!-- Main Style -->
+    <link rel="stylesheet" type="text/css" th:href="@{/css/main.css}">
+    <!-- custom Style -->
+    <link rel="stylesheet" type="text/css" th:href="@{/css/custom.css}">
+    <!-- Slicknav CSS -->
+    <link rel="stylesheet" type="text/css" th:href="@{/css/slicknav.css}">
+    <!-- Responsive Style -->
+    <link rel="stylesheet" type="text/css" th:href="@{/css/responsive.css}">
+    <!--Fonts-->
+    <link rel="stylesheet" media="screen" th:href="@{/css/font-awesome.css}">
+    <link rel="stylesheet" media="screen" th:href="@{/css/simple-line-icons.css}">
+    <!-- Extras -->
+    <link rel="stylesheet" type="text/css" th:href="@{/css/owl.css}">
+    <link rel="stylesheet" type="text/css" th:href="@{/css/owl_002.css}">
+    <link rel="stylesheet" type="text/css" th:href="@{/css/animate.css}">
+    <link rel="stylesheet" type="text/css" th:href="@{/css/normalize.css}">
+    <!-- Color CSS Styles  -->
+    <link rel="stylesheet" type="text/css" th:href="@{/css/mblue.css}" media="screen">
+    <!-- HTML5 Shim and Respond.js IE8 support of HTML5 elements and media queries -->
+
+    <!-- Include redirect -->
+    <script th:src="@{/js/redirect.js}"></script>
+</head>
+<body>
+<!-- Header area wrapper Start -->
+<!-- Page Header End -->
+<section class="split section" style="margin-top: -32px;">
+    <!-- Container Starts -->
+    <div class="container">
+        <div><h5 th:text="#{content.title}">Use your identity card for European applications as well</h5></div>
+        <div th:text="#{content.language}">Choose your language</div>
+        <form th:action="${linkToSelf}" method="post"
+              enctype="application/x-www-form-urlencoded" th:object="${responseModel}">
+            <p>
+                <input type="hidden" name="lang" value="en"/>
+                <input type="hidden" name="samlResponse" id="samlResponse" th:value="${SAML}"/>
+                <input type="hidden" name="consumerURL" id="consumerURL" th:value="${consumerURL}"/>
+                <input type="hidden" name="relayState" id="relayState" th:value="${relayState}" th:if="${relayState}"/>
+                <input type="image" name="submit" src="../../img/english.jpg"
+                       alt="Switch to English"
+                       th:attr="src=@{/img/english.jpg}"
+                       style="float: left; height: 25px; margin-right:10px; margin-top: 0px; margin-bottom: 5px; position: relative;"/>
+            </p>
+        </form>
+        <form th:action="${linkToSelf}" method="post"
+              enctype="application/x-www-form-urlencoded" th:object="${responseModel}">
+            <p>
+                <input type="hidden" name="lang" value="de"/>
+                <input type="hidden" name="samlResponse" id="samlResponse" th:value="${SAML}"/>
+                <input type="hidden" name="consumerURL" id="consumerURL" th:value="${consumerURL}"/>
+                <input type="hidden" name="relayState" id="relayState" th:value="${relayState}" th:if="${relayState}"/>
+                <input type="image" name="submit" src="../../img/german.png"
+                       alt="Nach Deutsch wechseln"
+                       th:attr="src=@{/img/german.png}"
+                       style="float: left; height: 25px; margin-top: 0px; margin-bottom: 5px; position: relative;">
+            </p>
+        </form>
+        <br/><br/>
+        <div class="row brdr-first">
+            <div class="container-1" style="margin-left: 14px;">
+                <h2 class="title" th:text="#{response.title}">Forward to your service provider</h2>
+            </div>
+        </div>
+        <div class="row brdr">
+            <div class="col-md-12" style="margin-top: 8px; margin-bottom: 8px; font-weight:300; font-size: 15px;">
+                <div th:utext="#{response.info}">
+                </div>
+            </div>
+        </div>
+        <div class="row brdr-last">
+            <div class="col-md-8 col-sm-6 col-xs-12 about">
+                <form th:action="${consumerURL}" method="post"
+                      enctype="application/x-www-form-urlencoded">
+                    <p>
+                        <input type="hidden" name="SAMLResponse" th:value="${SAML}"/>
+                        <input type="hidden" name="RelayState" th:value="${relayState}" th:if="${relayState}"/>
+                        <input type="submit" th:value="#{response.continue}"/>
+                    </p>
+                </form>
+            </div>
+        </div>
+        <!-- Nav-Buttons End -->
+    </div>
+    <!-- Container End -->
+</section>
+<footer>
+    <div align="center" th:text="#{footer.footer}">eIDAS Middleware provided by Governikus KG on behalf of BSI</div>
+</footer>
+</body>
+</html>

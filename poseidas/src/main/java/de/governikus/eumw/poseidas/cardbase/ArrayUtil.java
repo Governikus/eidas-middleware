@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018 Governikus KG. Licensed under the EUPL, Version 1.2 or as soon they will be approved by
+ * Copyright (c) 2019 Governikus KG. Licensed under the EUPL, Version 1.2 or as soon they will be approved by
  * the European Commission - subsequent versions of the EUPL (the "Licence"); You may not use this work except
  * in compliance with the Licence. You may obtain a copy of the Licence at:
  * http://joinup.ec.europa.eu/software/page/eupl Unless required by applicable law or agreed to in writing,
@@ -15,7 +15,7 @@ import java.util.Arrays;
 
 /**
  * Some additional convenience functions for arrays.
- * 
+ *
  * @see Arrays
  * @author Jens Wothe, jw@bos-bremen.de
  */
@@ -24,7 +24,7 @@ public final class ArrayUtil
 
   /**
    * Constant of error message for isEmpty failed because array is <code>null</code>.
-   * 
+   *
    * @see #isEmpty(byte[])
    */
   private static final String MESSAGE_FAILED_ARRAY_NULL = "array not permitted as null";
@@ -39,7 +39,7 @@ public final class ArrayUtil
 
   /**
    * Checks array is <code>null</code> or empty.
-   * 
+   *
    * @param array array to check
    * @return <code>true</code>, if array is <code>null</code> or empty, otherwise <code>false</code>
    * @see #isNull(byte[])
@@ -54,7 +54,7 @@ public final class ArrayUtil
 
   /**
    * Checks array is <code>null</code> or empty.
-   * 
+   *
    * @param array array to check
    * @return <code>true</code>, if array is <code>null</code> or empty, otherwise <code>false</code>
    * @see #isNull(Object[])
@@ -67,7 +67,7 @@ public final class ArrayUtil
 
   /**
    * Checks array is <code>null</code> or empty.
-   * 
+   *
    * @param array array to check
    * @return <code>true</code>, if array is <code>null</code> or empty, otherwise <code>false</code>
    * @see #isNull(int[])
@@ -80,7 +80,7 @@ public final class ArrayUtil
 
   /**
    * Checks array is <code>null</code>.
-   * 
+   *
    * @param array array to check
    * @return <code>true</code>, if array is <code>null</code>, otherwise <code>false</code>
    * @see #isEmpty(byte[])
@@ -93,7 +93,7 @@ public final class ArrayUtil
 
   /**
    * Checks array is <code>null</code>.
-   * 
+   *
    * @param array array to check
    * @return <code>true</code>, if array is <code>null</code>, otherwise <code>false</code>
    * @see #isEmpty(Object[])
@@ -106,7 +106,7 @@ public final class ArrayUtil
 
   /**
    * Checks array is <code>null</code>.
-   * 
+   *
    * @param array array to check
    * @return <code>true</code>, if array is <code>null</code>, otherwise <code>false</code>
    * @see #isEmpty(int[])
@@ -119,7 +119,7 @@ public final class ArrayUtil
 
   /**
    * Checks array is empty.
-   * 
+   *
    * @param array array to check, <code>null</code> not permitted
    * @return <code>true</code>, if array is empty, otherwise <code>false</code>
    * @throws IllegalArgumentException if array is <code>null</code>
@@ -138,7 +138,7 @@ public final class ArrayUtil
 
   /**
    * Checks array is empty.
-   * 
+   *
    * @param array array to check, <code>null</code> not permitted
    * @return <code>true</code>, if array is empty, otherwise <code>false</code>
    * @throws IllegalArgumentException if array is <code>null</code>
@@ -157,7 +157,7 @@ public final class ArrayUtil
 
   /**
    * Checks array is empty.
-   * 
+   *
    * @param array array to check, <code>null</code> not permitted
    * @return <code>true</code>, if array is empty, otherwise <code>false</code>
    * @throws IllegalArgumentException if array is <code>null</code>

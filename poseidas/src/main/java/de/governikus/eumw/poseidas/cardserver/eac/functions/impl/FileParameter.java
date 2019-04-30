@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018 Governikus KG. Licensed under the EUPL, Version 1.2 or as soon they will be approved by
+ * Copyright (c) 2019 Governikus KG. Licensed under the EUPL, Version 1.2 or as soon they will be approved by
  * the European Commission - subsequent versions of the EUPL (the "Licence"); You may not use this work except
  * in compliance with the Licence. You may obtain a copy of the Licence at:
  * http://joinup.ec.europa.eu/software/page/eupl Unless required by applicable law or agreed to in writing,
@@ -18,7 +18,7 @@ import de.governikus.eumw.poseidas.cardserver.eac.functions.read.ReadResult;
 
 /**
  * Implementation of file parameter for application selection, file selection and reading.
- * 
+ *
  * @see Read
  * @see FileSelect
  * @see ApplicationSelect
@@ -38,7 +38,7 @@ public class FileParameter implements FunctionParameter
 
   /**
    * Constructor.
-   * 
+   *
    * @param file_id if of file (EF)
    * @param dfid id of DF or <code>null</code>
    * @param aid id of application or <code>null</code>
@@ -56,7 +56,7 @@ public class FileParameter implements FunctionParameter
 
   /**
    * Constructor.
-   * 
+   *
    * @param path_id ID of path according to FID of DF or AID, <code>null</code> for no select of path required
    * @param file_id id of file
    * @param path_id_is_aid <code>true</code> for path is an AID, <code>false</code> for FID of a DF
@@ -69,7 +69,7 @@ public class FileParameter implements FunctionParameter
 
   /**
    * Constructor.
-   * 
+   *
    * @param path_id ID of path according to FID of DF or AID, <code>null</code> for no select of path required
    * @param file_id id of file
    * @param path_id_is_aid <code>true</code> for path is an AID, <code>false</code> for FID of a DF
@@ -83,7 +83,7 @@ public class FileParameter implements FunctionParameter
 
   /**
    * Gets FID of EF.
-   * 
+   *
    * @return FID of EF
    */
   public byte[] getEFID()
@@ -94,7 +94,7 @@ public class FileParameter implements FunctionParameter
 
   /**
    * Gets FID of DF.
-   * 
+   *
    * @return FID of DF, maybe <code>null</code>
    */
   public byte[] getDFID()
@@ -104,7 +104,7 @@ public class FileParameter implements FunctionParameter
 
   /**
    * Gets AID.
-   * 
+   *
    * @return AID, maybe <code>null</code>
    */
   public byte[] getAID()
@@ -114,7 +114,7 @@ public class FileParameter implements FunctionParameter
 
   /**
    * Indicates whether to request FCP when selecting file.
-   * 
+   *
    * @return <code>true</code> for request FCP
    */
   public boolean useFCP()

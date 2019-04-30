@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018 Governikus KG. Licensed under the EUPL, Version 1.2 or as soon they will be approved by
+ * Copyright (c) 2019 Governikus KG. Licensed under the EUPL, Version 1.2 or as soon they will be approved by
  * the European Commission - subsequent versions of the EUPL (the "Licence"); You may not use this work except
  * in compliance with the Licence. You may obtain a copy of the Licence at:
  * http://joinup.ec.europa.eu/software/page/eupl Unless required by applicable law or agreed to in writing,
@@ -27,14 +27,11 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.bouncycastle.jce.provider.BouncyCastleProvider;
 
-import de.bund.bsi.eid20.PSCRequestType;
 import de.governikus.eumw.eidascommon.Constants;
 import de.governikus.eumw.eidascommon.ErrorCode;
 import de.governikus.eumw.eidascommon.ErrorCodeException;
 import de.governikus.eumw.eidascommon.HttpRedirectUtils;
 import de.governikus.eumw.eidascommon.Utils;
-import de.governikus.eumw.poseidas.cardbase.asn1.npa.ATEidAccess;
-import de.governikus.eumw.poseidas.cardbase.asn1.npa.ATSpecificAttributes;
 import de.governikus.eumw.poseidas.eidmodel.TerminalData;
 import de.governikus.eumw.poseidas.eidmodel.data.EIDKeys;
 import de.governikus.eumw.poseidas.eidserver.convenience.EIDSequence.Authorizations;
@@ -54,13 +51,15 @@ import oasis.names.tc.dss._1_0.core.schema.Result;
 /**
  * Functional implementation of the eID-interface. This class provides an API which can be used from inside
  * the server instead of the WebService interface.
- * 
+ *
  * @author CM, TT
  * @author hauke
  */
 
 public final class EIDInternal
 {
+
+  private static final String COLON_AND_SPACE = ": ";
 
   private static final Log LOG = LogFactory.getLog(EIDInternal.class);
 
@@ -83,7 +82,7 @@ public final class EIDInternal
 
   /**
    * for getting the single instance of EIDInternal
-   * 
+   *
    * @return single instance of EIDInternal
    */
   public static EIDInternal getInstance()
@@ -95,7 +94,7 @@ public final class EIDInternal
 
   /**
    * Perform a useID-Request as described in the WSDL.
-   * 
+   *
    * @param request describes the requested data
    * @param client identifies the provider by used SSL client certificate
    * @return {@link EIDRequestResponse} contains session id and pre-shared key
@@ -129,32 +128,19 @@ public final class EIDInternal
         sessionId = Utils.generateUniqueID();
       }
     }
-    byte[] preSharedKey = null;
-    if (request.getPsk() == null)
-    {
-      preSharedKey = new byte[64];
-      pskSource.nextBytes(preSharedKey);
-    }
-    else
-    {
-      preSharedKey = request.getPsk();
-    }
-    EIDRequestResponse errorResponse = checkRequestError(request, sessionId, requestId, preSharedKey, client);
+    EIDRequestResponse errorResponse = checkRequestError(request, sessionId, requestId, client);
     if (errorResponse != null)
     {
       return errorResponse;
     }
     EPAConnectorConfigurationDto config = client.getEpaConnectorConfiguration();
-    boolean demoEnabled = config.getPaosReceiverURL().endsWith("epa_dummy");
-    EIDSession mySession = new EIDSession(sessionId, requestId, request.isSaml(), demoEnabled,
-                                          client.getEntityID());
+    EIDSession mySession = new EIDSession(sessionId, requestId, client.getEntityID());
     EIDRequestResponse response = new EIDRequestResponse(sessionId, requestId, Constants.EID_MAJOR_OK, null,
-                                                         null, preSharedKey, config.getPaosReceiverURL(),
+                                                         null, config.getPaosReceiverURL(),
                                                          mySession.getLogPrefix());
 
     try
     {
-      byte[] requestHash = request.getSamlHash();
       StringBuilder idProviderUrl = new StringBuilder(cconf.getServerUrl());
       idProviderUrl.append("/gov_autent/async");
       if (mySession.getRequestId() != null)
@@ -165,27 +151,12 @@ public final class EIDInternal
         idProviderUrl.append(URLEncoder.encode(mySession.getRequestId(), Utils.ENCODING));
       }
 
-      SessionInput input = null;
-
-      if (demoEnabled)
-      {
-        input = new SessionInputImpl(null, null, preSharedKey, sessionId, requestHash, null,
-                                     idProviderUrl.toString(), config.getCommunicationErrorURL(),
-                                     config.getPaosReceiverURL(), (byte[])null, null, null,
-                                     mySession.getLogPrefix());
-      }
-      else
-      {
-        input = startEcardApiRequest(mySession,
-                                     preSharedKey,
-                                     request,
-                                     config.getCVCRefID(),
-                                     requestHash,
-                                     idProviderUrl.toString(),
-                                     config.getCommunicationErrorURL(),
-                                     config.getPaosReceiverURL());
-        ECardIDServerFactory.getInstance().getCurrentServer();
-      }
+      SessionInput input = startEcardApiRequest(mySession,
+                                                request,
+                                                config.getCVCRefID(),
+                                                idProviderUrl.toString(),
+                                                config.getPaosReceiverURL());
+      ECardIDServerFactory.getInstance().getCurrentServer();
       mySession.setSessionInput(input);
 
       sessionManager.store(mySession);
@@ -209,20 +180,20 @@ public final class EIDInternal
           break;
       }
       return new EIDRequestResponse(sessionId, requestId, Constants.EID_MAJOR_ERROR, minorCode,
-                                    e.getMessage(), null, null, mySession.getLogPrefix());
+                                    e.getMessage(), null, mySession.getLogPrefix());
     }
     catch (IllegalArgumentException e)
     {
       LOG.info(mySession.getLogPrefix() + "an internal error occurred while processing a request", e);
       return new EIDRequestResponse(sessionId, requestId, Constants.EID_MAJOR_ERROR,
-                                    Constants.EID_MINOR_COMMON_INTERNALERROR, e.getMessage(), null, null,
+                                    Constants.EID_MINOR_COMMON_INTERNALERROR, e.getMessage(), null,
                                     mySession.getLogPrefix());
     }
     catch (UnsupportedEncodingException e)
     {
       LOG.info(mySession.getLogPrefix() + "an unsupported encoding was used", e);
       return new EIDRequestResponse(sessionId, requestId, Constants.EID_MAJOR_ERROR,
-                                    Constants.EID_MINOR_COMMON_INTERNALERROR, e.getMessage(), null, null,
+                                    Constants.EID_MINOR_COMMON_INTERNALERROR, e.getMessage(), null,
                                     mySession.getLogPrefix());
     }
     return response;
@@ -231,23 +202,14 @@ public final class EIDInternal
   private EIDRequestResponse checkRequestError(EIDRequestInput request,
                                                String sessionId,
                                                String requestId,
-                                               byte[] preSharedKey,
                                                ServiceProviderDto client)
   {
     if (client == null)
     {
       return new EIDRequestResponse(sessionId, requestId, Constants.EID_MAJOR_ERROR,
                                     Constants.EID_MINOR_COMMON_INTERNALERROR,
-                                    "SSL certificate of client is unknown in the configuration", preSharedKey,
-                                    null, "<unknown>: " + requestId + ": ");
-    }
-    else if (preSharedKey == null || preSharedKey.length < 16 || preSharedKey.length > 10240)
-    {
-      return new EIDRequestResponse(sessionId, requestId, Constants.EID_MAJOR_ERROR,
-                                    Constants.EID_MINOR_USEID_INVALID_PSK,
-                                    "The psk is too short with " + ((preSharedKey == null) ? 0
-                                      : preSharedKey.length) + " bytes",
-                                    preSharedKey, null, client.getEntityID() + ": " + requestId + ": ");
+                                    "client is unknown in the configuration", null,
+                                    "<unknown>: " + requestId + COLON_AND_SPACE);
     }
     else if (sessionId == null || sessionId.length() < 16 || sessionId.length() > 10240)
     {
@@ -255,7 +217,7 @@ public final class EIDInternal
                                     Constants.EID_MINOR_USEID_MISSING_ARGUMENT,
                                     "The session Id it too short with " + ((sessionId == null) ? 0
                                       : sessionId.length()) + " bytes",
-                                    preSharedKey, null, client.getEntityID() + ": " + requestId + ": ");
+                                    null, client.getEntityID() + COLON_AND_SPACE + requestId + COLON_AND_SPACE);
     }
     else if (requestId == null || requestId.length() < 16 || requestId.length() > 10240)
     {
@@ -263,42 +225,21 @@ public final class EIDInternal
                                     Constants.EID_MINOR_USEID_MISSING_ARGUMENT,
                                     "The Request ID it too short with " + ((requestId == null) ? 0
                                       : requestId.length()) + " bytes",
-                                    preSharedKey, null, client.getEntityID() + ": " + requestId + ": ");
+                                    null, client.getEntityID() + COLON_AND_SPACE + requestId + COLON_AND_SPACE);
     }
     else if (ageVerificationRequestIncomplete(request))
     {
       return new EIDRequestResponse(sessionId, requestId, Constants.EID_MAJOR_ERROR,
                                     Constants.EID_MINOR_USEID_MISSING_ARGUMENT,
-                                    "must specify required age to perform age verification", preSharedKey,
-                                    null, client.getEntityID() + ": " + requestId + ": ");
+                                    "must specify required age to perform age verification", null,
+                                    client.getEntityID() + COLON_AND_SPACE + requestId + COLON_AND_SPACE);
     }
     else if (placeVerificationRequestIncomplete(request))
     {
       return new EIDRequestResponse(sessionId, requestId, Constants.EID_MAJOR_ERROR,
                                     Constants.EID_MINOR_USEID_MISSING_ARGUMENT,
-                                    "must specify communityId to check against", preSharedKey, null,
-                                    client.getEntityID() + ": " + requestId + ": ");
-    }
-    else if (psmRequestIncomplete(request))
-    {
-      return new EIDRequestResponse(sessionId, requestId, Constants.EID_MAJOR_ERROR,
-                                    Constants.EID_MINOR_USEID_MISSING_ARGUMENT,
-                                    "must specify message to sign with PSM", preSharedKey, null,
-                                    client.getEntityID() + ": " + requestId + ": ");
-    }
-    else if (pscRequestIncomplete(request))
-    {
-      return new EIDRequestResponse(sessionId, requestId, Constants.EID_MAJOR_ERROR,
-                                    Constants.EID_MINOR_USEID_MISSING_ARGUMENT,
-                                    "must specify credentials to sign with PSC", preSharedKey, null,
-                                    client.getEntityID() + ": " + requestId + ": ");
-    }
-    else if (specificAttributeRequestIncomplete(request))
-    {
-      return new EIDRequestResponse(sessionId, requestId, Constants.EID_MAJOR_ERROR,
-                                    Constants.EID_MINOR_USEID_MISSING_ARGUMENT,
-                                    "must provide specific attribute request", preSharedKey, null,
-                                    client.getEntityID() + ": " + requestId + ": ");
+                                    "must specify communityId to check against", null,
+                                    client.getEntityID() + COLON_AND_SPACE + requestId + COLON_AND_SPACE);
     }
     return null;
   }
@@ -310,17 +251,14 @@ public final class EIDInternal
    */
   TerminalPermission getCVCData(String refId)
   {
-      return cvcFacade.getTerminalPermission(refId);
+    return cvcFacade.getTerminalPermission(refId);
   }
 
 
   private SessionInput startEcardApiRequest(EIDSession session,
-                                            byte[] preSharedKey,
                                             EIDRequestInput request,
                                             String refId,
-                                            byte[] sHA256ofSAMLRequest,
                                             String refreshAddress,
-                                            String commErrorAddress,
                                             String serverAddress)
     throws ErrorCodeException
   {
@@ -347,18 +285,18 @@ public final class EIDInternal
     {
       List<X509Certificate> masterListCerts = addMasterListCertsFromZip(masterListData,
                                                                         session.getLogPrefix());
-      input = new SessionInputImpl(cvc, tp.getCvcChain(), preSharedKey, session.getSessionId(),
-                                   sHA256ofSAMLRequest,
+      input = new SessionInputImpl(cvc, tp.getCvcChain(), session.getSessionId(),
+
                                    new BlackListConnectorImpl(cvcFacade, tp.getSectorID()), refreshAddress,
-                                   commErrorAddress, serverAddress, masterListCerts, defectListData,
+                                   serverAddress, masterListCerts, defectListData,
                                    request.getTransactionInfo(), session.getLogPrefix());
     }
     else
     {
-      input = new SessionInputImpl(cvc, tp.getCvcChain(), preSharedKey, session.getSessionId(),
-                                   sHA256ofSAMLRequest,
+      input = new SessionInputImpl(cvc, tp.getCvcChain(), session.getSessionId(),
+
                                    new BlackListConnectorImpl(cvcFacade, tp.getSectorID()), refreshAddress,
-                                   commErrorAddress, serverAddress, masterListData, defectListData,
+                                   serverAddress, masterListData, defectListData,
                                    request.getTransactionInfo(), session.getLogPrefix());
     }
     translateSelector(request, input, cvc.getAuthorizations(), session.getLogPrefix());
@@ -447,29 +385,9 @@ public final class EIDInternal
         }
         input.setCommunityIDVerification(request.getRequestedCommunityIDPattern(), true);
       }
-      else if (key == EIDKeys.PSM)
-      {
-        input.setPSM(request.getMessagePSM(), true);
-      }
-      else if (key == EIDKeys.PSC)
-      {
-        input.setPSC(request.getParametersPSC(), true);
-        if (!this.checkFieldsForSignature(request.getParametersPSC(), auth))
-        {
-          throw new ErrorCodeException(ErrorCode.EID_MISSING_TERMINAL_RIGHTS, key.toString());
-        }
-      }
-      else if (key == EIDKeys.SPECIFIC_ATTRIBUTES || key == EIDKeys.DELETE_SPECIFIC_ATTRIBUTES)
-      {
-        input.setSpecificAttributes(key, true, request.getParametersSART());
-      }
       else
       {
         input.addRequiredField(key);
-      }
-      if (key == EIDKeys.INSTALL_QUALIFIED_CERTIFICATE)
-      {
-        input.setCAConnection(new DummyCAConnection());
       }
     }
 
@@ -495,29 +413,9 @@ public final class EIDInternal
         }
         input.setCommunityIDVerification(request.getRequestedCommunityIDPattern(), false);
       }
-      else if (key == EIDKeys.PSM)
-      {
-        input.setPSM(request.getMessagePSM(), false);
-      }
-      else if (key == EIDKeys.PSC)
-      {
-        input.setPSC(request.getParametersPSC(), false);
-        if (!this.checkFieldsForSignature(request.getParametersPSC(), auth))
-        {
-          throw new ErrorCodeException(ErrorCode.EID_MISSING_TERMINAL_RIGHTS, key.toString());
-        }
-      }
-      else if (key == EIDKeys.SPECIFIC_ATTRIBUTES || key == EIDKeys.DELETE_SPECIFIC_ATTRIBUTES)
-      {
-        input.setSpecificAttributes(key, false, request.getParametersSART());
-      }
       else
       {
         input.addOptionalField(key);
-      }
-      if (key == EIDKeys.INSTALL_QUALIFIED_CERTIFICATE)
-      {
-        input.setCAConnection(new DummyCAConnection());
       }
     }
   }
@@ -527,159 +425,59 @@ public final class EIDInternal
     switch (key)
     {
       case DOCUMENT_TYPE:
-        return auth.getEidAccess() == null ? auth.getChat().isReadDocumentType()
-          : auth.getEidAccess().isReadDocumentType();
+        return auth.getChat().isReadDocumentType();
       case ISSUING_STATE:
-        return auth.getEidAccess() == null ? auth.getChat().isReadIssuingState()
-          : auth.getEidAccess().isReadIssuingState();
+        return auth.getChat().isReadIssuingState();
       case DATE_OF_EXPIRY:
-        return auth.getEidAccess() == null ? auth.getChat().isReadDateOfExpiry()
-          : auth.getEidAccess().isReadDateOfExpiry();
+        return auth.getChat().isReadDateOfExpiry();
       case GIVEN_NAMES:
-        return auth.getEidAccess() == null ? auth.getChat().isReadGivenNames()
-          : auth.getEidAccess().isReadGivenNames();
+        return auth.getChat().isReadGivenNames();
       case FAMILY_NAMES:
-        return auth.getEidAccess() == null ? auth.getChat().isReadFamilyNames()
-          : auth.getEidAccess().isReadFamilyNames();
+        return auth.getChat().isReadFamilyNames();
       case NOM_DE_PLUME:
-        return auth.getEidAccess() == null ? auth.getChat().isReadNomDePlume()
-          : auth.getEidAccess().isReadNomDePlume();
+        return auth.getChat().isReadNomDePlume();
       case ACADEMIC_TITLE:
-        return auth.getEidAccess() == null ? auth.getChat().isReadAcademicTitle()
-          : auth.getEidAccess().isReadAcademicTitle();
+        return auth.getChat().isReadAcademicTitle();
       case DATE_OF_BIRTH:
-        return auth.getEidAccess() == null ? auth.getChat().isReadDateOfBirth()
-          : auth.getEidAccess().isReadDateOfBirth();
+        return auth.getChat().isReadDateOfBirth();
       case PLACE_OF_BIRTH:
-        return auth.getEidAccess() == null ? auth.getChat().isReadPlaceOfBirth()
-          : auth.getEidAccess().isReadPlaceOfBirth();
+        return auth.getChat().isReadPlaceOfBirth();
       case NATIONALITY:
-        return auth.getEidAccess() == null ? auth.getChat().isReadNationality()
-          : auth.getEidAccess().isReadNationality();
+        return auth.getChat().isReadNationality();
       case SEX:
-        return auth.getEidAccess() == null ? auth.getChat().isReadSex() : auth.getEidAccess().isReadSex();
+        return auth.getChat().isReadSex();
       case OPTIONAL_DATA_R:
-        return auth.getEidAccess() == null ? auth.getChat().isReadOptionalDataR()
-          : auth.getEidAccess().isReadOptionalDataR();
+        return auth.getChat().isReadOptionalDataR();
       case BIRTH_NAME:
-        return auth.getEidAccess() == null ? auth.getChat().isReadBirthName()
-          : auth.getEidAccess().isReadBirthName();
+        return auth.getChat().isReadBirthName();
       case WRITTEN_SIGNATURE:
-        return auth.getEidAccess() == null ? auth.getChat().isReadWrittenSignature()
-          : auth.getEidAccess().isReadWrittenSignature();
+        return auth.getChat().isReadWrittenSignature();
       case DATE_OF_ISSUANCE:
-        return auth.getEidAccess() == null ? auth.getChat().isReadDateOfIssuance()
-          : auth.getEidAccess().isReadDateOfIssuance();
+        return auth.getChat().isReadDateOfIssuance();
       case PLACE_OF_RESIDENCE:
-        return auth.getEidAccess() == null ? auth.getChat().isReadPlaceOfResidence()
-          : auth.getEidAccess().isReadPlaceOfResidence();
+        return auth.getChat().isReadPlaceOfResidence();
       case MUNICIPALITY_ID:
-        return auth.getEidAccess() == null ? auth.getChat().isReadMunicipalityID()
-          : auth.getEidAccess().isReadMunicipalityID();
+        return auth.getChat().isReadMunicipalityID();
       case RESIDENCE_PERMIT_I:
-        return auth.getEidAccess() == null ? auth.getChat().isReadResidencePermitI()
-          : auth.getEidAccess().isReadResidencePermitI();
+        return auth.getChat().isReadResidencePermitI();
       case RESIDENCE_PERMIT_II:
-        return auth.getEidAccess() == null ? auth.getChat().isReadResidencePermitII()
-          : auth.getEidAccess().isReadResidencePermitII();
+        return auth.getChat().isReadResidencePermitII();
       case PHONE_NUMBER:
-        return auth.getEidAccess() == null ? auth.getChat().isReadPhoneNumber()
-          : auth.getEidAccess().isReadPhoneNumber();
+        return auth.getChat().isReadPhoneNumber();
       case EMAIL_ADDRESS:
-        return auth.getEidAccess() == null ? auth.getChat().isReadEmailAddress()
-          : auth.getEidAccess().isReadEmailAddress();
+        return auth.getChat().isReadEmailAddress();
       case DOCUMENT_VALIDITY:
         return false;
       case RESTRICTED_ID:
-        return auth.getSpecialFunctions() == null ? auth.getChat().isAuthenticateRestrictedIdentification()
-          : auth.getSpecialFunctions().isAuthenticateRestrictedIdentification();
+        return auth.getChat().isAuthenticateRestrictedIdentification();
       case AGE_VERIFICATION:
-        return auth.getSpecialFunctions() == null ? auth.getChat().isAuthenticateAgeVerification()
-          : auth.getSpecialFunctions().isAuthenticateAgeVerification();
+        return auth.getChat().isAuthenticateAgeVerification();
       case MUNICIPALITY_ID_VERIFICATION:
-        return auth.getSpecialFunctions() == null ? auth.getChat().isAuthenticateMunicipalityIDVerification()
-          : auth.getSpecialFunctions().isAuthenticateMunicipalityIDVerification();
-      case INSTALL_QUALIFIED_CERTIFICATE:
-        return auth.getChat().isInstallQualifiedCertificate();
-      case PSA:
-        return auth.getSpecialFunctions() == null ? false
-          : auth.getSpecialFunctions().isPerformPseudonymousSignatureAuthentication();
-      case PSC:
-        return auth.getSpecialFunctions() == null ? false
-          : auth.getSpecialFunctions().isPerformPseudonymousSignatureCredentials();
-      case PSM:
-        return auth.getSpecialFunctions() == null ? false
-          : auth.getSpecialFunctions().isPerformPseudonymousSignatureMessage();
-      case SPECIFIC_ATTRIBUTES:
-        return auth.getSpecificAttributes() == null ? false
-          : auth.getSpecificAttributes().isAuthenticateWriteAttributeRequest()
-            && auth.getSpecificAttributes().isAuthenticateReadSpecificAttributes();
-      case DELETE_SPECIFIC_ATTRIBUTES:
-        return auth.getSpecificAttributes() == null ? false
-          : auth.getSpecificAttributes().isAuthenticateDeleteSpecificAttributes();
-      case PROVIDE_SPECIFIC_ATTRIBUTES:
-        return auth.getSpecificAttributes() == null ? false
-          : auth.getSpecificAttributes().isAuthenticateReadAttributeRequest()
-            && auth.getSpecificAttributes().isAuthenticateWriteSpecificAttributes();
-      case PROVIDE_GLOBAL_GENERIC_ATTRIBUTES:
+        return auth.getChat().isAuthenticateMunicipalityIDVerification();
       default:
         break;
     }
     return false;
-  }
-
-  private boolean checkFieldsForSignature(PSCRequestType requestedFields, Authorizations auth)
-  {
-    ATEidAccess eidAccess = auth.getEidAccess();
-    ATSpecificAttributes specAttributes = auth.getSpecificAttributes();
-    if ((requestedFields.isDocumentType() != null && requestedFields.isDocumentType()
-         && (eidAccess == null || !eidAccess.isPSCDocumentType()))
-        || (requestedFields.isIssuingState() != null && requestedFields.isIssuingState()
-            && (eidAccess == null || !eidAccess.isPSCIssuingState()))
-        || (requestedFields.isDateOfExpiry() != null && requestedFields.isDateOfExpiry()
-            && (eidAccess == null || !eidAccess.isPSCDateOfExpiry()))
-        || (requestedFields.isGivenNames() != null && requestedFields.isGivenNames()
-            && (eidAccess == null || !eidAccess.isPSCGivenNames()))
-        || (requestedFields.isFamilyNames() != null && requestedFields.isFamilyNames()
-            && (eidAccess == null || !eidAccess.isPSCFamilyNames()))
-        || (requestedFields.isArtisticName() != null && requestedFields.isArtisticName()
-            && (eidAccess == null || !eidAccess.isPSCNomDePlume()))
-        || (requestedFields.isAcademicTitle() != null && requestedFields.isAcademicTitle()
-            && (eidAccess == null || !eidAccess.isPSCAcademicTitle()))
-        || (requestedFields.isDateOfBirth() != null && requestedFields.isDateOfBirth()
-            && (eidAccess == null || !eidAccess.isPSCDateOfBirth()))
-        || (requestedFields.isPlaceOfBirth() != null && requestedFields.isPlaceOfBirth()
-            && (eidAccess == null || !eidAccess.isPSCPlaceOfBirth()))
-        || (requestedFields.isNationality() != null && requestedFields.isNationality()
-            && (eidAccess == null || !eidAccess.isPSCNationality()))
-        || (requestedFields.isSex() != null && requestedFields.isSex()
-            && (eidAccess == null || !eidAccess.isPSCSex()))
-        || (requestedFields.isOptionalDataR() != null && requestedFields.isOptionalDataR()
-            && (eidAccess == null || !eidAccess.isPSCOptionalDataR()))
-        || (requestedFields.isBirthName() != null && requestedFields.isBirthName()
-            && (eidAccess == null || !eidAccess.isPSCBirthName()))
-        || (requestedFields.isWrittenSignature() != null && requestedFields.isWrittenSignature()
-            && (eidAccess == null || !eidAccess.isPSCWrittenSignature()))
-        || (requestedFields.isDateOfIssuance() != null && requestedFields.isDateOfIssuance()
-            && (eidAccess == null || !eidAccess.isPSCDateOfIssuance()))
-        || (requestedFields.isPlaceOfResidence() != null && requestedFields.isPlaceOfResidence()
-            && (eidAccess == null || !eidAccess.isPSCPlaceOfResidence()))
-        || (requestedFields.isMunicipalityID() != null && requestedFields.isMunicipalityID()
-            && (eidAccess == null || !eidAccess.isPSCMunicipalityID()))
-        || (requestedFields.isResidencePermitI() != null && requestedFields.isResidencePermitI()
-            && (eidAccess == null || !eidAccess.isPSCResidencePermitI()))
-        || (requestedFields.isResidencePermitII() != null && requestedFields.isResidencePermitII()
-            && (eidAccess == null || !eidAccess.isPSCResidencePermitII()))
-        || (requestedFields.isPhoneNumber() != null && requestedFields.isPhoneNumber()
-            && (eidAccess == null || !eidAccess.isPSCPhoneNumber()))
-        || (requestedFields.isEmailAddress() != null && requestedFields.isEmailAddress()
-            && (eidAccess == null || !eidAccess.isPSCEmailAddress()))
-        || (requestedFields.isSpecificAttribute() != null && requestedFields.isSpecificAttribute()
-            && (specAttributes == null || !specAttributes.isAuthenticateIncludeSpecificAttributesToPSC())))
-    {
-      return false;
-    }
-    return true;
   }
 
   private TerminalPermissionAO cvcFacade;
@@ -691,7 +489,7 @@ public final class EIDInternal
 
   /**
    * Gives back the data that was ordered to the client. Will usually be called more than one time.
-   * 
+   *
    * @param requestId
    * @return the result or an error-message
    */
@@ -707,7 +505,7 @@ public final class EIDInternal
     {
       return new EIDResultResponse(null, Constants.EID_MAJOR_ERROR,
                                    Constants.EID_MINOR_GETRESULT_INVALID_SESSION, null,
-                                   "<unknown>: " + requestId + ": ");
+                                   "<unknown>: " + requestId + COLON_AND_SPACE);
     }
     if (session.getSequenceNumber() != null && requestCounter != session.getSequenceNumber() + 1)
     {
@@ -735,10 +533,6 @@ public final class EIDInternal
     }
     EIDResultResponse response = new EIDResultResponse(session.getStatus(), session.getResult(),
                                                        session.getInfoMap(), session.getLogPrefix());
-    if (session.isDemoDataEnabled())
-    {
-      response.setResultMessage("This response contains test data only.");
-    }
     sessionManager.remove(session);
     return response;
   }
@@ -756,28 +550,4 @@ public final class EIDInternal
             || request.getOptionalFields().contains(EIDKeys.MUNICIPALITY_ID_VERIFICATION))
            && request.getRequestedCommunityIDPattern() == null;
   }
-
-  private boolean psmRequestIncomplete(EIDRequestInput request)
-  {
-    return (request.getRequiredFields().contains(EIDKeys.PSM)
-            || request.getOptionalFields().contains(EIDKeys.PSM))
-           && request.getMessagePSM() == null;
-  }
-
-  private boolean pscRequestIncomplete(EIDRequestInput request)
-  {
-    return (request.getRequiredFields().contains(EIDKeys.PSC)
-            || request.getOptionalFields().contains(EIDKeys.PSC))
-           && request.getParametersPSC() == null;
-  }
-
-  private boolean specificAttributeRequestIncomplete(EIDRequestInput request)
-  {
-    return (request.getRequiredFields().contains(EIDKeys.SPECIFIC_ATTRIBUTES)
-            || request.getOptionalFields().contains(EIDKeys.SPECIFIC_ATTRIBUTES))
-           && (request.getParametersSART() == null
-               || request.getParametersSART().getAttributeRequest() == null
-               || request.getParametersSART().getAttributeRequest().length == 0);
-  }
-
 }

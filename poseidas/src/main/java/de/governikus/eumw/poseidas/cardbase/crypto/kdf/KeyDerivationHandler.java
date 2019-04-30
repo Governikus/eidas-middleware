@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018 Governikus KG. Licensed under the EUPL, Version 1.2 or as soon they will be approved by
+ * Copyright (c) 2019 Governikus KG. Licensed under the EUPL, Version 1.2 or as soon they will be approved by
  * the European Commission - subsequent versions of the EUPL (the "Licence"); You may not use this work except
  * in compliance with the Licence. You may obtain a copy of the Licence at:
  * http://joinup.ec.europa.eu/software/page/eupl Unless required by applicable law or agreed to in writing,
@@ -20,7 +20,7 @@ import javax.crypto.SecretKey;
 
 /**
  * Interface for handlers performing key derivations.
- * 
+ *
  * @author Arne Stahlbock, ast@bos-bremen.de
  */
 public interface KeyDerivationHandler
@@ -28,7 +28,7 @@ public interface KeyDerivationHandler
 
   /**
    * Derive key from CAN, PIN or PUK of card.
-   * 
+   *
    * @param data byte-array containing CAN, PIN or PUK, <code>null</code> or empty not permitted
    * @return derived key
    * @throws IllegalArgumentException if data <code>null</code> or empty
@@ -42,7 +42,7 @@ public interface KeyDerivationHandler
 
   /**
    * Derive key for encryption.
-   * 
+   *
    * @param data data to use for derivation, <code>null</code> or empty data not permitted
    * @param nonce nonce, <code>null</code> permitted
    * @return derived key
@@ -57,7 +57,7 @@ public interface KeyDerivationHandler
 
   /**
    * Derive key for MAC calculations.
-   * 
+   *
    * @param data data to use for derivation, <code>null</code> or empty data not permitted
    * @param nonce nonce, <code>null</code> permitted
    * @return derived key

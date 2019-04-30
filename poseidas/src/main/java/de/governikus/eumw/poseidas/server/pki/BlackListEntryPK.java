@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018 Governikus KG. Licensed under the EUPL, Version 1.2 or as soon they will be approved by
+ * Copyright (c) 2019 Governikus KG. Licensed under the EUPL, Version 1.2 or as soon they will be approved by
  * the European Commission - subsequent versions of the EUPL (the "Licence"); You may not use this work except
  * in compliance with the Licence. You may obtain a copy of the Licence at:
  * http://joinup.ec.europa.eu/software/page/eupl Unless required by applicable law or agreed to in writing,
@@ -18,7 +18,7 @@ import javax.persistence.Embeddable;
 
 /**
  * Primary key for a blacklist entry. All data in a blacklist entry is in the primary key.
- * 
+ *
  * @author mehrtens
  */
 @Embeddable
@@ -41,7 +41,7 @@ public class BlackListEntryPK implements Serializable
 
   /**
    * Creates a new Blacklist entry primary key.
-   * 
+   *
    * @param sectorID the sector ID of the service provider this blacklist is for, as base64.
    * @param specificID the id of the revoked new identity card, as base64.
    */
@@ -61,7 +61,7 @@ public class BlackListEntryPK implements Serializable
 
   /**
    * Sets a new sector ID.
-   * 
+   *
    * @param id new ID
    */
   public void setSectorID(String id)

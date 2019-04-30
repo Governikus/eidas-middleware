@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018 Governikus KG. Licensed under the EUPL, Version 1.2 or as soon they will be approved by
+ * Copyright (c) 2019 Governikus KG. Licensed under the EUPL, Version 1.2 or as soon they will be approved by
  * the European Commission - subsequent versions of the EUPL (the "Licence"); You may not use this work except
  * in compliance with the Licence. You may obtain a copy of the Licence at:
  * http://joinup.ec.europa.eu/software/page/eupl Unless required by applicable law or agreed to in writing,
@@ -17,7 +17,7 @@ import java.util.List;
 
 /**
  * Interface for providing certificate chains and keys.
- * 
+ *
  * @author Arne Stahlbock, ast@bos-bremen.de
  */
 public interface CertAndKeyProvider
@@ -25,7 +25,7 @@ public interface CertAndKeyProvider
 
   /**
    * Get certificate chain by holders of root and terminal certificates.
-   * 
+   *
    * @param rootHolder holder of root certificate, <code>null</code> not permitted
    * @param termHolder holder of terminal certificate, <code>null</code> not permitted
    * @return List of certificates, <code>null</code> if not found, list expected to contain certificates in
@@ -38,7 +38,7 @@ public interface CertAndKeyProvider
 
   /**
    * Get key by its holder.
-   * 
+   *
    * @param holder holder as {@link String}
    * @return key as byte-array, <code>null</code> if not found
    * @throws IllegalArgumentException if holder <code>null</code>

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018 Governikus KG. Licensed under the EUPL, Version 1.2 or as soon they will be approved by
+ * Copyright (c) 2019 Governikus KG. Licensed under the EUPL, Version 1.2 or as soon they will be approved by
  * the European Commission - subsequent versions of the EUPL (the "Licence"); You may not use this work except
  * in compliance with the Licence. You may obtain a copy of the Licence at:
  * http://joinup.ec.europa.eu/software/page/eupl Unless required by applicable law or agreed to in writing,
@@ -52,8 +52,8 @@ import net.shibboleth.utilities.java.support.xml.XMLParserException;
  * a new sessionID in the {@link NewReceiverServlet#errorsMap} or {@link NewReceiverServlet#resultsXMLMap}.
  * Then this servlet redirects the user's browser to the same URL but this time with the sessionID. This time
  * the servlet retrieves the data to the corresponding sessionID and displays the result page.<br>
- * The URL this Sevlet is deployed under must match the same origin of the subject URL in the CVC description
- * (Beschreibung des Berechtigungszertifikats).
+ * The URL at which this sevlet is deployed must match the same address as the subject URL in the CVC
+ * description. (Beschreibung des Berechtigungszertifikats).
  *
  * @author hme
  * @author prange
@@ -178,7 +178,8 @@ public class NewReceiverServlet
         samlResponse = DatatypeConverter.parseBase64Binary(samlResponseBase64);
       }
 
-      extractDataFromResponse(sessionID, samlResponse);
+      String relayState = request.getParameter(HttpRedirectUtils.RELAYSTATE_PARAMNAME);
+      extractDataFromResponse(sessionID, samlResponse, relayState);
 
       forwardToURL(request, response, sessionID);
     }
@@ -194,12 +195,15 @@ public class NewReceiverServlet
    *
    * @param sessionID The ID for this response
    * @param samlResponse The response content
+   * @param relayState
    */
-  private void extractDataFromResponse(String sessionID, byte[] samlResponse) throws XMLParserException,
-    IOException, UnmarshallingException, ErrorCodeException, ComponentInitializationException
+  private void extractDataFromResponse(String sessionID, byte[] samlResponse, String relayState)
+    throws XMLParserException, IOException, UnmarshallingException, ErrorCodeException,
+    ComponentInitializationException
   {
     String saml = getXMLFromBytes(samlResponse);
-    resultsXMLMap.put(sessionID + UNPARSED, String.valueOf(saml));
+    resultsXMLMap.put(sessionID + UNPARSED, saml);
+    resultsXMLMap.put(sessionID + HttpRedirectUtils.RELAYSTATE_PARAMNAME, relayState);
 
     try (InputStream is = new ByteArrayInputStream(samlResponse))
     {
@@ -227,6 +231,24 @@ public class NewReceiverServlet
   {
     response.setContentType("text/plain");
     response.setCharacterEncoding("UTF-8");
+    if (resultsXMLMap.containsKey(sessionID + HttpRedirectUtils.RELAYSTATE_PARAMNAME))
+    {
+      response.getWriter().write("Relay State: ");
+      if (resultsXMLMap.get(sessionID + HttpRedirectUtils.RELAYSTATE_PARAMNAME) == null)
+      {
+        response.getWriter().write("<null>");
+      }
+      else if ("".equals(resultsXMLMap.get(sessionID + HttpRedirectUtils.RELAYSTATE_PARAMNAME)))
+      {
+        response.getWriter().write("<emtpy string>");
+      }
+      else
+      {
+        response.getWriter().write(resultsXMLMap.get(sessionID + HttpRedirectUtils.RELAYSTATE_PARAMNAME));
+      }
+      response.getWriter().write("\n\r");
+      response.getWriter().write("\n\r");
+    }
     if (resultsXMLMap.containsKey(sessionID + UNPARSED))
     {
       response.getWriter().write("" + resultsXMLMap.get(sessionID + UNPARSED));

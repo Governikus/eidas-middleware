@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018 Governikus KG. Licensed under the EUPL, Version 1.2 or as soon they will be approved by
+ * Copyright (c) 2019 Governikus KG. Licensed under the EUPL, Version 1.2 or as soon they will be approved by
  * the European Commission - subsequent versions of the EUPL (the "Licence"); You may not use this work except
  * in compliance with the Licence. You may obtain a copy of the Licence at:
  * http://joinup.ec.europa.eu/software/page/eupl Unless required by applicable law or agreed to in writing,
@@ -16,7 +16,7 @@ import iso.std.iso_iec._24727.tech.schema.TransmitResponse;
 
 /**
  * Implementation of transmit result.
- * 
+ *
  * @see TransmitAPDU
  * @author Jens Wothe, jw@bos-bremen.de
  */
@@ -25,7 +25,7 @@ public class TransmitResult extends AbstractResult<TransmitResponse> implements 
 
   /**
    * Gets index of throwable to indicate on which command error occured.
-   * 
+   *
    * @return the indexOfThrowable
    */
   public final int getIndexOfThrowable()
@@ -43,7 +43,7 @@ public class TransmitResult extends AbstractResult<TransmitResponse> implements 
 
   /**
    * Constructor.
-   * 
+   *
    * @param data data
    * @param throwable throwable
    */
@@ -54,7 +54,7 @@ public class TransmitResult extends AbstractResult<TransmitResponse> implements 
 
   /**
    * Constructor.
-   * 
+   *
    * @param data data
    */
   public TransmitResult(TransmitResponse data)

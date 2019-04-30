@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018 Governikus KG. Licensed under the EUPL, Version 1.2 or as soon they will be approved by
+ * Copyright (c) 2019 Governikus KG. Licensed under the EUPL, Version 1.2 or as soon they will be approved by
  * the European Commission - subsequent versions of the EUPL (the "Licence"); You may not use this work except
  * in compliance with the Licence. You may obtain a copy of the Licence at:
  * http://joinup.ec.europa.eu/software/page/eupl Unless required by applicable law or agreed to in writing,
@@ -31,7 +31,7 @@ import de.governikus.eumw.eidascommon.Utils;
 
 /**
  * wrapper for checking a CMS signature
- * 
+ *
  * @author tautenhahn
  */
 public class CmsSignatureChecker
@@ -43,7 +43,7 @@ public class CmsSignatureChecker
 
   /**
    * Create new instance with given trust anchor
-   * 
+   *
    * @param trustAnchor
    */
   CmsSignatureChecker(X509Certificate trustAnchor)
@@ -53,7 +53,7 @@ public class CmsSignatureChecker
 
   /**
    * Return true if parameter value is signed with key belonging to trusted anchor certificate.
-   * 
+   *
    * @param signedData
    */
   @SuppressWarnings("unchecked")

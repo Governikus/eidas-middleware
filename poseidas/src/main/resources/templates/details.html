@@ -1,6 +1,5 @@
-<!DOCTYPE html>
 <!--
-  ~ Copyright (c) 2018 Governikus KG. Licensed under the EUPL, Version 1.2 or as soon they will be approved by
+  ~ Copyright (c) 2019 Governikus KG. Licensed under the EUPL, Version 1.2 or as soon they will be approved by
   ~ the European Commission - subsequent versions of the EUPL (the "Licence"); You may not use this work except
   ~ in compliance with the Licence. You may obtain a copy of the Licence at:
   ~ http://joinup.ec.europa.eu/software/page/eupl Unless required by applicable law or agreed to in writing,
@@ -9,12 +8,14 @@
   ~ limitations under the Licence.
   -->
 
+<!DOCTYPE html>
+
 <html xmlns="http://www.w3.org/1999/xhtml"
       xmlns:th="http://www.thymeleaf.org">
 <head>
     <title>POSeIDAS CVC Info</title>
     <link rel="stylesheet" th:href="@{/webjars/blaze/3.2.0/dist/blaze.min.css}"/>
-    <link rel="stylesheet" th:href="@{/css/main.css}"/>
+    <link rel="stylesheet" th:href="@{/css/admin-interface.css}"/>
 </head>
 <body>
 <div class="content">
@@ -38,7 +39,7 @@
 
 
     <h3>Check connection to Authorisation CA</h3>
-    <form method="POST" th:action="@{/details/__${entityID}__/check}">
+    <form method="POST" th:action="@{/admin-interface/details/__${entityID}__/check}">
         <button type="submit" name="submit" value="value">Check connection</button>
     </form>
 
@@ -89,7 +90,7 @@
     </table>
 
     <h3>Initial CVC Request to DVCA</h3>
-    <form action="#" th:action="@{/details/__${entityID}__/initialRequest}"
+    <form action="#" th:action="@{/admin-interface/details/__${entityID}__/initialRequest}"
           th:object="${form}" method="post">
         <table>
             <tbody>
@@ -115,21 +116,21 @@
 
     <h3>Manual Renewal</h3>
     <form method="POST"
-          th:action="@{/details/__${entityID}__/renewBlackList}">
+          th:action="@{/admin-interface/details/__${entityID}__/renewBlackList}">
         <button type="submit" name="submit" value="value">Renew Black
             List
         </button>
     </form>
 
     <form method="POST"
-          th:action="@{/details/__${entityID}__/renewMasterDefectList}">
+          th:action="@{/admin-interface/details/__${entityID}__/renewMasterDefectList}">
         <button type="submit" name="submit" value="value">Renew Master and Defect
             List
         </button>
     </form>
 
     <form method="POST"
-          th:action="@{/details/__${entityID}__/renewCVC}">
+          th:action="@{/admin-interface/details/__${entityID}__/renewCVC}">
         <button type="submit" name="submit" value="value">Renew CVC</button>
     </form>
 </div>

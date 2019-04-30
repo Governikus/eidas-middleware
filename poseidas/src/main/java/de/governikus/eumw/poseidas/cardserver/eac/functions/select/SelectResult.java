@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018 Governikus KG. Licensed under the EUPL, Version 1.2 or as soon they will be approved by
+ * Copyright (c) 2019 Governikus KG. Licensed under the EUPL, Version 1.2 or as soon they will be approved by
  * the European Commission - subsequent versions of the EUPL (the "Licence"); You may not use this work except
  * in compliance with the Licence. You may obtain a copy of the Licence at:
  * http://joinup.ec.europa.eu/software/page/eupl Unless required by applicable law or agreed to in writing,
@@ -18,7 +18,7 @@ import de.governikus.eumw.poseidas.cardserver.eac.functions.read.Read;
 
 /**
  * Implementation of Read output parameter.
- * 
+ *
  * @see Read
  * @see FileParameter
  * @author Jens Wothe, jw@bos-bremen.de
@@ -30,7 +30,7 @@ public class SelectResult extends AbstractResult<Boolean> implements FunctionRes
 
   /**
    * Constructor.
-   * 
+   *
    * @param throwable throwable in case of errors
    */
   SelectResult(Throwable throwable)
@@ -40,7 +40,7 @@ public class SelectResult extends AbstractResult<Boolean> implements FunctionRes
 
   /**
    * Constructor.
-   * 
+   *
    * @param selected <code>true</code> for successful, otherwise <code>false</code>
    */
   SelectResult(Boolean selected)
@@ -50,7 +50,7 @@ public class SelectResult extends AbstractResult<Boolean> implements FunctionRes
 
   /**
    * Constructor.
-   * 
+   *
    * @param selected <code>true</code> for successful, otherwise <code>false</code>
    * @param fcp file control parameters
    */
@@ -62,7 +62,7 @@ public class SelectResult extends AbstractResult<Boolean> implements FunctionRes
 
   /**
    * Checks file or application successful selected.
-   * 
+   *
    * @return <code>true</code> if successful selected otherwise <code>false</code>
    */
   public boolean isSelected()
@@ -72,7 +72,7 @@ public class SelectResult extends AbstractResult<Boolean> implements FunctionRes
 
   /**
    * Gets file control parameters (only available if requested upon selection).
-   * 
+   *
    * @return file control parameters
    */
   public byte[] getFCP()

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018 Governikus KG. Licensed under the EUPL, Version 1.2 or as soon they will be approved by
+ * Copyright (c) 2019 Governikus KG. Licensed under the EUPL, Version 1.2 or as soon they will be approved by
  * the European Commission - subsequent versions of the EUPL (the "Licence"); You may not use this work except
  * in compliance with the Licence. You may obtain a copy of the Licence at:
  * http://joinup.ec.europa.eu/software/page/eupl Unless required by applicable law or agreed to in writing,
@@ -10,68 +10,77 @@
 
 package de.governikus.eumw.poseidas;
 
-import java.util.Arrays;
+import java.util.ArrayList;
+import java.util.List;
 
-import javax.annotation.PostConstruct;
-
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.authentication.AuthenticationProvider;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.crypto.bcrypt.BCrypt;
 import org.springframework.stereotype.Component;
 
+import lombok.extern.slf4j.Slf4j;
+
+
 /**
- * This provider manages the authentication process. The username and the hashed
- * password are read from the application.properties file. To create a hashed
- * password, see the password-generator project.
- * 
- * @author bpr
+ * This provider manages the authentication process. The username and the hashed password are read from the
+ * application.properties file. To create a hashed password, see the password-generator project.
  *
+ * @author bpr
  */
 @Component
-public class PasswordFileAuthenticationProvider implements AuthenticationProvider {
+@Slf4j
+public class PasswordFileAuthenticationProvider implements AuthenticationProvider
+{
 
-	private static final Log LOG = LogFactory.getLog(PasswordFileAuthenticationProvider.class);
+  @Value("${poseidas.admin.username}")
+  private String username;
 
-	@Value("${poseidas.admin.username}")
-	private String username;
+  @Value("${poseidas.admin.hashed.password}")
+  private String hashedPassword;
 
-	@Value("${poseidas.admin.hashed.password}")
-	private String hashedPassword;
+  private boolean isDefaultPassword(String password)
+  {
+    String defaultPassword = "$2a$10$lRmdsCOtjoBLb8bKDrviueoW1aUkIcUmnImu4xZlOzvfc5k9WcKAi";
+    return BCrypt.checkpw(password, defaultPassword);
+  }
 
-	@PostConstruct
-	public void checkForDefaultPassword() {
-		String defaultPassword = "$2a$10$lRmdsCOtjoBLb8bKDrviueoW1aUkIcUmnImu4xZlOzvfc5k9WcKAi";
-		if (defaultPassword.equals(hashedPassword)) {
-			LOG.fatal("YOU HAVE NOT CHANGED THE DEFAULT PASSWORD!");
-		}
-	}
-
-	@Override
+  @Override
   public Authentication authenticate(Authentication authentication)
   {
-		// Get the values from the login form
-		String loginName = authentication.getName();
-		String loginPassword = authentication.getCredentials().toString();
+    // Get the values from the login form
+    String loginName = authentication.getName();
+    String loginPassword = authentication.getCredentials().toString();
 
-		// Check if the values from the login form match with the values from the
-		// application.properties
-		if (username.equals(loginName) && BCrypt.checkpw(loginPassword, hashedPassword)) {
-			LOG.debug(loginName + "logged in");
-			return new UsernamePasswordAuthenticationToken(loginName, loginPassword,
-					Arrays.asList(new SimpleGrantedAuthority("user")));
-		}
-		LOG.debug(loginName + "failed to login");
-		return null;
-	}
+    // Check if the values from the login form match with the values from the
+    // application.properties
+    if (username.equals(loginName) && BCrypt.checkpw(loginPassword, hashedPassword))
+    {
+      log.debug("User {} logged in", loginName);
+      List<GrantedAuthority> authorities = new ArrayList<>();
 
-	@Override
-	public boolean supports(Class<?> authentication) {
-		return authentication.equals(UsernamePasswordAuthenticationToken.class);
-	}
+      // Check for default credentials
+      if (isDefaultPassword(loginPassword))
+      {
+        log.error("YOU HAVE NOT CHANGED THE DEFAULT PASSWORD!");
+        // Add authority for default credentials to be displayed in thymeleaf
+        authorities.add(new SimpleGrantedAuthority("defaultCredentials"));
+      }
+      // Add default user authority
+      authorities.add(new SimpleGrantedAuthority("user"));
+      return new UsernamePasswordAuthenticationToken(loginName, loginPassword, authorities);
+    }
+    log.debug("User {} failed to login", loginName);
+    return null;
+  }
+
+  @Override
+  public boolean supports(Class<?> authentication)
+  {
+    return authentication.equals(UsernamePasswordAuthenticationToken.class);
+  }
 
 }

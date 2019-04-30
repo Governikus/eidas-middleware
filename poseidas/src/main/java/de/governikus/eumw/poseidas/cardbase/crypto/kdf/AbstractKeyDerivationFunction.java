@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018 Governikus KG. Licensed under the EUPL, Version 1.2 or as soon they will be approved by
+ * Copyright (c) 2019 Governikus KG. Licensed under the EUPL, Version 1.2 or as soon they will be approved by
  * the European Commission - subsequent versions of the EUPL (the "Licence"); You may not use this work except
  * in compliance with the Licence. You may obtain a copy of the Licence at:
  * http://joinup.ec.europa.eu/software/page/eupl Unless required by applicable law or agreed to in writing,
@@ -21,7 +21,7 @@ import de.governikus.eumw.poseidas.cardbase.ByteUtil;
 /**
  * Abstract KeyDerivationFunction (KDF) as specified in TR-03110 Part3 v2.10, section A.2.3 used for 3DES and
  * AES.
- * 
+ *
  * @author Jens Wothe, jw@bos-bremen.de
  */
 public abstract class AbstractKeyDerivationFunction
@@ -49,7 +49,7 @@ public abstract class AbstractKeyDerivationFunction
 
   /**
    * Constructor.
-   * 
+   *
    * @param digest digest, <code>null</code> not permitted
    * @throws IllegalArgumentException if digest <code>null</code>
    */
@@ -62,7 +62,7 @@ public abstract class AbstractKeyDerivationFunction
 
   /**
    * The general key derivation function.
-   * 
+   *
    * @param k shared secret value (required), <code>null</code> or empty array not permitted
    * @param r nonce (optional), <code>null</code> permitted
    * @param c 4 byte/32 bit big endian integer (required), <code>null</code> not permitted
@@ -88,7 +88,7 @@ public abstract class AbstractKeyDerivationFunction
 
   /**
    * The general key derivation function.
-   * 
+   *
    * @param k shared secret, <code>null</code> or empty array not permitted
    * @param r nonce, <code>null</code> permitted
    * @param c 4 byte big endian integer, <code>null</code> not permitted

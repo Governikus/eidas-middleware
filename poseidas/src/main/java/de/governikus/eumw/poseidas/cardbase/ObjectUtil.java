@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018 Governikus KG. Licensed under the EUPL, Version 1.2 or as soon they will be approved by
+ * Copyright (c) 2019 Governikus KG. Licensed under the EUPL, Version 1.2 or as soon they will be approved by
  * the European Commission - subsequent versions of the EUPL (the "Licence"); You may not use this work except
  * in compliance with the Licence. You may obtain a copy of the Licence at:
  * http://joinup.ec.europa.eu/software/page/eupl Unless required by applicable law or agreed to in writing,
@@ -16,7 +16,7 @@ import java.util.Comparator;
 
 /**
  * Some convenience functions for Object.
- * 
+ *
  * @see ArrayUtil
  * @see ByteUtil
  * @see AssertUtil
@@ -30,7 +30,7 @@ public final class ObjectUtil
 
   /**
    * Constant of result for comparison first Object equal to second Object: zero - <code>0</code>.
-   * 
+   *
    * @see Comparator#compare(Object, Object)
    */
   private static final int COMPARE_RESULT_FIRST_EQUAL_TO_SECOND = 0;
@@ -38,14 +38,14 @@ public final class ObjectUtil
   /**
    * Constant of result for comparison first Object less than second Object: negative integer -
    * <code>-1</code>.
-   * 
+   *
    * @see Comparator#compare(Object, Object)
    */
   private static final int COMPARE_RESULT_FIRST_LESS_SECOND = -1;
 
   /**
    * Checks a Object is <code>null</code>.
-   * 
+   *
    * @param o Object to check
    * @return <code>true</code>, if Object is <code>null</code>, otherwise <code>false</code>
    * @see #isEqualsByReference(Object, Object)
@@ -57,7 +57,7 @@ public final class ObjectUtil
 
   /**
    * Checks a Object is not <code>null</code>.
-   * 
+   *
    * @param o Object to check
    * @return <code>false</code>, if Object is <code>null</code>, otherwise <code>true</code>
    * @see #notEqualsByReference(Object, Object)
@@ -69,7 +69,7 @@ public final class ObjectUtil
 
   /**
    * Checks one Object is equals to another Object (using default mode and no comparator).
-   * 
+   *
    * @param o1 one Object, <code>null</code> permitted
    * @param o2 another Object, <code>null</code> permitted
    * @return <code>true</code>, if Objects are equal, otherwise <code>false</code>
@@ -92,7 +92,7 @@ public final class ObjectUtil
    * not equals - related to implementation of Comparator]</li>
    * </ol>
    * </p>
-   * 
+   *
    * @param o1 one Object, <code>null</code> permitted
    * @param o2 another Object, <code>null</code> permitted
    * @param equalsMode mode for using {@link Object#equals(Object)}, <code>null</code> permitted and default
@@ -139,7 +139,7 @@ public final class ObjectUtil
 
   /**
    * Checks Objects are equal by reference.
-   * 
+   *
    * @param o1 the first object
    * @param o2 the second object
    * @return <code>true</code>, if equals by reference, otherwise <code>false</code>
@@ -151,7 +151,7 @@ public final class ObjectUtil
 
   /**
    * Checks Objects are not equal by reference.
-   * 
+   *
    * @param o1 the first object
    * @param o2 the second object
    * @return <code>false</code>, if equals by reference, otherwise <code>true</code>
@@ -163,7 +163,7 @@ public final class ObjectUtil
 
   /**
    * Default mode for {@link #isEquals(Object, Object, EqualsMode, Comparator)} - {@link EqualsMode#BOTH}.
-   * 
+   *
    * @see EqualsMode#BOTH
    */
   private static final EqualsMode DEFAULT_EQUALS_MODE = EqualsMode.BOTH;
@@ -171,7 +171,7 @@ public final class ObjectUtil
   /**
    * Enum for different modes usable at {@link #isEquals(Object, Object, EqualsMode, Comparator)} implementing
    * {@link Comparator} indicating equality by <code>0</code>.
-   * 
+   *
    * @see #isEquals(Object, Object, EqualsMode, Comparator)
    * @see Comparator
    * @see Comparator#compare(Object, Object)
@@ -181,26 +181,26 @@ public final class ObjectUtil
   {
     /**
      * Mode for checking Objects are equal: first Object must be equal to second.
-     * 
+     *
      * @see Object#equals(Object)
      */
     FIRST_SECOND((o1, o2) -> o1.equals(o2) ? COMPARE_RESULT_FIRST_EQUAL_TO_SECOND : COMPARE_RESULT_FIRST_LESS_SECOND),
     /**
      * Mode for checking Objects are equal: second Object must be equal to first.
-     * 
+     *
      * @see Object#equals(Object)
      */
     SECOND_FIRST((o1, o2) -> o2.equals(o1) ? COMPARE_RESULT_FIRST_EQUAL_TO_SECOND : COMPARE_RESULT_FIRST_LESS_SECOND),
     /**
      * Mode for checking Objects are equal: at least one Object must be equal to another.
-     * 
+     *
      * @see Object#equals(Object)
      */
     ANYONE((o1, o2) -> o1.equals(o2) || o2.equals(o1) ? COMPARE_RESULT_FIRST_EQUAL_TO_SECOND
       : COMPARE_RESULT_FIRST_LESS_SECOND),
     /**
      * Mode for checking Objects are equal: both Object must be equal to each other.
-     * 
+     *
      * @see Object#equals(Object)
      */
     BOTH((o1, o2) -> o1.equals(o2) && o2.equals(o1) ? COMPARE_RESULT_FIRST_EQUAL_TO_SECOND
@@ -211,7 +211,7 @@ public final class ObjectUtil
 
     /**
      * Constructor.
-     * 
+     *
      * @param comparator comparator, <code>null</code> not permitted
      */
     private EqualsMode(Comparator<Object> comparator)

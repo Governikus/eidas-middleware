@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018 Governikus KG. Licensed under the EUPL, Version 1.2 or as soon they will be approved by
+ * Copyright (c) 2019 Governikus KG. Licensed under the EUPL, Version 1.2 or as soon they will be approved by
  * the European Commission - subsequent versions of the EUPL (the "Licence"); You may not use this work except
  * in compliance with the Licence. You may obtain a copy of the Licence at:
  * http://joinup.ec.europa.eu/software/page/eupl Unless required by applicable law or agreed to in writing,
@@ -36,7 +36,7 @@ import uri.eacbt._1.termAuth.dv.RequestCertificateReturnCodeType;
 
 /**
  * Wrapper around uri.eac_pki_is_protocol._1_0.termAuth.dv.EACDVProtocolService
- * 
+ *
  * @author tautenhahn
  */
 public class TermAuthServiceWrapper11 implements TermAuthServiceWrapper
@@ -46,7 +46,7 @@ public class TermAuthServiceWrapper11 implements TermAuthServiceWrapper
 
   /**
    * create new instance
-   * 
+   *
    * @param con
    * @param uri
    * @throws URISyntaxException
@@ -108,7 +108,7 @@ public class TermAuthServiceWrapper11 implements TermAuthServiceWrapper
   /**
    * When we get a certificate chain of CA certificates this will fetch the last one which does not sign any
    * other certificate.
-   * 
+   *
    * @param certList list of certificates
    */
   protected static byte[] getCertificate(List<byte[]> certList)

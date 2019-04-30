@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018 Governikus KG. Licensed under the EUPL, Version 1.2 or as soon they will be approved by
+ * Copyright (c) 2019 Governikus KG. Licensed under the EUPL, Version 1.2 or as soon they will be approved by
  * the European Commission - subsequent versions of the EUPL (the "Licence"); You may not use this work except
  * in compliance with the Licence. You may obtain a copy of the Licence at:
  * http://joinup.ec.europa.eu/software/page/eupl Unless required by applicable law or agreed to in writing,
@@ -18,7 +18,7 @@ import java.io.IOException;
  * <p>
  * Notice: an encodable supports convenience methods related to ASN.1 object for access of contents.
  * </p>
- * 
+ *
  * @author Jens Wothe, jw@bos-bremen.de
  */
 public interface ASN1Encoder
@@ -26,7 +26,7 @@ public interface ASN1Encoder
 
   /**
    * Decodes/Initializes ASN.1 object from bytes.
-   * 
+   *
    * @param bytes bytes of ASN.1, <code>null</code> or empty array not permitted
    * @return ASN.1 object
    * @throws IllegalArgumentException if bytes <code>null</code> or empty
@@ -38,7 +38,7 @@ public interface ASN1Encoder
 
   /**
    * Decodes/Initializes ASN.1 object from ASN.1 object.
-   * 
+   *
    * @param asn1 ASN.1 object, <code>null</code> not permitted
    * @return ASN.1 object
    * @throws IllegalArgumentException if ASN.1 object <code>null</code> or incompatible ASN.1 object

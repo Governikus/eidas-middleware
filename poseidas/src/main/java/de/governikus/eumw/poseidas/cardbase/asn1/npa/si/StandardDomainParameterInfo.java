@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018 Governikus KG. Licensed under the EUPL, Version 1.2 or as soon they will be approved by
+ * Copyright (c) 2019 Governikus KG. Licensed under the EUPL, Version 1.2 or as soon they will be approved by
  * the European Commission - subsequent versions of the EUPL (the "Licence"); You may not use this work except
  * in compliance with the Licence. You may obtain a copy of the Licence at:
  * http://joinup.ec.europa.eu/software/page/eupl Unless required by applicable law or agreed to in writing,
@@ -15,7 +15,7 @@ import de.governikus.eumw.poseidas.cardbase.AssertUtil;
 
 /**
  * Class for a standard set of domain parameter infos referenced by an ID.
- * 
+ *
  * @author Arne Stahlbock, ast@bos-bremen.de
  */
 public class StandardDomainParameterInfo implements GeneralDomainParameterInfo
@@ -28,7 +28,7 @@ public class StandardDomainParameterInfo implements GeneralDomainParameterInfo
 
   /**
    * Constructor.
-   * 
+   *
    * @param dpiID ID of domain parameters
    * @throws IllegalArgumentException if given ID <code>null</code> or having unknown value
    */
@@ -44,7 +44,7 @@ public class StandardDomainParameterInfo implements GeneralDomainParameterInfo
 
   /**
    * Gets domain parameter ID.
-   * 
+   *
    * @return domain parameter ID
    */
   public Integer getdpiID()

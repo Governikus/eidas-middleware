@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018 Governikus KG. Licensed under the EUPL, Version 1.2 or as soon they will be approved by
+ * Copyright (c) 2019 Governikus KG. Licensed under the EUPL, Version 1.2 or as soon they will be approved by
  * the European Commission - subsequent versions of the EUPL (the "Licence"); You may not use this work except
  * in compliance with the Licence. You may obtain a copy of the Licence at:
  * http://joinup.ec.europa.eu/software/page/eupl Unless required by applicable law or agreed to in writing,
@@ -11,8 +11,6 @@
 package de.governikus.eumw.poseidas.eidserver.convenience;
 
 import java.io.IOException;
-import java.security.MessageDigest;
-import java.security.NoSuchAlgorithmException;
 import java.security.cert.X509Certificate;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -27,13 +25,6 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
 import de.governikus.eumw.poseidas.cardbase.asn1.ASN1;
-import de.governikus.eumw.poseidas.cardbase.asn1.npa.ASN1EidConstants;
-import de.governikus.eumw.poseidas.cardbase.asn1.npa.ATEidAccess;
-import de.governikus.eumw.poseidas.cardbase.asn1.npa.ATEidAccessConstants;
-import de.governikus.eumw.poseidas.cardbase.asn1.npa.ATSpecialConstants;
-import de.governikus.eumw.poseidas.cardbase.asn1.npa.ATSpecialFunctions;
-import de.governikus.eumw.poseidas.cardbase.asn1.npa.ATSpecificAttributes;
-import de.governikus.eumw.poseidas.cardbase.asn1.npa.ATSpecificAttributesConstants;
 import de.governikus.eumw.poseidas.cardbase.asn1.npa.CertificateDescription;
 import de.governikus.eumw.poseidas.cardbase.asn1.npa.CertificateDescriptionPath;
 import de.governikus.eumw.poseidas.cardbase.asn1.npa.CertificateHolderAuthorizationTemplate;
@@ -64,17 +55,19 @@ import de.governikus.eumw.poseidas.eidserver.ecardid.SessionInput;
 import de.governikus.eumw.poseidas.eidserver.model.signeddata.DefectKnown.DefectType;
 import de.governikus.eumw.poseidas.eidserver.model.signeddata.DefectList;
 import de.governikus.eumw.poseidas.eidserver.model.signeddata.MasterList;
+import de.governikus.eumw.poseidas.server.idprovider.config.PoseidasConfigurator;
 import iso.std.iso_iec._24727.tech.schema.ConnectionHandleType;
 import iso.std.iso_iec._24727.tech.schema.DIDAuthenticate;
 import iso.std.iso_iec._24727.tech.schema.DIDAuthenticateResponse;
 import iso.std.iso_iec._24727.tech.schema.DIDAuthenticationDataType;
 import iso.std.iso_iec._24727.tech.schema.EAC1OutputType;
 import iso.std.iso_iec._24727.tech.schema.EAC2OutputType;
-import iso.std.iso_iec._24727.tech.schema.ExtendedAccessPermission;
 import iso.std.iso_iec._24727.tech.schema.ResponseType;
 import iso.std.iso_iec._24727.tech.schema.StartPAOS;
 import iso.std.iso_iec._24727.tech.schema.StartPAOS.UserAgent;
 import iso.std.iso_iec._24727.tech.schema.TransmitResponse;
+import lombok.Getter;
+import lombok.Setter;
 import oasis.names.tc.dss._1_0.core.schema.ObjectFactory;
 import oasis.names.tc.dss._1_0.core.schema.Result;
 
@@ -281,12 +274,6 @@ public class EIDSequence extends ECardConvenienceSequenceAdapter
     setInstanceSession(sessionInput);
     this.mRequiredAuthorizations.chat = createRequiredCHAT(sessionInput);
     this.mOptionalAuthorizations.chat = createOptionalCHAT(sessionInput);
-    this.mRequiredAuthorizations.specialFunctions = createRequiredSF(sessionInput);
-    this.mOptionalAuthorizations.specialFunctions = createOptionalSF(sessionInput);
-    this.mRequiredAuthorizations.eidAccess = createRequiredATeID(sessionInput);
-    this.mOptionalAuthorizations.eidAccess = createOptionalATeID(sessionInput);
-    this.mRequiredAuthorizations.specificAttributes = createRequiredSpecificAttributes(sessionInput);
-    this.mOptionalAuthorizations.specificAttributes = createOptionalSpecificAttributes(sessionInput);
     // Set container for data received from card
     eidInfoContainer = new EIDInfoContainerImpl();
     LOG.debug(logPrefix + LOG_PRE_INIT + "Instance (ECardConvenienceSequenceAdapter) available");
@@ -378,7 +365,10 @@ public class EIDSequence extends ECardConvenienceSequenceAdapter
     List<X509Certificate> masterList = getMasterList(sessionInput);
     LOG.debug(logPrefix + LOG_PRE_INIT + " MasterList received from manager containing (" + masterList.size()
               + ") Certificates");
-    signedDataChecker = new EACSignedDataChecker(masterList, logPrefix);
+    signedDataChecker = new EACSignedDataChecker(masterList, logPrefix,
+                                                 PoseidasConfigurator.getInstance()
+                                                                     .getCurrentConfig()
+                                                                     .getAllowedDocumentTypes());
     if (sessionInput.getDefectList() != null)
     {
       defectList = new DefectList(sessionInput.getDefectList());
@@ -411,21 +401,6 @@ public class EIDSequence extends ECardConvenienceSequenceAdapter
     if (sessionInput.getRequiredCommunity() != null)
     {
       authenticatedAuxiliaryData.setCommunityIDAuxiliaryData(sessionInput.getRequiredCommunity());
-    }
-    if (sessionInput.getPsMessage() != null)
-    {
-      // per specification we are required to set the hash of the message here, but we cannot know the
-      // algorithm...
-      byte[] psMessage = null;
-      try
-      {
-        psMessage = MessageDigest.getInstance("SHA-256").digest(sessionInput.getPsMessage());
-      }
-      catch (NoSuchAlgorithmException e)
-      {
-        psMessage = sessionInput.getPsMessage();
-      }
-      this.authenticatedAuxiliaryData.setPseudonymousSignatureMessage(psMessage);
     }
     String documentVerification = new SimpleDateFormat("yyyyMMdd").format(now);
     LOG.debug(logPrefix + LOG_PRE_INIT + "Document Validity will be checked for date: "
@@ -744,7 +719,7 @@ public class EIDSequence extends ECardConvenienceSequenceAdapter
     {
       return handleError(ResultMinor.COMMON_INTERNAL_ERROR,
                          "DIDAuthenticateResponse: authenticationProtocolData is no instanceof "
-                                                           + "EAC1OutputType or EAC2OutputType");
+                                                            + "EAC1OutputType or EAC2OutputType");
     }
   }
 
@@ -761,24 +736,6 @@ public class EIDSequence extends ECardConvenienceSequenceAdapter
       {
         this.mModifiedAuthorizations.chat = new CertificateHolderAuthorizationTemplate(template);
       }
-      for ( ExtendedAccessPermission eap : eac1OutputType.getGrantedPermissionList() )
-      {
-        if (ATSpecialConstants.OID_ACCESS_ROLE_AND_RIGHTS_AUTHENTICATION_TERMINAL_SPECIAL_FUNCTIONS.equals(eap.getType()))
-        {
-          this.mModifiedAuthorizations.specialFunctions = new ATSpecialFunctions(new ASN1(ASN1EidConstants.TAG_DISCRETIONARY_DATA,
-                                                                                          eap.getValue()).getEncoded());
-        }
-        else if (ATEidAccessConstants.OID_ACCESS_ROLE_AND_RIGHTS_AUTHENTICATION_TERMINAL_EID_ACCESS.equals(eap.getType()))
-        {
-          this.mModifiedAuthorizations.eidAccess = new ATEidAccess(new ASN1(ASN1EidConstants.TAG_DISCRETIONARY_DATA,
-                                                                            eap.getValue()).getEncoded());
-        }
-        else if (ATSpecificAttributesConstants.OID_ACCESS_ROLE_AND_RIGHTS_AUTHENTICATION_TERMINAL_SPECIFIC_ATTRIBUTES.equals(eap.getType()))
-        {
-          this.mModifiedAuthorizations.specificAttributes = new ATSpecificAttributes(new ASN1(ASN1EidConstants.TAG_DISCRETIONARY_DATA,
-                                                                                              eap.getValue()).getEncoded());
-        }
-      }
     }
     catch (IOException | IllegalArgumentException e)
     {
@@ -793,27 +750,6 @@ public class EIDSequence extends ECardConvenienceSequenceAdapter
       this.allRights = this.mRequiredAuthorizations.chat.getAllRights();
       this.allRights.addAll(this.mOptionalAuthorizations.chat.getAllRights());
     }
-    if (this.mModifiedAuthorizations.specialFunctions != null)
-    {
-      this.allRights.removeAll(ATSpecialFunctions.CHAT_DOUBLES);
-      this.allRights.addAll(this.mModifiedAuthorizations.specialFunctions.getAllRights());
-    }
-    if (this.mModifiedAuthorizations.eidAccess != null)
-    {
-      this.allRights.removeAll(ATEidAccess.CHAT_DOUBLES);
-      this.allRights.addAll(this.mModifiedAuthorizations.eidAccess.getAllRights());
-    }
-    if (this.mModifiedAuthorizations.specificAttributes != null)
-    {
-      this.allRights.removeAll(ATSpecificAttributes.CHAT_DOUBLES);
-      this.allRights.addAll(this.mModifiedAuthorizations.specificAttributes.getAllRights());
-    }
-
-    Boolean useCaVer3 = null;
-    if (this.allRights.contains(CVCPermission.AUT_SF_PSA) || this.allRights.contains(CVCPermission.AUT_PSA))
-    {
-      useCaVer3 = Boolean.TRUE;
-    }
 
     LOG.debug(logPrefix + LOG_PRE_AUTH + "Create EAC2InputType");
     EAC2InputTypeWrapper eac2InputType = null;
@@ -823,7 +759,7 @@ public class EIDSequence extends ECardConvenienceSequenceAdapter
                                             EAC1OutputTypeWrapper.class,
                                             eac1OutputType,
                                             EAC2InputTypeWrapper.class,
-                                            new Object[]{eac1Input, cakProvider, useCaVer3});
+                                            new Object[]{eac1Input, cakProvider});
     }
     catch (InvalidEidException e)
     {
@@ -937,7 +873,7 @@ public class EIDSequence extends ECardConvenienceSequenceAdapter
    */
   private Object handleFirstTransmit() throws ECardException
   {
-    transmitProcess = new EIDSequenceTransmit(this, this.sessionInput.getCAConnection());
+    transmitProcess = new EIDSequenceTransmit(this);
     returnObject = transmitProcess.startTransmit(new ArrayList<>(allRights));
     // Create the first transmit request and send to client
     return returnObject;
@@ -1013,49 +949,6 @@ public class EIDSequence extends ECardConvenienceSequenceAdapter
 
     eac1Input.setRequiredCHAT(mRequiredAuthorizations.chat.getEncoded());
     eac1Input.setOptionalCHAT(mOptionalAuthorizations.chat.getEncoded());
-
-    if (mRequiredAuthorizations.eidAccess != null)
-    {
-      ExtendedAccessPermission eap = new ExtendedAccessPermission();
-      eap.setType(ATEidAccessConstants.OID_ACCESS_ROLE_AND_RIGHTS_AUTHENTICATION_TERMINAL_EID_ACCESS);
-      eap.setValue(mRequiredAuthorizations.eidAccess.getValue());
-      eac1Input.addRequiredPermission(eap);
-    }
-    if (mOptionalAuthorizations.eidAccess != null)
-    {
-      ExtendedAccessPermission eap = new ExtendedAccessPermission();
-      eap.setType(ATEidAccessConstants.OID_ACCESS_ROLE_AND_RIGHTS_AUTHENTICATION_TERMINAL_EID_ACCESS);
-      eap.setValue(mOptionalAuthorizations.eidAccess.getValue());
-      eac1Input.addOptionalPermission(eap);
-    }
-    if (mRequiredAuthorizations.specialFunctions != null)
-    {
-      ExtendedAccessPermission eap = new ExtendedAccessPermission();
-      eap.setType(ATSpecialConstants.OID_ACCESS_ROLE_AND_RIGHTS_AUTHENTICATION_TERMINAL_SPECIAL_FUNCTIONS);
-      eap.setValue(mRequiredAuthorizations.specialFunctions.getValue());
-      eac1Input.addRequiredPermission(eap);
-    }
-    if (mOptionalAuthorizations.specialFunctions != null)
-    {
-      ExtendedAccessPermission eap = new ExtendedAccessPermission();
-      eap.setType(ATSpecialConstants.OID_ACCESS_ROLE_AND_RIGHTS_AUTHENTICATION_TERMINAL_SPECIAL_FUNCTIONS);
-      eap.setValue(mOptionalAuthorizations.specialFunctions.getValue());
-      eac1Input.addOptionalPermission(eap);
-    }
-    if (mRequiredAuthorizations.specificAttributes != null)
-    {
-      ExtendedAccessPermission eap = new ExtendedAccessPermission();
-      eap.setType(ATSpecificAttributesConstants.OID_ACCESS_ROLE_AND_RIGHTS_AUTHENTICATION_TERMINAL_SPECIFIC_ATTRIBUTES);
-      eap.setValue(mRequiredAuthorizations.specificAttributes.getValue());
-      eac1Input.addRequiredPermission(eap);
-    }
-    if (mOptionalAuthorizations.specificAttributes != null)
-    {
-      ExtendedAccessPermission eap = new ExtendedAccessPermission();
-      eap.setType(ATSpecificAttributesConstants.OID_ACCESS_ROLE_AND_RIGHTS_AUTHENTICATION_TERMINAL_SPECIFIC_ATTRIBUTES);
-      eap.setValue(mOptionalAuthorizations.specificAttributes.getValue());
-      eac1Input.addOptionalPermission(eap);
-    }
 
     eac1Input.setCertificateDescription(mCardVerifiableCert.getCVCDescription().getEncoded());
     eac1Input.setAuthenticatedAuxiliaryData(authenticatedAuxiliaryData.getEncoded());
@@ -1157,16 +1050,6 @@ public class EIDSequence extends ECardConvenienceSequenceAdapter
     }
     Set<CVCPermission> options = CVCPermission.getOptions(fields);
 
-    // permissions in certificate extensions take precedence
-    if (input.getTerminalCertificate().getATSpecialFunctions() != null)
-    {
-      options.removeAll(ATSpecialFunctions.CHAT_DOUBLES);
-    }
-    if (input.getTerminalCertificate().getATEidAccess() != null)
-    {
-      options.removeAll(ATEidAccess.CHAT_DOUBLES);
-    }
-
     CertificateHolderAuthorizationTemplate chat = null;
     try
     {
@@ -1193,318 +1076,25 @@ public class EIDSequence extends ECardConvenienceSequenceAdapter
   }
 
   /**
-   * Create an optional {@link ATSpecialFunctions} by extracting the informations from outer session input
-   *
-   * @param sessionInput to be used for creation
-   * @return {@link ATSpecialFunctions} with optional fields
-   * @throws ChatOptionNotAllowedException
+   * Hold authorizations (which the end user is asked to grant). Currently supports CHAT only, can be extended
+   * to others (POSeIDAS).
    */
-  private static ATSpecialFunctions createOptionalSF(SessionInput sessionInput)
-    throws ChatOptionNotAllowedException
-  {
-    return createSpecialFunctions(sessionInput, true);
-  }
-
-  /**
-   * Create the required {@link ATSpecialFunctions} by extracting the informations from outer session input
-   *
-   * @param sessionInput to be used for creation
-   * @return {@link ATSpecialFunctions} with required fields
-   * @throws ChatOptionNotAllowedException
-   */
-  private static ATSpecialFunctions createRequiredSF(SessionInput sessionInput)
-    throws ChatOptionNotAllowedException
-  {
-    return createSpecialFunctions(sessionInput, false);
-  }
-
-  private static ATSpecialFunctions createSpecialFunctions(SessionInput input, boolean optionalFields)
-    throws ChatOptionNotAllowedException
-  {
-    // Set the fields from the session input
-    Set<EIDKeys> fields;
-    if (optionalFields)
-    {
-      fields = input.getOptionalFields();
-      LOG.debug(input.getLogPrefix() + LOG_PRE + "Optional fields(" + fields.size()
-                + ") received from server session input:\n" + fields);
-    }
-    else
-    {
-      fields = input.getRequiredFields();
-      LOG.debug(input.getLogPrefix() + LOG_PRE + "Required fields(" + fields.size()
-                + ") received from server session input:\n" + fields);
-    }
-    Set<CVCPermission> options = CVCPermission.getOptions(fields);
-
-    ATSpecialFunctions sf;
-    try
-    {
-      sf = ATSpecialFunctions.constructFromCVCPermissions(options);
-    }
-    catch (IOException e)
-    {
-      throw new ChatOptionNotAllowedException("Cannot construct ATSpecialFunctions with selected options");
-    }
-    LOG.debug(input.getLogPrefix() + "ATSpecialFunctions created:\n" + sf);
-
-    // Get the ATSpecialFunctions from the CVC
-    ATSpecialFunctions cvcSf = input.getTerminalCertificate().getATSpecialFunctions();
-    if (cvcSf == null)
-    {
-      if (!ATSpecialFunctions.SF_DOUBLES.containsAll(sf.getAllRights()))
-      {
-        String message = "Complete special functions not allowed";
-        LOG.error(input.getLogPrefix() + message);
-        throw new ChatOptionNotAllowedException(message);
-      }
-      return null;
-    }
-
-    for ( CVCPermission chatOption : sf.getAllRights() )
-    {
-      if (!cvcSf.existsRight(chatOption.getAccessRightEnum()))
-      {
-        String message = "Special function not allowed: " + chatOption;
-        LOG.error(input.getLogPrefix() + message);
-        throw new ChatOptionNotAllowedException(message);
-      }
-    }
-    return sf;
-  }
-
-  /**
-   * Create an optional {@link ATEidAccess} by extracting the informations from outer session input
-   *
-   * @param sessionInput to be used for creation
-   * @return {@link ATEidAccess} with optional fields
-   * @throws ChatOptionNotAllowedException
-   */
-  private static ATEidAccess createOptionalATeID(SessionInput sessionInput)
-    throws ChatOptionNotAllowedException
-  {
-    return createEidAccess(sessionInput, true);
-  }
-
-  /**
-   * Create the required {@link ATEidAccess} by extracting the informations from outer session input
-   *
-   * @param sessionInput to be used for creation
-   * @return {@link ATEidAccess} with required fields
-   * @throws ChatOptionNotAllowedException
-   */
-  private static ATEidAccess createRequiredATeID(SessionInput sessionInput)
-    throws ChatOptionNotAllowedException
-  {
-    return createEidAccess(sessionInput, false);
-  }
-
-  private static ATEidAccess createEidAccess(SessionInput input, boolean optionalFields)
-    throws ChatOptionNotAllowedException
-  {
-    // Set the fields from the session input
-    Set<EIDKeys> fields;
-    if (optionalFields)
-    {
-      fields = input.getOptionalFields();
-      LOG.debug(input.getLogPrefix() + LOG_PRE + "Optional fields(" + fields.size()
-                + ") received from server session input:\n" + fields);
-    }
-    else
-    {
-      fields = input.getRequiredFields();
-      LOG.debug(input.getLogPrefix() + LOG_PRE + "Required fields(" + fields.size()
-                + ") received from server session input:\n" + fields);
-    }
-    Set<CVCPermission> options = CVCPermission.getOptions(fields);
-
-    ATEidAccess eidAccess;
-    try
-    {
-      eidAccess = ATEidAccess.constructFromCVCPermissions(options, input.getPscAccessRightSet());
-    }
-    catch (IOException e)
-    {
-      throw new ChatOptionNotAllowedException("Cannot construct ATEidAccess with selected options");
-    }
-    LOG.debug(input.getLogPrefix() + "ATEidAccessFunctions created:\n" + eidAccess);
-
-    // Get the ATEidAccess from the CVC
-    ATEidAccess cvcEidAccess = input.getTerminalCertificate().getATEidAccess();
-    if (cvcEidAccess == null)
-    {
-      if (!ATEidAccess.EID_DOUBLES.containsAll(eidAccess.getAllRights()))
-      {
-        String message = "Complete eID access not allowed";
-        LOG.error(input.getLogPrefix() + message);
-        throw new ChatOptionNotAllowedException(message);
-      }
-      return null;
-    }
-
-    for ( CVCPermission chatOption : eidAccess.getAllRights() )
-    {
-      if (!cvcEidAccess.existsRight(chatOption.getAccessRightEnum()))
-      {
-        String message = "eID access not allowed: " + chatOption;
-        LOG.error(input.getLogPrefix() + message);
-        throw new ChatOptionNotAllowedException(message);
-      }
-    }
-    return eidAccess;
-  }
-
-  /**
-   * Create an optional {@link ATSpecificAttributes} by extracting the informations from outer session input.
-   *
-   * @param sessionInput to be used for creation
-   * @return {@link ATSpecificAttributes} with optional fields
-   * @throws ChatOptionNotAllowedException
-   */
-  private static ATSpecificAttributes createOptionalSpecificAttributes(SessionInput sessionInput)
-    throws ChatOptionNotAllowedException
-  {
-    return createSpecificAttributes(sessionInput, true);
-  }
-
-  /**
-   * Create the required {@link ATSpecificAttributes} by extracting the informations from outer session input.
-   *
-   * @param sessionInput to be used for creation
-   * @return {@link ATSpecificAttributes} with required fields
-   * @throws ChatOptionNotAllowedException
-   */
-  private static ATSpecificAttributes createRequiredSpecificAttributes(SessionInput sessionInput)
-    throws ChatOptionNotAllowedException
-  {
-    return createSpecificAttributes(sessionInput, false);
-  }
-
-  private static ATSpecificAttributes createSpecificAttributes(SessionInput input, boolean optionalFields)
-    throws ChatOptionNotAllowedException
-  {
-    // Set the fields from the session input
-    Set<EIDKeys> fields;
-    if (optionalFields)
-    {
-      fields = input.getOptionalFields();
-      LOG.debug(input.getLogPrefix() + LOG_PRE + "Optional fields(" + fields.size()
-                + ") received from server session input:\n" + fields);
-    }
-    else
-    {
-      fields = input.getRequiredFields();
-      LOG.debug(input.getLogPrefix() + LOG_PRE + "Required fields(" + fields.size()
-                + ") received from server session input:\n" + fields);
-    }
-    Set<CVCPermission> options = CVCPermission.getOptions(fields);
-
-    ATSpecificAttributes specAttr;
-    try
-    {
-      specAttr = ATSpecificAttributes.constructFromCVCPermissions(options,
-                                                                  input.isPscIncludeSpecific(),
-                                                                  input.isAccessAllSpecificAttributes());
-    }
-    catch (IOException e)
-    {
-      throw new ChatOptionNotAllowedException("Cannot construct ATSpecificAttributes with selected options");
-    }
-    LOG.debug(input.getLogPrefix() + "ATSpecificAttributes created:\n" + specAttr);
-
-    // Get the ATSpecificAttributes from the CVC
-    ATSpecificAttributes cvcSpecAttr = input.getTerminalCertificate().getATSpecificAttributes();
-    if (cvcSpecAttr == null)
-    {
-      if (!ATSpecificAttributes.SPEC_DOUBLES.containsAll(specAttr.getAllRights()))
-      {
-        String message = "Complete specific attributes not allowed";
-        LOG.error(input.getLogPrefix() + message);
-        throw new ChatOptionNotAllowedException(message);
-      }
-      return null;
-    }
-
-    for ( CVCPermission chatOption : specAttr.getAllRights() )
-    {
-      if (!cvcSpecAttr.existsRight(chatOption.getAccessRightEnum()))
-      {
-        String message = "Specific attribute not allowed: " + chatOption;
-        LOG.error(input.getLogPrefix() + message);
-        throw new ChatOptionNotAllowedException(message);
-      }
-    }
-    return specAttr;
-  }
-
-
+  @Getter
+  @Setter
   public static class Authorizations
   {
 
     private CertificateHolderAuthorizationTemplate chat = null;
-
-    private ATEidAccess eidAccess = null;
-
-    private ATSpecialFunctions specialFunctions = null;
-
-    private ATSpecificAttributes specificAttributes = null;
-
 
     public Authorizations()
     {
       super();
     }
 
-    public Authorizations(CertificateHolderAuthorizationTemplate chat,
-                          ATEidAccess eidAccess,
-                          ATSpecialFunctions specialFunctions,
-                          ATSpecificAttributes specificAttributes)
+    public Authorizations(CertificateHolderAuthorizationTemplate chat)
     {
       super();
       this.chat = chat;
-      this.eidAccess = eidAccess;
-      this.specialFunctions = specialFunctions;
-      this.setSpecificAttributes(specificAttributes);
-    }
-
-    public CertificateHolderAuthorizationTemplate getChat()
-    {
-      return this.chat;
-    }
-
-    public void setChat(CertificateHolderAuthorizationTemplate chat)
-    {
-      this.chat = chat;
-    }
-
-    public ATEidAccess getEidAccess()
-    {
-      return this.eidAccess;
-    }
-
-    public void setEidAccess(ATEidAccess eidAccess)
-    {
-      this.eidAccess = eidAccess;
-    }
-
-    public ATSpecialFunctions getSpecialFunctions()
-    {
-      return this.specialFunctions;
-    }
-
-    public void setSpecialFunctions(ATSpecialFunctions specialFunctions)
-    {
-      this.specialFunctions = specialFunctions;
-    }
-
-    public ATSpecificAttributes getSpecificAttributes()
-    {
-      return this.specificAttributes;
-    }
-
-    public void setSpecificAttributes(ATSpecificAttributes specificAttributes)
-    {
-      this.specificAttributes = specificAttributes;
     }
   }
 }

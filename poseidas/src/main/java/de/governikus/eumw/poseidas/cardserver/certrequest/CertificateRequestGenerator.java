@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018 Governikus KG. Licensed under the EUPL, Version 1.2 or as soon they will be approved by
+ * Copyright (c) 2019 Governikus KG. Licensed under the EUPL, Version 1.2 or as soon they will be approved by
  * the European Commission - subsequent versions of the EUPL (the "Licence"); You may not use this work except
  * in compliance with the Licence. You may obtain a copy of the Licence at:
  * http://joinup.ec.europa.eu/software/page/eupl Unless required by applicable law or agreed to in writing,
@@ -42,7 +42,7 @@ import de.governikus.eumw.poseidas.cardserver.service.hsm.impl.LocalCertAndKeyPr
 
 /**
  * Generator for certificate requests.
- * 
+ *
  * @author Jens Wothe, jw@bos-bremen.de
  * @author Arne Stahlbock, ast@bos-bremen.de
  */
@@ -58,7 +58,7 @@ public class CertificateRequestGenerator
    * <p>
    * Company: bremen online services GmbH und Co. KG
    * </p>
-   * 
+   *
    * @see CertificateRequestGenerator#generateRequest(ECCVCertificate, byte[], ECCVCertificate,
    *      CertificateDescription, AdditionalData, boolean, boolean)
    * @author Jens Wothe, jw@bos-bremen.de
@@ -75,7 +75,7 @@ public class CertificateRequestGenerator
 
     /**
      * create instance, see getter for meaning of parameters
-     * 
+     *
      * @param chr
      * @param car
      * @param chat
@@ -89,7 +89,7 @@ public class CertificateRequestGenerator
 
     /**
      * Gets CertificateAuthorizationReference, optional
-     * 
+     *
      * @return CertificateAuthorizationReference
      */
     public String getCertificateAuthorizationReference()
@@ -100,7 +100,7 @@ public class CertificateRequestGenerator
     /**
      * Gets CertificateHolderAuthorizationTemplate, optional if chat of old CVC is to be expected, required if
      * no old CVC available (only checking response to CertificateRequest).
-     * 
+     *
      * @return DOCUMENT ME!
      */
     public CertificateHolderAuthorizationTemplate getCertificateHolderAuthorizationTemplate()
@@ -111,7 +111,7 @@ public class CertificateRequestGenerator
     /**
      * Gets CertificateHolderReference, optional if holder of old CVC is to be used (automatically increasing
      * existing counter), required if no old CVC available.
-     * 
+     *
      * @return CertificateHolderReference
      */
     public String getCertificateHolderReference()
@@ -128,7 +128,7 @@ public class CertificateRequestGenerator
    * <p>
    * Company: bremen online services GmbH und Co. KG
    * </p>
-   * 
+   *
    * @see CertificateRequestGenerator#generateRequest(ECCVCertificate, ECCVCertificate,
    *      CertificateDescription,
    *      de.governikus.eumw.poseidas.cardserver.certrequest.CertificateRequestGenerator.AdditionalData,
@@ -141,7 +141,7 @@ public class CertificateRequestGenerator
 
     /**
      * Gets request of response.
-     * 
+     *
      * @return request
      * @see ASN1#getEncoded()
      */
@@ -149,7 +149,7 @@ public class CertificateRequestGenerator
 
     /**
      * Gets description of response.
-     * 
+     *
      * @return description
      * @see ASN1#getEncoded()
      */
@@ -157,7 +157,7 @@ public class CertificateRequestGenerator
 
     /**
      * Gets byte[]-array containing PKCS#8 serialized private key.
-     * 
+     *
      * @return key
      * @see ASN1#getEncoded()
      */
@@ -165,7 +165,7 @@ public class CertificateRequestGenerator
 
     /**
      * Gets CHAT expected at delivered CVC.
-     * 
+     *
      * @return CHAT
      * @see ASN1#getEncoded()
      */
@@ -230,7 +230,7 @@ public class CertificateRequestGenerator
 
   /**
    * Generates new CHR by increasing old.
-   * 
+   *
    * @param oldCVC old CVC containing old CHR, <code>null</code> only permitted if additionalData containing
    *          CHR
    * @param additionalData optional data, if present and containing CHR, overriding CHR from old CVC
@@ -270,7 +270,7 @@ public class CertificateRequestGenerator
 
   /**
    * Generates a request from given data.
-   * 
+   *
    * @param oldCVC used old CVC for creating new request, holder reference of CVC contains at last 5 bytes a
    *          sequence counter as alphanumeric ASCII characters to support increasing, <code>null</code> only
    *          permitted, if CertificateHolderReference and CertificateHolderAuthorizationTemplate given
@@ -388,7 +388,7 @@ public class CertificateRequestGenerator
 
   /**
    * Copies extensions from old CVC to new request.
-   * 
+   *
    * @param oldCVC old CVC
    * @param cr new request
    * @throws IOException
@@ -417,7 +417,7 @@ public class CertificateRequestGenerator
   /**
    * Sets outer signature for certificate request. Note: A follow-up request is to be signed with the private
    * key of the old certificate-to-be-replaced.
-   * 
+   *
    * @param ncr certificate request
    * @param oldPrivKey key for signature
    * @param sigAlg signature algorithm
@@ -453,7 +453,7 @@ public class CertificateRequestGenerator
   /**
    * Uses a certificate to produce a clean request, i.e. an ASN.1 object having the structure of a request,
    * but without valid data.
-   * 
+   *
    * @param rootCert certificate to use as pattern
    * @return empty certificate request
    * @throws IOException
@@ -486,7 +486,7 @@ public class CertificateRequestGenerator
 
   /**
    * Sets holder reference to a certificate request.
-   * 
+   *
    * @param cr certificate request
    * @param chr certificate holder reference
    * @throws IOException
@@ -509,7 +509,7 @@ public class CertificateRequestGenerator
   /**
    * Signs certificate request. Note: this is the mandatory inner self-signature, produced using the private
    * key of the certificate request.
-   * 
+   *
    * @param cr certificate request
    * @param root root certificate of PKI, containing domain parameters for key generation
    * @param chr certificate holder reference, used as alias for new key
@@ -540,7 +540,7 @@ public class CertificateRequestGenerator
 
   /**
    * Produces a new CHR by increasing the counter of an old CHR if possible.
-   * 
+   *
    * @param oldCHR old CHR of which the counter is to be increased
    * @return {@link String} representation of new CHR
    */
@@ -553,7 +553,7 @@ public class CertificateRequestGenerator
 
   /**
    * Helper method for increasing a String.
-   * 
+   *
    * @param str the String to be increased
    * @param position the position of the character to be increased
    * @return the increased String
@@ -598,7 +598,7 @@ public class CertificateRequestGenerator
 
   /**
    * Sets a certificate description to a certificate request, keeping other extensions intact.
-   * 
+   *
    * @param cr certificate request
    * @param cd certificate description
    * @throws IOException
@@ -684,7 +684,7 @@ public class CertificateRequestGenerator
 
   /**
    * Checks inner signature of certificate request.
-   * 
+   *
    * @param cr certificate request
    * @throws IOException
    * @throws FileNotFoundException

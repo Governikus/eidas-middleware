@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018 Governikus KG. Licensed under the EUPL, Version 1.2 or as soon they will be approved by
+ * Copyright (c) 2019 Governikus KG. Licensed under the EUPL, Version 1.2 or as soon they will be approved by
  * the European Commission - subsequent versions of the EUPL (the "Licence"); You may not use this work except
  * in compliance with the Licence. You may obtain a copy of the Licence at:
  * http://joinup.ec.europa.eu/software/page/eupl Unless required by applicable law or agreed to in writing,
@@ -24,7 +24,7 @@ import de.governikus.eumw.poseidas.cardbase.asn1.npa.SecurityInfosPath;
 
 /**
  * Implementation of the <code>SubjectPublicKeyInfo</code> structure in {@link SecurityInfos}.
- * 
+ *
  * @author Arne Stahlbock, ast@bos-bremen.de
  */
 public class SubjectPublicKeyInfo extends AbstractASN1Encoder
@@ -43,7 +43,7 @@ public class SubjectPublicKeyInfo extends AbstractASN1Encoder
 
   /**
    * Gets the child element <code>algorithm</code>.
-   * 
+   *
    * @return {@link AlgorithmIdentifier} instance containing <code>algorithm</code>, <code>null</code>
    *         possible
    * @throws IOException if error in getting
@@ -59,7 +59,7 @@ public class SubjectPublicKeyInfo extends AbstractASN1Encoder
 
   /**
    * Gets the child element <code>subjectPublicKey</code>.
-   * 
+   *
    * @return {@link ASN1} instance containing <code>subjectPublicKey</code>, <code>null</code> possible
    * @throws IOException if error in getting
    */

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018 Governikus KG. Licensed under the EUPL, Version 1.2 or as soon they will be approved by
+ * Copyright (c) 2019 Governikus KG. Licensed under the EUPL, Version 1.2 or as soon they will be approved by
  * the European Commission - subsequent versions of the EUPL (the "Licence"); You may not use this work except
  * in compliance with the Licence. You may obtain a copy of the Licence at:
  * http://joinup.ec.europa.eu/software/page/eupl Unless required by applicable law or agreed to in writing,
@@ -34,10 +34,6 @@ import de.governikus.eumw.poseidas.cardbase.asn1.npa.si.ChipAuthenticationPublic
 import de.governikus.eumw.poseidas.cardbase.asn1.npa.si.EIDSecurityInfo;
 import de.governikus.eumw.poseidas.cardbase.asn1.npa.si.PACEDomainParameterInfo;
 import de.governikus.eumw.poseidas.cardbase.asn1.npa.si.PACEInfo;
-import de.governikus.eumw.poseidas.cardbase.asn1.npa.si.PSAInfo;
-import de.governikus.eumw.poseidas.cardbase.asn1.npa.si.PSCInfo;
-import de.governikus.eumw.poseidas.cardbase.asn1.npa.si.PSMInfo;
-import de.governikus.eumw.poseidas.cardbase.asn1.npa.si.PSPublicKeyInfo;
 import de.governikus.eumw.poseidas.cardbase.asn1.npa.si.PasswordInfo;
 import de.governikus.eumw.poseidas.cardbase.asn1.npa.si.PrivilegedTerminalInfo;
 import de.governikus.eumw.poseidas.cardbase.asn1.npa.si.RestrictedIdentificationDomainParameterInfo;
@@ -49,7 +45,7 @@ import de.governikus.eumw.poseidas.cardbase.constants.OIDConstants;
 /**
  * Implementation of ASN.1 structure for SecurityInfos, contained in EF.CardAccess, EF.CardSecurity and
  * EF.ChipSecurity files.
- * 
+ *
  * @author Arne Stahlbock, ast@bos-bremen.de
  */
 public class SecurityInfos extends AbstractASN1Encoder implements ASN1Encoder
@@ -59,26 +55,6 @@ public class SecurityInfos extends AbstractASN1Encoder implements ASN1Encoder
    * List of {@link PasswordInfo}
    */
   private List<PasswordInfo> passwordInfoList;
-
-  /**
-   * List of {@link PSPublicKeyInfo}
-   */
-  private List<PSPublicKeyInfo> psPublicKeyInfoList;
-
-  /**
-   * List of {@link PSAInfo}
-   */
-  private List<PSAInfo> psaInfoList;
-
-  /**
-   * List of {@link PSMInfo}
-   */
-  private List<PSMInfo> psmInfoList;
-
-  /**
-   * List of {@link PSCInfo}
-   */
-  private List<PSCInfo> pscInfoList;
 
   /**
    * List of {@link PACEInfo}
@@ -145,7 +121,7 @@ public class SecurityInfos extends AbstractASN1Encoder implements ASN1Encoder
 
   /**
    * Constructor.
-   * 
+   *
    * @param bytes bytes of ASN.1
    * @throws IOException if constructing fails
    */
@@ -187,10 +163,6 @@ public class SecurityInfos extends AbstractASN1Encoder implements ASN1Encoder
       try
       {
         this.passwordInfoList = new ArrayList<>();
-        this.psPublicKeyInfoList = new ArrayList<>();
-        this.psaInfoList = new ArrayList<>();
-        this.psmInfoList = new ArrayList<>();
-        this.pscInfoList = new ArrayList<>();
         this.paceInfoList = new ArrayList<>();
         this.paceDomainParameterInfoList = new ArrayList<>();
         this.chipAuthenticationInfoList = new ArrayList<>();
@@ -202,10 +174,6 @@ public class SecurityInfos extends AbstractASN1Encoder implements ASN1Encoder
         {
           OID oid = (OID)a.getChildElementByPath(SecurityInfosPath.SECURITY_INFO_PROTOCOL);
           addPasswordInfo(a, oid);
-          addPSPublicKeyInfo(a, oid);
-          addPSAInfo(a, oid);
-          addPSMInfo(a, oid);
-          addPSCInfo(a, oid);
           addPACEInfo(a, oid);
           addPACEDomainParameterInfo(a, oid);
           addChipAuthenticationInfo(a, oid);
@@ -222,10 +190,6 @@ public class SecurityInfos extends AbstractASN1Encoder implements ASN1Encoder
       catch (IOException e)
       {
         this.passwordInfoList = null;
-        this.psPublicKeyInfoList = null;
-        this.psaInfoList = null;
-        this.psmInfoList = null;
-        this.pscInfoList = null;
         this.paceInfoList = null;
         this.paceDomainParameterInfoList = null;
         this.chipAuthenticationInfoList = null;
@@ -240,7 +204,7 @@ public class SecurityInfos extends AbstractASN1Encoder implements ASN1Encoder
 
   /**
    * Adds {@link PrivilegedTerminalInfo} for related {@link ASN1} identified by {@link OID}.
-   * 
+   *
    * @param a asn1
    * @param oid oid
    * @throws IOException if creating {@link PrivilegedTerminalInfo} fails
@@ -263,7 +227,7 @@ public class SecurityInfos extends AbstractASN1Encoder implements ASN1Encoder
 
   /**
    * Adds {@link EIDSecurityInfo} for related {@link ASN1} identified by {@link OID}.
-   * 
+   *
    * @param a asn1
    * @param oid oid
    * @throws IOException if creating {@link EIDSecurityInfo} fails
@@ -286,7 +250,7 @@ public class SecurityInfos extends AbstractASN1Encoder implements ASN1Encoder
 
   /**
    * Adds {@link CardInfo} for related {@link ASN1} identified by {@link OID}.
-   * 
+   *
    * @param a asn1
    * @param oid oid
    * @throws IOException if creating {@link CardInfo} fails
@@ -310,7 +274,7 @@ public class SecurityInfos extends AbstractASN1Encoder implements ASN1Encoder
   /**
    * Adds {@link RestrictedIdentificationDomainParameterInfo} for related {@link ASN1} identified by
    * {@link OID}.
-   * 
+   *
    * @param a asn1
    * @param oid oid
    * @throws IOException if creating {@link RestrictedIdentificationDomainParameterInfo} fails
@@ -326,7 +290,7 @@ public class SecurityInfos extends AbstractASN1Encoder implements ASN1Encoder
 
   /**
    * Adds {@link RestrictedIdentificationInfo} for related {@link ASN1} identified by {@link OID}.
-   * 
+   *
    * @param a asn1
    * @param oid oid
    * @throws IOException if creating {@link RestrictedIdentificationInfo} fails
@@ -345,7 +309,7 @@ public class SecurityInfos extends AbstractASN1Encoder implements ASN1Encoder
 
   /**
    * Adds {@link TerminalAuthenticationInfo} for related {@link ASN1} identified by {@link OID}.
-   * 
+   *
    * @param a asn1
    * @param oid oid
    * @throws IOException if creating {@link TerminalAuthenticationInfo} fails
@@ -360,7 +324,7 @@ public class SecurityInfos extends AbstractASN1Encoder implements ASN1Encoder
 
   /**
    * Adds {@link ChipAuthenticationPublicKeyInfo} for related {@link ASN1} identified by {@link OID}.
-   * 
+   *
    * @param a asn1
    * @param oid oid
    * @throws IOException if creating {@link ChipAuthenticationPublicKeyInfo} fails
@@ -375,7 +339,7 @@ public class SecurityInfos extends AbstractASN1Encoder implements ASN1Encoder
 
   /**
    * Adds {@link ChipAuthenticationDomainParameterInfo} for related {@link ASN1} identified by {@link OID}.
-   * 
+   *
    * @param a asn1
    * @param oid oid
    * @throws IOException if creating {@link ChipAuthenticationDomainParameterInfo} fails
@@ -391,7 +355,7 @@ public class SecurityInfos extends AbstractASN1Encoder implements ASN1Encoder
 
   /**
    * Adds {@link ChipAuthenticationInfo} for related {@link ASN1} identified by {@link OID}.
-   * 
+   *
    * @param a asn1
    * @param oid oid
    * @throws IOException if creating {@link ChipAuthenticationInfo} fails
@@ -412,7 +376,7 @@ public class SecurityInfos extends AbstractASN1Encoder implements ASN1Encoder
 
   /**
    * Adds {@link PACEDomainParameterInfo} for related {@link ASN1} identified by {@link OID}.
-   * 
+   *
    * @param a asn1
    * @param oid oid
    * @throws IOException if creating {@link PACEDomainParameterInfo} fails
@@ -428,7 +392,7 @@ public class SecurityInfos extends AbstractASN1Encoder implements ASN1Encoder
 
   /**
    * Adds {@link PasswordInfo} for related {@link ASN1} identified by {@link OID}.
-   * 
+   *
    * @param a asn1
    * @param oid oid
    * @throws IOException if creating {@link PasswordInfo} fails
@@ -443,74 +407,8 @@ public class SecurityInfos extends AbstractASN1Encoder implements ASN1Encoder
   }
 
   /**
-   * Adds {@link PSPublicKeyInfo} for related {@link ASN1} identified by {@link OID}.
-   * 
-   * @param a asn1
-   * @param oid oid
-   * @throws IOException if creating {@link PSPublicKeyInfo} fails
-   */
-  private void addPSPublicKeyInfo(ASN1 a, OID oid) throws IOException
-  {
-    if (oid.equals(OIDConstants.OID_PK_PS_ECDH_ECSCHNORR))
-    {
-      this.psPublicKeyInfoList.add(new PSPublicKeyInfo(a.getEncoded()));
-    }
-  }
-
-  /**
-   * Adds {@link PSAInfo} for related {@link ASN1} identified by {@link OID}.
-   * 
-   * @param a asn1
-   * @param oid oid
-   * @throws IOException if creating {@link PSAInfo} fails
-   */
-  private void addPSAInfo(ASN1 a, OID oid) throws IOException
-  {
-    if (oid.equals(OIDConstants.OID_PSA_ECDH_ECSCHNORR_SHA256)
-        || oid.equals(OIDConstants.OID_PSA_ECDH_ECSCHNORR_SHA384)
-        || oid.equals(OIDConstants.OID_PSA_ECDH_ECSCHNORR_SHA512))
-    {
-      this.psaInfoList.add(new PSAInfo(a.getEncoded()));
-    }
-  }
-
-  /**
-   * Adds {@link PSMInfo} for related {@link ASN1} identified by {@link OID}.
-   * 
-   * @param a asn1
-   * @param oid oid
-   * @throws IOException if creating {@link PSMInfo} fails
-   */
-  private void addPSMInfo(ASN1 a, OID oid) throws IOException
-  {
-    if (oid.equals(OIDConstants.OID_PSM_ECDH_ECSCHNORR_SHA256)
-        || oid.equals(OIDConstants.OID_PSM_ECDH_ECSCHNORR_SHA384)
-        || oid.equals(OIDConstants.OID_PSM_ECDH_ECSCHNORR_SHA512))
-    {
-      this.psmInfoList.add(new PSMInfo(a.getEncoded()));
-    }
-  }
-
-  /**
-   * Adds {@link PSCInfo} for related {@link ASN1} identified by {@link OID}.
-   * 
-   * @param a asn1
-   * @param oid oid
-   * @throws IOException if creating {@link PSCInfo} fails
-   */
-  private void addPSCInfo(ASN1 a, OID oid) throws IOException
-  {
-    if (oid.equals(OIDConstants.OID_PSC_ECDH_ECSCHNORR_SHA256)
-        || oid.equals(OIDConstants.OID_PSC_ECDH_ECSCHNORR_SHA384)
-        || oid.equals(OIDConstants.OID_PSC_ECDH_ECSCHNORR_SHA512))
-    {
-      this.pscInfoList.add(new PSCInfo(a.getEncoded()));
-    }
-  }
-
-  /**
    * Adds {@link PACEInfo} for related {@link ASN1} identified by {@link OID}.
-   * 
+   *
    * @param a asn1
    * @param oid oid
    * @throws IOException if creating {@link PACEInfo} fails
@@ -540,7 +438,7 @@ public class SecurityInfos extends AbstractASN1Encoder implements ASN1Encoder
 
   /**
    * Gets a list of all {@link PasswordInfo} structures in this {@link SecurityInfos}.
-   * 
+   *
    * @return list of {@link PasswordInfo}, can be <code>null</code> or empty
    */
   public List<PasswordInfo> getPasswordInfo()
@@ -549,48 +447,8 @@ public class SecurityInfos extends AbstractASN1Encoder implements ASN1Encoder
   }
 
   /**
-   * Gets a list of all {@link PSPublicKeyInfo} structures in this {@link SecurityInfos}.
-   * 
-   * @return list of {@link PSPublicKeyInfo}, can be <code>null</code> or empty
-   */
-  public List<PSPublicKeyInfo> getPSPublicKeyInfo()
-  {
-    return this.psPublicKeyInfoList;
-  }
-
-  /**
-   * Gets a list of all {@link PSAInfo} structures in this {@link SecurityInfos}.
-   * 
-   * @return list of {@link PSAInfo}, can be <code>null</code> or empty
-   */
-  public List<PSAInfo> getPSAInfo()
-  {
-    return this.psaInfoList;
-  }
-
-  /**
-   * Gets a list of all {@link PSMInfo} structures in this {@link SecurityInfos}.
-   * 
-   * @return list of {@link PSMInfo}, can be <code>null</code> or empty
-   */
-  public List<PSMInfo> getPSMInfo()
-  {
-    return this.psmInfoList;
-  }
-
-  /**
-   * Gets a list of all {@link PSCInfo} structures in this {@link SecurityInfos}.
-   * 
-   * @return list of {@link PSCInfo}, can be <code>null</code> or empty
-   */
-  public List<PSCInfo> getPSCInfo()
-  {
-    return this.pscInfoList;
-  }
-
-  /**
    * Gets a list of all {@link PACEInfo} structures in this {@link SecurityInfos}.
-   * 
+   *
    * @return list of {@link PACEInfo}, can be <code>null</code> or empty
    */
   public List<PACEInfo> getPACEInfo()
@@ -600,7 +458,7 @@ public class SecurityInfos extends AbstractASN1Encoder implements ASN1Encoder
 
   /**
    * Gets a list of all {@link PACEDomainParameterInfo} structures in this {@link SecurityInfos}.
-   * 
+   *
    * @return list of {@link PACEDomainParameterInfo}, can be <code>null</code> or empty
    */
   public List<PACEDomainParameterInfo> getPACEDomainParameterInfo()
@@ -610,7 +468,7 @@ public class SecurityInfos extends AbstractASN1Encoder implements ASN1Encoder
 
   /**
    * Gets a list of all {@link ChipAuthenticationInfo} structures in this {@link SecurityInfos}.
-   * 
+   *
    * @return list of {@link ChipAuthenticationInfo}, can be <code>null</code> or empty
    */
   public List<ChipAuthenticationInfo> getChipAuthenticationInfo()
@@ -621,7 +479,7 @@ public class SecurityInfos extends AbstractASN1Encoder implements ASN1Encoder
   /**
    * Gets a list of all {@link ChipAuthenticationDomainParameterInfo} structures in this {@link SecurityInfos}
    * .
-   * 
+   *
    * @return list of {@link ChipAuthenticationDomainParameterInfo}, can be <code>null</code> or empty
    */
   public List<ChipAuthenticationDomainParameterInfo> getChipAuthenticationDomainParameterInfo()
@@ -631,7 +489,7 @@ public class SecurityInfos extends AbstractASN1Encoder implements ASN1Encoder
 
   /**
    * Gets a list of all {@link ChipAuthenticationPublicKeyInfo} structures in this {@link SecurityInfos}.
-   * 
+   *
    * @return list of {@link ChipAuthenticationPublicKeyInfo}, can be <code>null</code> or empty
    */
   public List<ChipAuthenticationPublicKeyInfo> getChipAuthenticationPublicKeyInfo()
@@ -641,7 +499,7 @@ public class SecurityInfos extends AbstractASN1Encoder implements ASN1Encoder
 
   /**
    * Gets a list of all {@link TerminalAuthenticationInfo} structures in this {@link SecurityInfos}.
-   * 
+   *
    * @return list of {@link TerminalAuthenticationInfo}, can be <code>null</code> or empty
    */
   public List<TerminalAuthenticationInfo> getTerminalAuthenticationInfo()
@@ -651,7 +509,7 @@ public class SecurityInfos extends AbstractASN1Encoder implements ASN1Encoder
 
   /**
    * Gets a list of all {@link RestrictedIdentificationInfo} structures in this {@link SecurityInfos}.
-   * 
+   *
    * @return list of {@link RestrictedIdentificationInfo}, can be <code>null</code> or empty
    */
   public List<RestrictedIdentificationInfo> getRestrictedIdentificationInfo()
@@ -661,7 +519,7 @@ public class SecurityInfos extends AbstractASN1Encoder implements ASN1Encoder
 
   /**
    * Gets the {@link RestrictedIdentificationDomainParameterInfo} structure in this {@link SecurityInfos}.
-   * 
+   *
    * @return the {@link RestrictedIdentificationDomainParameterInfo}, can be <code>null</code>
    */
   public RestrictedIdentificationDomainParameterInfo getRestrictedIdentificationDomainParameterInfo()
@@ -671,7 +529,7 @@ public class SecurityInfos extends AbstractASN1Encoder implements ASN1Encoder
 
   /**
    * Gets the {@link CardInfo} structure in this {@link SecurityInfos}.
-   * 
+   *
    * @return the {@link CardInfo}, can be <code>null</code>
    */
   public CardInfo getCardInfo()
@@ -681,7 +539,7 @@ public class SecurityInfos extends AbstractASN1Encoder implements ASN1Encoder
 
   /**
    * Gets the {@link EIDSecurityInfo} structure in this {@link SecurityInfos}.
-   * 
+   *
    * @return the {@link EIDSecurityInfo}, can be <code>null</code>
    */
   public EIDSecurityInfo getEIDSecurityInfo()
@@ -691,7 +549,7 @@ public class SecurityInfos extends AbstractASN1Encoder implements ASN1Encoder
 
   /**
    * Gets the {@link PrivilegedTerminalInfo} structure in this {@link SecurityInfos}.
-   * 
+   *
    * @return the {@link PrivilegedTerminalInfo}, can be <code>null</code>
    */
   public PrivilegedTerminalInfo getPrivilegedTerminalInfo()
@@ -811,7 +669,7 @@ public class SecurityInfos extends AbstractASN1Encoder implements ASN1Encoder
 
   /**
    * Gets unmodifiable version of domain parameter map.
-   * 
+   *
    * @return domain parameter map
    */
   public static Map<Integer, ECParameterSpec> getDomainParameterMap()

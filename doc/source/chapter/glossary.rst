@@ -33,7 +33,7 @@ Glossary
     eIDAS Middleware
         The middleware as described in the eIDAS Technical Specification. See `collaborative platform created by
         the European Commission
-        <https://joinup.ec.europa.eu/software/cefeid/document/eidas-technical-specifications-v10>`_
+        <https://ec.europa.eu/cefdigital/wiki/display/CEFDIGITAL2018/eIDAS+Profile>`_
 
     Open Virtualization Format
         Open format for exchanging virtual machines.

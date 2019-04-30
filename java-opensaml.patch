@@ -278,16 +278,17 @@ index 0000000..226a090
 +    }
 +}
 diff --git a/opensaml-xmlsec-api/src/main/java/org/opensaml/xmlsec/encryption/support/Encrypter.java b/opensaml-xmlsec-api/src/main/java/org/opensaml/xmlsec/encryption/support/Encrypter.java
-index cb955b8..72160b4 100644
+index cb955b8..d23bd04 100644
 --- a/opensaml-xmlsec-api/src/main/java/org/opensaml/xmlsec/encryption/support/Encrypter.java
 +++ b/opensaml-xmlsec-api/src/main/java/org/opensaml/xmlsec/encryption/support/Encrypter.java
-@@ -19,22 +19,35 @@
+@@ -19,22 +19,37 @@
  
  import java.security.Key;
  import java.security.KeyException;
 +import java.security.KeyPair;
 +import java.security.KeyPairGenerator;
  import java.security.NoSuchAlgorithmException;
++import java.security.Provider;
 +import java.security.Security;
  import java.security.interfaces.DSAPublicKey;
 +import java.security.interfaces.ECKey;
@@ -314,10 +315,11 @@ index cb955b8..72160b4 100644
 +import org.bouncycastle.crypto.digests.SHA512Digest;
 +import org.bouncycastle.crypto.params.KDFParameters;
 +import org.bouncycastle.jce.provider.BouncyCastleProvider;
++import org.bouncycastle.pqc.math.linearalgebra.ByteUtils;
  import org.opensaml.core.xml.XMLObject;
  import org.opensaml.core.xml.XMLObjectBuilderFactory;
  import org.opensaml.core.xml.config.XMLObjectProviderRegistrySupport;
-@@ -45,6 +58,7 @@
+@@ -45,6 +60,7 @@
  import org.opensaml.core.xml.io.UnmarshallingException;
  import org.opensaml.security.SecurityException;
  import org.opensaml.security.credential.CredentialSupport;
@@ -325,7 +327,7 @@ index cb955b8..72160b4 100644
  import org.opensaml.xmlsec.algorithm.AlgorithmSupport;
  import org.opensaml.xmlsec.encryption.EncryptedData;
  import org.opensaml.xmlsec.encryption.EncryptedKey;
-@@ -58,6 +72,7 @@
+@@ -58,6 +74,7 @@
  import org.w3c.dom.Element;
  
  import com.google.common.base.Strings;
@@ -333,7 +335,7 @@ index cb955b8..72160b4 100644
  
  /**
   * Supports encryption of XMLObjects, their content and keys, according to the XML Encryption specification, version
-@@ -294,8 +309,64 @@
+@@ -294,8 +311,64 @@
  
          Key encryptionKey = CredentialSupport.extractEncryptionKey(kekParams.getEncryptionCredential());
  
@@ -350,15 +352,15 @@ index cb955b8..72160b4 100644
 +
 +            ecdh = true;
 +            try {
-+                Security.addProvider(new BouncyCastleProvider());
++                Provider bouncy = new BouncyCastleProvider();
 +                ECDHCredential cred = (ECDHCredential) kekParams.getEncryptionCredential();
-+                
-+                KeyPairGenerator kpg = KeyPairGenerator.getInstance("EC", "BC");
++
++                KeyPairGenerator kpg = KeyPairGenerator.getInstance("EC", bouncy);
 +                kpg.initialize(((ECKey) encryptionKey).getParams());
 +                KeyPair tempKeyPair = kpg.generateKeyPair();
 +                cred.setSenderPubKey(tempKeyPair.getPublic());
 +
-+                KeyAgreement ka = KeyAgreement.getInstance("ECDH", "BC");
++                KeyAgreement ka = KeyAgreement.getInstance("ECDH", bouncy);
 +                ka.init(tempKeyPair.getPrivate());
 +                ka.doPhase(encryptionKey, true);
 +                byte[] shared = ka.generateSecret();
@@ -367,12 +369,12 @@ index cb955b8..72160b4 100644
 +                byte[] rawKey = new byte[keyLength];
 +
 +                ConcatKDFParamsType concatKDFParams = cred.getConcatKDF();
-+                byte[] combinedConcatParams = Bytes.concat(concatKDFParams.getAlgorithmID(), concatKDFParams.getPartyUInfo(), concatKDFParams.getPartyVInfo());
++                byte[] combinedConcatParams = Bytes.concat(unpad(concatKDFParams.getAlgorithmID()), unpad(concatKDFParams.getPartyUInfo()), unpad(concatKDFParams.getPartyVInfo()));
 +                if (concatKDFParams.getSuppPubInfo() != null) {
-+                    combinedConcatParams = Bytes.concat(combinedConcatParams, concatKDFParams.getSuppPubInfo());
++                    combinedConcatParams = Bytes.concat(combinedConcatParams, unpad(concatKDFParams.getSuppPubInfo()));
 +                }
 +                if (concatKDFParams.getSuppPrivInfo() != null) {
-+                    combinedConcatParams = Bytes.concat(combinedConcatParams, concatKDFParams.getSuppPrivInfo());
++                    combinedConcatParams = Bytes.concat(combinedConcatParams, unpad(concatKDFParams.getSuppPrivInfo()));
 +                }
 +                Digest dig = null;
 +                switch (concatKDFParams.getDigestMethod().getAlgorithm()) {
@@ -400,7 +402,7 @@ index cb955b8..72160b4 100644
  
          if (kekParams.getKeyInfoGenerator() != null) {
              KeyInfoGenerator generator = kekParams.getKeyInfoGenerator();
-@@ -670,7 +741,8 @@
+@@ -670,7 +743,8 @@
          } else if (key instanceof DSAPublicKey) {
              log.error("Attempt made to use DSA key for encrypted key transport");
              throw new EncryptionException("DSA keys may not be used for encrypted key transport");
@@ -410,6 +412,22 @@ index cb955b8..72160b4 100644
              log.error("Attempt made to use EC key for encrypted key transport");
              throw new EncryptionException("EC keys may not be used for encrypted key transport");
          } else if (Strings.isNullOrEmpty(kekParams.getAlgorithm())) {
+@@ -756,4 +830,13 @@
+         }
+     }
+ 
+-}
+\ No newline at end of file
++    private static byte[] unpad(byte[] input) {
++        if (input == null || input.length == 0) {
++            return new byte[0];
++        }
++        if (input[0] == 0) {
++            return ByteUtils.subArray(input, 1);
++        }
++        throw new IllegalArgumentException("given byte array is not padded according to specification");
++    }
++}
 diff --git a/opensaml-xmlsec-api/src/main/java/org/opensaml/xmlsec/encryption/support/EncryptionConstants.java b/opensaml-xmlsec-api/src/main/java/org/opensaml/xmlsec/encryption/support/EncryptionConstants.java
 index 5725042..0396d1c 100644
 --- a/opensaml-xmlsec-api/src/main/java/org/opensaml/xmlsec/encryption/support/EncryptionConstants.java
@@ -471,7 +489,7 @@ index 04bc9d6..187c8ae 100644
  }
 \ No newline at end of file
 diff --git a/opensaml-xmlsec-api/src/main/java/org/opensaml/xmlsec/keyinfo/KeyInfoSupport.java b/opensaml-xmlsec-api/src/main/java/org/opensaml/xmlsec/keyinfo/KeyInfoSupport.java
-index f463935..6ccd82b 100644
+index f463935..3f58210 100644
 --- a/opensaml-xmlsec-api/src/main/java/org/opensaml/xmlsec/keyinfo/KeyInfoSupport.java
 +++ b/opensaml-xmlsec-api/src/main/java/org/opensaml/xmlsec/keyinfo/KeyInfoSupport.java
 @@ -17,6 +17,7 @@
@@ -524,7 +542,14 @@ index f463935..6ccd82b 100644
  import org.opensaml.xmlsec.signature.P;
  import org.opensaml.xmlsec.signature.Q;
  import org.opensaml.xmlsec.signature.RSAKeyValue;
-@@ -506,14 +515,14 @@
+@@ -500,20 +509,20 @@
+      */
+     public static void addPublicKey(@Nonnull final KeyInfo keyInfo, @Nullable final PublicKey pk) {
+         Constraint.isNotNull(keyInfo, "KeyInfo cannot be null");
+-        
++
+         XMLObjectBuilder<KeyValue> keyValueBuilder = (XMLObjectBuilder<KeyValue>)
+                 XMLObjectProviderRegistrySupport.getBuilderFactory().getBuilder(KeyValue.DEFAULT_ELEMENT_NAME);
          KeyValue keyValue = Constraint.isNotNull(keyValueBuilder, "KeyValue builder not available").buildObject(
                  KeyValue.DEFAULT_ELEMENT_NAME);
  
@@ -552,7 +577,7 @@ index f463935..6ccd82b 100644
 +     * @return an {@link ECKeyValue} XMLObject
 +     */
 +    @Nonnull public static ECKeyValue buildECKeyValue(@Nonnull final ECPublicKey ecPubKey) {
-+        Constraint.isNotNull(ecPubKey, "RSA public key cannot be null");
++        Constraint.isNotNull(ecPubKey, "EC public key cannot be null");
 +
 +        final XMLObjectBuilderFactory builderFactory = XMLObjectProviderRegistrySupport.getBuilderFactory();
 +
@@ -580,7 +605,7 @@ index f463935..6ccd82b 100644
 +            ASN1ObjectIdentifier oid = (ASN1ObjectIdentifier) innerSeq.getObjectAt(1).toASN1Primitive();
 +            DERBitString key = (DERBitString) seq.getObjectAt(1).toASN1Primitive();
 +
-+            namedCurve.setURI(oid.getId());
++            namedCurve.setURI("urn:oid:" + oid.getId());
 +            publicKey.setValue(Base64.getEncoder().encodeToString(key.getBytes()));
 +        } catch (IOException e) {
 +            // TODO

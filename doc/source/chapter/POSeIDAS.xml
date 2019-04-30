@@ -13,7 +13,7 @@
         <masterAndDefectListRenewal length="2"
             unit="11" />
     </TimerConfiguration>
-    <ServiceProvider entityID="providerA" enabled="true">
+    <ServiceProvider entityID="provider_a" enabled="true">
         <EPAConnectorConfiguration updateCVC="true">
             <CVCRefID>provider_a</CVCRefID>
             <PkiConnectorConfiguration>

@@ -1,4 +1,4 @@
-FROM governikus/eidas-base-container:1.0.7
+FROM governikus/eidas-base-container:1.1.0
 MAINTAINER Benny Prange <benny.prange@governikus.de>
 
 # Define the location of the configuration directory inside of the container

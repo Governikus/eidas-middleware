@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018 Governikus KG. Licensed under the EUPL, Version 1.2 or as soon they will be approved by
+ * Copyright (c) 2019 Governikus KG. Licensed under the EUPL, Version 1.2 or as soon they will be approved by
  * the European Commission - subsequent versions of the EUPL (the "Licence"); You may not use this work except
  * in compliance with the Licence. You may obtain a copy of the Licence at:
  * http://joinup.ec.europa.eu/software/page/eupl Unless required by applicable law or agreed to in writing,
@@ -15,6 +15,7 @@ import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.security.KeyStore;
 import java.security.cert.CertificateEncodingException;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
@@ -70,11 +71,6 @@ public class PoseidasCoreConfigForm extends AbstractConfigurationLoader
   public static final int SESSION_MAX_PENDING_REQUESTS = 500;
 
   /**
-   * certificate warning margin
-   */
-  public static final int CERTIFICATE_WARNING_MARGIN = 200;
-
-  /**
    * hours to refresh cvc before it expires
    */
   public static final int HOURS_REFRESH_BEFORE_EXPIRE = 48;
@@ -88,7 +84,17 @@ public class PoseidasCoreConfigForm extends AbstractConfigurationLoader
   /**
    * this service provider will represent the service provider that is currently edited in the html view
    */
-  private ServiceProviderForm serviceProvider = new ServiceProviderForm();
+  private List<ServiceProviderForm> serviceProviders = new ArrayList<>();
+
+  /**
+   * This holds the data that is equal for all service providers
+   */
+  private ServiceProviderForm commonServiceProviderData = new ServiceProviderForm();
+
+  /**
+   * This holds the form data to create a new service provider
+   */
+  private MinimalServiceProviderForm minimalServiceProviderForm = new MinimalServiceProviderForm();
 
   /**
    * this will hold all values for the Poseidas core cofiguration
@@ -129,6 +135,17 @@ public class PoseidasCoreConfigForm extends AbstractConfigurationLoader
    */
   public boolean loadConfiguration(final File poseidasXml)
   {
+    return loadConfiguration(poseidasXml, "");
+  }
+
+  /**
+   * loads the configuration from a file
+   *
+   * @param poseidasXml the configuration file that should hold the configuration
+   * @param entityIdInt the name of the entitiyId that should be used for public service providers
+   */
+  public boolean loadConfiguration(final File poseidasXml, String entityIdInt)
+  {
     if (!poseidasXml.exists())
     {
       log.debug("no poseidas xml file found at '{}'", poseidasXml);
@@ -136,7 +153,8 @@ public class PoseidasCoreConfigForm extends AbstractConfigurationLoader
     }
     log.trace("loading configuration from poseidas xml file: {}", poseidasXml);
     setCoreConfig(XmlHelper.unmarshal(poseidasXml, PoseidasCoreConfiguration.class));
-    getServiceProviderType().ifPresent(this::setServiceProviderFormValues);
+    getServiceProvidersFromConfig().ifPresent(serviceProviderType -> setServiceProviderFormValues(serviceProviderType,
+                                                                                                  entityIdInt));
     return true;
   }
 
@@ -158,53 +176,75 @@ public class PoseidasCoreConfigForm extends AbstractConfigurationLoader
       log.error("could not read poseidas xml input stream", e);
       return false;
     }
-    getServiceProviderType().ifPresent(this::setServiceProviderFormValues);
+    getServiceProvidersFromConfig().ifPresent(serviceProviderType -> setServiceProviderFormValues(serviceProviderType,
+                                                                                                  ""));
     return true;
   }
 
   /**
-   * will set the values of the configuration into the field {@link #serviceProvider}
+   * Will create a new {@link ServiceProviderForm} which will be added to {@link #serviceProviders}
    *
-   * @param serviceProviderType the service provider from the read configuration file
+   * @param serviceProviderTypeList the service provider from the read configuration file
    */
-  private void setServiceProviderFormValues(ServiceProviderType serviceProviderType)
+  private void setServiceProviderFormValues(List<ServiceProviderType> serviceProviderTypeList,
+                                            String publicServiceProviderEntityID)
   {
-    this.serviceProvider.setServiceProvider(serviceProviderType);
-    this.serviceProvider.setEntityID(serviceProviderType.getEntityID());
-    PkiConnectorConfigurationType pkiConnectorConfigurationType = serviceProviderType.getEPAConnectorConfiguration()
-                                                                                     .getPkiConnectorConfiguration();
-    // @formatter:off
-    getCertificate("blacklist-trust-anchor",
-                   pkiConnectorConfigurationType.getBlackListTrustAnchor()).ifPresent(this.serviceProvider::setBlackListTrustAnchor);
-    getCertificate("defectlist-trust-anchor",
-                   pkiConnectorConfigurationType.getDefectListTrustAnchor()).ifPresent(this.serviceProvider::setDefectListTrustAnchor);
-    getCertificate("masterlist-trust-anchor",
-                   pkiConnectorConfigurationType.getMasterListTrustAnchor()).ifPresent(this.serviceProvider::setMasterListTrustAnchor);
-    // @formatter:on
+    for ( ServiceProviderType serviceProviderType : serviceProviderTypeList )
+    {
 
-    String policyImplementationId = serviceProviderType.getEPAConnectorConfiguration()
-                                                       .getPkiConnectorConfiguration()
-                                                       .getPolicyImplementationId();
-    try
-    {
-      this.serviceProvider.setPolicyID(getPolicyImplementationId(serviceProviderType));
+      ServiceProviderForm serviceProvider = new ServiceProviderForm();
+      serviceProvider.setServiceProvider(serviceProviderType);
+      serviceProvider.setEntityID(serviceProviderType.getEntityID());
+      if (serviceProviderType.getEntityID().equals(publicServiceProviderEntityID))
+      {
+        serviceProvider.setPublicServiceProvider(true);
+      }
+      else
+      {
+        serviceProvider.setPublicServiceProvider(false);
+      }
+      PkiConnectorConfigurationType pkiConnectorConfigurationType = serviceProviderType.getEPAConnectorConfiguration()
+                                                                                       .getPkiConnectorConfiguration();
+      // @formatter:off
+      getCertificate("blacklist-trust-anchor",
+                     pkiConnectorConfigurationType.getBlackListTrustAnchor()).ifPresent(serviceProvider::setBlackListTrustAnchor);
+      getCertificate("defectlist-trust-anchor",
+                     pkiConnectorConfigurationType.getDefectListTrustAnchor()).ifPresent(serviceProvider::setDefectListTrustAnchor);
+      getCertificate("masterlist-trust-anchor",
+                     pkiConnectorConfigurationType.getMasterListTrustAnchor()).ifPresent(serviceProvider::setMasterListTrustAnchor);
+      // @formatter:on
+
+      String policyImplementationId = serviceProviderType.getEPAConnectorConfiguration()
+                                                         .getPkiConnectorConfiguration()
+                                                         .getPolicyImplementationId();
+      try
+      {
+        serviceProvider.setPolicyID(getPolicyImplementationId(serviceProviderType));
+      }
+      catch (IllegalArgumentException ex)
+      {
+        log.warn("could not parse policy implementation id '{}': {}",
+                 policyImplementationId,
+                 ex.getMessage());
+      }
+      getSslKeysForm(serviceProviderType,
+                     serviceProviderType.getEntityID()).ifPresent(serviceProvider::setSslKeysForm);
+      serviceProviders.add(serviceProvider);
+      commonServiceProviderData = serviceProvider;
     }
-    catch (IllegalArgumentException ex)
-    {
-      log.warn("could not parse policy implementation id '{}': {}", policyImplementationId, ex.getMessage());
-    }
-    getSslKeysForm(serviceProviderType).ifPresent(this.serviceProvider::setSslKeysForm);
   }
 
   /**
    * tries to read the ssl key configuration from the given service provider
    *
    * @param serviceProviderType the service provider configuration from the read poseidas.xml
+   * @param entityID The entityID of the service provider
    * @return an empty if not present or not readable, the {@link SslKeysForm} otherwise
    */
-  private Optional<SslKeysForm> getSslKeysForm(ServiceProviderType serviceProviderType)
+  private Optional<SslKeysForm> getSslKeysForm(ServiceProviderType serviceProviderType, String entityID)
   {
-    return getPkiConnectorConfig(serviceProviderType).flatMap(pkiConfig -> getSslKeysForm(pkiConfig.getSslKeys()));
+    return getPkiConnectorConfig(serviceProviderType).flatMap(pkiConfig -> getSslKeysForm(pkiConfig.getSslKeys(),
+                                                                                          entityID));
   }
 
   /**
@@ -212,10 +252,11 @@ public class PoseidasCoreConfigForm extends AbstractConfigurationLoader
    * entry not more. If more entries are found the first entry will be used and the rest will be ignored
    *
    * @param sslKeysTypeList a list of all ssl key configurations
+   * @param entityID The entityID of the service provider
    * @return an empty if no ssl key configurations are present or if the keys could not be read, the first
    *         entry of the ssl keys configuration else
    */
-  private Optional<SslKeysForm> getSslKeysForm(List<SslKeysType> sslKeysTypeList)
+  private Optional<SslKeysForm> getSslKeysForm(List<SslKeysType> sslKeysTypeList, String entityID)
   {
     if (sslKeysTypeList == null || sslKeysTypeList.isEmpty())
     {
@@ -225,7 +266,7 @@ public class PoseidasCoreConfigForm extends AbstractConfigurationLoader
     SslKeysForm.SslKeysFormBuilder builder = SslKeysForm.builder().sslKeysType(sslKeysType);
     getCertificate("dvca-ssl-server-certificate",
                    sslKeysType.getServerCertificate()).ifPresent(builder::serverCertificate);
-    getKeystore(sslKeysType).ifPresent(builder::clientKeyForm);
+    getKeystore(sslKeysType, entityID).ifPresent(builder::clientKeyForm);
     return Optional.of(builder.build());
   }
 
@@ -233,9 +274,10 @@ public class PoseidasCoreConfigForm extends AbstractConfigurationLoader
    * tries to read the ssl keys configuration if present from the given configuration
    *
    * @param sslKeysType the ssl keys-type configuration
+   * @param entityID The entityID of the service provider
    * @return an empty if the keys could not be read or are not present, the keystore else
    */
-  private Optional<KeystoreForm> getKeystore(SslKeysType sslKeysType)
+  private Optional<KeystoreForm> getKeystore(SslKeysType sslKeysType, String entityID)
   {
     if (sslKeysType.getClientCertificate() == null || sslKeysType.getClientCertificate().isEmpty())
     {
@@ -265,7 +307,7 @@ public class PoseidasCoreConfigForm extends AbstractConfigurationLoader
       return Optional.empty();
     }
     KeystoreForm keystoreForm = KeystoreForm.builder()
-                                            .keystoreName("dvca-ssl-client-keystore")
+                                            .keystoreName(entityID + "-ssl-client-keystore")
                                             .keystore(keyStore)
                                             .alias(pseudoAlias)
                                             .keystorePassword(pseudoPin)
@@ -311,11 +353,11 @@ public class PoseidasCoreConfigForm extends AbstractConfigurationLoader
   }
 
   /**
-   * tries to get the service provider configuration from the poseidas.xml
+   * tries to get the service provider configurations from the poseidas.xml
    *
-   * @return the service provider configuration of the first entry found within the list
+   * @return the list of service providers from the poseidas.xml
    */
-  private Optional<ServiceProviderType> getServiceProviderType()
+  private Optional<List<ServiceProviderType>> getServiceProvidersFromConfig()
   {
     if (coreConfig == null)
     {
@@ -325,14 +367,13 @@ public class PoseidasCoreConfigForm extends AbstractConfigurationLoader
     {
       return Optional.empty();
     }
-    return Optional.of(coreConfig.getServiceProvider().get(0));
+    return Optional.of(coreConfig.getServiceProvider());
   }
 
   /**
    * saves the application properties form into directory/application.properties file
    *
    * @param directory file path
-   * @throws XmlException
    * @throws CertificateEncodingException
    */
   public void save(String directory) throws CertificateEncodingException
@@ -350,39 +391,42 @@ public class PoseidasCoreConfigForm extends AbstractConfigurationLoader
   {
     coreConfig.setSessionManagerUsesDatabase(true);
     coreConfig.setSessionMaxPendingRequests(SESSION_MAX_PENDING_REQUESTS);
-    coreConfig.setCertificateWarningMargin(CERTIFICATE_WARNING_MARGIN);
     // only add path if it is not already there
     if (coreConfig.getServerUrl() != null && !coreConfig.getServerUrl().trim().endsWith("/eidas-middleware"))
     {
       coreConfig.setServerUrl(coreConfig.getServerUrl() + "/eidas-middleware");
     }
 
-    ServiceProviderType newServiceProvider = new ServiceProviderType();
-    newServiceProvider.setEntityID(serviceProvider.getEntityID());
-    newServiceProvider.setEnabled(true);
-
-    EPAConnectorConfigurationType epa = new EPAConnectorConfigurationType();
-    epa.setCVCRefID(serviceProvider.getEntityID());
-    epa.setHoursRefreshCVCBeforeExpires(HOURS_REFRESH_BEFORE_EXPIRE);
-    epa.setPaosReceiverURL(coreConfig.getServerUrl() + "/paosreceiver");
-    epa.setUpdateCVC(true);
-
-    PkiConnectorConfigurationType pki = new PkiConnectorConfigurationType();
-    pki.setBlackListTrustAnchor(serviceProvider.getBlackListTrustAnchor().getCertificate().getEncoded());
-    pki.setDefectListTrustAnchor(serviceProvider.getDefectListTrustAnchor().getCertificate().getEncoded());
-    pki.setMasterListTrustAnchor(serviceProvider.getMasterListTrustAnchor().getCertificate().getEncoded());
-    pki.setPolicyImplementationId(serviceProvider.getPolicyID().getValue());
-
-    pki.getSslKeys().add(createSslKeys());
-
-    addDvcaServices(pki);
-
-    epa.setPkiConnectorConfiguration(pki);
-
-    newServiceProvider.setEPAConnectorConfiguration(epa);
-
     coreConfig.getServiceProvider().clear();
-    coreConfig.getServiceProvider().add(newServiceProvider);
+
+    for ( ServiceProviderForm serviceProvider : serviceProviders )
+    {
+      ServiceProviderType newServiceProvider = new ServiceProviderType();
+      newServiceProvider.setEntityID(serviceProvider.getEntityID());
+      newServiceProvider.setEnabled(true);
+
+      EPAConnectorConfigurationType epa = new EPAConnectorConfigurationType();
+      epa.setCVCRefID(serviceProvider.getEntityID());
+      epa.setHoursRefreshCVCBeforeExpires(HOURS_REFRESH_BEFORE_EXPIRE);
+      epa.setPaosReceiverURL(coreConfig.getServerUrl() + "/paosreceiver");
+      epa.setUpdateCVC(true);
+
+      PkiConnectorConfigurationType pki = new PkiConnectorConfigurationType();
+      pki.setBlackListTrustAnchor(serviceProvider.getBlackListTrustAnchor().getCertificate().getEncoded());
+      pki.setDefectListTrustAnchor(serviceProvider.getDefectListTrustAnchor().getCertificate().getEncoded());
+      pki.setMasterListTrustAnchor(serviceProvider.getMasterListTrustAnchor().getCertificate().getEncoded());
+      pki.setPolicyImplementationId(serviceProvider.getPolicyID().getValue());
+
+      pki.getSslKeys().add(createSslKeys(serviceProvider));
+
+      addDvcaServices(pki);
+
+      epa.setPkiConnectorConfiguration(pki);
+
+      newServiceProvider.setEPAConnectorConfiguration(epa);
+
+      coreConfig.getServiceProvider().add(newServiceProvider);
+    }
   }
 
   /**
@@ -390,6 +434,7 @@ public class PoseidasCoreConfigForm extends AbstractConfigurationLoader
    */
   private void addDvcaServices(PkiConnectorConfigurationType pki)
   {
+
     String sslKeysId = pki.getSslKeys().get(0).getId();
     String terminal;
     String restricted;
@@ -435,18 +480,23 @@ public class PoseidasCoreConfigForm extends AbstractConfigurationLoader
 
   /**
    * create the ssl keys section for the {@link PkiServiceType} from the {@link PoseidasCoreConfigForm}
+   *
+   * @param serviceProvider The serviceProvider whose ssl keys should be used
    */
-  private SslKeysType createSslKeys() throws CertificateEncodingException
+  private SslKeysType createSslKeys(ServiceProviderForm serviceProvider) throws CertificateEncodingException
   {
     SslKeysType sslKeys = new SslKeysType();
     sslKeys.setId("default");
-    sslKeys.getClientCertificate()
-           .add(serviceProvider.getSslKeysForm()
-                               .getClientKeyForm()
-                               .asCertificate()
-                               .getCertificate()
-                               .getEncoded());
-    sslKeys.setClientKey(serviceProvider.getSslKeysForm().getClientKeyForm().getPrivateKey().getEncoded());
+    if (serviceProvider.getSslKeysForm().getClientKeyForm() != null)
+    {
+      sslKeys.getClientCertificate()
+             .add(serviceProvider.getSslKeysForm()
+                                 .getClientKeyForm()
+                                 .asCertificate()
+                                 .getCertificate()
+                                 .getEncoded());
+      sslKeys.setClientKey(serviceProvider.getSslKeysForm().getClientKeyForm().getPrivateKey().getEncoded());
+    }
     sslKeys.setServerCertificate(serviceProvider.getSslKeysForm()
                                                 .getServerCertificate()
                                                 .getCertificate()

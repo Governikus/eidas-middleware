@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018 Governikus KG. Licensed under the EUPL, Version 1.2 or as soon they will be approved by
+ * Copyright (c) 2019 Governikus KG. Licensed under the EUPL, Version 1.2 or as soon they will be approved by
  * the European Commission - subsequent versions of the EUPL (the "Licence"); You may not use this work except
  * in compliance with the Licence. You may obtain a copy of the Licence at:
  * http://joinup.ec.europa.eu/software/page/eupl Unless required by applicable law or agreed to in writing,
@@ -87,7 +87,7 @@ public class CurrentAddressAttribute implements EidasAttribute
   /**
    * Adds a root XML Container around the given CurrentAddressAttribute. Otherwise the XML is not well formed
    * and will raise an exception
-   * 
+   *
    * @param xmlString
    * @throws SAXException
    */
@@ -99,7 +99,7 @@ public class CurrentAddressAttribute implements EidasAttribute
   /**
    * Decode and parse the given xml string. Adds a root XML Container around the given
    * CurrentAddressAttribute. Otherwise the XML is not well formed and will raise an exception
-   * 
+   *
    * @param base64XmlString base64 encoded xmlstring
    */
   private void parseEncodedXML(String base64XmlString) throws SAXException
@@ -110,7 +110,7 @@ public class CurrentAddressAttribute implements EidasAttribute
   /**
    * parse the given xml string. Adds a root XML Container around the given CurrentAddressAttribute. Otherwise
    * the XML is not well formed and will raise an exception
-   * 
+   *
    * @param xmlString
    */
   private void parseXML(String xmlString) throws SAXException

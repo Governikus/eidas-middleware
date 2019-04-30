@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018 Governikus KG. Licensed under the EUPL, Version 1.2 or as soon they will be approved by
+ * Copyright (c) 2019 Governikus KG. Licensed under the EUPL, Version 1.2 or as soon they will be approved by
  * the European Commission - subsequent versions of the EUPL (the "Licence"); You may not use this work except
  * in compliance with the Licence. You may obtain a copy of the Licence at:
  * http://joinup.ec.europa.eu/software/page/eupl Unless required by applicable law or agreed to in writing,
@@ -12,7 +12,7 @@ package de.governikus.eumw.poseidas.cardbase.asn1;
 
 /**
  * Implementation of convenience methods for informations about ASN.1.
- * 
+ *
  * @author Jens Wothe, jw@bos-bremen.de
  */
 final class ASN1InfoUtil
@@ -28,7 +28,7 @@ final class ASN1InfoUtil
 
   /**
    * Checks bytes of ASN.1 with description and tag define a sequence.
-   * 
+   *
    * @param dTagBytes bytes with description and tag of ASN.1 - including ASN.1 bit coded informations about
    *          class and content, <code>null</code> or empty array not permitted
    * @return <code>true</code>, if sequence
@@ -47,7 +47,7 @@ final class ASN1InfoUtil
 
   /**
    * Checks bytes of ASN.1 with description and tag define a set.
-   * 
+   *
    * @param dTagBytes bytes with description and tag of ASN.1 - including ASN.1 bit coded informations about
    *          class and content, <code>null</code> or empty array not permitted
    * @return <code>true</code>, if set
@@ -66,7 +66,7 @@ final class ASN1InfoUtil
 
   /**
    * Checks bytes of ASN.1 with description and tag defines a universal tag.
-   * 
+   *
    * @param dTagBytes bytes with description and tag of ASN.1 - including ASN.1 bit coded informations about
    *          class and content, <code>null</code> or empty array not permitted
    * @return <code>true</code>, if universal
@@ -85,7 +85,7 @@ final class ASN1InfoUtil
 
   /**
    * Checks bytes of ASN.1 with description and tag defines a application tag.
-   * 
+   *
    * @param dTagBytes bytes with description and tag of ASN.1 - including ASN.1 bit coded informations about
    *          class and content, <code>null</code> or empty array not permitted
    * @return <code>true</code>, if application
@@ -104,7 +104,7 @@ final class ASN1InfoUtil
 
   /**
    * Checks bytes of ASN.1 with description and tag defines a context specific tag.
-   * 
+   *
    * @param dTagBytes bytes with description and tag of ASN.1 - including ASN.1 bit coded informations about
    *          class and content, <code>null</code> or empty array not permitted
    * @return <code>true</code>, if application
@@ -123,7 +123,7 @@ final class ASN1InfoUtil
 
   /**
    * Checks bytes of ASN.1 with description and tag defines a private tag.
-   * 
+   *
    * @param dTagBytes bytes with description and tag of ASN.1 - including ASN.1 bit coded informations about
    *          class and content, <code>null</code> or empty array not permitted
    * @return <code>true</code>, if private
@@ -142,7 +142,7 @@ final class ASN1InfoUtil
 
   /**
    * Checks bytes of ASN.1 with description and tag define a primitive.
-   * 
+   *
    * @param dTagBytes bytes with description and tag of ASN.1 - including ASN.1 bit coded informations about
    *          class and content, <code>null</code> or empty array not permitted
    * @throws IllegalArgumentException if dTagBytes <code>null</code> or empty
@@ -160,7 +160,7 @@ final class ASN1InfoUtil
 
   /**
    * Checks bytes of ASN.1 with description and tag define a constructed.
-   * 
+   *
    * @param dTagBytes bytes with description and tag of ASN.1 - including ASN.1 bit coded informations about
    *          class and content, <code>null</code> or empty array not permitted
    * @return <code>true</code>, if constructed

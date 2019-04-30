@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018 Governikus KG. Licensed under the EUPL, Version 1.2 or as soon they will be approved by
+ * Copyright (c) 2019 Governikus KG. Licensed under the EUPL, Version 1.2 or as soon they will be approved by
  * the European Commission - subsequent versions of the EUPL (the "Licence"); You may not use this work except
  * in compliance with the Licence. You may obtain a copy of the Licence at:
  * http://joinup.ec.europa.eu/software/page/eupl Unless required by applicable law or agreed to in writing,
@@ -18,7 +18,7 @@ import de.governikus.eumw.poseidas.cardserver.eac.functions.FunctionParameter;
 
 /**
  * Implementation of RestrictedIdentification input parameter.
- * 
+ *
  * @see RestrictedIdentification
  * @see Connector#execute(Parameter)
  * @see RestrictedIdentificationResult
@@ -46,7 +46,7 @@ public class RestrictedIdentificationParameter implements FunctionParameter
 
   /**
    * Constructor.
-   * 
+   *
    * @param riInfo {@link RestrictedIdentificationInfo}
    * @param firstKey
    * @param secondKey
@@ -68,7 +68,7 @@ public class RestrictedIdentificationParameter implements FunctionParameter
 
   /**
    * Gets {@link RestrictedIdentificationInfo}.
-   * 
+   *
    * @return {@link RestrictedIdentificationInfo}
    */
   public RestrictedIdentificationInfo getRiInfo()
@@ -78,7 +78,7 @@ public class RestrictedIdentificationParameter implements FunctionParameter
 
   /**
    * Gets first key.
-   * 
+   *
    * @return first key
    */
   public byte[] getFirstKey()
@@ -88,7 +88,7 @@ public class RestrictedIdentificationParameter implements FunctionParameter
 
   /**
    * Gets second key.
-   * 
+   *
    * @return second key
    */
   public byte[] getSecondKey()

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018 Governikus KG. Licensed under the EUPL, Version 1.2 or as soon they will be approved by
+ * Copyright (c) 2019 Governikus KG. Licensed under the EUPL, Version 1.2 or as soon they will be approved by
  * the European Commission - subsequent versions of the EUPL (the "Licence"); You may not use this work except
  * in compliance with the Licence. You may obtain a copy of the Licence at:
  * http://joinup.ec.europa.eu/software/page/eupl Unless required by applicable law or agreed to in writing,
@@ -47,8 +47,6 @@ import de.governikus.eumw.poseidas.cardbase.asn1.npa.si.ChipAuthenticationInfo;
 import de.governikus.eumw.poseidas.cardbase.asn1.npa.si.ChipAuthenticationPublicKeyInfo;
 import de.governikus.eumw.poseidas.cardbase.asn1.npa.si.PACEDomainParameterInfo;
 import de.governikus.eumw.poseidas.cardbase.asn1.npa.si.PACEInfo;
-import de.governikus.eumw.poseidas.cardbase.asn1.npa.si.PSAInfo;
-import de.governikus.eumw.poseidas.cardbase.asn1.npa.si.PSMInfo;
 import de.governikus.eumw.poseidas.cardbase.asn1.npa.si.TerminalAuthenticationInfo;
 import de.governikus.eumw.poseidas.cardbase.constants.OIDConstants;
 import de.governikus.eumw.poseidas.cardbase.crypto.ec.ECUtil;
@@ -81,7 +79,7 @@ import iso.std.iso_iec._24727.tech.schema.EACAdditionalInputType;
 
 /**
  * This class performs the server part of EAC in a distributed setting.
- * 
+ *
  * @author Arne Stahlbock, ast@bos-bremen.de
  */
 public class EACServer
@@ -125,11 +123,6 @@ public class EACServer
   private byte[] compressedKey = null;
 
   /**
-   * Flag indicating if CA version 3 is required.
-   */
-  private Boolean useCaVer3 = null;
-
-  /**
    * Reference to the {@link SecurityInfos} read from EF.CardAccess.
    */
   private SecurityInfos efCardAccess = null;
@@ -144,7 +137,7 @@ public class EACServer
 
   /**
    * Produces input for TACA.
-   * 
+   *
    * @param firstOutput {@link EAC1OutputType} from PACE, <code>null</code> not permitted
    * @param additionalParameters additional data: array of two or three elements required, first must be
    *          {@link EAC1InputType}, second {@link CertAndKeyProvider}, third element ( {@link Boolean})
@@ -167,7 +160,7 @@ public class EACServer
   {
     AssertUtil.notNull(firstOutput, "first output");
     AssertUtil.notNullOrEmpty(additionalParameters, "additional parameters");
-    if (additionalParameters.length != 3)
+    if (additionalParameters.length != 2)
     {
       throw new IllegalArgumentException("three parameters required as additional input");
     }
@@ -181,10 +174,6 @@ public class EACServer
     {
       throw new IllegalArgumentException("parameter is not instance of CertAndKeyProvider");
     }
-    if (additionalParameters[2] != null && !Boolean.class.isInstance(additionalParameters[2]))
-    {
-      throw new IllegalArgumentException("parameter is not instance of Boolean");
-    }
     EAC1InputTypeWrapper firstInput = (EAC1InputTypeWrapper)additionalParameters[0];
     ECCVCertificate termCert = findTermCert(firstInput.getCertificateList());
     if (termCert == null)
@@ -196,8 +185,6 @@ public class EACServer
     this.efCardAccess = new SecurityInfos();
     this.efCardAccess.decode(firstOutput.getEFCardAccess());
 
-    this.useCaVer3 = (Boolean)additionalParameters[2];
-
     List<ChipAuthenticationInfo> caInfoList = this.efCardAccess.getChipAuthenticationInfo();
     List<ChipAuthenticationDomainParameterInfo> caDomParamList = this.efCardAccess.getChipAuthenticationDomainParameterInfo();
     List<PACEInfo> paceInfoList = this.efCardAccess.getPACEInfo();
@@ -205,7 +192,7 @@ public class EACServer
     AssertUtil.notNullOrEmpty(caDomParamList, "list of CA domain parameters");
     AssertUtil.notNullOrEmpty(paceInfoList, "list of PACE info");
 
-    this.caData = InfoSelector.selectCAData(caInfoList, caDomParamList, this.useCaVer3);
+    this.caData = InfoSelector.selectCAData(caInfoList, caDomParamList);
 
     this.paceInfo = InfoSelector.selectPACEInfo(paceInfoList);
     OID protocol = this.caData.getCaDomParamInfo().getProtocol();
@@ -278,7 +265,7 @@ public class EACServer
 
   /**
    * Produces signature for TA.
-   * 
+   *
    * @param termCert terminal certificate
    * @param auxiliaryData auxiliary data
    * @param idPicc ID of PICC received from PACE
@@ -319,7 +306,7 @@ public class EACServer
 
   /**
    * Processes output from complete TACA.
-   * 
+   *
    * @param secondOutput {@link EAC2OutputType} from TACA, <code>null</code> not permitted
    * @param additionalParameters additional data: array of one element required - {@link SignedDataChecker}
    * @return {@link EACFinal} object holding relevant data for following procedures outside of EAC
@@ -377,7 +364,8 @@ public class EACServer
     SecurityInfos cardSecurity = NPAUtil.fromCardSecurityBytes(cardSecurityBytes);
     if (!matchSecurityInfos(this.efCardAccess, cardSecurity))
     {
-      throw new InvalidEidException("contents of EF.CardSecurity and EF.CardAccess do not match");
+      LOG.debug("contents of EF.CardSecurity and EF.CardAccess do not match");
+      //throw new InvalidEidException("contents of EF.CardSecurity and EF.CardAccess do not match");
     }
 
     ChipAuthenticationPublicKeyInfo caPubKeyInfo = null;
@@ -420,7 +408,7 @@ public class EACServer
 
   /**
    * Executes one server-side step of EAC protocol.
-   * 
+   *
    * @param <P> type of next input to client or final result of EAC
    * @param <Q> type of result from client
    * @param stepSelect step to perform, only {@link #STEP_PACE_OUTPUT_TO_TACA_INPUT}, {@link #STEP_OPTIONAL}
@@ -506,7 +494,7 @@ public class EACServer
 
   /**
    * Finds a terminal certificate in a given certificate list.
-   * 
+   *
    * @param certList list of certificates, <code>null</code> not permitted
    * @return found terminal certificate, <code>null</code> if none present, first if more than one present
    * @throws IOException
@@ -530,7 +518,7 @@ public class EACServer
 
   /**
    * Checks if {@link SecurityInfos} contained in EF.CardAccess match with those contained in EF.CardSecurity.
-   * 
+   *
    * @param efCardAccess
    * @param efCardSecurity
    * @return result of check
@@ -639,52 +627,6 @@ public class EACServer
       outer: for ( TerminalAuthenticationInfo infoAccess : efCardAccess.getTerminalAuthenticationInfo() )
       {
         for ( TerminalAuthenticationInfo infoSecurity : efCardSecurity.getTerminalAuthenticationInfo() )
-        {
-          if (ByteUtil.equals(infoAccess.getEncoded(), infoSecurity.getEncoded()))
-          {
-            continue outer;
-          }
-        }
-        return false;
-      }
-    }
-
-    if ((efCardAccess.getPSAInfo() == null) != (efCardSecurity.getPSAInfo() == null))
-    {
-      return false;
-    }
-    if (efCardAccess.getPSAInfo() != null)
-    {
-      if (efCardAccess.getPSAInfo().size() != efCardSecurity.getPSAInfo().size())
-      {
-        return false;
-      }
-      outer: for ( PSAInfo infoAccess : efCardAccess.getPSAInfo() )
-      {
-        for ( PSAInfo infoSecurity : efCardSecurity.getPSAInfo() )
-        {
-          if (ByteUtil.equals(infoAccess.getEncoded(), infoSecurity.getEncoded()))
-          {
-            continue outer;
-          }
-        }
-        return false;
-      }
-    }
-
-    if ((efCardAccess.getPSMInfo() == null) != (efCardSecurity.getPSMInfo() == null))
-    {
-      return false;
-    }
-    if (efCardAccess.getPSMInfo() != null)
-    {
-      if (efCardAccess.getPSMInfo().size() != efCardSecurity.getPSMInfo().size())
-      {
-        return false;
-      }
-      outer: for ( PSMInfo infoAccess : efCardAccess.getPSMInfo() )
-      {
-        for ( PSMInfo infoSecurity : efCardSecurity.getPSMInfo() )
         {
           if (ByteUtil.equals(infoAccess.getEncoded(), infoSecurity.getEncoded()))
           {

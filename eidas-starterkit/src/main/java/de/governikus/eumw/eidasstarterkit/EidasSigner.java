@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018 Governikus KG. Licensed under the EUPL, Version 1.2 or as soon they will be approved by
+ * Copyright (c) 2019 Governikus KG. Licensed under the EUPL, Version 1.2 or as soon they will be approved by
  * the European Commission - subsequent versions of the EUPL (the "Licence"); You may not use this work except
  * in compliance with the Licence. You may obtain a copy of the Licence at:
  * http://joinup.ec.europa.eu/software/page/eupl Unless required by applicable law or agreed to in writing,
@@ -10,7 +10,11 @@
 
 package de.governikus.eumw.eidasstarterkit;
 
+import java.security.KeyStore;
+import java.security.KeyStoreException;
+import java.security.NoSuchAlgorithmException;
 import java.security.PrivateKey;
+import java.security.UnrecoverableKeyException;
 import java.security.cert.X509Certificate;
 
 import de.governikus.eumw.eidasstarterkit.XMLSignatureHandler.SigEntryType;
@@ -21,6 +25,8 @@ import de.governikus.eumw.eidasstarterkit.XMLSignatureHandler.SigEntryType;
  */
 public class EidasSigner
 {
+
+  private static final String SAML_SIGNING = "samlsigning";
 
   /**
    * signature key
@@ -73,6 +79,13 @@ public class EidasSigner
   EidasSigner(PrivateKey key, X509Certificate cert)
   {
     this(true, key, cert);
+  }
+
+  public EidasSigner(KeyStore keyStore)
+    throws UnrecoverableKeyException, KeyStoreException, NoSuchAlgorithmException
+  {
+    this(true, (PrivateKey)keyStore.getKey(SAML_SIGNING, null),
+         (X509Certificate)keyStore.getCertificate(SAML_SIGNING), "SHA256");
   }
 
   public PrivateKey getSigKey()

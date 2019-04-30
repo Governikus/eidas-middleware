@@ -1,20 +1,20 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<!-- ~ Copyright (c) 2018 Governikus KG. Licensed under the EUPL, Version
-    1.2 or as soon they will be approved by ~ the European Commission - subsequent
-    versions of the EUPL (the "Licence"); You may not use this work except ~
-    in compliance with the Licence. You may obtain a copy of the Licence at:
-    ~ http://joinup.ec.europa.eu/software/page/eupl Unless required by applicable
-    law or agreed to in writing, ~ software distributed under the Licence is
-    distributed on an "AS IS" basis, WITHOUT WARRANTIES OR CONDITIONS ~ OF ANY
-    KIND, either express or implied. See the Licence for the specific language
-    governing permissions and ~ limitations under the Licence. -->
+<!--
+  ~ Copyright (c) 2019 Governikus KG. Licensed under the EUPL, Version 1.2 or as soon they will be approved by
+  ~ the European Commission - subsequent versions of the EUPL (the "Licence"); You may not use this work except
+  ~ in compliance with the Licence. You may obtain a copy of the Licence at:
+  ~ http://joinup.ec.europa.eu/software/page/eupl Unless required by applicable law or agreed to in writing,
+  ~ software distributed under the Licence is distributed on an "AS IS" basis, WITHOUT WARRANTIES OR CONDITIONS
+  ~ OF ANY KIND, either express or implied. See the Licence for the specific language governing permissions and
+  ~ limitations under the Licence.
+  -->
 
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
 
     <groupId>de.governikus.eumw</groupId>
     <artifactId>eumw</artifactId>
-    <version>1.0.7</version>
+    <version>1.1.0</version>
     <packaging>pom</packaging>
 
     <name>EU Middleware</name>
@@ -37,7 +37,7 @@
     <scm>
         <url>https://github.com/Governikus/${project.artifactId}</url>
         <connection>${governikus.scm.connection}</connection>
-      <tag>eumw-1.0.7</tag>
+      <tag>eumw-1.1.0</tag>
   </scm>
 
     <developers>
@@ -105,39 +105,51 @@
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
 
-        <!-- Jave compiler source version -->
+        <!-- Java compiler source version -->
         <maven.compiler.source>1.8</maven.compiler.source>
         <!-- Java compiler target version -->
         <maven.compiler.target>1.8</maven.compiler.target>
 
-        <version.bouncycastle>1.60</version.bouncycastle>
-        <version.cxf>3.2.4</version.cxf>
-        <version.jaxb2-basics>1.11.1</version.jaxb2-basics>
-        <version.opensaml>3.3.1-GOV3</version.opensaml>
+        <!-- crypto -->
+        <version.bouncycastle>1.61</version.bouncycastle>
         <version.javasupport>7.3.0</version.javasupport>
-        <version.slf4j>1.7.25</version.slf4j>
-        <version.spring>5.0.8.RELEASE</version.spring>
-        <version.springboot>2.0.4.RELEASE</version.springboot>
-        <version.lombok>1.18.2</version.lombok>
-        <version.commons.lang3>3.7</version.commons.lang3>
-        <version.thymeleaf>3.0.9.RELEASE</version.thymeleaf>
-        <version.thymeleaf-layout-dialect>2.3.0</version.thymeleaf-layout-dialect>
-        <version.commons.fileupload>1.3.3</version.commons.fileupload>
+        <version.opensaml>3.3.1-GOV5</version.opensaml>
+        <version.xmlsec>2.1.3</version.xmlsec>
+
+        <version.cxf>3.3.1</version.cxf>
+        <version.spring>5.1.6.RELEASE</version.spring>
+        <version.springboot>2.1.4.RELEASE</version.springboot>
+        <version.thymeleaf>3.0.11.RELEASE</version.thymeleaf>
+        <version.thymeleaf-layout-dialect>2.4.1</version.thymeleaf-layout-dialect>
+
+        <version.asm>5.2</version.asm>
+        <version.blaze>3.2.0</version.blaze>
+        <version.commons.codec>1.12</version.commons.codec>
+        <version.commons.collections>3.2.2</version.commons.collections>
+        <version.commons.fileupload>1.4</version.commons.fileupload>
         <version.commons.io>2.6</version.commons.io>
+        <version.commons.lang3>3.9</version.commons.lang3>
+        <version.guava>27.1-jre</version.guava>
+        <version.h2>1.4.199</version.h2>
+        <version.istack-commons-runtime>3.0.8</version.istack-commons-runtime>
+        <version.jackson>2.9.8</version.jackson>
+        <version.jaxb2-basics>1.11.1</version.jaxb2-basics>
+        <version.jsr305>3.0.2</version.jsr305>
+        <version.snmp4j>2.6.3</version.snmp4j>
 
         <!-- IDE helper -->
-        <version.xmlsec>2.1.1</version.xmlsec>
-        <version.jackson>2.9.6</version.jackson>
+        <version.lombok>1.18.6</version.lombok>
+
         <!-- logging dependencies -->
-        <version.log4j2>2.11.0</version.log4j2>
-        <version.slf4j>1.7.25</version.slf4j>
+        <version.log4j2>2.11.2</version.log4j2>
+        <version.slf4j>1.7.26</version.slf4j>
+
         <!-- test dependencies -->
-        <version.junit.platform>1.2.0</version.junit.platform>
-        <version.junit.jupiter>5.2.0</version.junit.jupiter>
-        <version.junit.vintage>5.2.0</version.junit.vintage>
         <version.htmlunit>2.30</version.htmlunit>
+        <version.junit.jupiter>5.2.0</version.junit.jupiter>
+        <version.junit.platform>1.2.0</version.junit.platform>
+        <version.junit.vintage>5.2.0</version.junit.vintage>
         <version.opentest4j>1.1.0</version.opentest4j>
-        <version.junit-platform-commons>1.2.0</version.junit-platform-commons>
     </properties>
 
     <build>
@@ -401,7 +413,6 @@
     </build>
 
     <modules>
-        <module>eid-service</module>
         <module>poseidas-configuration</module>
         <module>poseidas</module>
         <module>eidas-middleware</module>
@@ -412,7 +423,8 @@
         <module>databasemigration</module>
         <module>configuration-wizard</module>
         <module>utils</module>
-    </modules>
+        <module>dvca-connection-configurator</module>
+  </modules>
 
     <dependencies>
         <dependency>
@@ -499,12 +511,12 @@
             <dependency>
                 <groupId>commons-codec</groupId>
                 <artifactId>commons-codec</artifactId>
-                <version>1.11</version>
+                <version>${version.commons.codec}</version>
             </dependency>
             <dependency>
                 <groupId>commons-collections</groupId>
                 <artifactId>commons-collections</artifactId>
-                <version>3.2.2</version>
+                <version>${version.commons.collections}</version>
             </dependency>
             <!-- To use spring-boot in JUnit Tests with embedded tomcat -->
             <dependency>
@@ -531,11 +543,6 @@
             </dependency>
             <dependency>
                 <groupId>de.governikus.eumw</groupId>
-                <artifactId>eid-service</artifactId>
-                <version>${project.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>de.governikus.eumw</groupId>
                 <artifactId>poseidas</artifactId>
                 <version>${project.version}</version>
             </dependency>
@@ -549,25 +556,21 @@
                 <groupId>org.apache.cxf</groupId>
                 <artifactId>cxf-core</artifactId>
                 <version>${version.cxf}</version>
-                <scope>provided</scope>
             </dependency>
             <dependency>
                 <groupId>org.apache.cxf</groupId>
                 <artifactId>cxf-rt-frontend-simple</artifactId>
                 <version>${version.cxf}</version>
-                <scope>provided</scope>
+            </dependency>
+            <dependency>
+                <groupId>org.apache.cxf</groupId>
+                <artifactId>cxf-rt-frontend-jaxws</artifactId>
+                <version>${version.cxf}</version>
             </dependency>
             <dependency>
                 <groupId>org.apache.cxf</groupId>
                 <artifactId>cxf-rt-transports-http</artifactId>
                 <version>${version.cxf}</version>
-                <scope>provided</scope>
-            </dependency>
-
-            <dependency>
-                <groupId>org.glassfish.metro</groupId>
-                <artifactId>webservices-rt</artifactId>
-                <version>2.4.0</version>
             </dependency>
 
             <dependency>
@@ -700,15 +703,27 @@
             </dependency>
 
             <dependency>
+                <groupId>com.sun.istack</groupId>
+                <artifactId>istack-commons-runtime</artifactId>
+                <version>${version.istack-commons-runtime}</version>
+            </dependency>
+
+            <dependency>
                 <groupId>com.h2database</groupId>
                 <artifactId>h2</artifactId>
-                <version>1.4.197</version>
+                <version>${version.h2}</version>
+            </dependency>
+
+            <dependency>
+                <groupId>org.ow2.asm</groupId>
+                <artifactId>asm</artifactId>
+                <version>${version.asm}</version>
             </dependency>
 
             <dependency>
                 <groupId>org.snmp4j</groupId>
                 <artifactId>snmp4j</artifactId>
-                <version>2.6.2</version>
+                <version>${version.snmp4j}</version>
                 <exclusions>
                     <exclusion>
                         <groupId>log4j</groupId>
@@ -727,19 +742,19 @@
             <dependency>
                 <groupId>com.google.guava</groupId>
                 <artifactId>guava</artifactId>
-                <version>25.1-jre</version>
+                <version>${version.guava}</version>
             </dependency>
 
             <dependency>
                 <groupId>com.google.code.findbugs</groupId>
                 <artifactId>jsr305</artifactId>
-                <version>3.0.2</version>
+                <version>${version.jsr305}</version>
             </dependency>
 
             <dependency>
                 <groupId>org.webjars.npm</groupId>
                 <artifactId>blaze</artifactId>
-                <version>3.2.0</version>
+                <version>${version.blaze}</version>
             </dependency>
 
             <dependency>
@@ -787,7 +802,7 @@
             <dependency>
                 <groupId>org.junit.platform</groupId>
                 <artifactId>junit-platform-commons</artifactId>
-                <version>${version.junit-platform-commons}</version>
+                <version>${version.junit.platform}</version>
                 <scope>test</scope>
             </dependency>
 

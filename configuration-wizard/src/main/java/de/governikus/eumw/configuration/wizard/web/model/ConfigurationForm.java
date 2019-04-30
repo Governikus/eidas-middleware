@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018 Governikus KG. Licensed under the EUPL, Version 1.2 or as soon they will be approved by
+ * Copyright (c) 2019 Governikus KG. Licensed under the EUPL, Version 1.2 or as soon they will be approved by
  * the European Commission - subsequent versions of the EUPL (the "Licence"); You may not use this work except
  * in compliance with the Licence. You may obtain a copy of the Licence at:
  * http://joinup.ec.europa.eu/software/page/eupl Unless required by applicable law or agreed to in writing,
@@ -26,8 +26,10 @@ import de.governikus.eumw.configuration.wizard.exceptions.MiddlewarePropertiesSa
 import de.governikus.eumw.configuration.wizard.exceptions.PoseidasConfigSaveException;
 import de.governikus.eumw.configuration.wizard.exceptions.SavingFailedException;
 import de.governikus.eumw.configuration.wizard.identifier.FileNames;
+import de.governikus.eumw.configuration.wizard.identifier.HSMTypeIdentifier;
 import de.governikus.eumw.configuration.wizard.projectconfig.ConfigDirectory;
 import de.governikus.eumw.configuration.wizard.web.model.poseidasxml.PoseidasCoreConfigForm;
+import de.governikus.eumw.configuration.wizard.web.model.poseidasxml.ServiceProviderForm;
 import de.governikus.eumw.configuration.wizard.web.utils.ExceptionHelper;
 import de.governikus.eumw.utils.key.exceptions.KeyStoreCreationFailedException;
 import de.governikus.eumw.utils.xml.XmlException;
@@ -108,11 +110,12 @@ public class ConfigurationForm implements Observer
                                                               configFileFound) -> configLoaded
                                                                                   || configFileFound;
     configurationLoaded = foundConfigFiles.apply(configurationLoaded,
-                                                 poseidasConfig.loadConfiguration(getPoseidasConfigFile()));
-    configurationLoaded = foundConfigFiles.apply(configurationLoaded,
                                                  applicationProperties.loadConfiguration(getApplicationPropertiesFile()));
     configurationLoaded = foundConfigFiles.apply(configurationLoaded,
                                                  eidasmiddlewareProperties.loadConfiguration(getMiddlewarePropertiesFile()));
+    configurationLoaded = foundConfigFiles.apply(configurationLoaded,
+                                                 poseidasConfig.loadConfiguration(getPoseidasConfigFile(),
+                                                                                  eidasmiddlewareProperties.getEntityIdInt()));
   }
 
   /**
@@ -203,6 +206,11 @@ public class ConfigurationForm implements Observer
     }
     try
     {
+      if (HSMTypeIdentifier.isUsingHSM(getApplicationProperties().getHsmType()))
+      {
+        getPoseidasConfig().getServiceProviders().forEach(p -> p.getSslKeysForm().setClientKeyForm(null));
+      }
+
       getPoseidasConfig().save(saveLocation);
     }
     catch (CertificateEncodingException | XmlException e)
@@ -221,10 +229,22 @@ public class ConfigurationForm implements Observer
 
     try
     {
-      // Set missing properties with values from POSeIDAS.xml
-      getEidasmiddlewareProperties().setEntityIdInt(getPoseidasConfig().getServiceProvider().getEntityID());
+      // Search the public service provider from the list of service providers
+      for ( ServiceProviderForm serviceProvider : getPoseidasConfig().getServiceProviders() )
+      {
+        if (serviceProvider.isPublicServiceProvider())
+        {
+          getEidasmiddlewareProperties().setEntityIdInt(serviceProvider.getEntityID());
+          break;
+        }
+      }
       String serverURL = getPoseidasConfig().getCoreConfig().getServerUrl().replace("/eidas-middleware", "");
       getEidasmiddlewareProperties().setServerURL(serverURL);
+
+      if (HSMTypeIdentifier.isUsingHSM(getApplicationProperties().getHsmType()))
+      {
+        getEidasmiddlewareProperties().setMiddlewareSignKeystore(null);
+      }
 
       getEidasmiddlewareProperties().save(saveLocation);
     }

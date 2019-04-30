@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018 Governikus KG. Licensed under the EUPL, Version 1.2 or as soon they will be approved by
+ * Copyright (c) 2019 Governikus KG. Licensed under the EUPL, Version 1.2 or as soon they will be approved by
  * the European Commission - subsequent versions of the EUPL (the "Licence"); You may not use this work except
  * in compliance with the Licence. You may obtain a copy of the Licence at:
  * http://joinup.ec.europa.eu/software/page/eupl Unless required by applicable law or agreed to in writing,
@@ -17,7 +17,7 @@ import java.util.List;
 
 /**
  * Factory for {@link KeyDerivationHandler}.
- * 
+ *
  * @author Jens Wothe, jw@bos-bremen.de
  */
 public final class KeyDerivationHandlerFactory
@@ -36,7 +36,7 @@ public final class KeyDerivationHandlerFactory
 
   /**
    * Creates new {@link KeyDerivationHandler}.
-   * 
+   *
    * @param algorithm algorithm
    * @param keyLength key length, implementation checks requirements of key length
    * @return instance of {@link KeyDerivationHandler}

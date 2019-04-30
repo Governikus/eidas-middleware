@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018 Governikus KG. Licensed under the EUPL, Version 1.2 or as soon they will be approved by
+ * Copyright (c) 2019 Governikus KG. Licensed under the EUPL, Version 1.2 or as soon they will be approved by
  * the European Commission - subsequent versions of the EUPL (the "Licence"); You may not use this work except
  * in compliance with the Licence. You may obtain a copy of the Licence at:
  * http://joinup.ec.europa.eu/software/page/eupl Unless required by applicable law or agreed to in writing,
@@ -23,7 +23,7 @@ import de.governikus.eumw.poseidas.cardbase.asn1.npa.si.SubjectPublicKeyInfo;
 
 /**
  * Path for child elements of {@link SecurityInfos}.
- * 
+ *
  * @author Arne Stahlbock, ast@bos-bremen.de
  */
 public class SecurityInfosPath extends ASN1Path
@@ -31,7 +31,7 @@ public class SecurityInfosPath extends ASN1Path
 
   /**
    * Constructor.
-   * 
+   *
    * @param name name
    * @param tagByteString tag of child element as Hex-String
    * @param index index of child element
@@ -55,7 +55,7 @@ public class SecurityInfosPath extends ASN1Path
 
   /**
    * Constructor.
-   * 
+   *
    * @param name name
    * @param tagByteString tag of child element as Hex-String
    * @param index index of child element

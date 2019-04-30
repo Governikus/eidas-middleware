@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018 Governikus KG. Licensed under the EUPL, Version 1.2 or as soon they will be approved by
+ * Copyright (c) 2019 Governikus KG. Licensed under the EUPL, Version 1.2 or as soon they will be approved by
  * the European Commission - subsequent versions of the EUPL (the "Licence"); You may not use this work except
  * in compliance with the Licence. You may obtain a copy of the Licence at:
  * http://joinup.ec.europa.eu/software/page/eupl Unless required by applicable law or agreed to in writing,
@@ -16,6 +16,7 @@ import java.net.SocketException;
 import java.net.URISyntaxException;
 import java.nio.ByteBuffer;
 import java.security.GeneralSecurityException;
+import java.security.KeyStore;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.security.cert.X509Certificate;
@@ -44,7 +45,7 @@ import lombok.extern.slf4j.Slf4j;
 
 /**
  * Process of requesting public sector key and black list
- * 
+ *
  * @author tautenhahn, hme
  */
 @Slf4j
@@ -57,14 +58,14 @@ public class RestrictedIdHandler extends BerCaRequestHandlerBase
 
   /**
    * Create instance for one-time use. May be re-used only for same configuration version.
-   * 
+   *
    * @param nPaConf
    * @param facade
    */
-  RestrictedIdHandler(EPAConnectorConfigurationDto nPaConf, TerminalPermissionAO facade)
+  RestrictedIdHandler(EPAConnectorConfigurationDto nPaConf, TerminalPermissionAO facade, KeyStore hsmKeyStore)
     throws GovManagementException
   {
-    super(nPaConf, facade);
+    super(nPaConf, facade, hsmKeyStore);
   }
 
 
@@ -73,7 +74,7 @@ public class RestrictedIdHandler extends BerCaRequestHandlerBase
     if (data == null || data.getCvc() == null)
     {
       throw new GovManagementException(GlobalManagementCodes.EC_UNEXPECTED_ERROR.createMessage("no terminal permission for entry "
-                                                                                               + entityId));
+                                                                                               + cvcRefId));
     }
     try
     {
@@ -81,7 +82,7 @@ public class RestrictedIdHandler extends BerCaRequestHandlerBase
       if (cvc.getSectorPublicKeyHash() == null)
       {
         throw new GovManagementException(GlobalManagementCodes.EC_UNEXPECTED_ERROR.createMessage("no sector public key hash in the blacklist or cvc found for entry "
-                                                                                                 + entityId));
+                                                                                                 + cvcRefId));
       }
       return cvc.getSectorPublicKeyHash();
     }
@@ -93,12 +94,12 @@ public class RestrictedIdHandler extends BerCaRequestHandlerBase
 
   void requestPublicSectorKeyIfNeeded() throws GovManagementException
   {
-    TerminalPermission data = facade.getTerminalPermission(entityId);
+    TerminalPermission data = facade.getTerminalPermission(cvcRefId);
     if (data.getRiKey1() == null)
     {
-      log.info("{}: no public sector key found, will fetch one now", entityId);
+      log.info("{}: no public sector key found, will fetch one now", cvcRefId);
       requestPublicSectorKey();
-      log.info("{}: missing public sector key has been obtained and stored", entityId);
+      log.info("{}: missing public sector key has been obtained and stored", cvcRefId);
     }
     else
     {
@@ -110,22 +111,22 @@ public class RestrictedIdHandler extends BerCaRequestHandlerBase
 
         if (hash == null || !Arrays.equals(sectorId, hash))
         {
-          log.info("{}: public sector key has changed, will fetch new one now", entityId);
+          log.info("{}: public sector key has changed, will fetch new one now", cvcRefId);
           requestPublicSectorKey();
-          log.info("{}: new public sector key was fetched", entityId);
+          log.info("{}: new public sector key was fetched", cvcRefId);
         }
       }
       catch (NoSuchAlgorithmException e)
       {
         throw new GovManagementException(GlobalManagementCodes.EC_UNEXPECTED_ERROR.createMessage("SHA-256 not supported "
-                                                                                                 + entityId));
+                                                                                                 + cvcRefId));
       }
     }
   }
 
   /**
    * Get the digest algorithm from the public key of the CVC
-   * 
+   *
    * @param data The terminal whose digest algorithm should be returned
    * @return The digest algorithm that was used in the public key of the CVC or SHA-256 if the public key
    *         digest algorithm could not be determined
@@ -150,18 +151,18 @@ public class RestrictedIdHandler extends BerCaRequestHandlerBase
 
   /**
    * Request a public sector key and store it in the database.
-   * 
+   *
    * @throws GovManagementException
    */
   private void requestPublicSectorKey() throws GovManagementException
   {
-    TerminalPermission data = facade.getTerminalPermission(entityId);
+    TerminalPermission data = facade.getTerminalPermission(cvcRefId);
     byte[] sectorId = getSectorID(data);
     byte[] sectorPK;
     try
     {
       PKIServiceConnector.getContextLock();
-      log.debug("{}: obtained lock on SSL context for downloading public sector key", entityId);
+      log.debug("{}: obtained lock on SSL context for downloading public sector key", cvcRefId);
       RestrictedIdServiceWrapper wrapper = createWrapper();
       sectorPK = wrapper.getSectorPublicKey(sectorId);
     }
@@ -169,7 +170,7 @@ public class RestrictedIdHandler extends BerCaRequestHandlerBase
     {
       PKIServiceConnector.releaseContextLock();
     }
-    facade.storePublicSectorKey(entityId, sectorPK);
+    facade.storePublicSectorKey(cvcRefId, sectorPK);
   }
 
   /**
@@ -183,7 +184,7 @@ public class RestrictedIdHandler extends BerCaRequestHandlerBase
 
     /**
      * Create a new instance to reference the blacklist byte array
-     * 
+     *
      * @param content the blacklist byte array
      */
     private BlackListContent(byte[] content)
@@ -211,7 +212,7 @@ public class RestrictedIdHandler extends BerCaRequestHandlerBase
 
   /**
    * request a black list and store it in the database
-   * 
+   *
    * @param all <code>true</code> to store the blacklist for all service providers contained,
    *          <code>false</code> to store only the one for the provider referred by the entityID of this
    *          instance
@@ -220,19 +221,19 @@ public class RestrictedIdHandler extends BerCaRequestHandlerBase
    */
   Set<ByteBuffer> requestBlackList(boolean all, boolean delta) throws GovManagementException
   {
-    log.info("{}: started requestBlackList. All: {} | Delta: {}", entityId, all, delta);
+    log.info("{}: started requestBlackList. All: {} | Delta: {}", cvcRefId, all, delta);
     BlackListResult blResult;
     try
     {
       PKIServiceConnector.getContextLock();
-      log.debug("{}: obtained lock on SSL context for downloading black list", entityId);
+      log.debug("{}: obtained lock on SSL context for downloading black list", cvcRefId);
       RestrictedIdServiceWrapper wrapper = createWrapper();
 
       byte[] deltaID = null;
       if (delta)
       {
-        log.debug("{}: trying to request delta blacklist", entityId);
-        TerminalPermission tp = facade.getTerminalPermission(entityId);
+        log.debug("{}: trying to request delta blacklist", cvcRefId);
+        TerminalPermission tp = facade.getTerminalPermission(cvcRefId);
         deltaID = tp.getBlackListVersion() == null ? null
           : BigInteger.valueOf(tp.getBlackListVersion()).toByteArray();
       }
@@ -245,24 +246,24 @@ public class RestrictedIdHandler extends BerCaRequestHandlerBase
     }
     catch (Exception e)
     {
-      log.error("{}: cannot download black list", entityId, e);
+      log.error("{}: cannot download black list", cvcRefId, e);
       throw new GovManagementException(GlobalManagementCodes.EXTERNAL_SERVICE_NOT_REACHABLE,
                                        pkiConfig.getRestrictedIdService().getUrl(), e.getLocalizedMessage());
     }
     finally
     {
       PKIServiceConnector.releaseContextLock();
-      log.debug("{}: BlackList request done", entityId);
+      log.debug("{}: BlackList request done", cvcRefId);
     }
     if (blResult == null || (blResult.getUri() == null && blResult.getDeltaAdded() == null))
     {
-      log.info("{}: Did not receive a blacklist from BerCa", entityId);
+      log.info("{}: Did not receive a blacklist from BerCa", cvcRefId);
       return new HashSet<>();
     }
     if (RestrictedIdServiceWrapper.NO_NEW_DATA.equals(blResult))
     {
-      log.info("{}: No newer delta blacklist from BerCa available", entityId);
-      facade.updateBlackListStoreDate(entityId, null, null);
+      log.info("{}: No newer delta blacklist from BerCa available", cvcRefId);
+      facade.updateBlackListStoreDate(cvcRefId, null, null);
       return new HashSet<>();
     }
 
@@ -298,19 +299,19 @@ public class RestrictedIdHandler extends BerCaRequestHandlerBase
     }
     else
     {
-      TerminalPermission tp = facade.getTerminalPermission(entityId);
+      TerminalPermission tp = facade.getTerminalPermission(cvcRefId);
       try
       {
         ECCVCertificate cvc = new ECCVCertificate(tp.getCvc());
         importBlackList(new BlackListContent(blResult.getDeltaRemoved()),
-                        entityId,
+                        cvcRefId,
                         cvc.getSectorPublicKeyHash(),
                         BlackList.TYPE_REMOVED);
         byte[] sectorID = importBlackList(new BlackListContent(blResult.getDeltaAdded()),
-                                          entityId,
+                                          cvcRefId,
                                           cvc.getSectorPublicKeyHash(),
                                           BlackList.TYPE_ADDED);
-        log.info("{}: successfully finished requestBlackList", entityId);
+        log.info("{}: successfully finished requestBlackList", cvcRefId);
 
         Set<ByteBuffer> result = new HashSet<>();
         if (sectorID != null)
@@ -338,15 +339,15 @@ public class RestrictedIdHandler extends BerCaRequestHandlerBase
       log.info("Successfully finished requestBlackList for {} terminals", updatedSectorIDs.size());
       return updatedSectorIDs;
     }
-    TerminalPermission tp = facade.getTerminalPermission(entityId);
+    TerminalPermission tp = facade.getTerminalPermission(cvcRefId);
     try
     {
       ECCVCertificate cvc = new ECCVCertificate(tp.getCvc());
       byte[] sectorID = importBlackList(blackList,
-                                        entityId,
+                                        cvcRefId,
                                         cvc.getSectorPublicKeyHash(),
                                         BlackList.TYPE_COMPLETE);
-      log.info("{}: successfully finished requestBlackList", entityId);
+      log.info("{}: successfully finished requestBlackList", cvcRefId);
 
       Set<ByteBuffer> result = new HashSet<>();
       if (sectorID != null)
@@ -367,7 +368,7 @@ public class RestrictedIdHandler extends BerCaRequestHandlerBase
     try
     {
       PKIServiceConnector.getContextLock();
-      log.debug("{}: Blacklist file download started", entityId);
+      log.debug("{}: Blacklist file download started", cvcRefId);
       blackList = new BlackListContent(connector.getFile(blResult.getUri()));
     }
     catch (SocketException e)
@@ -377,13 +378,13 @@ public class RestrictedIdHandler extends BerCaRequestHandlerBase
     }
     catch (Exception e)
     {
-      log.error("{}: cannot download black list", entityId, e);
+      log.error("{}: cannot download black list", cvcRefId, e);
       throw new GovManagementException(GlobalManagementCodes.INTERNAL_ERROR);
     }
     finally
     {
       PKIServiceConnector.releaseContextLock();
-      log.debug("{}: Blacklist file download finished", entityId);
+      log.debug("{}: Blacklist file download finished", cvcRefId);
     }
     if (!checkBlacklistsSignature(blackList.getContent(), pkiConfig.getBlackListTrustAnchor()))
     {
@@ -396,7 +397,7 @@ public class RestrictedIdHandler extends BerCaRequestHandlerBase
   /**
    * For a given blackListCollection, process every contained BlackListDetails which's sectorID matches to one
    * of the terminals
-   * 
+   *
    * @param blacklistCollection The BlackListCollection that should be imported
    * @param type The action that should be performed with the contained BlackListEntries
    * @return A set containing the sectorIDs of the BlackListDetails that matched the refIDs.
@@ -404,9 +405,9 @@ public class RestrictedIdHandler extends BerCaRequestHandlerBase
   private Set<ByteBuffer> importBlacklistCollection(BlackListContent blacklistCollection, int type)
   {
     Set<ByteBuffer> result = new HashSet<>();
-    log.debug("{}: Blacklist parsing for collection started", entityId);
+    log.debug("{}: Blacklist parsing for collection started", cvcRefId);
     BlackList parsedBlacklist = new BlackList(blacklistCollection.getContent());
-    log.debug("{}: Blacklist parsing for collection finished", entityId);
+    log.debug("{}: Blacklist parsing for collection finished", cvcRefId);
 
     // allow gc
     blacklistCollection.clear();
@@ -438,7 +439,7 @@ public class RestrictedIdHandler extends BerCaRequestHandlerBase
 
   /**
    * Find the refID that matches to the sectorID from the BlackListDetail
-   * 
+   *
    * @param blackListDetailsSectorID the sectorId from the BlackListDetail
    * @param allRefIDs the list of all terminals
    * @return the refId of the terminal which sectorID matches with the sectorId from the BlackListDetails or
@@ -475,7 +476,7 @@ public class RestrictedIdHandler extends BerCaRequestHandlerBase
 
   /**
    * Check that for a given BlackListDetail the sectorID is not null or empty
-   * 
+   *
    * @param blacklistDetails the BlackListDetail to be checked
    * @return true if the sectorID of the given BlackListDetail is not null and not empty
    */
@@ -505,7 +506,7 @@ public class RestrictedIdHandler extends BerCaRequestHandlerBase
 
   /**
    * put a given black list into data storage
-   * 
+   *
    * @param blackList
    * @param cvcRefId
    * @param sectorPublicKeyHash
@@ -513,9 +514,9 @@ public class RestrictedIdHandler extends BerCaRequestHandlerBase
    * @throws GovManagementException
    */
   private byte[] importBlackList(BlackListContent blackList,
-                                String cvcRefId,
-                                byte[] sectorPublicKeyHash,
-                                int type)
+                                 String cvcRefId,
+                                 byte[] sectorPublicKeyHash,
+                                 int type)
   {
     if (blackList == null)
     {
@@ -583,13 +584,20 @@ public class RestrictedIdHandler extends BerCaRequestHandlerBase
 
     try
     {
-      connector = new PKIServiceConnector(180, keys.getServerCertificate(), keys.getClientKey(),
-                                          keys.getClientCertificateChain(), entityId);
+      if (hsmKeyStore == null)
+      {
+        connector = new PKIServiceConnector(180, keys.getServerCertificate(), keys.getClientKey(),
+                                            keys.getClientCertificateChain(), cvcRefId);
+      }
+      else
+      {
+        connector = new PKIServiceConnector(180, keys.getServerCertificate(), hsmKeyStore, null, cvcRefId);
+      }
       return ServiceWrapperFactory.createRestrictedIdServiceWrapper(connector, serviceUrl, wsdlVersion);
     }
     catch (GeneralSecurityException e)
     {
-      log.error("{}: problem with crypto data of this SP", entityId, e);
+      log.error("{}: problem with crypto data of this SP", cvcRefId, e);
       throw new GovManagementException(GlobalManagementCodes.EC_UNEXPECTED_ERROR, e.getMessage());
     }
     catch (URISyntaxException e)
@@ -603,7 +611,7 @@ public class RestrictedIdHandler extends BerCaRequestHandlerBase
    */
   private boolean checkBlacklistsSignature(byte[] blacklist, X509Certificate trustAnchor)
   {
-    return new CmsSignatureChecker(trustAnchor).checkEnvelopedSignature(blacklist, entityId);
+    return new CmsSignatureChecker(trustAnchor).checkEnvelopedSignature(blacklist, cvcRefId);
   }
 
 }

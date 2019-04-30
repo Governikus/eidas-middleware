@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018 Governikus KG. Licensed under the EUPL, Version 1.2 or as soon they will be approved by
+ * Copyright (c) 2019 Governikus KG. Licensed under the EUPL, Version 1.2 or as soon they will be approved by
  * the European Commission - subsequent versions of the EUPL (the "Licence"); You may not use this work except
  * in compliance with the Licence. You may obtain a copy of the Licence at:
  * http://joinup.ec.europa.eu/software/page/eupl Unless required by applicable law or agreed to in writing,
@@ -18,7 +18,7 @@ import de.governikus.eumw.poseidas.cardserver.sm.BatchSecureMessaging;
 
 /**
  * Data class holding the final results of EAC required for further steps.
- * 
+ *
  * @author Arne Stahlbock, ast@bos-bremen.de
  */
 public class EACFinal
@@ -46,7 +46,7 @@ public class EACFinal
 
   /**
    * Constructor.
-   * 
+   *
    * @param sm {@link BatchSecureMessaging} instance, <code>null</code> not permitted
    * @param cardSecurityBytes bytes of EF.CardSecurity, <code>null</code> or empty not permitted
    * @param caData selected Chip Authentication parameters, <code>null</code> not permitted
@@ -71,7 +71,7 @@ public class EACFinal
 
   /**
    * Gets {@link BatchSecureMessaging} instance.
-   * 
+   *
    * @return {@link BatchSecureMessaging}
    */
   public BatchSecureMessaging getSM()
@@ -81,7 +81,7 @@ public class EACFinal
 
   /**
    * Gets bytes of EF.CardSecurity (as a copy).
-   * 
+   *
    * @return bytes of EF.CardSecurity
    */
   public byte[] getCardSecurityBytes()
@@ -91,7 +91,7 @@ public class EACFinal
 
   /**
    * Gets selected Chip Authentication parameters.
-   * 
+   *
    * @return CA parameters
    */
   public ChipAuthenticationData getCaData()
@@ -101,7 +101,7 @@ public class EACFinal
 
   /**
    * Gets ephemeral key of card.
-   * 
+   *
    * @return ephemeral key of card
    */
   public byte[] getEphemeralCardKey()

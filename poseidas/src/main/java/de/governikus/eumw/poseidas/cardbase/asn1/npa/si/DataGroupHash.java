@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018 Governikus KG. Licensed under the EUPL, Version 1.2 or as soon they will be approved by
+ * Copyright (c) 2019 Governikus KG. Licensed under the EUPL, Version 1.2 or as soon they will be approved by
  * the European Commission - subsequent versions of the EUPL (the "Licence"); You may not use this work except
  * in compliance with the Licence. You may obtain a copy of the Licence at:
  * http://joinup.ec.europa.eu/software/page/eupl Unless required by applicable law or agreed to in writing,
@@ -21,7 +21,7 @@ import de.governikus.eumw.poseidas.cardbase.asn1.npa.SecurityInfosPath;
 
 /**
  * Implementation of the <code>DataGroupHash</code> structure in {@link EIDSecurityObject}.
- * 
+ *
  * @author Arne Stahlbock, ast@bos-bremen.de
  */
 public class DataGroupHash extends ASN1
@@ -29,7 +29,7 @@ public class DataGroupHash extends ASN1
 
   /**
    * Constructor.
-   * 
+   *
    * @param bytes byte-array containing ASN.1 description of a {@link DataGroupHash}.
    * @throws IOException if reading bytes fails
    */
@@ -40,7 +40,7 @@ public class DataGroupHash extends ASN1
 
   /**
    * Gets data group number.
-   * 
+   *
    * @return data group number
    * @throws IOException
    */
@@ -51,7 +51,7 @@ public class DataGroupHash extends ASN1
 
   /**
    * Gets data group hash.
-   * 
+   *
    * @return data group hash
    * @throws IOException
    */

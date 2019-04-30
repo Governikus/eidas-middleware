@@ -1,0 +1,165 @@
+﻿<!--
+  ~ Copyright (c) 2019 Governikus KG. Licensed under the EUPL, Version 1.2 or as soon they will be approved by
+  ~ the European Commission - subsequent versions of the EUPL (the "Licence"); You may not use this work except
+  ~ in compliance with the Licence. You may obtain a copy of the Licence at:
+  ~ http://joinup.ec.europa.eu/software/page/eupl Unless required by applicable law or agreed to in writing,
+  ~ software distributed under the Licence is distributed on an "AS IS" basis, WITHOUT WARRANTIES OR CONDITIONS
+  ~ OF ANY KIND, either express or implied. See the Licence for the specific language governing permissions and
+  ~ limitations under the Licence.
+  -->
+
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:th="http://www.thymeleaf.org" lang="de">
+<head>
+    <title th:text="#{title.title}">German eIDAS Middleware</title>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta charset="utf-8">
+    <!-- Viewport Meta Tag -->
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <!-- Bootstrap -->
+    <link rel="stylesheet" type="text/css" th:href="@{/css/bootstrap.css}">
+    <!-- Main Style -->
+    <link rel="stylesheet" type="text/css" th:href="@{/css/main.css}">
+    <!-- custom Style -->
+    <link rel="stylesheet" type="text/css" th:href="@{/css/custom.css}">
+    <!-- Slicknav CSS -->
+    <link rel="stylesheet" type="text/css" th:href="@{/css/slicknav.css}">
+    <!-- Responsive Style -->
+    <link rel="stylesheet" type="text/css" th:href="@{/css/responsive.css}">
+    <!--Fonts-->
+    <link rel="stylesheet" media="screen" th:href="@{/css/font-awesome.css}">
+    <link rel="stylesheet" media="screen" th:href="@{/css/simple-line-icons.css}">
+    <!-- Extras -->
+    <link rel="stylesheet" type="text/css" th:href="@{/css/owl.css}">
+    <link rel="stylesheet" type="text/css" th:href="@{/css/owl_002.css}">
+    <link rel="stylesheet" type="text/css" th:href="@{/css/animate.css}">
+    <link rel="stylesheet" type="text/css" th:href="@{/css/normalize.css}">
+    <!-- Color CSS Styles  -->
+    <link rel="stylesheet" type="text/css" th:href="@{/css/mblue.css}" media="screen">
+    <!-- HTML5 Shim and Respond.js IE8 support of HTML5 elements and media queries -->
+
+</head>
+<body>
+<!-- Header area wrapper Start -->
+
+<!-- Page Header End -->
+
+<section class="split section" style="margin-top: -32px;">
+    <!-- Container Starts -->
+
+
+    <div class="container">
+        <div><h5 th:text="#{content.title}">Use your identity card for European applications as well</h5></div>
+        <div th:text="#{content.language}">Choose your language</div>
+        <a th:href="${linkToSelf} + '&lang=en'" title="Change language to english.">
+            <img src="../../img/english.jpg"
+                 alt="english flag"
+                 th:attr="src=@{/img/english.jpg}"
+                 style="float: left; height: 25px; margin-right:10px; margin-top: 0px; margin-bottom: 5px; position: relative;">
+        </a>
+        <a th:href="${linkToSelf} + '&lang=de'" title="Seite auf Deutsch anzeigen.">
+            <img src="../../img/german.png"
+                 alt="german flag"
+                 th:attr="src=@{/img/german.png}"
+                 style="float: left; height: 25px; margin-top: 0px; margin-bottom: 5px; position: relative;">
+        </a><br/><br/>
+        <div class="row brdr-first">
+            <div class="container-1" style="margin-left: 14px;">
+                <h2 class="title" th:text="#{content.requirements.title}">To use the online id function you need</h2>
+            </div>
+        </div>
+        <div class="row brdr">
+            <div class="col-md-4 col-sm-6 col-xs-12 about1">
+                <div class="images">
+                    <img src="../../img/npa-left.png" th:attr="src=@{/img/npa-left.png}" alt="Logo Personalausweis"
+                         style="margin-top: 0px;">
+                </div>
+            </div>
+            <div class="col-md-8 col-sm-6 col-xs-12 about">
+                <div class="details-list">
+                    <h3 th:text="#{content.requirements.npa}">1. An identity card / electronic residence permit</h3>
+                    <p class="lead" th:text="#{content.requirements.npa.hint}">
+                        (issued from 01.11.2010 or 01.09.2011) with unlocked online ID function and your personal
+                        PIN</p>
+                </div>
+            </div>
+        </div>
+        <div class="row brdr">
+            <div class="col-md-4 col-sm-6 col-xs-12 about1">
+                <div class="images">
+                    <img src="../../img/cr-phone.png" th:attr="src=@{/img/cr-phone.png}"
+                         alt="Logo Kartenleser und Smartphone" style="margin-top: 0px;">
+                </div>
+            </div>
+            <div class="col-md-8 col-sm-6 col-xs-12 about">
+                <div class="details-list">
+                    <h3 th:text="#{content.requirements.device}">2. A card reader / Android device for direct readout
+                        via NFC</h3>
+                    <p class="lead" th:utext="#{content.requirements.device.hint}">An overview of suitable card readers
+                        or mobile devices can be found at ausweisapp.bund.de/en/ (<a
+                                href="https://www.ausweisapp.bund.de/en/compatible-devices/card-readers/"
+                                title="List of  suitable card readers">card reader</a> / <a
+                                href="https://www.ausweisapp.bund.de/en/compatible-devices/mobile-phones-and-tablets/"
+                                title="List of of suitable smartphones and tablets">smartphones / tablets</a>)
+                </div>
+            </div>
+        </div>
+        <div class="row brdr-last">
+            <div class="col-md-4 col-sm-6 col-xs-12 about1">
+                <div class="images">
+                    <img src="../../img/logo-ausweisapp2.png" th:attr="src=@{/img/logo-ausweisapp2.png}"
+                         alt="Logo AusweisApp2" style="margin-top: 0px;">
+                </div>
+            </div>
+            <div class="col-md-8 col-sm-6 col-xs-12 about">
+                <div class="content-inner">
+                    <div class="details-list">
+                        <h3 th:text="#{content.requirements.app}">3. The AusweisApp2</h3>
+                        <p class="lead" th:utext="#{content.requirements.app.hint}">
+                            The App can be downloaded for free here:
+                            <br> <a href="/ausweisapp-redirect"
+                                    title="Redirect to download page"><b>ausweisapp.bund.de/en/</b></a>
+                        </p>
+                    </div>
+                </div>
+                <br>
+            </div>
+        </div>
+        <div class="row brdr-last">
+            <div class="col-md-12" style="margin-top: 8px; margin-bottom: 8px; font-weight:300; font-size: 15px;">
+                <div th:utext="#{content.help}">
+                </div>
+
+                <div>
+                    <div class="container-1" th:utext="#{content.help.link}">
+                    </div>
+                </div>
+
+            </div>
+        </div>
+
+
+        <div class="row">
+            <div class="col-md-12 nopad wow fadeInUp animated" style="visibility: visible;">
+                <a th:href="${ausweisapp}" class="btn btn-common mt-20 btn-lg re">
+                    <img src="../../img/logo-ausweisapp2-xl.png"
+                         th:attr="src=@{/img/logo-ausweisapp2-xl.png}"
+                         style="height: 30px; margin-right:10px; margin-top: -2px;" th:utext="#{content.start}" alt="logo ausweisapp2">
+                </a>
+            </div>
+        </div>
+        <!-- Nav-Buttons End -->
+    </div>
+    <!-- Container End -->
+</section>
+
+
+<footer>
+    <div align="center" th:text="#{footer.footer}">eIDAS Middleware provided by Governikus KG on behalf of BSI</div>
+</footer>
+
+
+</body>
+</html>

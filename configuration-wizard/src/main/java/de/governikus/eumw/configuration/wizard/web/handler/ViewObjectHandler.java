@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018 Governikus KG. Licensed under the EUPL, Version 1.2 or as soon they will be approved by
+ * Copyright (c) 2019 Governikus KG. Licensed under the EUPL, Version 1.2 or as soon they will be approved by
  * the European Commission - subsequent versions of the EUPL (the "Licence"); You may not use this work except
  * in compliance with the Licence. You may obtain a copy of the Licence at:
  * http://joinup.ec.europa.eu/software/page/eupl Unless required by applicable law or agreed to in writing,
@@ -32,7 +32,7 @@ public abstract class ViewObjectHandler<T extends NamedObject>
 
   /**
    * add an element to this object handler
-   * 
+   *
    * @param object the object to be added
    */
   public void add(T object)
@@ -47,7 +47,7 @@ public abstract class ViewObjectHandler<T extends NamedObject>
 
   /**
    * remove the given object
-   * 
+   *
    * @param object the object to remove
    */
   public void remove(T object)
@@ -61,7 +61,7 @@ public abstract class ViewObjectHandler<T extends NamedObject>
 
   /**
    * will remove an object if only the name is present
-   * 
+   *
    * @param objectName the name of the object to remove
    * @return the named object that has been removed
    */
@@ -86,7 +86,7 @@ public abstract class ViewObjectHandler<T extends NamedObject>
 
   /**
    * will return the named object with the given name
-   * 
+   *
    * @param name the name to be found
    * @return the named object or null if no entry with this name has been found
    */

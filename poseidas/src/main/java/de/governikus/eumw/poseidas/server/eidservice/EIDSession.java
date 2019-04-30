@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018 Governikus KG. Licensed under the EUPL, Version 1.2 or as soon they will be approved by
+ * Copyright (c) 2019 Governikus KG. Licensed under the EUPL, Version 1.2 or as soon they will be approved by
  * the European Commission - subsequent versions of the EUPL (the "Licence"); You may not use this work except
  * in compliance with the Licence. You may obtain a copy of the Licence at:
  * http://joinup.ec.europa.eu/software/page/eupl Unless required by applicable law or agreed to in writing,
@@ -22,7 +22,7 @@ import oasis.names.tc.dss._1_0.core.schema.Result;
 
 /**
  * Session inside the eID-Server which links the POAS conversation to the getResult-, and useID requests
- * 
+ *
  * @author tt
  */
 public class EIDSession implements StoreableSession
@@ -42,8 +42,6 @@ public class EIDSession implements StoreableSession
 
   private final String sessionId;
 
-  private final boolean demoDataEnabled;
-
   private SessionInput sessionInput;
 
 
@@ -51,11 +49,10 @@ public class EIDSession implements StoreableSession
 
   private final String logPrefix;
 
-  EIDSession(String sessionId, String requestId, boolean saml, boolean demoDataEnabled, String providerName)
+  EIDSession(String sessionId, String requestId, String providerName)
   {
     this.sessionId = sessionId;
     this.requestId = requestId;
-    this.demoDataEnabled = demoDataEnabled;
     creationTime = System.currentTimeMillis();
 
     StringBuilder builder = new StringBuilder();
@@ -111,14 +108,6 @@ public class EIDSession implements StoreableSession
   Integer getSequenceNumber()
   {
     return sequenceNumber;
-  }
-
-  /**
-   * @return true if it is allowed to use demo / test data in this session.
-   */
-  public boolean isDemoDataEnabled()
-  {
-    return demoDataEnabled;
   }
 
   @Override

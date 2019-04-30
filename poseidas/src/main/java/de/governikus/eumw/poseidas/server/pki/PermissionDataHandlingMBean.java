@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018 Governikus KG. Licensed under the EUPL, Version 1.2 or as soon they will be approved by
+ * Copyright (c) 2019 Governikus KG. Licensed under the EUPL, Version 1.2 or as soon they will be approved by
  * the European Commission - subsequent versions of the EUPL (the "Licence"); You may not use this work except
  * in compliance with the Licence. You may obtain a copy of the Licence at:
  * http://joinup.ec.europa.eu/software/page/eupl Unless required by applicable law or agreed to in writing,
@@ -22,7 +22,7 @@ import de.governikus.eumw.poseidas.gov2server.constants.admin.ManagementMessage;
  * <p>
  * <b> when doing any change see second class </b>
  * </p>
- * 
+ *
  * @author tt
  * @author Hauke Mehrtens
  */
@@ -31,7 +31,7 @@ public interface PermissionDataHandlingMBean
 
   /**
    * Remove a set of permission data from the database
-   * 
+   *
    * @param cvcRefId
    */
   ManagementMessage removePermissionData(String cvcRefId);
@@ -39,7 +39,7 @@ public interface PermissionDataHandlingMBean
   /**
    * Returns informations about the Permission data object. Use AdminPoseidasConstants.VALUE_PERMISSION_DATA_*
    * to access the map.
-   * 
+   *
    * @param cvcRefId
    * @param withBlkNumber include the number of entries in the blacklist, this could take some more time.
    */
@@ -55,7 +55,7 @@ public interface PermissionDataHandlingMBean
   /**
    * Request a new terminal certificate to access the nPA with. The system will generate and store a key pair,
    * create a certificate request, send it and store the results.
-   * 
+   *
    * @param entityID defines the service provider to work for
    * @param cvcDescription obtained by a previous call of
    *          {@link #prepareFirstCertificateRequest(String, String, String, String, boolean, boolean, String, String, String, List)}
@@ -75,7 +75,7 @@ public interface PermissionDataHandlingMBean
   /**
    * Request a new terminal certificate to access the nPA with. The system will generate and store a key pair,
    * create a certificate request, send it and store the results.
-   * 
+   *
    * @param entityID defines the service provider to work for
    * @param countryCode
    * @param chrMnemonic
@@ -89,7 +89,7 @@ public interface PermissionDataHandlingMBean
 
   /**
    * Create a database entry in which terminal certificates can be stored.
-   * 
+   *
    * @param cvcRefId unique ID of the entry
    * @return status message
    */
@@ -99,7 +99,7 @@ public interface PermissionDataHandlingMBean
    * Import certificate into an existing database entry. Verify if the certificate matches the pending
    * request, deletes the pending request, store the certificate in the database and updates the valid time in
    * the database.
-   * 
+   *
    * @param entityID terminal permission primary key
    * @param cvc certificate to be imported
    * @return status message
@@ -108,7 +108,7 @@ public interface PermissionDataHandlingMBean
 
   /**
    * Trigger a subsequent certificate request manually for one service provider.
-   * 
+   *
    * @param entityID
    * @return "OK" or "internal error"
    */
@@ -116,7 +116,7 @@ public interface PermissionDataHandlingMBean
 
   /**
    * Trigger a subsequent certificate request with a new cvc description.
-   * 
+   *
    * @param entityID
    * @param cvcDescription new cvc description to use
    * @return "OK" or "internal error"
@@ -125,7 +125,7 @@ public interface PermissionDataHandlingMBean
 
   /**
    * Check whether the configuration is sufficiently complete for requesting an CVC.
-   * 
+   *
    * @param entityID
    * @return no message in success case.
    */
@@ -135,14 +135,14 @@ public interface PermissionDataHandlingMBean
    * Trigger renewal of all existing black lists. Furthermore, for all entries where a certificate is obtained
    * but getting the blacklist failed, the missing blacklist and sector public key is requested. <br>
    * Normally, this method is triggered by a timer. Call it only for test purposes!
-   * 
+   *
    * @param delta flag indicating a delta request
    */
   void renewBlackList(boolean delta);
 
   /**
    * Trigger a renewal of the blacklist assosiated with the given entityID.
-   * 
+   *
    * @return ok, if everything was ok or an error message.
    */
   ManagementMessage renewBlackList(String entityID);
@@ -154,14 +154,14 @@ public interface PermissionDataHandlingMBean
 
   /**
    * Trigger renewal of the master and defect lists with the given entityID.
-   * 
+   *
    * @return ok, if everything was ok or an error message.
    */
   ManagementMessage renewMasterAndDefectList(String entityID);
 
   /**
    * Returns the CVC description for the given CvcRefId. In case of an error it returns an ManagementMessage.
-   * 
+   *
    * @param cvcRefId
    * @return CVC description
    */
@@ -169,7 +169,7 @@ public interface PermissionDataHandlingMBean
 
   /**
    * Delete pending certificate request associated with the given entityID from database.
-   * 
+   *
    * @return ok, if everything was ok or an error message.
    */
   ManagementMessage deletePendingCertRequest(String entityID);

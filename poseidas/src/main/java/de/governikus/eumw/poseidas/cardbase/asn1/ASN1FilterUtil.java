@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018 Governikus KG. Licensed under the EUPL, Version 1.2 or as soon they will be approved by
+ * Copyright (c) 2019 Governikus KG. Licensed under the EUPL, Version 1.2 or as soon they will be approved by
  * the European Commission - subsequent versions of the EUPL (the "Licence"); You may not use this work except
  * in compliance with the Licence. You may obtain a copy of the Licence at:
  * http://joinup.ec.europa.eu/software/page/eupl Unless required by applicable law or agreed to in writing,
@@ -20,7 +20,7 @@ import de.governikus.eumw.poseidas.cardbase.ByteUtil;
 
 /**
  * Implementation of convenience methods for filtering ASN.1.
- * 
+ *
  * @author Jens Wothe, jw@bos-bremen.de
  */
 final class ASN1FilterUtil
@@ -36,7 +36,7 @@ final class ASN1FilterUtil
 
   /**
    * Filter array of child elements for elements with given tag.
-   * 
+   *
    * @param asn1s array of ASN.1, <code>null</code> and empty array permitted
    * @param tag tag for filtering
    * @return filtered array of child elements, {@link ASN1Constants#EMPTY_ASN1_ARRAY} for no child element
@@ -49,7 +49,7 @@ final class ASN1FilterUtil
 
   /**
    * Filter array of child elements for elements with given tag.
-   * 
+   *
    * @param asn1s array of ASN.1, <code>null</code> and empty array permitted
    * @param tag tag for filtering
    * @return filtered array of child elements, {@link ASN1Constants#EMPTY_ASN1_ARRAY} for no child element
@@ -76,7 +76,7 @@ final class ASN1FilterUtil
 
   /**
    * Filter array of child elements for elements with given tag of tag with description and tag.
-   * 
+   *
    * @param asn1s array of ASN.1, <code>null</code> and empty array permitted (leading to empty result)
    * @param dTag description and tag for filtering - including ASN.1 bit coded informations about class and
    *          content, <code>null</code> not permitted
@@ -96,7 +96,7 @@ final class ASN1FilterUtil
 
   /**
    * Filter array of child elements for elements with given tag of tag bytes with description and tag.
-   * 
+   *
    * @param asn1s array of ASN.1, <code>null</code> and empty array permitted (leading to empty result)
    * @param dTagBytes bytes with description and tag of ASN.1 - including ASN.1 bit coded informations about
    *          class and content, <code>null</code> not permitted
@@ -129,7 +129,7 @@ final class ASN1FilterUtil
 
   /**
    * Filter array of child elements for elements with given description and tag.
-   * 
+   *
    * @param asn1Objects array of ASN.1, <code>null</code> and empty array permitted (leading to empty result)
    * @param dTag description and tag for filtering - including ASN.1 bit coded informations about class and
    *          content, <code>null</code> not permitted
@@ -149,7 +149,7 @@ final class ASN1FilterUtil
 
   /**
    * Filter array of child elements for elements with given bytes of description and tag.
-   * 
+   *
    * @param asn1s array of ASN.1, <code>null</code> and empty array permitted (leading to empty result)
    * @param dTagBytes bytes with description and tag of ASN.1 - including ASN.1 bit coded informations about
    *          class and content, <code>null</code> or empty array not permitted

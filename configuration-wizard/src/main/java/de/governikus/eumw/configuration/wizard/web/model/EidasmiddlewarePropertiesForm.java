@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018 Governikus KG. Licensed under the EUPL, Version 1.2 or as soon they will be approved by
+ * Copyright (c) 2019 Governikus KG. Licensed under the EUPL, Version 1.2 or as soon they will be approved by
  * the European Commission - subsequent versions of the EUPL (the "Licence"); You may not use this work except
  * in compliance with the Licence. You may obtain a copy of the Licence at:
  * http://joinup.ec.europa.eu/software/page/eupl Unless required by applicable law or agreed to in writing,
@@ -21,26 +21,24 @@ import java.security.cert.CertificateEncodingException;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.Enumeration;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.Properties;
 import java.util.TreeSet;
+import java.util.stream.Collectors;
 
 import javax.validation.constraints.NotBlank;
 
-import org.apache.commons.fileupload.FileItem;
-import org.apache.commons.fileupload.disk.DiskFileItem;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.io.IOUtils;
-import org.apache.commons.io.output.DeferredFileOutputStream;
 import org.apache.commons.lang3.StringUtils;
-import org.springframework.http.MediaType;
 import org.springframework.web.multipart.MultipartFile;
-import org.springframework.web.multipart.commons.CommonsMultipartFile;
 
 import de.governikus.eumw.configuration.wizard.identifier.FileNames;
 import de.governikus.eumw.configuration.wizard.identifier.MiddlewarePropertiesIdentifier;
-import de.governikus.eumw.configuration.wizard.web.utils.ExceptionHelper;
 import de.governikus.eumw.utils.key.KeyStoreSupporter;
 import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
@@ -74,17 +72,16 @@ public class EidasmiddlewarePropertiesForm extends AbstractPropertiesConfigurati
    */
   private String serviceProviderMetadataPath;
 
+
+  /**
+   * placeholder for the uploaded metadata file
+   */
+  private MultipartFile uploadedFile;
+
   /**
    * service provider metadata
    */
-  private MultipartFile serviceProviderMetadataFile;
-
-  /**
-   * Because spring deletes the temporary MultipartFiles before we save them we must keep them in memory.
-   *
-   * @see #serviceProviderMetadataFile
-   */
-  private byte[] serviceProviderMetadataFileBytes;
+  private Map<String, byte[]> serviceProviderMetadataFiles = new HashMap<>();
 
   /**
    * certificate the metadata is signed with
@@ -152,20 +149,16 @@ public class EidasmiddlewarePropertiesForm extends AbstractPropertiesConfigurati
   void readFromProperties(Properties middlewareProperties)
   {
     // @formatter:off
-    this.serviceProviderMetadataPath =
-              (String) middlewareProperties.get(MiddlewarePropertiesIdentifier.SERVICE_PROVIDER_CONFIG_FOLDER.name());
+    this.serviceProviderMetadataPath = (String)middlewareProperties.get(MiddlewarePropertiesIdentifier.SERVICE_PROVIDER_CONFIG_FOLDER.name());
     // @formatter:on
-    getServiceProviderMetadataFile(middlewareProperties).ifPresent(this::setServiceProviderMetadataFile);
+    getServiceProviderMetadataFiles(middlewareProperties).ifPresent(this::setServiceProviderMetadataFiles);
     loadMetadataSignatureCertificate(middlewareProperties).ifPresent(this::setMetadataSignatureCertificate);
     this.entityIdInt = (String)middlewareProperties.get(MiddlewarePropertiesIdentifier.ENTITYID_INT.name());
     this.serverURL = (String)middlewareProperties.get(MiddlewarePropertiesIdentifier.SERVER_URL.name());
     // @formatter:off
-    String keystorePath =
-                      (String)middlewareProperties.get(MiddlewarePropertiesIdentifier.MIDDLEWARE_SIGN_KEY.name());
-    String keystoreAlias =
-                      (String)middlewareProperties.get(MiddlewarePropertiesIdentifier.MIDDLEWARE_SIGN_ALIAS.name());
-    String keystorePassword =
-                      (String)middlewareProperties.get(MiddlewarePropertiesIdentifier.MIDDLEWARE_SIGN_PIN.name());
+    String keystorePath = (String)middlewareProperties.get(MiddlewarePropertiesIdentifier.MIDDLEWARE_SIGN_KEY.name());
+    String keystoreAlias = (String)middlewareProperties.get(MiddlewarePropertiesIdentifier.MIDDLEWARE_SIGN_ALIAS.name());
+    String keystorePassword = (String)middlewareProperties.get(MiddlewarePropertiesIdentifier.MIDDLEWARE_SIGN_PIN.name());
     String privateKeyPassword = keystorePassword;
     // @formatter:on
     loadKeystoreSettings(FilenameUtils.getBaseName(keystorePath),
@@ -191,19 +184,13 @@ public class EidasmiddlewarePropertiesForm extends AbstractPropertiesConfigurati
     this.countryCode = (String)middlewareProperties.get(MiddlewarePropertiesIdentifier.COUNTRYCODE.name());
 
     // @formatter:off
-    this.contactPersonCompany =
-              (String)middlewareProperties.get(MiddlewarePropertiesIdentifier.CONTACT_PERSON_COMPANY.name());
-    this.contactPersonEmail =
-              (String)middlewareProperties.get(MiddlewarePropertiesIdentifier.CONTACT_PERSON_EMAIL.name());
-    this.contactPersonGivenname =
-              (String)middlewareProperties.get(MiddlewarePropertiesIdentifier.CONTACT_PERSON_GIVENNAME.name());
-    this.contactPersonSurname =
-              (String)middlewareProperties.get(MiddlewarePropertiesIdentifier.CONTACT_PERSON_SURNAME.name());
-    this.contactPersonTel =
-              (String)middlewareProperties.get(MiddlewarePropertiesIdentifier.CONTACT_PERSON_TEL.name());
+    this.contactPersonCompany = (String)middlewareProperties.get(MiddlewarePropertiesIdentifier.CONTACT_PERSON_COMPANY.name());
+    this.contactPersonEmail = (String)middlewareProperties.get(MiddlewarePropertiesIdentifier.CONTACT_PERSON_EMAIL.name());
+    this.contactPersonGivenname = (String)middlewareProperties.get(MiddlewarePropertiesIdentifier.CONTACT_PERSON_GIVENNAME.name());
+    this.contactPersonSurname = (String)middlewareProperties.get(MiddlewarePropertiesIdentifier.CONTACT_PERSON_SURNAME.name());
+    this.contactPersonTel = (String)middlewareProperties.get(MiddlewarePropertiesIdentifier.CONTACT_PERSON_TEL.name());
 
-    this.organizationDisplayName =
-              (String)middlewareProperties.get(MiddlewarePropertiesIdentifier.ORGANIZATION_DISPLAY_NAME.name());
+    this.organizationDisplayName = (String)middlewareProperties.get(MiddlewarePropertiesIdentifier.ORGANIZATION_DISPLAY_NAME.name());
     this.organizationName = (String)middlewareProperties.get(MiddlewarePropertiesIdentifier.ORGANIZATION_NAME.name());
     this.organizationUrl = (String)middlewareProperties.get(MiddlewarePropertiesIdentifier.ORGANIZATION_URL.name());
     this.organizationLang = (String)middlewareProperties.get(MiddlewarePropertiesIdentifier.ORGANIZATION_LANG.name());
@@ -221,8 +208,7 @@ public class EidasmiddlewarePropertiesForm extends AbstractPropertiesConfigurati
   private Optional<CertificateForm> loadMetadataSignatureCertificate(Properties properties)
   {
     // @formatter:off
-    String metadataSignatureCertPath =
-              (String)properties.get(MiddlewarePropertiesIdentifier.SERVICE_PROVIDER_METADATA_SIGNATURE_CERT.name());
+    String metadataSignatureCertPath = (String)properties.get(MiddlewarePropertiesIdentifier.SERVICE_PROVIDER_METADATA_SIGNATURE_CERT.name());
     // @formatter:on
     if (StringUtils.isNotBlank(metadataSignatureCertPath))
     {
@@ -231,7 +217,8 @@ public class EidasmiddlewarePropertiesForm extends AbstractPropertiesConfigurati
       {
         try (InputStream inputStream = new FileInputStream(signatureCertFile))
         {
-          return getCertificate(FilenameUtils.getBaseName(metadataSignatureCertPath), IOUtils.toByteArray(inputStream));
+          return getCertificate(FilenameUtils.getBaseName(metadataSignatureCertPath),
+                                IOUtils.toByteArray(inputStream));
         }
         catch (IOException e)
         {
@@ -248,11 +235,10 @@ public class EidasmiddlewarePropertiesForm extends AbstractPropertiesConfigurati
    * @param properties the properties with the possible location of the metadata file
    * @return the file as multipart file if it exists
    */
-  private Optional<MultipartFile> getServiceProviderMetadataFile(Properties properties)
+  private Optional<Map<String, byte[]>> getServiceProviderMetadataFiles(Properties properties)
   {
     // @formatter:off
-    String serviceProviderMetadataPathTmp =
-                (String) properties.get(MiddlewarePropertiesIdentifier.SERVICE_PROVIDER_CONFIG_FOLDER.name());
+    String serviceProviderMetadataPathTmp = (String)properties.get(MiddlewarePropertiesIdentifier.SERVICE_PROVIDER_CONFIG_FOLDER.name());
     // @formatter:on
     if (StringUtils.isBlank(serviceProviderMetadataPathTmp))
     {
@@ -268,34 +254,29 @@ public class EidasmiddlewarePropertiesForm extends AbstractPropertiesConfigurati
       return Optional.empty();
     }
     File[] files = metadataDirectory.listFiles();
-    Optional<File> optionalFile = Arrays.stream(files)
-                                        .filter(file -> file.getName().endsWith(".xml"))
-                                        .findFirst();
-    if (optionalFile.isPresent())
-    {
-      File metadataFile = optionalFile.get();
-      FileItem uploadedFileMock = new DiskFileItem("eidasmiddlewareProperties.serviceProviderMetadataFile",
-                                                   MediaType.APPLICATION_XML_VALUE, true,
-                                                   metadataFile.getName(), Integer.MAX_VALUE, null);
-      try (
-        DeferredFileOutputStream outputStream = (DeferredFileOutputStream)uploadedFileMock.getOutputStream();
-        FileInputStream fileInputStream = new FileInputStream(metadataFile))
-      {
-        // will write the metadata-file into a temporary file in the "java.io.tmpdir"-directory this is
-        // necessary to have access to the inputstream when saving the file in a new location
-        outputStream.write(IOUtils.toByteArray(fileInputStream));
-      }
-      catch (IOException ex)
-      {
-        log.error("problem while initializing outputstream for uploaded mock file: {}",
-                  ExceptionHelper.getRootMessage(ex));
-      }
-      return Optional.of(new CommonsMultipartFile(uploadedFileMock));
-    }
-    else
+    List<File> fileList = Arrays.stream(files)
+                                .filter(file -> file.getName().endsWith(".xml"))
+                                .collect(Collectors.toList());
+
+    if (fileList.isEmpty())
     {
       return Optional.empty();
     }
+
+    Map<String, byte[]> metadataFileMap = new HashMap<>();
+
+    for ( File metadataFile : fileList )
+    {
+      try
+      {
+        metadataFileMap.put(metadataFile.getName(), IOUtils.toByteArray(metadataFile.toURI()));
+      }
+      catch (IOException e)
+      {
+        log.error("Cannot read metadata file", e);
+      }
+    }
+    return Optional.of(metadataFileMap);
   }
 
   /**
@@ -307,22 +288,31 @@ public class EidasmiddlewarePropertiesForm extends AbstractPropertiesConfigurati
    */
   public void save(String directory) throws IOException, CertificateEncodingException
   {
-    KeyStoreSupporter.keyStoreToFile(new File(directory),
-                                     middlewareSignKeystore.getKeystoreName(),
-                                     middlewareSignKeystore.getKeystore(),
-                                     middlewareSignKeystore.getKeystorePassword());
+    if (middlewareSignKeystore != null)
+    {
+      KeyStoreSupporter.keyStoreToFile(new File(directory),
+                                       middlewareSignKeystore.getKeystoreName(),
+                                       middlewareSignKeystore.getKeystore(),
+                                       middlewareSignKeystore.getKeystorePassword());
+    }
+
     KeyStoreSupporter.keyStoreToFile(new File(directory),
                                      middlewareCryptKeystore.getKeystoreName(),
                                      middlewareCryptKeystore.getKeystore(),
                                      middlewareCryptKeystore.getKeystorePassword());
 
     Files.createDirectories(Paths.get(directory, SERVICEPROVIDER_METADATA_FOLDERNAME));
-    FileUtils.cleanDirectory(Paths.get(directory,
-            SERVICEPROVIDER_METADATA_FOLDERNAME).toFile());
-    Files.write(Paths.get(directory,
-                          SERVICEPROVIDER_METADATA_FOLDERNAME,
-                          serviceProviderMetadataFile.getOriginalFilename()),
-                serviceProviderMetadataFileBytes);
+    FileUtils.cleanDirectory(Paths.get(directory, SERVICEPROVIDER_METADATA_FOLDERNAME).toFile());
+    serviceProviderMetadataFiles.forEach((String fileName, byte[] file) -> {
+      try
+      {
+        Files.write(Paths.get(directory, SERVICEPROVIDER_METADATA_FOLDERNAME, fileName), file);
+      }
+      catch (IOException e)
+      {
+        log.error("Cannot save metadata file", e);
+      }
+    });
 
     Files.write(Paths.get(directory, metadataSignatureCertificate.getName() + ".crt"),
                 metadataSignatureCertificate.getCertificate().getEncoded());
@@ -357,24 +347,27 @@ public class EidasmiddlewarePropertiesForm extends AbstractPropertiesConfigurati
     properties.setProperty(MiddlewarePropertiesIdentifier.ENTITYID_INT.name(), entityIdInt);
     properties.setProperty(MiddlewarePropertiesIdentifier.SERVER_URL.name(), serverURL);
     // @formatter:off
-    properties.setProperty(MiddlewarePropertiesIdentifier.MIDDLEWARE_SIGN_KEY.name(),
-                           addPathPrefix(pathPrefix,
-                             middlewareSignKeystore.getKeystoreName() + "."
-                                         + KeyStoreSupporter.KeyStoreType.valueOf(middlewareSignKeystore.getKeystore()
-                                                                                                        .getType())
-                                                                         .getFileExtension()));
-    // @formatter:on
-    properties.setProperty(MiddlewarePropertiesIdentifier.MIDDLEWARE_SIGN_PIN.name(),
-                           middlewareSignKeystore.getKeystorePassword());
-    properties.setProperty(MiddlewarePropertiesIdentifier.MIDDLEWARE_SIGN_ALIAS.name(),
-                           middlewareSignKeystore.getAlias());
+    if (middlewareSignKeystore != null)
+    {
+      properties.setProperty(MiddlewarePropertiesIdentifier.MIDDLEWARE_SIGN_KEY.name(),
+                             addPathPrefix(pathPrefix,
+                                           middlewareSignKeystore.getKeystoreName() + "."
+                                                       + KeyStoreSupporter.KeyStoreType.valueOf(middlewareSignKeystore.getKeystore()
+                                                                                                                      .getType())
+                                                                                       .getFileExtension()));
+      // @formatter:on
+      properties.setProperty(MiddlewarePropertiesIdentifier.MIDDLEWARE_SIGN_PIN.name(),
+                             middlewareSignKeystore.getKeystorePassword());
+      properties.setProperty(MiddlewarePropertiesIdentifier.MIDDLEWARE_SIGN_ALIAS.name(),
+                             middlewareSignKeystore.getAlias());
+    }
     // @formatter:off
     properties.setProperty(MiddlewarePropertiesIdentifier.MIDDLEWARE_CRYPT_KEY.name(),
                            addPathPrefix(pathPrefix,
-                             middlewareCryptKeystore.getKeystoreName() + "."
-                                         + KeyStoreSupporter.KeyStoreType.valueOf(middlewareCryptKeystore.getKeystore()
-                                                                                                         .getType())
-                                                                         .getFileExtension()));
+                                         middlewareCryptKeystore.getKeystoreName() + "."
+                                                     + KeyStoreSupporter.KeyStoreType.valueOf(middlewareCryptKeystore.getKeystore()
+                                                                                                                     .getType())
+                                                                                     .getFileExtension()));
     // @formatter:on
     properties.setProperty(MiddlewarePropertiesIdentifier.MIDDLEWARE_CRYPT_PIN.name(),
                            middlewareCryptKeystore.getKeystorePassword());
@@ -404,16 +397,17 @@ public class EidasmiddlewarePropertiesForm extends AbstractPropertiesConfigurati
   }
 
   /**
-   * @see #serviceProviderMetadataFile
+   * This method is executed when the upload button for metadata files is clicked. The uploaded file will be
+   * added to the map containing the metadata files.
    */
-  public void setServiceProviderMetadataFile(MultipartFile serviceProviderMetadataFile)
+  public void setUploadedFile(MultipartFile serviceProviderMetadataFile)
   {
     if (serviceProviderMetadataFile != null && serviceProviderMetadataFile.getSize() > 0)
     {
-      this.serviceProviderMetadataFile = serviceProviderMetadataFile;
       try
       {
-        this.serviceProviderMetadataFileBytes = serviceProviderMetadataFile.getBytes();
+        serviceProviderMetadataFiles.put(serviceProviderMetadataFile.getOriginalFilename(),
+                                         serviceProviderMetadataFile.getBytes());
       }
       catch (IOException e)
       {

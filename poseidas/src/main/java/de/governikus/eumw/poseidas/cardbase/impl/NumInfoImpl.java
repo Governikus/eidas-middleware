@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018 Governikus KG. Licensed under the EUPL, Version 1.2 or as soon they will be approved by
+ * Copyright (c) 2019 Governikus KG. Licensed under the EUPL, Version 1.2 or as soon they will be approved by
  * the European Commission - subsequent versions of the EUPL (the "Licence"); You may not use this work except
  * in compliance with the Licence. You may obtain a copy of the Licence at:
  * http://joinup.ec.europa.eu/software/page/eupl Unless required by applicable law or agreed to in writing,
@@ -22,7 +22,7 @@ import de.governikus.eumw.poseidas.cardbase.ObjectUtil;
 
 /**
  * Implementation of number informations.
- * 
+ *
  * @param <T> type of number
  * @author Jens Wothe, jw@bos-bremen.de
  */
@@ -31,7 +31,7 @@ public final class NumInfoImpl<T extends Number & Comparable<T>> implements NumI
 
   /**
    * Constant of informations about number type Byte.
-   * 
+   *
    * @see Byte
    * @see NumInfo#ZERO_BYTE
    * @see NumInfo#NEGATIVE_INFINITY_BYTE
@@ -54,7 +54,7 @@ public final class NumInfoImpl<T extends Number & Comparable<T>> implements NumI
 
   /**
    * Constant of informations about number type Short.
-   * 
+   *
    * @see Short
    * @see NumInfo#ZERO_SHORT
    * @see NumInfo#NEGATIVE_INFINITY_SHORT
@@ -77,7 +77,7 @@ public final class NumInfoImpl<T extends Number & Comparable<T>> implements NumI
 
   /**
    * Constant of informations about number type Integer.
-   * 
+   *
    * @see Integer
    * @see NumInfo#ZERO_INTEGER
    * @see NumInfo#NEGATIVE_INFINITY_INTEGER
@@ -101,7 +101,7 @@ public final class NumInfoImpl<T extends Number & Comparable<T>> implements NumI
 
   /**
    * Constant of informations about number type Long.
-   * 
+   *
    * @see Long
    * @see NumInfo#ZERO_LONG
    * @see NumInfo#NEGATIVE_INFINITY_LONG
@@ -124,7 +124,7 @@ public final class NumInfoImpl<T extends Number & Comparable<T>> implements NumI
 
   /**
    * Constant of informations about number type BigInteger.
-   * 
+   *
    * @see BigInteger
    * @see NumInfo#ZERO_BIGINTEGER
    * @see NumInfo#NEGATIVE_INFINITY_BIGINTEGER
@@ -152,7 +152,7 @@ public final class NumInfoImpl<T extends Number & Comparable<T>> implements NumI
 
   /**
    * Constant of informations about number type Float.
-   * 
+   *
    * @see Float
    * @see NumInfo#ZERO_FLOAT
    * @see NumInfo#NEGATIVE_INFINITY_FLOAT
@@ -175,7 +175,7 @@ public final class NumInfoImpl<T extends Number & Comparable<T>> implements NumI
 
   /**
    * Constant of informations about number type Double.
-   * 
+   *
    * @see Double
    * @see NumInfo#ZERO_DOUBLE
    * @see NumInfo#NEGATIVE_INFINITY_DOUBLE
@@ -198,7 +198,7 @@ public final class NumInfoImpl<T extends Number & Comparable<T>> implements NumI
 
   /**
    * Constant list of number informations.
-   * 
+   *
    * @see #BYTE
    * @see #SHORT
    * @see #INTEGER
@@ -247,7 +247,7 @@ public final class NumInfoImpl<T extends Number & Comparable<T>> implements NumI
 
   /**
    * Constructor.
-   * 
+   *
    * @param numClass number class, <code>null</code> not permitted
    * @param zero zero value, <code>null</code> not permitted
    * @param negativeInfinity negative infinity value, <code>null</code> permitted (

@@ -2,7 +2,7 @@
 <CoreConfiguration
         xmlns="http:/www.bos_bremen.de/2009/06/eID-Server-CoreConfig">
     <ServerUrl>
-        https://localhost:443/eidas-middleware
+        https://myhost:8443/eidas-middleware
     </ServerUrl>
     <sessionManagerUsesDatabase>true</sessionManagerUsesDatabase>
     <sessionMaxPendingRequests>500</sessionMaxPendingRequests>
@@ -52,9 +52,9 @@
                 </dvcaCertDescriptionService>
             </PkiConnectorConfiguration>
             <PaosReceiverURL>
-                https://localhost:443/eidas-middleware/paosreceiver
+                https://myhost:8443/eidas-middleware/paosreceiver
             </PaosReceiverURL>
             <hoursRefreshCVCBeforeExpires>48</hoursRefreshCVCBeforeExpires>
         </EPAConnectorConfiguration>
     </ServiceProvider>
-</CoreConfiguration> 
+</CoreConfiguration>

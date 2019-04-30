@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018 Governikus KG. Licensed under the EUPL, Version 1.2 or as soon they will be approved by
+ * Copyright (c) 2019 Governikus KG. Licensed under the EUPL, Version 1.2 or as soon they will be approved by
  * the European Commission - subsequent versions of the EUPL (the "Licence"); You may not use this work except
  * in compliance with the Licence. You may obtain a copy of the Licence at:
  * http://joinup.ec.europa.eu/software/page/eupl Unless required by applicable law or agreed to in writing,
@@ -19,7 +19,7 @@ import de.governikus.eumw.poseidas.cardbase.ByteUtil;
 
 /**
  * Some convenience methods for Secure Messaging purposes.
- * 
+ *
  * @see SMConstants
  * @author Jens Wothe, jw@bos-bremen.de
  */
@@ -36,7 +36,7 @@ public final class SMUtil
 
   /**
    * Pads bytes with given lead byte and pad byte to multiple of block size.
-   * 
+   *
    * @param bytes bytes to be padded, <code>null</code> or empty array not permitted
    * @param leadingPadByte leading pad byte
    * @param padByte padding byte
@@ -70,7 +70,7 @@ public final class SMUtil
 
   /**
    * Pads data with to multiple of block size according to ISO.
-   * 
+   *
    * @param bytes bytes to be padded, <code>null</code> or empty array not permitted
    * @param blocksize block size (related to used symmetric key and its algorithm, e. g. 8 for DES)
    * @return ISO padded bytes
@@ -86,7 +86,7 @@ public final class SMUtil
 
   /**
    * Unpads bytes with given leading pad byte, pad byte and block size.
-   * 
+   *
    * @param paddedBytes bytes to be unpadded, <code>null</code> or empty array not permitted
    * @param leadingPadByte leading pad byte
    * @param padByte padding byte
@@ -128,7 +128,7 @@ public final class SMUtil
 
   /**
    * Unpads bytes according to ISO.
-   * 
+   *
    * @param paddedBytes bytes to be unpadded, <code>null</code> or empty array not permitted
    * @param blocksize block size (related to used symmetric key and its algorithm, e. g. 8 for DES)
    * @return unpadded bytes

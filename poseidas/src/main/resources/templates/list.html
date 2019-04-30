@@ -1,6 +1,5 @@
-<!DOCTYPE html>
 <!--
-  ~ Copyright (c) 2018 Governikus KG. Licensed under the EUPL, Version 1.2 or as soon they will be approved by
+  ~ Copyright (c) 2019 Governikus KG. Licensed under the EUPL, Version 1.2 or as soon they will be approved by
   ~ the European Commission - subsequent versions of the EUPL (the "Licence"); You may not use this work except
   ~ in compliance with the Licence. You may obtain a copy of the Licence at:
   ~ http://joinup.ec.europa.eu/software/page/eupl Unless required by applicable law or agreed to in writing,
@@ -9,12 +8,14 @@
   ~ limitations under the Licence.
   -->
 
+<!DOCTYPE html>
+
 <html xmlns="http://www.w3.org/1999/xhtml"
       xmlns:th="http://www.thymeleaf.org">
 <head>
     <title>POSeIDAS CVC List</title>
     <link rel="stylesheet" th:href="@{/webjars/blaze/3.2.0/dist/blaze.min.css}"/>
-    <link rel="stylesheet" th:href="@{/css/main.css}"/>
+    <link rel="stylesheet" th:href="@{/css/admin-interface.css}"/>
 </head>
 <body>
 <div class="content">
@@ -36,7 +37,7 @@
         <tbody>
         <tr th:each="entity: ${entities}">
             <td><a href="details.html"
-                   th:href="@{/details/__${entity.getEntityID()}__}"><span
+                   th:href="@{/admin-interface/details/__${entity.getEntityID()}__}"><span
                     th:text="${entity.getEntityID()}">link</span></a></td>
             <td th:text="${entity.getCVCRefID()}"/>
             <td th:text="${entity.getCHR()}"/>

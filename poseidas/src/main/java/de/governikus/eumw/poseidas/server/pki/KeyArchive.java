@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018 Governikus KG. Licensed under the EUPL, Version 1.2 or as soon they will be approved by
+ * Copyright (c) 2019 Governikus KG. Licensed under the EUPL, Version 1.2 or as soon they will be approved by
  * the European Commission - subsequent versions of the EUPL (the "Licence"); You may not use this work except
  * in compliance with the Licence. You may obtain a copy of the Licence at:
  * http://joinup.ec.europa.eu/software/page/eupl Unless required by applicable law or agreed to in writing,
@@ -21,7 +21,7 @@ import de.governikus.eumw.poseidas.cardbase.AssertUtil;
 
 /**
  * Lock for synchronizing changes in keys stored in HSM instances.
- * 
+ *
  * @author Arne Stahlbock, ast@bos-bremen.de
  */
 @Entity
@@ -50,7 +50,7 @@ public class KeyArchive implements Serializable
 
   /**
    * Constructor setting key name and CVC.
-   * 
+   *
    * @param keyName name of key, <code>null</code> or empty not permitted
    * @param cvcBytes cvc as byte-array, <code>null</code> or empty not permitted
    * @throws IllegalArgumentException if any argument <code>null</code> or empty
@@ -65,7 +65,7 @@ public class KeyArchive implements Serializable
 
   /**
    * Constructor setting key name.
-   * 
+   *
    * @param keyName name of key, <code>null</code> or empty not permitted
    * @throws IllegalArgumentException if any argument <code>null</code> or empty
    */
@@ -85,7 +85,7 @@ public class KeyArchive implements Serializable
 
   /**
    * Get name of key.
-   * 
+   *
    * @return name of key
    */
   public String getKeyName()
@@ -95,7 +95,7 @@ public class KeyArchive implements Serializable
 
   /**
    * Gets CVC as bytes.
-   * 
+   *
    * @return cvc bytes
    */
   public byte[] getCvc()
@@ -105,7 +105,7 @@ public class KeyArchive implements Serializable
 
   /**
    * Sets CVC.
-   * 
+   *
    * @param cvcBytes CVC as byte-array, <code>null</code> or empty not permitted
    * @throws IllegalArgumentException if cvcBytes <code>null</code> or empty
    */
@@ -117,7 +117,7 @@ public class KeyArchive implements Serializable
 
   /**
    * Get key data.
-   * 
+   *
    * @return key data
    */
   public byte[] getPrivateKey()
@@ -127,7 +127,7 @@ public class KeyArchive implements Serializable
 
   /**
    * Sets private key.
-   * 
+   *
    * @param pkBytes private key as byte-array, <code>null</code> or empty not permitted
    * @throws IllegalArgumentException if pkBytes <code>null</code> or empty
    */

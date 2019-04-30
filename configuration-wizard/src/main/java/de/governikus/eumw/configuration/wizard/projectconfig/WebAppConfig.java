@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018 Governikus KG. Licensed under the EUPL, Version 1.2 or as soon they will be approved by
+ * Copyright (c) 2019 Governikus KG. Licensed under the EUPL, Version 1.2 or as soon they will be approved by
  * the European Commission - subsequent versions of the EUPL (the "Licence"); You may not use this work except
  * in compliance with the Licence. You may obtain a copy of the Licence at:
  * http://joinup.ec.europa.eu/software/page/eupl Unless required by applicable law or agreed to in writing,
@@ -12,10 +12,13 @@ package de.governikus.eumw.configuration.wizard.projectconfig;
 
 import javax.servlet.Filter;
 
+import de.governikus.eumw.configuration.wizard.web.converter.CertificateConverter;
+import de.governikus.eumw.configuration.wizard.web.converter.KeystoreConverter;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.format.FormatterRegistry;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 
 import de.governikus.eumw.configuration.wizard.projectconfig.filter.Utf8Filter;
@@ -71,7 +74,7 @@ public class WebAppConfig implements WebMvcConfigurer
 
   /**
    * this method holds all the resource-bundle paths that will be used
-   * 
+   *
    * @return all the resource-bundle paths
    */
   public String[] resourceBundles()
@@ -84,7 +87,7 @@ public class WebAppConfig implements WebMvcConfigurer
 
   /**
    * this method will load the resource-bundles for localization
-   * 
+   *
    * @return the message source that contains the messages of the resource-bundles.
    */
   @Bean("messageSource")
@@ -95,6 +98,16 @@ public class WebAppConfig implements WebMvcConfigurer
     messageSource.setUseCodeAsDefaultMessage(false);
     messageSource.setDefaultEncoding("UTF-8");
     return messageSource;
+  }
+
+  /**
+   * adds all converters that will simplify the communication with the html-views
+   */
+  @Override
+  public void addFormatters(FormatterRegistry registry)
+  {
+    registry.addConverter(new CertificateConverter());
+    registry.addConverter(new KeystoreConverter());
   }
 
 }

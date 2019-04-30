@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018 Governikus KG. Licensed under the EUPL, Version 1.2 or as soon they will be approved by
+ * Copyright (c) 2019 Governikus KG. Licensed under the EUPL, Version 1.2 or as soon they will be approved by
  * the European Commission - subsequent versions of the EUPL (the "Licence"); You may not use this work except
  * in compliance with the Licence. You may obtain a copy of the Licence at:
  * http://joinup.ec.europa.eu/software/page/eupl Unless required by applicable law or agreed to in writing,
@@ -15,7 +15,7 @@ import java.math.BigInteger;
 
 /**
  * ASN.1-constants for usage in {@link ASN1} and {@link ASN1Util}.
- * 
+ *
  * @author Arne Stahlbock, ast@bos-bremen.de
  * @author Jens Wothe, jw@bos-bremen.de
  */
@@ -59,14 +59,14 @@ public final class ASN1Constants
 
   /**
    * Constant of mask with significant bits of first bytes for tag.
-   * 
+   *
    * @see #TAG_BITS_MASK
    */
   public static final byte TAG_BITS_FIRST_BYTE_MASK = (byte)0x1f;
 
   /**
    * Constant of mask with significant bits of following bytes tag.
-   * 
+   *
    * @see #TAG_BITS_FIRST_BYTE_MASK
    */
   public static final byte TAG_BITS_MASK = (byte)0x7f;
@@ -113,7 +113,7 @@ public final class ASN1Constants
 
   /**
    * Constant of tag for ASN.1-Sequence (constructed).
-   * 
+   *
    * @see #UNIVERSAL_TAG_SEQUENCE
    * @see #TAG_PRIMITIVE_MASK
    */
@@ -121,7 +121,7 @@ public final class ASN1Constants
 
   /**
    * Constant of tag for ASN.1-Set (constructed).
-   * 
+   *
    * @see #UNIVERSAL_TAG_SEQUENCE
    * @see #TAG_PRIMITIVE_MASK
    */
@@ -129,14 +129,14 @@ public final class ASN1Constants
 
   /**
    * Constant of byte indicating undetermined length format - end of value indicated by EOC.
-   * 
+   *
    * @see #LENGTH_UNDETERMINED
    */
   public static final byte LENGTH_UNDETERMINED_BYTE = (byte)0x80;
 
   /**
    * Constant of length indicating undetermined length format.
-   * 
+   *
    * @see #LENGTH_UNDETERMINED_BYTE
    */
   public static final BigInteger LENGTH_UNDETERMINED = BigInteger.valueOf(-1);
@@ -149,14 +149,14 @@ public final class ASN1Constants
 
   /**
    * Constant of buffer size for any reading of streams: <code>4096</code>.
-   * 
+   *
    * @see #BI_BUFFER_SIZE
    */
   public static final int BUFFER_SIZE = 4096;
 
   /**
    * Constant of buffer size for any reading of streams.
-   * 
+   *
    * @see #BUFFER_SIZE
    */
   public static final BigInteger BI_BUFFER_SIZE = BigInteger.valueOf(BUFFER_SIZE);

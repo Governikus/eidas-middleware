@@ -1,20 +1,20 @@
 <?xml version="1.0"?>
-<!-- ~ Copyright (c) 2018 Governikus KG. Licensed under the EUPL, Version
-    1.2 or as soon they will be approved by ~ the European Commission - subsequent
-    versions of the EUPL (the "Licence"); You may not use this work except ~
-    in compliance with the Licence. You may obtain a copy of the Licence at:
-    ~ http://joinup.ec.europa.eu/software/page/eupl Unless required by applicable
-    law or agreed to in writing, ~ software distributed under the Licence is
-    distributed on an "AS IS" basis, WITHOUT WARRANTIES OR CONDITIONS ~ OF ANY
-    KIND, either express or implied. See the Licence for the specific language
-    governing permissions and ~ limitations under the Licence. -->
+<!--
+  ~ Copyright (c) 2019 Governikus KG. Licensed under the EUPL, Version 1.2 or as soon they will be approved by
+  ~ the European Commission - subsequent versions of the EUPL (the "Licence"); You may not use this work except
+  ~ in compliance with the Licence. You may obtain a copy of the Licence at:
+  ~ http://joinup.ec.europa.eu/software/page/eupl Unless required by applicable law or agreed to in writing,
+  ~ software distributed under the Licence is distributed on an "AS IS" basis, WITHOUT WARRANTIES OR CONDITIONS
+  ~ OF ANY KIND, either express or implied. See the Licence for the specific language governing permissions and
+  ~ limitations under the Licence.
+  -->
 
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
     <parent>
         <groupId>de.governikus.eumw</groupId>
         <artifactId>eumw</artifactId>
-        <version>1.0.7</version>
+        <version>1.1.0</version>
     </parent>
     <artifactId>eidas-middleware</artifactId>
 
@@ -31,6 +31,10 @@
             <artifactId>poseidas</artifactId>
         </dependency>
         <dependency>
+            <groupId>de.governikus.eumw</groupId>
+            <artifactId>utils</artifactId>
+        </dependency>
+        <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-web</artifactId>
             <exclusions>
@@ -43,6 +47,11 @@
                     <artifactId>log4j-to-slf4j</artifactId>
                 </exclusion>
             </exclusions>
+        </dependency>
+
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-thymeleaf</artifactId>
         </dependency>
 
 
@@ -74,6 +83,23 @@
             <groupId>junit</groupId>
             <artifactId>junit</artifactId>
         </dependency>
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-test</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.mockito</groupId>
+            <artifactId>mockito-junit-jupiter</artifactId>
+            <version>2.22.0</version>
+            <scope>test</scope>
+        </dependency>
+
+        <dependency>
+            <groupId>commons-io</groupId>
+            <artifactId>commons-io</artifactId>
+        </dependency>
+
         <dependency>
             <groupId>org.projectlombok</groupId>
             <artifactId>lombok</artifactId>

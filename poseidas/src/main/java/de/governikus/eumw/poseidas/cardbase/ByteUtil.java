@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018 Governikus KG. Licensed under the EUPL, Version 1.2 or as soon they will be approved by
+ * Copyright (c) 2019 Governikus KG. Licensed under the EUPL, Version 1.2 or as soon they will be approved by
  * the European Commission - subsequent versions of the EUPL (the "Licence"); You may not use this work except
  * in compliance with the Licence. You may obtain a copy of the Licence at:
  * http://joinup.ec.europa.eu/software/page/eupl Unless required by applicable law or agreed to in writing,
@@ -21,7 +21,7 @@ import de.governikus.eumw.poseidas.cardbase.constants.Constants;
 
 /**
  * Utilities for byte-arrays.
- * 
+ *
  * @author Jens Wothe, jw@bos-bremen.de
  */
 public final class ByteUtil
@@ -44,7 +44,7 @@ public final class ByteUtil
 
   /**
    * Combine two byte-arrays.
-   * 
+   *
    * @param bytes1 first byte-array, <code>null</code> or empty array permitted
    * @param bytes2 second byte-array, <code>null</code> or empty array permitted
    * @return new byte-array containing bytes of given byte-arrays
@@ -97,7 +97,7 @@ public final class ByteUtil
 
   /**
    * Combine multiple byte-arrays.
-   * 
+   *
    * @param bytes multiple byte-arrays, <code>null</code> or empty array permitted, <code>null</code> or empty
    *          array entries permitted
    * @return new byte-array containing bytes of given byte-arrays, <code>null</code> if array of arrays is
@@ -132,7 +132,7 @@ public final class ByteUtil
 
   /**
    * Copy byte-array.
-   * 
+   *
    * @param bytes byte-array
    * @return copied byte-array, <code>null</code> if byte-array <code>null</code> and
    *         {@link Constants#EMPTY_PRIMITIVE_BYTE_ARRAY} if byte-array empty
@@ -157,7 +157,7 @@ public final class ByteUtil
 
   /**
    * Counts bytes of byte-arrays.
-   * 
+   *
    * @param bytes byte-arrays, <code>null</code> or <code>null</code> array entries are permitted
    * @return count of bytes of all byte-arrays
    */
@@ -184,7 +184,7 @@ public final class ByteUtil
    * <p>
    * Notice: similar to {@link String#substring(int)}.
    * </p>
-   * 
+   *
    * @param bytes byte-array, <code>null</code> not permitted, empty array permitted
    * @param beginIndex index to begin sub array
    * @return new created byte-array with sub bytes of byte-array starting at given index
@@ -205,7 +205,7 @@ public final class ByteUtil
    * <p>
    * Notice: similar to {@link String#substring(int, int)}.
    * </p>
-   * 
+   *
    * @param bytes byte-array, <code>null</code> not permitted, empty array permitted
    * @param beginIndex index to begin sub array, value greater equals <code>0</code> and less equals length or
    *          array only permitted
@@ -259,7 +259,7 @@ public final class ByteUtil
 
   /**
    * Sets bits specified by mask at byte of byte-array specified by byte index.
-   * 
+   *
    * @param bytes byte-array, <code>null</code> or empty array not permitted
    * @param byteIndex index of byte, index greater equals <code>0</code> and less equals length of byte-array
    *          permitted
@@ -275,7 +275,7 @@ public final class ByteUtil
 
   /**
    * Sets bits specified by mask at byte.
-   * 
+   *
    * @param b byte
    * @param mask bit mask
    * @return modified byte
@@ -287,7 +287,7 @@ public final class ByteUtil
 
   /**
    * Removes a leading zero from a byte array (used in case unsigned integer is requested).
-   * 
+   *
    * @param arg byte array to be converted, <code>null</code> or empty array not permitted
    * @return converted byte array, unchanged if first byte is not zero
    * @throws IllegalArgumentException if arg <code>null</code> or empty
@@ -307,7 +307,7 @@ public final class ByteUtil
 
   /**
    * Adds a leading zero to a byte array (prevents values to be interpreted as negative).
-   * 
+   *
    * @param arg byte array to be converted, <code>null</code> or empty array permitted
    * @return new byte array with leading zero
    */
@@ -326,7 +326,7 @@ public final class ByteUtil
 
   /**
    * XOR of byte-array with byte-array mask.
-   * 
+   *
    * @param bytes byte-array, <code>null</code> not permitted, empty array permitted
    * @param mask byte-array with xor-bytes, <code>null</code> or empty array permitted
    * @return new created byte-array with xor masked bytes, copy of byte if
@@ -354,7 +354,7 @@ public final class ByteUtil
 
   /**
    * XOR of bits specified by mask for byte.
-   * 
+   *
    * @param b byte
    * @param mask bit mask
    * @return modified byte
@@ -366,7 +366,7 @@ public final class ByteUtil
 
   /**
    * Returns a byte-array which is the result of a shift left operation (one step) on the input.
-   * 
+   *
    * @param input array to be shifted, most significant byte at index 0, <code>null</code> or empty not
    *          permitted
    * @return shifted array (as a new array instance, input is unchanged)
@@ -399,7 +399,7 @@ public final class ByteUtil
    * <p>
    * Notice: similar to {@link String#lastIndexOf(String)}.
    * </p>
-   * 
+   *
    * @param bytes byte-array to search, <code>null</code> or empty array permitted
    * @param search byte-array to find, <code>null</code> or empty array permitted
    * @return last index of byte-array or {@link #INDEX_NOT_FOUND} if not found, an empty array or
@@ -422,7 +422,7 @@ public final class ByteUtil
    * <p>
    * Notice: similar to {@link String#lastIndexOf(String, int)}.
    * </p>
-   * 
+   *
    * @param bytes byte-array to search, <code>null</code> or empty array permitted
    * @param search byte-array to find, <code>null</code> or empty array permitted
    * @param beginIndex index
@@ -480,7 +480,7 @@ public final class ByteUtil
 
   /**
    * Checks all bits of mask are set at given byte.
-   * 
+   *
    * @param b byte
    * @param mask bit mask
    * @return <code>true</code>, if all bits set, <code>false</code> otherwise
@@ -496,7 +496,7 @@ public final class ByteUtil
 
   /**
    * Fills array with fill byte between given indices.
-   * 
+   *
    * @param bytes byte-array, <code>null</code> not permitted, empty array permitted
    * @param fillByte fill byte
    * @param beginIndex index to start fill, index less equals than <code>0</code> not permitted, index greater
@@ -545,7 +545,7 @@ public final class ByteUtil
 
   /**
    * Checks byte-array and index of byte.
-   * 
+   *
    * @param bytes byte-array, <code>null</code> or empty array not permitted
    * @param byteIndex index of byte, index greater equals <code>0</code> and less length of byte-array
    *          permitted or index greater equals <code>0</code> and less equals length of byte-array permitted
@@ -579,7 +579,7 @@ public final class ByteUtil
 
   /**
    * Checks a single bit of given byte is set.
-   * 
+   *
    * @param b byte
    * @param index index of bit
    * @return <code>true</code>, if set, otherwise false
@@ -595,7 +595,7 @@ public final class ByteUtil
 
   /**
    * Checks all bits of indices array are set at given byte.
-   * 
+   *
    * @param b byte
    * @param indices indices of bits, <code>null</code> or empty array permitted, only indices between
    *          {@link ByteConstants#MINIMUM_BIT_INDEX} and {@link ByteConstants#MAXIMUM_BIT_INDEX} permitted
@@ -618,7 +618,7 @@ public final class ByteUtil
 
   /**
    * Creates bit mask for a bit indices array.
-   * 
+   *
    * @param indices indices of bits, <code>null</code> not permitted, only indices between
    *          {@link ByteConstants#MINIMUM_BIT_INDEX} and {@link ByteConstants#MAXIMUM_BIT_INDEX} permitted
    * @return bit mask
@@ -655,7 +655,7 @@ public final class ByteUtil
   /**
    * Check array of bit indices - every index of bit must be between minimum 0 - {@link #MINIMUM_BIT_INDEX}
    * and maximum 7 - {@link ByteConstants#MINIMUM_BIT_INDEX}.
-   * 
+   *
    * @param indices bit indices
    * @throws IllegalArgumentException if one index not permitted
    * @see #checkBitIndex(int)
@@ -677,7 +677,7 @@ public final class ByteUtil
   /**
    * Checks given index of bit must be between minimum 0 - {@link ByteConstants#MINIMUM_BIT_INDEX} and maximum
    * 7 - {@link ByteConstants#MINIMUM_BIT_INDEX}.
-   * 
+   *
    * @param index index of bit
    * @throws IllegalArgumentException if index not permitted
    * @see ByteConstants#MINIMUM_BIT_INDEX
@@ -698,7 +698,7 @@ public final class ByteUtil
   /**
    * Trim byte array containing integer to required length (cutting or extending if required) without changing
    * integer value.
-   * 
+   *
    * @param tmp bytes to trim, <code>null</code> or empty not permitted
    * @param trimLen length to trim to, must be (tmp.length-1) or higher
    * @return trimmed bytes
@@ -731,7 +731,7 @@ public final class ByteUtil
 
   /**
    * Check byte[]-array equals.
-   * 
+   *
    * @param bytes1 first byte[]-array, <code>null</code> or empty array permitted
    * @param bytes2 second byte[]-array, <code>null</code> or empty array permitted
    * @return <code>true</code> if equals, otherwise <code>null</code>

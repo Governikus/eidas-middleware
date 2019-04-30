@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018 Governikus KG. Licensed under the EUPL, Version 1.2 or as soon they will be approved by
+ * Copyright (c) 2019 Governikus KG. Licensed under the EUPL, Version 1.2 or as soon they will be approved by
  * the European Commission - subsequent versions of the EUPL (the "Licence"); You may not use this work except
  * in compliance with the Licence. You may obtain a copy of the Licence at:
  * http://joinup.ec.europa.eu/software/page/eupl Unless required by applicable law or agreed to in writing,
@@ -22,8 +22,10 @@ import java.security.cert.X509Certificate;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Enumeration;
+import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Set;
 
 import javax.security.auth.x500.X500Principal;
 
@@ -55,6 +57,7 @@ import de.governikus.eumw.poseidas.cardserver.eac.crypto.SignedDataChecker;
 @SuppressWarnings({"unchecked"})
 public class EACSignedDataChecker extends EACSignedDataParser implements SignedDataChecker
 {
+
   private static final String CHECK_FAILED = "Exception during check of EF.CardSecurity";
 
   private static final Log LOG = LogFactory.getLog(EACSignedDataChecker.class.getName());
@@ -63,18 +66,25 @@ public class EACSignedDataChecker extends EACSignedDataParser implements SignedD
 
   private final List<X509Certificate> masterList;
 
+  private final Set<String> allowedDocumentTypes;
+
   private boolean masterListChecked;
 
   /**
    * Instance needs master list
    *
    * @param masterList the master list of all trusted certificates
+   * @param logPrefix
+   * @param allowedDocumentTypes
    */
-  public EACSignedDataChecker(List<X509Certificate> masterList, String logPrefix)
+  public EACSignedDataChecker(List<X509Certificate> masterList,
+                              String logPrefix,
+                              Set<String> allowedDocumentTypes)
   {
     super(logPrefix);
     // Do a copy to avoid that the list is changed externally
     this.masterList = new LinkedList<>(masterList);
+    this.allowedDocumentTypes = new HashSet<>(allowedDocumentTypes);
   }
 
   /** {@inheritDoc} */
@@ -144,6 +154,15 @@ public class EACSignedDataChecker extends EACSignedDataParser implements SignedD
       // Card certificates collected
       LOG.debug(logPrefix + "Found " + certifacteListFromCardSignatureData.size()
                 + " certificate(s) on card");
+
+      // check document signers for allowed types
+      for ( Certificate c : certifacteListFromCardSignatureData )
+      {
+        if (!checkForDocumentType((X509Certificate)c))
+        {
+          return false;
+        }
+      }
 
       // Get signature debugmations
       Enumeration<ASN1Sequence> signatureInfosFromCard = signedDataFromCard.getSignerInfos().getObjects();
@@ -306,6 +325,43 @@ public class EACSignedDataChecker extends EACSignedDataParser implements SignedD
     catch (GeneralSecurityException e)
     {
       LOG.error(logPrefix + CHECK_FAILED, e);
+      return false;
+    }
+    return true;
+  }
+
+  /**
+   * Check whether the given certificate contains only allowed document types.
+   *
+   * @param c certificate to check
+   * @return <code>false</code> if a single non-allowed type is found, <code>true</code> otherwise
+   */
+  private boolean checkForDocumentType(X509Certificate c)
+  {
+    byte[] extValue = c.getExtensionValue("2.23.136.1.1.6.2");
+    if (extValue == null)
+    {
+      return true;
+    }
+    try
+    {
+      ASN1 sequence = new ASN1(new ASN1(extValue).getValue());
+      ASN1 set = sequence.getChildElements()[1];
+      for ( ASN1 printableStr : set.getChildElements() )
+      {
+        String type = new String(printableStr.getValue());
+        if (allowedDocumentTypes.contains(type))
+        {
+          continue;
+        }
+        if (type.length() != 2 || !allowedDocumentTypes.contains(type.substring(0, 1)))
+        {
+          return false;
+        }
+      }
+    }
+    catch (IOException e)
+    {
       return false;
     }
     return true;

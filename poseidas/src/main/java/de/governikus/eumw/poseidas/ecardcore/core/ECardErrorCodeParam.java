@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018 Governikus KG. Licensed under the EUPL, Version 1.2 or as soon they will be approved by
+ * Copyright (c) 2019 Governikus KG. Licensed under the EUPL, Version 1.2 or as soon they will be approved by
  * the European Commission - subsequent versions of the EUPL (the "Licence"); You may not use this work except
  * in compliance with the Licence. You may obtain a copy of the Licence at:
  * http://joinup.ec.europa.eu/software/page/eupl Unless required by applicable law or agreed to in writing,
@@ -19,7 +19,7 @@ import java.lang.annotation.Target;
 /**
  * ECardErrorCodeParam this should annotate Error Codes that may have parameters so that the client knows what
  * parameters may be in that exception.
- * 
+ *
  * @author Alexander Funk
  */
 @Target(ElementType.FIELD)
@@ -30,7 +30,7 @@ public @interface ECardErrorCodeParam
   /**
    * just an array with one entry per parameter that will be added to the exception. The entry contains just a
    * free text hint what the parameters semantic is.
-   * 
+   *
    * @return one string for each parameter possible
    */
   String[] params();

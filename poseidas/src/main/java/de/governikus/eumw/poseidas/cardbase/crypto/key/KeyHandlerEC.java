@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018 Governikus KG. Licensed under the EUPL, Version 1.2 or as soon they will be approved by
+ * Copyright (c) 2019 Governikus KG. Licensed under the EUPL, Version 1.2 or as soon they will be approved by
  * the European Commission - subsequent versions of the EUPL (the "Licence"); You may not use this work except
  * in compliance with the Licence. You may obtain a copy of the Licence at:
  * http://joinup.ec.europa.eu/software/page/eupl Unless required by applicable law or agreed to in writing,
@@ -38,7 +38,7 @@ import de.governikus.eumw.poseidas.cardbase.crypto.ec.ECUtil;
 
 /**
  * Implementation of {@link KeyHandler} for EC keys (Fp variant only, F2m currently not used in nPA context).
- * 
+ *
  * @author Arne Stahlbock, ast@bos-bremen.de
  */
 public class KeyHandlerEC implements KeyHandler
@@ -51,7 +51,7 @@ public class KeyHandlerEC implements KeyHandler
 
   /**
    * Constructor.
-   * 
+   *
    * @param parameter field size (from domain parameters, in bytes), must be at least 1
    * @throws IllegalArgumentException if fieldSize zero or negative
    */

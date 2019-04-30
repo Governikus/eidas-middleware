@@ -1,6 +1,5 @@
-<!DOCTYPE html>
 <!--
-  ~ Copyright (c) 2018 Governikus KG. Licensed under the EUPL, Version 1.2 or as soon they will be approved by
+  ~ Copyright (c) 2019 Governikus KG. Licensed under the EUPL, Version 1.2 or as soon they will be approved by
   ~ the European Commission - subsequent versions of the EUPL (the "Licence"); You may not use this work except
   ~ in compliance with the Licence. You may obtain a copy of the Licence at:
   ~ http://joinup.ec.europa.eu/software/page/eupl Unless required by applicable law or agreed to in writing,
@@ -9,13 +8,15 @@
   ~ limitations under the Licence.
   -->
 
+<!DOCTYPE html>
+
 <html xmlns="http://www.w3.org/1999/xhtml"
       xmlns:th="http://www.thymeleaf.org">
 <head>
     <title>POSeIDAS CVC Info</title>
     <!-- this is header-css -->
     <link rel="stylesheet" th:href="@{/webjars/blaze/3.2.0/dist/blaze.min.css}"/>
-    <link rel="stylesheet" th:href="@{/css/main.css}"/>
+    <link rel="stylesheet" th:href="@{/css/admin-interface.css}"/>
 </head>
 <body>
 <div class="content">
@@ -27,7 +28,7 @@
         <div class="row" style="margin-top: 20px">
             <div
                     class="col-xs-12 col-sm-8 col-md-6 col-sm-offset-2 col-md-offset-3">
-                <form th:action="@{/login}" method="post">
+                <form th:action="@{/admin-interface/login}" method="post">
                     <fieldset>
                         <h1>Please Sign In</h1>
 
@@ -36,7 +37,7 @@
                                 Invalid username and password.
                             </div>
                         </div>
-                        <div th:if="${param.logout}">
+                        <div th:if="${param.success}">
                             <div class="c-alert c-alert--info">
                                 You have been logged out.
                             </div>
@@ -50,7 +51,7 @@
                         <div class="form-group">
                             <input type="password" name="password" id="password"
                                    class="form-control input-lg" placeholder="Password"
-                                   required="true"/>
+                                   required="true" autocomplete="new-password"/>
                         </div>
 
                         <div class="row">

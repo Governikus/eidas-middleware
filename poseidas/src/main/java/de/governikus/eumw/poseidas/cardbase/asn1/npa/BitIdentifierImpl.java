@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018 Governikus KG. Licensed under the EUPL, Version 1.2 or as soon they will be approved by
+ * Copyright (c) 2019 Governikus KG. Licensed under the EUPL, Version 1.2 or as soon they will be approved by
  * the European Commission - subsequent versions of the EUPL (the "Licence"); You may not use this work except
  * in compliance with the Licence. You may obtain a copy of the Licence at:
  * http://joinup.ec.europa.eu/software/page/eupl Unless required by applicable law or agreed to in writing,
@@ -16,7 +16,7 @@ import de.governikus.eumw.poseidas.cardbase.asn1.ASN1;
 
 /**
  * Implementation for information identified by one or more bit.
- * 
+ *
  * @author Jens Wothe, jw@bos-bremen.de
  */
 public class BitIdentifierImpl implements BitIdentifier
@@ -38,7 +38,7 @@ public class BitIdentifierImpl implements BitIdentifier
 
   /**
    * Constructor.
-   * 
+   *
    * @param name name of information, <code>null</code> or empty String not permitted
    * @param byteIndex index of significant byte, negative index not permitted
    * @param bitMask bit mask expected to be set at significant byte after AND with byte mask
@@ -51,7 +51,7 @@ public class BitIdentifierImpl implements BitIdentifier
 
   /**
    * Constructor.
-   * 
+   *
    * @param name name of information, <code>null</code> or empty String not permitted
    * @param byteIndex index of significant byte, negative index not permitted
    * @param byteMask mask of significant bits at significant byte, bit mask must be a subset of byte mask

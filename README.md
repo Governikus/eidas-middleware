@@ -37,7 +37,7 @@ The user documentation for each release is available in the release artifacts.
 Please see [CONTRIBUTING.md](CONTRIBUTING.md) for more information on how to submit pull requests.
 
 ## License
-Copyright &copy; 2018 Governikus KG
+Copyright &copy; 2019 Governikus KG
  
 This work is licensed under the EUPL 1.2. See LICENSE.txt for additional information.
 

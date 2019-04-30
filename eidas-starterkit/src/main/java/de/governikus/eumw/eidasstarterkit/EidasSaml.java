@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018 Governikus KG. Licensed under the EUPL, Version 1.2 or as soon they will be approved by
+ * Copyright (c) 2019 Governikus KG. Licensed under the EUPL, Version 1.2 or as soon they will be approved by
  * the European Commission - subsequent versions of the EUPL (the "Licence"); You may not use this work except
  * in compliance with the Licence. You may obtain a copy of the Licence at:
  * http://joinup.ec.europa.eu/software/page/eupl Unless required by applicable law or agreed to in writing,
@@ -12,7 +12,6 @@ package de.governikus.eumw.eidasstarterkit;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.security.Security;
 import java.security.cert.CertificateEncodingException;
 import java.security.cert.CertificateException;
 import java.security.cert.X509Certificate;
@@ -28,8 +27,6 @@ import javax.xml.validation.Schema;
 import javax.xml.validation.SchemaFactory;
 import javax.xml.validation.Validator;
 
-import org.apache.xml.security.algorithms.JCEMapper;
-import org.bouncycastle.jce.provider.BouncyCastleProvider;
 import org.opensaml.core.config.InitializationException;
 import org.opensaml.core.config.InitializationService;
 import org.opensaml.core.xml.io.MarshallingException;
@@ -51,7 +48,7 @@ import net.shibboleth.utilities.java.support.xml.XMLParserException;
 /**
  * Put all method together for creating, validating and parsing of saml messages and make it easy. Using the
  * methods of this class will init opensaml automatecally
- * 
+ *
  * @author hohnholt
  */
 public class EidasSaml
@@ -60,9 +57,8 @@ public class EidasSaml
   private static boolean isInit = false;
 
   /**
-   * Inits the OpenSAML library and the EidasSaml Starterkit library. Set BouncyCastleProvider as Security
-   * Provider It is nessesary to call this method!
-   * 
+   * Inits the OpenSAML library and the EidasSaml Starterkit library. It is necessary to call this method!
+   *
    * @throws ConfigurationException if there is a problem to init the OpenSAML lib or the eidassaml templates
    */
   public static synchronized void init() throws InitializationException
@@ -79,15 +75,13 @@ public class EidasSaml
         throw new InitializationException("EidasSaml: Can not init Templateloader. SAML Message will not build correctly!",
                                           e);
       }
-      Security.addProvider(new BouncyCastleProvider());
-      JCEMapper.setProviderId(BouncyCastleProvider.PROVIDER_NAME);
       isInit = true;
     }
   }
 
   /**
    * Creates a signed eidas saml request. Sets the Level of Assurance to http://eidas.europa.eu/LoA/high
-   * 
+   *
    * @param issuer the name of the requester
    * @param destination the response destination
    * @param providerName the response provider
@@ -114,7 +108,8 @@ public class EidasSaml
     TransformerException, ComponentInitializationException
   {
     init();
-    EidasRequest eidasRequest = new EidasRequest(destination, issuer, Constants.DEFAULT_PROVIDER_NAME, signer);
+    EidasRequest eidasRequest = new EidasRequest(destination, issuer, Constants.DEFAULT_PROVIDER_NAME,
+                                                 signer);
     return eidasRequest.generate(requestedAttributes);
   }
 
@@ -135,7 +130,7 @@ public class EidasSaml
 
   /**
    * Creates a signed eidas saml request
-   * 
+   *
    * @param issuer the name of the requester
    * @param destination the response destination
    * @param providerName the response provider
@@ -213,7 +208,7 @@ public class EidasSaml
 
   /**
    * Read a eidas saml request xml and creats a EidasRequest object
-   * 
+   *
    * @param is the eidas saml request
    * @return a representation of the eidas saml request
    * @throws ConfigurationException thrown if the opensaml lib or eidas starterkit lib is not init
@@ -233,7 +228,7 @@ public class EidasSaml
 
   /**
    * Read a eidas saml request xml and checks the signatures
-   * 
+   *
    * @param is the eidas saml request
    * @param authors a list of author certificates to check the signaures
    * @return a representation of the eidas saml request
@@ -253,8 +248,23 @@ public class EidasSaml
   }
 
   /**
+   * Checks the signature of an already parsed request.
+   *
+   * @param request request to check
+   * @param authors trusted signers
+   * @throws InitializationException
+   * @throws ErrorCodeException if signature is invalid or check cannot be performed
+   */
+  public static void verifyRequest(EidasRequest request, List<X509Certificate> authors)
+    throws InitializationException, ErrorCodeException
+  {
+    init();
+    EidasRequest.checkSignature(request.getAuthnRequest().getSignature(), authors);
+  }
+
+  /**
    * Creates a signed eidas saml response. the Assertion is encrypted
-   * 
+   *
    * @param att the values of the requested attributes
    * @param destination the response destination
    * @param recipient the response destination metadata URL
@@ -355,14 +365,13 @@ public class EidasSaml
                                              List<EidasNameIdType> supportedNameIdTypes,
                                              List<EidasPersonAttributes> attributes,
                                              EidasSigner signer)
-    throws CertificateEncodingException, IOException,
-    MarshallingException, SignatureException, TransformerFactoryConfigurationError, TransformerException,
-    InitializationException
+    throws CertificateEncodingException, IOException, MarshallingException, SignatureException,
+    TransformerFactoryConfigurationError, TransformerException, InitializationException
   {
     init();
-    EidasMetadataService meta = new EidasMetadataService(id, entityId, validUntil,
-                                                         sigCert, encCert, organisation, technicalcontact,
-                                                         supportContact, postEndpoint, redirectEndpoint,
+    EidasMetadataService meta = new EidasMetadataService(id, entityId, validUntil, sigCert, encCert,
+                                                         organisation, technicalcontact, supportContact,
+                                                         postEndpoint, redirectEndpoint,
                                                          supportedNameIdTypes);
     return meta.generate(attributes, signer);
   }
@@ -377,9 +386,8 @@ public class EidasSaml
    * @throws IOException
    * @throws ComponentInitializationException
    */
-  static EidasMetadataService parseMetaDataService(InputStream is)
-    throws CertificateException, XMLParserException, UnmarshallingException,
-    InitializationException, ComponentInitializationException
+  static EidasMetadataService parseMetaDataService(InputStream is) throws CertificateException,
+    XMLParserException, UnmarshallingException, InitializationException, ComponentInitializationException
   {
     init();
     return EidasMetadataService.parse(is);
@@ -446,8 +454,8 @@ public class EidasSaml
    * @throws ComponentInitializationException
    */
   public static EidasMetadataNode parseMetaDataNode(InputStream is, X509Certificate signer)
-    throws CertificateException, XMLParserException, UnmarshallingException,
-    ErrorCodeException, InitializationException, ComponentInitializationException
+    throws CertificateException, XMLParserException, UnmarshallingException, ErrorCodeException,
+    InitializationException, ComponentInitializationException
   {
     init();
     return EidasMetadataNode.parse(is, signer);
@@ -457,7 +465,7 @@ public class EidasSaml
    * Validates a saml message with the saml-schema-protocol-2_0.xsd, saml-schema-assertion-2_0.xsd,
    * xenc-schema.xsd, xmldsig-core-schema.xsd,NaturalPersonShema.xsd If the message is not valid a
    * SAXException will be thrown
-   * 
+   *
    * @param is the saml message as stream
    * @param resetStreamAfterValidation if u like to parse the given stream later u have to reset the stream
    * @throws SAXException if the given saml message is not vaild
@@ -468,7 +476,7 @@ public class EidasSaml
   {
 
     SchemaFactory sf = Utils.getSchemaFactory();
-    
+
     StreamSource s2 = new StreamSource(EidasSaml.class.getResourceAsStream("saml-schema-protocol-2_0.xsd"));
     StreamSource s1 = new StreamSource(EidasSaml.class.getResourceAsStream("saml-schema-assertion-2_0.xsd"));
     StreamSource s3 = new StreamSource(EidasSaml.class.getResourceAsStream("xenc-schema.xsd"));

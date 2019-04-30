@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018 Governikus KG. Licensed under the EUPL, Version 1.2 or as soon they will be approved by
+ * Copyright (c) 2019 Governikus KG. Licensed under the EUPL, Version 1.2 or as soon they will be approved by
  * the European Commission - subsequent versions of the EUPL (the "Licence"); You may not use this work except
  * in compliance with the Licence. You may obtain a copy of the Licence at:
  * http://joinup.ec.europa.eu/software/page/eupl Unless required by applicable law or agreed to in writing,
@@ -22,7 +22,7 @@ import de.governikus.eumw.poseidas.cardbase.AssertUtil;
 /**
  * AES implementation of {@link KeyDerivationHandler} as specified in TR-03110 Part3 v2.10, section A.2.3.2
  * for AES.
- * 
+ *
  * @author Arne Stahlbock, ast@bos-bremen.de
  * @author Jens Wothe, jw@bos-bremen.de
  */
@@ -39,7 +39,7 @@ class KeyDerivationAES extends AbstractKeyDerivationFunction implements KeyDeriv
 
   /**
    * Constructor.
-   * 
+   *
    * @param keyLength required key length, must be <code>128</code>, <code>192</code> or <code>256</code>
    * @throws IllegalArgumentException if keyLength not one of the accepted values
    * @throws NoSuchAlgorithmException
@@ -83,7 +83,7 @@ class KeyDerivationAES extends AbstractKeyDerivationFunction implements KeyDeriv
 
   /**
    * The general key derivation function.
-   * 
+   *
    * @param k shared secret, <code>null</code> or empty array not permitted
    * @param r nonce, <code>null</code> permitted
    * @param c 4 byte big endian integer, <code>null</code> not permitted

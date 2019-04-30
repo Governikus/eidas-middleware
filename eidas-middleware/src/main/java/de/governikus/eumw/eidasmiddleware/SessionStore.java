@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018 Governikus KG. Licensed under the EUPL, Version 1.2 or as soon they will be approved by
+ * Copyright (c) 2019 Governikus KG. Licensed under the EUPL, Version 1.2 or as soon they will be approved by
  * the European Commission - subsequent versions of the EUPL (the "Licence"); You may not use this work except
  * in compliance with the Licence. You may obtain a copy of the Licence at:
  * http://joinup.ec.europa.eu/software/page/eupl Unless required by applicable law or agreed to in writing,
@@ -31,7 +31,7 @@ import de.governikus.eumw.eidasstarterkit.person_attributes.EidasPersonAttribute
 
 /**
  * Simple in memory db to store eidas saml request. Stores only a minimum of data
- * 
+ *
  * @author hohnholt
  */
 @Component
@@ -54,15 +54,17 @@ public class SessionStore implements AutoCloseable
   @Value("${spring.datasource.password:}")
   private String dbPassword;
 
-  private static final String CREATE_QUERY = "CREATE TABLE IF NOT EXISTS SESSION(id IDENTITY PRIMARY KEY, reqid varchar(255),"
-                                             + "relaystate varchar(255), destination varchar(255), creationtime TIMESTAMP, eidref varchar(255));";
+  private static final String DELETE_QUERY = "DROP TABLE IF EXISTS SESSION;";
+
+  private static final String CREATE_QUERY = "CREATE TABLE SESSION(id IDENTITY PRIMARY KEY, reqid varchar(255),"
+                                             + "relaystate varchar(255), destination varchar(255), providername varchar(255), entityid varchar(255), creationtime TIMESTAMP, eidref varchar(255));";
 
   private static final String CREATE_TABLE_REQUESTED_ATTRIBUTES_QUERY = "CREATE TABLE IF NOT EXISTS REQUESTEDATTRIBUTES(id IDENTITY PRIMARY KEY,reqid varchar(255),"
                                                                         + "name varchar(255), required int, creationtime TIMESTAMP);";
 
   private static final String INSERT_QUERY = "INSERT INTO SESSION"
-                                             + "(reqid, relaystate, destination, creationtime) values"
-                                             + "(?,?,?,CURRENT_TIMESTAMP());";
+                                             + "(reqid, relaystate, destination, providername, entityid, creationtime) values"
+                                             + "(?,?,?,?,?,CURRENT_TIMESTAMP());";
 
   private static final String UPDATE_QUERY = "UPDATE SESSION SET eidref = ? WHERE reqid = ?;";
 
@@ -89,6 +91,10 @@ public class SessionStore implements AutoCloseable
 
   void setupDb() throws SQLException
   {
+    try (PreparedStatement createPreparedStatement = dbConnection.prepareStatement(DELETE_QUERY))
+    {
+      createPreparedStatement.execute();
+    }
     try (PreparedStatement createPreparedStatement = dbConnection.prepareStatement(CREATE_QUERY))
     {
       createPreparedStatement.execute();
@@ -126,8 +132,10 @@ public class SessionStore implements AutoCloseable
     try (PreparedStatement preparedStatement = dbConnection.prepareStatement(INSERT_QUERY))
     {
       preparedStatement.setString(1, session.getReqId());
-      preparedStatement.setString(2, session.getRelayState());
+      preparedStatement.setString(2, session.getRelayState().orElse(null));
       preparedStatement.setString(3, session.getReqDestination());
+      preparedStatement.setString(4, session.getReqProviderName());
+      preparedStatement.setString(5, session.getReqProviderEntityId());
       preparedStatement.execute();
     }
     for ( Entry<EidasPersonAttributes, Boolean> entry : session.getRequestedAttributes().entrySet() )
@@ -164,7 +172,8 @@ public class SessionStore implements AutoCloseable
         if (rs.next())
         {
           session = new RequestSession(rs.getString("relaystate"), rs.getString("reqid"),
-                                       rs.getString("destination"));
+                                       rs.getString("destination"), rs.getString("providername"),
+                                       rs.getString("entityid"));
         }
       }
     }
@@ -199,7 +208,8 @@ public class SessionStore implements AutoCloseable
         if (rs.next())
         {
           session = new RequestSession(rs.getString("relaystate"), rs.getString("reqid"),
-                                       rs.getString("destination"));
+                                       rs.getString("destination"), rs.getString("providername"),
+                                       rs.getString("entityid"));
         }
       }
     }

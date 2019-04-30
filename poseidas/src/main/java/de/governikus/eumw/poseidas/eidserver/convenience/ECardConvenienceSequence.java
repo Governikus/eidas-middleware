@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018 Governikus KG. Licensed under the EUPL, Version 1.2 or as soon they will be approved by
+ * Copyright (c) 2019 Governikus KG. Licensed under the EUPL, Version 1.2 or as soon they will be approved by
  * the European Commission - subsequent versions of the EUPL (the "Licence"); You may not use this work except
  * in compliance with the Licence. You may obtain a copy of the Licence at:
  * http://joinup.ec.europa.eu/software/page/eupl Unless required by applicable law or agreed to in writing,
@@ -18,7 +18,7 @@ import iso.std.iso_iec._24727.tech.schema.ResponseType;
  * IDValidator interface in the eIDServer but does not validate things. Instances of this class must figure
  * out what the next request after a given response is to figure the result out. An implementating class will
  * have to define getters that will deliver the final result as soon as isFinished delivers true
- * 
+ *
  * @author Alexander Funk
  */
 public interface ECardConvenienceSequence
@@ -31,7 +31,7 @@ public interface ECardConvenienceSequence
 
   /**
    * gets the next request that follow the response. If response is null the sequence is initialized
-   * 
+   *
    * @param response the last response
    * @return the next request
    */

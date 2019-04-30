@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018 Governikus KG. Licensed under the EUPL, Version 1.2 or as soon they will be approved by
+ * Copyright (c) 2019 Governikus KG. Licensed under the EUPL, Version 1.2 or as soon they will be approved by
  * the European Commission - subsequent versions of the EUPL (the "Licence"); You may not use this work except
  * in compliance with the Licence. You may obtain a copy of the Licence at:
  * http://joinup.ec.europa.eu/software/page/eupl Unless required by applicable law or agreed to in writing,
@@ -27,7 +27,7 @@ import de.governikus.eumw.poseidas.cardbase.asn1.npa.SecurityInfosPath;
 
 /**
  * Implementation of the <code>CardInfo</code> structure in {@link SecurityInfos}.
- * 
+ *
  * @author Arne Stahlbock, ast@bos-bremen.de
  */
 public class CardInfo extends SecurityInfo
@@ -35,7 +35,7 @@ public class CardInfo extends SecurityInfo
 
   /**
    * Constructor.
-   * 
+   *
    * @param bytes byte-array containing ASN.1 description of a {@link CardInfo}.
    * @throws IOException if reading bytes fails
    */
@@ -46,7 +46,7 @@ public class CardInfo extends SecurityInfo
 
   /**
    * Gets the child element <code>urlCardInfo</code> converted to {@link String}.
-   * 
+   *
    * @return {@link String} containing <code>urlCardInfo</code>
    * @throws IOException
    */
@@ -57,7 +57,7 @@ public class CardInfo extends SecurityInfo
 
   /**
    * Gets the child element <code>OptionalCardInfoData</code>.
-   * 
+   *
    * @return {@link ASN1} instance containing <code>EFCardInfo</code> or <code>ExtCardInfoData</code>,
    *         <code>null</code> possible
    * @throws IOException if error in getting
@@ -161,7 +161,7 @@ public class CardInfo extends SecurityInfo
 
   /**
    * Implementation of the <code>SupportedTerminalTypes</code> structure in {@link SecurityInfos}.
-   * 
+   *
    * @author Arne Stahlbock, ast@bos-bremen.de
    */
   public static class SupportedTerminalTypes extends ASN1

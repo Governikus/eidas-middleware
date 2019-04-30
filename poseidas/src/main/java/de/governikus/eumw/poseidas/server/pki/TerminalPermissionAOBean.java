@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018 Governikus KG. Licensed under the EUPL, Version 1.2 or as soon they will be approved by
+ * Copyright (c) 2019 Governikus KG. Licensed under the EUPL, Version 1.2 or as soon they will be approved by
  * the European Commission - subsequent versions of the EUPL (the "Licence"); You may not use this work except
  * in compliance with the Licence. You may obtain a copy of the Licence at:
  * http://joinup.ec.europa.eu/software/page/eupl Unless required by applicable law or agreed to in writing,
@@ -47,7 +47,7 @@ import lombok.extern.slf4j.Slf4j;
 /**
  * Access to terminal permission data. Use
  * de.bos_bremen.gov2.jca_provider.ocf.asn1.cvc.CertificateRequestGenerator for getting the data!
- * 
+ *
  * @author tt
  */
 @Repository
@@ -153,7 +153,7 @@ public class TerminalPermissionAOBean implements TerminalPermissionAO
 
   /**
    * Store a new chain for this terminal
-   * 
+   *
    * @param chain the chain to be stored
    * @param data the terminal reference
    */
@@ -361,8 +361,9 @@ public class TerminalPermissionAOBean implements TerminalPermissionAO
   private void removeOldSectorID(String oldSectorID, String sectorIDBase64)
   {
     log.debug("SectorID has changed, removing all entries with the old SectorID");
-    String stringQuery = String.format("UPDATE BlackListEntry SET key.sectorID = '%s' WHERE key.sectorID = :%s"
-       , sectorIDBase64, BlackListEntry.PARAM_SECTORID);
+    String stringQuery = String.format("UPDATE BlackListEntry SET key.sectorID = '%s' WHERE key.sectorID = :%s",
+                                       sectorIDBase64,
+                                       BlackListEntry.PARAM_SECTORID);
     Query updateQuery = entityManager.createQuery(stringQuery);
     updateQuery.setParameter(BlackListEntry.PARAM_SECTORID, oldSectorID);
     updateQuery.executeUpdate();
@@ -746,9 +747,10 @@ public class TerminalPermissionAOBean implements TerminalPermissionAO
     {
       String myAddress = InetAddress.getLocalHost().toString();
       String ownChoice = own ? "=" : "<>";
-      String stringQuery = String.format("SELECT l FROM ChangeKeyLock l WHERE l.autentIP %s'%s'",ownChoice, myAddress);
-      TypedQuery<ChangeKeyLock> query = this.entityManager.createQuery(stringQuery,
-                                                                       ChangeKeyLock.class);
+      String stringQuery = String.format("SELECT l FROM ChangeKeyLock l WHERE l.autentIP %s'%s'",
+                                         ownChoice,
+                                         myAddress);
+      TypedQuery<ChangeKeyLock> query = this.entityManager.createQuery(stringQuery, ChangeKeyLock.class);
       for ( ChangeKeyLock q : query.getResultList() )
       {
         resultList.add(q);
@@ -775,7 +777,11 @@ public class TerminalPermissionAOBean implements TerminalPermissionAO
   @Transactional
   public boolean iHaveLock(String keyAlias)
   {
-    AssertUtil.notNull(keyAlias, "key alias");
+    if (keyAlias == null)
+    {
+      log.debug("unable to detect lock for null alias");
+      return false;
+    }
     try
     {
       String myAddress = InetAddress.getLocalHost().toString();
@@ -799,8 +805,16 @@ public class TerminalPermissionAOBean implements TerminalPermissionAO
   @Transactional
   public void archiveCVC(String alias, byte[] cvcData)
   {
-    AssertUtil.notNullOrEmpty(alias, "alias");
-    AssertUtil.notNullOrEmpty(cvcData, "cvc data");
+    if (alias == null || alias.length() == 0)
+    {
+      log.debug("unable to archive CVC without alias");
+      return;
+    }
+    if (cvcData == null || cvcData.length == 0)
+    {
+      log.debug("unable to archive CVC without data");
+      return;
+    }
 
     KeyArchive ka = this.entityManager.find(KeyArchive.class, alias);
     if (ka == null)
@@ -820,8 +834,16 @@ public class TerminalPermissionAOBean implements TerminalPermissionAO
   @Transactional
   public void archiveKey(String alias, byte[] keyData)
   {
-    AssertUtil.notNullOrEmpty(alias, "alias");
-    AssertUtil.notNullOrEmpty(keyData, "key data");
+    if (alias == null || alias.length() == 0)
+    {
+      log.debug("unable to archive key without alias");
+      return;
+    }
+    if (keyData == null || keyData.length == 0)
+    {
+      log.debug("unable to archive key without data");
+      return;
+    }
 
     KeyArchive ka = this.entityManager.find(KeyArchive.class, alias);
     if (ka == null)

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018 Governikus KG. Licensed under the EUPL, Version 1.2 or as soon they will be approved by
+ * Copyright (c) 2019 Governikus KG. Licensed under the EUPL, Version 1.2 or as soon they will be approved by
  * the European Commission - subsequent versions of the EUPL (the "Licence"); You may not use this work except
  * in compliance with the Licence. You may obtain a copy of the Licence at:
  * http://joinup.ec.europa.eu/software/page/eupl Unless required by applicable law or agreed to in writing,
@@ -17,7 +17,7 @@ import de.governikus.eumw.poseidas.cardserver.eac.functions.transmitAPDU.Transmi
 
 /**
  * Interface for evaluators of transmit results to the specified type.
- * 
+ *
  * @param <T> type of result
  * @author Jens Wothe, jw@bos-bremen.de
  */
@@ -32,7 +32,7 @@ public interface TransmitResultEvaluator<T extends FunctionResult<?>> extends AP
    * <p>
    * Company: bremen online services GmbH und Co. KG
    * </p>
-   * 
+   *
    * @author Jens Wothe, jw@bos-bremen.de
    */
   public static class Util
@@ -48,7 +48,7 @@ public interface TransmitResultEvaluator<T extends FunctionResult<?>> extends AP
 
     /**
      * Default check for arguments.
-     * 
+     *
      * @param transmitResult transmit result, <code>null</code> not permitted
      * @param responseIndices indices of response APDUs to be used for evaluation, only positive indices up to
      *          index of last available responses valid, count of indices must between minimum and maximum
@@ -88,7 +88,7 @@ public interface TransmitResultEvaluator<T extends FunctionResult<?>> extends AP
 
   /**
    * Evaluate result from transmit result.
-   * 
+   *
    * @param <Q> type of result
    * @param resultClass Class of result, <code>null</code> not permitted
    * @param transmitResult transmit result, <code>null</code> not permitted

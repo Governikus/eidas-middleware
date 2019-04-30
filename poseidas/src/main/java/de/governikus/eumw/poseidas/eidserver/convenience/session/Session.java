@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018 Governikus KG. Licensed under the EUPL, Version 1.2 or as soon they will be approved by
+ * Copyright (c) 2019 Governikus KG. Licensed under the EUPL, Version 1.2 or as soon they will be approved by
  * the European Commission - subsequent versions of the EUPL (the "Licence"); You may not use this work except
  * in compliance with the Licence. You may obtain a copy of the Licence at:
  * http://joinup.ec.europa.eu/software/page/eupl Unless required by applicable law or agreed to in writing,
@@ -100,11 +100,6 @@ public class Session implements Serializable
       throw new IllegalArgumentException("Session input is null");
     }
     this.sessionInput = sessionInput;
-    if (sessionInput.getPresharedKey() == null)
-    {
-      throw new IllegalArgumentException(sessionInput.getLogPrefix() + "Pre-shared key is null."
-                                         + " Pre-shared key must be set in session input");
-    }
     if (sessionInput.getSessionID() == null)
     {
       throw new IllegalArgumentException(sessionInput.getLogPrefix() + "SessionID is null."
@@ -306,27 +301,6 @@ public class Session implements Serializable
   public EIDSequence getEIDSequence()
   {
     return eIDSequence;
-  }
-
-  /**
-   * Return the pre shared key received from sessionInput
-   *
-   * @return preshared key
-   */
-  public byte[] getPresharedKey()
-  {
-    return sessionInput.getPresharedKey();
-  }
-
-  /**
-   * Return the SAML hash
-   *
-   * @return hash as byte array
-   */
-  @Deprecated
-  public byte[] getSHA256ofSAMLRequest()
-  {
-    return sessionInput.getSHA256ofSAMLRequest();
   }
 
   /**

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018 Governikus KG. Licensed under the EUPL, Version 1.2 or as soon they will be approved by
+ * Copyright (c) 2019 Governikus KG. Licensed under the EUPL, Version 1.2 or as soon they will be approved by
  * the European Commission - subsequent versions of the EUPL (the "Licence"); You may not use this work except
  * in compliance with the Licence. You may obtain a copy of the Licence at:
  * http://joinup.ec.europa.eu/software/page/eupl Unless required by applicable law or agreed to in writing,
@@ -60,7 +60,7 @@ import net.shibboleth.utilities.java.support.xml.XMLParserException;
 
 /**
  * Use this class to build a eu connector metadata.xml
- * 
+ *
  * @author hohnholt
  */
 public class EidasMetadataNode
@@ -84,7 +84,7 @@ public class EidasMetadataNode
 
   private String postEndpoint;
 
-  private EidasRequestSectorType spType = EidasRequestSectorType.PUBLIC;
+  private EidasRequestSectorType spType;
 
   private List<EidasNameIdType> supportedNameIdTypes = new ArrayList<>();
 
@@ -231,7 +231,7 @@ public class EidasMetadataNode
 
   /**
    * Creates a metadata.xml as byte array
-   * 
+   *
    * @param signer
    * @return metadata.xml byte array
    * @throws CertificateEncodingException
@@ -323,7 +323,7 @@ public class EidasMetadataNode
 
   /**
    * Parse an metadata.xml
-   * 
+   *
    * @param is
    * @return
    * @throws XMLParserException
@@ -395,7 +395,7 @@ public class EidasMetadataNode
 
   /**
    * Search in a KeyDescriptor node for the frist certificate
-   * 
+   *
    * @param keyDescriptor
    * @return the first Cert from the given keyDescriptor
    * @throws CertificateException

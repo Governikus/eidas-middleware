@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018 Governikus KG. Licensed under the EUPL, Version 1.2 or as soon they will be approved by
+ * Copyright (c) 2019 Governikus KG. Licensed under the EUPL, Version 1.2 or as soon they will be approved by
  * the European Commission - subsequent versions of the EUPL (the "Licence"); You may not use this work except
  * in compliance with the Licence. You may obtain a copy of the Licence at:
  * http://joinup.ec.europa.eu/software/page/eupl Unless required by applicable law or agreed to in writing,
@@ -19,7 +19,7 @@ import de.governikus.eumw.poseidas.cardbase.ByteUtil;
 
 /**
  * Constants for bits and bytes.
- * 
+ *
  * @see ByteUtil
  * @author Jens Wothe, jw@bos-bremen.de
  */
@@ -43,7 +43,7 @@ public final class ByteConstants
 
   /**
    * Constant of index for eighth bit: <code>7</code>.
-   * 
+   *
    * @see #MASK_BIT8
    * @see #BYTE_MASK_BIT8
    */
@@ -51,7 +51,7 @@ public final class ByteConstants
 
   /**
    * Constant of index for seventh bit: <code>6</code>.
-   * 
+   *
    * @see #MASK_BIT7
    * @see #BYTE_MASK_BIT7
    */
@@ -59,7 +59,7 @@ public final class ByteConstants
 
   /**
    * Constant of index for sixth bit: <code>5</code>.
-   * 
+   *
    * @see #MASK_BIT6
    * @see #BYTE_MASK_BIT6
    */
@@ -67,7 +67,7 @@ public final class ByteConstants
 
   /**
    * Constant of index for fifth bit: <code>4</code>.
-   * 
+   *
    * @see #MASK_BIT5
    * @see #BYTE_MASK_BIT5
    */
@@ -75,7 +75,7 @@ public final class ByteConstants
 
   /**
    * Constant of index for fourth bit: <code>3</code>.
-   * 
+   *
    * @see #MASK_BIT4
    * @see #BYTE_MASK_BIT4
    */
@@ -83,7 +83,7 @@ public final class ByteConstants
 
   /**
    * Constant of index for third bit: <code>2</code>.
-   * 
+   *
    * @see #MASK_BIT3
    * @see #BYTE_MASK_BIT3
    */
@@ -91,7 +91,7 @@ public final class ByteConstants
 
   /**
    * Constant of index for second bit: <code>1</code>.
-   * 
+   *
    * @see #MASK_BIT2
    * @see #BYTE_MASK_BIT2
    */
@@ -99,7 +99,7 @@ public final class ByteConstants
 
   /**
    * Constant of index for first bit: <code>0</code>.
-   * 
+   *
    * @see #MASK_BIT1
    * @see #BYTE_MASK_BIT1
    */
@@ -107,7 +107,7 @@ public final class ByteConstants
 
   /**
    * Constant of bit mask for eighth bit: <code>0x80</code>.
-   * 
+   *
    * @see #BIT_INDEX_8
    * @see #BYTE_MASK_BIT8
    * @see Math#pow(double, double)
@@ -116,7 +116,7 @@ public final class ByteConstants
 
   /**
    * Constant of bit mask for seventh bit: <code>0x40</code>.
-   * 
+   *
    * @see #BIT_INDEX_7
    * @see #BYTE_MASK_BIT7
    * @see Math#pow(double, double)
@@ -125,7 +125,7 @@ public final class ByteConstants
 
   /**
    * Constant of bit mask for sixth bit: <code>0x20</code>.
-   * 
+   *
    * @see #BIT_INDEX_6
    * @see #BYTE_MASK_BIT6
    * @see Math#pow(double, double)
@@ -134,7 +134,7 @@ public final class ByteConstants
 
   /**
    * Constant of bit mask for fifth bit: <code>0x10</code>.
-   * 
+   *
    * @see #BIT_INDEX_5
    * @see #BYTE_MASK_BIT5
    * @see Math#pow(double, double)
@@ -143,7 +143,7 @@ public final class ByteConstants
 
   /**
    * Constant of bit mask for fourth bit: <code>0x08</code>.
-   * 
+   *
    * @see #BIT_INDEX_4
    * @see #BYTE_MASK_BIT4
    * @see Math#pow(double, double)
@@ -152,7 +152,7 @@ public final class ByteConstants
 
   /**
    * Constant of bit mask for third bit: <code>0x04</code>.
-   * 
+   *
    * @see #BIT_INDEX_3
    * @see #BYTE_MASK_BIT3
    * @see Math#pow(double, double)
@@ -161,7 +161,7 @@ public final class ByteConstants
 
   /**
    * Constant of bit mask for second bit: <code>0x02</code>.
-   * 
+   *
    * @see #BIT_INDEX_2
    * @see #BYTE_MASK_BIT2
    * @see Math#pow(double, double)
@@ -170,7 +170,7 @@ public final class ByteConstants
 
   /**
    * Constant of bit mask for first bit: <code>0x01</code>. see
-   * 
+   *
    * @see #BIT_INDEX_1
    * @see #BYTE_MASK_BIT1
    * @see Math#pow(double, double)
@@ -179,7 +179,7 @@ public final class ByteConstants
 
   /**
    * Constant of bit mask for eighth bit.
-   * 
+   *
    * @see #MASK_BIT8
    * @see #BIT_INDEX_MASK_LIST
    */
@@ -187,7 +187,7 @@ public final class ByteConstants
 
   /**
    * Constant of bit mask for seventh bit.
-   * 
+   *
    * @see #MASK_BIT7
    * @see #BIT_INDEX_MASK_LIST
    */
@@ -195,7 +195,7 @@ public final class ByteConstants
 
   /**
    * Constant of bit mask for sixth bit.
-   * 
+   *
    * @see #MASK_BIT6
    * @see #BIT_INDEX_MASK_LIST
    */
@@ -203,7 +203,7 @@ public final class ByteConstants
 
   /**
    * Constant of bit mask for fifth bit.
-   * 
+   *
    * @see #MASK_BIT5
    * @see #BIT_INDEX_MASK_LIST
    */
@@ -211,7 +211,7 @@ public final class ByteConstants
 
   /**
    * Constant of bit mask for fourth bit.
-   * 
+   *
    * @see #MASK_BIT4
    * @see #BIT_INDEX_MASK_LIST
    */
@@ -219,7 +219,7 @@ public final class ByteConstants
 
   /**
    * Constant of bit mask for third bit.
-   * 
+   *
    * @see #MASK_BIT3
    * @see #BIT_INDEX_MASK_LIST
    */
@@ -227,7 +227,7 @@ public final class ByteConstants
 
   /**
    * Constant of bit mask for second bit.
-   * 
+   *
    * @see #MASK_BIT2
    * @see #BIT_INDEX_MASK_LIST
    */
@@ -235,7 +235,7 @@ public final class ByteConstants
 
   /**
    * Constant of bit mask for first bit.
-   * 
+   *
    * @see #MASK_BIT1
    * @see #BIT_INDEX_MASK_LIST
    */

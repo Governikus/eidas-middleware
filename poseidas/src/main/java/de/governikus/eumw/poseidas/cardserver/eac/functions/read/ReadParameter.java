@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018 Governikus KG. Licensed under the EUPL, Version 1.2 or as soon they will be approved by
+ * Copyright (c) 2019 Governikus KG. Licensed under the EUPL, Version 1.2 or as soon they will be approved by
  * the European Commission - subsequent versions of the EUPL (the "Licence"); You may not use this work except
  * in compliance with the Licence. You may obtain a copy of the Licence at:
  * http://joinup.ec.europa.eu/software/page/eupl Unless required by applicable law or agreed to in writing,
@@ -15,7 +15,7 @@ import de.governikus.eumw.poseidas.cardserver.eac.functions.FunctionParameter;
 
 /**
  * Parmeter for reading.
- * 
+ *
  * @author Jens Wothe, jw@bos-bremen.de
  */
 public class ReadParameter implements FunctionParameter
@@ -24,7 +24,7 @@ public class ReadParameter implements FunctionParameter
 
   /**
    * Gets SFI (optional value).
-   * 
+   *
    * @return sfi
    */
   public final Byte getSfi()
@@ -35,7 +35,7 @@ public class ReadParameter implements FunctionParameter
 
   /**
    * Gets read length.
-   * 
+   *
    * @return length
    */
   public final int getLength()
@@ -46,7 +46,7 @@ public class ReadParameter implements FunctionParameter
 
   /**
    * Gets offset.
-   * 
+   *
    * @return the offset
    */
   public final int getOffset()
@@ -85,7 +85,7 @@ public class ReadParameter implements FunctionParameter
 
   /**
    * Constructor.
-   * 
+   *
    * @param offset offset for reading, default <code>0</code>, value greater equals <code>0</code> and less
    *          equals <code>32768</code> only permitted, when SFI given offset less equals <code>255</code>
    *          permitted only

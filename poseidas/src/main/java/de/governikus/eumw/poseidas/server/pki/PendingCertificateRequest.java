@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018 Governikus KG. Licensed under the EUPL, Version 1.2 or as soon they will be approved by
+ * Copyright (c) 2019 Governikus KG. Licensed under the EUPL, Version 1.2 or as soon they will be approved by
  * the European Commission - subsequent versions of the EUPL (the "Licence"); You may not use this work except
  * in compliance with the Licence. You may obtain a copy of the Licence at:
  * http://joinup.ec.europa.eu/software/page/eupl Unless required by applicable law or agreed to in writing,
@@ -26,7 +26,7 @@ import javax.persistence.TemporalType;
 /**
  * Holds certificate request data of requests which have been created but not yet answered. You might want to
  * send these request again or take other steps.
- * 
+ *
  * @author tautenhahn
  */
 @Entity
@@ -92,7 +92,7 @@ public class PendingCertificateRequest implements Serializable
 
   /**
    * Create new instance to represent a request created now.
-   * 
+   *
    * @param refID specified the permission data record this request belongs to
    */
   PendingCertificateRequest(String refID)
@@ -171,7 +171,7 @@ public class PendingCertificateRequest implements Serializable
 
   /**
    * set the messageID of a pending request - needed for assigning asynchronously obtained data
-   * 
+   *
    * @param messageID
    */
   public void setMessageID(String messageID)
@@ -197,7 +197,7 @@ public class PendingCertificateRequest implements Serializable
 
   /**
    * Add a new CVC description to this pending request.
-   * 
+   *
    * @param newCvcDescription
    */
   public void setNewCvcDescription(byte[] newCvcDescription)
@@ -208,7 +208,7 @@ public class PendingCertificateRequest implements Serializable
   /**
    * set an optional free String which contains additional information about the current status of the
    * request. Interpretation is totally up to the the administrator, poseidas will not use this value.
-   * 
+   *
    * @param additionalInfo
    */
   public void setAdditionalInfo(String additionalInfo)
