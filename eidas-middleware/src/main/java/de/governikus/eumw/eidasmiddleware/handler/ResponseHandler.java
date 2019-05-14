@@ -22,6 +22,7 @@ import java.util.Map;
 import javax.xml.bind.DatatypeConverter;
 import javax.xml.transform.TransformerException;
 
+import de.governikus.eumw.eidasstarterkit.*;
 import org.apache.commons.codec.binary.Hex;
 import org.opensaml.core.config.InitializationException;
 import org.opensaml.core.xml.io.MarshallingException;
@@ -42,15 +43,6 @@ import de.governikus.eumw.eidasmiddleware.ServiceProviderConfig;
 import de.governikus.eumw.eidasmiddleware.SessionStore;
 import de.governikus.eumw.eidasmiddleware.WebServiceHelper;
 import de.governikus.eumw.eidasmiddleware.eid.RequestingServiceProvider;
-import de.governikus.eumw.eidasstarterkit.EidasAttribute;
-import de.governikus.eumw.eidasstarterkit.EidasEncrypter;
-import de.governikus.eumw.eidasstarterkit.EidasLoA;
-import de.governikus.eumw.eidasstarterkit.EidasNameId;
-import de.governikus.eumw.eidasstarterkit.EidasNaturalPersonAttributes;
-import de.governikus.eumw.eidasstarterkit.EidasResponse;
-import de.governikus.eumw.eidasstarterkit.EidasSaml;
-import de.governikus.eumw.eidasstarterkit.EidasSigner;
-import de.governikus.eumw.eidasstarterkit.EidasTransientNameId;
 import de.governikus.eumw.eidasstarterkit.person_attributes.natural_persons_attribute.BirthNameAttribute;
 import de.governikus.eumw.eidasstarterkit.person_attributes.natural_persons_attribute.CurrentAddressAttribute;
 import de.governikus.eumw.eidasstarterkit.person_attributes.natural_persons_attribute.DateOfBirthAttribute;
@@ -284,7 +276,10 @@ public class ResponseHandler
                                                                    + Hex.encodeHexString(restrID.getID1())
                                                                         .toUpperCase(Locale.GERMANY));
       attributes.add(pi);
-      nameId = new EidasTransientNameId(pi.getId());
+      //nameId = new EidasTransientNameId(pi.getId());
+      //Using persistent Name ID as PersonIdentifier is a persistent identifier.
+      //Ideally this should be checking the SP metadata whether the selected format is requested.
+      nameId = new EidasPersistentNameId(pi.getId());
     }
 
     try

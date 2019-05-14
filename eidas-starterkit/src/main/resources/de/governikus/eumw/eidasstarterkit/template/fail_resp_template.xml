@@ -9,5 +9,4 @@
     <saml2p:StatusCode Value="$Code"/>
     <saml2p:StatusMessage>$ErrMsg</saml2p:StatusMessage>
   </saml2p:Status>
-  $Assertion
 </saml2p:Response>

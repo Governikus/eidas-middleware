@@ -25,6 +25,10 @@ import de.governikus.eumw.eidasstarterkit.XMLSignatureHandler.SigEntryType;
  */
 public class EidasSigner
 {
+  /**
+   * The default hash algoritm. This value can be overridden by environment variable.
+   */
+  private static String defaultHashAlgo="SHA256-PSS";
 
   private static final String SAML_SIGNING = "samlsigning";
 
@@ -47,6 +51,11 @@ public class EidasSigner
    * specifies whether to sign and whether to include the signature certificate
    */
   private final SigEntryType sigType;
+
+  static {
+    String envHashSetting = System.getenv("EIDAS_SIGNER_DEFAULT_HASH_ALGORITHM");
+    defaultHashAlgo = envHashSetting != null ? envHashSetting : defaultHashAlgo;
+  }
 
   private EidasSigner(boolean includeCert, PrivateKey key, X509Certificate cert, String digestAlg)
   {
@@ -73,7 +82,7 @@ public class EidasSigner
    */
   public EidasSigner(boolean includeCert, PrivateKey key, X509Certificate cert)
   {
-    this(includeCert, key, cert, "SHA256-PSS");
+    this(includeCert, key, cert, defaultHashAlgo);
   }
 
   EidasSigner(PrivateKey key, X509Certificate cert)
