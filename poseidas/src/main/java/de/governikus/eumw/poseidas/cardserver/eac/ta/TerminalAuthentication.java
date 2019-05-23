@@ -25,7 +25,6 @@ import de.governikus.eumw.poseidas.cardbase.ByteUtil;
 import de.governikus.eumw.poseidas.cardbase.asn1.OID;
 import de.governikus.eumw.poseidas.cardserver.service.ServiceRegistry;
 import de.governikus.eumw.poseidas.cardserver.service.hsm.HSMServiceFactory;
-import de.governikus.eumw.poseidas.cardserver.service.hsm.impl.BOSHSMSimulatorService;
 import de.governikus.eumw.poseidas.cardserver.service.hsm.impl.HSMException;
 import de.governikus.eumw.poseidas.cardserver.service.hsm.impl.HSMService;
 
@@ -75,19 +74,9 @@ public class TerminalAuthentication
     AssertUtil.notNullOrEmpty(compOwnEphPubKey, "compressed own public key");
 
     byte[] completeChallenge = ByteUtil.combine(new byte[][]{idPicc, rPicc, compOwnEphPubKey, auxiliaryData});
-/*
-    This is the original code:
-    Running this of PKCS11 hsm does not work as it attempts to use the CHR value as key alias.
-    This alias does not exist in our HSM.
-
     HSMService hsm = ServiceRegistry.Util.getServiceRegistry()
                                          .getService(HSMServiceFactory.class)
                                          .getHSMService();
-*/
-    //Forcing to not use HSM
-    HSMService hsm = ServiceRegistry.Util.getServiceRegistry()
-      .getService(HSMServiceFactory.class)
-      .getHSMService(BOSHSMSimulatorService.class);
 
     return hsm.sign(alias, algorithm, completeChallenge);
   }
