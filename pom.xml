@@ -132,7 +132,7 @@
         <version.guava>27.1-jre</version.guava>
         <version.h2>1.4.199</version.h2>
         <version.istack-commons-runtime>3.0.8</version.istack-commons-runtime>
-        <version.jackson>2.9.10</version.jackson>
+        <version.jackson>2.10.0</version.jackson>
         <version.jaxb2-basics>1.11.1</version.jaxb2-basics>
         <version.jsr305>3.0.2</version.jsr305>
         <version.snmp4j>2.6.3</version.snmp4j>
