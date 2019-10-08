@@ -28,7 +28,7 @@ public enum FileNames
   @Getter
   private String fileName;
 
-  private FileNames(String fileName)
+  FileNames(String fileName)
   {
     this.fileName = fileName;
   }

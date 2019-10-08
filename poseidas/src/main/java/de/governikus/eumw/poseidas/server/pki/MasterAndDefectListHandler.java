@@ -16,10 +16,8 @@ import java.net.URL;
 import java.security.GeneralSecurityException;
 import java.security.KeyStore;
 import java.util.Arrays;
+import java.util.Base64;
 
-import javax.xml.bind.DatatypeConverter;
-
-import de.governikus.eumw.eidascommon.Utils;
 import de.governikus.eumw.poseidas.config.schema.PkiServiceType;
 import de.governikus.eumw.poseidas.gov2server.GovManagementException;
 import de.governikus.eumw.poseidas.gov2server.constants.admin.GlobalManagementCodes;
@@ -78,13 +76,11 @@ public class MasterAndDefectListHandler extends BerCaRequestHandlerBase
         defectList = getDefectList(wrapper);
         if (masterList != null)
         {
-          log.debug("MasterList:\n{}",
-                    Utils.breakAfter76Chars(DatatypeConverter.printBase64Binary(masterList)));
+          log.debug("MasterList:\n{}", Base64.getMimeEncoder().encodeToString(masterList));
         }
         if (defectList != null)
         {
-          log.debug("DefectList:\n{}",
-                    Utils.breakAfter76Chars(DatatypeConverter.printBase64Binary(defectList)));
+          log.debug("DefectList:\n{}", Base64.getMimeEncoder().encodeToString(defectList));
         }
       }
       catch (MalformedURLException e)

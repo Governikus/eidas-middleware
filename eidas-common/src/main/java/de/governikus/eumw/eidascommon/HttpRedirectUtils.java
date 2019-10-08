@@ -12,17 +12,11 @@ package de.governikus.eumw.eidascommon;
 
 import java.io.UnsupportedEncodingException;
 import java.net.MalformedURLException;
-import java.net.URI;
-import java.net.URISyntaxException;
 import java.net.URL;
-import java.net.URLDecoder;
 import java.net.URLEncoder;
 import java.security.GeneralSecurityException;
 import java.security.PrivateKey;
 import java.security.Signature;
-import java.security.cert.X509Certificate;
-import java.util.HashMap;
-import java.util.Map;
 import java.util.zip.DataFormatException;
 import java.util.zip.Deflater;
 import java.util.zip.Inflater;
@@ -293,142 +287,4 @@ public final class HttpRedirectUtils
     result.append('=');
     result.append(URLEncoder.encode(value, Utils.ENCODING));
   }
-
-  private static String getSignedURL(String input) throws UnsupportedEncodingException, URISyntaxException
-  {
-    Map<String, String> parameter = getParameterList(input, false);
-    StringBuilder signed = new StringBuilder();
-    if (parameter.get(RESPONSE_PARAMNAME) == null)
-    {
-      signed.append(REQUEST_PARAMNAME);
-      signed.append('=');
-      signed.append(parameter.get(REQUEST_PARAMNAME));
-    }
-    else
-    {
-      signed.append(RESPONSE_PARAMNAME);
-      signed.append('=');
-      signed.append(parameter.get(RESPONSE_PARAMNAME));
-    }
-    if (parameter.get(RELAYSTATE_PARAMNAME) != null)
-    {
-      signed.append('&');
-      signed.append(RELAYSTATE_PARAMNAME);
-      signed.append('=');
-      signed.append(parameter.get(RELAYSTATE_PARAMNAME));
-    }
-    signed.append('&');
-    signed.append(SIGALG_PARAMNAME);
-    signed.append('=');
-    signed.append(parameter.get(SIGALG_PARAMNAME));
-    return signed.toString();
-  }
-
-  /**
-   * Checks the signature of a query string.
-   *
-   * @param input complete URL like https://examle.com?parameter=...
-   * @param sigCert certificate the parameters are signed with
-   * @return true if contained signature was valid.
-   */
-  public static boolean checkQueryString(String input, X509Certificate sigCert)
-  {
-    if (sigCert == null || input == null)
-    {
-      return false;
-    }
-    try
-    {
-      Map<String, String> parameter = getParameterList(input, true);
-      String sigAlgo = parameter.get(SIGALG_PARAMNAME);
-
-      String algoName = null;
-      if (sigAlgo.equals(SIGALG_RSA_SHA256) || sigAlgo.equals(SIGALG_RSA_SHA256_OLD_WRONG))
-      {
-        algoName = "SHA256WithRSA";
-      }
-      else if (sigAlgo.equals(SIGALG_RSA_SHA1))
-      {
-        algoName = "SHA1WithRSA";
-      }
-      else if (sigAlgo.equals(SIGALG_DSA_SHA256))
-      {
-        algoName = "SHA256WithDSA";
-      }
-      else if (sigAlgo.equals(SIGALG_DSA_SHA1))
-      {
-        algoName = "SHA1WithDSA";
-      }
-      else if (sigAlgo.equals(SIGALG_ECDSA_SHA512))
-      {
-        algoName = "SHA512WithECDSA";
-      }
-      else if (sigAlgo.equals(SIGALG_ECDSA_SHA384))
-      {
-        algoName = "SHA384WithECDSA";
-      }
-      else if (sigAlgo.equals(SIGALG_ECDSA_SHA256))
-      {
-        algoName = "SHA256WithECDSA";
-      }
-      else if (sigAlgo.equals(SIGALG_ECDSA_SHA1))
-      {
-        algoName = "SHA1WithECDSA";
-      }
-      else
-      {
-        throw new UnsupportedOperationException("unknown signature algorithm " + sigAlgo);
-      }
-      String sigValue = parameter.get(SIGVALUE_PARAMNAME);
-      byte[] value = DatatypeConverter.parseBase64Binary(sigValue);
-      Signature sig = Signature.getInstance(algoName);
-      sig.initVerify(sigCert);
-
-      String signed = getSignedURL(input);
-      sig.update(signed.getBytes(Utils.ENCODING));
-      return sig.verify(value);
-    }
-    catch (Exception t)
-    {
-      return false;
-    }
-  }
-
-  /**
-   * Returns a hap with the get parameters given to this function.
-   *
-   * @param url full url or just the query
-   * @param doUrlDecode if true the parameters will also be url decoded
-   * @return Map containing the parameters
-   * @throws URISyntaxException
-   * @throws UnsupportedEncodingException
-   */
-  private static Map<String, String> getParameterList(String url, boolean doUrlDecode)
-    throws URISyntaxException, UnsupportedEncodingException
-  {
-    String query = url;
-    if (url.startsWith("http"))
-    {
-      URI uri = new URI(url);
-      query = uri.getRawQuery();
-    }
-
-    String[] paramters = query.split("&");
-    Map<String, String> result = new HashMap<>();
-    for ( String paramter : paramters )
-    {
-      String[] splittedParameter = paramter.split("=");
-      if (doUrlDecode)
-      {
-        result.put(URLDecoder.decode(splittedParameter[0], Utils.ENCODING),
-                   URLDecoder.decode(splittedParameter[1], Utils.ENCODING));
-      }
-      else
-      {
-        result.put(splittedParameter[0], splittedParameter[1]);
-      }
-    }
-    return result;
-  }
-
 }

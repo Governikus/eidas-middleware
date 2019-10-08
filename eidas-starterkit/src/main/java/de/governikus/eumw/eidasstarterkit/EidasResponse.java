@@ -158,29 +158,6 @@ public class EidasResponse
   {
     BasicParserPool ppMgr = Utils.getBasicParserPool();
     byte[] returnValue;
-    String notBefore = Constants.format(new Date());
-    String notAfter = Constants.format(new Date(new Date().getTime() + (10 * ONE_MINUTE_IN_MILLIS)));
-
-    String assoTemp = TemplateLoader.getTemplateByName("failasso");
-
-    if (nameId == null)
-    {
-      nameId = new EidasTransientNameId("Error in process, therefore no NameID");
-    }
-
-    assoTemp = assoTemp.replace("$AssertionId", "_" + Utils.generateUniqueID());
-    assoTemp = assoTemp.replace("$IssueInstant", issueInstant);
-    assoTemp = assoTemp.replace("$Issuer", issuer);
-    assoTemp = assoTemp.replace("$NameFormat", nameId.getType().value);
-    assoTemp = assoTemp.replace("$NameID", nameId.getValue());
-    assoTemp = assoTemp.replace("$InResponseTo", inResponseTo);
-    assoTemp = assoTemp.replace("$NotOnOrAfter", notAfter);
-    assoTemp = assoTemp.replace("$Recipient", recipient);
-    assoTemp = assoTemp.replace("$NotBefore", notBefore);
-
-    assoTemp = assoTemp.replace("$AuthnInstant", issueInstant);
-    assoTemp = assoTemp.replace("$LoA", loa.value);
-
     String respTemp = TemplateLoader.getTemplateByName("failresp");
     respTemp = respTemp.replace("$InResponseTo", inResponseTo);
     respTemp = respTemp.replace("$IssueInstant", issueInstant);
@@ -196,8 +173,6 @@ public class EidasResponse
     {
       respTemp = respTemp.replace("$ErrMsg", code.toDescription(msg));
     }
-    respTemp = respTemp.replace("$Assertion", assoTemp);
-
     List<Signature> sigs = new ArrayList<>();
 
     try (InputStream is = new ByteArrayInputStream(respTemp.getBytes(StandardCharsets.UTF_8)))
@@ -581,13 +556,13 @@ public class EidasResponse
 
       resp.getAssertions().clear();
       resp.getAssertions().addAll(assertions);
+      eidasResp.recipient = getAudience(resp);
     }
     eidasResp.id = resp.getID();
     eidasResp.destination = resp.getDestination();
     eidasResp.inResponseTo = resp.getInResponseTo();
     eidasResp.issueInstant = Constants.format(resp.getIssueInstant().toDate());
     eidasResp.issuer = resp.getIssuer().getDOM().getTextContent();
-    eidasResp.recipient = getAudience(resp);
     eidasResp.openSamlResp = resp;
 
     return eidasResp;

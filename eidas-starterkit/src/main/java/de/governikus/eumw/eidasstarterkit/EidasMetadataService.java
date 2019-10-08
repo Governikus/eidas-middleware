@@ -101,6 +101,10 @@ import org.w3c.dom.NodeList;
 
 import de.governikus.eumw.eidascommon.Utils;
 import de.governikus.eumw.eidasstarterkit.person_attributes.EidasPersonAttributes;
+import lombok.AccessLevel;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
 import net.shibboleth.utilities.java.support.component.ComponentInitializationException;
 import net.shibboleth.utilities.java.support.xml.BasicParserPool;
 import net.shibboleth.utilities.java.support.xml.XMLParserException;
@@ -111,6 +115,9 @@ import net.shibboleth.utilities.java.support.xml.XMLParserException;
  *
  * @author hohnholt
  */
+@NoArgsConstructor(access = AccessLevel.PRIVATE)
+@Getter
+@Setter
 class EidasMetadataService
 {
 
@@ -126,9 +133,9 @@ class EidasMetadataService
 
   private EidasOrganisation organisation;
 
-  private EidasContactPerson technicalcontact;
+  private EidasContactPerson technicalContact;
 
-  private EidasContactPerson supportcontact;
+  private EidasContactPerson supportContact;
 
   private String postEndpoint;
 
@@ -136,12 +143,9 @@ class EidasMetadataService
 
   private List<EidasPersonAttributes> attributes = new ArrayList<>();
 
+  @Getter(AccessLevel.NONE)
+  @Setter(AccessLevel.NONE)
   private List<EidasNameIdType> supportedNameIdTypes = new ArrayList<>();
-
-  private EidasMetadataService()
-  {
-    super();
-  }
 
   EidasMetadataService(String id,
                        String entityId,
@@ -153,6 +157,7 @@ class EidasMetadataService
                        EidasContactPerson supportContact,
                        String postEndpoint,
                        String redirectEndpoint,
+                       List<EidasPersonAttributes> attributes,
                        List<EidasNameIdType> supportedNameIdTypes)
   {
     super();
@@ -162,136 +167,30 @@ class EidasMetadataService
     this.sigCert = sigCert;
     this.encCert = encCert;
     this.organisation = organisation;
-    this.technicalcontact = technicalContact;
-    this.supportcontact = supportContact;
+    this.technicalContact = technicalContact;
+    this.supportContact = supportContact;
     this.postEndpoint = postEndpoint;
     this.redirectEndpoint = redirectEndpoint;
-    this.supportedNameIdTypes = supportedNameIdTypes;
 
+    this.attributes = attributes;
+    if (this.attributes == null)
+    {
+      this.attributes = new ArrayList<>();
+    }
+
+    this.supportedNameIdTypes = supportedNameIdTypes;
     if (this.supportedNameIdTypes == null)
     {
       this.supportedNameIdTypes = new ArrayList<>();
     }
-
     if (this.supportedNameIdTypes.isEmpty())
     {
       this.supportedNameIdTypes.add(EidasNameIdType.UNSPECIFIED);
     }
   }
 
-  public String getPostEndpoint()
-  {
-    return postEndpoint;
-  }
-
-  public void setPostEndpoint(String postEndpoint)
-  {
-    this.postEndpoint = postEndpoint;
-  }
-
-  public String getRedirectEndpoint()
-  {
-    return redirectEndpoint;
-  }
-
-  public void setRedirectEndpoint(String redirectEndpoint)
-  {
-    this.redirectEndpoint = redirectEndpoint;
-  }
-
-  public String getId()
-  {
-    return id;
-  }
-
-  public void setId(String id)
-  {
-    this.id = id;
-  }
-
-  public String getEntityId()
-  {
-    return entityId;
-  }
-
-  public void setEntityId(String entityId)
-  {
-    this.entityId = entityId;
-  }
-
-  public Date getValidUntil()
-  {
-    return validUntil;
-  }
-
-  public void setValidUntil(Date validUntil)
-  {
-    this.validUntil = validUntil;
-  }
-
-  public X509Certificate getSigCert()
-  {
-    return sigCert;
-  }
-
-  public void setSigCert(X509Certificate sigCert)
-  {
-    this.sigCert = sigCert;
-  }
-
-  public X509Certificate getEncCert()
-  {
-    return encCert;
-  }
-
-  public void setEncCert(X509Certificate encCert)
-  {
-    this.encCert = encCert;
-  }
-
-  public EidasOrganisation getOrganisation()
-  {
-    return organisation;
-  }
-
-  public void setOrganisation(EidasOrganisation organisation)
-  {
-    this.organisation = organisation;
-  }
-
-  public EidasContactPerson getTechnicalContact()
-  {
-    return technicalcontact;
-  }
-
-  public void setTechnicalContact(EidasContactPerson contact)
-  {
-    this.technicalcontact = contact;
-  }
-
-  public EidasContactPerson getSupportcontact()
-  {
-    return supportcontact;
-  }
-
-  public void setSupportcontact(EidasContactPerson supportcontact)
-  {
-    this.supportcontact = supportcontact;
-  }
-
-  public List<EidasPersonAttributes> getAttributes()
-  {
-    return attributes;
-  }
-
-  public void setAttributes(List<EidasPersonAttributes> attributes)
-  {
-    this.attributes = attributes;
-  }
-
-  byte[] generate(List<EidasPersonAttributes> attributes, EidasSigner signer)
-    throws CertificateEncodingException, IOException, MarshallingException, SignatureException,
-    TransformerFactoryConfigurationError, TransformerException
+  byte[] generate(EidasSigner signer) throws CertificateEncodingException, IOException, MarshallingException,
+    SignatureException, TransformerFactoryConfigurationError, TransformerException
   {
     EntityDescriptor entityDescriptor = new EntityDescriptorBuilder().buildObject();
     entityDescriptor.setID(id);
@@ -371,38 +270,38 @@ class EidasMetadataService
 
     ContactPerson cp = new ContactPersonBuilder().buildObject();
     Company comp = new CompanyBuilder().buildObject();
-    comp.setName(technicalcontact.getCompany());
+    comp.setName(technicalContact.getCompany());
     cp.setCompany(comp);
     GivenName gn = new GivenNameBuilder().buildObject();
-    gn.setName(technicalcontact.getGivenName());
+    gn.setName(technicalContact.getGivenName());
     cp.setGivenName(gn);
     SurName sn = new SurNameBuilder().buildObject();
-    sn.setName(technicalcontact.getSurName());
+    sn.setName(technicalContact.getSurName());
     cp.setSurName(sn);
     EmailAddress email = new EmailAddressBuilder().buildObject();
-    email.setAddress(technicalcontact.getEmail());
+    email.setAddress(technicalContact.getEmail());
     cp.getEmailAddresses().add(email);
     TelephoneNumber tel = new TelephoneNumberBuilder().buildObject();
-    tel.setNumber(technicalcontact.getTel());
+    tel.setNumber(technicalContact.getTel());
     cp.getTelephoneNumbers().add(tel);
     cp.setType(ContactPersonTypeEnumeration.TECHNICAL);
     entityDescriptor.getContactPersons().add(cp);
 
     cp = new ContactPersonBuilder().buildObject();
     comp = new CompanyBuilder().buildObject();
-    comp.setName(supportcontact.getCompany());
+    comp.setName(supportContact.getCompany());
     cp.setCompany(comp);
     gn = new GivenNameBuilder().buildObject();
-    gn.setName(supportcontact.getGivenName());
+    gn.setName(supportContact.getGivenName());
     cp.setGivenName(gn);
     sn = new SurNameBuilder().buildObject();
-    sn.setName(supportcontact.getSurName());
+    sn.setName(supportContact.getSurName());
     cp.setSurName(sn);
     email = new EmailAddressBuilder().buildObject();
-    email.setAddress(supportcontact.getEmail());
+    email.setAddress(supportContact.getEmail());
     cp.getEmailAddresses().add(email);
     tel = new TelephoneNumberBuilder().buildObject();
-    tel.setNumber(supportcontact.getTel());
+    tel.setNumber(supportContact.getTel());
     cp.getTelephoneNumbers().add(tel);
     cp.setType(ContactPersonTypeEnumeration.SUPPORT);
     entityDescriptor.getContactPersons().add(cp);
@@ -428,7 +327,8 @@ class EidasMetadataService
     ext.getUnknownXMLObjects().add(sm);
 
     sm = new SigningMethodBuilder().buildObject();
-    sm.setAlgorithm(XMLSignature.ALGO_ID_SIGNATURE_RSA_SHA256);
+    sm.setAlgorithm(EidasSigner.DIGEST_NONSPEC.equals(signer.getSigDigestAlg())
+      ? XMLSignature.ALGO_ID_SIGNATURE_RSA_SHA256 : XMLSignature.ALGO_ID_SIGNATURE_RSA_SHA256_MGF1);
     sm.setMinKeySize(3072);
     sm.setMaxKeySize(4096);
     ext.getUnknownXMLObjects().add(sm);
@@ -453,7 +353,7 @@ class EidasMetadataService
     }
 
     Transformer trans = Utils.getTransformer();
-    trans.setOutputProperty(OutputKeys.ENCODING, "UTF-8");
+    trans.setOutputProperty(OutputKeys.ENCODING, StandardCharsets.UTF_8.name());
     try (ByteArrayOutputStream bout = new ByteArrayOutputStream())
     {
       trans.transform(new DOMSource(all), new StreamResult(bout));
@@ -472,7 +372,7 @@ class EidasMetadataService
     UnmarshallerFactory unmarshallerFactory = XMLObjectProviderRegistrySupport.getUnmarshallerFactory();
     Unmarshaller unmarshaller = unmarshallerFactory.getUnmarshaller(metadataRoot);
     EntityDescriptor metaData = (EntityDescriptor)unmarshaller.unmarshall(metadataRoot);
-    eidasMetadataService.setSupportcontact(unmarshalContactPerson(metaData.getContactPersons(), "support"));
+    eidasMetadataService.setSupportContact(unmarshalContactPerson(metaData.getContactPersons(), "support"));
     eidasMetadataService.setTechnicalContact(unmarshalContactPerson(metaData.getContactPersons(),
                                                                     "technical"));
     eidasMetadataService.setOrganisation(unmarshalOrganisation(metaData.getOrganization()));
@@ -555,27 +455,35 @@ class EidasMetadataService
     return new EidasOrganisation(name, displayName, url, langId);
   }
 
-  private static java.security.cert.X509Certificate getFirstCertFromKeyDescriptor(KeyDescriptor k)
+  /**
+   * Search in a KeyDescriptor node for the first certificate
+   *
+   * @param keyDescriptor
+   * @return the first Cert from the given keyDescriptor
+   * @throws CertificateException
+   */
+  static X509Certificate getFirstCertFromKeyDescriptor(KeyDescriptor keyDescriptor)
     throws CertificateException
   {
-    java.security.cert.X509Certificate x = null;
-    if (k.getKeyInfo().getX509Datas() != null && !k.getKeyInfo().getX509Datas().isEmpty())
+    X509Certificate cert = null;
+    if (keyDescriptor.getKeyInfo().getX509Datas() != null
+        && !keyDescriptor.getKeyInfo().getX509Datas().isEmpty())
     {
-      X509Data d = k.getKeyInfo().getX509Datas().get(0);
-      if (d != null)
+      X509Data data = keyDescriptor.getKeyInfo().getX509Datas().get(0);
+      if (data != null)
       {
-        NodeList childs = d.getDOM().getChildNodes();
+        NodeList childs = data.getDOM().getChildNodes();
         for ( int i = 0 ; i < childs.getLength() ; i++ )
         {
           if ("X509Certificate".equals(childs.item(i).getLocalName()))
           {
             String base64String = childs.item(i).getTextContent();
-            byte[] bytes = Base64.getDecoder().decode(base64String);
-            x = Utils.readCert(bytes, true);
+            byte[] bytes = Base64.getMimeDecoder().decode(base64String);
+            cert = Utils.readCert(bytes, true);
           }
         }
       }
     }
-    return x;
+    return cert;
   }
 }

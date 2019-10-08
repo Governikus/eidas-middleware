@@ -31,15 +31,15 @@ import de.governikus.eumw.eidasstarterkit.template.TemplateLoader;
 public class CurrentAddressAttribute implements EidasAttribute
 {
 
-  private static final String CV_ADDRESS_TEMP = "<eidas:LocatorDesignator>$locatorDesignator</eidas:LocatorDesignator>"
-                                                + "<eidas:Thoroughfare>$thoroughfare</eidas:Thoroughfare>"
-                                                + "<eidas:PostName>$postName</eidas:PostName>"
-                                                + "<eidas:PostCode>$postCode</eidas:PostCode>"
-                                                + "<eidas:PoBox>$pOBOX</eidas:PoBox>"
+  private static final String CV_ADDRESS_TEMP = "<eidas:PoBox>$pOBOX</eidas:PoBox>"
+                                                + "<eidas:LocatorDesignator>$locatorDesignator</eidas:LocatorDesignator>"
                                                 + "<eidas:LocatorName>$locatorName</eidas:LocatorName>"
                                                 + "<eidas:CvaddressArea>$cvaddressArea</eidas:CvaddressArea>"
+                                                + "<eidas:Thoroughfare>$thoroughfare</eidas:Thoroughfare>"
+                                                + "<eidas:PostName>$postName</eidas:PostName>"
                                                 + "<eidas:AdminunitFirstline>$adminunitFirstline</eidas:AdminunitFirstline>"
-                                                + "<eidas:AdminunitSecondline>$adminunitSecondline</eidas:AdminunitSecondline>";
+                                                + "<eidas:AdminunitSecondline>$adminunitSecondline</eidas:AdminunitSecondline>"
+                                                + "<eidas:PostCode>$postCode</eidas:PostCode>";
 
   private String locatorDesignator;
 

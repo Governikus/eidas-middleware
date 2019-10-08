@@ -109,7 +109,7 @@ public class NewReceiverServlet
   @GetMapping
   public void doGet(HttpServletRequest request, HttpServletResponse response)
   {
-    processRequest(request, response, false);
+    processRequest(request, response);
   }
 
   /**
@@ -118,20 +118,20 @@ public class NewReceiverServlet
   @PostMapping
   public void doPost(HttpServletRequest req, HttpServletResponse resp)
   {
-    processRequest(req, resp, true);
+    processRequest(req, resp);
   }
 
   /**
    * Process the incoming request dependent if the sessionID is present
    */
-  private void processRequest(HttpServletRequest request, HttpServletResponse response, boolean isPost)
+  private void processRequest(HttpServletRequest request, HttpServletResponse response)
   {
     try
     {
       String sessionID = request.getParameter("sessionID");
       if (sessionID == null)
       {
-        processIncomingSAMLResponse(request, response, isPost);
+        processIncomingSAMLResponse(request, response);
       }
       else
       {
@@ -150,8 +150,7 @@ public class NewReceiverServlet
    * response data is extracted and the browser is redirected to this servlet with the sessionID.
    */
   private void processIncomingSAMLResponse(HttpServletRequest request,
-                                           HttpServletResponse response,
-                                           boolean isPost)
+                                           HttpServletResponse response)
     throws IOException
   {
     String sessionID = Utils.generateUniqueID();
@@ -159,24 +158,7 @@ public class NewReceiverServlet
     {
       String samlResponseBase64 = request.getParameter(HttpRedirectUtils.RESPONSE_PARAMNAME);
 
-      byte[] samlResponse;
-      if (!isPost)
-      {
-        // check the signature of the SAML response. There is no XML signature in this response but the
-        // parameter are signed.
-        if (!HttpRedirectUtils.checkQueryString(request.getQueryString(), helper.serverSigCert))
-        {
-          storeError(sessionID, request, response, "Signaturpr&uuml;fung der SAML-Response fehlgeschlagen!");
-          return;
-        }
-
-        // inflate and base64 decode the SAML response to get the xml.
-        samlResponse = HttpRedirectUtils.inflate(samlResponseBase64);
-      }
-      else
-      {
-        samlResponse = DatatypeConverter.parseBase64Binary(samlResponseBase64);
-      }
+      byte[] samlResponse = DatatypeConverter.parseBase64Binary(samlResponseBase64);
 
       String relayState = request.getParameter(HttpRedirectUtils.RELAYSTATE_PARAMNAME);
       extractDataFromResponse(sessionID, samlResponse, relayState);

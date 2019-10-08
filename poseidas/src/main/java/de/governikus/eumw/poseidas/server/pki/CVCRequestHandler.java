@@ -20,6 +20,7 @@ import java.security.SignatureException;
 import java.security.cert.CertificateException;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Base64;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -257,8 +258,9 @@ public class CVCRequestHandler extends BerCaRequestHandlerBase
           String message = "cannot request a new certificate as long as there is a pending request for same data with status "
                            + requestStatus + " for " + cvcRefId;
           log.error("{}: {}", cvcRefId, message);
-          SNMPDelegate.getInstance().sendSNMPTrap(SNMPDelegate.OID.CERT_RENEWAL_FAILED,
-                                                  SNMPDelegate.CERT_RENEWAL_FAILED + " " + message);
+          SNMPDelegate.getInstance()
+                      .sendSNMPTrap(SNMPDelegate.OID.CERT_RENEWAL_FAILED,
+                                    SNMPDelegate.CERT_RENEWAL_FAILED + " " + message);
 
           return GlobalManagementCodes.EC_UNEXPECTED_ERROR.createMessage("cannot request a new certificate as long as there is a pending request for same data for "
                                                                          + cvcRefId);
@@ -343,15 +345,17 @@ public class CVCRequestHandler extends BerCaRequestHandlerBase
     catch (GovManagementException e)
     {
       log.error("{}: cannot renew certificate", cvcRefId, e);
-      SNMPDelegate.getInstance().sendSNMPTrap(SNMPDelegate.OID.CERT_RENEWAL_FAILED,
-                                              SNMPDelegate.CERT_RENEWAL_FAILED + " " + e.getMessage());
+      SNMPDelegate.getInstance()
+                  .sendSNMPTrap(SNMPDelegate.OID.CERT_RENEWAL_FAILED,
+                                SNMPDelegate.CERT_RENEWAL_FAILED + " " + e.getMessage());
       return e.getManagementMessage();
     }
     catch (Throwable t)
     {
       log.error("{}: cannot renew certificate", cvcRefId, t);
-      SNMPDelegate.getInstance().sendSNMPTrap(SNMPDelegate.OID.CERT_RENEWAL_FAILED,
-                                              SNMPDelegate.CERT_RENEWAL_FAILED + " " + t.getMessage());
+      SNMPDelegate.getInstance()
+                  .sendSNMPTrap(SNMPDelegate.OID.CERT_RENEWAL_FAILED,
+                                SNMPDelegate.CERT_RENEWAL_FAILED + " " + t.getMessage());
       return GlobalManagementCodes.EC_UNEXPECTED_ERROR.createMessage(t.getMessage());
     }
   }
@@ -442,7 +446,7 @@ public class CVCRequestHandler extends BerCaRequestHandlerBase
       log.error("{}: check of new CVC failed. Reason: {}. CVC Data:\n{}",
                 cvcRefId,
                 e.getMessage(),
-                Utils.breakAfter76Chars(DatatypeConverter.printBase64Binary(cert)));
+                Base64.getMimeEncoder().encodeToString(cert));
       facade.storeCVCObtainedError(cvcRefId, e.getMessage());
       // restart timer
       handler.registerTimerHandling();

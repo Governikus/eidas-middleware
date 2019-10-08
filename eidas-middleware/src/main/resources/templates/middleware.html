@@ -73,8 +73,8 @@
         <div class="row brdr">
             <div class="col-md-4 col-sm-6 col-xs-12 about1">
                 <div class="images">
-                    <img src="../../img/npa-left.png" th:attr="src=@{/img/npa-left.png}" alt="Logo Personalausweis"
-                         style="margin-top: 0px;">
+                    <img src="../../img/npa-left.png" th:attr="src=@{/img/npa-left.png}" th:alt="#{image.npa-left}"
+                         style="margin-top: 0px;" th:title="#{image.npa-left}">
                 </div>
             </div>
             <div class="col-md-8 col-sm-6 col-xs-12 about">
@@ -90,7 +90,8 @@
             <div class="col-md-4 col-sm-6 col-xs-12 about1">
                 <div class="images">
                     <img src="../../img/cr-phone.png" th:attr="src=@{/img/cr-phone.png}"
-                         alt="Logo Kartenleser und Smartphone" style="margin-top: 0px;">
+                         th:alt="#{image.cr-phone}" style="margin-top: 0px;"
+                         th:title="#{image.cr-phone}">
                 </div>
             </div>
             <div class="col-md-8 col-sm-6 col-xs-12 about">
@@ -110,7 +111,7 @@
             <div class="col-md-4 col-sm-6 col-xs-12 about1">
                 <div class="images">
                     <img src="../../img/logo-ausweisapp2.png" th:attr="src=@{/img/logo-ausweisapp2.png}"
-                         alt="Logo AusweisApp2" style="margin-top: 0px;">
+                         th:alt="#{image.ausweisapp2}" style="margin-top: 0px;" th:title="#{image.ausweisapp2}">
                 </div>
             </div>
             <div class="col-md-8 col-sm-6 col-xs-12 about">
@@ -146,7 +147,8 @@
                 <a th:href="${ausweisapp}" class="btn btn-common mt-20 btn-lg re">
                     <img src="../../img/logo-ausweisapp2-xl.png"
                          th:attr="src=@{/img/logo-ausweisapp2-xl.png}"
-                         style="height: 30px; margin-right:10px; margin-top: -2px;" th:utext="#{content.start}" alt="logo ausweisapp2">
+                         style="height: 30px; margin-right:10px; margin-top: -2px;" th:utext="#{content.start}"
+                         th:alt="#{image.ausweisapp2}" th:title="#{image.ausweisapp2}">
                 </a>
             </div>
         </div>

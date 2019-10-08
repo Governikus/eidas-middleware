@@ -43,9 +43,9 @@ import org.junit.Test;
 import org.opensaml.core.config.InitializationException;
 import org.opensaml.core.xml.io.MarshallingException;
 import org.opensaml.core.xml.io.UnmarshallingException;
+import org.opensaml.saml.saml2.core.StatusCode;
 import org.opensaml.xmlsec.encryption.support.EncryptionException;
 import org.opensaml.xmlsec.signature.support.SignatureException;
-import org.xml.sax.SAXException;
 
 import de.governikus.eumw.eidascommon.ErrorCode;
 import de.governikus.eumw.eidascommon.ErrorCodeException;
@@ -69,7 +69,7 @@ public class TestEidasSaml
 {
 
   // *.p12 used for tests.
-  static final String TEST_P12 = "/eidassignertest.p12";
+  private static final String TEST_P12 = "/eidassignertest.p12";
 
   @Before
   public void setUp() throws Exception
@@ -188,7 +188,7 @@ public class TestEidasSaml
   }
 
   @Test
-  public void createParseResponse() throws SAXException, CertificateException, IOException,
+  public void createParseResponse() throws CertificateException, IOException,
     UnrecoverableKeyException, KeyStoreException, NoSuchAlgorithmException, NoSuchProviderException,
     KeyException, XMLParserException, UnmarshallingException, EncryptionException, MarshallingException,
     SignatureException, TransformerFactoryConfigurationError, TransformerException, ErrorCodeException,
@@ -253,32 +253,12 @@ public class TestEidasSaml
   }
 
   @Test
-  public void createParseErrorResponse() throws SAXException, CertificateException, IOException,
+  public void createParseErrorResponse() throws CertificateException, IOException,
     UnrecoverableKeyException, KeyStoreException, NoSuchAlgorithmException, NoSuchProviderException,
-    KeyException, XMLParserException, UnmarshallingException, EncryptionException, MarshallingException,
+    KeyException, XMLParserException, UnmarshallingException, MarshallingException,
     SignatureException, TransformerFactoryConfigurationError, TransformerException, ErrorCodeException,
-    InitializationException, ComponentInitializationException
+    ComponentInitializationException
   {
-    BirthNameAttribute birthName = new BirthNameAttribute("Meyer");
-    CurrentAddressAttribute currentAddress = new CurrentAddressAttribute("Am Fallturm", "33", "Bremen",
-                                                                         "28207", "100", "bla", "bla", "bla",
-                                                                         "bla");
-    DateOfBirthAttribute dao = new DateOfBirthAttribute("1982-02-11");
-    FamilyNameAttribute familyName = new FamilyNameAttribute("Muller", "Müller");
-    GenderAttribute gender = new GenderAttribute(GenderType.MALE);
-    GivenNameAttribute givenName = new GivenNameAttribute("Bjorn", "Bjørn");
-    PersonIdentifierAttribute pi = new PersonIdentifierAttribute("test12321");
-    PlaceOfBirthAttribute pob = new PlaceOfBirthAttribute("Saint-Étienne, France");
-    ArrayList<EidasAttribute> att = new ArrayList<>();
-    att.add(birthName);
-    att.add(currentAddress);
-    att.add(dao);
-    att.add(familyName);
-    att.add(gender);
-    att.add(givenName);
-    att.add(pi);
-    att.add(pob);
-
     String destination = "test destination";
     String recipient = "test_recipient";
     EidasNameId nameid = new EidasPersistentNameId("eidasnameidTest");
@@ -299,13 +279,11 @@ public class TestEidasSaml
     EidasResponse result = EidasResponse.parse(new ByteArrayInputStream(response), keypair, cert);
 
     assertEquals(result.getDestination(), destination);
-    assertEquals(result.getNameId().getValue(), nameid.getValue());
+    assertEquals(StatusCode.AUTHN_FAILED,
+                 result.getOpenSamlResponse().getStatus().getStatusCode().getValue());
     assertEquals(result.getIssuer(), issuer);
     assertEquals(result.getInResponseTo(), inResponseTo);
-
-
   }
-
 
   @Test
   public void createParseMetaDataService() throws IOException, XMLParserException, UnmarshallingException,
@@ -326,7 +304,6 @@ public class TestEidasSaml
                                                                  "technical");
     EidasContactPerson supportContact = new EidasContactPerson("support  company", "Barack", "Obama", "789",
                                                                "support@example.com", "support");
-    ;
     String postEndpoint = "post.eu/endpoint";
     String redirectEndpoint = "redirect.eu/endpoint";
     List<EidasNameIdType> supportedNameIdTypes = new ArrayList<>();
@@ -372,12 +349,12 @@ public class TestEidasSaml
     assertEquals(emds.getPostEndpoint(), postEndpoint);
     assertEquals(emds.getRedirectEndpoint(), redirectEndpoint);
     assertEquals(emds.getSigCert(), sigCert);
-    assertEquals(emds.getSupportcontact().getCompany(), supportContact.getCompany());
-    assertEquals(emds.getSupportcontact().getEmail(), supportContact.getEmail());
-    assertEquals(emds.getSupportcontact().getGivenName(), supportContact.getGivenName());
-    assertEquals(emds.getSupportcontact().getSurName(), supportContact.getSurName());
-    assertEquals(emds.getSupportcontact().getTel(), supportContact.getTel());
-    assertEquals(emds.getSupportcontact().getType(), supportContact.getType());
+    assertEquals(emds.getSupportContact().getCompany(), supportContact.getCompany());
+    assertEquals(emds.getSupportContact().getEmail(), supportContact.getEmail());
+    assertEquals(emds.getSupportContact().getGivenName(), supportContact.getGivenName());
+    assertEquals(emds.getSupportContact().getSurName(), supportContact.getSurName());
+    assertEquals(emds.getSupportContact().getTel(), supportContact.getTel());
+    assertEquals(emds.getSupportContact().getType(), supportContact.getType());
     assertEquals(emds.getTechnicalContact().getCompany(), technicalcontact.getCompany());
     assertEquals(emds.getTechnicalContact().getEmail(), technicalcontact.getEmail());
     assertEquals(emds.getTechnicalContact().getGivenName(), technicalcontact.getGivenName());

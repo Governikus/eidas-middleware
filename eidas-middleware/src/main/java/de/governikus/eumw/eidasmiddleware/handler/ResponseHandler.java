@@ -34,7 +34,6 @@ import de.governikus.eumw.eidascommon.Constants;
 import de.governikus.eumw.eidascommon.ContextPaths;
 import de.governikus.eumw.eidascommon.ErrorCode;
 import de.governikus.eumw.eidascommon.ErrorCodeException;
-import de.governikus.eumw.eidascommon.Utils;
 import de.governikus.eumw.eidasmiddleware.ConfigHolder;
 import de.governikus.eumw.eidasmiddleware.RequestProcessingException;
 import de.governikus.eumw.eidasmiddleware.RequestSession;
@@ -192,7 +191,7 @@ public class ResponseHandler
                                                                        + ContextPaths.METADATA,
                                             EidasLoA.HIGH, signer, null);
       byte[] eidasResp = rsp.generateErrorRsp(errorCode, msg);
-      return Utils.breakAfter76Chars(DatatypeConverter.printBase64Binary(eidasResp));
+      return DatatypeConverter.printBase64Binary(eidasResp);
     }
     catch (IOException | GeneralSecurityException | XMLParserException | UnmarshallingException
       | MarshallingException | SignatureException | TransformerException | ComponentInitializationException e)
@@ -303,7 +302,7 @@ public class ResponseHandler
                                                   samlReqSession.getReqId(),
                                                   encrypter,
                                                   signer);
-      return Utils.breakAfter76Chars(DatatypeConverter.printBase64Binary(eidasResp));
+      return DatatypeConverter.printBase64Binary(eidasResp);
     }
     catch (IOException | GeneralSecurityException | InitializationException | XMLParserException
       | UnmarshallingException | EncryptionException | MarshallingException | SignatureException

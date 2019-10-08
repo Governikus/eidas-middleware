@@ -14,7 +14,7 @@
     <parent>
         <groupId>de.governikus.eumw</groupId>
         <artifactId>eumw</artifactId>
-        <version>1.1.0</version>
+        <version>1.2.0</version>
     </parent>
     <artifactId>eidas-middleware</artifactId>
 
@@ -105,6 +105,12 @@
             <artifactId>lombok</artifactId>
             <scope>provided</scope>
         </dependency>
+
+        <!-- this dependency is necessary for the docker build -->
+        <dependency>
+            <groupId>de.governikus.eumw</groupId>
+            <artifactId>eidas-base-container</artifactId>
+        </dependency>
     </dependencies>
 
     <build>
@@ -121,6 +127,25 @@
                         </goals>
                     </execution>
                 </executions>
+            </plugin>
+            <plugin>
+                <groupId>io.fabric8</groupId>
+                <artifactId>docker-maven-plugin</artifactId>
+                <configuration>
+                    <verbose>true</verbose>
+                    <images>
+                        <image>
+                            <name>docker.io/governikus/eidas-middleware-application</name>
+                            <build>
+                                <contextDir>.</contextDir>
+                                <tags>${project.version}</tags>
+                                <assembly>
+                                    <descriptorRef>artifact</descriptorRef>
+                                </assembly>
+                            </build>
+                        </image>
+                    </images>
+                </configuration>
             </plugin>
         </plugins>
     </build>

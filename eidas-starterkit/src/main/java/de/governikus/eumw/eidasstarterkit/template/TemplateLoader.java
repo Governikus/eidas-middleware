@@ -50,8 +50,6 @@ public class TemplateLoader
       map.put("familyname_transliterated",
               streamToString(TemplateLoader.class.getResourceAsStream("familyname_transliterated_template.xml")));
       map.put("auth", streamToString(TemplateLoader.class.getResourceAsStream("auth_template.xml")));
-      map.put("metadataservice",
-              streamToString(TemplateLoader.class.getResourceAsStream("metadata_service_template.xml")));
       map.put("gender", streamToString(TemplateLoader.class.getResourceAsStream("gender_template.xml")));
       map.put("birthName",
               streamToString(TemplateLoader.class.getResourceAsStream("birthName_Template.xml")));
@@ -61,11 +59,7 @@ public class TemplateLoader
               streamToString(TemplateLoader.class.getResourceAsStream("currentaddress_template.xml")));
       map.put("placeOfBirth",
               streamToString(TemplateLoader.class.getResourceAsStream("placeOfBirth_template.xml")));
-      map.put("metadatanode",
-              streamToString(TemplateLoader.class.getResourceAsStream("metadata_nodes_template.xml")));
       map.put("failresp", streamToString(TemplateLoader.class.getResourceAsStream("fail_resp_template.xml")));
-      map.put("failasso", streamToString(TemplateLoader.class.getResourceAsStream("fail_asso_template.xml")));
-
       map.put("d201217euidentifier",
               streamToString(TemplateLoader.class.getResourceAsStream("d201217euidentifier_template.xml")));
       map.put("eori", streamToString(TemplateLoader.class.getResourceAsStream("eori_template.xml")));

@@ -1,4 +1,6 @@
-<saml2:Attribute FriendlyName="FirstName" Name="http://eidas.europa.eu/attributes/naturalperson/CurrentGivenName" NameFormat="urn:oasis:names:tc:SAML:2.0:attrnameformat:uri">
-	<saml2:AttributeValue xsi:type="eidas:CurrentGivenNameType">$latinScript</saml2:AttributeValue>  
-	<saml2:AttributeValue xsi:type="eidas:CurrentGivenNameType" LatinScript="false">$nonLatinScript</saml2:AttributeValue>        
+<saml2:Attribute FriendlyName="FirstName"
+                 Name="http://eidas.europa.eu/attributes/naturalperson/CurrentGivenName"
+                 NameFormat="urn:oasis:names:tc:SAML:2.0:attrname-format:uri">
+    <saml2:AttributeValue xsi:type="eidas:CurrentGivenNameType">$latinScript</saml2:AttributeValue>
+    <saml2:AttributeValue xsi:type="eidas:CurrentGivenNameType" LatinScript="false">$nonLatinScript</saml2:AttributeValue>
 </saml2:Attribute>

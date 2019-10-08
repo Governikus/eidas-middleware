@@ -375,18 +375,18 @@ public class EidasmiddlewarePropertiesForm extends AbstractPropertiesConfigurati
                            middlewareCryptKeystore.getAlias());
     properties.setProperty(MiddlewarePropertiesIdentifier.COUNTRYCODE.name(), countryCode);
     properties.setProperty(MiddlewarePropertiesIdentifier.CONTACT_PERSON_COMPANY.name(),
-                           contactPersonCompany);
-    properties.setProperty(MiddlewarePropertiesIdentifier.CONTACT_PERSON_EMAIL.name(), contactPersonEmail);
+                           contactPersonCompany.trim());
+    properties.setProperty(MiddlewarePropertiesIdentifier.CONTACT_PERSON_EMAIL.name(), contactPersonEmail.trim());
     properties.setProperty(MiddlewarePropertiesIdentifier.CONTACT_PERSON_GIVENNAME.name(),
-                           contactPersonGivenname);
+                           contactPersonGivenname.trim());
     properties.setProperty(MiddlewarePropertiesIdentifier.CONTACT_PERSON_SURNAME.name(),
-                           contactPersonSurname);
+                           contactPersonSurname.trim());
     properties.setProperty(MiddlewarePropertiesIdentifier.CONTACT_PERSON_TEL.name(), contactPersonTel);
     properties.setProperty(MiddlewarePropertiesIdentifier.ORGANIZATION_DISPLAY_NAME.name(),
-                           organizationDisplayName);
-    properties.setProperty(MiddlewarePropertiesIdentifier.ORGANIZATION_NAME.name(), organizationName);
-    properties.setProperty(MiddlewarePropertiesIdentifier.ORGANIZATION_URL.name(), organizationUrl);
-    properties.setProperty(MiddlewarePropertiesIdentifier.ORGANIZATION_LANG.name(), organizationLang);
+                           organizationDisplayName.trim());
+    properties.setProperty(MiddlewarePropertiesIdentifier.ORGANIZATION_NAME.name(), organizationName.trim());
+    properties.setProperty(MiddlewarePropertiesIdentifier.ORGANIZATION_URL.name(), organizationUrl.trim());
+    properties.setProperty(MiddlewarePropertiesIdentifier.ORGANIZATION_LANG.name(), organizationLang.trim());
 
     return properties;
   }

@@ -13,8 +13,7 @@ package de.governikus.eumw.poseidas.server.pki;
 import java.io.ByteArrayInputStream;
 import java.security.GeneralSecurityException;
 import java.security.cert.X509Certificate;
-
-import javax.xml.bind.DatatypeConverter;
+import java.util.Base64;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -77,7 +76,7 @@ public class CmsSignatureChecker
                                                                        .build(cert.getPublicKey()));
         }
         LOG.warn(entityID + ": got untrusted signature certificate:\n"
-                 + Utils.breakAfter76Chars(DatatypeConverter.printBase64Binary(cert.getEncoded())));
+                 + Base64.getMimeEncoder().encodeToString(cert.getEncoded()));
       }
     }
     catch (RuntimeException e)
@@ -88,7 +87,7 @@ public class CmsSignatureChecker
     {
       LOG.error(entityID + ": cannot check signature", e);
       LOG.info(entityID + ": the data to be checked was:\n"
-               + Utils.breakAfter76Chars(DatatypeConverter.printBase64Binary(signedData)));
+               + Base64.getMimeEncoder().encodeToString(signedData));
     }
     return false;
   }

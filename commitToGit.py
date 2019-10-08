@@ -1,4 +1,4 @@
-#!/user/bin/env python
+#!/usr/bin/env python
 
 import os.path
 import shutil
@@ -9,7 +9,7 @@ from distutils.dir_util import copy_tree
 
 
 def pretty_print(message):
-    print '=== ' + message + ' ==='
+    print ('=== ' + message + ' ===')
 
 
 pretty_print('Starting to copy mercurial to git')
@@ -31,11 +31,6 @@ if os.path.exists(git_local_path):
 
 call(["git", "clone", github_url, git_local_path])
 
-hg_local_path = raw_input('Please specify the path to the local hg repository\n')
-if not os.path.exists(hg_local_path):
-    pretty_print(hg_local_path + " DOES NOT EXIST, ABORTING")
-    sys.exit()
-
 if os.path.exists(hg_tmp_path):
     pretty_print(hg_tmp_path + ' does already exist')
     pretty_print('To delete the directory, type y. Otherwise this script will abort')
@@ -46,8 +41,7 @@ if os.path.exists(hg_tmp_path):
         pretty_print('Aborting')
         sys.exit()
 
-pretty_print("Copy " + hg_local_path + " to " + hg_tmp_path)
-shutil.copytree(hg_local_path, hg_tmp_path)
+call(["hg", "clone", "https://scm.governikus.de/Autent/eumw", hg_tmp_path])
 
 tag = raw_input("Specify the hg tag name of the release\n")
 

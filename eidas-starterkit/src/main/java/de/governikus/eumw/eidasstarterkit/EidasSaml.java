@@ -371,9 +371,9 @@ public class EidasSaml
     init();
     EidasMetadataService meta = new EidasMetadataService(id, entityId, validUntil, sigCert, encCert,
                                                          organisation, technicalcontact, supportContact,
-                                                         postEndpoint, redirectEndpoint,
+                                                         postEndpoint, redirectEndpoint, attributes,
                                                          supportedNameIdTypes);
-    return meta.generate(attributes, signer);
+    return meta.generate(signer);
   }
 
   /**

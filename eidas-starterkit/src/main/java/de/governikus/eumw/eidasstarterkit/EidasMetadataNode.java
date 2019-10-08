@@ -10,7 +10,6 @@
 
 package de.governikus.eumw.eidasstarterkit;
 
-import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -19,40 +18,89 @@ import java.security.cert.CertificateEncodingException;
 import java.security.cert.CertificateException;
 import java.security.cert.X509Certificate;
 import java.util.ArrayList;
+import java.util.Base64;
 import java.util.Date;
 import java.util.List;
 
+import javax.xml.namespace.QName;
 import javax.xml.transform.OutputKeys;
 import javax.xml.transform.Transformer;
 import javax.xml.transform.TransformerException;
-import javax.xml.transform.TransformerFactoryConfigurationError;
 import javax.xml.transform.dom.DOMSource;
 import javax.xml.transform.stream.StreamResult;
 
-import org.apache.commons.codec.binary.Base64;
+import org.apache.xml.security.algorithms.MessageDigestAlgorithm;
+import org.apache.xml.security.signature.XMLSignature;
+import org.joda.time.DateTime;
 import org.opensaml.core.xml.config.XMLObjectProviderRegistrySupport;
 import org.opensaml.core.xml.io.MarshallingException;
 import org.opensaml.core.xml.io.Unmarshaller;
 import org.opensaml.core.xml.io.UnmarshallerFactory;
 import org.opensaml.core.xml.io.UnmarshallingException;
+import org.opensaml.core.xml.schema.XSAny;
+import org.opensaml.core.xml.schema.impl.XSAnyBuilder;
+import org.opensaml.saml.common.xml.SAMLConstants;
+import org.opensaml.saml.ext.saml2alg.DigestMethod;
+import org.opensaml.saml.ext.saml2alg.SigningMethod;
+import org.opensaml.saml.ext.saml2alg.impl.DigestMethodBuilder;
+import org.opensaml.saml.ext.saml2alg.impl.SigningMethodBuilder;
+import org.opensaml.saml.saml2.metadata.AssertionConsumerService;
+import org.opensaml.saml.saml2.metadata.Company;
+import org.opensaml.saml.saml2.metadata.ContactPerson;
+import org.opensaml.saml.saml2.metadata.ContactPersonTypeEnumeration;
+import org.opensaml.saml.saml2.metadata.EmailAddress;
+import org.opensaml.saml.saml2.metadata.EncryptionMethod;
 import org.opensaml.saml.saml2.metadata.EntityDescriptor;
+import org.opensaml.saml.saml2.metadata.Extensions;
+import org.opensaml.saml.saml2.metadata.GivenName;
 import org.opensaml.saml.saml2.metadata.KeyDescriptor;
+import org.opensaml.saml.saml2.metadata.NameIDFormat;
+import org.opensaml.saml.saml2.metadata.Organization;
+import org.opensaml.saml.saml2.metadata.OrganizationDisplayName;
+import org.opensaml.saml.saml2.metadata.OrganizationName;
+import org.opensaml.saml.saml2.metadata.OrganizationURL;
 import org.opensaml.saml.saml2.metadata.SPSSODescriptor;
+import org.opensaml.saml.saml2.metadata.SurName;
+import org.opensaml.saml.saml2.metadata.TelephoneNumber;
+import org.opensaml.saml.saml2.metadata.impl.AssertionConsumerServiceBuilder;
+import org.opensaml.saml.saml2.metadata.impl.CompanyBuilder;
+import org.opensaml.saml.saml2.metadata.impl.ContactPersonBuilder;
+import org.opensaml.saml.saml2.metadata.impl.EmailAddressBuilder;
+import org.opensaml.saml.saml2.metadata.impl.EncryptionMethodBuilder;
+import org.opensaml.saml.saml2.metadata.impl.EntityDescriptorBuilder;
 import org.opensaml.saml.saml2.metadata.impl.EntityDescriptorMarshaller;
+import org.opensaml.saml.saml2.metadata.impl.ExtensionsBuilder;
+import org.opensaml.saml.saml2.metadata.impl.GivenNameBuilder;
+import org.opensaml.saml.saml2.metadata.impl.KeyDescriptorBuilder;
+import org.opensaml.saml.saml2.metadata.impl.NameIDFormatBuilder;
+import org.opensaml.saml.saml2.metadata.impl.OrganizationBuilder;
+import org.opensaml.saml.saml2.metadata.impl.OrganizationDisplayNameBuilder;
+import org.opensaml.saml.saml2.metadata.impl.OrganizationNameBuilder;
+import org.opensaml.saml.saml2.metadata.impl.OrganizationURLBuilder;
+import org.opensaml.saml.saml2.metadata.impl.SPSSODescriptorBuilder;
+import org.opensaml.saml.saml2.metadata.impl.SurNameBuilder;
+import org.opensaml.saml.saml2.metadata.impl.TelephoneNumberBuilder;
 import org.opensaml.security.credential.UsageType;
+import org.opensaml.xmlsec.encryption.support.EncryptionConstants;
+import org.opensaml.xmlsec.signature.KeyInfo;
 import org.opensaml.xmlsec.signature.Signature;
 import org.opensaml.xmlsec.signature.X509Data;
+import org.opensaml.xmlsec.signature.impl.KeyInfoBuilder;
+import org.opensaml.xmlsec.signature.impl.X509CertificateBuilder;
+import org.opensaml.xmlsec.signature.impl.X509DataBuilder;
 import org.opensaml.xmlsec.signature.support.SignatureException;
 import org.opensaml.xmlsec.signature.support.Signer;
 import org.w3c.dom.DOMException;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;
-import org.w3c.dom.NodeList;
 
 import de.governikus.eumw.eidascommon.ErrorCodeException;
 import de.governikus.eumw.eidascommon.Utils;
-import de.governikus.eumw.eidasstarterkit.template.TemplateLoader;
+import lombok.AccessLevel;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
 import net.shibboleth.utilities.java.support.component.ComponentInitializationException;
 import net.shibboleth.utilities.java.support.xml.BasicParserPool;
 import net.shibboleth.utilities.java.support.xml.XMLParserException;
@@ -63,6 +111,9 @@ import net.shibboleth.utilities.java.support.xml.XMLParserException;
  *
  * @author hohnholt
  */
+@NoArgsConstructor(access = AccessLevel.PRIVATE)
+@Getter
+@Setter
 public class EidasMetadataNode
 {
 
@@ -78,20 +129,17 @@ public class EidasMetadataNode
 
   private EidasOrganisation organisation;
 
-  private EidasContactPerson technicalcontact;
+  private EidasContactPerson technicalContact;
 
-  private EidasContactPerson supportcontact;
+  private EidasContactPerson supportContact;
 
   private String postEndpoint;
 
   private EidasRequestSectorType spType;
 
+  @Getter(AccessLevel.NONE)
+  @Setter(AccessLevel.NONE)
   private List<EidasNameIdType> supportedNameIdTypes = new ArrayList<>();
-
-  private EidasMetadataNode()
-  {
-    super();
-  }
 
   EidasMetadataNode(String id,
                     String entityId,
@@ -99,7 +147,7 @@ public class EidasMetadataNode
                     X509Certificate sigCert,
                     X509Certificate encCert,
                     EidasOrganisation organisation,
-                    EidasContactPerson technicalcontact,
+                    EidasContactPerson technicalContact,
                     EidasContactPerson supportContact,
                     String postEndpoint,
                     EidasRequestSectorType spType,
@@ -112,211 +160,177 @@ public class EidasMetadataNode
     this.sigCert = sigCert;
     this.encCert = encCert;
     this.organisation = organisation;
-    this.technicalcontact = technicalcontact;
-    this.supportcontact = supportContact;
+    this.technicalContact = technicalContact;
+    this.supportContact = supportContact;
     this.postEndpoint = postEndpoint;
     this.spType = spType;
-    this.supportedNameIdTypes = supportedNameIdTypes;
 
+    this.supportedNameIdTypes = supportedNameIdTypes;
     if (this.supportedNameIdTypes == null)
     {
       this.supportedNameIdTypes = new ArrayList<>();
     }
-
     if (this.supportedNameIdTypes.isEmpty())
     {
       this.supportedNameIdTypes.add(EidasNameIdType.UNSPECIFIED);
     }
   }
 
-  public String getPostEndpoint()
+  byte[] generate(EidasSigner signer) throws CertificateEncodingException, MarshallingException,
+    SignatureException, TransformerException, IOException
   {
-    return postEndpoint;
-  }
+    EntityDescriptor entityDescriptor = new EntityDescriptorBuilder().buildObject();
+    entityDescriptor.setID(id);
+    entityDescriptor.setEntityID(entityId);
+    entityDescriptor.setValidUntil(new DateTime(validUntil.getTime()));
 
-  public void setPostEndpoint(String postEndpoint)
-  {
-    this.postEndpoint = postEndpoint;
-  }
+    SPSSODescriptor spDescriptor = new SPSSODescriptorBuilder().buildObject();
+    spDescriptor.addSupportedProtocol(SAMLConstants.SAML20P_NS);
+    spDescriptor.setWantAssertionsSigned(Boolean.FALSE);
+    spDescriptor.setAuthnRequestsSigned(Boolean.TRUE);
 
-  public String getId()
-  {
-    return id;
-  }
+    KeyDescriptor kd = new KeyDescriptorBuilder().buildObject();
+    kd.setUse(UsageType.SIGNING);
+    KeyInfo ki = new KeyInfoBuilder().buildObject();
+    X509Data x509 = new X509DataBuilder().buildObject();
+    org.opensaml.xmlsec.signature.X509Certificate x509Cert = new X509CertificateBuilder().buildObject();
+    x509Cert.setValue(new String(Base64.getEncoder().encode(sigCert.getEncoded()), StandardCharsets.UTF_8));
+    x509.getX509Certificates().add(x509Cert);
+    ki.getX509Datas().add(x509);
+    kd.setKeyInfo(ki);
+    spDescriptor.getKeyDescriptors().add(kd);
 
-  public void setId(String id)
-  {
-    this.id = id;
-  }
+    kd = new KeyDescriptorBuilder().buildObject();
+    kd.setUse(UsageType.ENCRYPTION);
+    ki = new KeyInfoBuilder().buildObject();
+    x509 = new X509DataBuilder().buildObject();
+    x509Cert = new X509CertificateBuilder().buildObject();
+    x509Cert.setValue(new String(Base64.getEncoder().encode(encCert.getEncoded()), StandardCharsets.UTF_8));
+    x509.getX509Certificates().add(x509Cert);
+    ki.getX509Datas().add(x509);
+    kd.setKeyInfo(ki);
+    EncryptionMethod encMethod = new EncryptionMethodBuilder().buildObject();
+    encMethod.setAlgorithm(EncryptionConstants.ALGO_ID_BLOCKCIPHER_AES256_GCM);
+    kd.getEncryptionMethods().add(encMethod);
+    spDescriptor.getKeyDescriptors().add(kd);
 
-  public String getEntityId()
-  {
-    return entityId;
-  }
+    AssertionConsumerService acs = new AssertionConsumerServiceBuilder().buildObject();
+    acs.setBinding(SAMLConstants.SAML2_POST_BINDING_URI);
+    acs.setLocation(postEndpoint);
+    acs.setIndex(1);
+    acs.setIsDefault(Boolean.TRUE);
+    spDescriptor.getAssertionConsumerServices().add(acs);
 
-  public void setEntityId(String entityId)
-  {
-    this.entityId = entityId;
-  }
-
-  public Date getValidUntil()
-  {
-    return validUntil;
-  }
-
-  public void setValidUntil(Date validUntil)
-  {
-    this.validUntil = validUntil;
-  }
-
-  public X509Certificate getSigCert()
-  {
-    return sigCert;
-  }
-
-  public void setSigCert(X509Certificate sigCert)
-  {
-    this.sigCert = sigCert;
-  }
-
-  public X509Certificate getEncCert()
-  {
-    return encCert;
-  }
-
-  public void setEncCert(X509Certificate encCert)
-  {
-    this.encCert = encCert;
-  }
-
-  public EidasOrganisation getOrganisation()
-  {
-    return organisation;
-  }
-
-  public void setOrganisation(EidasOrganisation organisation)
-  {
-    this.organisation = organisation;
-  }
-
-  public EidasContactPerson getTechnicalcontact()
-  {
-    return technicalcontact;
-  }
-
-  public void setTechnicalcontact(EidasContactPerson technicalcontact)
-  {
-    this.technicalcontact = technicalcontact;
-  }
-
-  public EidasContactPerson getSupportcontact()
-  {
-    return supportcontact;
-  }
-
-  public void setSupportcontact(EidasContactPerson supportcontact)
-  {
-    this.supportcontact = supportcontact;
-  }
-
-  public EidasRequestSectorType getSpType()
-  {
-    return spType;
-  }
-
-  public void setSpType(EidasRequestSectorType spType)
-  {
-    this.spType = spType;
-  }
-
-  /**
-   * Creates a metadata.xml as byte array
-   *
-   * @param signer
-   * @return metadata.xml byte array
-   * @throws CertificateEncodingException
-   * @throws IOException
-   * @throws XMLParserException
-   * @throws UnmarshallingException
-   * @throws MarshallingException
-   * @throws SignatureException
-   * @throws TransformerFactoryConfigurationError
-   * @throws TransformerException
-   * @throws ComponentInitializationException
-   */
-  byte[] generate(EidasSigner signer) throws CertificateEncodingException, IOException, XMLParserException,
-    UnmarshallingException, MarshallingException, SignatureException, TransformerFactoryConfigurationError,
-    TransformerException, ComponentInitializationException
-  {
-    byte[] result = null;
-    String template = TemplateLoader.getTemplateByName("metadatanode");
-    template = template.replace("$Id", id);
-    template = template.replace("$entityID", entityId);
-    template = template.replace("$validUntil", Constants.format(validUntil));
-    template = template.replace("$signCert",
-                                new String(Base64.encodeBase64(sigCert.getEncoded(), false),
-                                           StandardCharsets.UTF_8));
-    template = template.replace("$encCert",
-                                new String(Base64.encodeBase64(encCert.getEncoded(), false),
-                                           StandardCharsets.UTF_8));
-    template = template.replace("$landID", this.organisation.getLangId());
-
-    template = template.replace("$orgName", organisation.getName());
-    template = template.replace("$orgDisplayName", organisation.getDisplayName());
-    template = template.replace("$orgUrl", organisation.getUrl());
-    template = template.replace("$techPersonCompany", technicalcontact.getCompany());
-    template = template.replace("$techPersonGivenName", technicalcontact.getGivenName());
-    template = template.replace("$techPersonSurName", technicalcontact.getSurName());
-    template = template.replace("$techPersonAddress", technicalcontact.getEmail());
-    template = template.replace("$techPersonTel", supportcontact.getTel());
-    template = template.replace("$supPersonCompany", supportcontact.getCompany());
-    template = template.replace("$supPersonGivenName", supportcontact.getGivenName());
-    template = template.replace("$supPersonSurName", supportcontact.getSurName());
-    template = template.replace("$supPersonAddress", supportcontact.getEmail());
-    template = template.replace("$supPersonTel", supportcontact.getTel());
-    template = template.replace("$POST_ENDPOINT", postEndpoint);
-    template = template.replace("$SPType", spType.value);
-
-
-
-    StringBuilder sbSupportNameIDTypes = new StringBuilder();
     for ( EidasNameIdType nameIDType : this.supportedNameIdTypes )
     {
-      sbSupportNameIDTypes.append("<md:NameIDFormat>" + nameIDType.value + "</md:NameIDFormat>");
+      NameIDFormat nif = new NameIDFormatBuilder().buildObject();
+      nif.setFormat(nameIDType.value);
+      spDescriptor.getNameIDFormats().add(nif);
     }
-    template = template.replace("$SUPPORTED_NAMEIDTYPES", sbSupportNameIDTypes.toString());
 
+    entityDescriptor.getRoleDescriptors().add(spDescriptor);
+
+    Organization organization = new OrganizationBuilder().buildObject();
+    OrganizationDisplayName odn = new OrganizationDisplayNameBuilder().buildObject();
+    odn.setValue(organisation.getDisplayName());
+    odn.setXMLLang(organisation.getLangId());
+    organization.getDisplayNames().add(odn);
+    OrganizationName on = new OrganizationNameBuilder().buildObject();
+    on.setValue(organisation.getName());
+    on.setXMLLang(organisation.getLangId());
+    organization.getOrganizationNames().add(on);
+    OrganizationURL ourl = new OrganizationURLBuilder().buildObject();
+    ourl.setValue(organisation.getUrl());
+    ourl.setXMLLang(organisation.getLangId());
+    organization.getURLs().add(ourl);
+    entityDescriptor.setOrganization(organization);
+
+    ContactPerson cp = new ContactPersonBuilder().buildObject();
+    Company comp = new CompanyBuilder().buildObject();
+    comp.setName(technicalContact.getCompany());
+    cp.setCompany(comp);
+    GivenName gn = new GivenNameBuilder().buildObject();
+    gn.setName(technicalContact.getGivenName());
+    cp.setGivenName(gn);
+    SurName sn = new SurNameBuilder().buildObject();
+    sn.setName(technicalContact.getSurName());
+    cp.setSurName(sn);
+    EmailAddress email = new EmailAddressBuilder().buildObject();
+    email.setAddress(technicalContact.getEmail());
+    cp.getEmailAddresses().add(email);
+    TelephoneNumber tel = new TelephoneNumberBuilder().buildObject();
+    tel.setNumber(technicalContact.getTel());
+    cp.getTelephoneNumbers().add(tel);
+    cp.setType(ContactPersonTypeEnumeration.TECHNICAL);
+    entityDescriptor.getContactPersons().add(cp);
+
+    cp = new ContactPersonBuilder().buildObject();
+    comp = new CompanyBuilder().buildObject();
+    comp.setName(supportContact.getCompany());
+    cp.setCompany(comp);
+    gn = new GivenNameBuilder().buildObject();
+    gn.setName(supportContact.getGivenName());
+    cp.setGivenName(gn);
+    sn = new SurNameBuilder().buildObject();
+    sn.setName(supportContact.getSurName());
+    cp.setSurName(sn);
+    email = new EmailAddressBuilder().buildObject();
+    email.setAddress(supportContact.getEmail());
+    cp.getEmailAddresses().add(email);
+    tel = new TelephoneNumberBuilder().buildObject();
+    tel.setNumber(supportContact.getTel());
+    cp.getTelephoneNumbers().add(tel);
+    cp.setType(ContactPersonTypeEnumeration.SUPPORT);
+    entityDescriptor.getContactPersons().add(cp);
+
+    Extensions ext = new ExtensionsBuilder().buildObject();
+
+    DigestMethod dm = new DigestMethodBuilder().buildObject();
+    dm.setAlgorithm(MessageDigestAlgorithm.ALGO_ID_DIGEST_SHA256);
+    ext.getUnknownXMLObjects().add(dm);
+
+    SigningMethod sm = new SigningMethodBuilder().buildObject();
+    sm.setAlgorithm(XMLSignature.ALGO_ID_SIGNATURE_ECDSA_SHA256);
+    sm.setMinKeySize(256);
+    ext.getUnknownXMLObjects().add(sm);
+
+    XSAny any = new XSAnyBuilder().buildObject(new QName("http://eidas.europa.eu/saml-extensions", "SPType",
+                                                         "eidas"));
+    any.setTextContent(spType.value);
+    ext.getUnknownXMLObjects().add(any);
+
+    sm = new SigningMethodBuilder().buildObject();
+    sm.setAlgorithm(EidasSigner.DIGEST_NONSPEC.equals(signer.getSigDigestAlg())
+      ? XMLSignature.ALGO_ID_SIGNATURE_RSA_SHA256 : XMLSignature.ALGO_ID_SIGNATURE_RSA_SHA256_MGF1);
+    sm.setMinKeySize(3072);
+    sm.setMaxKeySize(4096);
+    ext.getUnknownXMLObjects().add(sm);
+
+    entityDescriptor.setExtensions(ext);
+
+    byte[] result = null;
     List<Signature> sigs = new ArrayList<>();
-    BasicParserPool ppMgr = Utils.getBasicParserPool();
-    try (InputStream is = new ByteArrayInputStream(template.getBytes(StandardCharsets.UTF_8)))
+
+    XMLSignatureHandler.addSignature(entityDescriptor,
+                                     signer.getSigKey(),
+                                     signer.getSigCert(),
+                                     signer.getSigType(),
+                                     signer.getSigDigestAlg());
+    sigs.add(entityDescriptor.getSignature());
+
+    EntityDescriptorMarshaller arm = new EntityDescriptorMarshaller();
+    Element all = arm.marshall(entityDescriptor);
+    if (!sigs.isEmpty())
     {
-      Document inCommonMDDoc = ppMgr.parse(is);
-      Element metadataRoot = inCommonMDDoc.getDocumentElement();
-      UnmarshallerFactory unmarshallerFactory = XMLObjectProviderRegistrySupport.getUnmarshallerFactory();
-      Unmarshaller unmarshaller = unmarshallerFactory.getUnmarshaller(metadataRoot);
-      EntityDescriptor metaData = (EntityDescriptor)unmarshaller.unmarshall(metadataRoot);
+      Signer.signObjects(sigs);
+    }
 
-      XMLSignatureHandler.addSignature(metaData,
-                                       signer.getSigKey(),
-                                       signer.getSigCert(),
-                                       signer.getSigType(),
-                                       signer.getSigDigestAlg());
-      sigs.add(metaData.getSignature());
-
-      EntityDescriptorMarshaller arm = new EntityDescriptorMarshaller();
-      Element all = arm.marshall(metaData);
-      if (!sigs.isEmpty())
-      {
-        Signer.signObjects(sigs);
-      }
-
-      Transformer trans = Utils.getTransformer();
-      trans.setOutputProperty(OutputKeys.ENCODING, "UTF-8");
-      try (ByteArrayOutputStream bout = new ByteArrayOutputStream())
-      {
-        trans.transform(new DOMSource(all), new StreamResult(bout));
-        result = bout.toByteArray();
-      }
+    Transformer trans = Utils.getTransformer();
+    trans.setOutputProperty(OutputKeys.ENCODING, StandardCharsets.UTF_8.name());
+    try (ByteArrayOutputStream bout = new ByteArrayOutputStream())
+    {
+      trans.transform(new DOMSource(all), new StreamResult(bout));
+      result = bout.toByteArray();
     }
     return result;
   }
@@ -337,7 +351,7 @@ public class EidasMetadataNode
   static EidasMetadataNode parse(InputStream is, X509Certificate signer) throws XMLParserException,
     UnmarshallingException, CertificateException, ErrorCodeException, ComponentInitializationException
   {
-    EidasMetadataNode eidasMetadataService = new EidasMetadataNode();
+    EidasMetadataNode eidasMetadataNode = new EidasMetadataNode();
     BasicParserPool ppMgr = Utils.getBasicParserPool();
     Document inCommonMDDoc = ppMgr.parse(is);
     Element metadataRoot = inCommonMDDoc.getDocumentElement();
@@ -351,9 +365,9 @@ public class EidasMetadataNode
       XMLSignatureHandler.checkSignature(sig, signer);
     }
 
-    eidasMetadataService.setId(metaData.getID());
-    eidasMetadataService.setEntityId(metaData.getEntityID());
-    eidasMetadataService.setValidUntil(metaData.getValidUntil() == null ? null
+    eidasMetadataNode.setId(metaData.getID());
+    eidasMetadataNode.setEntityId(metaData.getEntityID());
+    eidasMetadataNode.setValidUntil(metaData.getValidUntil() == null ? null
       : metaData.getValidUntil().toDate());
     if (metaData.getExtensions() != null)
     {
@@ -363,7 +377,7 @@ public class EidasMetadataNode
         Node n = extension.getChildNodes().item(i);
         if ("SPType".equals(n.getLocalName()))
         {
-          eidasMetadataService.spType = EidasRequestSectorType.getValueOf(n.getTextContent());
+          eidasMetadataNode.spType = EidasRequestSectorType.getValueOf(n.getTextContent());
           break;
         }
       }
@@ -375,7 +389,7 @@ public class EidasMetadataNode
       String bindString = s.getBinding();
       if ("urn:oasis:names:tc:SAML:2.0:bindings:HTTP-POST".equals(bindString))
       {
-        eidasMetadataService.setPostEndpoint(s.getLocation());
+        eidasMetadataNode.setPostEndpoint(s.getLocation());
       }
     });
 
@@ -383,45 +397,13 @@ public class EidasMetadataNode
     {
       if (k.getUse() == UsageType.ENCRYPTION)
       {
-        eidasMetadataService.encCert = getFirstCertFromKeyDescriptor(k);
+        eidasMetadataNode.encCert = EidasMetadataService.getFirstCertFromKeyDescriptor(k);
       }
       else if (k.getUse() == UsageType.SIGNING)
       {
-        eidasMetadataService.sigCert = getFirstCertFromKeyDescriptor(k);
+        eidasMetadataNode.sigCert = EidasMetadataService.getFirstCertFromKeyDescriptor(k);
       }
     }
-    return eidasMetadataService;
-  }
-
-  /**
-   * Search in a KeyDescriptor node for the frist certificate
-   *
-   * @param keyDescriptor
-   * @return the first Cert from the given keyDescriptor
-   * @throws CertificateException
-   */
-  private static X509Certificate getFirstCertFromKeyDescriptor(KeyDescriptor keyDescriptor)
-    throws CertificateException
-  {
-    java.security.cert.X509Certificate cert = null;
-    if (keyDescriptor.getKeyInfo().getX509Datas() != null
-        && !keyDescriptor.getKeyInfo().getX509Datas().isEmpty())
-    {
-      X509Data x509Data = keyDescriptor.getKeyInfo().getX509Datas().get(0);
-      if (x509Data != null)
-      {
-        NodeList childs = x509Data.getDOM().getChildNodes();
-        for ( int i = 0 ; i < childs.getLength() ; i++ )
-        {
-          if ("X509Certificate".equals(childs.item(i).getLocalName()))
-          {
-            String base64String = childs.item(i).getTextContent();
-            byte[] bytes = Base64.decodeBase64(base64String);
-            cert = Utils.readCert(bytes, true);
-          }
-        }
-      }
-    }
-    return cert;
+    return eidasMetadataNode;
   }
 }

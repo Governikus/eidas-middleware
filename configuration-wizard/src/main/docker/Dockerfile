@@ -1,4 +1,4 @@
-FROM governikus/eidas-base-container:1.1.0
+FROM governikus/eidas-base-container:${project.version}
 MAINTAINER Benny Prange <benny.prange@governikus.de>
 
 # NOTE: Some ENV variables are set in the parent "eidas-base-image"
@@ -7,8 +7,8 @@ MAINTAINER Benny Prange <benny.prange@governikus.de>
 USER eidas-middleware
 WORKDIR /opt/eidas-middleware
 
-# Download the release from github
-RUN wget https://github.com/Governikus/eidas-middleware/releases/download/${VERSION}/configuration-wizard-${VERSION}.jar
+# Copy the freshly built artifact
+COPY maven/ /opt/eidas-middleware
 
 RUN    mv configuration-wizard*.jar configuration-wizard.jar &&\
     mkdir -p ${CONFIG_DIR}

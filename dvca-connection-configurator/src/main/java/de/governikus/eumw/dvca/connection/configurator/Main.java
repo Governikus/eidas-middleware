@@ -25,19 +25,11 @@ public final class Main
 {
 
   /**
-   * silence PMD
-   */
-  private Main()
-  {
-
-  }
-
-  /**
    * @param args
    */
   public static void main(String[] args)
   {
-    log.info("\nThis software will configure your productive eidas-middleware to connect to the D-Trust DVCA.\nRun it in the same folder as your POSeIDAS.xml .\nBACKUP YOUR POSeIDAS.xml BEFOREHAND. ");
+    log.info("\nThis software will update the Master- and Defectlist Trust Anchor of your productive eidas-middleware.\nRun it in the same folder as your POSeIDAS.xml .\nBACKUP YOUR POSeIDAS.xml BEFOREHAND. ");
     Console c = System.console();
     String con = c.readLine("Continue? (y/N): ");
     if (!"y".equalsIgnoreCase(con))
@@ -47,11 +39,9 @@ public final class Main
     PoseidasConfigHandler configHandler = new PoseidasConfigHandler();
     if (!configHandler.loadConfiguration(new File(FileNames.POSEIDAS_XML.getFileName())))
     {
-      log.error("Run this jar in the same folder as the POSeIDAS.xml");
+      log.error("There was an error during the execution, aborting.");
       System.exit(-1);
     }
-    String clientCertPath = c.readLine("Enter the path to your client certificate:");
-    configHandler.initialize(clientCertPath);
     configHandler.updateServiceProviders();
     configHandler.save();
   }

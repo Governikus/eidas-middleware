@@ -238,7 +238,7 @@ public class ConfigurationForm implements Observer
           break;
         }
       }
-      String serverURL = getPoseidasConfig().getCoreConfig().getServerUrl().replace("/eidas-middleware", "");
+      String serverURL = getPoseidasConfig().getCoreConfig().getServerUrl().trim().replaceAll("\\/eidas-middleware$", "");
       getEidasmiddlewareProperties().setServerURL(serverURL);
 
       if (HSMTypeIdentifier.isUsingHSM(getApplicationProperties().getHsmType()))

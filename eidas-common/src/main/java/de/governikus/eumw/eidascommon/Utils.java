@@ -33,7 +33,6 @@ import java.util.Base64;
 import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.UUID;
-import java.util.regex.Pattern;
 import java.util.zip.ZipInputStream;
 
 import javax.servlet.http.HttpServletRequest;
@@ -90,8 +89,6 @@ public final class Utils
    * default encoding used by the eID-Server
    */
   public static final String ENCODING = StandardCharsets.UTF_8.name();
-
-  private static final Pattern LINE_BREAK = Pattern.compile("(.{76})");
 
   /**
    * Contains a error page to show if something went wrong.
@@ -463,17 +460,6 @@ public final class Utils
   public static X509Certificate readCert(byte[] data) throws CertificateException
   {
     return data == null ? null : (X509Certificate)readCert(new ByteArrayInputStream(data), "X509");
-  }
-
-  /**
-   * This line breaks the given string after 76 chars.
-   *
-   * @param input
-   * @return
-   */
-  public static String breakAfter76Chars(String input)
-  {
-    return LINE_BREAK.matcher(input).replaceAll("$1\n");
   }
 
   /**

@@ -14,7 +14,7 @@
 
     <groupId>de.governikus.eumw</groupId>
     <artifactId>eumw</artifactId>
-    <version>1.1.0</version>
+    <version>1.2.0</version>
     <packaging>pom</packaging>
 
     <name>EU Middleware</name>
@@ -37,7 +37,7 @@
     <scm>
         <url>https://github.com/Governikus/${project.artifactId}</url>
         <connection>${governikus.scm.connection}</connection>
-      <tag>eumw-1.1.0</tag>
+      <tag>eumw-1.2.0</tag>
   </scm>
 
     <developers>
@@ -111,14 +111,14 @@
         <maven.compiler.target>1.8</maven.compiler.target>
 
         <!-- crypto -->
-        <version.bouncycastle>1.61</version.bouncycastle>
+        <version.bouncycastle>1.63</version.bouncycastle>
         <version.javasupport>7.3.0</version.javasupport>
         <version.opensaml>3.3.1-GOV5</version.opensaml>
-        <version.xmlsec>2.1.3</version.xmlsec>
+        <version.xmlsec>2.1.4</version.xmlsec>
 
         <version.cxf>3.3.1</version.cxf>
-        <version.spring>5.1.6.RELEASE</version.spring>
-        <version.springboot>2.1.4.RELEASE</version.springboot>
+        <version.spring>5.1.10.RELEASE</version.spring>
+        <version.springboot>2.1.8.RELEASE</version.springboot>
         <version.thymeleaf>3.0.11.RELEASE</version.thymeleaf>
         <version.thymeleaf-layout-dialect>2.4.1</version.thymeleaf-layout-dialect>
 
@@ -132,7 +132,7 @@
         <version.guava>27.1-jre</version.guava>
         <version.h2>1.4.199</version.h2>
         <version.istack-commons-runtime>3.0.8</version.istack-commons-runtime>
-        <version.jackson>2.9.8</version.jackson>
+        <version.jackson>2.9.10</version.jackson>
         <version.jaxb2-basics>1.11.1</version.jaxb2-basics>
         <version.jsr305>3.0.2</version.jsr305>
         <version.snmp4j>2.6.3</version.snmp4j>
@@ -343,25 +343,26 @@
                 <plugin>
                     <groupId>org.codehaus.mojo</groupId>
                     <artifactId>license-maven-plugin</artifactId>
-                    <version>${version.license-maven-plugin}</version>
+                    <version>1.20</version>
                 </plugin>
                 <plugin>
                     <groupId>org.apache.maven.plugins</groupId>
                     <artifactId>maven-jarsigner-plugin</artifactId>
-                    <version>1.4</version>
+                    <version>3.0.0</version>
                     <configuration>
                         <keystore>NONE</keystore>
                         <storetype>PKCS11</storetype>
                         <tsa>http://timestamp.globalsign.com/scripts/timestamp.dll</tsa>
                         <providerClass>sun.security.pkcs11.SunPKCS11</providerClass>
-                        <providerArg>${java.home}/../bin/eToken.cfg</providerArg>
+                        <providerArg>${globalsign.config}</providerArg>
                         <alias>${globalsign.alias}</alias>
                         <storepass>${globalsign.storepass}</storepass>
-                        <arguments>
-                            <argument>${sign.proxy.host}</argument>
-                            <argument>${sign.proxy.port}</argument>
-                        </arguments>
                     </configuration>
+                </plugin>
+                <plugin>
+                    <groupId>io.fabric8</groupId>
+                    <artifactId>docker-maven-plugin</artifactId>
+                    <version>0.31.0</version>
                 </plugin>
             </plugins>
         </pluginManagement>
@@ -424,7 +425,9 @@
         <module>configuration-wizard</module>
         <module>utils</module>
         <module>dvca-connection-configurator</module>
-  </modules>
+        <module>configuration-checker</module>
+        <module>eidas-base-container</module>
+    </modules>
 
     <dependencies>
         <dependency>
@@ -549,6 +552,11 @@
             <dependency>
                 <groupId>de.governikus.eumw</groupId>
                 <artifactId>utils</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>de.governikus.eumw</groupId>
+                <artifactId>eidas-base-container</artifactId>
                 <version>${project.version}</version>
             </dependency>
 

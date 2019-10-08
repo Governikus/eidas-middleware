@@ -64,7 +64,7 @@ public final class WebServiceHelper
     {
       html = Utils.readFromStream(WebServiceHelper.class.getResourceAsStream("forwardToConsumer.html"));
     }
-    html = html.replace("${SAML}", Utils.breakAfter76Chars(DatatypeConverter.printBase64Binary(saml)));
+    html = html.replace("${SAML}", DatatypeConverter.printBase64Binary(saml));
     if (relayState == null)
     {
       html = html.replace("${RELAY_STATE}", "");

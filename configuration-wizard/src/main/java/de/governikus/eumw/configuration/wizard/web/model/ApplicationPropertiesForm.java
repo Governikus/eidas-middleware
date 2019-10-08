@@ -231,9 +231,9 @@ public class ApplicationPropertiesForm extends AbstractPropertiesConfigurationLo
       }
     };
 
-    properties.setProperty(ApplicationPropertiesIdentifier.SERVER_PORT.getPropertyName(), serverPort);
+    properties.setProperty(ApplicationPropertiesIdentifier.SERVER_PORT.getPropertyName(), serverPort.trim());
     properties.setProperty(ApplicationPropertiesIdentifier.ADMIN_INTERFACE_PORT.getPropertyName(),
-                           adminInterfacePort);
+                           adminInterfacePort.trim());
     properties.setProperty(ApplicationPropertiesIdentifier.SERVER_SSL_KEYSTORE.getPropertyName(),
                            "file:" + Paths.get(pathPrefix,
                                                serverSslKeystore.getKeystoreName() + "."
@@ -250,12 +250,12 @@ public class ApplicationPropertiesForm extends AbstractPropertiesConfigurationLo
                            serverSslKeystore.getKeystore().getType());
     properties.setProperty(ApplicationPropertiesIdentifier.SERVER_SSL_KEY_ALIAS.getPropertyName(),
                            serverSslKeystore.getAlias());
-    properties.setProperty(ApplicationPropertiesIdentifier.DATASOURCE_URL.getPropertyName(), datasourceUrl);
+    properties.setProperty(ApplicationPropertiesIdentifier.DATASOURCE_URL.getPropertyName(), datasourceUrl.trim());
     properties.setProperty(ApplicationPropertiesIdentifier.DATASOURCE_USERNAME.getPropertyName(),
-                           datasourceUsername);
+                           datasourceUsername.trim());
     properties.setProperty(ApplicationPropertiesIdentifier.DATASOURCE_PASSWORD.getPropertyName(),
                            datasourcePassword);
-    properties.setProperty(ApplicationPropertiesIdentifier.ADMIN_USERNAME.getPropertyName(), adminUsername);
+    properties.setProperty(ApplicationPropertiesIdentifier.ADMIN_USERNAME.getPropertyName(), adminUsername.trim());
     properties.setProperty(ApplicationPropertiesIdentifier.ADMIN_PASSWORD.getPropertyName(),
                            hashIfNecessary(adminPassword));
     properties.setProperty(ApplicationPropertiesIdentifier.LOGGING_FILE.getPropertyName(), logFile);
@@ -268,7 +268,7 @@ public class ApplicationPropertiesForm extends AbstractPropertiesConfigurationLo
       if (StringUtils.isNotEmpty(hsmKeysDelete))
       {
         properties.setProperty(ApplicationPropertiesIdentifier.HSM_KEYS_DELETE.getPropertyName(),
-                               hsmKeysDelete);
+                               hsmKeysDelete.trim());
       }
 
       properties.setProperty(ApplicationPropertiesIdentifier.HSM_KEYS_ARCHIVE.getPropertyName(),
@@ -276,7 +276,7 @@ public class ApplicationPropertiesForm extends AbstractPropertiesConfigurationLo
 
 
       properties.setProperty(ApplicationPropertiesIdentifier.PKCS11_SUN_CONFIG_PROVIDER_FILE_PATH.getPropertyName(),
-                             pkcs11ConfigProviderPath);
+                             pkcs11ConfigProviderPath.trim());
 
       properties.setProperty(ApplicationPropertiesIdentifier.PKCS11_HSM_PASSWORD.getPropertyName(),
                              pkcs11HsmPassword);

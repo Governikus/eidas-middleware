@@ -10,6 +10,8 @@
 
 package de.governikus.eumw.eidasmiddleware.controller;
 
+import java.util.Locale;
+
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestHeader;
@@ -26,12 +28,19 @@ public class AusweisappRedirect
 {
 
   @GetMapping
-  public ModelAndView redirect(@RequestHeader("User-Agent") String userAgent,
+  public ModelAndView redirect(@RequestHeader("User-Agent") String userAgentHeader,
                                @RequestParam(required = false, name = "lang") String lang)
   {
-    if (userAgent != null && userAgent.contains("Android"))
+    String userAgentLowerCase = userAgentHeader.toLowerCase(Locale.ENGLISH);
+    if (userAgentLowerCase.contains("android"))
     {
       return new ModelAndView("redirect:https://play.google.com/store/apps/details?id=com.governikus.ausweisapp2");
+    }
+
+    if (userAgentLowerCase.contains("iphone") || userAgentLowerCase.contains("ipod")
+        || userAgentLowerCase.contains("ipad"))
+    {
+      return new ModelAndView("redirect:https://apps.apple.com/us/app/ausweisapp2/id948660805?l=de&ls=1");
     }
 
     StringBuilder stringBuilder = new StringBuilder("https://www.ausweisapp.bund.de/");
@@ -39,15 +48,7 @@ public class AusweisappRedirect
     {
       stringBuilder.append("en/");
     }
-    if (userAgent != null
-        && (userAgent.contains("iPhone") || userAgent.contains("iPod") || userAgent.contains("iPad")))
-    {
-      stringBuilder.append("download/ios/");
-    }
-    else
-    {
-      stringBuilder.append("download/windows-und-mac/");
-    }
+    stringBuilder.append("download/windows-und-mac/");
     return new ModelAndView("redirect:" + stringBuilder.toString());
   }
 }

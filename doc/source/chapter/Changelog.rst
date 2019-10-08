@@ -64,6 +64,18 @@ Changelog
     - eIDAS Middleware: Add whitelist for allowed document signer types which can be extended using the configuration.
     - eIDAS Middleware: The validity of the metadata is now configurable, the default value is 30 days.
 
+* 1.2.0
+
+    - eIDAS Middleware: Fix handling of empty or absent RelayState.
+    - eIDAS Middleware: Fix the order of attributes in the current address.
+    - eIDAS Middleware: Fix some typos in the creation of SAML responses.
+    - eIDAS Middleware: Remove the assertion in SAML responses when status is not success.
+    - eIDAS Middleware: Remove carriage returns in the base64 representation of the SAML response.
+
+    Note: The carriage returns inside the SAML response, e.g. in signatures and cipher texts, are not removed.
+    These are created by OpenSAML / xmlsec following W3C XML signature and encryption specifications.
+
+
     Known Issue:
     The SUN PKCS11 security provider that is shipped with JAVA 8 does not support RSA-PSS signatures.
     In order to use a HSM module and stay in line with the eIDAS cryptographic requirements, the use of EC cryptography for the SAML signature is mandatory.

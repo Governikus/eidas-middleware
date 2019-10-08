@@ -18,15 +18,21 @@ import java.security.UnrecoverableKeyException;
 import java.security.cert.X509Certificate;
 
 import de.governikus.eumw.eidasstarterkit.XMLSignatureHandler.SigEntryType;
+import lombok.Getter;
 
 
 /**
  * @author hohnholt
  */
+@Getter
 public class EidasSigner
 {
 
   private static final String SAML_SIGNING = "samlsigning";
+  
+  private static final String DIGEST_DEFAULT = "SHA256-PSS";
+  
+  static final String DIGEST_NONSPEC = "SHA256";
 
   /**
    * signature key
@@ -73,7 +79,7 @@ public class EidasSigner
    */
   public EidasSigner(boolean includeCert, PrivateKey key, X509Certificate cert)
   {
-    this(includeCert, key, cert, "SHA256-PSS");
+    this(includeCert, key, cert, DIGEST_DEFAULT);
   }
 
   EidasSigner(PrivateKey key, X509Certificate cert)
@@ -85,26 +91,6 @@ public class EidasSigner
     throws UnrecoverableKeyException, KeyStoreException, NoSuchAlgorithmException
   {
     this(true, (PrivateKey)keyStore.getKey(SAML_SIGNING, null),
-         (X509Certificate)keyStore.getCertificate(SAML_SIGNING), "SHA256");
-  }
-
-  public PrivateKey getSigKey()
-  {
-    return sigKey;
-  }
-
-  public X509Certificate getSigCert()
-  {
-    return sigCert;
-  }
-
-  public String getSigDigestAlg()
-  {
-    return sigDigestAlg;
-  }
-
-  public SigEntryType getSigType()
-  {
-    return sigType;
+         (X509Certificate)keyStore.getCertificate(SAML_SIGNING), DIGEST_NONSPEC);
   }
 }

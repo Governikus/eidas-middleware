@@ -81,14 +81,14 @@ public class Metadata
     list.add(EidasNaturalPersonAttributes.BIRTH_NAME);
     list.add(EidasNaturalPersonAttributes.PLACE_OF_BIRTH);
     list.add(EidasNaturalPersonAttributes.DATE_OF_BIRTH);
-    EidasSigner signer;
+
     List<EidasNameIdType> supportedNameIdTypes = new ArrayList<>();
     supportedNameIdTypes.add(EidasNameIdType.PERSISTENT);
     supportedNameIdTypes.add(EidasNameIdType.TRANSIENT);
     supportedNameIdTypes.add(EidasNameIdType.UNSPECIFIED);
     try
     {
-      signer = getEidasSigner();
+      EidasSigner signer = getEidasSigner();
 
       Date validUntil;
       if (configHolder.getMetadataValidity() == null)
@@ -111,8 +111,7 @@ public class Metadata
                                                    configHolder.getOrganization(),
                                                    configHolder.getContactPerson(),
                                                    configHolder.getContactPerson(),
-                                                   configHolder.getServerURLWithContextPath()
-                                                                                    + ContextPaths.REQUEST_RECEIVER,
+                                                   configHolder.getServerURLWithContextPath() + ContextPaths.REQUEST_RECEIVER,
                                                    configHolder.getServerURLWithContextPath() + ContextPaths.REQUEST_RECEIVER,
                                                    supportedNameIdTypes,
                                                    list,

@@ -391,10 +391,14 @@ public class PoseidasCoreConfigForm extends AbstractConfigurationLoader
   {
     coreConfig.setSessionManagerUsesDatabase(true);
     coreConfig.setSessionMaxPendingRequests(SESSION_MAX_PENDING_REQUESTS);
-    // only add path if it is not already there
-    if (coreConfig.getServerUrl() != null && !coreConfig.getServerUrl().trim().endsWith("/eidas-middleware"))
-    {
-      coreConfig.setServerUrl(coreConfig.getServerUrl() + "/eidas-middleware");
+
+    if(coreConfig.getServerUrl() != null){
+      //Remove a trailing slash, to prevent dubble slashes
+      coreConfig.setServerUrl(coreConfig.getServerUrl().trim().replaceAll("/$", ""));
+      // only add path if it is not already there
+      if(!coreConfig.getServerUrl().endsWith("/eidas-middleware")){
+        coreConfig.setServerUrl(coreConfig.getServerUrl() + "/eidas-middleware");
+      }
     }
 
     coreConfig.getServiceProvider().clear();
@@ -406,7 +410,7 @@ public class PoseidasCoreConfigForm extends AbstractConfigurationLoader
       newServiceProvider.setEnabled(true);
 
       EPAConnectorConfigurationType epa = new EPAConnectorConfigurationType();
-      epa.setCVCRefID(serviceProvider.getEntityID());
+      epa.setCVCRefID(serviceProvider.getEntityID().trim());
       epa.setHoursRefreshCVCBeforeExpires(HOURS_REFRESH_BEFORE_EXPIRE);
       epa.setPaosReceiverURL(coreConfig.getServerUrl() + "/paosreceiver");
       epa.setUpdateCVC(true);
