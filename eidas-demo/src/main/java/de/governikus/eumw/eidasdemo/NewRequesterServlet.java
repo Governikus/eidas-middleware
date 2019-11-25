@@ -23,6 +23,8 @@ import javax.servlet.http.HttpServletResponse;
 import javax.xml.transform.TransformerException;
 import javax.xml.transform.TransformerFactoryConfigurationError;
 
+import de.governikus.eumw.eidasstarterkit.EidasLoA;
+import de.governikus.eumw.eidasstarterkit.EidasNameIdType;
 import org.apache.commons.io.IOUtils;
 import org.opensaml.core.config.InitializationException;
 import org.opensaml.core.xml.io.MarshallingException;
@@ -98,7 +100,10 @@ public class NewRequesterServlet
       samlRequest = EidasSaml.createRequest(ownURL.replace("NewRequesterServlet", "Metadata"),
                                             ownURL.replace("NewRequesterServlet", "NewReceiverServlet"),
                                             signer,
-                                            reqAtt);
+                                            reqAtt,
+                                            null,
+                                            EidasNameIdType.TRANSIENT,
+                                            EidasLoA.HIGH);
     }
     catch (CertificateEncodingException | ComponentInitializationException | InitializationException
       | XMLParserException | UnmarshallingException | MarshallingException | SignatureException
@@ -134,7 +139,6 @@ public class NewRequesterServlet
       html = html.replace("CURRENTRELAYSTATE", relayState);
       html = html.replace("EMPTYRELAYSTATE", response.encodeURL(emptyRelayState));
       html = html.replace("WITHOUTRELAYSTATE", response.encodeURL(withoutRelayState));
-
 
 
       Writer writer = response.getWriter();

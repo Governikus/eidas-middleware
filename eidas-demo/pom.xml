@@ -14,7 +14,7 @@
     <parent>
         <groupId>de.governikus.eumw</groupId>
         <artifactId>eumw</artifactId>
-        <version>1.2.0</version>
+        <version>1.2.1</version>
     </parent>
     <artifactId>eidas-demo</artifactId>
 
@@ -92,10 +92,9 @@
                     <verbose>true</verbose>
                     <images>
                         <image>
-                            <name>docker.io/governikus/eidas-demo-application</name>
+                            <name>governikus/eidas-demo-application:${project.version}</name>
                             <build>
                                 <contextDir>.</contextDir>
-                                <tags>${project.version}</tags>
                                 <assembly>
                                     <descriptorRef>artifact</descriptorRef>
                                 </assembly>

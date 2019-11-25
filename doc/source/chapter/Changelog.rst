@@ -41,7 +41,7 @@ Changelog
     - eIDAS Middleware: Improve logging in case of unparsable authentication request.
 
 * 1.0.7
-  
+
     **Security Advisory**
 
     There were two security issues reported to the German POSC and Governikus. This release fixes these issues.
@@ -80,3 +80,6 @@ Changelog
     The SUN PKCS11 security provider that is shipped with JAVA 8 does not support RSA-PSS signatures.
     In order to use a HSM module and stay in line with the eIDAS cryptographic requirements, the use of EC cryptography for the SAML signature is mandatory.
     This issue will be resolved when the eIDAS Middleware supports JAVA 11 as this version comes with a newer SUN PKCS11 security provider.
+
+* 1.2.1
+    - eIDAS Middleware: Fix SAML encryption with EC certificates.

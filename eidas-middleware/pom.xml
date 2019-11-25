@@ -14,7 +14,7 @@
     <parent>
         <groupId>de.governikus.eumw</groupId>
         <artifactId>eumw</artifactId>
-        <version>1.2.0</version>
+        <version>1.2.1</version>
     </parent>
     <artifactId>eidas-middleware</artifactId>
 
@@ -135,10 +135,9 @@
                     <verbose>true</verbose>
                     <images>
                         <image>
-                            <name>docker.io/governikus/eidas-middleware-application</name>
+                            <name>governikus/eidas-middleware-application:${project.version}</name>
                             <build>
                                 <contextDir>.</contextDir>
-                                <tags>${project.version}</tags>
                                 <assembly>
                                     <descriptorRef>artifact</descriptorRef>
                                 </assembly>

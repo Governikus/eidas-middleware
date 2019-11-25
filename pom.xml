@@ -14,7 +14,7 @@
 
     <groupId>de.governikus.eumw</groupId>
     <artifactId>eumw</artifactId>
-    <version>1.2.0</version>
+    <version>1.2.1</version>
     <packaging>pom</packaging>
 
     <name>EU Middleware</name>
@@ -37,7 +37,7 @@
     <scm>
         <url>https://github.com/Governikus/${project.artifactId}</url>
         <connection>${governikus.scm.connection}</connection>
-      <tag>eumw-1.2.0</tag>
+      <tag>eumw-1.2.1</tag>
   </scm>
 
     <developers>
@@ -111,9 +111,9 @@
         <maven.compiler.target>1.8</maven.compiler.target>
 
         <!-- crypto -->
-        <version.bouncycastle>1.63</version.bouncycastle>
+        <version.bouncycastle>1.64</version.bouncycastle>
         <version.javasupport>7.3.0</version.javasupport>
-        <version.opensaml>3.3.1-GOV5</version.opensaml>
+        <version.opensaml>3.3.1-GOV6</version.opensaml>
         <version.xmlsec>2.1.4</version.xmlsec>
 
         <version.cxf>3.3.1</version.cxf>

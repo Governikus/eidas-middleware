@@ -14,7 +14,7 @@
     <parent>
         <groupId>de.governikus.eumw</groupId>
         <artifactId>eumw</artifactId>
-        <version>1.2.0</version>
+        <version>1.2.1</version>
     </parent>
     <artifactId>configuration-wizard</artifactId>
 
@@ -149,10 +149,9 @@
                     <verbose>true</verbose>
                     <images>
                         <image>
-                            <name>docker.io/governikus/eidas-configuration-wizard</name>
+                            <name>governikus/eidas-configuration-wizard:${project.version}</name>
                             <build>
                                 <contextDir>.</contextDir>
-                                <tags>${project.version}</tags>
                                 <assembly>
                                     <descriptorRef>artifact</descriptorRef>
                                 </assembly>
