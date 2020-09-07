@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019 Governikus KG. Licensed under the EUPL, Version 1.2 or as soon they will be approved by
+ * Copyright (c) 2020 Governikus KG. Licensed under the EUPL, Version 1.2 or as soon they will be approved by
  * the European Commission - subsequent versions of the EUPL (the "Licence"); You may not use this work except
  * in compliance with the Licence. You may obtain a copy of the Licence at:
  * http://joinup.ec.europa.eu/software/page/eupl Unless required by applicable law or agreed to in writing,
@@ -70,7 +70,7 @@ public class AuthenticatedAuxiliaryData
     }
     else
     {
-      communityID = communityID.replaceAll(" ", "");
+      communityID = communityID.replace(" ", "");
     }
     // Prepare error messages for wrong pattern matching
     String messageI = "CommunityID format wrong: With length [";
@@ -193,7 +193,8 @@ public class AuthenticatedAuxiliaryData
     if (ageVerification != null)
     {
       ASN1 iod = new OID(OID_STR_AGE_VERIFICATION);
-      ASN1 data = new ASN1(ASN1_ASN1_DISCRETIONARY_DATA_TAG, ageVerification.getBytes(StandardCharsets.UTF_8));
+      ASN1 data = new ASN1(ASN1_ASN1_DISCRETIONARY_DATA_TAG,
+                           ageVerification.getBytes(StandardCharsets.UTF_8));
       byte[] bytes = ByteUtil.combine(iod.getEncoded(), data.getEncoded());
       ASN1 dataTemplate = new ASN1(ASN1_DISCRETIONARY_DATA_TEMPLATE_TAG, bytes);
       childs.add(dataTemplate);

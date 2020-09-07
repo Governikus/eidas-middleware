@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019 Governikus KG. Licensed under the EUPL, Version 1.2 or as soon they will be approved by
+ * Copyright (c) 2020 Governikus KG. Licensed under the EUPL, Version 1.2 or as soon they will be approved by
  * the European Commission - subsequent versions of the EUPL (the "Licence"); You may not use this work except
  * in compliance with the Licence. You may obtain a copy of the Licence at:
  * http://joinup.ec.europa.eu/software/page/eupl Unless required by applicable law or agreed to in writing,
@@ -126,8 +126,7 @@ public class CertificateRequest extends AbstractASN1Encoder
 
   /** {@inheritDoc} */
   @Override
-  public ASN1 decode(byte[] bytes) throws
-    IOException
+  public ASN1 decode(byte[] bytes) throws IOException
   {
     CertificateRequest result = new CertificateRequest(bytes);
     super.decode(result);
@@ -153,10 +152,9 @@ public class CertificateRequest extends AbstractASN1Encoder
    * @throws InvalidKeyException
    * @throws UnrecoverableKeyException
    */
-  void signCVCBody(PublicKey publicKey, String alias) throws
-    IOException, UnrecoverableKeyException, InvalidKeyException,
-    NoSuchAlgorithmException, NoSuchProviderException, KeyStoreException, CertificateException,
-    SignatureException, InvalidKeySpecException, HSMException
+  void signCVCBody(PublicKey publicKey, String alias) throws IOException, UnrecoverableKeyException,
+    InvalidKeyException, NoSuchAlgorithmException, NoSuchProviderException, KeyStoreException,
+    CertificateException, SignatureException, InvalidKeySpecException, HSMException
   {
     AssertUtil.notNull(publicKey, "public key");
     AssertUtil.notNullOrEmpty(alias, "alias");
@@ -234,10 +232,9 @@ public class CertificateRequest extends AbstractASN1Encoder
    * @throws InvalidKeyException
    * @throws UnrecoverableKeyException
    */
-  void signRequest(String oldPrivKeyAlias, OID algOID, boolean useGivenKey)
-    throws IOException, UnrecoverableKeyException,
-    InvalidKeyException, NoSuchAlgorithmException, NoSuchProviderException, KeyStoreException,
-    CertificateException, SignatureException, InvalidKeySpecException, HSMException
+  void signRequest(String oldPrivKeyAlias, OID algOID, boolean useGivenKey) throws IOException,
+    UnrecoverableKeyException, InvalidKeyException, NoSuchAlgorithmException, NoSuchProviderException,
+    KeyStoreException, CertificateException, SignatureException, InvalidKeySpecException, HSMException
   {
     AssertUtil.notNullOrEmpty(oldPrivKeyAlias, "alias of private key for signing");
     AssertUtil.notNull(algOID, "OID of signature algorithm");
@@ -268,8 +265,7 @@ public class CertificateRequest extends AbstractASN1Encoder
    * @throws UnsupportedOperationException
    * @throws IllegalArgumentException
    */
-  private void setOuterSignature(byte[] signature) throws
-    IOException
+  private void setOuterSignature(byte[] signature) throws IOException
   {
     AssertUtil.notNullOrEmpty(signature, "signature");
     this.removeChildElement(this.getChildElementByPath(CertificateRequestPath.OUTER_SIGNATURE), this);
@@ -278,7 +274,7 @@ public class CertificateRequest extends AbstractASN1Encoder
 
   /** {@inheritDoc} */
   @Override
-  public boolean isSequence()
+  public synchronized boolean isSequence()
   {
     return true;
   }

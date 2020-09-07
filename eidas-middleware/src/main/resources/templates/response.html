@@ -1,5 +1,5 @@
 <!--
-  ~ Copyright (c) 2019 Governikus KG. Licensed under the EUPL, Version 1.2 or as soon they will be approved by
+  ~ Copyright (c) 2020 Governikus KG. Licensed under the EUPL, Version 1.2 or as soon they will be approved by
   ~ the European Commission - subsequent versions of the EUPL (the "Licence"); You may not use this work except
   ~ in compliance with the Licence. You may obtain a copy of the Licence at:
   ~ http://joinup.ec.europa.eu/software/page/eupl Unless required by applicable law or agreed to in writing,
@@ -9,39 +9,39 @@
   -->
 
 <!DOCTYPE html>
-<html xmlns="http://www.w3.org/1999/xhtml"
-      xmlns:th="http://www.thymeleaf.org" lang="de">
+<html lang="de"
+      xmlns="http://www.w3.org/1999/xhtml" xmlns:th="http://www.thymeleaf.org">
 <head>
     <title th:text="#{title.title}">German eIDAS Middleware</title>
-    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
-    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta content="text/html; charset=UTF-8" http-equiv="Content-Type">
+    <meta content="IE=edge" http-equiv="X-UA-Compatible">
     <meta charset="utf-8">
     <!-- Viewport Meta Tag -->
-    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta content="width=device-width, initial-scale=1" name="viewport">
     <!-- Bootstrap -->
-    <link rel="stylesheet" type="text/css" th:href="@{/css/bootstrap.css}">
+    <link rel="stylesheet" th:href="@{/eidas-middleware/css/bootstrap.css}" type="text/css">
     <!-- Main Style -->
-    <link rel="stylesheet" type="text/css" th:href="@{/css/main.css}">
+    <link rel="stylesheet" th:href="@{/eidas-middleware/css/main.css}" type="text/css">
     <!-- custom Style -->
-    <link rel="stylesheet" type="text/css" th:href="@{/css/custom.css}">
+    <link rel="stylesheet" th:href="@{/eidas-middleware/css/custom.css}" type="text/css">
     <!-- Slicknav CSS -->
-    <link rel="stylesheet" type="text/css" th:href="@{/css/slicknav.css}">
+    <link rel="stylesheet" th:href="@{/eidas-middleware/css/slicknav.css}" type="text/css">
     <!-- Responsive Style -->
-    <link rel="stylesheet" type="text/css" th:href="@{/css/responsive.css}">
+    <link rel="stylesheet" th:href="@{/eidas-middleware/css/responsive.css}" type="text/css">
     <!--Fonts-->
-    <link rel="stylesheet" media="screen" th:href="@{/css/font-awesome.css}">
-    <link rel="stylesheet" media="screen" th:href="@{/css/simple-line-icons.css}">
+    <link media="screen" rel="stylesheet" th:href="@{/eidas-middleware/css/font-awesome.css}">
+    <link media="screen" rel="stylesheet" th:href="@{/eidas-middleware/css/simple-line-icons.css}">
     <!-- Extras -->
-    <link rel="stylesheet" type="text/css" th:href="@{/css/owl.css}">
-    <link rel="stylesheet" type="text/css" th:href="@{/css/owl_002.css}">
-    <link rel="stylesheet" type="text/css" th:href="@{/css/animate.css}">
-    <link rel="stylesheet" type="text/css" th:href="@{/css/normalize.css}">
+    <link rel="stylesheet" th:href="@{/eidas-middleware/css/owl.css}" type="text/css">
+    <link rel="stylesheet" th:href="@{/eidas-middleware/css/owl_002.css}" type="text/css">
+    <link rel="stylesheet" th:href="@{/eidas-middleware/css/animate.css}" type="text/css">
+    <link rel="stylesheet" th:href="@{/eidas-middleware/css/normalize.css}" type="text/css">
     <!-- Color CSS Styles  -->
-    <link rel="stylesheet" type="text/css" th:href="@{/css/mblue.css}" media="screen">
+    <link media="screen" rel="stylesheet" th:href="@{/eidas-middleware/css/mblue.css}" type="text/css">
     <!-- HTML5 Shim and Respond.js IE8 support of HTML5 elements and media queries -->
 
     <!-- Include redirect -->
-    <script th:src="@{/js/redirect.js}"></script>
+    <script th:src="@{/eidas-middleware/js/redirect.js}"></script>
 </head>
 <body>
 <!-- Header area wrapper Start -->
@@ -49,32 +49,35 @@
 <section class="split section" style="margin-top: -32px;">
     <!-- Container Starts -->
     <div class="container">
-        <div><h5 th:text="#{content.title}">Use your identity card for European applications as well</h5></div>
+        <div><h5 th:text="#{content.title}">Use your identity card for European applications as well</h5>
+        </div>
         <div th:text="#{content.language}">Choose your language</div>
-        <form th:action="${linkToSelf}" method="post"
-              enctype="application/x-www-form-urlencoded" th:object="${responseModel}">
+        <form enctype="application/x-www-form-urlencoded" method="post"
+              th:action="${linkToSelf}" th:object="${responseModel}">
             <p>
-                <input type="hidden" name="lang" value="en"/>
-                <input type="hidden" name="samlResponse" id="samlResponse" th:value="${SAML}"/>
-                <input type="hidden" name="consumerURL" id="consumerURL" th:value="${consumerURL}"/>
-                <input type="hidden" name="relayState" id="relayState" th:value="${relayState}" th:if="${relayState}"/>
-                <input type="image" name="submit" src="../../img/english.jpg"
-                       alt="Switch to English"
-                       th:attr="src=@{/img/english.jpg}"
-                       style="float: left; height: 25px; margin-right:10px; margin-top: 0px; margin-bottom: 5px; position: relative;"/>
+                <input name="lang" type="hidden" value="en"/>
+                <input id="samlResponse" name="samlResponse" th:value="${SAML}" type="hidden"/>
+                <input id="consumerURL" name="consumerURL" th:value="${consumerURL}" type="hidden"/>
+                <input id="relayState" name="relayState" th:if="${relayState}" th:value="${relayState}"
+                       type="hidden"/>
+                <input alt="Switch to English" name="submit" src="/eidas-middleware/img/english.jpg"
+                       style="float: left; height: 25px; margin-right:10px; margin-top: 0px; margin-bottom: 5px; position: relative;"
+                       th:attr="src=@{/eidas-middleware/img/english.jpg}"
+                       type="image"/>
             </p>
         </form>
-        <form th:action="${linkToSelf}" method="post"
-              enctype="application/x-www-form-urlencoded" th:object="${responseModel}">
+        <form enctype="application/x-www-form-urlencoded" method="post"
+              th:action="${linkToSelf}" th:object="${responseModel}">
             <p>
-                <input type="hidden" name="lang" value="de"/>
-                <input type="hidden" name="samlResponse" id="samlResponse" th:value="${SAML}"/>
-                <input type="hidden" name="consumerURL" id="consumerURL" th:value="${consumerURL}"/>
-                <input type="hidden" name="relayState" id="relayState" th:value="${relayState}" th:if="${relayState}"/>
-                <input type="image" name="submit" src="../../img/german.png"
-                       alt="Nach Deutsch wechseln"
-                       th:attr="src=@{/img/german.png}"
-                       style="float: left; height: 25px; margin-top: 0px; margin-bottom: 5px; position: relative;">
+                <input name="lang" type="hidden" value="de"/>
+                <input id="samlResponse" name="samlResponse" th:value="${SAML}" type="hidden"/>
+                <input id="consumerURL" name="consumerURL" th:value="${consumerURL}" type="hidden"/>
+                <input id="relayState" name="relayState" th:if="${relayState}" th:value="${relayState}"
+                       type="hidden"/>
+                <input alt="Nach Deutsch wechseln" name="submit" src="/eidas-middleware/img/german.png"
+                       style="float: left; height: 25px; margin-top: 0px; margin-bottom: 5px; position: relative;"
+                       th:attr="src=@{/eidas-middleware/img/german.png}"
+                       type="image">
             </p>
         </form>
         <br/><br/>
@@ -84,19 +87,21 @@
             </div>
         </div>
         <div class="row brdr">
-            <div class="col-md-12" style="margin-top: 8px; margin-bottom: 8px; font-weight:300; font-size: 15px;">
+            <div class="col-md-12"
+                 style="margin-top: 8px; margin-bottom: 8px; font-weight:300; font-size: 15px;">
                 <div th:utext="#{response.info}">
                 </div>
             </div>
         </div>
         <div class="row brdr-last">
             <div class="col-md-8 col-sm-6 col-xs-12 about">
-                <form th:action="${consumerURL}" method="post"
-                      enctype="application/x-www-form-urlencoded">
+                <form enctype="application/x-www-form-urlencoded" method="post"
+                      th:action="${consumerURL}">
                     <p>
-                        <input type="hidden" name="SAMLResponse" th:value="${SAML}"/>
-                        <input type="hidden" name="RelayState" th:value="${relayState}" th:if="${relayState}"/>
-                        <input type="submit" th:value="#{response.continue}"/>
+                        <input name="SAMLResponse" th:value="${SAML}" type="hidden"/>
+                        <input name="RelayState" th:if="${relayState}" th:value="${relayState}"
+                               type="hidden"/>
+                        <input th:value="#{response.continue}" type="submit"/>
                     </p>
                 </form>
             </div>
@@ -106,7 +111,9 @@
     <!-- Container End -->
 </section>
 <footer>
-    <div align="center" th:text="#{footer.footer}">eIDAS Middleware provided by Governikus KG on behalf of BSI</div>
+    <div align="center" th:text="#{footer.footer}">eIDAS Middleware provided by Governikus KG on behalf of
+        BSI
+    </div>
 </footer>
 </body>
 </html>

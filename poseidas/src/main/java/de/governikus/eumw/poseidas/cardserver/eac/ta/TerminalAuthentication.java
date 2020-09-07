@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019 Governikus KG. Licensed under the EUPL, Version 1.2 or as soon they will be approved by
+ * Copyright (c) 2020 Governikus KG. Licensed under the EUPL, Version 1.2 or as soon they will be approved by
  * the European Commission - subsequent versions of the EUPL (the "Licence"); You may not use this work except
  * in compliance with the Licence. You may obtain a copy of the Licence at:
  * http://joinup.ec.europa.eu/software/page/eupl Unless required by applicable law or agreed to in writing,
@@ -27,6 +27,8 @@ import de.governikus.eumw.poseidas.cardserver.service.ServiceRegistry;
 import de.governikus.eumw.poseidas.cardserver.service.hsm.HSMServiceFactory;
 import de.governikus.eumw.poseidas.cardserver.service.hsm.impl.HSMException;
 import de.governikus.eumw.poseidas.cardserver.service.hsm.impl.HSMService;
+import lombok.AccessLevel;
+import lombok.NoArgsConstructor;
 
 
 /**
@@ -34,6 +36,7 @@ import de.governikus.eumw.poseidas.cardserver.service.hsm.impl.HSMService;
  *
  * @author Arne Stahlbock, ast@bos-bremen.de
  */
+@NoArgsConstructor(access = AccessLevel.PRIVATE)
 public class TerminalAuthentication
 {
 
@@ -63,9 +66,10 @@ public class TerminalAuthentication
                             byte[] idPicc,
                             byte[] rPicc,
                             byte[] compOwnEphPubKey,
-                            byte[] auxiliaryData) throws InvalidKeySpecException,
-    NoSuchAlgorithmException, NoSuchProviderException, InvalidKeyException, SignatureException, IOException,
-    UnrecoverableKeyException, KeyStoreException, CertificateException, HSMException
+                            byte[] auxiliaryData)
+    throws InvalidKeySpecException, NoSuchAlgorithmException, NoSuchProviderException, InvalidKeyException,
+    SignatureException, IOException, UnrecoverableKeyException, KeyStoreException, CertificateException,
+    HSMException
   {
     AssertUtil.notNullOrEmpty(alias, "alias of key");
     AssertUtil.notNull(algorithm, "OID of algorithm");

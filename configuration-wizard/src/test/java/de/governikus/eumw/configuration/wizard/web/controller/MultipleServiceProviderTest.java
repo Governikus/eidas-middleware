@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019 Governikus KG. Licensed under the EUPL, Version 1.2 or as soon they will be approved by
+ * Copyright (c) 2020 Governikus KG. Licensed under the EUPL, Version 1.2 or as soon they will be approved by
  * the European Commission - subsequent versions of the EUPL (the "Licence"); You may not use this work except
  * in compliance with the Licence. You may obtain a copy of the Licence at:
  * http://joinup.ec.europa.eu/software/page/eupl Unless required by applicable law or agreed to in writing,
@@ -15,8 +15,6 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 import java.io.IOException;
 import java.net.URISyntaxException;
 import java.net.URL;
-import java.nio.charset.StandardCharsets;
-import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.security.KeyStoreException;
@@ -24,13 +22,13 @@ import java.security.NoSuchAlgorithmException;
 import java.security.UnrecoverableKeyException;
 import java.security.cert.CertificateException;
 
-import org.apache.commons.io.FileUtils;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 
 import com.gargoylesoftware.htmlunit.WebAssert;
@@ -51,6 +49,7 @@ import lombok.extern.slf4j.Slf4j;
 @ExtendWith(SpringExtension.class)
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 @DisplayName("test different scenarions with multiple service providers")
+@ActiveProfiles("test")
 public class MultipleServiceProviderTest extends ConfigWizardTestBase
 {
 
@@ -63,6 +62,11 @@ public class MultipleServiceProviderTest extends ConfigWizardTestBase
    * The validation message for an incorrect default service provider setting
    */
   private static final String INCORRECT_DEFAULT_SERVICEPROVIDER = "wizard.status.validation.incorrect.default.serviceprovider";
+
+  /**
+   * The validation message for an duplicated service provider name
+   */
+  private static final String DUPLICATED_ENTITY_ID = "wizard.status.validation.duplicatedEntityId.serviceprovider";
 
   /**
    * providerB
@@ -126,7 +130,6 @@ public class MultipleServiceProviderTest extends ConfigWizardTestBase
     setTextValue(poseidasPage, SERVER_URL_FIELD_ID, SERVER_URL);
     setSelectValue(poseidasPage, BLACK_LIST_FIELD_ID, BLACKLIST_CERT_NAME);
     setSelectValue(poseidasPage, MASTER_LIST_FIELD_ID, MASTERLIST_CERT_NAME);
-    setSelectValue(poseidasPage, DEFECT_LIST_FIELD_ID, DEFECTLIST_CERT_NAME);
     setSelectValue(poseidasPage, SERVER_CERTIFICATE_FIELD_ID, SERVER_CERT_NAME);
 
     // no service provider configured
@@ -175,6 +178,18 @@ public class MultipleServiceProviderTest extends ConfigWizardTestBase
     // selecting only the second public service provider
     setCheckboxValue(poseidasPage, "publicServiceProvider-1-publicServiceProvider", true);
     checkValidConfig(poseidasPage);
+
+    // adding another service provider with same entitiy id -> invalid
+    setTextValue(poseidasPage, ENTITY_ID_FIELD_ID, "anotherEntity");
+    setSelectValue(poseidasPage, CLIENT_KEYSTORE_FIELD_ID, CLIENT_KEYSTORE_NAME);
+    setCheckboxValue(poseidasPage,
+                     "minimalServiceProviderForm-minimalServiceProviderForm.publicServiceProvider",
+                     false);
+    poseidasPage = click(poseidasPage, Button.UPLOAD_SERVICE_PROVIDER);
+    poseidasPage = click(poseidasPage, Button.NEXT_PAGE);
+    // Fill placeholder
+    WebAssert.assertTextPresent(poseidasPage,
+                                getMessage(DUPLICATED_ENTITY_ID).replace("{0}", "\"anotherEntity\""));
   }
 
   /**

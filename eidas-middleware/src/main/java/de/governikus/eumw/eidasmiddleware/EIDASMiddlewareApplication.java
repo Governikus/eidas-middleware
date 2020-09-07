@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019 Governikus KG. Licensed under the EUPL, Version 1.2 or as soon they will be approved by
+ * Copyright (c) 2020 Governikus KG. Licensed under the EUPL, Version 1.2 or as soon they will be approved by
  * the European Commission - subsequent versions of the EUPL (the "Licence"); You may not use this work except
  * in compliance with the Licence. You may obtain a copy of the Licence at:
  * http://joinup.ec.europa.eu/software/page/eupl Unless required by applicable law or agreed to in writing,
@@ -34,6 +34,7 @@ public class EIDASMiddlewareApplication
     // do not remove bouncy without consideration, it will impact ECDH
     Security.addProvider(new BouncyCastleProvider());
     System.setProperty("jdk.tls.namedGroups", "secp521r1,secp384r1,secp256r1,secp224r1");
+    System.setProperty("jdk.tls.ephemeralDHKeySize", "2048");
     Security.setProperty("jdk.tls.disabledAlgorithms",
                          "SSLv3, RC4, MD5, SHA1, DSA, DH keySize < " + Utils.MIN_KEY_SIZE_RSA_TLS
                                                        + ", ECDH keySize < " + Utils.MIN_KEY_SIZE_EC_TLS

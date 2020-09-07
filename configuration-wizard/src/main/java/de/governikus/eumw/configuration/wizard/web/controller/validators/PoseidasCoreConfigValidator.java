@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019 Governikus KG. Licensed under the EUPL, Version 1.2 or as soon they will be approved by
+ * Copyright (c) 2020 Governikus KG. Licensed under the EUPL, Version 1.2 or as soon they will be approved by
  * the European Commission - subsequent versions of the EUPL (the "Licence"); You may not use this work except
  * in compliance with the Licence. You may obtain a copy of the Licence at:
  * http://joinup.ec.europa.eu/software/page/eupl Unless required by applicable law or agreed to in writing,
@@ -9,6 +9,10 @@
  */
 
 package de.governikus.eumw.configuration.wizard.web.controller.validators;
+
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
 
 import org.springframework.validation.BindingResult;
 
@@ -46,23 +50,42 @@ public class PoseidasCoreConfigValidator extends ViewValidator
                      commonServiceProvider.getMasterListTrustAnchor(),
                      bindingResult,
                      true);
-    checkNamedObject("poseidasConfig.commonServiceProviderData.defectListTrustAnchor",
-                     commonServiceProvider.getDefectListTrustAnchor(),
-                     bindingResult,
-                     true);
     checkNamedObject("poseidasConfig.commonServiceProviderData.sslKeysForm.serverCertificate",
                      commonServiceProvider.getSslKeysForm().getServerCertificate(),
                      bindingResult,
                      true);
-    checkRadioButton("poseidasConfig.commonServiceProviderData.policyID",
-                     commonServiceProvider.getPolicyID(),
+    checkRadioButton("poseidasConfig.commonServiceProviderData.dvcaProvider",
+                     commonServiceProvider.getDvcaProvider(),
                      bindingResult);
 
-    if (configurationForm.getPoseidasConfig().getServiceProviders().size() == 0)
+    if (configurationForm.getPoseidasConfig().getServiceProviders().isEmpty())
     {
       bindingResult.reject("wizard.status.validation.missing.serviceprovider",
                            "You must create at least one Service Provider.");
       return;
+    }
+    else
+    {
+      List<ServiceProviderForm> serviceProviders = configurationForm.getPoseidasConfig()
+                                                                    .getServiceProviders();
+      Set<ServiceProviderForm> duplicatedServiceProviderSet = new HashSet<>();
+      serviceProviders.forEach(serviceProvider -> {
+        if (serviceProviders.stream()
+                            .filter(serviceProvider2 -> serviceProvider.getEntityID()
+                                                                       .equalsIgnoreCase(serviceProvider2.getEntityID()))
+                            .count() > 1
+            && duplicatedServiceProviderSet.stream()
+                                           .noneMatch(serviceProviderToCompare -> serviceProviderToCompare.getEntityID()
+                                                                                                          .equalsIgnoreCase(serviceProvider.getEntityID())))
+        {
+          duplicatedServiceProviderSet.add(serviceProvider);
+        }
+      });
+      duplicatedServiceProviderSet.forEach(serviceProvider -> bindingResult.reject("wizard.status.validation.duplicatedEntityId.serviceprovider",
+                                                                                   new String[]{"\""
+                                                                                                + serviceProvider.getEntityID()
+                                                                                                + "\""},
+                                                                                   "Every Service Provider must have an unique id (EntityID)"));
     }
 
     boolean defaultServiceProviderSelected = false;

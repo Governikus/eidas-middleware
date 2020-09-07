@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019 Governikus KG. Licensed under the EUPL, Version 1.2 or as soon they will be approved by
+ * Copyright (c) 2020 Governikus KG. Licensed under the EUPL, Version 1.2 or as soon they will be approved by
  * the European Commission - subsequent versions of the EUPL (the "Licence"); You may not use this work except
  * in compliance with the Licence. You may obtain a copy of the Licence at:
  * http://joinup.ec.europa.eu/software/page/eupl Unless required by applicable law or agreed to in writing,
@@ -19,6 +19,7 @@ import java.util.Arrays;
 import java.util.Base64;
 
 import de.governikus.eumw.poseidas.config.schema.PkiServiceType;
+import de.governikus.eumw.poseidas.eidserver.model.signeddata.MasterList;
 import de.governikus.eumw.poseidas.gov2server.GovManagementException;
 import de.governikus.eumw.poseidas.gov2server.constants.admin.GlobalManagementCodes;
 import de.governikus.eumw.poseidas.gov2server.constants.admin.IDManagementCodes;
@@ -72,15 +73,25 @@ public class MasterAndDefectListHandler extends BerCaRequestHandlerBase
         PKIServiceConnector.getContextLock();
         log.debug("{}: obtained lock on SSL context for downloading master and defect list", cvcRefId);
         PassiveAuthServiceWrapper wrapper = createWrapper();
+
         masterList = getMasterList(wrapper);
-        defectList = getDefectList(wrapper);
-        if (masterList != null)
+        MasterList ml;
+        if (masterList == null)
         {
-          log.debug("MasterList:\n{}", Base64.getMimeEncoder().encodeToString(masterList));
+          // if we do not get a new master list from CA, at least try to use old stored version for defect
+          // list check
+          ml = new MasterList(facade.getTerminalPermission(cvcRefId).getMasterList());
         }
+        else
+        {
+          log.trace("MasterList:\n{}", Base64.getMimeEncoder().encodeToString(masterList));
+          ml = new MasterList(masterList);
+        }
+
+        defectList = getDefectList(wrapper, ml);
         if (defectList != null)
         {
-          log.debug("DefectList:\n{}", Base64.getMimeEncoder().encodeToString(defectList));
+          log.trace("DefectList:\n{}", Base64.getMimeEncoder().encodeToString(defectList));
         }
       }
       catch (MalformedURLException e)
@@ -92,9 +103,9 @@ public class MasterAndDefectListHandler extends BerCaRequestHandlerBase
       {
         throw e;
       }
-      catch (Throwable t)
+      catch (Exception e)
       {
-        log.error("{}: cannot renew master and defect list", cvcRefId, t);
+        log.error("{}: cannot renew master and defect list", cvcRefId, e);
         throw new GovManagementException(GlobalManagementCodes.INTERNAL_ERROR);
       }
       finally
@@ -111,9 +122,9 @@ public class MasterAndDefectListHandler extends BerCaRequestHandlerBase
         masterList = Arrays.copyOf(tp.getMasterList(), tp.getMasterList().length);
         defectList = Arrays.copyOf(tp.getDefectList(), tp.getDefectList().length);
       }
-      catch (Throwable t)
+      catch (Exception e)
       {
-        log.error("{}: cannot fetch master and defect list", cvcRefId, t);
+        log.error("{}: cannot fetch master and defect list", cvcRefId, e);
         throw new GovManagementException(GlobalManagementCodes.INTERNAL_ERROR);
       }
     }
@@ -179,13 +190,13 @@ public class MasterAndDefectListHandler extends BerCaRequestHandlerBase
     return masterList;
   }
 
-  private byte[] getDefectList(PassiveAuthServiceWrapper wrapper) throws MalformedURLException
+  private byte[] getDefectList(PassiveAuthServiceWrapper wrapper, MasterList ml) throws MalformedURLException
   {
 
     byte[] defectList = wrapper.getDefectList();
     if (!isLocalZip(defectList))
     {
-      CmsSignatureChecker checker = new CmsSignatureChecker(pkiConfig.getDefectListTrustAnchor());
+      CmsSignatureChecker checker = new CmsSignatureChecker(ml);
       if (!checker.checkEnvelopedSignature(defectList, cvcRefId))
       {
         SNMPDelegate.getInstance()

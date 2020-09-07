@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019 Governikus KG. Licensed under the EUPL, Version 1.2 or as soon they will be approved by
+ * Copyright (c) 2020 Governikus KG. Licensed under the EUPL, Version 1.2 or as soon they will be approved by
  * the European Commission - subsequent versions of the EUPL (the "Licence"); You may not use this work except
  * in compliance with the Licence. You may obtain a copy of the Licence at:
  * http://joinup.ec.europa.eu/software/page/eupl Unless required by applicable law or agreed to in writing,
@@ -10,9 +10,7 @@
 
 package de.governikus.eumw.poseidas.server.pki;
 
-import java.io.ByteArrayInputStream;
 import java.io.IOException;
-import java.lang.management.ManagementFactory;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.nio.ByteBuffer;
@@ -27,26 +25,13 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.zip.ZipEntry;
-import java.util.zip.ZipInputStream;
 
 import javax.annotation.PostConstruct;
-import javax.annotation.PreDestroy;
-import javax.management.InstanceAlreadyExistsException;
-import javax.management.InstanceNotFoundException;
-import javax.management.MBeanRegistrationException;
-import javax.management.MBeanServer;
-import javax.management.MalformedObjectNameException;
-import javax.management.NotCompliantMBeanException;
-import javax.management.ObjectName;
 
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Component;
 
-import de.governikus.eumw.eidascommon.Utils;
-import de.governikus.eumw.poseidas.cardbase.asn1.npa.CertificateDescription;
 import de.governikus.eumw.poseidas.cardbase.asn1.npa.ECCVCertificate;
 import de.governikus.eumw.poseidas.config.schema.PkiServiceType;
 import de.governikus.eumw.poseidas.gov2server.GovManagementException;
@@ -83,26 +68,13 @@ public class PermissionDataHandling implements PermissionDataHandlingMBean
   @Autowired
   private TerminalPermissionAO facade;
 
-  private ObjectName oname;
-
-  private ObjectName timerHandlingOName;
-
   @Autowired
   protected HSMServiceHolder hsmServiceHolder;
-
-  @Autowired
-  private ApplicationContext aplicationContext;
-
-  private MBeanServer server;
-
-  private boolean knowThatNoCertsWillExpire = false;
-
-  private boolean haveRequestedCert = false;
 
   private CVCRequestHandler getCvcRequestHandler(EPAConnectorConfigurationDto nPaConf)
     throws GovManagementException
   {
-    return new CVCRequestHandler(nPaConf, facade, aplicationContext, hsmServiceHolder.getKeyStore());
+    return new CVCRequestHandler(nPaConf, facade, hsmServiceHolder.getKeyStore());
   }
 
   private EPAConnectorConfigurationDto getnPaConfig(String entityID) throws GovManagementException
@@ -210,8 +182,8 @@ public class PermissionDataHandling implements PermissionDataHandlingMBean
     }
     catch (Exception e)
     {
-      SNMPDelegate.getInstance().sendSNMPTrap(OID.MASTERLIST_RENEWAL_FAILED,
-                                              SNMPDelegate.MASTERLIST_RENEWAL_FAILED);
+      SNMPDelegate.getInstance()
+                  .sendSNMPTrap(OID.MASTERLIST_RENEWAL_FAILED, SNMPDelegate.MASTERLIST_RENEWAL_FAILED);
       log.error("unable to renew any master and defect list", e);
     }
   }
@@ -310,15 +282,12 @@ public class PermissionDataHandling implements PermissionDataHandlingMBean
       for ( ServiceProviderDto provider : config.getServiceProvider().values() )
       {
         EPAConnectorConfigurationDto npaConf = provider.getEpaConnectorConfiguration();
-        if (npaConf != null && npaConf.isUpdateCVC())
-        {
-          renewMasterAndDefectList(provider, npaConf);
-        }
-        else if (npaConf != null)
+        if (npaConf != null && !npaConf.isUpdateCVC())
         {
           log.debug("{}: skip renew of black list for this provider, updateCVC is set to false, CVCRefID: {}",
                     provider.getEntityID(),
                     npaConf.getCVCRefID());
+          continue;
         }
         renewBlackList(provider, npaConf, true, alreadyRenewed, delta);
         requestPublicSectorKeyIfNeeded(provider, npaConf);
@@ -326,8 +295,8 @@ public class PermissionDataHandling implements PermissionDataHandlingMBean
     }
     catch (Exception e)
     {
-      SNMPDelegate.getInstance().sendSNMPTrap(OID.BLACKLIST_RENEWAL_FAILED,
-                                              SNMPDelegate.BLACKLIST_RENEWAL_FAILED);
+      SNMPDelegate.getInstance()
+                  .sendSNMPTrap(OID.BLACKLIST_RENEWAL_FAILED, SNMPDelegate.BLACKLIST_RENEWAL_FAILED);
       log.error("unable to renew any blacklist", e);
     }
   }
@@ -361,8 +330,23 @@ public class PermissionDataHandling implements PermissionDataHandlingMBean
                                                               hsmServiceHolder.getKeyStore());
       if (alreadyRenewed != null)
       {
-        alreadyRenewed.addAll(riHandler.requestBlackList(all, delta));
+        if (BlackListLock.getINSTANCE().getBlackListUpdateLock().tryLock())
+        {
+          try
+          {
+            alreadyRenewed.addAll(riHandler.requestBlackList(all, delta));
+          }
+          finally
+          {
+            BlackListLock.getINSTANCE().getBlackListUpdateLock().unlock();
+          }
+        }
+        else
+        {
+          log.debug("Black list is currently being updated, skipping this execution");
+        }
       }
+
       return GlobalManagementCodes.OK.createMessage();
     }
     catch (GovManagementException e)
@@ -445,7 +429,6 @@ public class PermissionDataHandling implements PermissionDataHandlingMBean
       }
       assertHsmAlive();
       Map<String, Date> expirationDateMap = facade.getExpirationDates();
-      knowThatNoCertsWillExpire = (expirationDateMap == null || expirationDateMap.isEmpty());
       if (expirationDateMap == null)
       {
         return;
@@ -456,7 +439,6 @@ public class PermissionDataHandling implements PermissionDataHandlingMBean
       {
         renewCvcForProvider(provider, expirationDateMap, lockedServiceProviders);
       }
-      haveRequestedCert = true;
     }
     catch (Exception e)
     {
@@ -569,25 +551,10 @@ public class PermissionDataHandling implements PermissionDataHandlingMBean
   @Override
   public ManagementMessage triggerCertRenewal(String entityID)
   {
-    return makeSubsequentRequest(entityID, null, true);
+    return makeSubsequentRequest(entityID, true);
   }
 
-  @Override
-  public ManagementMessage changeCvcDescription(String entityID, byte[] cvcDescription)
-  {
-    try
-    {
-      // try to parse the cvc description
-      new CertificateDescription(cvcDescription);
-    }
-    catch (Exception e)
-    {
-      return IDManagementCodes.INVALID_INPUT_DATA.createMessage(e.getMessage());
-    }
-    return makeSubsequentRequest(entityID, cvcDescription, false);
-  }
-
-  private ManagementMessage makeSubsequentRequest(String entityID, byte[] file, boolean forceSendAgain)
+  private ManagementMessage makeSubsequentRequest(String entityID, boolean forceSendAgain)
   {
     try
     {
@@ -597,10 +564,6 @@ public class PermissionDataHandling implements PermissionDataHandlingMBean
       BerCaPolicy policy = PolicyImplementationFactory.getInstance()
                                                       .getPolicy(npaConf.getPkiConnectorConfiguration()
                                                                         .getBerCaPolicyId());
-      if (policy != null && policy.isCertDescriptionFetch() && file != null)
-      {
-        return IDManagementCodes.INVALID_INPUT_DATA.createMessage("Certificate description replacing is done automatically when the BerCa provides a new certificate description.");
-      }
 
       TerminalPermission tp = getTerminalPermissionForRenewal(npaConf.getCVCRefID());
       boolean forceAsyncron = false;
@@ -609,17 +572,6 @@ public class PermissionDataHandling implements PermissionDataHandlingMBean
         forceAsyncron = containsExpiredCVC(tp);
       }
       byte[] cvcDescription = null;
-      if (file != null)
-      {
-        try
-        {
-          cvcDescription = writeZipOrCvcDescriptiontoMBean(entityID, file);
-        }
-        catch (Exception e)
-        {
-          log.error("Can not update config with new data from CVC", e);
-        }
-      }
       ManagementMessage message = getCvcRequestHandler(npaConf).makeSubsequentRequest(tp,
                                                                                       cvcDescription,
                                                                                       forceAsyncron,
@@ -635,8 +587,8 @@ public class PermissionDataHandling implements PermissionDataHandlingMBean
     }
     catch (Exception e)
     {
-      SNMPDelegate.getInstance().sendSNMPTrap(OID.CERT_RENEWAL_FAILED,
-                                              SNMPDelegate.CERT_RENEWAL_FAILED + " " + entityID);
+      SNMPDelegate.getInstance()
+                  .sendSNMPTrap(OID.CERT_RENEWAL_FAILED, SNMPDelegate.CERT_RENEWAL_FAILED + " " + entityID);
       log.error("{}: unable to renew CVC", entityID, e);
       return GlobalManagementCodes.EC_UNEXPECTED_ERROR.createMessage("unable to renew CVC: "
                                                                      + e.getMessage());
@@ -687,90 +639,6 @@ public class PermissionDataHandling implements PermissionDataHandlingMBean
   public void registerInJMX()
   {
     EIDInternal.getInstance().setCVCFacade(facade);
-
-    try
-    {
-      oname = AdminPoseidasConstants.OBJ_PERMISSION_DATA_HANDLING;
-      server = ManagementFactory.getPlatformMBeanServer();
-      server.registerMBean(this, oname);
-
-      timerHandlingOName = new ObjectName(oname.getDomain()
-                                          + ":module=permissisonDataHandling,service=timerHandling");
-      TimerHandling timerHandling = new TimerHandling(this, hsmServiceHolder, facade);
-
-      server.registerMBean(timerHandling, timerHandlingOName);
-    }
-    catch (MalformedObjectNameException | InstanceAlreadyExistsException | MBeanRegistrationException
-      | NotCompliantMBeanException e)
-    {
-      log.error("can not register MBean", e);
-      throw new IllegalStateException("can not register MBean", e);
-    }
-  }
-
-  /**
-   * register the timer handling bean
-   */
-  void registerTimerHandling()
-  {
-    log.info("register timer handler");
-    try
-    {
-      timerHandlingOName = new ObjectName(oname.getDomain()
-                                          + ":module=permissisonDataHandling,service=timerHandling");
-      TimerHandling timerHandling = new TimerHandling(this, hsmServiceHolder, facade);
-
-      server.registerMBean(timerHandling, timerHandlingOName);
-    }
-    catch (MalformedObjectNameException | NotCompliantMBeanException | MBeanRegistrationException
-      | InstanceAlreadyExistsException e)
-    {
-      log.error("Cannot register timer handling bean:", e);
-    }
-  }
-
-  /**
-   * unregister the timer handling bean
-   */
-  void unregisterTimerHandling()
-  {
-    log.info("unregister timer handler");
-    if (server.isRegistered(timerHandlingOName))
-    {
-      try
-      {
-        server.unregisterMBean(timerHandlingOName);
-      }
-      catch (InstanceNotFoundException | MBeanRegistrationException e)
-      {
-        log.error("Cannot unregister timer handling bean:", e);
-      }
-    }
-  }
-
-  @PreDestroy
-  public void unregisterRomJMX()
-  {
-    try
-    {
-      server.unregisterMBean(oname);
-      if (!knowThatNoCertsWillExpire || haveRequestedCert)
-      {
-        SNMPDelegate.getInstance()
-                    .sendSNMPTrap(OID.CERT_RENEWAL_SHUTDOWN,
-                                  SNMPDelegate.CERT_RENEWAL_SHUTDOWN + " "
-                                                             + "Application server shuts down, CVC renewal will not be done next time");
-      }
-      if (server.isRegistered(timerHandlingOName))
-      {
-        server.unregisterMBean(timerHandlingOName);
-      }
-    }
-    catch (MBeanRegistrationException | InstanceNotFoundException e)
-    {
-      log.error("can not unregister MBean", e);
-      throw new IllegalStateException("can not unregister MBean", e);
-    }
   }
 
   @Override
@@ -809,17 +677,6 @@ public class PermissionDataHandling implements PermissionDataHandlingMBean
       }
 
       byte[] cvcDescription = null;
-      if (file != null)
-      {
-        try
-        {
-          cvcDescription = writeZipOrCvcDescriptiontoMBean(entityID, file);
-        }
-        catch (Exception e)
-        {
-          log.error("Can not update config with new data from CVC", e);
-        }
-      }
 
       CVCRequestHandler handler = getCvcRequestHandler(epaConf);
       handler.makeInitialRequest(cvcDescription, countryCode, chrMnemonic, sequenceNumber);
@@ -873,7 +730,6 @@ public class PermissionDataHandling implements PermissionDataHandlingMBean
     BerCaPolicy policy = PolicyImplementationFactory.getInstance().getPolicy(pkiConf.getBerCaPolicyId());
     checkValuePresent(pkiConf.getBlackListTrustAnchor(), "blackListTrustAnchor");
     checkValuePresent(pkiConf.getMasterListTrustAnchor(), "masterListTrustAnchor");
-    checkValuePresent(pkiConf.getDefectListTrustAnchor(), "defectListTrustAnchor");
     checkUrl(pkiConf.getTerminalAuthService().getUrl(), "terminalAuthService.title");
     checkUrl(pkiConf.getRestrictedIdService().getUrl(), "restrictedIdService.title");
     checkService(pkiConf, pkiConf.getTerminalAuthService(), npaConf.getCVCRefID());
@@ -996,75 +852,6 @@ public class PermissionDataHandling implements PermissionDataHandlingMBean
     return tp.getCvcDescription();
   }
 
-  /**
-   * Tries to parse given data as CVC, returns true if CVC was successfully parsed
-   *
-   * @param cvc
-   * @return parse result
-   */
-  private boolean simpleParseCVC(byte[] cvc)
-  {
-    try
-    {
-      new ECCVCertificate(cvc);
-    }
-    catch (Exception e)
-    {
-      return false;
-    }
-    return true;
-  }
-
-  @Override
-  public ManagementMessage importCertificate(String entityID, byte[] cvc)
-  {
-    CVCUpdateLock lock = null;
-    try
-    {
-      if (!simpleParseCVC(cvc))
-      {
-        log.error("{}: unable to import certificate", entityID);
-        return IDManagementCodes.INVALID_CERTIFICATE.createMessage();
-      }
-      EPAConnectorConfigurationDto nPaConf = getnPaConfigWithCheck(entityID);
-      String cvcRefID = nPaConf.getCVCRefID();
-      TerminalPermission tp = facade.getTerminalPermission(cvcRefID);
-      if (tp == null)
-      {
-        return IDManagementCodes.MISSING_TERMINAL_CERTIFICATE.createMessage(cvcRefID);
-      }
-      PendingCertificateRequest pendingRequest = tp.getPendingCertificateRequest();
-      if (pendingRequest == null)
-      {
-        return IDManagementCodes.MISSING_TERMINAL_CERTIFICATE.createMessage(cvcRefID);
-      }
-
-      String trustCenterUrl = nPaConf.getPkiConnectorConfiguration().getTerminalAuthService().getUrl();
-      lock = facade.obtainCVCUpdateLock(trustCenterUrl);
-      if (lock == null)
-      {
-        log.debug("{}: Some other server is renewing CVCs right now - skipping all calls to {}",
-                  entityID,
-                  trustCenterUrl);
-        return IDManagementCodes.CVC_UPDATE_LOCKED.createMessage();
-      }
-      CVCRequestHandler handler = getCvcRequestHandler(nPaConf);
-      handler.installNewCertificate(cvc);
-    }
-    catch (GovManagementException t)
-    {
-      return t.getManagementMessage();
-    }
-    finally
-    {
-      if (lock != null)
-      {
-        facade.releaseCVCUpdateLock(lock);
-      }
-    }
-    return GlobalManagementCodes.OK.createMessage();
-  }
-
   @Override
   public ManagementMessage deletePendingCertRequest(String entityID)
   {
@@ -1077,42 +864,6 @@ public class PermissionDataHandling implements PermissionDataHandlingMBean
     {
       log.error("{}: Problem while deleting cvc request: {}", entityID, e.getManagementMessage());
       return e.getManagementMessage();
-    }
-  }
-
-  private boolean isZip(byte[] data)
-  {
-    return data.length >= 2 && data[0] == 0x50 && data[1] == 0X4b;
-  }
-
-  private byte[] writeZipOrCvcDescriptiontoMBean(String entityID, byte[] file) throws GovManagementException
-  {
-    if (file == null || file.length <= 2)
-    {
-      throw new GovManagementException(GlobalManagementCodes.EC_INVALIDVALUE.createMessage());
-    }
-    try
-    {
-      byte[] cvcDescription = file;
-      if (isZip(file))
-      {
-        try (ZipInputStream zipIns = new ZipInputStream(new ByteArrayInputStream(file)))
-        {
-          for ( ZipEntry entry = zipIns.getNextEntry() ; entry != null ; entry = zipIns.getNextEntry() )
-          {
-            if (entry.getName().endsWith(".bin"))
-            {
-              cvcDescription = Utils.readBytesFromStream(zipIns);
-            }
-          }
-        }
-      }
-      return cvcDescription;
-    }
-    catch (IOException e)
-    {
-      log.error("{}: IO Problem when importing the CVC", entityID, e);
-      throw new GovManagementException(GlobalManagementCodes.INTERNAL_ERROR.createMessage());
     }
   }
 }

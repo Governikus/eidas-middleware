@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019 Governikus KG. Licensed under the EUPL, Version 1.2 or as soon they will be approved by
+ * Copyright (c) 2020 Governikus KG. Licensed under the EUPL, Version 1.2 or as soon they will be approved by
  * the European Commission - subsequent versions of the EUPL (the "Licence"); You may not use this work except
  * in compliance with the Licence. You may obtain a copy of the Licence at:
  * http://joinup.ec.europa.eu/software/page/eupl Unless required by applicable law or agreed to in writing,
@@ -57,17 +57,17 @@ public class ReadParameter implements FunctionParameter
   /**
    * Constant for default read length.
    */
-  private static int DEFAULT_LENGTH = 0;
+  private static final int DEFAULT_LENGTH = 0;
 
   /**
    * Constant for default offset.
    */
-  private static int DEFAULT_OFFSET = 0;
+  private static final int DEFAULT_OFFSET = 0;
 
   /**
    * Constant for default SFI.
    */
-  private static Byte DEFAULT_SFI = null;
+  private static final Byte DEFAULT_SFI = null;
 
   private Byte sfi = DEFAULT_SFI;
 

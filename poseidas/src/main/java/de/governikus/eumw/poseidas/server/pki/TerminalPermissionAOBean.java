@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019 Governikus KG. Licensed under the EUPL, Version 1.2 or as soon they will be approved by
+ * Copyright (c) 2020 Governikus KG. Licensed under the EUPL, Version 1.2 or as soon they will be approved by
  * the European Commission - subsequent versions of the EUPL (the "Licence"); You may not use this work except
  * in compliance with the Licence. You may obtain a copy of the Licence at:
  * http://joinup.ec.europa.eu/software/page/eupl Unless required by applicable law or agreed to in writing,
@@ -59,8 +59,6 @@ public class TerminalPermissionAOBean implements TerminalPermissionAO
   private static final int MAX_DB_ARGS = 5000;
 
   private static final int DEFAULT_BATCH_SIZE = 1000;
-
-  public static final String SECTOR_ID = "sectorID";
 
   @Autowired
   private ApplicationContext applicationContext;
@@ -213,7 +211,7 @@ public class TerminalPermissionAOBean implements TerminalPermissionAO
   public Map<String, Date> getExpirationDates()
   {
     Map<String, Date> result = new HashMap<>();
-    TypedQuery<TerminalPermission> query = entityManager.createNamedQuery("getTerminalPermissionList",
+    TypedQuery<TerminalPermission> query = entityManager.createNamedQuery(TerminalPermission.QUERY_NAME_GETTERMINALPERMISSIONLIST,
                                                                           TerminalPermission.class);
     for ( TerminalPermission permission : query.getResultList() )
     {
@@ -274,7 +272,7 @@ public class TerminalPermissionAOBean implements TerminalPermissionAO
   @Override
   public TerminalPermission getTerminalPermissionByMessage(String messageID)
   {
-    TypedQuery<TerminalPermission> query = entityManager.createNamedQuery("getByMessageId",
+    TypedQuery<TerminalPermission> query = entityManager.createNamedQuery(TerminalPermission.QUERY_NAME_GETBYMESSAGEID,
                                                                           TerminalPermission.class);
     query.setParameter("pMessageID", messageID);
     try
@@ -360,11 +358,9 @@ public class TerminalPermissionAOBean implements TerminalPermissionAO
 
   private void removeOldSectorID(String oldSectorID, String sectorIDBase64)
   {
-    log.debug("SectorID has changed, removing all entries with the old SectorID");
-    String stringQuery = String.format("UPDATE BlackListEntry SET key.sectorID = '%s' WHERE key.sectorID = :%s",
-                                       sectorIDBase64,
-                                       BlackListEntry.PARAM_SECTORID);
-    Query updateQuery = entityManager.createQuery(stringQuery);
+    log.debug("SectorID has changed, change all entries with the old SectorID");
+    Query updateQuery = entityManager.createNamedQuery(BlackListEntry.UPDATE_WHERE_SECTORID);
+    updateQuery.setParameter(BlackListEntry.PARAM_NEWSECTORID, sectorIDBase64);
     updateQuery.setParameter(BlackListEntry.PARAM_SECTORID, oldSectorID);
     updateQuery.executeUpdate();
   }
@@ -389,9 +385,9 @@ public class TerminalPermissionAOBean implements TerminalPermissionAO
     log.info("{} entries that are no longer blacklisted will be removed", specificIds.size());
     for ( List<String> partition : Lists.partition(specificIds, MAX_DB_ARGS) )
     {
-      Query deleteQuery = entityManager.createQuery("DELETE FROM BlackListEntry WHERE key.sectorID = :sectorID AND key.specificID in :specificIDs");
-      deleteQuery.setParameter(SECTOR_ID, sectorID);
-      deleteQuery.setParameter("specificIDs", partition);
+      Query deleteQuery = entityManager.createNamedQuery(BlackListEntry.DELETE_WHERE_SECTORID_AND_SPECIFICID);
+      deleteQuery.setParameter(BlackListEntry.PARAM_SECTORID, sectorID);
+      deleteQuery.setParameter(BlackListEntry.PARAM_SPECIFICID, partition);
       deleteQuery.executeUpdate();
     }
   }
@@ -512,14 +508,10 @@ public class TerminalPermissionAOBean implements TerminalPermissionAO
     }
     if (element.getSectorID() != null)
     {
-      // FIXME: Use BlackListEntry.DELETE_WHERE_SECTORID
-      TypedQuery<BlackListEntry> query = entityManager.createNamedQuery("getBlackListEntries",
-                                                                        BlackListEntry.class);
-      query.setParameter(SECTOR_ID, DatatypeConverter.printBase64Binary(element.getSectorID()));
-      for ( BlackListEntry oldEntry : query.getResultList() )
-      {
-        entityManager.remove(oldEntry);
-      }
+      Query query = entityManager.createNamedQuery(BlackListEntry.DELETE_WHERE_SECTORID);
+      query.setParameter(BlackListEntry.PARAM_SECTORID,
+                         DatatypeConverter.printBase64Binary(element.getSectorID()));
+      query.executeUpdate();
     }
     entityManager.remove(element);
     return true;
@@ -581,7 +573,7 @@ public class TerminalPermissionAOBean implements TerminalPermissionAO
     }
     else
     {
-      pending.setStatus(Status.Created);
+      pending.setStatus(Status.CREATED);
     }
     pending.setRequestData(request);
     pending.setPrivateKey(privKey);
@@ -597,7 +589,7 @@ public class TerminalPermissionAOBean implements TerminalPermissionAO
   public void storeCVCRequestSent(String refID)
   {
     TerminalPermission tp = entityManager.find(TerminalPermission.class, refID);
-    tp.getPendingCertificateRequest().setStatus(PendingCertificateRequest.Status.Sent);
+    tp.getPendingCertificateRequest().setStatus(PendingCertificateRequest.Status.SENT);
   }
 
   @Override
@@ -620,14 +612,6 @@ public class TerminalPermissionAOBean implements TerminalPermissionAO
     TerminalPermission data = entityManager.find(TerminalPermission.class, refID);
     data.setDefectList(defectList);
     data.setDefectListStoreDate(new Date());
-    // removing this is only needed when old systems are migrated
-    PendingCertificateRequest pendingRequest = data.getPendingCertificateRequest();
-    if (data.getMasterListStoreDate() != null && pendingRequest != null
-        && pendingRequest.getStatus().equals(Status.SectorKeyReceived))
-    {
-      entityManager.remove(pendingRequest);
-      data.setPendingCertificateRequest(null);
-    }
   }
 
   @Override
@@ -644,21 +628,13 @@ public class TerminalPermissionAOBean implements TerminalPermissionAO
   {
     TerminalPermission data = entityManager.find(TerminalPermission.class, refID);
     data.setRiKey1(publicSectorKey);
-    // removing this is only needed when old systems are migrated
-    PendingCertificateRequest pendingRequest = data.getPendingCertificateRequest();
-    if (pendingRequest != null
-        && PendingCertificateRequest.Status.CertReceived.equals(pendingRequest.getStatus()))
-    {
-      entityManager.remove(pendingRequest);
-      data.setPendingCertificateRequest(null);
-    }
   }
 
   @Override
   public void storeCVCObtainedError(String refID, String additionalInfo)
   {
     TerminalPermission data = entityManager.find(TerminalPermission.class, refID);
-    data.getPendingCertificateRequest().setStatus(Status.Failure);
+    data.getPendingCertificateRequest().setStatus(Status.FAILURE);
     data.getPendingCertificateRequest().setAdditionalInfo(additionalInfo);
   }
 
@@ -746,11 +722,10 @@ public class TerminalPermissionAOBean implements TerminalPermissionAO
     try
     {
       String myAddress = InetAddress.getLocalHost().toString();
-      String ownChoice = own ? "=" : "<>";
-      String stringQuery = String.format("SELECT l FROM ChangeKeyLock l WHERE l.autentIP %s'%s'",
-                                         ownChoice,
-                                         myAddress);
-      TypedQuery<ChangeKeyLock> query = this.entityManager.createQuery(stringQuery, ChangeKeyLock.class);
+      TypedQuery<ChangeKeyLock> query = this.entityManager.createNamedQuery(own
+        ? ChangeKeyLock.QUERY_NAME_GETOWNLOCKS : ChangeKeyLock.QUERY_NAME_GETFOREIGNLOCKS,
+                                                                            ChangeKeyLock.class);
+      query.setParameter(ChangeKeyLock.PARAM_IP, myAddress);
       for ( ChangeKeyLock q : query.getResultList() )
       {
         resultList.add(q);
@@ -880,7 +855,7 @@ public class TerminalPermissionAOBean implements TerminalPermissionAO
   @Override
   public List<String> getTerminalPermissionRefIDList()
   {
-    TypedQuery<TerminalPermission> query = entityManager.createNamedQuery("getTerminalPermissionList",
+    TypedQuery<TerminalPermission> query = entityManager.createNamedQuery(TerminalPermission.QUERY_NAME_GETTERMINALPERMISSIONLIST,
                                                                           TerminalPermission.class);
     List<String> entityIDList = new ArrayList<>();
     for ( TerminalPermission tp : query.getResultList() )

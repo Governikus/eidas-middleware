@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019 Governikus KG. Licensed under the EUPL, Version 1.2 or as soon they will be approved by
+ * Copyright (c) 2020 Governikus KG. Licensed under the EUPL, Version 1.2 or as soon they will be approved by
  * the European Commission - subsequent versions of the EUPL (the "Licence"); You may not use this work except
  * in compliance with the Licence. You may obtain a copy of the Licence at:
  * http://joinup.ec.europa.eu/software/page/eupl Unless required by applicable law or agreed to in writing,
@@ -21,6 +21,7 @@ import javax.xml.bind.JAXBException;
 import javax.xml.parsers.ParserConfigurationException;
 import javax.xml.soap.SOAPException;
 import javax.xml.soap.SOAPMessage;
+import javax.xml.transform.TransformerException;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -35,8 +36,12 @@ import iso.std.iso_iec._24727.tech.schema.ResponseType;
 import iso.std.iso_iec._24727.tech.schema.StartPAOS;
 
 
-abstract public class AbstractPaosHandler
+public abstract class AbstractPaosHandler
 {
+
+  private static final String VER_BEGIN = "ver=\"";
+
+  private static final String VER_END = "\"";
 
   private static final Log LOG = LogFactory.getLog(AbstractPaosHandler.class.getName());
 
@@ -134,21 +139,21 @@ abstract public class AbstractPaosHandler
     }
 
     // Only require one property out of 3
-    if (paosHeader.indexOf("ver=\"" + AuthenticationConstants.PAOS_1_1_URN + "\"") != -1)
+    if (paosHeader.indexOf(VER_BEGIN + AuthenticationConstants.PAOS_1_1_URN + VER_END) != -1)
     {
       return true;
     }
-    if (paosHeader.indexOf("ver=\"" + AuthenticationConstants.PAOS_2_0_URN + "\"") != -1)
+    if (paosHeader.indexOf(VER_BEGIN + AuthenticationConstants.PAOS_2_0_URN + VER_END) != -1)
     {
       return true;
     }
     // Paos from AusweisApp
-    if (paosHeader.indexOf("ver=\"" + AuthenticationConstants.PAOS_1_1_URN_BC_QUIRKSMODE + "\"") != -1)
+    if (paosHeader.indexOf(VER_BEGIN + AuthenticationConstants.PAOS_1_1_URN_BC_QUIRKSMODE + VER_END) != -1)
     {
       LOG.debug("Accept Wrong PAOS Header from AusweisApp: " + paosHeader);
       return true;
     }
-    if (paosHeader.indexOf("ver=\"" + AuthenticationConstants.PAOS_2_0_URN_BC_QUIRKSMODE + "\"") != -1)
+    if (paosHeader.indexOf(VER_BEGIN + AuthenticationConstants.PAOS_2_0_URN_BC_QUIRKSMODE + VER_END) != -1)
     {
       LOG.debug("Accept Wrong PAOS Header from AusweisApp: " + paosHeader);
       return true;
@@ -234,10 +239,13 @@ abstract public class AbstractPaosHandler
    *
    * @param object the conversation object
    * @return the PAOS message as string
-   * @throws IOException on any IO error, will not be caught
-   * @throws Exception any other exception will be caught
+   * @throws SAXException
+   * @throws IOException
+   * @throws TransformerException
+   * @throws ParserConfigurationException
    */
-  abstract protected String createPAOSMessage(Object object) throws Exception, IOException;
+  protected abstract String createPAOSMessage(Object object)
+    throws SAXException, IOException, TransformerException, ParserConfigurationException;
 
   /**
    * Sets up the HTTP servlet response and writes the body.

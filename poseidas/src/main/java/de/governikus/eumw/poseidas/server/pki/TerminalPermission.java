@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019 Governikus KG. Licensed under the EUPL, Version 1.2 or as soon they will be approved by
+ * Copyright (c) 2020 Governikus KG. Licensed under the EUPL, Version 1.2 or as soon they will be approved by
  * the European Commission - subsequent versions of the EUPL (the "Licence"); You may not use this work except
  * in compliance with the Licence. You may obtain a copy of the Licence at:
  * http://joinup.ec.europa.eu/software/page/eupl Unless required by applicable law or agreed to in writing,
@@ -23,7 +23,6 @@ import javax.persistence.Entity;
 import javax.persistence.Id;
 import javax.persistence.JoinColumn;
 import javax.persistence.Lob;
-import javax.persistence.NamedQueries;
 import javax.persistence.NamedQuery;
 import javax.persistence.OneToMany;
 import javax.persistence.OneToOne;
@@ -41,13 +40,19 @@ import de.governikus.eumw.poseidas.eidmodel.TerminalData;
  * @author TT
  */
 @Entity
-@NamedQueries({
-               @NamedQuery(name = "getTerminalPermissionList", query = "SELECT t FROM TerminalPermission t ORDER BY t.notOnOrAfter"),
-               @NamedQuery(name = "getByMessageId", query = "SELECT t FROM TerminalPermission t WHERE t.pendingRequest.messageID = :pMessageID")})
+@NamedQuery(name = TerminalPermission.QUERY_NAME_GETTERMINALPERMISSIONLIST, query = "SELECT t FROM TerminalPermission t ORDER BY t.notOnOrAfter")
+@NamedQuery(name = TerminalPermission.QUERY_NAME_GETBYMESSAGEID, query = "SELECT t FROM TerminalPermission t WHERE t.pendingRequest.messageID = :"
+                                                                         + TerminalPermission.PARAM_MESSAGEID)
 public class TerminalPermission implements Serializable
 {
 
   private static final long serialVersionUID = 8085421165844034269L * 5;
+
+  static final String QUERY_NAME_GETTERMINALPERMISSIONLIST = "getTerminalPermissionList";
+
+  static final String QUERY_NAME_GETBYMESSAGEID = "getByMessageId";
+
+  static final String PARAM_MESSAGEID = "pMessageID";
 
   @Id
   private String refID;

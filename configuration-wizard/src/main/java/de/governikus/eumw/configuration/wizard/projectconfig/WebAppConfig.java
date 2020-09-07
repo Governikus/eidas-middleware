@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019 Governikus KG. Licensed under the EUPL, Version 1.2 or as soon they will be approved by
+ * Copyright (c) 2020 Governikus KG. Licensed under the EUPL, Version 1.2 or as soon they will be approved by
  * the European Commission - subsequent versions of the EUPL (the "Licence"); You may not use this work except
  * in compliance with the Licence. You may obtain a copy of the Licence at:
  * http://joinup.ec.europa.eu/software/page/eupl Unless required by applicable law or agreed to in writing,
@@ -12,17 +12,21 @@ package de.governikus.eumw.configuration.wizard.projectconfig;
 
 import javax.servlet.Filter;
 
-import de.governikus.eumw.configuration.wizard.web.converter.CertificateConverter;
-import de.governikus.eumw.configuration.wizard.web.converter.KeystoreConverter;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Primary;
+import org.springframework.context.annotation.Profile;
+import org.springframework.context.annotation.Scope;
 import org.springframework.format.FormatterRegistry;
+import org.springframework.web.context.annotation.SessionScope;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 
 import de.governikus.eumw.configuration.wizard.projectconfig.filter.Utf8Filter;
 import de.governikus.eumw.configuration.wizard.web.ExposedReloadableResourceBundleMessageSource;
+import de.governikus.eumw.configuration.wizard.web.converter.CertificateConverter;
+import de.governikus.eumw.configuration.wizard.web.converter.KeystoreConverter;
 import lombok.extern.slf4j.Slf4j;
 
 
@@ -50,18 +54,31 @@ public class WebAppConfig implements WebMvcConfigurer
    * read at system startup
    */
   @Value("${configDirectory:}")
-  private String configDirectory;
+  private String configDirectoryPath;
 
   /**
-   * this bean is used to have the configDirectory value as a dynamic value that can be
-   *
-   * @return the bean with the configuration directory
+   * Bean with scope "singleton" will only used for testing purposes
    */
-  @Bean
-  public ConfigDirectory getConfigDirFactoryBean()
+  @Bean("configDirectory")
+  @Profile("test")
+  @Scope("singleton")
+  public ConfigDirectory configDirectoryForTest()
   {
-    return new ConfigDirectory(configDirectory);
+    return new ConfigDirectory(configDirectoryPath);
   }
+
+  /**
+   * Bean with scope "session" will only used for none testing purposes
+   */
+  @Bean("configDirectory")
+  @Profile("!test")
+  @SessionScope
+  @Primary
+  public ConfigDirectory configDirectory()
+  {
+    return new ConfigDirectory(configDirectoryPath);
+  }
+
 
   /**
    * @return a filter that sets the encoding of any request and any response to UTF-8
@@ -80,8 +97,7 @@ public class WebAppConfig implements WebMvcConfigurer
   public String[] resourceBundles()
   {
     // @formatter:off
-    return new String[]{bundlesDir + "/statusMessages",
-                        bundlesDir + "/commonMessages"};
+    return new String[]{bundlesDir + "/statusMessages", bundlesDir + "/commonMessages"};
     // @formatter:on
   }
 

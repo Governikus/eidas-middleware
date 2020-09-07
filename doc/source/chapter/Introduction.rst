@@ -25,17 +25,17 @@ For additional information see the page about the `eIDAS Notification of the Ger
 The following brief description facilitates the understanding and configuration of the eIDAS Middleware.
 
 A single eIDAS Middleware supports a multiple :term:`eID Service Provider` s and multiple eIDAS connectors.
-An :term:`eID Service Provider` needs an :term:`Authorisation Certificate` to access data on the eID Card.
-The Authorisation Certificate is issued to the :term:`eID Service Provider` by the :term:`Authorisation CA`, also called :term:`BerCA`.
-The eIDAS Middleware technically receives the :term:`Authorisation Certificate` via SOAP requests
-to the :term:`Authorisation CA`.
+An :term:`eID Service Provider` needs an :term:`Authorization Certificate` to access data on the eID Card.
+The Authorization Certificate is issued to the :term:`eID Service Provider` by the :term:`Authorization CA`, also called :term:`BerCA`.
+The eIDAS Middleware technically receives the :term:`Authorization Certificate` via SOAP requests
+to the :term:`Authorization CA`.
 These requests are secured by TLS client authentication.
-Therefore the public certificates of the :term:`Authorisation CA` and your eIDAS Middleware must be exchanged before the eIDAS Middleware can request the first Authorisation Certificate.
-For more information on how to get in contact with the :term:`Authorisation CA`, see the document `Three Steps to integrate the German eIDAS Middleware <https://ec.europa.eu/cefdigital/wiki/display/EIDIMPL/eIDAS-Middleware?preview=/37773440/51020051/2017_08_23_German%20eID_MW-Integration_v1_0.pdf>`_.
-The :term:`Authorisation Certificate` is presented to the German eID Card to ensure the authenticity of the :term:`eID Service Provider` and to verify that the :term:`eID Service Provider` only requests attributes allowed by the :term:`Authorisation CA`.
+Therefore the public certificates of the :term:`Authorization CA` and your eIDAS Middleware must be exchanged before the eIDAS Middleware can request the first Authorization Certificate.
+For more information on how to get in contact with the :term:`Authorization CA`, see the document `Three Steps to integrate the German eIDAS Middleware on the German Country Page <https://ec.europa.eu/cefdigital/wiki/display/EIDIMPL/Germany#Germany-GermaneIDAS-Middleware>`_.
+The :term:`Authorization Certificate` is presented to the German eID Card to ensure the authenticity of the :term:`eID Service Provider` and to verify that the :term:`eID Service Provider` only requests attributes allowed by the :term:`Authorization CA`.
 
-There are two different Authorisation CAs available. The Bundesdruckerei provides Authorisation Certificates for productive environments with real eID cards.
-Governikus provides Authorisation Certificates for test environments with test eID cards.
+There are two different Authorization CAs available. The Bundesdruckerei provides Authorization Certificates for productive environments with real eID cards.
+Governikus provides Authorization Certificates for test environments with test eID cards.
 
 Introduction to Docker
 ======================

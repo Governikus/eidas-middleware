@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019 Governikus KG. Licensed under the EUPL, Version 1.2 or as soon they will be approved by
+ * Copyright (c) 2020 Governikus KG. Licensed under the EUPL, Version 1.2 or as soon they will be approved by
  * the European Commission - subsequent versions of the EUPL (the "Licence"); You may not use this work except
  * in compliance with the Licence. You may obtain a copy of the Licence at:
  * http://joinup.ec.europa.eu/software/page/eupl Unless required by applicable law or agreed to in writing,
@@ -54,16 +54,11 @@ public interface TransmitResultEvaluator<T extends FunctionResult<?>> extends AP
      *          index of last available responses valid, count of indices must between minimum and maximum
      *          response count, <code>null</code> or empty array replaced by array containing index 0 only to
      *          use first response only
-     * @param min minimum count of responses
-     * @param max maximum count of responses
      * @return adjusted responseIndices, <code>null</code> replaced by array containing default index 0 for
      *         first response
      * @throws IllegalArgumentException when arguments invalid
      */
-    public static int[] checkArguments(TransmitAPDUResult transmitResult,
-                                       int[] responseIndices,
-                                       int min,
-                                       int max)
+    public static int[] checkArguments(TransmitAPDUResult transmitResult, int[] responseIndices)
     {
       AssertUtil.notNull(transmitResult, "transmit result");
       if (ArrayUtil.isNullOrEmpty(responseIndices))
@@ -79,7 +74,8 @@ public interface TransmitResultEvaluator<T extends FunctionResult<?>> extends AP
         if (responseIndex >= transmitResult.getData().getOutputAPDU().size())
         {
           throw new IllegalArgumentException("invalid index, only value less equals "
-                                             + transmitResult.getData().getOutputAPDU().size() + " permitted");
+                                             + transmitResult.getData().getOutputAPDU().size()
+                                             + " permitted");
         }
       }
       return responseIndices;

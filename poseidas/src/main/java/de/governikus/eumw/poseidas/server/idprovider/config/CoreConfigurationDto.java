@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019 Governikus KG. Licensed under the EUPL, Version 1.2 or as soon they will be approved by
+ * Copyright (c) 2020 Governikus KG. Licensed under the EUPL, Version 1.2 or as soon they will be approved by
  * the European Commission - subsequent versions of the EUPL (the "Licence"); You may not use this work except
  * in compliance with the Licence. You may obtain a copy of the Licence at:
  * http://joinup.ec.europa.eu/software/page/eupl Unless required by applicable law or agreed to in writing,
@@ -13,7 +13,9 @@ package de.governikus.eumw.poseidas.server.idprovider.config;
 import java.io.Reader;
 import java.util.Calendar;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 import java.util.TreeMap;
 
@@ -26,6 +28,7 @@ import de.governikus.eumw.poseidas.config.schema.ObjectFactory;
 import de.governikus.eumw.poseidas.config.schema.ServiceProviderType;
 import de.governikus.eumw.poseidas.config.schema.TimerConfigurationType;
 import de.governikus.eumw.poseidas.config.schema.TimerType;
+import de.governikus.eumw.poseidas.server.idprovider.exceptions.InvalidConfigurationException;
 
 
 /**
@@ -48,8 +51,7 @@ public class CoreConfigurationDto extends AbstractConfigDto<CoreConfigurationTyp
     super(jaxBConfig);
   }
 
-  @Override
-  protected void setJaxbConfig(CoreConfigurationType jaxBConfig)
+  @Override protected void setJaxbConfig(CoreConfigurationType jaxBConfig)
   {
     this.jaxbConfig = jaxBConfig;
 
@@ -83,6 +85,18 @@ public class CoreConfigurationDto extends AbstractConfigDto<CoreConfigurationTyp
       timerConf.getMasterAndDefectListRenewal().setLength(1);
       timerConf.getMasterAndDefectListRenewal().setUnit(Calendar.DAY_OF_MONTH);
     }
+    if (timerConf.getCrlRenewal() == null)
+    {
+      timerConf.setCrlRenewal(new TimerType());
+      timerConf.getCrlRenewal().setLength(12);
+      timerConf.getCrlRenewal().setUnit(Calendar.HOUR_OF_DAY);
+    }
+    if (timerConf.getCrlCacheTime() == null)
+    {
+      timerConf.setCrlCacheTime(new TimerType());
+      timerConf.getCrlCacheTime().setLength(24);
+      timerConf.getCrlCacheTime().setUnit(Calendar.HOUR_OF_DAY);
+    }
 
     if (jaxbConfig.getSessionMaxPendingRequests() == 0)
     {
@@ -96,8 +110,8 @@ public class CoreConfigurationDto extends AbstractConfigDto<CoreConfigurationTyp
    * @param reader
    * @throws JAXBException
    */
-  @SuppressWarnings("unchecked")
-  static CoreConfigurationDto readFrom(Reader reader) throws JAXBException
+  @SuppressWarnings("unchecked") static CoreConfigurationDto readFrom(Reader reader)
+    throws JAXBException, InvalidConfigurationException
   {
     JAXBContext context = JAXBContext.newInstance(ObjectFactory.class);
     Object po = context.createUnmarshaller().unmarshal(reader);
@@ -110,17 +124,18 @@ public class CoreConfigurationDto extends AbstractConfigDto<CoreConfigurationTyp
     {
       parsed = ((JAXBElement<CoreConfigurationType>)po).getValue();
     }
+    validateConfig(parsed);
     return new CoreConfigurationDto(parsed);
   }
 
-  @Override
-  public CoreConfigurationType getJaxbConfig()
+  @Override public CoreConfigurationType getJaxbConfig()
   {
     jaxbConfig.getServiceProvider().clear();
     for ( ServiceProviderDto provider : serviceProviders.values() )
     {
       jaxbConfig.getServiceProvider().add(provider.getJaxbConfig());
     }
+
     return jaxbConfig;
   }
 
@@ -202,5 +217,28 @@ public class CoreConfigurationDto extends AbstractConfigDto<CoreConfigurationTyp
       }
     }
     return result;
+  }
+
+  private static void validateConfig(CoreConfigurationType config) throws InvalidConfigurationException
+  {
+
+    List<ServiceProviderType> serviceProviders = config.getServiceProvider();
+    Set<ServiceProviderType> duplicatedServiceProviderList = new HashSet<>();
+    serviceProviders.forEach(serviceProvider -> {
+      if (serviceProviders.stream()
+                          .filter(serviceProvider2 -> serviceProvider.getEntityID()
+                                                                     .contentEquals(serviceProvider2.getEntityID()))
+                          .count() > 1)
+      {
+        duplicatedServiceProviderList.add(serviceProvider);
+      }
+    });
+
+    if (!duplicatedServiceProviderList.isEmpty())
+    {
+      Optional<ServiceProviderType> first = duplicatedServiceProviderList.stream().findFirst();
+      throw new InvalidConfigurationException(
+        "Duplicated Service Provider Name found: " + (first.isPresent() ? first.get().getEntityID() : ""));
+    }
   }
 }

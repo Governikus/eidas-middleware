@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019 Governikus KG. Licensed under the EUPL, Version 1.2 or as soon they will be approved by
+ * Copyright (c) 2020 Governikus KG. Licensed under the EUPL, Version 1.2 or as soon they will be approved by
  * the European Commission - subsequent versions of the EUPL (the "Licence"); You may not use this work except
  * in compliance with the Licence. You may obtain a copy of the Licence at:
  * http://joinup.ec.europa.eu/software/page/eupl Unless required by applicable law or agreed to in writing,
@@ -39,16 +39,6 @@ public class SessionStoreAOBeanMemory implements SessionStoreAO
    * Number of requests which may be in process before searching for outdated requests.
    */
   private int maxPendingRequests = MAX_PENDING_DEFAULT;
-
-  /**
-   * If there are too many requests, requests older that 3 minutes may be deleted to avoid database overflow.
-   */
-  private final int timeLimitHard = TIME_LIMIT_HARD_DEFAULT;
-
-  /**
-   * When we run the general cleanup all sessions older then 20 minutes will be removed.
-   */
-  private final int timeLimitSoft = TIME_LIMIT_SOFT_DEFAULT;
 
   private final Map<String, StoreableSession> contentBySessionId = new ConcurrentHashMap<>();
 
@@ -151,13 +141,17 @@ public class SessionStoreAOBeanMemory implements SessionStoreAO
   {
     if (contentBySessionId.size() > maxPendingRequests)
     {
-      deteleOldSessions(timeLimitSoft);
+      deteleOldSessions(TIME_LIMIT_SOFT_DEFAULT);
     }
     if (contentBySessionId.size() > maxPendingRequests)
     {
-      LOG.error("There is an overflow, deleting all not ended sessions older than " + (timeLimitSoft / 1000)
-                + "did not helped, will delete all sessions older than " + (timeLimitHard / 1000));
-      deteleOldSessions(timeLimitHard);
+      if (LOG.isErrorEnabled())
+      {
+        LOG.error("There is an overflow, deleting all not ended sessions older than "
+                  + (TIME_LIMIT_SOFT_DEFAULT / 1000) + "did not helped, will delete all sessions older than "
+                  + (TIME_LIMIT_HARD_DEFAULT / 1000));
+      }
+      deteleOldSessions(TIME_LIMIT_HARD_DEFAULT);
     }
     if (contentBySessionId.size() > maxPendingRequests)
     {

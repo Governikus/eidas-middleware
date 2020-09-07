@@ -1,5 +1,5 @@
 <!--
-  ~ Copyright (c) 2019 Governikus KG. Licensed under the EUPL, Version 1.2 or as soon they will be approved by
+  ~ Copyright (c) 2020 Governikus KG. Licensed under the EUPL, Version 1.2 or as soon they will be approved by
   ~ the European Commission - subsequent versions of the EUPL (the "Licence"); You may not use this work except
   ~ in compliance with the Licence. You may obtain a copy of the Licence at:
   ~ http://joinup.ec.europa.eu/software/page/eupl Unless required by applicable law or agreed to in writing,
@@ -10,43 +10,58 @@
 
 <!DOCTYPE html>
 
-<html xmlns="http://www.w3.org/1999/xhtml"
-      xmlns:th="http://www.thymeleaf.org">
+<html xmlns="http://www.w3.org/1999/xhtml" xmlns:th="http://www.thymeleaf.org">
 <head>
     <title>POSeIDAS CVC List</title>
-    <link rel="stylesheet" th:href="@{/webjars/blaze/3.2.0/dist/blaze.min.css}"/>
-    <link rel="stylesheet" th:href="@{/css/admin-interface.css}"/>
+    <!--Bootstrap-->
+    <link rel="stylesheet" th:href="@{/admin-interface/webjars/bootstrap/4.5.0/css/bootstrap.css}">
+    <script th:src="@{/admin-interface/webjars/jquery/3.5.1/jquery.min.js}"></script>
+    <script th:src="@{/admin-interface/webjars/bootstrap/4.5.0/js/bootstrap.bundle.min.js}"></script>
+    <script th:src="@{/admin-interface/js/poseidas.js}"></script>
 </head>
 <body>
 <div class="content">
 
     <div th:replace="fragments/header :: header"/>
 
-    <h1>List of available eID Service Providers</h1>
-    <table border="1">
-        <thead>
-        <tr>
-            <th scope="col">Entity Name</th>
-            <th scope="col">CVC refID</th>
-            <th scope="col">CHR</th>
-            <th scope="col">CAR</th>
-            <th scope="col">Valid from</th>
-            <th scope="col">Invalid on</th>
-        </tr>
-        </thead>
-        <tbody>
-        <tr th:each="entity: ${entities}">
-            <td><a href="details.html"
-                   th:href="@{/admin-interface/details/__${entity.getEntityID()}__}"><span
-                    th:text="${entity.getEntityID()}">link</span></a></td>
-            <td th:text="${entity.getCVCRefID()}"/>
-            <td th:text="${entity.getCHR()}"/>
-            <td th:text="${entity.getCAR()}"/>
-            <td th:text="${entity.getValidFrom()}"/>
-            <td th:text="${entity.getInvalidOn()}"/>
-        </tr>
-        </tbody>
-    </table>
+    <div th:if="${errorMessage} != null">
+        <div th:text="${errorMessage}" class="text-danger"/>
+    </div>
+    <div class="container mt-4">
+        <div class="row">
+            <div class="col-9">
+                <h1>List of available eID Service Providers</h1>
+            </div>
+            <div class="col-3 text-right">
+                <form action="#" method=get th:action="@{/admin-interface/download}">
+                    <input type="submit" class="btn btn-primary" value="Download Metadata"/>
+                </form>
+            </div>
+        </div>
+        <table class="table table-striped">
+            <thead>
+            <tr>
+                <th scope="col">Entity Name</th>
+                <th scope="col">CVC refID</th>
+                <th scope="col">CHR</th>
+                <th scope="col">CAR</th>
+                <th scope="col">Valid from</th>
+                <th scope="col">Invalid on</th>
+            </tr>
+            </thead>
+            <tbody>
+            <tr th:each="entity: ${entities}">
+                <td><a href="details.html" th:href="@{/admin-interface/details/__${entity.getEntityID()}__}">
+                    <span th:text="${entity.getEntityID()}">link</span></a></td>
+                <td th:text="${entity.getCVCRefID()}"/>
+                <td th:text="${entity.getCHR()}"/>
+                <td th:text="${entity.getCAR()}"/>
+                <td th:text="${entity.getValidFrom()}"/>
+                <td th:text="${entity.getInvalidOn()}"/>
+            </tr>
+            </tbody>
+        </table>
+    </div>
 </div>
 </body>
 </html>

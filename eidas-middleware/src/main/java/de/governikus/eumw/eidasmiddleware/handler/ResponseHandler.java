@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019 Governikus KG. Licensed under the EUPL, Version 1.2 or as soon they will be approved by
+ * Copyright (c) 2020 Governikus KG. Licensed under the EUPL, Version 1.2 or as soon they will be approved by
  * the European Commission - subsequent versions of the EUPL (the "Licence"); You may not use this work except
  * in compliance with the Licence. You may obtain a copy of the Licence at:
  * http://joinup.ec.europa.eu/software/page/eupl Unless required by applicable law or agreed to in writing,
@@ -23,6 +23,7 @@ import javax.xml.bind.DatatypeConverter;
 import javax.xml.transform.TransformerException;
 
 import org.apache.commons.codec.binary.Hex;
+import org.apache.commons.lang3.StringUtils;
 import org.opensaml.core.config.InitializationException;
 import org.opensaml.core.xml.io.MarshallingException;
 import org.opensaml.core.xml.io.UnmarshallingException;
@@ -58,8 +59,11 @@ import de.governikus.eumw.eidasstarterkit.person_attributes.natural_persons_attr
 import de.governikus.eumw.eidasstarterkit.person_attributes.natural_persons_attribute.PersonIdentifierAttribute;
 import de.governikus.eumw.eidasstarterkit.person_attributes.natural_persons_attribute.PlaceOfBirthAttribute;
 import de.governikus.eumw.poseidas.cardbase.StringUtil;
+import de.governikus.eumw.poseidas.ecardcore.model.ResultMinor;
 import de.governikus.eumw.poseidas.eidmodel.data.EIDKeys;
 import de.governikus.eumw.poseidas.eidserver.convenience.EIDInfoResult;
+import de.governikus.eumw.poseidas.eidserver.convenience.EIDInfoResultDeselected;
+import de.governikus.eumw.poseidas.eidserver.convenience.EIDInfoResultNotOnChip;
 import de.governikus.eumw.poseidas.eidserver.convenience.EIDInfoResultPlaceFreeText;
 import de.governikus.eumw.poseidas.eidserver.convenience.EIDInfoResultPlaceNo;
 import de.governikus.eumw.poseidas.eidserver.convenience.EIDInfoResultPlaceStructured;
@@ -81,6 +85,10 @@ import net.shibboleth.utilities.java.support.xml.XMLParserException;
 @Service
 public class ResponseHandler
 {
+
+  private static final String REQUIRED_ATTRIBUTE_HAS_BEEN_DESELECTED = "Required attribute has been deselected";
+
+  private static final String UNKNOWN_REF_ID = "Unknown refID";
 
   private static final String NR = "nr";
 
@@ -129,7 +137,7 @@ public class ResponseHandler
     RequestSession samlReqSession = getSAMLReqSession(refID);
     if (samlReqSession == null)
     {
-      throw new RequestProcessingException("Unknown refID");
+      throw new RequestProcessingException(UNKNOWN_REF_ID);
     }
     RequestingServiceProvider reqSP = serviceProviderConfig.getProviderByEntityID(samlReqSession.getReqProviderEntityId());
 
@@ -143,52 +151,52 @@ public class ResponseHandler
       }
       catch (RequestProcessingException e)
       {
-        response = prepareSAMLErrorResponse(reqSP, samlReqSession, ErrorCode.INTERNAL_ERROR, e.getMessage());
+        response = prepareSAMLErrorResponse(reqSP,
+                                            samlReqSession.getReqId(),
+                                            ErrorCode.INTERNAL_ERROR,
+                                            e.getMessage());
       }
       return response;
     }
     else
     {
-      return prepareSAMLErrorResponse(reqSP,
-                                      samlReqSession,
-                                      ErrorCode.EID_ERROR,
-                                      "ResultMajor not okay " + eidResponse.getResultMinor());
+      if (WebServiceHelper.checkResult(eidResponse.getResult(),
+                                       Constants.EID_MAJOR_ERROR,
+                                       ResultMinor.SAL_CANCELLATION_BY_USER.toString()))
+      {
+        return prepareSAMLErrorResponse(reqSP,
+                                        samlReqSession.getReqId(),
+                                        ErrorCode.CANCELLATION_BY_USER,
+                                        eidResponse.getResultMessage());
+      }
+      else
+      {
+        String message;
+        if (StringUtils.isNotBlank(eidResponse.getResultMessage()))
+        {
+          message = eidResponse.getResultMessage();
+        }
+        else
+        {
+          message = eidResponse.getResultMinor();
+        }
+        return prepareSAMLErrorResponse(reqSP, samlReqSession.getReqId(), ErrorCode.EID_ERROR, message);
+      }
     }
-  }
-
-  /**
-   * Create a SAML error response
-   *
-   * @param refID The refID as it was send from the AusweisApp2
-   * @param errorCode The appropriate ErrorCode
-   * @param resultMinor The resultMinor as it was send from the AusweisApp2
-   * @return The SAML response, already signed and base64 encoded
-   */
-  public String createSAMLErrorResponse(String refID, ErrorCode errorCode, String resultMinor)
-  {
-    RequestSession samlReqSession = getSAMLReqSession(refID);
-    if (samlReqSession == null)
-    {
-      throw new RequestProcessingException("Unknown refID");
-    }
-    RequestingServiceProvider reqSP = serviceProviderConfig.getProviderByEntityID(samlReqSession.getReqProviderEntityId());
-    return prepareSAMLErrorResponse(reqSP, samlReqSession, errorCode, resultMinor);
   }
 
   private String prepareSAMLErrorResponse(RequestingServiceProvider reqSP,
-                                          RequestSession samlReqSession,
+                                          String samlReqId,
                                           ErrorCode errorCode,
                                           String... msg)
   {
-    log.warn(requestInfo(reqSP, samlReqSession.getRelayState().orElse(null)));
-    log.warn(errorCode.toDescription(msg));
+    log.warn(prepareLogMessage(reqSP, samlReqId, errorCode.toDescription(msg)));
     try
     {
       EidasSigner signer = getEidasSigner();
       EidasResponse rsp = new EidasResponse(reqSP.getAssertionConsumerURL(), reqSP.getEntityID(), null,
-                                            samlReqSession.getReqId(),
-                                            configHolder.getServerURLWithContextPath()
-                                                                       + ContextPaths.METADATA,
+                                            samlReqId, configHolder.getServerURLWithContextPath()
+                                                       + ContextPaths.METADATA,
                                             EidasLoA.HIGH, signer, null);
       byte[] eidasResp = rsp.generateErrorRsp(errorCode, msg);
       return DatatypeConverter.printBase64Binary(eidasResp);
@@ -215,21 +223,20 @@ public class ResponseHandler
     return signer;
   }
 
-  private String requestInfo(RequestingServiceProvider reqSP, String reqRelayState)
+  private String prepareLogMessage(RequestingServiceProvider reqSP,
+                                   String samlRequestId,
+                                   String errorCodeDescription)
   {
-    if (reqRelayState == null)
-    {
-      return requestInfo(reqSP);
-    }
-    return " Error in request for SPname " + reqSP.getEntityID() + " consumerUrl "
-           + reqSP.getAssertionConsumerURL() + " relayState " + reqRelayState + " ";
-  }
-
-  private String requestInfo(RequestingServiceProvider reqSP)
-  {
-    return " Error in request for SPname " + reqSP.getEntityID() + " consumerUrl "
-           + reqSP.getAssertionConsumerURL();
-
+    StringBuilder result = new StringBuilder();
+    result.append("Error in request for SPname: '")
+          .append(reqSP.getEntityID())
+          .append("' and consumerUrl: '")
+          .append(reqSP.getAssertionConsumerURL())
+          .append("' and SAML request id:' ")
+          .append(samlRequestId)
+          .append("'. Error: ")
+          .append(errorCodeDescription);
+    return result.toString();
   }
 
   private String prepareSAMLResponse(RequestingServiceProvider reqSP,
@@ -238,7 +245,13 @@ public class ResponseHandler
   {
     ArrayList<EidasAttribute> attributes = new ArrayList<>();
 
-    createAllNames(eidResponse, attributes, samlReqSession);
+    if (!createAllNames(eidResponse, attributes, samlReqSession))
+    {
+      return prepareSAMLErrorResponse(reqSP,
+                                      samlReqSession.getReqId(),
+                                      ErrorCode.AUTHORIZATION_FAILED,
+                                      REQUIRED_ATTRIBUTE_HAS_BEEN_DESELECTED);
+    }
 
     EIDInfoResult dateOfBirth = eidResponse.getEIDInfo(EIDKeys.DATE_OF_BIRTH);
     String dateOfBirthStr = dateOfBirth instanceof EIDInfoResultString
@@ -254,6 +267,16 @@ public class ResponseHandler
       String day = dateString.substring(6, 8);
       attributes.add(new DateOfBirthAttribute(year + "-" + month + "-" + day));
     }
+    else if (samlReqSession.getRequestedAttributes().get(EidasNaturalPersonAttributes.DATE_OF_BIRTH) != null
+             && samlReqSession.getRequestedAttributes()
+                              .get(EidasNaturalPersonAttributes.DATE_OF_BIRTH)
+                              .booleanValue())
+    {
+      return prepareSAMLErrorResponse(reqSP,
+                                      samlReqSession.getReqId(),
+                                      ErrorCode.AUTHORIZATION_FAILED,
+                                      REQUIRED_ATTRIBUTE_HAS_BEEN_DESELECTED);
+    }
 
     EIDInfoResult placeOfBirth = eidResponse.getEIDInfo(EIDKeys.PLACE_OF_BIRTH);
     if (placeOfBirth instanceof EIDInfoResultPlaceStructured)
@@ -268,13 +291,39 @@ public class ResponseHandler
     {
       attributes.add(new PlaceOfBirthAttribute(((EIDInfoResultPlaceNo)placeOfBirth).getNoPlaceInfo()));
     }
+    else if (samlReqSession.getRequestedAttributes().get(EidasNaturalPersonAttributes.PLACE_OF_BIRTH) != null
+             && samlReqSession.getRequestedAttributes()
+                              .get(EidasNaturalPersonAttributes.PLACE_OF_BIRTH)
+                              .booleanValue())
+    {
+      return prepareSAMLErrorResponse(reqSP,
+                                      samlReqSession.getReqId(),
+                                      ErrorCode.AUTHORIZATION_FAILED,
+                                      REQUIRED_ATTRIBUTE_HAS_BEEN_DESELECTED);
+    }
 
-    createPlaceOfResidence(eidResponse, attributes);
+    if (!createPlaceOfResidence(eidResponse, attributes, samlReqSession))
+    {
+      return prepareSAMLErrorResponse(reqSP,
+                                      samlReqSession.getReqId(),
+                                      ErrorCode.AUTHORIZATION_FAILED,
+                                      REQUIRED_ATTRIBUTE_HAS_BEEN_DESELECTED);
+    }
 
     EidasNameId nameId;
     EIDInfoResultRestrictedID restrID = (EIDInfoResultRestrictedID)eidResponse.getEIDInfo(EIDKeys.RESTRICTED_ID);
     if (restrID == null)
     {
+      if (samlReqSession.getRequestedAttributes().get(EidasNaturalPersonAttributes.PERSON_IDENTIFIER) != null
+          && samlReqSession.getRequestedAttributes()
+                           .get(EidasNaturalPersonAttributes.PERSON_IDENTIFIER)
+                           .booleanValue())
+      {
+        return prepareSAMLErrorResponse(reqSP,
+                                        samlReqSession.getReqId(),
+                                        ErrorCode.AUTHORIZATION_FAILED,
+                                        REQUIRED_ATTRIBUTE_HAS_BEEN_DESELECTED);
+      }
       nameId = new EidasTransientNameId("PersonIdentifier not requested, therefore no NameID");
     }
     else
@@ -285,6 +334,7 @@ public class ResponseHandler
       attributes.add(pi);
       nameId = new EidasTransientNameId(pi.getId());
     }
+
 
     try
     {
@@ -319,13 +369,11 @@ public class ResponseHandler
    * @param attributes The list with the eIDAS attributes
    * @param samlReqSession The original SAML request
    */
-  private void createAllNames(EIDResultResponse eIDrespInt,
-                              List<EidasAttribute> attributes,
-                              RequestSession samlReqSession)
+  private boolean createAllNames(EIDResultResponse eIDrespInt,
+                                 List<EidasAttribute> attributes,
+                                 RequestSession samlReqSession)
   {
     EIDInfoResult birthName = eIDrespInt.getEIDInfo(EIDKeys.BIRTH_NAME);
-    String birthNameStr = birthName instanceof EIDInfoResultString
-      ? ((EIDInfoResultString)birthName).getResult() : "";
     EIDInfoResult familyNames = eIDrespInt.getEIDInfo(EIDKeys.FAMILY_NAMES);
     String familyNamesStr = familyNames instanceof EIDInfoResultString
       ? ((EIDInfoResultString)familyNames).getResult() : "";
@@ -333,24 +381,67 @@ public class ResponseHandler
     String givenNamesStr = givenNames instanceof EIDInfoResultString
       ? ((EIDInfoResultString)givenNames).getResult() : "";
 
-    // if birth name is requested, build it according to TR03130-3
+    // if birth name is requested, build it according to TR03130-3 section 3.2
     if (samlReqSession.getRequestedAttributes().get(EidasNaturalPersonAttributes.BIRTH_NAME) != null)
     {
-      String constructedBirthName = "";
-      constructedBirthName += givenNamesStr + " ";
-      if (birthName != null && StringUtil.notEmpty(birthNameStr))
+      // deselected or not on chip, do not add attribute...
+      if (birthName instanceof EIDInfoResultDeselected || birthName instanceof EIDInfoResultNotOnChip)
       {
-        constructedBirthName += birthNameStr;
+        // ... but send error if mandatory
+        if (samlReqSession.getRequestedAttributes()
+                          .get(EidasNaturalPersonAttributes.BIRTH_NAME)
+                          .booleanValue())
+        {
+          return false;
+        }
       }
       else
       {
-        constructedBirthName += familyNamesStr;
+        String constructedBirthName = givenNamesStr + " ";
+        String birthNameStr = birthName instanceof EIDInfoResultString
+          ? ((EIDInfoResultString)birthName).getResult() : "";
+        if (StringUtil.notEmpty(birthNameStr))
+        {
+          constructedBirthName += birthNameStr;
+        }
+        else
+        {
+          constructedBirthName += familyNamesStr;
+        }
+        attributes.add(new BirthNameAttribute(constructedBirthName));
       }
-      attributes.add(new BirthNameAttribute(constructedBirthName));
     }
 
-    attributes.add(new FamilyNameAttribute(familyNamesStr));
-    attributes.add(new GivenNameAttribute(givenNamesStr));
+    if (samlReqSession.getRequestedAttributes().get(EidasNaturalPersonAttributes.FAMILY_NAME) != null)
+
+    {
+      if (familyNames instanceof EIDInfoResultString)
+      {
+        attributes.add(new FamilyNameAttribute(familyNamesStr));
+      }
+      else if (samlReqSession.getRequestedAttributes()
+                             .get(EidasNaturalPersonAttributes.FAMILY_NAME)
+                             .booleanValue())
+      {
+        return false;
+      }
+    }
+
+    if (samlReqSession.getRequestedAttributes().get(EidasNaturalPersonAttributes.FIRST_NAME) != null)
+    {
+      if (givenNames instanceof EIDInfoResultString)
+      {
+        attributes.add(new GivenNameAttribute(givenNamesStr));
+      }
+      else if (samlReqSession.getRequestedAttributes()
+                             .get(EidasNaturalPersonAttributes.FIRST_NAME)
+                             .booleanValue())
+      {
+        return false;
+      }
+    }
+
+    return true;
   }
 
   /**
@@ -359,7 +450,9 @@ public class ResponseHandler
    * @param eIDrespInt The list with the eID responses
    * @param attributes The list with the eIDAS attributes
    */
-  private void createPlaceOfResidence(EIDResultResponse eIDrespInt, List<EidasAttribute> attributes)
+  private boolean createPlaceOfResidence(EIDResultResponse eIDrespInt,
+                                         List<EidasAttribute> attributes,
+                                         RequestSession samlReqSession)
   {
     EIDInfoResult placeOfResidence = eIDrespInt.getEIDInfo(EIDKeys.PLACE_OF_RESIDENCE);
     if (placeOfResidence != null)
@@ -386,6 +479,14 @@ public class ResponseHandler
       }
       attributes.add(cA);
     }
+    else if (samlReqSession.getRequestedAttributes().get(EidasNaturalPersonAttributes.CURRENT_ADDRESS) != null
+             && samlReqSession.getRequestedAttributes()
+                              .get(EidasNaturalPersonAttributes.CURRENT_ADDRESS)
+                              .booleanValue())
+    {
+      return false;
+    }
+    return true;
   }
 
   /**
@@ -427,7 +528,7 @@ public class ResponseHandler
     RequestSession samlReqSession = getSAMLReqSession(refID);
     if (samlReqSession == null)
     {
-      throw new RequestProcessingException("Unknown refID");
+      throw new RequestProcessingException(UNKNOWN_REF_ID);
     }
     RequestingServiceProvider reqSP = serviceProviderConfig.getProviderByEntityID(samlReqSession.getReqProviderEntityId());
     return reqSP.getAssertionConsumerURL();
@@ -438,7 +539,7 @@ public class ResponseHandler
     RequestSession samlReqSession = getSAMLReqSession(refID);
     if (samlReqSession == null)
     {
-      throw new RequestProcessingException("Unknown refID");
+      throw new RequestProcessingException(UNKNOWN_REF_ID);
     }
     return samlReqSession.getRelayState().orElse(null);
   }

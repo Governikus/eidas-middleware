@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019 Governikus KG. Licensed under the EUPL, Version 1.2 or as soon they will be approved by
+ * Copyright (c) 2020 Governikus KG. Licensed under the EUPL, Version 1.2 or as soon they will be approved by
  * the European Commission - subsequent versions of the EUPL (the "Licence"); You may not use this work except
  * in compliance with the Licence. You may obtain a copy of the Licence at:
  * http://joinup.ec.europa.eu/software/page/eupl Unless required by applicable law or agreed to in writing,
@@ -109,6 +109,11 @@ public class EidasmiddlewarePropertiesForm extends AbstractPropertiesConfigurati
   private KeystoreForm middlewareCryptKeystore;
 
   /**
+   * flag indicating whether the MW shall sign its metadata
+   */
+  private boolean doSignMetadata = true;
+
+  /**
    * country where the MW is deployed
    */
   @NotBlank
@@ -182,6 +187,12 @@ public class EidasmiddlewarePropertiesForm extends AbstractPropertiesConfigurati
                          privateKeyPassword).ifPresent(this::setMiddlewareCryptKeystore);
 
     this.countryCode = (String)middlewareProperties.get(MiddlewarePropertiesIdentifier.COUNTRYCODE.name());
+    String signMetadata = (String)middlewareProperties.get(MiddlewarePropertiesIdentifier.MIDDLEWARE_DO_SIGN_METADATA.name());
+    if (signMetadata == null || signMetadata.isEmpty())
+    {
+      signMetadata = "true";
+    }
+    this.doSignMetadata = Boolean.parseBoolean(signMetadata);
 
     // @formatter:off
     this.contactPersonCompany = (String)middlewareProperties.get(MiddlewarePropertiesIdentifier.CONTACT_PERSON_COMPANY.name());
@@ -374,9 +385,12 @@ public class EidasmiddlewarePropertiesForm extends AbstractPropertiesConfigurati
     properties.setProperty(MiddlewarePropertiesIdentifier.MIDDLEWARE_CRYPT_ALIAS.name(),
                            middlewareCryptKeystore.getAlias());
     properties.setProperty(MiddlewarePropertiesIdentifier.COUNTRYCODE.name(), countryCode);
+    properties.setProperty(MiddlewarePropertiesIdentifier.MIDDLEWARE_DO_SIGN_METADATA.name(),
+                           Boolean.toString(doSignMetadata));
     properties.setProperty(MiddlewarePropertiesIdentifier.CONTACT_PERSON_COMPANY.name(),
                            contactPersonCompany.trim());
-    properties.setProperty(MiddlewarePropertiesIdentifier.CONTACT_PERSON_EMAIL.name(), contactPersonEmail.trim());
+    properties.setProperty(MiddlewarePropertiesIdentifier.CONTACT_PERSON_EMAIL.name(),
+                           contactPersonEmail.trim());
     properties.setProperty(MiddlewarePropertiesIdentifier.CONTACT_PERSON_GIVENNAME.name(),
                            contactPersonGivenname.trim());
     properties.setProperty(MiddlewarePropertiesIdentifier.CONTACT_PERSON_SURNAME.name(),

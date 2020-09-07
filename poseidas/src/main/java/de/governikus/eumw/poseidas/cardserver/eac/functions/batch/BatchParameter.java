@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019 Governikus KG. Licensed under the EUPL, Version 1.2 or as soon they will be approved by
+ * Copyright (c) 2020 Governikus KG. Licensed under the EUPL, Version 1.2 or as soon they will be approved by
  * the European Commission - subsequent versions of the EUPL (the "Licence"); You may not use this work except
  * in compliance with the Licence. You may obtain a copy of the Licence at:
  * http://joinup.ec.europa.eu/software/page/eupl Unless required by applicable law or agreed to in writing,
@@ -10,10 +10,7 @@
 
 package de.governikus.eumw.poseidas.cardserver.eac.functions.batch;
 
-import java.util.ArrayList;
 import java.util.List;
-
-import javax.smartcardio.CommandAPDU;
 
 import de.governikus.eumw.poseidas.cardbase.AssertUtil;
 import de.governikus.eumw.poseidas.cardserver.eac.functions.FunctionParameter;
@@ -36,8 +33,6 @@ public class BatchParameter implements FunctionParameter
 
   private List<InputAPDUInfoType> transmitCommandList = null;
 
-  private final List<CommandAPDU> commandList = null;
-
   /**
    * Constructor.
    *
@@ -51,23 +46,7 @@ public class BatchParameter implements FunctionParameter
     super();
     AssertUtil.notNullOrEmpty(transmitCommandList, "transmit command list");
     this.transmitCommandList = transmitCommandList;
-    List<CommandAPDU> commandList = new ArrayList<>();
-    for ( InputAPDUInfoType tc : this.transmitCommandList )
-    {
-      commandList.add(new CommandAPDU(tc.getInputAPDU()));
-    }
   }
-
-  /**
-   * Gets commands.
-   *
-   * @return commands
-   */
-  public List<CommandAPDU> getCommandList()
-  {
-    return this.commandList;
-  }
-
 
   /**
    * @return the transmitCommandList
@@ -76,5 +55,4 @@ public class BatchParameter implements FunctionParameter
   {
     return transmitCommandList;
   }
-
 }

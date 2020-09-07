@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019 Governikus KG. Licensed under the EUPL, Version 1.2 or as soon they will be approved by
+ * Copyright (c) 2020 Governikus KG. Licensed under the EUPL, Version 1.2 or as soon they will be approved by
  * the European Commission - subsequent versions of the EUPL (the "Licence"); You may not use this work except
  * in compliance with the Licence. You may obtain a copy of the Licence at:
  * http://joinup.ec.europa.eu/software/page/eupl Unless required by applicable law or agreed to in writing,
@@ -19,9 +19,6 @@ import java.security.PublicKey;
 import java.security.spec.InvalidKeySpecException;
 import java.util.Arrays;
 
-import javax.crypto.BadPaddingException;
-import javax.crypto.IllegalBlockSizeException;
-import javax.crypto.NoSuchPaddingException;
 import javax.crypto.SecretKey;
 
 import org.apache.commons.logging.Log;
@@ -37,20 +34,18 @@ import de.governikus.eumw.poseidas.cardbase.asn1.npa.si.ChipAuthenticationPublic
 import de.governikus.eumw.poseidas.cardbase.asn1.npa.si.PACEInfo;
 import de.governikus.eumw.poseidas.cardbase.asn1.npa.si.SubjectPublicKeyInfo;
 import de.governikus.eumw.poseidas.cardbase.constants.OIDConstants;
-import de.governikus.eumw.poseidas.cardbase.crypto.aes.CryptoHandler;
+import de.governikus.eumw.poseidas.cardbase.crypto.CipherUtil;
 import de.governikus.eumw.poseidas.cardbase.crypto.ec.ECUtil;
 import de.governikus.eumw.poseidas.cardbase.crypto.kdf.KeyDerivationHandler;
 import de.governikus.eumw.poseidas.cardbase.crypto.kdf.KeyDerivationHandlerFactory;
 import de.governikus.eumw.poseidas.cardbase.crypto.key.KeyHandler;
 import de.governikus.eumw.poseidas.cardbase.npa.InfoSelector.ChipAuthenticationData;
-import de.governikus.eumw.poseidas.cardserver.eac.crypto.impl.CryptoAES;
 import de.governikus.eumw.poseidas.cardserver.eac.crypto.impl.KeyHandlerEC;
 import de.governikus.eumw.poseidas.cardserver.eac.protocol.InvalidEidException;
 
 
 /**
  * Class for executing Chip Authentication as part of Extended Access Control.
-
  *
  * @author Arne Stahlbock, ast@bos-bremen.de
  */
@@ -88,11 +83,6 @@ public class ChipAuthentication
   private final PACEInfo paceInfo;
 
   /**
-   * Reference to the handler for cryptographic operations.
-   */
-  private CryptoHandler crypto = null;
-
-  /**
    * Reference to the handler for key derivation operations.
    */
   private KeyDerivationHandler kdh = null;
@@ -127,13 +117,12 @@ public class ChipAuthentication
    * @param paceInfo {@link PACEInfo} or previously executed PACE, <code>null</code> permitted
    * @throws IllegalArgumentException if any argument <code>null</code>
    * @throws NoSuchAlgorithmException
-   * @throws NoSuchPaddingException
    * @throws IOException
    */
   public ChipAuthentication(ChipAuthenticationData caData,
                             ChipAuthenticationPublicKeyInfo caPubKeyInfo,
                             PACEInfo paceInfo)
-    throws IOException, NoSuchAlgorithmException, NoSuchPaddingException
+    throws IOException, NoSuchAlgorithmException
   {
     super();
     if (caData == null)
@@ -172,38 +161,36 @@ public class ChipAuthentication
    * @throws IllegalArgumentException if unsupported protocol detected
    * @throws IOException
    * @throws NoSuchAlgorithmException
-   * @throws NoSuchPaddingException
    */
-  private void initCA() throws IOException, NoSuchAlgorithmException,
-    NoSuchPaddingException
+  private void initCA() throws IOException, NoSuchAlgorithmException
   {
     LOG.debug("Initializing CA version " + this.caVersion + " for protocol " + this.oid);
     if (this.oid.equals(OIDConstants.OID_CA_ECDH_AES_CBC_CMAC_128))
     {
-      this.crypto = new CryptoAES(128);
       this.kdh = KeyDerivationHandlerFactory.newKeyDerivationHandler("AES", 128);
       this.kh = new KeyHandlerEC(ECUtil.parameterSpecFromDomainParameters(this.caDomParamInfo)
                                        .getCurve()
                                        .getField()
-                                       .getFieldSize() / 8);
+                                       .getFieldSize()
+                                 / 8);
     }
     else if (this.oid.equals(OIDConstants.OID_CA_ECDH_AES_CBC_CMAC_192))
     {
-      this.crypto = new CryptoAES(192);
       this.kdh = KeyDerivationHandlerFactory.newKeyDerivationHandler("AES", 192);
       this.kh = new KeyHandlerEC(ECUtil.parameterSpecFromDomainParameters(this.caDomParamInfo)
                                        .getCurve()
                                        .getField()
-                                       .getFieldSize() / 8);
+                                       .getFieldSize()
+                                 / 8);
     }
     else if (this.oid.equals(OIDConstants.OID_CA_ECDH_AES_CBC_CMAC_256))
     {
-      this.crypto = new CryptoAES(256);
       this.kdh = KeyDerivationHandlerFactory.newKeyDerivationHandler("AES", 256);
       this.kh = new KeyHandlerEC(ECUtil.parameterSpecFromDomainParameters(this.caDomParamInfo)
                                        .getCurve()
                                        .getField()
-                                       .getFieldSize() / 8);
+                                       .getFieldSize()
+                                 / 8);
     }
     else
     {
@@ -223,14 +210,11 @@ public class ChipAuthentication
    * @throws NoSuchAlgorithmException
    * @throws NoSuchProviderException
    * @throws InvalidKeySpecException
-   * @throws BadPaddingException
-   * @throws IllegalBlockSizeException
-   * @throws NoSuchPaddingException
    * @throws InvalidEidException
    */
-  public boolean processResponse(KeyPair tacaKeyPair, byte[] cardKeyBytes) throws InvalidKeyException,
-    NoSuchAlgorithmException, NoSuchProviderException, InvalidKeySpecException,
-    NoSuchPaddingException, IllegalBlockSizeException, BadPaddingException, IOException, InvalidEidException
+  public boolean processResponse(KeyPair tacaKeyPair, byte[] cardKeyBytes)
+    throws InvalidKeyException, NoSuchAlgorithmException, NoSuchProviderException, InvalidKeySpecException,
+    IOException, InvalidEidException
   {
     AssertUtil.notNull(tacaKeyPair, "key pair");
     AssertUtil.notNullOrEmpty(cardKeyBytes, "card key bytes");
@@ -250,15 +234,11 @@ public class ChipAuthentication
    * @throws NoSuchAlgorithmException
    * @throws NoSuchProviderException
    * @throws InvalidKeySpecException
-   * @throws BadPaddingException
-   * @throws IllegalBlockSizeException
-   * @throws NoSuchPaddingException
    * @throws InvalidEidException
    */
-  public boolean processResponse(KeyPair tacaKeyPair, byte[] nonce, byte[] authToken) throws IOException,
-    InvalidKeyException, NoSuchAlgorithmException, NoSuchProviderException,
-    InvalidKeySpecException, NoSuchPaddingException, IllegalBlockSizeException, BadPaddingException,
-    InvalidEidException
+  public boolean processResponse(KeyPair tacaKeyPair, byte[] nonce, byte[] authToken)
+    throws IOException, InvalidKeyException, NoSuchAlgorithmException, NoSuchProviderException,
+    InvalidKeySpecException, InvalidEidException
   {
     AssertUtil.notNull(tacaKeyPair, "key pair");
     AssertUtil.notNullOrEmpty(nonce, "nonce");
@@ -280,15 +260,11 @@ public class ChipAuthentication
    * @throws NoSuchAlgorithmException
    * @throws NoSuchProviderException
    * @throws InvalidKeySpecException
-   * @throws NoSuchPaddingException
-   * @throws IllegalBlockSizeException
-   * @throws BadPaddingException
    * @throws InvalidEidException
    */
   private boolean processResponse(KeyPair tacaKeyPair, byte[] nonce, byte[] authToken, byte[] cardKeyBytes)
-    throws IOException, InvalidKeyException, NoSuchAlgorithmException,
-    NoSuchProviderException, InvalidKeySpecException, NoSuchPaddingException, IllegalBlockSizeException,
-    BadPaddingException, InvalidEidException
+    throws IOException, InvalidKeyException, NoSuchAlgorithmException, NoSuchProviderException,
+    InvalidKeySpecException, InvalidEidException
   {
     if (this.caVersion == 2 && nonce != null && nonce.length > 0 && authToken != null && authToken.length > 0)
     {
@@ -333,7 +309,7 @@ public class ChipAuthentication
       }
 
       byte[] structure = this.kh.convertPublicKey(tacaKeyPair.getPublic(), this.oid, paceVersion == 1);
-      byte[] mac = this.crypto.mac(this.macKey, structure);
+      byte[] mac = CipherUtil.cMAC(structure, macKey, CipherUtil.AES_CMAC_DEFAULT_LENGTH);
       if (!Arrays.equals(authToken, mac))
       {
         LOG.debug("CA not successful: could not verify MAC");

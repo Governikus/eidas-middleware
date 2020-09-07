@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019 Governikus KG. Licensed under the EUPL, Version 1.2 or as soon they will be approved by
+ * Copyright (c) 2020 Governikus KG. Licensed under the EUPL, Version 1.2 or as soon they will be approved by
  * the European Commission - subsequent versions of the EUPL (the "Licence"); You may not use this work except
  * in compliance with the Licence. You may obtain a copy of the Licence at:
  * http://joinup.ec.europa.eu/software/page/eupl Unless required by applicable law or agreed to in writing,
@@ -15,7 +15,6 @@ import java.io.Serializable;
 import javax.persistence.Entity;
 import javax.persistence.Id;
 import javax.persistence.Lob;
-import javax.persistence.NamedQueries;
 import javax.persistence.NamedQuery;
 
 
@@ -25,10 +24,10 @@ import javax.persistence.NamedQuery;
  * @author mehrtens
  */
 @Entity
-@NamedQueries({@NamedQuery(name = "getNumberEntries", query = "SELECT COUNT(s.creationTime) FROM SessionInStore s"),
-               @NamedQuery(name = "getOldEntries", query = "SELECT s FROM SessionInStore s WHERE s.creationTime < :creationTime"),
-               @NamedQuery(name = "getAllForClass", query = "SELECT s FROM SessionInStore s WHERE s.key.className = :className"),
-               @NamedQuery(name = "getByRequestId", query = "SELECT s FROM SessionInStore s WHERE s.key.className = :className AND s.requestId = :requestId")})
+@NamedQuery(name = "getNumberEntries", query = "SELECT COUNT(s.creationTime) FROM SessionInStore s")
+@NamedQuery(name = "getOldEntries", query = "SELECT s FROM SessionInStore s WHERE s.creationTime < :creationTime")
+@NamedQuery(name = "getAllForClass", query = "SELECT s FROM SessionInStore s WHERE s.key.className = :className")
+@NamedQuery(name = "getByRequestId", query = "SELECT s FROM SessionInStore s WHERE s.key.className = :className AND s.requestId = :requestId")
 public class SessionInStore implements Serializable
 {
 

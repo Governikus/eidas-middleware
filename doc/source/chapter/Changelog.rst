@@ -72,14 +72,34 @@ Changelog
     - eIDAS Middleware: Remove the assertion in SAML responses when status is not success.
     - eIDAS Middleware: Remove carriage returns in the base64 representation of the SAML response.
 
-    Note: The carriage returns inside the SAML response, e.g. in signatures and cipher texts, are not removed.
-    These are created by OpenSAML / xmlsec following W3C XML signature and encryption specifications.
+  Note: The carriage returns inside the SAML response, e.g. in signatures and cipher texts, are not removed.
+  These are created by OpenSAML / xmlsec following W3C XML signature and encryption specifications.
 
 
-    Known Issue:
-    The SUN PKCS11 security provider that is shipped with JAVA 8 does not support RSA-PSS signatures.
-    In order to use a HSM module and stay in line with the eIDAS cryptographic requirements, the use of EC cryptography for the SAML signature is mandatory.
-    This issue will be resolved when the eIDAS Middleware supports JAVA 11 as this version comes with a newer SUN PKCS11 security provider.
+  Known Issue:
+  The SUN PKCS11 security provider that is shipped with JAVA 8 does not support RSA-PSS signatures.
+  In order to use a HSM module and stay in line with the eIDAS cryptographic requirements,
+  the use of EC cryptography for the SAML signature is mandatory.
+  This issue will be resolved when the eIDAS Middleware supports JAVA 11 as this version
+  comes with a newer SUN PKCS11 security provider.
 
 * 1.2.1
+
     - eIDAS Middleware: Fix SAML encryption with EC certificates.
+
+* 2.0.0
+
+    - eIDAS Middleware: Support version 1.2 of the eIDAS specifications.
+    - eIDAS Middleware: Add a CRL check to Passive Authentication.
+    - eIDAS Middleware: There is no longer a dedicated defect list trust anchor. Trust is instead established using the master list.
+    - Configuration Wizard: Remove option to configure defect list trust anchor.
+    - eIDAS Middleware: Perform some certificate checks on startup.
+    - eIDAS Middleware: Option to have unsigned metadata, including download button in admin interface.
+    - eIDAS Middleware: Overhaul admin interface.
+    - eIDAS Middleware: Display status of AusweisApp2 on middleware landing page.
+    - eIDAS Middleware: Load resources (css, js, ...) with context path.
+    - eIDAS Middleware: Add support for a second test CA.
+    - Configuration Wizard: Option to configure second test CA.
+
+  Note: The new test CA is introduced to slowly replace the old one. Do not change CA settings on your own.
+  The process of phasing out the old and migrating to the new will be initiated and guided by Governikus.

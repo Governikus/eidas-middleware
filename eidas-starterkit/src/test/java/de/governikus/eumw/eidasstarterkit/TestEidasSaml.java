@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019 Governikus KG. Licensed under the EUPL, Version 1.2 or as soon they will be approved by
+ * Copyright (c) 2020 Governikus KG. Licensed under the EUPL, Version 1.2 or as soon they will be approved by
  * the European Commission - subsequent versions of the EUPL (the "Licence"); You may not use this work except
  * in compliance with the Licence. You may obtain a copy of the Licence at:
  * http://joinup.ec.europa.eu/software/page/eupl Unless required by applicable law or agreed to in writing,
@@ -132,7 +132,7 @@ public class TestEidasSaml
     EidasRequest result = EidasSaml.parseRequest(new ByteArrayInputStream(request), authors);
     assertEquals(issuer, result.getIssuer());
     assertEquals(destination, result.getDestination());
-    assertEquals(providerName, result.getProviderName());
+    assertEquals(providerName, result.getRequesterId());
     assertEquals(destination, result.getDestination());
     assertEquals(requestedAttributes.size(), result.getRequestedAttributes().size());
     for ( Map.Entry<EidasPersonAttributes, Boolean> entry : result.getRequestedAttributes() )
@@ -188,11 +188,11 @@ public class TestEidasSaml
   }
 
   @Test
-  public void createParseResponse() throws CertificateException, IOException,
-    UnrecoverableKeyException, KeyStoreException, NoSuchAlgorithmException, NoSuchProviderException,
-    KeyException, XMLParserException, UnmarshallingException, EncryptionException, MarshallingException,
-    SignatureException, TransformerFactoryConfigurationError, TransformerException, ErrorCodeException,
-    InitializationException, ComponentInitializationException
+  public void createParseResponse() throws CertificateException, IOException, UnrecoverableKeyException,
+    KeyStoreException, NoSuchAlgorithmException, NoSuchProviderException, KeyException, XMLParserException,
+    UnmarshallingException, EncryptionException, MarshallingException, SignatureException,
+    TransformerFactoryConfigurationError, TransformerException, ErrorCodeException, InitializationException,
+    ComponentInitializationException
   {
     BirthNameAttribute birthName = new BirthNameAttribute("Meyer");
     CurrentAddressAttribute currentAddress = new CurrentAddressAttribute("Am Fallturm", "33", "Bremen",
@@ -253,11 +253,10 @@ public class TestEidasSaml
   }
 
   @Test
-  public void createParseErrorResponse() throws CertificateException, IOException,
-    UnrecoverableKeyException, KeyStoreException, NoSuchAlgorithmException, NoSuchProviderException,
-    KeyException, XMLParserException, UnmarshallingException, MarshallingException,
-    SignatureException, TransformerFactoryConfigurationError, TransformerException, ErrorCodeException,
-    ComponentInitializationException
+  public void createParseErrorResponse() throws CertificateException, IOException, UnrecoverableKeyException,
+    KeyStoreException, NoSuchAlgorithmException, NoSuchProviderException, KeyException, XMLParserException,
+    UnmarshallingException, MarshallingException, SignatureException, TransformerFactoryConfigurationError,
+    TransformerException, ErrorCodeException, ComponentInitializationException
   {
     String destination = "test destination";
     String recipient = "test_recipient";
@@ -293,6 +292,7 @@ public class TestEidasSaml
   {
     String id = "test id";
     String entityId = "test entityid";
+    String middlewareVersion = "1.2";
     Date validUntil = new SimpleDateFormat("dd.MM.yyyy").parse("01.01.2025");
 
     X509Certificate sigCert = Utils.readCert(TestEidasSaml.class.getResourceAsStream("/EidasSignerTest_x509.cer"));
@@ -337,11 +337,15 @@ public class TestEidasSaml
                                                  redirectEndpoint,
                                                  supportedNameIdTypes,
                                                  attributes,
-                                                 signer);
+                                                 signer,
+                                                 middlewareVersion,
+                                                 true,
+                                                 true);
     EidasMetadataService emds = EidasSaml.parseMetaDataService(new ByteArrayInputStream(mds));
     assertEquals(emds.getEncCert(), encCert);
     assertEquals(emds.getEntityId(), entityId);
     assertEquals(emds.getId(), id);
+    assertEquals(middlewareVersion, emds.getMiddlewareVersion());
     assertEquals(emds.getOrganisation().getName(), organisation.getName());
     assertEquals(emds.getOrganisation().getDisplayName(), organisation.getDisplayName());
     assertEquals(emds.getOrganisation().getLangId(), organisation.getLangId());

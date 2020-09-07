@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019 Governikus KG. Licensed under the EUPL, Version 1.2 or as soon they will be approved by
+ * Copyright (c) 2020 Governikus KG. Licensed under the EUPL, Version 1.2 or as soon they will be approved by
  * the European Commission - subsequent versions of the EUPL (the "Licence"); You may not use this work except
  * in compliance with the Licence. You may obtain a copy of the Licence at:
  * http://joinup.ec.europa.eu/software/page/eupl Unless required by applicable law or agreed to in writing,
@@ -12,13 +12,10 @@ package de.governikus.eumw.poseidas.cardbase.crypto.sm;
 
 import java.io.IOException;
 import java.math.BigInteger;
-import java.security.InvalidKeyException;
-import java.security.NoSuchAlgorithmException;
 import java.util.Arrays;
 
 import javax.crypto.BadPaddingException;
 import javax.crypto.IllegalBlockSizeException;
-import javax.crypto.NoSuchPaddingException;
 import javax.crypto.spec.IvParameterSpec;
 import javax.smartcardio.CommandAPDU;
 import javax.smartcardio.ResponseAPDU;
@@ -73,8 +70,7 @@ public class AESSecureMessaging implements SecureMessaging
    * @throws SecureMessagingException
    */
   @Override
-  public CommandAPDU encipherCommand(CommandAPDU command) throws
-    SecureMessagingException
+  public CommandAPDU encipherCommand(CommandAPDU command) throws SecureMessagingException
   {
     AssertUtil.notNull(command, "command");
     this.material.getIvParameterSpec().increaseSSC();
@@ -91,9 +87,8 @@ public class AESSecureMessaging implements SecureMessaging
     byte[] macDOBytes = createMacDO(secureHeaderPaddedBytes, cryptogramDOBytes, neDOBytes);
     byte[] dataFieldBytes = ByteUtil.combine(new byte[][]{cryptogramDOBytes, neDOBytes, macDOBytes});
     int l = getNewLe(neDOBytes, dataFieldBytes);
-    CommandAPDU result = new CommandAPDU(secureHeaderBytes[0], secureHeaderBytes[1], secureHeaderBytes[2],
-                                         secureHeaderBytes[3], dataFieldBytes, l);
-    return result;
+    return new CommandAPDU(secureHeaderBytes[0], secureHeaderBytes[1], secureHeaderBytes[2],
+                           secureHeaderBytes[3], dataFieldBytes, l);
   }
 
   private int getNewLe(byte[] neDOBytes, byte[] dataFieldBytes)
@@ -135,8 +130,7 @@ public class AESSecureMessaging implements SecureMessaging
    * @throws SecureMessagingException
    */
   @Override
-  public ResponseAPDU decipherResponse(ResponseAPDU response) throws
-    SecureMessagingException
+  public ResponseAPDU decipherResponse(ResponseAPDU response) throws SecureMessagingException
   {
     AssertUtil.notNull(response, "response");
     this.material.getIvParameterSpec().increaseSSC();
@@ -168,7 +162,6 @@ public class AESSecureMessaging implements SecureMessaging
           macData = ByteUtil.combine(macData, child.getEncoded());
           encDataDOBytes = child.getValue();
           encTag = tag;
-          continue;
         }
         else
         {
@@ -182,7 +175,6 @@ public class AESSecureMessaging implements SecureMessaging
         {
           macData = ByteUtil.combine(macData, child.getEncoded());
           processDOBytes = child.getValue();
-          continue;
         }
         else
         {
@@ -195,7 +187,6 @@ public class AESSecureMessaging implements SecureMessaging
         if (macDOBytes == null)
         {
           macDOBytes = child.getValue();
-          continue;
         }
         else
         {
@@ -211,11 +202,8 @@ public class AESSecureMessaging implements SecureMessaging
     }
     checkMac(macDOBytes, macData);
     byte[] dataBytes = getDataBytes(encDataDOBytes, encTag);
-    byte[] result = ByteUtil.combine(new byte[][]{
-                                                  dataBytes,
-                                                  processDOBytes != null ? processDOBytes
-                                                    : ByteUtil.subbytes(responseBytes,
-                                                                        responseBytes.length - 2)});
+    byte[] result = ByteUtil.combine(new byte[][]{dataBytes, processDOBytes == null
+      ? ByteUtil.subbytes(responseBytes, responseBytes.length - 2) : processDOBytes});
     return new ResponseAPDU(result);
   }
 
@@ -248,11 +236,7 @@ public class AESSecureMessaging implements SecureMessaging
                                              ? ByteUtil.subbytes(encDataDOBytes, 1) : encDataDOBytes,
                                            null);
       }
-      catch (IllegalBlockSizeException e)
-      {
-        throw new SecureMessagingException(SecureMessagingException.CODE_SOFTWARE, e.getMessage(), e);
-      }
-      catch (BadPaddingException e)
+      catch (IllegalBlockSizeException | BadPaddingException e)
       {
         throw new SecureMessagingException(SecureMessagingException.CODE_SOFTWARE, e.getMessage(), e);
       }
@@ -267,22 +251,14 @@ public class AESSecureMessaging implements SecureMessaging
     {
       // invalidate key material so the channel can no longer be used
       this.material = null;
-      throw new SecureMessagingException(SecureMessagingException.CODE_CARD,
-                                         "no checksum received from card", null);
+      throw new SecureMessagingException(SecureMessagingException.CODE_CARD, "no checksum received from card",
+                                         null);
     }
     else
     {
       byte[] tmpMacData = pad(macData);
       byte[] cMac = null;
-      try
-      {
-        cMac = cMac(tmpMacData);
-      }
-      catch (InvalidKeyException | NoSuchAlgorithmException | NoSuchPaddingException
-        | IllegalBlockSizeException | BadPaddingException e)
-      {
-        throw new SecureMessagingException(SecureMessagingException.CODE_SOFTWARE, e.getMessage(), e);
-      }
+      cMac = cMac(tmpMacData);
       if (!Arrays.equals(cMac, macDOBytes))
       {
         // invalidate key material so the channel can no longer be used
@@ -293,47 +269,21 @@ public class AESSecureMessaging implements SecureMessaging
   }
 
   private byte[] createMacDO(byte[] secureHeaderBytes, byte[] cryptogramDOBytes, byte[] neDOBytes)
-    throws SecureMessagingException
   {
-    try
+    byte[] macData = ByteUtil.combine(new byte[][]{secureHeaderBytes, cryptogramDOBytes, neDOBytes});
+    if (!ArrayUtil.isNullOrEmpty(cryptogramDOBytes) || !ArrayUtil.isNullOrEmpty(neDOBytes))
     {
-      byte[] macData = ByteUtil.combine(new byte[][]{secureHeaderBytes, cryptogramDOBytes, neDOBytes});
-      if (!ArrayUtil.isNullOrEmpty(cryptogramDOBytes) || !ArrayUtil.isNullOrEmpty(neDOBytes))
-      {
-        macData = pad(macData);
-      }
-      byte[] cMac = this.cMac(macData);
-      ASN1 result = new ASN1(SMConstants.TAG_BYTE_DO_CRYPTOGRPAHIC_CHECKSUM, cMac);
-      return result.getEncoded();
+      macData = pad(macData);
     }
-    catch (InvalidKeyException e)
-    {
-      throw new SecureMessagingException(SecureMessagingException.CODE_SOFTWARE, e.getMessage(), e);
-    }
-    catch (NoSuchPaddingException e)
-    {
-      throw new SecureMessagingException(SecureMessagingException.CODE_SOFTWARE, e.getMessage(), e);
-    }
-    catch (NoSuchAlgorithmException e)
-    {
-      throw new SecureMessagingException(SecureMessagingException.CODE_SOFTWARE, e.getMessage(), e);
-    }
-    catch (IllegalBlockSizeException e)
-    {
-      throw new SecureMessagingException(SecureMessagingException.CODE_SOFTWARE, e.getMessage(), e);
-    }
-    catch (BadPaddingException e)
-    {
-      throw new SecureMessagingException(SecureMessagingException.CODE_SOFTWARE, e.getMessage(), e);
-
-    }
+    byte[] cMac = this.cMac(macData);
+    ASN1 result = new ASN1(SMConstants.TAG_BYTE_DO_CRYPTOGRPAHIC_CHECKSUM, cMac);
+    return result.getEncoded();
   }
 
-  private byte[] cMac(byte[] macData) throws InvalidKeyException,
-    NoSuchPaddingException, NoSuchAlgorithmException, IllegalBlockSizeException, BadPaddingException
+  private byte[] cMac(byte[] macData)
   {
     IvParameterSpec ivSpec = new IvParameterSpec(this.material.getIvParameterSpec().getIV());
-    return CipherUtil.cMAC(macData, this.material.getAESMacKey(), ivSpec, Integer.valueOf(8));
+    return CipherUtil.cMAC(macData, this.material.getAESMacKey(), ivSpec, CipherUtil.AES_CMAC_DEFAULT_LENGTH);
   }
 
   private static byte[] createNeDO(byte[] le)
@@ -379,11 +329,7 @@ public class AESSecureMessaging implements SecureMessaging
       }
       return result.getEncoded();
     }
-    catch (IllegalBlockSizeException e)
-    {
-      throw new SecureMessagingException(SecureMessagingException.CODE_SOFTWARE, e.getMessage(), e);
-    }
-    catch (BadPaddingException e)
+    catch (IllegalBlockSizeException | BadPaddingException e)
     {
       throw new SecureMessagingException(SecureMessagingException.CODE_SOFTWARE, e.getMessage(), e);
     }

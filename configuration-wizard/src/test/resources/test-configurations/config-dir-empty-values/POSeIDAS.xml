@@ -19,8 +19,6 @@
                 </blackListTrustAnchor>
                 <masterListTrustAnchor>
                 </masterListTrustAnchor>
-                <defectListTrustAnchor>
-                </defectListTrustAnchor>
                 <policyImplementationId></policyImplementationId>
                 <sslKeys id="">
                     <serverCertificate>

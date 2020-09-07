@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019 Governikus KG. Licensed under the EUPL, Version 1.2 or as soon they will be approved by
+ * Copyright (c) 2020 Governikus KG. Licensed under the EUPL, Version 1.2 or as soon they will be approved by
  * the European Commission - subsequent versions of the EUPL (the "Licence"); You may not use this work except
  * in compliance with the Licence. You may obtain a copy of the Licence at:
  * http://joinup.ec.europa.eu/software/page/eupl Unless required by applicable law or agreed to in writing,
@@ -15,11 +15,11 @@ import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.net.URLEncoder;
 import java.security.NoSuchProviderException;
-import java.security.SecureRandom;
 import java.security.cert.CertificateException;
 import java.security.cert.CertificateFactory;
 import java.security.cert.X509Certificate;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.zip.ZipInputStream;
 
@@ -62,8 +62,6 @@ public final class EIDInternal
   private static final String COLON_AND_SPACE = ": ";
 
   private static final Log LOG = LogFactory.getLog(EIDInternal.class);
-
-  private final SecureRandom pskSource = new SecureRandom();
 
   private static EIDInternal instance = new EIDInternal();
 
@@ -217,7 +215,8 @@ public final class EIDInternal
                                     Constants.EID_MINOR_USEID_MISSING_ARGUMENT,
                                     "The session Id it too short with " + ((sessionId == null) ? 0
                                       : sessionId.length()) + " bytes",
-                                    null, client.getEntityID() + COLON_AND_SPACE + requestId + COLON_AND_SPACE);
+                                    null,
+                                    client.getEntityID() + COLON_AND_SPACE + requestId + COLON_AND_SPACE);
     }
     else if (requestId == null || requestId.length() < 16 || requestId.length() > 10240)
     {
@@ -225,7 +224,8 @@ public final class EIDInternal
                                     Constants.EID_MINOR_USEID_MISSING_ARGUMENT,
                                     "The Request ID it too short with " + ((requestId == null) ? 0
                                       : requestId.length()) + " bytes",
-                                    null, client.getEntityID() + COLON_AND_SPACE + requestId + COLON_AND_SPACE);
+                                    null,
+                                    client.getEntityID() + COLON_AND_SPACE + requestId + COLON_AND_SPACE);
     }
     else if (ageVerificationRequestIncomplete(request))
     {
@@ -299,7 +299,7 @@ public final class EIDInternal
                                    serverAddress, masterListData, defectListData,
                                    request.getTransactionInfo(), session.getLogPrefix());
     }
-    translateSelector(request, input, cvc.getAuthorizations(), session.getLogPrefix());
+    translateSelector(request, input, cvc.getAuthorizations());
 
     return input;
   }
@@ -311,41 +311,44 @@ public final class EIDInternal
 
   private List<X509Certificate> addMasterListCertsFromZip(byte[] listData, String logPrefix)
   {
-    CertificateFactory certFactory;
+    CertificateFactory certFactory = null;
     try
     {
-      try
-      {
-        certFactory = CertificateFactory.getInstance("X509", BouncyCastleProvider.PROVIDER_NAME);
-      }
-      catch (NoSuchProviderException e)
-      {
-        certFactory = CertificateFactory.getInstance("X509");
-      }
+      certFactory = CertificateFactory.getInstance("X509", BouncyCastleProvider.PROVIDER_NAME);
+    }
+    catch (NoSuchProviderException e)
+    {
+      // nothing
     }
     catch (CertificateException e)
     {
       // without certificate factory the is little we can do
-      return null;
+      return Collections.emptyList();
+    }
+
+    // bouncy not available
+    if (certFactory == null)
+    {
+      try
+      {
+        certFactory = CertificateFactory.getInstance("X509");
+      }
+      catch (CertificateException e)
+      {
+        // without certificate factory the is little we can do
+        return Collections.emptyList();
+      }
     }
 
     List<X509Certificate> result = new ArrayList<>();
-    try
+    try (ZipInputStream ins = new ZipInputStream(new ByteArrayInputStream(listData)))
     {
-      ZipInputStream ins = new ZipInputStream(new ByteArrayInputStream(listData));
       while (ins.getNextEntry() != null)
       {
-        try
+        X509Certificate cert = tryGenerateCertFromZip(logPrefix, certFactory, ins);
+        if (cert != null)
         {
-          X509Certificate cert = (X509Certificate)certFactory.generateCertificate(ins);
-          if (cert != null)
-          {
-            result.add(cert);
-          }
-        }
-        catch (CertificateException e)
-        {
-          LOG.info(logPrefix + "Can not read a certificate from the master list zip file.", e);
+          result.add(cert);
         }
       }
       return result;
@@ -354,13 +357,28 @@ public final class EIDInternal
     {
       LOG.error(logPrefix + "fake masterlist not readable", e);
     }
-    return null;
+    return Collections.emptyList();
   }
 
-  private void translateSelector(EIDRequestInput request,
-                                 SessionInputImpl input,
-                                 Authorizations auth,
-                                 String logPrefix)
+  private static X509Certificate tryGenerateCertFromZip(String logPrefix,
+                                                        CertificateFactory certFactory,
+                                                        ZipInputStream zis)
+  {
+    try
+    {
+      return (X509Certificate)certFactory.generateCertificate(zis);
+    }
+    catch (CertificateException e)
+    {
+      if (LOG.isInfoEnabled())
+      {
+        LOG.info(logPrefix + "Can not read a certificate from the master list zip file.", e);
+      }
+      return null;
+    }
+  }
+
+  private void translateSelector(EIDRequestInput request, SessionInputImpl input, Authorizations auth)
     throws ErrorCodeException
   {
     for ( EIDKeys key : request.getRequiredFields() )

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019 Governikus KG. Licensed under the EUPL, Version 1.2 or as soon they will be approved by
+ * Copyright (c) 2020 Governikus KG. Licensed under the EUPL, Version 1.2 or as soon they will be approved by
  * the European Commission - subsequent versions of the EUPL (the "Licence"); You may not use this work except
  * in compliance with the Licence. You may obtain a copy of the Licence at:
  * http://joinup.ec.europa.eu/software/page/eupl Unless required by applicable law or agreed to in writing,
@@ -153,8 +153,8 @@ public final class AssertUtil
   {
     if (s == null || s.length() == 0)
     {
-      throw new IllegalArgumentException(format(MESSAGE_CHECK_FAILED_STRING_NULL_OR_EMPTY, (message != null
-        ? message : "String")));
+      throw new IllegalArgumentException(format(MESSAGE_CHECK_FAILED_STRING_NULL_OR_EMPTY,
+                                                (message != null ? message : "String")));
     }
     return s;
   }
@@ -301,10 +301,9 @@ public final class AssertUtil
   {
     if (value1 == value2)
     {
-      return;
+      // OK
     }
-    else if ((value1 == null && value2 != null) || (value1 != null && value2 == null)
-             || !value1.equals(value2))
+    else if (value1 == null || !value1.equals(value2))
     {
       throw new IllegalArgumentException(format(MESSAGE_CHECK_FAILED_EQUALS,
                                                 message != null ? message : DEFAULT_ARGUMENTS_NAME,
@@ -371,8 +370,7 @@ public final class AssertUtil
   {
     if (!Numbers.isPositive(value))
     {
-      throw new IllegalArgumentException(
-                                         StringUtil.format(MESSAGE_CHECK_FAILED_POSITIVE,
+      throw new IllegalArgumentException(StringUtil.format(MESSAGE_CHECK_FAILED_POSITIVE,
                                                            makeMessage(message, "value"),
                                                            value));
     }

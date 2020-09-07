@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019 Governikus KG. Licensed under the EUPL, Version 1.2 or as soon they will be approved by
+ * Copyright (c) 2020 Governikus KG. Licensed under the EUPL, Version 1.2 or as soon they will be approved by
  * the European Commission - subsequent versions of the EUPL (the "Licence"); You may not use this work except
  * in compliance with the Licence. You may obtain a copy of the Licence at:
  * http://joinup.ec.europa.eu/software/page/eupl Unless required by applicable law or agreed to in writing,
@@ -24,6 +24,7 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 
 import com.gargoylesoftware.htmlunit.html.DomElement;
@@ -43,7 +44,8 @@ import lombok.extern.slf4j.Slf4j;
 @ExtendWith(SpringExtension.class)
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 @DisplayName("test reading configuration files")
-public class ReadConfigFilesTest extends AbstractConfigFileTest
+@ActiveProfiles("test")
+class ReadConfigFilesTest extends AbstractConfigFileTest
 {
 
   /**
@@ -69,7 +71,7 @@ public class ReadConfigFilesTest extends AbstractConfigFileTest
    */
   @ParameterizedTest // NOPMD
   @ValueSource(strings = {CONFIG_DIR_SUCCESS, CONFIG_DIR_EMPTY_VALUES, CONFIG_DIR_FALSE_VALUES})
-  public void testReadFilesAtSytemStartup(String configDirExtension) throws IOException
+  void testReadFilesAtSytemStartup(String configDirExtension) throws IOException
   {
     configDirectoryBean.setConfigDirectory(configDirectoryBean.getConfigDirectory() + configDirExtension);
     HtmlPage currentPage = getWebClient().getPage(getRequestUrl("/"));

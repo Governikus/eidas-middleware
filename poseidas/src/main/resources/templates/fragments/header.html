@@ -1,5 +1,5 @@
 <!--
-  ~ Copyright (c) 2019 Governikus KG. Licensed under the EUPL, Version 1.2 or as soon they will be approved by
+  ~ Copyright (c) 2020 Governikus KG. Licensed under the EUPL, Version 1.2 or as soon they will be approved by
   ~ the European Commission - subsequent versions of the EUPL (the "Licence"); You may not use this work except
   ~ in compliance with the Licence. You may obtain a copy of the Licence at:
   ~ http://joinup.ec.europa.eu/software/page/eupl Unless required by applicable law or agreed to in writing,
@@ -8,26 +8,55 @@
   ~ limitations under the Licence.
   -->
 
-<html xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/thymeleaf-extras-springsecurity4">
+<html xmlns:sec="http://www.thymeleaf.org/thymeleaf-extras-springsecurity4"
+      xmlns:th="http://www.thymeleaf.org">
 <head>
-    <!-- this is header-css -->
-    <link rel="stylesheet" th:href="@{/webjars/blaze/3.2.0/dist/blaze.min.css}"/>
-    <link rel="stylesheet" th:href="@{/css/admin-interface.css}"/>
+    <!--Bootstrap-->
+    <link rel="stylesheet" th:href="@{/admin-interface/webjars/bootstrap/4.5.0/css/bootstrap.css}">
+    <script th:src="@{/admin-interface/webjars/jquery/3.5.1/jquery.min.js}"></script>
+    <script th:src="@{/admin-interface/webjars/bootstrap/4.5.0/js/bootstrap.bundle.min.js}"></script>
+    <script th:src="@{/admin-interface/js/poseidas.js}"></script>
 </head>
 <body>
-<div th:fragment="header" class="header-box">
-    <h1>eIDAS Middleware</h1>
-    <h2>Web Configuration</h2>
-    <hr>
-    <div sec:authorize="isAuthenticated()" class="navigation">
-        <a th:href="@{/admin-interface/list}">Overview of eID Service Providers</a>
-        <a th:href="@{/admin-interface/logout}">Sign Out</a>
-        <hr>
+<div class="header-box" th:fragment="header">
+    <div class="jumbotron text-center mb-0">
+        <h1>eIDAS Middleware</h1>
+        <p>Web Configuration</p>
     </div>
-    <div sec:authorize="hasAuthority('defaultCredentials')" class="c-alert c-alert--error">
+    <div sec:authorize="isAuthenticated()">
+        <nav class="navbar navbar-expand-sm bg-light navbar-light justify-content-center">
+            <ul class="navbar-nav">
+                <li>
+                    <hr style="border:none;border-left:1px solid hsla(200, 10%, 50%,100);
+                    border-left-color: rgba(0, 0, 0, 0.1); height: 100%;width: 1px;margin: 0px;">
+                </li>
+                <li class="nav-item mx-3">
+                    <a class="nav-link " th:href="@{/admin-interface/list}">Overview of eID Service Providers</a>
+                </li>
+                <li>
+                    <hr style="border:none;border-left:1px solid hsla(200, 10%, 50%,100);
+                    border-left-color: rgba(0, 0, 0, 0.1); height: 100%;width: 1px;margin: 0px;">
+                </li>
+                <li class="nav-item mx-3">
+                    <a class="nav-link" th:href="@{/admin-interface/status}">Status</a>
+                </li>
+                <li>
+                    <hr style="border:none;border-left:1px solid hsla(200, 10%, 50%,100);
+                    border-left-color: rgba(0, 0, 0, 0.1); height: 100%;width: 1px;margin: 0px;">
+                </li>
+                <li class="nav-item mx-3">
+                    <a class="nav-link" th:href="@{/admin-interface/logout}">Sign out</a>
+                </li>
+                <li>
+                    <hr style="border:none;border-left:1px solid hsla(200, 10%, 50%,100);
+                    border-left-color: rgba(0, 0, 0, 0.1); height: 100%;width: 1px;margin: 0px;">
+                </li>
+            </ul>
+        </nav>
+    </div>
+    <div sec:authorize="hasAuthority('defaultCredentials')" class="text-danger container">
         You are still using the default password. Change it immediately!
     </div>
 </div>
-
 </body>
 </html>

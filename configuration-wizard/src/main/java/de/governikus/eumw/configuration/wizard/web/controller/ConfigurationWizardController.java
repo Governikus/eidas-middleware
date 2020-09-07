@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019 Governikus KG. Licensed under the EUPL, Version 1.2 or as soon they will be approved by
+ * Copyright (c) 2020 Governikus KG. Licensed under the EUPL, Version 1.2 or as soon they will be approved by
  * the European Commission - subsequent versions of the EUPL (the "Licence"); You may not use this work except
  * in compliance with the Licence. You may obtain a copy of the Licence at:
  * http://joinup.ec.europa.eu/software/page/eupl Unless required by applicable law or agreed to in writing,
@@ -11,6 +11,7 @@
 package de.governikus.eumw.configuration.wizard.web.controller;
 
 import java.util.List;
+import java.util.Optional;
 
 import javax.validation.Valid;
 
@@ -24,6 +25,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.SessionAttributes;
+import org.springframework.web.bind.support.SessionStatus;
 import org.springframework.web.servlet.ModelAndView;
 
 import de.governikus.eumw.configuration.wizard.exceptions.ApplicationPropertiesSaveException;
@@ -47,7 +49,6 @@ import de.governikus.eumw.configuration.wizard.web.utils.WebViews;
 import de.governikus.eumw.configuration.wizard.web.utils.WizardPage;
 import de.governikus.eumw.utils.key.exceptions.KeyStoreCreationFailedException;
 import lombok.extern.slf4j.Slf4j;
-
 
 
 /**
@@ -200,7 +201,8 @@ public class ConfigurationWizardController
   @PostMapping(params = {"action=save"})
   public ModelAndView saveConfigurationButton(@Valid @ModelAttribute("coreConfiguration") ConfigurationForm configurationForm,
                                               BindingResult bindingResult,
-                                              @ModelAttribute("currentPage") WizardPage currentPage)
+                                              @ModelAttribute("currentPage") WizardPage currentPage,
+                                              SessionStatus sessionStatus)
   {
     FormValidator.validateView(currentPage, configurationForm, bindingResult);
     if (bindingResult.hasErrors())
@@ -226,6 +228,8 @@ public class ConfigurationWizardController
       modelAndView.addObject("saving_failed", ExceptionHelper.getRootMessage(ex));
     }
     modelAndView.addObject("save_location", configurationForm.getSaveLocation());
+    // Final page, finish the session so that the attributes can be removed by spring and JVM
+    sessionStatus.setComplete();
     return modelAndView;
   }
 
@@ -378,17 +382,14 @@ public class ConfigurationWizardController
     newServiceProvider.setMasterListTrustAnchor(configurationForm.getPoseidasConfig()
                                                                  .getCommonServiceProviderData()
                                                                  .getMasterListTrustAnchor());
-    newServiceProvider.setDefectListTrustAnchor(configurationForm.getPoseidasConfig()
-                                                                 .getCommonServiceProviderData()
-                                                                 .getDefectListTrustAnchor());
     newServiceProvider.getSslKeysForm()
                       .setServerCertificate(configurationForm.getPoseidasConfig()
                                                              .getCommonServiceProviderData()
                                                              .getSslKeysForm()
                                                              .getServerCertificate());
-    newServiceProvider.setPolicyID(configurationForm.getPoseidasConfig()
-                                                    .getCommonServiceProviderData()
-                                                    .getPolicyID());
+    newServiceProvider.setDvcaProvider(configurationForm.getPoseidasConfig()
+                                                        .getCommonServiceProviderData()
+                                                        .getDvcaProvider());
 
     configurationForm.getPoseidasConfig().getServiceProviders().add(newServiceProvider);
 
@@ -409,11 +410,18 @@ public class ConfigurationWizardController
                                             @ModelAttribute("coreConfiguration") ConfigurationForm configurationForm)
   {
     log.debug("Deleting service provider {}", serviceProviderName);
-    configurationForm.getPoseidasConfig()
-                     .getServiceProviders()
-                     .removeIf(serviceProviderForm -> serviceProviderForm.getEntityID()
-                                                                         .equals(serviceProviderName));
-
+    Optional<ServiceProviderForm> optionalDuplicatedServiceProviderForm = configurationForm.getPoseidasConfig()
+                                                                                           .getServiceProviders()
+                                                                                           .stream()
+                                                                                           .filter(serviceProviderForm -> serviceProviderForm.getEntityID()
+                                                                                                                                             .equals(serviceProviderName))
+                                                                                           .findFirst();
+    if (optionalDuplicatedServiceProviderForm.isPresent())
+    {
+      configurationForm.getPoseidasConfig()
+                       .getServiceProviders()
+                       .remove(optionalDuplicatedServiceProviderForm.get());
+    }
     return new ModelAndView(WebViews.CONFIG_WIZARD);
   }
 

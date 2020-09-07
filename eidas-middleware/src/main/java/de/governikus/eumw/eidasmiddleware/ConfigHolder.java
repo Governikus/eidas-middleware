@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019 Governikus KG. Licensed under the EUPL, Version 1.2 or as soon they will be approved by
+ * Copyright (c) 2020 Governikus KG. Licensed under the EUPL, Version 1.2 or as soon they will be approved by
  * the European Commission - subsequent versions of the EUPL (the "Licence"); You may not use this work except
  * in compliance with the Licence. You may obtain a copy of the Licence at:
  * http://joinup.ec.europa.eu/software/page/eupl Unless required by applicable law or agreed to in writing,
@@ -47,6 +47,11 @@ public class ConfigHolder
   private static final String KEY_SERVICE_PROVIDER_METADATA_SIGNATURE_CERT = "SERVICE_PROVIDER_METADATA_SIGNATURE_CERT";
 
   private static final Object LOCKOBJECT = new Object();
+
+  /**
+   * Flag indicating if the application shall sign its metadata.
+   */
+  private static final String KEY_APP_DO_SIGN_METADATA = "MIDDLEWARE_DO_SIGN_METADATA";
 
   /**
    * Path to the signature keystore for the SAML interface
@@ -408,5 +413,10 @@ public class ConfigHolder
       metadataValidity = properties.getProperty(KEY_METADATA_VALIDITY);
     }
     return metadataValidity;
+  }
+
+  public synchronized boolean isDoSignMetadata()
+  {
+    return Boolean.parseBoolean(properties.getProperty(KEY_APP_DO_SIGN_METADATA, "true"));
   }
 }

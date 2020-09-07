@@ -37,9 +37,11 @@ The user documentation for each release is available in the release artifacts.
 Please see [CONTRIBUTING.md](CONTRIBUTING.md) for more information on how to submit pull requests.
 
 ## License
-Copyright &copy; 2019 Governikus KG
+Copyright &copy; 2020 Governikus KG
  
-This work is licensed under the EUPL 1.2. See LICENSE.txt for additional information.
+This work is provided under the terms of the EUPL 1.2. The terms of the LICENSE.txt do only apply for the official
+release of the eIDAS Middleware, which is provided by Governikus GmbH & Co. KG on behalf of the German Federal
+Government. 
 
 The overview of the used third party dependecies and their licenses is available in the release documents.
  

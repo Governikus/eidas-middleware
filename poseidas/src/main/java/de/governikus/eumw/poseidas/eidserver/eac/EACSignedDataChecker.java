@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019 Governikus KG. Licensed under the EUPL, Version 1.2 or as soon they will be approved by
+ * Copyright (c) 2020 Governikus KG. Licensed under the EUPL, Version 1.2 or as soon they will be approved by
  * the European Commission - subsequent versions of the EUPL (the "Licence"); You may not use this work except
  * in compliance with the Licence. You may obtain a copy of the Licence at:
  * http://joinup.ec.europa.eu/software/page/eupl Unless required by applicable law or agreed to in writing,
@@ -20,7 +20,6 @@ import java.security.cert.CertificateException;
 import java.security.cert.CertificateFactory;
 import java.security.cert.X509Certificate;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Enumeration;
 import java.util.HashSet;
 import java.util.LinkedList;
@@ -46,6 +45,7 @@ import de.governikus.eumw.poseidas.cardbase.ByteUtil;
 import de.governikus.eumw.poseidas.cardbase.asn1.ASN1;
 import de.governikus.eumw.poseidas.cardbase.asn1.npa.SecurityInfos;
 import de.governikus.eumw.poseidas.cardserver.eac.crypto.SignedDataChecker;
+import de.governikus.eumw.poseidas.eidserver.crl.CertificationRevocationListImpl;
 
 
 /**
@@ -89,18 +89,14 @@ public class EACSignedDataChecker extends EACSignedDataParser implements SignedD
 
   /** {@inheritDoc} */
   @Override
-  public boolean checkSignedData(byte[] data)
+  public Certificate checkSignedData(byte[] data)
   {
-    if (checkSignedDataInternal(data))
+    Certificate result = checkSignedDataInternal(data);
+    if (LOG.isDebugEnabled())
     {
-      LOG.debug(logPrefix + "Result: Check OK ");
-      return true;
+      LOG.debug(logPrefix + "Result: Check " + (result == null ? "NEGATIVE" : "OK"));
     }
-    else
-    {
-      LOG.debug(logPrefix + "Result: Check NEGATIVE ");
-      return false;
-    }
+    return result;
   }
 
   /**
@@ -113,10 +109,11 @@ public class EACSignedDataChecker extends EACSignedDataParser implements SignedD
    * </ul>
    *
    * @param data to be validated
-   * @return true if check is positive
+   * @return certificate that signed the data, <code>null</code> if not correctly signed
    */
-  private boolean checkSignedDataInternal(byte[] data)
+  private Certificate checkSignedDataInternal(byte[] data)
   {
+    Certificate signer = null;
     try
     {
       // First check existing master list
@@ -138,7 +135,7 @@ public class EACSignedDataChecker extends EACSignedDataParser implements SignedD
       if (!certs.hasMoreElements())
       {
         LOG.debug(logPrefix + "No certificate found in signature data from card to check signature");
-        return false;
+        return null;
       }
       List<Certificate> certifacteListFromCardSignatureData = new ArrayList<>();
       // Handle X509 certificates
@@ -160,7 +157,7 @@ public class EACSignedDataChecker extends EACSignedDataParser implements SignedD
       {
         if (!checkForDocumentType((X509Certificate)c))
         {
-          return false;
+          return null;
         }
       }
 
@@ -170,7 +167,7 @@ public class EACSignedDataChecker extends EACSignedDataParser implements SignedD
       if (!signatureInfosFromCard.hasMoreElements())
       {
         LOG.debug(logPrefix + "No signature found in data from card to check card");
-        return false;
+        return null;
       }
       int signaturesChecked = 0;
       while (signatureInfosFromCard.hasMoreElements())
@@ -204,7 +201,7 @@ public class EACSignedDataChecker extends EACSignedDataParser implements SignedD
         if (validDigestsFromThisCardInfoAttributes.isEmpty())
         {
           LOG.debug(logPrefix + "No valid digest found for signature from card info attributes");
-          return false;
+          return null;
         }
         LOG.debug(logPrefix + "Found " + validDigestsFromThisCardInfoAttributes.size()
                   + " digest(s) in signature attributes from card");
@@ -218,7 +215,7 @@ public class EACSignedDataChecker extends EACSignedDataParser implements SignedD
         boolean cardSignatureMatch = false;
         for ( byte[] compare : validDigestsFromThisCardInfoAttributes )
         {
-          if (Arrays.equals(compare, selfCalculatedDigest))
+          if (MessageDigest.isEqual(compare, selfCalculatedDigest))
           {
             cardSignatureMatch = true;
             break;
@@ -228,7 +225,7 @@ public class EACSignedDataChecker extends EACSignedDataParser implements SignedD
         if (!cardSignatureMatch)
         {
           LOG.debug(logPrefix + "Digests of signatures do not match");
-          return false;
+          return null;
         }
         LOG.debug(logPrefix + "RESULT: Signature digest is valid");
 
@@ -257,7 +254,7 @@ public class EACSignedDataChecker extends EACSignedDataParser implements SignedD
         {
           LOG.debug(logPrefix + "No certificate fits issuer: " + signatureCertificateIssuer.toString()
                     + " and serial: " + signatureCertificateSerialNumber.toString());
-          return false;
+          return null;
         }
         LOG.debug(logPrefix + "Certificates and signature data result: " + validCertificates.size() + "/"
                   + certifacteListFromCardSignatureData.size());
@@ -266,7 +263,7 @@ public class EACSignedDataChecker extends EACSignedDataParser implements SignedD
         for ( Certificate certificate : validCertificates )
         {
           // Check if a certificate is on master list
-          if (isCertificateOnMasterList(certificate.getEncoded()))
+          if (isOnMasterListAndNotRevoked(certificate.getEncoded()))
           {
             LOG.debug(logPrefix + "Certificate is on master list");
             certificatesOnMasterList.add(certificate);
@@ -279,7 +276,7 @@ public class EACSignedDataChecker extends EACSignedDataParser implements SignedD
         if (certificatesOnMasterList.isEmpty())
         {
           LOG.debug(logPrefix + "No certificate is on masterlist: verification negative result");
-          return false;
+          return null;
         }
 
         // SIGNATURE CHECK
@@ -299,11 +296,11 @@ public class EACSignedDataChecker extends EACSignedDataParser implements SignedD
           if (signature.verify(signatureFromSignatureInfo))
           {
             signatureVerified = true;
+            signer = initialCertificate;
           }
           else
           {
             LOG.debug(logPrefix + "Calculated signature is invalid for this certificate");
-            continue;
           }
         }
         if (signatureVerified)
@@ -313,21 +310,16 @@ public class EACSignedDataChecker extends EACSignedDataParser implements SignedD
         else
         {
           LOG.debug(logPrefix + "Signature is not valid");
-          return false;
+          return null;
         }
       }
     }
-    catch (IOException e)
+    catch (IOException | GeneralSecurityException e)
     {
       LOG.error(logPrefix + CHECK_FAILED, e);
-      return false;
+      return null;
     }
-    catch (GeneralSecurityException e)
-    {
-      LOG.error(logPrefix + CHECK_FAILED, e);
-      return false;
-    }
-    return true;
+    return signer;
   }
 
   /**
@@ -404,15 +396,15 @@ public class EACSignedDataChecker extends EACSignedDataParser implements SignedD
 
   /**
    * Checks if the given certificate found in the client signature data is part of a certificate on the master
-   * list.
+   * list and is not on the Certificate Revocation List.
    *
    * @param certificateToCheck an encoded version of a certificate
-   * @return true if the given certificate is in the masterList
+   * @return true if the given certificate is on the masterList and not on the Certificate Revocation List.
    * @throws CertificateException if no X509 certificate is available
    * @throws IOException
    * @throws GeneralSecurityException
    */
-  private boolean isCertificateOnMasterList(byte certificateToCheck[])
+  private boolean isOnMasterListAndNotRevoked(byte[] certificateToCheck)
     throws IOException, GeneralSecurityException
   {
     CertificateFactory fac = CertificateFactory.getInstance(CERTIFICATE_X509,
@@ -421,6 +413,11 @@ public class EACSignedDataChecker extends EACSignedDataParser implements SignedD
     X509Certificate x509CertificateToCheck = (X509Certificate)fac.generateCertificate(bais);
     X500Principal certificateSubject = x509CertificateToCheck.getSubjectX500Principal();
     X500Principal certificateIssuer = x509CertificateToCheck.getIssuerX500Principal();
+    CertificationRevocationListImpl certificationRevocationList = CertificationRevocationListImpl.getInstance();
+    if (certificationRevocationList.isOnCRL(x509CertificateToCheck))
+    {
+      return false;
+    }
 
     // For all certificates on master list
     LOG.debug(logPrefix + "Try to find issuer certificate for card certificate:\n  "
@@ -443,7 +440,7 @@ public class EACSignedDataChecker extends EACSignedDataParser implements SignedD
           checkMasterListCertificate(masterCert);
           x509CertificateToCheck.verify(masterCert.getPublicKey());
           LOG.debug(logPrefix + "RESULT: Verify certificate against master list successful");
-          return true;
+          return !certificationRevocationList.isOnCRL(masterCert);
         }
         else
         {
@@ -455,6 +452,8 @@ public class EACSignedDataChecker extends EACSignedDataParser implements SignedD
     // No match found
     return false;
   }
+
+
 
   /**
    * Checks if a certificate from master list is self-signed

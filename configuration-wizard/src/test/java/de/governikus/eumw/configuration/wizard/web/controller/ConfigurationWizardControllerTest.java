@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019 Governikus KG. Licensed under the EUPL, Version 1.2 or as soon they will be approved by
+ * Copyright (c) 2020 Governikus KG. Licensed under the EUPL, Version 1.2 or as soon they will be approved by
  * the European Commission - subsequent versions of the EUPL (the "Licence"); You may not use this work except
  * in compliance with the Licence. You may obtain a copy of the Licence at:
  * http://joinup.ec.europa.eu/software/page/eupl Unless required by applicable law or agreed to in writing,
@@ -26,6 +26,7 @@ import org.junit.jupiter.api.DynamicTest;
 import org.junit.jupiter.api.TestFactory;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 
 import com.gargoylesoftware.htmlunit.html.DomElement;
@@ -56,7 +57,8 @@ import lombok.extern.slf4j.Slf4j;
 @ExtendWith(SpringExtension.class)
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 @DisplayName("test view components of the configuration wizard")
-public class ConfigurationWizardControllerTest extends AbstractWebTest // NOPMD
+@ActiveProfiles("test")
+class ConfigurationWizardControllerTest extends AbstractWebTest // NOPMD
 {
 
   /**
@@ -84,7 +86,7 @@ public class ConfigurationWizardControllerTest extends AbstractWebTest // NOPMD
    */
   @TestFactory
   @DisplayName("upload a certificate")
-  public List<DynamicTest> uploadCertificate() throws IOException // NOPMD
+  List<DynamicTest> uploadCertificate() throws IOException // NOPMD
   {
     final String certificateUploadViewId = "certificate-upload-view";
 
@@ -218,7 +220,7 @@ public class ConfigurationWizardControllerTest extends AbstractWebTest // NOPMD
    */
   @TestFactory
   @DisplayName("upload a keystore")
-  public List<DynamicTest> uploadKeystore() throws IOException // NOPMD
+  List<DynamicTest> uploadKeystore() throws IOException // NOPMD
   {
     // @CHECKSTYLE:OFF
     List<DynamicTest> dynamicTests = new ArrayList<>();
@@ -259,8 +261,12 @@ public class ConfigurationWizardControllerTest extends AbstractWebTest // NOPMD
     final URL pkcs12KeystoreUrl = getClass().getResource("/test-files/junit-test.p12");
     final File pkcs12KeystoreFile = new File(pkcs12KeystoreUrl.toString());
 
-    final KeyStore jksKeyStore = KeyStoreSupporter.readKeyStore(IOUtils.toByteArray(jksKeystoreUrl), KeyStoreType.JKS, keystorePassword);
-    final KeyStore pkcs12KeyStore = KeyStoreSupporter.readKeyStore(IOUtils.toByteArray(pkcs12KeystoreUrl), KeyStoreType.PKCS12, keystorePassword);
+    final KeyStore jksKeyStore = KeyStoreSupporter.readKeyStore(IOUtils.toByteArray(jksKeystoreUrl),
+                                                                KeyStoreType.JKS,
+                                                                keystorePassword);
+    final KeyStore pkcs12KeyStore = KeyStoreSupporter.readKeyStore(IOUtils.toByteArray(pkcs12KeystoreUrl),
+                                                                   KeyStoreType.PKCS12,
+                                                                   keystorePassword);
 
     HtmlDetails kd = (HtmlDetails)originalPage.getElementById(keystoreUploadViewId);
     Assertions.assertEquals("", kd.getAttribute(OPEN));
@@ -293,7 +299,8 @@ public class ConfigurationWizardControllerTest extends AbstractWebTest // NOPMD
 
       Assertions.assertNotNull(keystoreForm.getKeystore());
       Assertions.assertNotNull(keystoreForm.getKeystore().getCertificate(alias));
-      Assertions.assertEquals(jksKeyStore.getCertificate(alias), keystoreForm.getKeystore().getCertificate(alias));
+      Assertions.assertEquals(jksKeyStore.getCertificate(alias),
+                              keystoreForm.getKeystore().getCertificate(alias));
       Assertions.assertNotNull(keystoreForm.getKeystore().getKey(alias, privateKeyPassword.toCharArray()));
 
       HtmlDetails keystoreDetails = (HtmlDetails)resultPage.getElementById(keystoreUploadViewId);
@@ -328,7 +335,8 @@ public class ConfigurationWizardControllerTest extends AbstractWebTest // NOPMD
 
       Assertions.assertNotNull(keystoreForm.getKeystore());
       Assertions.assertNotNull(keystoreForm.getKeystore().getCertificate(alias));
-      Assertions.assertEquals(pkcs12KeyStore.getCertificate(alias), keystoreForm.getKeystore().getCertificate(alias));
+      Assertions.assertEquals(pkcs12KeyStore.getCertificate(alias),
+                              keystoreForm.getKeystore().getCertificate(alias));
       Assertions.assertNotNull(keystoreForm.getKeystore().getKey(alias, privateKeyPassword.toCharArray()));
 
       HtmlDetails keystoreDetails = (HtmlDetails)resultPage.getElementById(keystoreUploadViewId);
@@ -497,7 +505,7 @@ public class ConfigurationWizardControllerTest extends AbstractWebTest // NOPMD
    */
   @TestFactory // NOPMD
   @DisplayName("test application properties settings")
-  public List<DynamicTest> testApplicationPropertiesSettings() throws IOException // NOPMD
+  List<DynamicTest> testApplicationPropertiesSettings() throws IOException // NOPMD
   {
     // @CHECKSTYLE:OFF
     List<DynamicTest> dynamicTests = new ArrayList<>();

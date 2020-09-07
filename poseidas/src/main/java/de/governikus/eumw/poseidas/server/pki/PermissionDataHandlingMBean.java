@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019 Governikus KG. Licensed under the EUPL, Version 1.2 or as soon they will be approved by
+ * Copyright (c) 2020 Governikus KG. Licensed under the EUPL, Version 1.2 or as soon they will be approved by
  * the European Commission - subsequent versions of the EUPL (the "Licence"); You may not use this work except
  * in compliance with the Licence. You may obtain a copy of the Licence at:
  * http://joinup.ec.europa.eu/software/page/eupl Unless required by applicable law or agreed to in writing,
@@ -96,32 +96,12 @@ public interface PermissionDataHandlingMBean
   ManagementMessage createTerminalPermissionEntry(String cvcRefId);
 
   /**
-   * Import certificate into an existing database entry. Verify if the certificate matches the pending
-   * request, deletes the pending request, store the certificate in the database and updates the valid time in
-   * the database.
-   *
-   * @param entityID terminal permission primary key
-   * @param cvc certificate to be imported
-   * @return status message
-   */
-  ManagementMessage importCertificate(String entityID, byte[] cvc);
-
-  /**
    * Trigger a subsequent certificate request manually for one service provider.
    *
    * @param entityID
    * @return "OK" or "internal error"
    */
   ManagementMessage triggerCertRenewal(String entityID);
-
-  /**
-   * Trigger a subsequent certificate request with a new cvc description.
-   *
-   * @param entityID
-   * @param cvcDescription new cvc description to use
-   * @return "OK" or "internal error"
-   */
-  ManagementMessage changeCvcDescription(String entityID, byte[] cvcDescription);
 
   /**
    * Check whether the configuration is sufficiently complete for requesting an CVC.

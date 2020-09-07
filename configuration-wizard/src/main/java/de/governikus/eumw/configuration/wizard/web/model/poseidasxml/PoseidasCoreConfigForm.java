@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019 Governikus KG. Licensed under the EUPL, Version 1.2 or as soon they will be approved by
+ * Copyright (c) 2020 Governikus KG. Licensed under the EUPL, Version 1.2 or as soon they will be approved by
  * the European Commission - subsequent versions of the EUPL (the "Licence"); You may not use this work except
  * in compliance with the Licence. You may obtain a copy of the Licence at:
  * http://joinup.ec.europa.eu/software/page/eupl Unless required by applicable law or agreed to in writing,
@@ -153,6 +153,7 @@ public class PoseidasCoreConfigForm extends AbstractConfigurationLoader
     }
     log.trace("loading configuration from poseidas xml file: {}", poseidasXml);
     setCoreConfig(XmlHelper.unmarshal(poseidasXml, PoseidasCoreConfiguration.class));
+    serviceProviders.clear();
     getServiceProvidersFromConfig().ifPresent(serviceProviderType -> setServiceProviderFormValues(serviceProviderType,
                                                                                                   entityIdInt));
     return true;
@@ -176,6 +177,7 @@ public class PoseidasCoreConfigForm extends AbstractConfigurationLoader
       log.error("could not read poseidas xml input stream", e);
       return false;
     }
+    serviceProviders.clear();
     getServiceProvidersFromConfig().ifPresent(serviceProviderType -> setServiceProviderFormValues(serviceProviderType,
                                                                                                   ""));
     return true;
@@ -195,21 +197,13 @@ public class PoseidasCoreConfigForm extends AbstractConfigurationLoader
       ServiceProviderForm serviceProvider = new ServiceProviderForm();
       serviceProvider.setServiceProvider(serviceProviderType);
       serviceProvider.setEntityID(serviceProviderType.getEntityID());
-      if (serviceProviderType.getEntityID().equals(publicServiceProviderEntityID))
-      {
-        serviceProvider.setPublicServiceProvider(true);
-      }
-      else
-      {
-        serviceProvider.setPublicServiceProvider(false);
-      }
+      serviceProvider.setPublicServiceProvider(serviceProviderType.getEntityID()
+                                                                  .equals(publicServiceProviderEntityID));
       PkiConnectorConfigurationType pkiConnectorConfigurationType = serviceProviderType.getEPAConnectorConfiguration()
                                                                                        .getPkiConnectorConfiguration();
       // @formatter:off
       getCertificate("blacklist-trust-anchor",
                      pkiConnectorConfigurationType.getBlackListTrustAnchor()).ifPresent(serviceProvider::setBlackListTrustAnchor);
-      getCertificate("defectlist-trust-anchor",
-                     pkiConnectorConfigurationType.getDefectListTrustAnchor()).ifPresent(serviceProvider::setDefectListTrustAnchor);
       getCertificate("masterlist-trust-anchor",
                      pkiConnectorConfigurationType.getMasterListTrustAnchor()).ifPresent(serviceProvider::setMasterListTrustAnchor);
       // @formatter:on
@@ -219,7 +213,7 @@ public class PoseidasCoreConfigForm extends AbstractConfigurationLoader
                                                          .getPolicyImplementationId();
       try
       {
-        serviceProvider.setPolicyID(getPolicyImplementationId(serviceProviderType));
+        serviceProvider.setDvcaProvider(getDvcaProvider(serviceProviderType));
       }
       catch (IllegalArgumentException ex)
       {
@@ -337,19 +331,43 @@ public class PoseidasCoreConfigForm extends AbstractConfigurationLoader
    * tries to extract the policy implementation id from the configuration
    *
    * @param serviceProviderType the service provider configuration
-   * @return the matching policy implementation id or {@link PolicyImplementationId#GOV_DVCA} if the value
-   *         could not be resolved
+   * @return the matching policy implementation id or {@link DvcaProvider#GOV_DVCA} if the value could not be
+   *         resolved
    */
-  private PolicyImplementationId getPolicyImplementationId(ServiceProviderType serviceProviderType)
+  private DvcaProvider getDvcaProvider(ServiceProviderType serviceProviderType)
   {
-    return getPkiConnectorConfig(serviceProviderType).map(pkiConfig -> {
-      String policyImplementationId = pkiConfig.getPolicyImplementationId();
-      if (StringUtils.isBlank(policyImplementationId))
-      {
-        return PolicyImplementationId.GOV_DVCA;
-      }
-      return PolicyImplementationId.fromValue(policyImplementationId).orElse(PolicyImplementationId.GOV_DVCA);
-    }).orElse(PolicyImplementationId.GOV_DVCA);
+
+    Optional<PkiConnectorConfigurationType> connectorConfig = getPkiConnectorConfig(serviceProviderType);
+    if (!connectorConfig.isPresent())
+    {
+      return DvcaProvider.GOV_DVCA;
+    }
+
+    PkiConnectorConfigurationType pkiConnectorConfiguration = connectorConfig.get();
+
+    if (StringUtils.isBlank(pkiConnectorConfiguration.getPolicyImplementationId()))
+    {
+      return DvcaProvider.GOV_DVCA;
+    }
+    if (DvcaProvider.BUDRU.getValue().equals(pkiConnectorConfiguration.getPolicyImplementationId()))
+    {
+      return DvcaProvider.BUDRU;
+    }
+
+    // New Gov DVCA can only be identified using the connection URLs because it uses the same
+    // DvcaProvider as old Gov DVCA
+    if ("https://dvca-r1.governikus-eid.de:8444/gov_dvca/ta-service".equals(pkiConnectorConfiguration.getTerminalAuthService()
+                                                                                                     .getUrl())
+        && "https://dvca-r1.governikus-eid.de:8444/gov_dvca/ri-service".equals(pkiConnectorConfiguration.getRestrictedIdService()
+                                                                                                        .getUrl())
+        && "https://dvca-r1.governikus-eid.de:8444/gov_dvca/pa-service".equals(pkiConnectorConfiguration.getPassiveAuthService()
+                                                                                                        .getUrl())
+        && "https://dvca-r1.governikus-eid.de:8444/gov_dvca/certDesc-service".equals(pkiConnectorConfiguration.getDvcaCertDescriptionService()
+                                                                                                              .getUrl()))
+    {
+      return DvcaProvider.NEW_GOV_DVCA;
+    }
+    return DvcaProvider.GOV_DVCA;
   }
 
   /**
@@ -392,11 +410,13 @@ public class PoseidasCoreConfigForm extends AbstractConfigurationLoader
     coreConfig.setSessionManagerUsesDatabase(true);
     coreConfig.setSessionMaxPendingRequests(SESSION_MAX_PENDING_REQUESTS);
 
-    if(coreConfig.getServerUrl() != null){
-      //Remove a trailing slash, to prevent dubble slashes
+    if (coreConfig.getServerUrl() != null)
+    {
+      // Remove a trailing slash, to prevent double slashes
       coreConfig.setServerUrl(coreConfig.getServerUrl().trim().replaceAll("/$", ""));
       // only add path if it is not already there
-      if(!coreConfig.getServerUrl().endsWith("/eidas-middleware")){
+      if (!coreConfig.getServerUrl().endsWith("/eidas-middleware"))
+      {
         coreConfig.setServerUrl(coreConfig.getServerUrl() + "/eidas-middleware");
       }
     }
@@ -417,13 +437,20 @@ public class PoseidasCoreConfigForm extends AbstractConfigurationLoader
 
       PkiConnectorConfigurationType pki = new PkiConnectorConfigurationType();
       pki.setBlackListTrustAnchor(serviceProvider.getBlackListTrustAnchor().getCertificate().getEncoded());
-      pki.setDefectListTrustAnchor(serviceProvider.getDefectListTrustAnchor().getCertificate().getEncoded());
       pki.setMasterListTrustAnchor(serviceProvider.getMasterListTrustAnchor().getCertificate().getEncoded());
-      pki.setPolicyImplementationId(serviceProvider.getPolicyID().getValue());
+
+      if (DvcaProvider.BUDRU.getValue().equals(serviceProvider.getDvcaProvider().getValue()))
+      {
+        pki.setPolicyImplementationId(DvcaProvider.BUDRU.getValue());
+      }
+      else
+      {
+        pki.setPolicyImplementationId(DvcaProvider.GOV_DVCA.getValue());
+      }
 
       pki.getSslKeys().add(createSslKeys(serviceProvider));
 
-      addDvcaServices(pki);
+      addDvcaServices(serviceProvider.getDvcaProvider().getValue(), pki);
 
       epa.setPkiConnectorConfiguration(pki);
 
@@ -433,10 +460,8 @@ public class PoseidasCoreConfigForm extends AbstractConfigurationLoader
     }
   }
 
-  /**
-   * @param pki PkiConnectorConfigurationType
-   */
-  private void addDvcaServices(PkiConnectorConfigurationType pki)
+
+  private void addDvcaServices(String dvcaProvider, PkiConnectorConfigurationType pki)
   {
 
     String sslKeysId = pki.getSslKeys().get(0).getId();
@@ -445,20 +470,28 @@ public class PoseidasCoreConfigForm extends AbstractConfigurationLoader
     String passive;
     String dvca;
 
-    if (PolicyImplementationId.BUDRU.getValue().equals(pki.getPolicyImplementationId()))
+    if (DvcaProvider.BUDRU.getValue().equals(dvcaProvider))
     {
       terminal = "https://berca-ps.d-trust.net/ps/dvca-at";
       restricted = "https://berca-ps.d-trust.net/ps/dvsd_v2";
       passive = "https://berca-ps.d-trust.net/ps/scs";
       dvca = "https://berca-ps.d-trust.net/ps/dvca-at-cert-desc";
     }
-    else
+    else if (DvcaProvider.GOV_DVCA.getValue().equals(dvcaProvider))
     {
       // Governikus dvca
       terminal = "https://dev.governikus-eid.de:9444/gov_dvca/ta-service";
       restricted = "https://dev.governikus-eid.de:9444/gov_dvca/ri-service";
       passive = "https://dev.governikus-eid.de:9444/gov_dvca/pa-service";
       dvca = "https://dev.governikus-eid.de:9444/gov_dvca/certDesc-service";
+    }
+    else
+    {
+      // New Governikus dvca
+      terminal = "https://dvca-r1.governikus-eid.de:8444/gov_dvca/ta-service";
+      restricted = "https://dvca-r1.governikus-eid.de:8444/gov_dvca/ri-service";
+      passive = "https://dvca-r1.governikus-eid.de:8444/gov_dvca/pa-service";
+      dvca = "https://dvca-r1.governikus-eid.de:8444/gov_dvca/certDesc-service";
     }
 
     PkiServiceType terminalAuthService = new PkiServiceType();

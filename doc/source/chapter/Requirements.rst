@@ -10,9 +10,9 @@ Software Requirements
 
 The eIDAS Middleware is a Spring Boot Application. This means that you can start the application with a JRE,
 there is no need for an application server. We support the latest available Zulu JDK in Version 8,
-at the time of this release this is 8u222.
+at the time of this release this is 8u252.
 
-For the operating system we support Debian 9.
+For the operating system we support Debian 9 (LTS).
 
 Hardware Requirements
 ---------------------
@@ -39,6 +39,15 @@ For a **test system** the following URLs need to be reachable::
     https://dev.governikus-eid.de:9444/gov_dvca/pa-service
     https://dev.governikus-eid.de:9444/gov_dvca/certDesc-service
 
+Governikus is in the process of replacing the old test CA with a new one. After migration the middleware will require
+to reach these URLs::
+
+    https://dvca-r1.governikus-eid.de:8444/gov_dvca/ta-service
+    https://dvca-r1.governikus-eid.de:8444/gov_dvca/ri-service
+    https://dvca-r1.governikus-eid.de:8444/gov_dvca/pa-service
+    https://dvca-r1.governikus-eid.de:8444/gov_dvca/certDesc-service
+
+Governikus will inform you when migration is due. Please do not change the CA settings on your own.
 
 For a **production system** the following URLs need to be reachable::
 

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019 Governikus KG. Licensed under the EUPL, Version 1.2 or as soon they will be approved by
+ * Copyright (c) 2020 Governikus KG. Licensed under the EUPL, Version 1.2 or as soon they will be approved by
  * the European Commission - subsequent versions of the EUPL (the "Licence"); You may not use this work except
  * in compliance with the Licence. You may obtain a copy of the Licence at:
  * http://joinup.ec.europa.eu/software/page/eupl Unless required by applicable law or agreed to in writing,
@@ -14,21 +14,23 @@ import java.security.KeyException;
 import java.security.NoSuchAlgorithmException;
 import java.security.cert.X509Certificate;
 
-import org.apache.xml.security.binding.xmldsig.DigestMethodType;
-import org.apache.xml.security.binding.xmlenc11.ConcatKDFParamsType;
+import org.apache.xml.security.algorithms.MessageDigestAlgorithm;
 import org.opensaml.core.config.ConfigurationService;
 import org.opensaml.saml.saml2.encryption.Encrypter;
 import org.opensaml.saml.saml2.encryption.Encrypter.KeyPlacement;
 import org.opensaml.security.credential.Credential;
 import org.opensaml.security.credential.CredentialSupport;
-import org.opensaml.security.x509.ECDHCredential;
+import org.opensaml.security.x509.BasicX509Credential;
 import org.opensaml.xmlsec.EncryptionConfiguration;
 import org.opensaml.xmlsec.algorithm.AlgorithmSupport;
 import org.opensaml.xmlsec.encryption.support.DataEncryptionParameters;
-import org.opensaml.xmlsec.encryption.support.ECDHParameters;
 import org.opensaml.xmlsec.encryption.support.EncryptionConstants;
 import org.opensaml.xmlsec.encryption.support.KeyEncryptionParameters;
+import org.opensaml.xmlsec.encryption.support.RSAOAEPParameters;
 import org.opensaml.xmlsec.keyinfo.KeyInfoGeneratorFactory;
+
+import se.swedenconnect.opensaml.xmlsec.config.ExtendedDefaultSecurityConfigurationBootstrap;
+import se.swedenconnect.opensaml.xmlsec.encryption.support.ECDHKeyAgreementParameters;
 
 
 public class EidasEncrypter
@@ -38,18 +40,6 @@ public class EidasEncrypter
    * Completely configured encryption handler, null if encryption is not set.
    */
   Encrypter encrypter;
-
-  /**
-   * Encryption parameters used to set up the {@link #encrypter}, null if encryption is not set.
-   */
-  private final DataEncryptionParameters encParams;
-
-  /**
-   * key encryption parameters used to set up the {@link #encrypter}, null if encryption is not set. Note that
-   * the encrypter will ignore these values given to it in the constructor when it encrypts an XMLObject. In
-   * that case, you have to give these values again to the encrypt method.
-   */
-  private final KeyEncryptionParameters kek;
 
   /**
    * Create a XMLCipher Object. The KeyEncryptionParameters algorithm will be
@@ -64,46 +54,45 @@ public class EidasEncrypter
   private EidasEncrypter(boolean includeCert, X509Certificate cert, String cipherAlgo)
     throws NoSuchAlgorithmException, KeyException
   {
-    Credential receiverCredential = "EC".equals(cert.getPublicKey().getAlgorithm()) ? new ECDHCredential(cert)
-      : CredentialSupport.getSimpleCredential(cert, null);
+    Credential receiverCredential = CredentialSupport.getSimpleCredential(cert, null);
     Credential symmetricCredential = CredentialSupport.getSimpleCredential(AlgorithmSupport.generateSymmetricKey(cipherAlgo));
 
-    encParams = new DataEncryptionParameters();
+    DataEncryptionParameters encParams = new DataEncryptionParameters();
     encParams.setAlgorithm(cipherAlgo);
     encParams.setEncryptionCredential(symmetricCredential);
 
-    kek = new KeyEncryptionParameters();
-    if (receiverCredential instanceof ECDHCredential)
+    if ("EC".equals(cert.getPublicKey().getAlgorithm()))
     {
-      ConcatKDFParamsType concatKDFParams = new ConcatKDFParamsType();
-      concatKDFParams.setAlgorithmID(new byte[]{0, 1});
-      concatKDFParams.setPartyUInfo(new byte[]{0, 2});
-      concatKDFParams.setPartyVInfo(new byte[]{0, 3});
-      DigestMethodType digestMethod = new DigestMethodType();
-      digestMethod.setAlgorithm(EncryptionConstants.ALGO_ID_DIGEST_SHA512);
-      concatKDFParams.setDigestMethod(digestMethod);
-      ((ECDHCredential)receiverCredential).setConcatKDF(concatKDFParams);
-      kek.setAlgorithm(EncryptionConstants.ALGO_ID_KEYAGREEMENT_ECDH_ES);
-
-      ECDHParameters ecdhParams = new ECDHParameters();
-      ecdhParams.setKeyWrapMethod(EncryptionConstants.ALGO_ID_KEYWRAP_AES256);
-      kek.setECDHParameters(ecdhParams);
+      ECDHKeyAgreementParameters ecdhKeyAgreementParameters = new ECDHKeyAgreementParameters();
+      ecdhKeyAgreementParameters.setPeerCredential(receiverCredential);
+      ecdhKeyAgreementParameters.setKeyInfoGenerator(ExtendedDefaultSecurityConfigurationBootstrap.buildDefaultKeyAgreementKeyInfoGeneratorFactory()
+                                                                                                  .newInstance());
+      encrypter = new Encrypter(encParams, ecdhKeyAgreementParameters);
     }
+
     else
     {
-      kek.setAlgorithm(EncryptionConstants.ALGO_ID_KEYTRANSPORT_RSAOAEP);
-    }
-    kek.setEncryptionCredential(receiverCredential);
 
-    if (includeCert || receiverCredential instanceof ECDHCredential)
-    {
-      KeyInfoGeneratorFactory kigf = ConfigurationService.get(EncryptionConfiguration.class)
-                                                         .getKeyTransportKeyInfoGeneratorManager()
-                                                         .getDefaultManager()
-                                                         .getFactory(receiverCredential);
-      kek.setKeyInfoGenerator(kigf.newInstance());
+      /**
+       * key encryption parameters used to set up the {@link #encrypter}, null if encryption is not set. Note
+       * that the encrypter will ignore these values given to it in the constructor when it encrypts an
+       * XMLObject. In that case, you have to give these values again to the encrypt method.
+       */
+      KeyEncryptionParameters kek = new KeyEncryptionParameters();
+      kek.setAlgorithm(EncryptionConstants.ALGO_ID_KEYTRANSPORT_RSAOAEP);
+      kek.setEncryptionCredential(receiverCredential);
+      kek.setRSAOAEPParameters(new RSAOAEPParameters(MessageDigestAlgorithm.ALGO_ID_DIGEST_SHA256, null,
+                                                     null));
+      encrypter = new Encrypter(encParams, kek);
+      if (includeCert)
+      {
+        KeyInfoGeneratorFactory kigf = ConfigurationService.get(EncryptionConfiguration.class)
+                                                           .getKeyTransportKeyInfoGeneratorManager()
+                                                           .getDefaultManager()
+                                                           .getFactory(new BasicX509Credential(cert));
+        kek.setKeyInfoGenerator(kigf.newInstance());
+      }
     }
-    encrypter = new Encrypter(encParams, kek);
     encrypter.setKeyPlacement(KeyPlacement.INLINE);
   }
 

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019 Governikus KG. Licensed under the EUPL, Version 1.2 or as soon they will be approved by
+ * Copyright (c) 2020 Governikus KG. Licensed under the EUPL, Version 1.2 or as soon they will be approved by
  * the European Commission - subsequent versions of the EUPL (the "Licence"); You may not use this work except
  * in compliance with the Licence. You may obtain a copy of the Licence at:
  * http://joinup.ec.europa.eu/software/page/eupl Unless required by applicable law or agreed to in writing,
@@ -177,12 +177,10 @@ public class HSMServiceHolder implements WarmupListener
    *
    * @param deleteAfterDays days after which to delete a key
    * @param archive <code>true</code> for archiving old keys in database
-   * @throws IllegalStateException
    * @throws HSMException
    * @throws IOException
    */
-  synchronized void deleteOutdatedKeys()
-    throws IllegalStateException, HSMException, IOException
+  synchronized void deleteOutdatedKeys() throws HSMException, IOException
   {
     if (deleteOldKeys < 1 || !isServiceAvailable(true))
     {
@@ -308,8 +306,9 @@ public class HSMServiceHolder implements WarmupListener
       result.add(startHSMService());
       if (!isServiceAvailable(false))
       {
-        SNMPDelegate.getInstance().sendSNMPTrap(OID.HSM_NOT_AVAILABLE,
-                                                SNMPDelegate.HSM_NOT_AVAILABLE + " " + "No HSM active");
+        SNMPDelegate.getInstance()
+                    .sendSNMPTrap(OID.HSM_NOT_AVAILABLE,
+                                  SNMPDelegate.HSM_NOT_AVAILABLE + " " + "No HSM active");
         result.add(GlobalManagementCodes.EC_UNEXPECTED_ERROR.createMessage("No HSM active"));
       }
     }

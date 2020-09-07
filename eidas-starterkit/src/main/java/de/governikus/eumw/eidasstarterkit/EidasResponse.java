@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019 Governikus KG. Licensed under the EUPL, Version 1.2 or as soon they will be approved by
+ * Copyright (c) 2020 Governikus KG. Licensed under the EUPL, Version 1.2 or as soon they will be approved by
  * the European Commission - subsequent versions of the EUPL (the "Licence"); You may not use this work except
  * in compliance with the Licence. You may obtain a copy of the Licence at:
  * http://joinup.ec.europa.eu/software/page/eupl Unless required by applicable law or agreed to in writing,
@@ -18,6 +18,7 @@ import java.nio.charset.StandardCharsets;
 import java.security.cert.CertificateEncodingException;
 import java.security.cert.X509Certificate;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Date;
 import java.util.EnumMap;
 import java.util.LinkedList;
@@ -50,8 +51,6 @@ import org.opensaml.security.credential.Credential;
 import org.opensaml.security.credential.CredentialSupport;
 import org.opensaml.xmlsec.encryption.support.DecryptionException;
 import org.opensaml.xmlsec.encryption.support.EncryptionException;
-import org.opensaml.xmlsec.encryption.support.InlineEncryptedKeyResolver;
-import org.opensaml.xmlsec.keyinfo.impl.StaticKeyInfoCredentialResolver;
 import org.opensaml.xmlsec.signature.Signature;
 import org.opensaml.xmlsec.signature.support.SignatureException;
 import org.opensaml.xmlsec.signature.support.Signer;
@@ -64,10 +63,12 @@ import de.governikus.eumw.eidascommon.Utils;
 import de.governikus.eumw.eidascommon.Utils.X509KeyPair;
 import de.governikus.eumw.eidasstarterkit.person_attributes.AbstractNonLatinScriptAttribute;
 import de.governikus.eumw.eidasstarterkit.person_attributes.EidasPersonAttributes;
+import de.governikus.eumw.eidasstarterkit.template.TemplateConstants;
 import de.governikus.eumw.eidasstarterkit.template.TemplateLoader;
 import net.shibboleth.utilities.java.support.component.ComponentInitializationException;
 import net.shibboleth.utilities.java.support.xml.BasicParserPool;
 import net.shibboleth.utilities.java.support.xml.XMLParserException;
+import se.swedenconnect.opensaml.xmlsec.encryption.support.DecryptionUtils;
 
 
 /**
@@ -159,19 +160,19 @@ public class EidasResponse
     BasicParserPool ppMgr = Utils.getBasicParserPool();
     byte[] returnValue;
     String respTemp = TemplateLoader.getTemplateByName("failresp");
-    respTemp = respTemp.replace("$InResponseTo", inResponseTo);
-    respTemp = respTemp.replace("$IssueInstant", issueInstant);
-    respTemp = respTemp.replace("$Issuer", issuer);
-    respTemp = respTemp.replace("$Id", id);
-    respTemp = respTemp.replace("$Destination", destination);
-    respTemp = respTemp.replace("$Code", errorCodeToSamlStatus.get(code));
+    respTemp = respTemp.replace(TemplateConstants.IN_RESPONSE_TO, inResponseTo);
+    respTemp = respTemp.replace(TemplateConstants.ISSUE_INSTANT, issueInstant);
+    respTemp = respTemp.replace(TemplateConstants.ISSUER, issuer);
+    respTemp = respTemp.replace(TemplateConstants.ID, id);
+    respTemp = respTemp.replace(TemplateConstants.DESTINATION, destination);
+    respTemp = respTemp.replace(TemplateConstants.CODE, errorCodeToSamlStatus.get(code));
     if (msg == null)
     {
-      respTemp = respTemp.replace("$ErrMsg", code.toDescription());
+      respTemp = respTemp.replace(TemplateConstants.ERR_MSG, code.toDescription());
     }
     else
     {
-      respTemp = respTemp.replace("$ErrMsg", code.toDescription(msg));
+      respTemp = respTemp.replace(TemplateConstants.ERR_MSG, code.toDescription(msg));
     }
     List<Signature> sigs = new ArrayList<>();
 
@@ -236,21 +237,21 @@ public class EidasResponse
       attributeString.append(eidasAtt.generate());
     }
     String assoTemp = TemplateLoader.getTemplateByName("asso");
-    assoTemp = assoTemp.replace("$NameFormat", nameId.getType().value);
-    assoTemp = assoTemp.replace("$NameID", nameId.getValue());
-    assoTemp = assoTemp.replace("$AssertionId", "_" + Utils.generateUniqueID());
-    assoTemp = assoTemp.replace("$Recipient", recipient);
-    assoTemp = assoTemp.replace("$AuthnInstant", issueInstant);
-    assoTemp = assoTemp.replace("$LoA", loa.value);
-    assoTemp = assoTemp.replace("$SessionIndex", "_" + Utils.generateUniqueID());
-    assoTemp = assoTemp.replace("$attributes", attributeString.toString());
-    assoTemp = assoTemp.replace("$NotBefore", notBefore);
-    assoTemp = assoTemp.replace("$NotOnOrAfter", notAfter);
-    assoTemp = assoTemp.replace("$InResponseTo", inResponseTo);
-    assoTemp = assoTemp.replace("$IssueInstant", issueInstant);
-    assoTemp = assoTemp.replace("$Issuer", issuer);
-    assoTemp = assoTemp.replace("$Id", id);
-    assoTemp = assoTemp.replace("$Destination", destination);
+    assoTemp = assoTemp.replace(TemplateConstants.NAME_FORMAT, nameId.getType().value);
+    assoTemp = assoTemp.replace(TemplateConstants.NAME_ID, nameId.getValue());
+    assoTemp = assoTemp.replace(TemplateConstants.ASSERTION_ID, "_" + Utils.generateUniqueID());
+    assoTemp = assoTemp.replace(TemplateConstants.RECIPIENT, recipient);
+    assoTemp = assoTemp.replace(TemplateConstants.AUTHN_INSTANT, issueInstant);
+    assoTemp = assoTemp.replace(TemplateConstants.LOA, loa.value);
+    assoTemp = assoTemp.replace(TemplateConstants.SESSION_INDEX, "_" + Utils.generateUniqueID());
+    assoTemp = assoTemp.replace(TemplateConstants.ATTRIBUTES, attributeString.toString());
+    assoTemp = assoTemp.replace(TemplateConstants.NOT_BEFORE, notBefore);
+    assoTemp = assoTemp.replace(TemplateConstants.NOT_ON_OR_AFTER, notAfter);
+    assoTemp = assoTemp.replace(TemplateConstants.IN_RESPONSE_TO, inResponseTo);
+    assoTemp = assoTemp.replace(TemplateConstants.ISSUE_INSTANT, issueInstant);
+    assoTemp = assoTemp.replace(TemplateConstants.ISSUER, issuer);
+    assoTemp = assoTemp.replace(TemplateConstants.ID, id);
+    assoTemp = assoTemp.replace(TemplateConstants.DESTINATION, destination);
 
     String generatedAssertionXML = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>" + assoTemp;
     Assertion ass = null;
@@ -268,11 +269,11 @@ public class EidasResponse
     Assertion[] assertions = new Assertion[]{ass};
 
     String respTemp = TemplateLoader.getTemplateByName("resp");
-    respTemp = respTemp.replace("$InResponseTo", inResponseTo);
-    respTemp = respTemp.replace("$IssueInstant", issueInstant);
-    respTemp = respTemp.replace("$Issuer", issuer);
-    respTemp = respTemp.replace("$Id", id);
-    respTemp = respTemp.replace("$Destination", destination);
+    respTemp = respTemp.replace(TemplateConstants.IN_RESPONSE_TO, inResponseTo);
+    respTemp = respTemp.replace(TemplateConstants.ISSUE_INSTANT, issueInstant);
+    respTemp = respTemp.replace(TemplateConstants.ISSUER, issuer);
+    respTemp = respTemp.replace(TemplateConstants.ID, id);
+    respTemp = respTemp.replace(TemplateConstants.DESTINATION, destination);
 
     List<Signature> sigs = new ArrayList<>();
 
@@ -384,45 +385,29 @@ public class EidasResponse
     throws XMLParserException, UnmarshallingException, ErrorCodeException, ComponentInitializationException
   {
     EidasResponse eidasResp = new EidasResponse();
-    List<Credential> decryptionCredentialList = new LinkedList<>();
-    List<X509Certificate> trustedAnchorList = new LinkedList<>();
-
-    if (decryptionKeyPairs == null)
-    {
-      throw new ErrorCodeException(ErrorCode.CANNOT_DECRYPT);
-    }
-    if (decryptionKeyPairs.length == 0)
-    {
-      throw new ErrorCodeException(ErrorCode.CANNOT_DECRYPT);
-    }
-    for ( X509KeyPair pair : decryptionKeyPairs )
-    {
-      decryptionCredentialList.add(CredentialSupport.getSimpleCredential(pair.getCert(), pair.getKey()));
-    }
-
-    if (signatureAuthors == null)
-    {
-      throw new ErrorCodeException(ErrorCode.SIGNATURE_CHECK_FAILED);
-    }
-    if (signatureAuthors.length == 0)
-    {
-      throw new ErrorCodeException(ErrorCode.SIGNATURE_CHECK_FAILED);
-    }
-    for ( X509Certificate author : signatureAuthors )
-    {
-      trustedAnchorList.add(author);
-    }
-
-    BasicParserPool ppMgr = Utils.getBasicParserPool();
-    Document inCommonMDDoc = ppMgr.parse(is);
-    Element metadataRoot = inCommonMDDoc.getDocumentElement();
-    // Get apropriate unmarshaller
-    UnmarshallerFactory unmarshallerFactory = XMLObjectProviderRegistrySupport.getUnmarshallerFactory();
-    Unmarshaller unmarshaller = unmarshallerFactory.getUnmarshaller(metadataRoot);
-    Response resp = (Response)unmarshaller.unmarshall(metadataRoot);
+    List<X509Certificate> trustedAnchorList = getTrustedAnchorList(signatureAuthors);
+    List<Credential> decryptionCredentialList = getDecryptionCredentialList(decryptionKeyPairs);
+    Response resp = getOpenSamlResponse(is);
     eidasResp.openSamlResp = resp;
 
     checkSignature(resp.getSignature(), trustedAnchorList);
+    processSAMLResponse(eidasResp, trustedAnchorList, decryptionCredentialList, resp);
+    eidasResp.id = resp.getID();
+    eidasResp.destination = resp.getDestination();
+    eidasResp.inResponseTo = resp.getInResponseTo();
+    eidasResp.issueInstant = Constants.format(resp.getIssueInstant().toDate());
+    eidasResp.issuer = resp.getIssuer().getDOM().getTextContent();
+    eidasResp.openSamlResp = resp;
+
+    return eidasResp;
+  }
+
+  private static void processSAMLResponse(EidasResponse eidasResp,
+                                          List<X509Certificate> trustedAnchorList,
+                                          List<Credential> decryptionCredentialList,
+                                          Response resp)
+    throws ErrorCodeException
+  {
     if (!StatusCode.SUCCESS.equals(resp.getStatus().getStatusCode().getValue()))
     {
       ErrorCode code = findErrorCode(resp.getStatus().getStatusCode().getValue());
@@ -432,140 +417,183 @@ public class EidasResponse
         throw new ErrorCodeException(code,
                                      "Unkown statuscode " + resp.getStatus().getStatusCode().getValue());
       }
-      // Error respose, so un-encrypted asserion!
+      // Error respose, so un-encrypted assertion!
       for ( Assertion assertion : resp.getAssertions() )
       {
-        if (eidasResp.nameId == null)
-        {
-          EidasNameIdType type = EidasNameIdType.getValueOf(assertion.getSubject().getNameID().getFormat());
-          if (type == EidasNameIdType.PERSISTENT)
-          {
-            eidasResp.nameId = new EidasPersistentNameId(assertion.getSubject().getNameID().getValue());
-          }
-          else if (type == EidasNameIdType.TRANSIENT)
-          {
-            eidasResp.nameId = new EidasTransientNameId(assertion.getSubject().getNameID().getValue());
-          }
-          else
-          {
-            eidasResp.nameId = new EidasUnspecifiedNameId(assertion.getSubject().getNameID().getValue());
-          }
-        }
+        setEidasResponseNameIdFromAssertion(eidasResp, assertion);
       }
     }
     else
     {
-      List<EncryptedAssertion> decryptedAssertions = new ArrayList<>();
-      List<Assertion> assertions = new ArrayList<>();
-
-      StaticKeyInfoCredentialResolver resolver = new StaticKeyInfoCredentialResolver(decryptionCredentialList);
-
-      Decrypter decr = new Decrypter(null, resolver, new InlineEncryptedKeyResolver());
+      Decrypter decr = new Decrypter(DecryptionUtils.createDecryptionParameters(decryptionCredentialList.toArray(new Credential[0])));
       decr.setRootInNewDocument(true);
 
-      for ( EncryptedAssertion noitressa : resp.getEncryptedAssertions() )
-      {
-        try
-        {
-          assertions.add(decr.decrypt(noitressa));
-          decryptedAssertions.add(noitressa);
-        }
-        catch (DecryptionException e)
-        {
-          throw new ErrorCodeException(ErrorCode.CANNOT_DECRYPT, e);
-        }
-      }
+      List<Assertion> assertions = collectDecryptedAssertions(resp, decr);
 
-      for ( Assertion assertion : assertions )
-      {
-        if (null != assertion.getSignature())
-        { // signature in assertion may be null
-          checkSignature(assertion.getSignature(), trustedAnchorList);
-        }
-        if (eidasResp.nameId == null)
-        {
-          EidasNameIdType type = EidasNameIdType.getValueOf(assertion.getSubject().getNameID().getFormat());
-          if (type == EidasNameIdType.PERSISTENT)
-          {
-            eidasResp.nameId = new EidasPersistentNameId(assertion.getSubject().getNameID().getValue());
-          }
-          else if (type == EidasNameIdType.TRANSIENT)
-          {
-            eidasResp.nameId = new EidasTransientNameId(assertion.getSubject().getNameID().getValue());
-          }
-          else
-          {
-            eidasResp.nameId = new EidasUnspecifiedNameId(assertion.getSubject().getNameID().getValue());
-          }
-        }
-        for ( AttributeStatement attStat : assertion.getAttributeStatements() )
-        {
-
-          for ( Attribute att : attStat.getAttributes() )
-          {
-            if (att.getAttributeValues().isEmpty())
-            {
-              continue;
-            }
-            XMLObject attributeValue = att.getAttributeValues().get(0); // IN EIDAS there is just one value
-                                                                        // except familyname!
-            Element domElement = attributeValue.getDOM();
-            EidasPersonAttributes personAttributes;
-            /* Get Person Attribute from the DOM */
-            try
-            {
-              personAttributes = EidasNaturalPersonAttributes.getValueOf(att.getName());
-            }
-            catch (ErrorCodeException e1)
-            {
-              try
-              {
-                personAttributes = EidasLegalPersonAttributes.getValueOf(att.getName());
-              }
-              catch (ErrorCodeException e2)
-              {
-                throw new IllegalArgumentException("No attribute known with name: " + att.getName());
-              }
-
-            }
-
-            EidasAttribute eidasAttribute = personAttributes.getInstance();
-            if (eidasAttribute instanceof AbstractNonLatinScriptAttribute)
-            {
-              AbstractNonLatinScriptAttribute abstractAttribute = (AbstractNonLatinScriptAttribute)eidasAttribute;
-              abstractAttribute.setLatinScript(att.getAttributeValues().get(0).getDOM().getTextContent());
-              if (att.getAttributeValues().size() == 2)
-              {
-                abstractAttribute.setNonLatinScript(att.getAttributeValues()
-                                                       .get(1)
-                                                       .getDOM()
-                                                       .getTextContent());
-              }
-            }
-            else
-            {
-              eidasAttribute.setLatinScript(domElement.getTextContent());
-            }
-
-
-            eidasResp.attributes.add(eidasAttribute);
-
-          }
-        }
-      }
+      processAssertions(eidasResp, trustedAnchorList, assertions);
 
       resp.getAssertions().clear();
       resp.getAssertions().addAll(assertions);
       eidasResp.recipient = getAudience(resp);
     }
-    eidasResp.id = resp.getID();
-    eidasResp.destination = resp.getDestination();
-    eidasResp.inResponseTo = resp.getInResponseTo();
-    eidasResp.issueInstant = Constants.format(resp.getIssueInstant().toDate());
-    eidasResp.issuer = resp.getIssuer().getDOM().getTextContent();
-    eidasResp.openSamlResp = resp;
+  }
 
-    return eidasResp;
+  private static void processAssertions(EidasResponse eidasResp,
+                                        List<X509Certificate> trustedAnchorList,
+                                        List<Assertion> assertions)
+    throws ErrorCodeException
+  {
+    for ( Assertion assertion : assertions )
+    {
+      checkSignature(trustedAnchorList, assertion);
+      setEidasResponseNameIdFromAssertion(eidasResp, assertion);
+      for ( AttributeStatement attStat : assertion.getAttributeStatements() )
+      {
+        processAttributes(eidasResp, attStat);
+      }
+    }
+  }
+
+  private static void processAttributes(EidasResponse eidasResp, AttributeStatement attStat)
+  {
+    for ( Attribute att : attStat.getAttributes() )
+    {
+      if (att.getAttributeValues().isEmpty())
+      {
+        continue;
+      }
+
+      EidasPersonAttributes personAttributes = getEidasPersonAttributes(att);
+      XMLObject attributeValue = att.getAttributeValues().get(0); // IN EIDAS there is just one value
+                                                                  // except familyname!
+      Element domElement = attributeValue.getDOM();
+      EidasAttribute eidasAttribute = personAttributes.getInstance();
+      if (eidasAttribute instanceof AbstractNonLatinScriptAttribute)
+      {
+        AbstractNonLatinScriptAttribute abstractAttribute = (AbstractNonLatinScriptAttribute)eidasAttribute;
+        abstractAttribute.setLatinScript(att.getAttributeValues().get(0).getDOM().getTextContent());
+        if (att.getAttributeValues().size() == 2)
+        {
+          abstractAttribute.setNonLatinScript(att.getAttributeValues().get(1).getDOM().getTextContent());
+        }
+      }
+      else
+      {
+        eidasAttribute.setLatinScript(domElement.getTextContent());
+      }
+      eidasResp.attributes.add(eidasAttribute);
+    }
+  }
+
+  private static EidasPersonAttributes getEidasPersonAttributes(Attribute att)
+  {
+    EidasPersonAttributes personAttributes;
+    /* Get Person Attribute from the DOM */
+    try
+    {
+      personAttributes = EidasNaturalPersonAttributes.getValueOf(att.getName());
+    }
+    catch (ErrorCodeException e1)
+    {
+      try
+      {
+        personAttributes = EidasLegalPersonAttributes.getValueOf(att.getName());
+      }
+      catch (ErrorCodeException e2)
+      {
+        throw new IllegalArgumentException("No attribute known with name: " + att.getName());
+      }
+    }
+    return personAttributes;
+  }
+
+  private static void checkSignature(List<X509Certificate> trustedAnchorList, Assertion assertion)
+    throws ErrorCodeException
+  {
+    if (null != assertion.getSignature())
+    { // signature in assertion may be null
+      checkSignature(assertion.getSignature(), trustedAnchorList);
+    }
+  }
+
+  private static void setEidasResponseNameIdFromAssertion(EidasResponse eidasResp, Assertion assertion)
+    throws ErrorCodeException
+  {
+    if (eidasResp.nameId == null)
+    {
+      EidasNameIdType type = EidasNameIdType.getValueOf(assertion.getSubject().getNameID().getFormat());
+      if (type == EidasNameIdType.PERSISTENT)
+      {
+        eidasResp.nameId = new EidasPersistentNameId(assertion.getSubject().getNameID().getValue());
+      }
+      else if (type == EidasNameIdType.TRANSIENT)
+      {
+        eidasResp.nameId = new EidasTransientNameId(assertion.getSubject().getNameID().getValue());
+      }
+      else
+      {
+        eidasResp.nameId = new EidasUnspecifiedNameId(assertion.getSubject().getNameID().getValue());
+      }
+    }
+  }
+
+  private static List<Assertion> collectDecryptedAssertions(Response resp, Decrypter decr)
+    throws ErrorCodeException
+  {
+    List<Assertion> assertions = new ArrayList<>();
+
+    for ( EncryptedAssertion noitressa : resp.getEncryptedAssertions() )
+    {
+      try
+      {
+        assertions.add(decr.decrypt(noitressa));
+      }
+      catch (DecryptionException e)
+      {
+        throw new ErrorCodeException(ErrorCode.CANNOT_DECRYPT, e);
+      }
+    }
+
+    return assertions;
+  }
+
+  private static Response getOpenSamlResponse(InputStream is)
+    throws ComponentInitializationException, XMLParserException, UnmarshallingException
+  {
+    BasicParserPool ppMgr = Utils.getBasicParserPool();
+    Document inCommonMDDoc = ppMgr.parse(is);
+    Element metadataRoot = inCommonMDDoc.getDocumentElement();
+    // Get apropriate unmarshaller
+    UnmarshallerFactory unmarshallerFactory = XMLObjectProviderRegistrySupport.getUnmarshallerFactory();
+    Unmarshaller unmarshaller = unmarshallerFactory.getUnmarshaller(metadataRoot);
+    return (Response)unmarshaller.unmarshall(metadataRoot);
+  }
+
+  private static List<X509Certificate> getTrustedAnchorList(X509Certificate... signatureAuthors)
+    throws ErrorCodeException
+  {
+    if (signatureAuthors == null || signatureAuthors.length == 0)
+    {
+      throw new ErrorCodeException(ErrorCode.SIGNATURE_CHECK_FAILED);
+    }
+    return new LinkedList<>(Arrays.asList(signatureAuthors));
+  }
+
+  private static List<Credential> getDecryptionCredentialList(X509KeyPair... decryptionKeyPairs)
+    throws ErrorCodeException
+  {
+    if (decryptionKeyPairs == null || decryptionKeyPairs.length == 0)
+    {
+      throw new ErrorCodeException(ErrorCode.CANNOT_DECRYPT);
+    }
+
+    List<Credential> decryptionCredentialList = new LinkedList<>();
+    for ( X509KeyPair pair : decryptionKeyPairs )
+    {
+      decryptionCredentialList.add(CredentialSupport.getSimpleCredential(pair.getCert(), pair.getKey()));
+    }
+
+    return decryptionCredentialList;
   }
 
   private static String getAudience(Response resp) throws ErrorCodeException
@@ -595,9 +623,6 @@ public class EidasResponse
     {
       throw new ErrorCodeException(ErrorCode.SIGNATURE_CHECK_FAILED);
     }
-
-
-
     XMLSignatureHandler.checkSignature(sig,
                                        trustedAnchorList.toArray(new X509Certificate[trustedAnchorList.size()]));
   }
@@ -642,6 +667,7 @@ public class EidasResponse
     errorCodeToSamlStatus.put(ErrorCode.PROXY_COUNT_EXCEEDED, StatusCode.PROXY_COUNT_EXCEEDED);
     errorCodeToSamlStatus.put(ErrorCode.NO_SUPPORTED_IDP, StatusCode.NO_SUPPORTED_IDP);
     errorCodeToSamlStatus.put(ErrorCode.REQUEST_DENIED, StatusCode.REQUEST_DENIED);
+    errorCodeToSamlStatus.put(ErrorCode.CANCELLATION_BY_USER, StatusCode.AUTHN_FAILED);
   }
 
   private static ErrorCode findErrorCode(String s)

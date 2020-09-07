@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019 Governikus KG. Licensed under the EUPL, Version 1.2 or as soon they will be approved by
+ * Copyright (c) 2020 Governikus KG. Licensed under the EUPL, Version 1.2 or as soon they will be approved by
  * the European Commission - subsequent versions of the EUPL (the "Licence"); You may not use this work except
  * in compliance with the Licence. You may obtain a copy of the Licence at:
  * http://joinup.ec.europa.eu/software/page/eupl Unless required by applicable law or agreed to in writing,
@@ -101,6 +101,8 @@ import oasis.names.tc.dss._1_0.core.schema.Result;
 public class EIDSequence extends ECardConvenienceSequenceAdapter
 {
 
+  private static final String INITIALIZE_FAIL = "Initialize fail: ";
+
   /**
    * LOGGER for this class. Note: Data fields should be logged only in LEVEL.TRACE
    */
@@ -181,7 +183,7 @@ public class EIDSequence extends ECardConvenienceSequenceAdapter
   /**
    * Result stored to handle restricted/blocking id
    */
-  private EACFinal result;
+  private EACFinal eacFinal;
 
   /**
    * MasterList checks are handled with this instance for mCard
@@ -284,7 +286,7 @@ public class EIDSequence extends ECardConvenienceSequenceAdapter
     // Check CVC
     if (cvcList == null || cvc == null)
     {
-      throw new IllegalArgumentException(LOG_PRE_INIT + "Initialize fail: " + "CVC is null");
+      throw new IllegalArgumentException(LOG_PRE_INIT + INITIALIZE_FAIL + "CVC is null");
     }
     // First CVC from list is the terminal certificate
     mCardVerifiableCert = cvc;
@@ -292,7 +294,7 @@ public class EIDSequence extends ECardConvenienceSequenceAdapter
     // Check description
     if (cvcDescription == null)
     {
-      throw new IllegalArgumentException(LOG_PRE_INIT + "Initialize fail: " + "CVC description is null");
+      throw new IllegalArgumentException(LOG_PRE_INIT + INITIALIZE_FAIL + "CVC description is null");
     }
     try
     {
@@ -345,8 +347,8 @@ public class EIDSequence extends ECardConvenienceSequenceAdapter
       catch (NullPointerException e)
       {
         LOG.warn(logPrefix + "[SERVER] blacklist not available");
-        throw new IllegalArgumentException(LOG_PRE_INIT + "Initialize fail: "
-                                           + "BlacklistConnector is not available");
+        throw new IllegalArgumentException(LOG_PRE_INIT + INITIALIZE_FAIL
+                                           + "BlacklistConnector is not available", e);
       }
 
       if (sessionInput.getSessionID() == null)
@@ -357,7 +359,7 @@ public class EIDSequence extends ECardConvenienceSequenceAdapter
     }
     else
     {
-      throw new IllegalArgumentException(LOG_PRE_INIT + "Initialize fail: "
+      throw new IllegalArgumentException(LOG_PRE_INIT + INITIALIZE_FAIL
                                          + "To provide preshared key and hash for SAML request"
                                          + " session input is required");
     }
@@ -589,7 +591,7 @@ public class EIDSequence extends ECardConvenienceSequenceAdapter
    */
   protected EACFinal getEACFinal()
   {
-    return result;
+    return eacFinal;
   }
 
   SessionInput getSessionInput()
@@ -693,7 +695,7 @@ public class EIDSequence extends ECardConvenienceSequenceAdapter
    *
    * @return factory object
    */
-  private Object handleStart() throws ECardException
+  private Object handleStart()
   {
     LOG.debug(logPrefix + LOG_PRE_START + "Connection handle available. DIDName set directly to 'PIN'");
     mDIDName = DEFAULT_DID_NAME;
@@ -728,27 +730,27 @@ public class EIDSequence extends ECardConvenienceSequenceAdapter
     // Create Server and get stored EAC1Input
     eacServer = new EACServer();
 
+    this.allRights = this.mRequiredAuthorizations.chat.getAllRights();
+    this.allRights.addAll(this.mOptionalAuthorizations.chat.getAllRights());
+
     // Get selected fields from user
     byte[] template = eac1OutputType.getCertificateHolderAuthorizationTemplate();
-    try
+    if (template != null)
     {
-      if (template != null)
+      try
       {
         this.mModifiedAuthorizations.chat = new CertificateHolderAuthorizationTemplate(template);
+        this.allRights.retainAll(this.mModifiedAuthorizations.chat.getAllRights());
+        if ((mRequiredAuthorizations.chat.isReadBirthName() || mOptionalAuthorizations.chat.isReadBirthName())
+            && !mModifiedAuthorizations.chat.isReadBirthName())
+        {
+          eidInfoContainer.getInfoMap().put(EIDKeys.BIRTH_NAME, new EIDInfoResultDeselected());
+        }
       }
-    }
-    catch (IOException | IllegalArgumentException e)
-    {
-      throw new ECardException(ResultMinor.COMMON_INTERNAL_ERROR, e);
-    }
-    if (this.mModifiedAuthorizations.chat != null)
-    {
-      this.allRights = this.mModifiedAuthorizations.chat.getAllRights();
-    }
-    else
-    {
-      this.allRights = this.mRequiredAuthorizations.chat.getAllRights();
-      this.allRights.addAll(this.mOptionalAuthorizations.chat.getAllRights());
+      catch (IOException | IllegalArgumentException e)
+      {
+        throw new ECardException(ResultMinor.COMMON_INTERNAL_ERROR, e);
+      }
     }
 
     LOG.debug(logPrefix + LOG_PRE_AUTH + "Create EAC2InputType");
@@ -816,7 +818,7 @@ public class EIDSequence extends ECardConvenienceSequenceAdapter
         LOG.warn(logPrefix + LOG_PRE_AUTH + "WARNING: Private keys maybe compromised.\nDefect:\n"
                  + DefectType.ID_CHIP_AUTH_KEY_REVOKED.toStringDetail());
       }
-      // Check if data group integrity is not certain;
+      // Check if data group integrity is not certain
       if (controller.isCardAffectedBy(DefectType.ID_EID_INTEGRITY))
       {
         return handleError(controller.getDefectResult(DefectType.ID_EID_INTEGRITY));
@@ -826,12 +828,12 @@ public class EIDSequence extends ECardConvenienceSequenceAdapter
       {
         LOG.debug(logPrefix + LOG_PRE_AUTH + "Expected Defect: " + DefectType.ID_POWER_DOWN_REQ);
       }
-      result = eacServer.executeStep(EACServer.STEP_TACA_RESULT,
-                                     EAC2OutputTypeWrapper.class,
-                                     eac2OutputType,
-                                     EACFinal.class,
-                                     new Object[]{signedDataChecker});
-      if (result == null)
+      eacFinal = eacServer.executeStep(EACServer.STEP_TACA_RESULT,
+                                       EAC2OutputTypeWrapper.class,
+                                       eac2OutputType,
+                                       EACFinal.class,
+                                       new Object[]{signedDataChecker});
+      if (eacFinal == null)
       {
         LOG.debug(logPrefix + "Can not proceed with transmit: result from card not verified");
         eidInfoContainer.setStatus(EIDStatus.NOT_AUTHENTIC);
@@ -942,7 +944,7 @@ public class EIDSequence extends ECardConvenienceSequenceAdapter
     return ofIso.createStartPAOSResponse(rt);
   }
 
-  private Object getEAC1DIDAuthenticate() throws ECardException
+  private Object getEAC1DIDAuthenticate()
   {
     eac1Input = new EAC1InputTypeWrapper();
     eac1Input.setProtocol(EACServer.PROTOCOL_EAC2);
@@ -974,7 +976,6 @@ public class EIDSequence extends ECardConvenienceSequenceAdapter
   {
     StringBuilder stringBuilder = new StringBuilder("EID SEQUENCE STATUS:\n");
     stringBuilder.append(" Required CHAT      : ").append(mRequiredAuthorizations.chat).append("\n");
-
     stringBuilder.append(" Optional CHAT      : ").append(mOptionalAuthorizations.chat).append("\n");
     if (mModifiedAuthorizations.chat != null)
     {

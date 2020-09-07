@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019 Governikus KG. Licensed under the EUPL, Version 1.2 or as soon they will be approved by
+ * Copyright (c) 2020 Governikus KG. Licensed under the EUPL, Version 1.2 or as soon they will be approved by
  * the European Commission - subsequent versions of the EUPL (the "Licence"); You may not use this work except
  * in compliance with the Licence. You may obtain a copy of the Licence at:
  * http://joinup.ec.europa.eu/software/page/eupl Unless required by applicable law or agreed to in writing,
@@ -70,7 +70,7 @@ public final class InfoSelector
       }
       catch (IOException e)
       {
-        continue;
+        // nothing
       }
     }
 
@@ -89,8 +89,8 @@ public final class InfoSelector
    * @throws IllegalArgumentException if any parameter <code>null</code> or empty
    */
   public static ChipAuthenticationData selectCAData(Collection<ChipAuthenticationInfo> listCAInfos,
-                                                    Collection<ChipAuthenticationDomainParameterInfo> listCaDomParams) throws
-    IOException
+                                                    Collection<ChipAuthenticationDomainParameterInfo> listCaDomParams)
+    throws IOException
   {
     AssertUtil.notNullOrEmpty(listCAInfos, "list of chip authentication info");
     AssertUtil.notNullOrEmpty(listCaDomParams, "list of chip authentication domain parameter info");
@@ -120,7 +120,7 @@ public final class InfoSelector
       }
       catch (IOException e)
       {
-        continue;
+        // nothing
       }
     }
 
@@ -137,7 +137,7 @@ public final class InfoSelector
       }
       catch (IOException e)
       {
-        continue;
+        // nothing
       }
     }
     return null;
@@ -214,7 +214,7 @@ public final class InfoSelector
           }
           catch (IOException e)
           {
-            continue;
+            // nothing
           }
         }
         // coming here would mean inconsistent data
@@ -255,7 +255,7 @@ public final class InfoSelector
 
 
     private ChipAuthenticationData(ChipAuthenticationInfo caInfo,
-                                  ChipAuthenticationDomainParameterInfo caDomParamInfo)
+                                   ChipAuthenticationDomainParameterInfo caDomParamInfo)
     {
       super();
       AssertUtil.notNull(caInfo, "ca info");

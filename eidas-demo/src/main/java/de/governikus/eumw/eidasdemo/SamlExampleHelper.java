@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019 Governikus KG. Licensed under the EUPL, Version 1.2 or as soon they will be approved by
+ * Copyright (c) 2020 Governikus KG. Licensed under the EUPL, Version 1.2 or as soon they will be approved by
  * the European Commission - subsequent versions of the EUPL (the "Licence"); You may not use this work except
  * in compliance with the Licence. You may obtain a copy of the Licence at:
  * http://joinup.ec.europa.eu/software/page/eupl Unless required by applicable law or agreed to in writing,
@@ -24,6 +24,7 @@ import javax.servlet.http.HttpServletResponse;
 import org.apache.commons.lang.StringUtils;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
+import org.springframework.web.util.HtmlUtils;
 
 import de.governikus.eumw.eidascommon.Utils;
 import de.governikus.eumw.eidascommon.Utils.X509KeyPair;
@@ -200,13 +201,16 @@ public class SamlExampleHelper
   {
     StringBuilder builder = new StringBuilder();
     builder.append("<h3>");
-    builder.append(errorCode);
+    builder.append(HtmlUtils.htmlEscape(errorCode));
     builder.append("</h3>");
     for ( String detail : details )
     {
-      builder.append("<p>");
-      builder.append(detail);
-      builder.append("</p>");
+      if (detail != null)
+      {
+        builder.append("<p>");
+        builder.append(HtmlUtils.htmlEscape(detail));
+        builder.append("</p>");
+      }
     }
     String html = Utils.createErrorMessage(builder.toString());
     // status code 400 is needed for new eID activation as defined in TR-03130 version 2.0 and above.

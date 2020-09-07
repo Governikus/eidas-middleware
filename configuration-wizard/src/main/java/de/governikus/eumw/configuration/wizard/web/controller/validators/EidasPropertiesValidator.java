@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019 Governikus KG. Licensed under the EUPL, Version 1.2 or as soon they will be approved by
+ * Copyright (c) 2020 Governikus KG. Licensed under the EUPL, Version 1.2 or as soon they will be approved by
  * the European Commission - subsequent versions of the EUPL (the "Licence"); You may not use this work except
  * in compliance with the Licence. You may obtain a copy of the Licence at:
  * http://joinup.ec.europa.eu/software/page/eupl Unless required by applicable law or agreed to in writing,
@@ -14,7 +14,6 @@ import java.io.UnsupportedEncodingException;
 import java.nio.charset.StandardCharsets;
 
 import org.springframework.validation.BindingResult;
-import org.springframework.web.multipart.MultipartFile;
 
 import de.governikus.eumw.configuration.wizard.identifier.HSMTypeIdentifier;
 import de.governikus.eumw.configuration.wizard.web.model.ConfigurationForm;
@@ -33,14 +32,6 @@ public class EidasPropertiesValidator extends ViewValidator
   private static final String WIZARD_STATUS_VALIDATION_INCORRECT_METADATA = "wizard.status.validation.incorrect.metadata";
 
   private static final String INVALID_XML = "Invalid xml.";
-
-  @Override
-  protected void checkMultipartFile(String fieldName,
-                                    MultipartFile multipartFile,
-                                    BindingResult bindingResult)
-  {
-    super.checkMultipartFile(fieldName, multipartFile, bindingResult);
-  }
 
   @Override
   public void validateView(ConfigurationForm configurationForm, BindingResult bindingResult)

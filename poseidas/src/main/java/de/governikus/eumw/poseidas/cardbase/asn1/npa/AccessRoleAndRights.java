@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019 Governikus KG. Licensed under the EUPL, Version 1.2 or as soon they will be approved by
+ * Copyright (c) 2020 Governikus KG. Licensed under the EUPL, Version 1.2 or as soon they will be approved by
  * the European Commission - subsequent versions of the EUPL (the "Licence"); You may not use this work except
  * in compliance with the Licence. You may obtain a copy of the Licence at:
  * http://joinup.ec.europa.eu/software/page/eupl Unless required by applicable law or agreed to in writing,
@@ -96,9 +96,8 @@ public abstract class AccessRoleAndRights extends ASN1
    * @see AccessRoleAndRights#ACCESS_ROLE_CVCA_MASK
    */
   static final BitIdentifier IDENTIFIER_CVCA = new BitIdentifierImpl(ACCESS_ROLE_NAME_CVCA,
-                                                                            ACCESS_ROLE_BYTE_INDEX,
-                                                                            ACCESS_ROLE_MASK,
-                                                                            ACCESS_ROLE_CVCA_MASK);
+                                                                     ACCESS_ROLE_BYTE_INDEX, ACCESS_ROLE_MASK,
+                                                                     ACCESS_ROLE_CVCA_MASK);
 
   // list of defined access roles
   private final List<BitIdentifier> definedAccessRolesIdentifierList;
@@ -125,13 +124,16 @@ public abstract class AccessRoleAndRights extends ASN1
    * @see ASN1#ASN1(byte[])
    */
   AccessRoleAndRights(byte[] bytes,
-                             int valueByteCount,
-                             List<BitIdentifier> definedAccessRolesIdentifierList,
-                             List<BitIdentifier> definedAccessRightsIdentifierList) throws IOException
+                      int valueByteCount,
+                      List<BitIdentifier> definedAccessRolesIdentifierList,
+                      List<BitIdentifier> definedAccessRightsIdentifierList)
+    throws IOException
   {
     // init ASN.1
     super(bytes);
-    AssertUtil.equals(new BigInteger(new byte[]{ASN1EidConstants.TAG_DISCRETIONARY_DATA}), super.getTag(), "tag");
+    AssertUtil.equals(new BigInteger(new byte[]{ASN1EidConstants.TAG_DISCRETIONARY_DATA}),
+                      super.getTag(),
+                      "tag");
     // check count of bytes
     if (super.getValue() == null || super.getValue().length != valueByteCount)
     {
@@ -148,10 +150,8 @@ public abstract class AccessRoleAndRights extends ASN1
       throw new IllegalArgumentException("list of access rights not permitted as null or empty list");
     }
     // make unmodifiable lists
-    this.definedAccessRolesIdentifierList = Collections.unmodifiableList(new ArrayList<>(
-                                                                                                      definedAccessRolesIdentifierList));
-    this.definedAccessRightsIdentifierList = Collections.unmodifiableList(new ArrayList<>(
-                                                                                                       definedAccessRightsIdentifierList));
+    this.definedAccessRolesIdentifierList = Collections.unmodifiableList(new ArrayList<>(definedAccessRolesIdentifierList));
+    this.definedAccessRightsIdentifierList = Collections.unmodifiableList(new ArrayList<>(definedAccessRightsIdentifierList));
     update();
   }
 
@@ -255,4 +255,15 @@ public abstract class AccessRoleAndRights extends ASN1
     return this.accessRolesIdentifierList.contains(accessRole);
   }
 
+  @Override
+  public boolean equals(Object object)
+  {
+    return super.equals(object);
+  }
+
+  @Override
+  public int hashCode()
+  {
+    return super.hashCode();
+  }
 }

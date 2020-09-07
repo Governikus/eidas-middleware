@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019 Governikus KG. Licensed under the EUPL, Version 1.2 or as soon they will be approved by
+ * Copyright (c) 2020 Governikus KG. Licensed under the EUPL, Version 1.2 or as soon they will be approved by
  * the European Commission - subsequent versions of the EUPL (the "Licence"); You may not use this work except
  * in compliance with the Licence. You may obtain a copy of the Licence at:
  * http://joinup.ec.europa.eu/software/page/eupl Unless required by applicable law or agreed to in writing,
@@ -52,8 +52,7 @@ public final class ATConstants
    *
    * @see #OID_ACCESS_ROLE_AND_RIGHTS_AUTHENTICATION_TERMINAL
    */
-  public static final OID OID_AUTHENTICATION_TERMINALS = new OID(
-                                                                 OID_ACCESS_ROLE_AND_RIGHTS_AUTHENTICATION_TERMINAL);
+  public static final OID OID_AUTHENTICATION_TERMINALS = new OID(OID_ACCESS_ROLE_AND_RIGHTS_AUTHENTICATION_TERMINAL);
 
   /**
    * Count of ASN.1 value bytes: <code>5</code>.
@@ -66,7 +65,7 @@ public final class ATConstants
    * @see AuthenticationTerminals.AccessRoleEnum#AUTHENTICATION_TERMINAL
    * @see AccessRoleAndRights#ACCESS_ROLE_MASK_00
    */
-  public static final byte ACCESS_ROLE_MASK_AUTHENTICATION_TERMINAL = BaseAccessRoleAndRights.ACCESS_ROLE_MASK_00;
+  public static final byte ACCESS_ROLE_MASK_AUTHENTICATION_TERMINAL = AccessRoleAndRights.ACCESS_ROLE_MASK_00;
 
   /**
    * Constant of role name Authentication Terminal: <tt>Authentication Terminal</tt>.

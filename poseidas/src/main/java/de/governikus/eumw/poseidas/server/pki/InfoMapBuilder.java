@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019 Governikus KG. Licensed under the EUPL, Version 1.2 or as soon they will be approved by
+ * Copyright (c) 2020 Governikus KG. Licensed under the EUPL, Version 1.2 or as soon they will be approved by
  * the European Commission - subsequent versions of the EUPL (the "Licence"); You may not use this work except
  * in compliance with the Licence. You may obtain a copy of the Licence at:
  * http://joinup.ec.europa.eu/software/page/eupl Unless required by applicable law or agreed to in writing,
@@ -39,6 +39,8 @@ import de.governikus.eumw.poseidas.eidmodel.TerminalData;
 import de.governikus.eumw.poseidas.gov2server.constants.admin.AdminPoseidasConstants;
 import de.governikus.eumw.poseidas.gov2server.constants.admin.IDManagementCodes;
 import de.governikus.eumw.poseidas.gov2server.constants.admin.ManagementMessage;
+import lombok.AccessLevel;
+import lombok.NoArgsConstructor;
 
 
 /**
@@ -46,6 +48,7 @@ import de.governikus.eumw.poseidas.gov2server.constants.admin.ManagementMessage;
  *
  * @author tautenhahn, hme
  */
+@NoArgsConstructor(access = AccessLevel.PRIVATE)
 public class InfoMapBuilder
 {
 
@@ -58,8 +61,8 @@ public class InfoMapBuilder
    * @param withBlkNumber include the number of entries in the blacklist, this could take some more time.
    */
   static Map<String, Object> createInfoMap(TerminalPermissionAO facade,
-                                                  String cvcRefID,
-                                                  boolean withBlkNumber)
+                                           String cvcRefID,
+                                           boolean withBlkNumber)
   {
     if (facade == null)
     {
@@ -74,14 +77,18 @@ public class InfoMapBuilder
     Map<String, Object> result = new HashMap<>();
     result.put(AdminPoseidasConstants.VALUE_PERMISSION_DATA_ERROR_MESSAGE, new HashSet<ManagementMessage>());
 
-    result.put(AdminPoseidasConstants.VALUE_PERMISSION_DATA_BLACK_LIST_DATE, terminal.getBlackListStoreDate());
-    result.put(AdminPoseidasConstants.VALUE_PERMISSION_DATA_MASTER_LIST_DATE, terminal.getMasterListStoreDate());
-    result.put(AdminPoseidasConstants.VALUE_PERMISSION_DATA_DEFECT_LIST_DATE, terminal.getDefectListStoreDate());
+    result.put(AdminPoseidasConstants.VALUE_PERMISSION_DATA_BLACK_LIST_DATE,
+               terminal.getBlackListStoreDate());
+    result.put(AdminPoseidasConstants.VALUE_PERMISSION_DATA_MASTER_LIST_DATE,
+               terminal.getMasterListStoreDate());
+    result.put(AdminPoseidasConstants.VALUE_PERMISSION_DATA_DEFECT_LIST_DATE,
+               terminal.getDefectListStoreDate());
 
     if (terminal.getPendingCertificateRequest() != null)
     {
       result.put(AdminPoseidasConstants.VALUE_PERMISSION_DATA_PENDING_CERT_REQUEST,
-                 DatatypeConverter.printBase64Binary(terminal.getPendingCertificateRequest().getRequestData()));
+                 DatatypeConverter.printBase64Binary(terminal.getPendingCertificateRequest()
+                                                             .getRequestData()));
       result.put(AdminPoseidasConstants.VALUE_PERMISSION_DATA_PENDING_CERT_REQUEST_DATE,
                  terminal.getPendingCertificateRequest().getLastChanged());
       result.put(AdminPoseidasConstants.VALUE_PERMISSION_DATA_PENDING_CERT_REQUEST_STATUS,
@@ -92,7 +99,7 @@ public class InfoMapBuilder
 
     if (terminal.getCvcDescription() != null)
     {
-      getInfoFromCvcDescription(result, terminal.getCvcDescription(), terminal.getRefID(), facade);
+      getInfoFromCvcDescription(result, terminal.getCvcDescription(), terminal.getRefID());
     }
     if (terminal.getCvc() != null)
     {
@@ -124,9 +131,12 @@ public class InfoMapBuilder
       new TerminalData(terminal.getCvc(), terminal.getCvcDescription(), terminal.getCvcPrivateKey(),
                        terminal.getRiKey1(), terminal.getPSKey());
     }
-    catch (Throwable t)
+    catch (Exception e)
     {
-      LOG.info(cvcRefID + ": CVC description and CVC do not match", t);
+      if (LOG.isInfoEnabled())
+      {
+        LOG.info(cvcRefID + ": CVC description and CVC do not match", e);
+      }
       addErrorMessage(result, IDManagementCodes.CVC_DESCRIPTION_NOT_MATCH.createMessage(terminal.getRefID()));
       return result;
     }
@@ -183,7 +193,8 @@ public class InfoMapBuilder
       }
       result.put(AdminPoseidasConstants.VALUE_PERMISSION_DATA_EXPIRATION_DATE, cvc.getExpirationDate());
       result.put(AdminPoseidasConstants.VALUE_PERMISSION_DATA_EFFECTIVE_DATE, cvc.getEffectiveDate());
-      result.put(AdminPoseidasConstants.VALUE_PERMISSION_DATA_HOLDERREFERENCE, cvc.getHolderReferenceString());
+      result.put(AdminPoseidasConstants.VALUE_PERMISSION_DATA_HOLDERREFERENCE,
+                 cvc.getHolderReferenceString());
       result.put(AdminPoseidasConstants.VALUE_PERMISSION_DATA_CA_REFERENCE, cvc.getCAReferenceString());
       result.put(AdminPoseidasConstants.VALUE_PERMISSION_DATA_SECTOR_PUBLIC_KEY_HASH,
                  DatatypeConverter.printHexBinary(cvc.getSectorPublicKeyHash()));
@@ -193,9 +204,12 @@ public class InfoMapBuilder
         addErrorMessage(result, IDManagementCodes.SECTOR_HASH_DOES_NOT_MATCH.createMessage(cvcRefID));
       }
     }
-    catch (Throwable t)
+    catch (Exception e)
     {
-      LOG.error(cvcRefID + ": can not parse CVC", t);
+      if (LOG.isErrorEnabled())
+      {
+        LOG.error(cvcRefID + ": can not parse CVC", e);
+      }
       addErrorMessage(result, IDManagementCodes.INCOMPLETE_TERMINAL_CERTIFICATE.createMessage(cvcRefID));
     }
     try
@@ -205,17 +219,19 @@ public class InfoMapBuilder
       MessageDigest md = DigestUtil.getDigestByOID(oid);
       result.put(AdminPoseidasConstants.VALUE_PERMISSION_DATA_MESSAGE_DIGEST, md);
     }
-    catch (Throwable t)
+    catch (Exception e)
     {
-      LOG.error(cvcRefID + ": can not calculate the certificate description digest", t);
+      if (LOG.isErrorEnabled())
+      {
+        LOG.error(cvcRefID + ": can not calculate the certificate description digest", e);
+      }
       addErrorMessage(result, IDManagementCodes.INCOMPLETE_TERMINAL_CERTIFICATE.createMessage(cvcRefID));
     }
   }
 
   private static void getInfoFromCvcDescription(Map<String, Object> result,
                                                 byte[] cvcDescBytes,
-                                                String cvcRefID,
-                                                TerminalPermissionAO facade)
+                                                String cvcRefID)
   {
     try
     {
@@ -239,29 +255,24 @@ public class InfoMapBuilder
                    new String(redirectURLAsn1.getValue(), StandardCharsets.UTF_8));
       }
 
-      try
+      ASN1 certHashes = desc.getCertificateDescriptionPart(CertificateDescriptionPath.COMM_CERTIFICATES);
+      if (certHashes != null)
       {
-        ASN1 certHashes = desc.getCertificateDescriptionPart(CertificateDescriptionPath.COMM_CERTIFICATES);
-        if (certHashes != null)
+        List<String> commCertHashList = new ArrayList<>();
+        for ( ASN1 hashes : certHashes.getChildElementList() )
         {
-          List<String> commCertHashList = new ArrayList<>();
-          for ( ASN1 hashes : certHashes.getChildElementList() )
-          {
-            String hash = DatatypeConverter.printHexBinary(hashes.getValue());
-            commCertHashList.add(hash);
-          }
-          result.put(AdminPoseidasConstants.VALUE_PERMISSION_DATA_COMMUNICATION_CERTS_HASHES, commCertHashList);
+          String hash = DatatypeConverter.printHexBinary(hashes.getValue());
+          commCertHashList.add(hash);
         }
-      }
-      catch (IOException e)
-      {
-        LOG.error(cvcRefID + ": Can not parse communication certificate hashes", e);
-        addErrorMessage(result, IDManagementCodes.INCOMPLETE_TERMINAL_CERTIFICATE.createMessage(cvcRefID));
+        result.put(AdminPoseidasConstants.VALUE_PERMISSION_DATA_COMMUNICATION_CERTS_HASHES, commCertHashList);
       }
     }
-    catch (Throwable t)
+    catch (IOException e)
     {
-      LOG.error(cvcRefID + ": Can not parse CVC description", t);
+      if (LOG.isErrorEnabled())
+      {
+        LOG.error(cvcRefID + ": Can not parse CVC description", e);
+      }
       addErrorMessage(result, IDManagementCodes.INCOMPLETE_TERMINAL_CERTIFICATE.createMessage(cvcRefID));
     }
   }

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019 Governikus KG. Licensed under the EUPL, Version 1.2 or as soon they will be approved by
+ * Copyright (c) 2020 Governikus KG. Licensed under the EUPL, Version 1.2 or as soon they will be approved by
  * the European Commission - subsequent versions of the EUPL (the "Licence"); You may not use this work except
  * in compliance with the Licence. You may obtain a copy of the Licence at:
  * http://joinup.ec.europa.eu/software/page/eupl Unless required by applicable law or agreed to in writing,
@@ -35,11 +35,14 @@ import iso.std.iso_iec._24727.tech.schema.StartPAOS;
 public class DefaultPaosHandler extends AbstractPaosHandler
 {
 
-  private final String relatesTo, messageId;
+  private static final String HTTP_WWW_W3_ORG_2005_03_ADDRESSING = "http://www.w3.org/2005/03/addressing";
+
+  private final String relatesTo;
+
+  private final String messageId;
 
 
-  DefaultPaosHandler(HttpServletRequest request, byte[] requestBody)
-    throws PaosHandlerException, IOException
+  DefaultPaosHandler(HttpServletRequest request, byte[] requestBody) throws PaosHandlerException, IOException
   {
     super(request, requestBody);
 
@@ -52,9 +55,9 @@ public class DefaultPaosHandler extends AbstractPaosHandler
         throw new PaosHandlerException("Cannot find session for ID : " + sessionId, 403);
       }
     }
-    relatesTo = Util.getHeaderValue(soapMessage, "http://www.w3.org/2005/03/addressing", "MessageID");
+    relatesTo = Util.getHeaderValue(soapMessage, HTTP_WWW_W3_ORG_2005_03_ADDRESSING, "MessageID");
     String oldMessageID = Util.getHeaderValue(soapMessage,
-                                              "http://www.w3.org/2005/03/addressing",
+                                              HTTP_WWW_W3_ORG_2005_03_ADDRESSING,
                                               "RelatesTo");
     messageId = Util.generateUUID();
 
@@ -77,7 +80,7 @@ public class DefaultPaosHandler extends AbstractPaosHandler
     }
 
     String oldMessageID = Util.getHeaderValue(soapMessage,
-                                              "http://www.w3.org/2005/03/addressing",
+                                              HTTP_WWW_W3_ORG_2005_03_ADDRESSING,
                                               "RelatesTo");
     if (oldMessageID == null)
     {
@@ -95,8 +98,8 @@ public class DefaultPaosHandler extends AbstractPaosHandler
   }
 
   @Override
-  protected String createPAOSMessage(Object object) throws SAXException, IOException, TransformerException,
-    ParserConfigurationException
+  protected String createPAOSMessage(Object object)
+    throws SAXException, IOException, TransformerException, ParserConfigurationException
   {
     ByteArrayOutputStream out = new ByteArrayOutputStream();
     try (PrintWriter writer = new PrintWriter(out))

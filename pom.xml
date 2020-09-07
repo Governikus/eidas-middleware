@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!--
-  ~ Copyright (c) 2019 Governikus KG. Licensed under the EUPL, Version 1.2 or as soon they will be approved by
+  ~ Copyright (c) 2020 Governikus KG. Licensed under the EUPL, Version 1.2 or as soon they will be approved by
   ~ the European Commission - subsequent versions of the EUPL (the "Licence"); You may not use this work except
   ~ in compliance with the Licence. You may obtain a copy of the Licence at:
   ~ http://joinup.ec.europa.eu/software/page/eupl Unless required by applicable law or agreed to in writing,
@@ -14,11 +14,11 @@
 
     <groupId>de.governikus.eumw</groupId>
     <artifactId>eumw</artifactId>
-    <version>1.2.1</version>
+    <version>2.0.0</version>
     <packaging>pom</packaging>
 
     <name>EU Middleware</name>
-    <url>https://github.com/Governikus/${project.artifactId}</url>
+    <url>https://github.com/Governikus/eidas-middleware</url>
 
     <licenses>
         <license>
@@ -35,10 +35,10 @@
     </organization>
 
     <scm>
-        <url>https://github.com/Governikus/${project.artifactId}</url>
-        <connection>${governikus.scm.connection}</connection>
-      <tag>eumw-1.2.1</tag>
-  </scm>
+        <url>https://hg.govkg.de/Autent/eumw</url>
+        <connection>scm:hg:https://hg.govkg.de/Autent/eumw</connection>
+        <tag>eumw-2.0.0</tag>
+    </scm>
 
     <developers>
         <developer>
@@ -67,39 +67,6 @@
         </developer>
     </developers>
 
-    <repositories>
-        <repository>
-            <snapshots>
-                <enabled>false</enabled>
-            </snapshots>
-            <id>bintray-governikus-public</id>
-            <name>bintray</name>
-            <url>https://dl.bintray.com/governikus/public</url>
-        </repository>
-        <repository>
-            <snapshots>
-                <enabled>false</enabled>
-            </snapshots>
-            <id>jcenter</id>
-            <name>jcenter</name>
-            <url>https://jcenter.bintray.com</url>
-        </repository>
-    </repositories>
-
-    <distributionManagement>
-        <repository>
-            <id>${governikus.site.distributionId}</id>
-            <name>${governikus.site.distributionId}</name>
-            <url>${governikus.site.repository.distributionUrl}</url>
-        </repository>
-
-        <site>
-            <id>${governikus.site.distributionId}</id>
-            <url>${governikus.site.distributionUrl}/autent-commons/${project.version}</url>
-        </site>
-    </distributionManagement>
-
-
     <properties>
         <!-- Source encoding -->
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
@@ -111,45 +78,54 @@
         <maven.compiler.target>1.8</maven.compiler.target>
 
         <!-- crypto -->
-        <version.bouncycastle>1.64</version.bouncycastle>
-        <version.javasupport>7.3.0</version.javasupport>
-        <version.opensaml>3.3.1-GOV6</version.opensaml>
-        <version.xmlsec>2.1.4</version.xmlsec>
+        <version.bouncycastle>1.66</version.bouncycastle>
+        <version.javasupport>7.5.1</version.javasupport>
+        <version.opensaml-security-ext>1.0.7</version.opensaml-security-ext>
+        <version.opensaml>3.4.5</version.opensaml>
+        <version.xmlsec>2.2.0</version.xmlsec>
 
-        <version.cxf>3.3.1</version.cxf>
-        <version.spring>5.1.10.RELEASE</version.spring>
-        <version.springboot>2.1.8.RELEASE</version.springboot>
+        <version.cxf>3.3.7</version.cxf>
+        <version.springboot>2.2.8.RELEASE</version.springboot>
         <version.thymeleaf>3.0.11.RELEASE</version.thymeleaf>
         <version.thymeleaf-layout-dialect>2.4.1</version.thymeleaf-layout-dialect>
 
-        <version.asm>5.2</version.asm>
-        <version.blaze>3.2.0</version.blaze>
-        <version.commons.codec>1.12</version.commons.codec>
+        <version.asm>8.0.1</version.asm>
+        <version.commons.codec>1.14</version.commons.codec>
         <version.commons.collections>3.2.2</version.commons.collections>
         <version.commons.fileupload>1.4</version.commons.fileupload>
-        <version.commons.io>2.6</version.commons.io>
-        <version.commons.lang3>3.9</version.commons.lang3>
-        <version.guava>27.1-jre</version.guava>
-        <version.h2>1.4.199</version.h2>
-        <version.istack-commons-runtime>3.0.8</version.istack-commons-runtime>
-        <version.jackson>2.9.10</version.jackson>
+        <version.commons.io>2.7</version.commons.io>
+        <version.commons.lang3>3.10</version.commons.lang3>
+        <version.guava>29.0-jre</version.guava>
+        <version.h2>1.4.200</version.h2>
+        <version.istack-commons-runtime>3.0.11</version.istack-commons-runtime>
+        <version.jackson>2.11.1</version.jackson>
         <version.jaxb2-basics>1.11.1</version.jaxb2-basics>
+        <version.json-schema-validator>2.2.14</version.json-schema-validator>
         <version.jsr305>3.0.2</version.jsr305>
-        <version.snmp4j>2.6.3</version.snmp4j>
+        <!-- 3.x.x available but not executable with Java 8 -->
+        <version.snmp4j>2.8.3</version.snmp4j>
 
         <!-- IDE helper -->
-        <version.lombok>1.18.6</version.lombok>
+        <version.lombok>1.18.12</version.lombok>
 
         <!-- logging dependencies -->
-        <version.log4j2>2.11.2</version.log4j2>
-        <version.slf4j>1.7.26</version.slf4j>
+        <version.log4j2>2.13.3</version.log4j2>
+        <version.slf4j>1.7.30</version.slf4j>
 
         <!-- test dependencies -->
-        <version.htmlunit>2.30</version.htmlunit>
-        <version.junit.jupiter>5.2.0</version.junit.jupiter>
-        <version.junit.platform>1.2.0</version.junit.platform>
-        <version.junit.vintage>5.2.0</version.junit.vintage>
-        <version.opentest4j>1.1.0</version.opentest4j>
+        <!-- 2.39.0 available but any higher than 2.31 causes test failures -->
+        <version.htmlunit>2.31</version.htmlunit>
+        <version.junit-bom>5.6.2</version.junit-bom>
+        <version.mockserver>5.11.0</version.mockserver>
+        <version.opentest4j>1.2.0</version.opentest4j>
+
+        <!-- version for dependency check, can be overwritten by Jenkins -->
+        <version.dependency-check-maven>5.2.2</version.dependency-check-maven>
+
+        <!-- version for bootstrap -->
+        <!-- ATTENTION you need to change the templates on updating these versions -->
+        <version.bootstrap>4.5.0</version.bootstrap>
+        <version.jquery>3.5.1</version.jquery>
     </properties>
 
     <build>
@@ -236,12 +212,10 @@
                         </additionalOptions>
                     </configuration>
                 </plugin>
-                <!-- TODO maven surefire plugin 2.20 has a memory leak so
-                    we will downgrade surefire here until this is fixed with the next release -->
                 <plugin>
                     <groupId>org.apache.maven.plugins</groupId>
                     <artifactId>maven-surefire-plugin</artifactId>
-                    <version>2.19.1</version>
+                    <version>2.22.2</version>
                     <configuration>
                         <!-- alphabetical on even hours, reverse alphabetical
                             on odd hours -->
@@ -260,28 +234,11 @@
                             <exclude>**/*PerformanceTest.*</exclude>
                         </excludes>
                     </configuration>
-                    <dependencies>
-                        <dependency>
-                            <groupId>org.junit.platform</groupId>
-                            <artifactId>junit-platform-surefire-provider</artifactId>
-                            <version>1.1.0</version>
-                        </dependency>
-                        <dependency>
-                            <groupId>org.junit.jupiter</groupId>
-                            <artifactId>junit-jupiter-engine</artifactId>
-                            <version>${version.junit.jupiter}</version>
-                        </dependency>
-                        <dependency>
-                            <groupId>org.junit.vintage</groupId>
-                            <artifactId>junit-vintage-engine</artifactId>
-                            <version>${version.junit.vintage}</version>
-                        </dependency>
-                    </dependencies>
                 </plugin>
                 <plugin>
                     <groupId>org.apache.maven.plugins</groupId>
                     <artifactId>maven-failsafe-plugin</artifactId>
-                    <version>2.19.1</version>
+                    <version>2.22.2</version>
                 </plugin>
                 <plugin>
                     <groupId>org.apache.maven.plugins</groupId>
@@ -323,7 +280,7 @@
                 <plugin>
                     <groupId>org.apache.maven.plugins</groupId>
                     <artifactId>maven-deploy-plugin</artifactId>
-                    <version>2.8.2</version>
+                    <version>3.0.0-M1</version>
                 </plugin>
                 <plugin>
                     <groupId>org.apache.maven.plugins</groupId>
@@ -341,9 +298,17 @@
                     <version>3.0.2</version>
                 </plugin>
                 <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-assembly-plugin</artifactId>
+                    <version>3.2.0</version>
+                </plugin>
+                <plugin>
                     <groupId>org.codehaus.mojo</groupId>
                     <artifactId>license-maven-plugin</artifactId>
-                    <version>1.20</version>
+                    <version>2.0.0</version>
+                    <configuration>
+                        <licenseMergesUrl>https://hg.govkg.de/Infrastruktur/maven/LicenseWhitelist/raw-file/default/license-merges</licenseMergesUrl>
+                    </configuration>
                 </plugin>
                 <plugin>
                     <groupId>org.apache.maven.plugins</groupId>
@@ -363,6 +328,12 @@
                     <groupId>io.fabric8</groupId>
                     <artifactId>docker-maven-plugin</artifactId>
                     <version>0.31.0</version>
+                </plugin>
+                <plugin>
+                    <groupId>org.owasp</groupId>
+                    <artifactId>dependency-check-maven</artifactId>
+                    <!-- the version will be set by Jenkins -->
+                    <version>${version.dependency-check-maven}</version>
                 </plugin>
             </plugins>
         </pluginManagement>
@@ -414,19 +385,20 @@
     </build>
 
     <modules>
-        <module>poseidas-configuration</module>
-        <module>poseidas</module>
+        <module>configuration-checker</module>
+        <module>configuration-wizard</module>
+        <module>databasemigration</module>
+        <module>distribution</module>
+        <module>dvca-connection-configurator</module>
+        <module>eidas-base-container</module>
+        <module>eidas-common</module>
+        <module>eidas-demo</module>
         <module>eidas-middleware</module>
         <module>eidas-starterkit</module>
-        <module>eidas-demo</module>
-        <module>eidas-common</module>
         <module>password-generator</module>
-        <module>databasemigration</module>
-        <module>configuration-wizard</module>
+        <module>poseidas</module>
+        <module>poseidas-configuration</module>
         <module>utils</module>
-        <module>dvca-connection-configurator</module>
-        <module>configuration-checker</module>
-        <module>eidas-base-container</module>
     </modules>
 
     <dependencies>
@@ -438,24 +410,109 @@
         <dependency>
             <groupId>org.junit.platform</groupId>
             <artifactId>junit-platform-launcher</artifactId>
+            <scope>test</scope>
         </dependency>
         <dependency>
             <groupId>org.junit.jupiter</groupId>
             <artifactId>junit-jupiter-engine</artifactId>
+            <scope>test</scope>
         </dependency>
         <dependency>
             <groupId>org.junit.jupiter</groupId>
             <artifactId>junit-jupiter-params</artifactId>
+            <scope>test</scope>
         </dependency>
         <dependency>
             <groupId>org.junit.vintage</groupId>
             <artifactId>junit-vintage-engine</artifactId>
+            <scope>test</scope>
         </dependency>
     </dependencies>
 
 
     <dependencyManagement>
         <dependencies>
+            <!-- own modules -->
+            <dependency>
+                <groupId>de.governikus.eumw</groupId>
+                <artifactId>configuration-checker</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>de.governikus.eumw</groupId>
+                <artifactId>configuration-wizard</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>de.governikus.eumw</groupId>
+                <artifactId>database-migration</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>de.governikus.eumw</groupId>
+                <artifactId>distribution</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>de.governikus.eumw</groupId>
+                <artifactId>dvca-connection-configurator</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>de.governikus.eumw</groupId>
+                <artifactId>eidas-base-container</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>de.governikus.eumw</groupId>
+                <artifactId>eidas-common</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>de.governikus.eumw</groupId>
+                <artifactId>eidas-demo</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>de.governikus.eumw</groupId>
+                <artifactId>eidas-middleware</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>de.governikus.eumw</groupId>
+                <artifactId>eidas-starterkit</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>de.governikus.eumw</groupId>
+                <artifactId>password-generator</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>de.governikus.eumw</groupId>
+                <artifactId>poseidas</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>de.governikus.eumw</groupId>
+                <artifactId>poseidas-configuration</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>de.governikus.eumw</groupId>
+                <artifactId>utils</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+
+            <!-- junit bom -->
+            <dependency>
+                <groupId>org.junit</groupId>
+                <artifactId>junit-bom</artifactId>
+                <version>${version.junit-bom}</version>
+                <type>pom</type>
+                <scope>import</scope>
+            </dependency>
+
             <!-- log4j-bom https://github.com/apache/logging-log4j2/tree/master/log4j-bom -->
             <dependency>
                 <groupId>org.apache.logging.log4j</groupId>
@@ -528,37 +585,6 @@
                 <version>${version.springboot}</version>
                 <scope>test</scope>
             </dependency>
-            <dependency>
-                <groupId>org.springframework</groupId>
-                <artifactId>spring-test</artifactId>
-                <version>${version.spring}</version>
-                <scope>test</scope>
-            </dependency>
-            <dependency>
-                <groupId>de.governikus.eumw</groupId>
-                <artifactId>eidas-common</artifactId>
-                <version>${project.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>de.governikus.eumw</groupId>
-                <artifactId>eidas-starterkit</artifactId>
-                <version>${project.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>de.governikus.eumw</groupId>
-                <artifactId>poseidas</artifactId>
-                <version>${project.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>de.governikus.eumw</groupId>
-                <artifactId>utils</artifactId>
-                <version>${project.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>de.governikus.eumw</groupId>
-                <artifactId>eidas-base-container</artifactId>
-                <version>${project.version}</version>
-            </dependency>
 
             <dependency>
                 <groupId>org.apache.cxf</groupId>
@@ -587,16 +613,10 @@
                 <version>${version.xmlsec}</version>
             </dependency>
 
-            <!-- test dependencies -->
             <dependency>
                 <groupId>org.slf4j</groupId>
                 <artifactId>slf4j-api</artifactId>
                 <version>${version.slf4j}</version>
-            </dependency>
-            <dependency>
-                <groupId>de.governikus.eumw</groupId>
-                <artifactId>poseidas-configuration</artifactId>
-                <version>${project.version}</version>
             </dependency>
             <dependency>
                 <groupId>com.fasterxml.jackson.core</groupId>
@@ -621,60 +641,15 @@
             </dependency>
 
             <dependency>
-                <groupId>org.springframework</groupId>
-                <artifactId>spring-core</artifactId>
-                <version>${version.spring}</version>
-            </dependency>
-            <dependency>
-                <groupId>org.springframework</groupId>
-                <artifactId>spring-tx</artifactId>
-                <version>${version.spring}</version>
-            </dependency>
-            <dependency>
-                <groupId>org.springframework</groupId>
-                <artifactId>spring-aop</artifactId>
-                <version>${version.spring}</version>
-            </dependency>
-            <dependency>
-                <groupId>org.springframework</groupId>
-                <artifactId>spring-beans</artifactId>
-                <version>${version.spring}</version>
-            </dependency>
-            <dependency>
-                <groupId>org.springframework</groupId>
-                <artifactId>spring-context</artifactId>
-                <version>${version.spring}</version>
-            </dependency>
-            <dependency>
-                <groupId>org.springframework</groupId>
-                <artifactId>spring-expression</artifactId>
-                <version>${version.spring}</version>
-            </dependency>
-            <dependency>
-                <groupId>org.springframework</groupId>
-                <artifactId>spring-jdbc</artifactId>
-                <version>${version.spring}</version>
-            </dependency>
-            <dependency>
-                <groupId>org.springframework</groupId>
-                <artifactId>spring-orm</artifactId>
-                <version>${version.spring}</version>
-            </dependency>
-            <dependency>
-                <groupId>org.springframework</groupId>
-                <artifactId>spring-web</artifactId>
-                <version>${version.spring}</version>
-            </dependency>
-            <dependency>
-                <groupId>org.springframework</groupId>
-                <artifactId>spring-webmvc</artifactId>
-                <version>${version.spring}</version>
-            </dependency>
-
-            <dependency>
                 <groupId>org.slf4j</groupId>
                 <artifactId>jcl-over-slf4j</artifactId>
                 <version>${version.slf4j}</version>
+            </dependency>
+            <!--OpenSAML -->
+            <dependency>
+                <groupId>se.swedenconnect.opensaml</groupId>
+                <artifactId>opensaml-security-ext</artifactId>
+                <version>${version.opensaml-security-ext}</version>
             </dependency>
 
             <dependency>
@@ -682,11 +657,43 @@
                 <artifactId>opensaml-core</artifactId>
                 <version>${version.opensaml}</version>
             </dependency>
+
+            <dependency>
+                <groupId>org.opensaml</groupId>
+                <artifactId>opensaml-saml-api</artifactId>
+                <version>${version.opensaml}</version>
+            </dependency>
+
             <dependency>
                 <groupId>org.opensaml</groupId>
                 <artifactId>opensaml-saml-impl</artifactId>
                 <version>${version.opensaml}</version>
             </dependency>
+
+            <dependency>
+                <groupId>org.opensaml</groupId>
+                <artifactId>opensaml-security-api</artifactId>
+                <version>${version.opensaml}</version>
+            </dependency>
+
+            <dependency>
+                <groupId>org.opensaml</groupId>
+                <artifactId>opensaml-security-impl</artifactId>
+                <version>${version.opensaml}</version>
+            </dependency>
+
+            <dependency>
+                <groupId>org.opensaml</groupId>
+                <artifactId>opensaml-xmlsec-api</artifactId>
+                <version>${version.opensaml}</version>
+            </dependency>
+
+            <dependency>
+                <groupId>org.opensaml</groupId>
+                <artifactId>opensaml-xmlsec-impl</artifactId>
+                <version>${version.opensaml}</version>
+            </dependency>
+
             <dependency>
                 <groupId>net.shibboleth.utilities</groupId>
                 <artifactId>java-support</artifactId>
@@ -760,41 +767,18 @@
             </dependency>
 
             <dependency>
-                <groupId>org.webjars.npm</groupId>
-                <artifactId>blaze</artifactId>
-                <version>${version.blaze}</version>
-            </dependency>
-
-            <dependency>
                 <groupId>com.fasterxml.jackson.core</groupId>
                 <artifactId>jackson-databind</artifactId>
                 <version>${version.jackson}</version>
             </dependency>
 
             <dependency>
-                <groupId>org.junit.platform</groupId>
-                <artifactId>junit-platform-launcher</artifactId>
-                <version>${version.junit.platform}</version>
-                <scope>test</scope>
+                <groupId>com.github.java-json-tools</groupId>
+                <artifactId>json-schema-validator</artifactId>
+                <version>${version.json-schema-validator}</version>
             </dependency>
-            <dependency>
-                <groupId>org.junit.jupiter</groupId>
-                <artifactId>junit-jupiter-engine</artifactId>
-                <version>${version.junit.jupiter}</version>
-                <scope>test</scope>
-            </dependency>
-            <dependency>
-                <groupId>org.junit.jupiter</groupId>
-                <artifactId>junit-jupiter-params</artifactId>
-                <version>${version.junit.jupiter}</version>
-                <scope>test</scope>
-            </dependency>
-            <dependency>
-                <groupId>org.junit.vintage</groupId>
-                <artifactId>junit-vintage-engine</artifactId>
-                <version>${version.junit.vintage}</version>
-                <scope>test</scope>
-            </dependency>
+
+            <!-- test dependencies -->
             <dependency>
                 <groupId>org.slf4j</groupId>
                 <artifactId>slf4j-simple</artifactId>
@@ -808,12 +792,22 @@
                 <scope>test</scope>
             </dependency>
             <dependency>
-                <groupId>org.junit.platform</groupId>
-                <artifactId>junit-platform-commons</artifactId>
-                <version>${version.junit.platform}</version>
+                <groupId>org.mock-server</groupId>
+                <artifactId>mockserver-junit-jupiter</artifactId>
+                <version>${version.mockserver}</version>
                 <scope>test</scope>
             </dependency>
-
+            <!-- https://mvnrepository.com/artifact/org.webjars/bootstrap -->
+            <dependency>
+                <groupId>org.webjars</groupId>
+                <artifactId>bootstrap</artifactId>
+                <version>${version.bootstrap}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.webjars</groupId>
+                <artifactId>jquery</artifactId>
+                <version>${version.jquery}</version>
+            </dependency>
         </dependencies>
     </dependencyManagement>
 
@@ -861,7 +855,6 @@
                                 <id>attach-javadocs</id>
                                 <goals>
                                     <goal>jar</goal>
-                                    <goal>test-jar</goal>
                                 </goals>
                             </execution>
                         </executions>
@@ -962,6 +955,54 @@
                     </plugin>
                 </plugins>
             </build>
+        </profile>
+        <profile>
+            <id>dependency-check</id>
+            <activation>
+                <!-- activate automatically when built on Jenkins build server -->
+                <property>
+                    <name>env.JENKINS_URL</name>
+                </property>
+            </activation>
+            <build>
+                <plugins>
+                    <plugin>
+                        <groupId>org.owasp</groupId>
+                        <artifactId>dependency-check-maven</artifactId>
+                        <configuration>
+                            <skipProvidedScope>true</skipProvidedScope>
+                            <skipTestScope>true</skipTestScope>
+                            <skipRuntimeScope>false</skipRuntimeScope>
+                            <format>ALL</format>
+                            <outputDirectory>${project.build.directory}</outputDirectory>
+                            <failOnError>false</failOnError>
+                        </configuration>
+                        <executions>
+                            <execution>
+                                <goals>
+                                    <goal>check</goal>
+                                </goals>
+                                <phase>verify</phase>
+                            </execution>
+                        </executions>
+                    </plugin>
+                </plugins>
+            </build>
+            <reporting>
+                <plugins>
+                    <plugin>
+                        <groupId>org.owasp</groupId>
+                        <artifactId>dependency-check-maven</artifactId>
+                        <reportSets>
+                            <reportSet>
+                                <reports>
+                                    <report>aggregate</report>
+                                </reports>
+                            </reportSet>
+                        </reportSets>
+                    </plugin>
+                </plugins>
+            </reporting>
         </profile>
     </profiles>
 

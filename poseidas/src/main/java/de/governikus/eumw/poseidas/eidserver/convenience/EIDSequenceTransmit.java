@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019 Governikus KG. Licensed under the EUPL, Version 1.2 or as soon they will be approved by
+ * Copyright (c) 2020 Governikus KG. Licensed under the EUPL, Version 1.2 or as soon they will be approved by
  * the European Commission - subsequent versions of the EUPL (the "Licence"); You may not use this work except
  * in compliance with the Licence. You may obtain a copy of the Licence at:
  * http://joinup.ec.europa.eu/software/page/eupl Unless required by applicable law or agreed to in writing,
@@ -224,8 +224,7 @@ public class EIDSequenceTransmit
     log.debug("{} [Transmit] Handle response: {}", parent.getLogPrefix(), state.name());
     // Handle the converted result from eCard by result step to be able to handle mCard batch
     transmitResult = transmitBatch.resultStep(transmitResult.getData());
-    if (transmitResult.getThrowable() != null
-        && transmitResult.getThrowable() instanceof SecureMessagingException)
+    if (transmitResult.getThrowable() instanceof SecureMessagingException)
     {
       parent.getEIDInfoContainer().setStatus(EIDStatus.NOT_AUTHENTIC);
       throw new ECardException(ResultMinor.COMMON_INTERNAL_ERROR, transmitResult.getThrowable());
@@ -479,10 +478,10 @@ public class EIDSequenceTransmit
         {
           String street = getASNAdress(addressASN, (byte)0xaa, isBirthPlace);
           String city = getASNAdress(addressASN, (byte)0xab, isBirthPlace);
-          String state = getASNAdress(addressASN, (byte)0xac, isBirthPlace);
+          String stateAddr = getASNAdress(addressASN, (byte)0xac, isBirthPlace);
           String country = getASNAdress(addressASN, (byte)0xad, isBirthPlace);
           String zipCode = getASNAdress(addressASN, (byte)0xae, isBirthPlace);
-          return new EIDInfoResultPlaceStructured(street, city, state, country, zipCode);
+          return new EIDInfoResultPlaceStructured(street, city, stateAddr, country, zipCode);
         }
         else
         {
@@ -648,7 +647,6 @@ public class EIDSequenceTransmit
             && (field.getSFID() == null || Hex.parse(field.getSFID())[0] < 0x17))
         {
           // only handle generic attributes here
-          continue;
         }
         else
         {
@@ -760,7 +758,6 @@ public class EIDSequenceTransmit
           && (field.getSFID() == null || Hex.parse(field.getSFID())[0] >= 0x17))
       {
         // there is nothing we can read
-        continue;
       }
       else
       {

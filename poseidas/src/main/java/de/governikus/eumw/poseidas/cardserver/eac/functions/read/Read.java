@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019 Governikus KG. Licensed under the EUPL, Version 1.2 or as soon they will be approved by
+ * Copyright (c) 2020 Governikus KG. Licensed under the EUPL, Version 1.2 or as soon they will be approved by
  * the European Commission - subsequent versions of the EUPL (the "Licence"); You may not use this work except
  * in compliance with the Licence. You may obtain a copy of the Licence at:
  * http://joinup.ec.europa.eu/software/page/eupl Unless required by applicable law or agreed to in writing,
@@ -40,8 +40,8 @@ import iso.std.iso_iec._24727.tech.schema.TransmitResponse;
  * @see ReadResult
  * @author Jens Wothe, jw@bos-bremen.de
  */
-public class Read extends AbstractFunctionStep<ReadParameter, ReadResult> implements
-  FunctionStep<ReadParameter, ReadResult>, TransmitCommandCreator<ReadParameter>,
+public class Read extends AbstractFunctionStep<ReadParameter, ReadResult>
+  implements FunctionStep<ReadParameter, ReadResult>, TransmitCommandCreator<ReadParameter>,
   TransmitResultEvaluator<ReadResult>
 {
 
@@ -67,8 +67,7 @@ public class Read extends AbstractFunctionStep<ReadParameter, ReadResult> implem
     }
     TransmitAPDUParameter tap = new TransmitAPDUParameter(listTransmitCommand);
 
-    Transmit securedTransmitParameter = super.transmit.parameterStep(tap, sht);
-    return securedTransmitParameter;
+    return super.transmit.parameterStep(tap, sht);
   }
 
   /** {@inheritDoc} */
@@ -98,8 +97,9 @@ public class Read extends AbstractFunctionStep<ReadParameter, ReadResult> implem
     }
     else
     {
-      command = new CommandAPDU((byte)0x00, (byte)0xb0, parameter.getSfi() != null
-        ? (parameter.getSfi() | 0x80) : (byte)(parameter.getOffset() / 256),
+      command = new CommandAPDU((byte)0x00, (byte)0xb0,
+                                parameter.getSfi() == null ? (byte)(parameter.getOffset() / 256)
+                                  : parameter.getSfi() | 0x80,
                                 (byte)(parameter.getOffset() % 256), null, parameter.getLength());
     }
     return InputAPDUInfoTypeUtil.create(command, acceptedResponseList);
@@ -109,10 +109,7 @@ public class Read extends AbstractFunctionStep<ReadParameter, ReadResult> implem
   @Override
   public ReadResult evaluate(TransmitAPDUResult transmitResult, int[] responseIndices)
   {
-    responseIndices = TransmitResultEvaluator.Util.checkArguments(transmitResult,
-                                                                  responseIndices,
-                                                                  getMinimumCount(),
-                                                                  getMaximumCount());
+    responseIndices = TransmitResultEvaluator.Util.checkArguments(transmitResult, responseIndices);
     if (transmitResult.getThrowable() != null)
     {
       return new ReadResult(transmitResult.getThrowable());

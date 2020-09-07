@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019 Governikus KG. Licensed under the EUPL, Version 1.2 or as soon they will be approved by
+ * Copyright (c) 2020 Governikus KG. Licensed under the EUPL, Version 1.2 or as soon they will be approved by
  * the European Commission - subsequent versions of the EUPL (the "Licence"); You may not use this work except
  * in compliance with the Licence. You may obtain a copy of the Licence at:
  * http://joinup.ec.europa.eu/software/page/eupl Unless required by applicable law or agreed to in writing,
@@ -71,19 +71,22 @@ public class Defect
         // Get the choice for SignerIdentifier element
         if (objectAt instanceof ASN1Sequence)
         {
-          LOGGER.debug("SignerIdentifier: IssuerAndSerialNumber");
+          if (LOGGER.isDebugEnabled())
+          {
+            LOGGER.debug("SignerIdentifier: IssuerAndSerialNumber");
+          }
           // Sequence indicates issuer and serial number is used
-          ASN1Sequence issuerAndSerialNumber = (ASN1Sequence)objectAt;
-          if (issuerAndSerialNumber.size() < 2)
+          ASN1Sequence issuerAndSerialNumberInt = (ASN1Sequence)objectAt;
+          if (issuerAndSerialNumberInt.size() < 2)
           {
             throw new IOException("IssuerAndSerialNumber has not enough elements to be build");
           }
-          else if (issuerAndSerialNumber.size() > 2)
+          else if (issuerAndSerialNumberInt.size() > 2 && LOGGER.isDebugEnabled())
           {
-            LOGGER.debug("IssuerAndSerialNumber with unexpected format ("
-                         + issuerAndSerialNumber.size() + ")");
+            LOGGER.debug("IssuerAndSerialNumber with unexpected format (" + issuerAndSerialNumberInt.size()
+                         + ")");
           }
-          ASN1Encodable nameSequence = issuerAndSerialNumber.getObjectAt(0);
+          ASN1Encodable nameSequence = issuerAndSerialNumberInt.getObjectAt(0);
           X500Name issuerName = null;
           if (nameSequence instanceof ASN1Sequence)
           {
@@ -94,7 +97,7 @@ public class Defect
             throw new IOException("Cannot extract issuer from " + nameSequence);
           }
 
-          ASN1Encodable serialInteger = issuerAndSerialNumber.getObjectAt(1);
+          ASN1Encodable serialInteger = issuerAndSerialNumberInt.getObjectAt(1);
           BigInteger serialNumber = null;
           if (serialInteger instanceof ASN1Integer)
           {
@@ -109,10 +112,13 @@ public class Defect
         }
         else if (objectAt instanceof ASN1OctetString)
         {
-          LOGGER.debug("SignerIdentifier: SubjectKeyIdentifier");
+          if (LOGGER.isDebugEnabled())
+          {
+            LOGGER.debug("SignerIdentifier: SubjectKeyIdentifier");
+          }
           // Octets are subjectKeyIdentifier representation
-          ASN1OctetString subjectKeyIdentifier = (ASN1OctetString)objectAt;
-          this.subjectKeyIdentifier = subjectKeyIdentifier.getOctets();
+          ASN1OctetString subjectKeyIdentifierInt = (ASN1OctetString)objectAt;
+          this.subjectKeyIdentifier = subjectKeyIdentifierInt.getOctets();
         }
         else
         {
@@ -125,15 +131,21 @@ public class Defect
       // the document signer certificate MUST additionally be included
       else if (objectAt instanceof ASN1OctetString)
       {
-        LOGGER.debug("Optional information: document signer certficate hash");
-        ASN1OctetString certificateHash = (ASN1OctetString)objectAt;
-        this.certificateHash = certificateHash.getOctets();
+        if (LOGGER.isDebugEnabled())
+        {
+          LOGGER.debug("Optional information: document signer certficate hash");
+        }
+        ASN1OctetString certificateHashInt = (ASN1OctetString)objectAt;
+        this.certificateHash = certificateHashInt.getOctets();
       }
 
       // Defect contains KnownDefects
       else if (objectAt instanceof ASN1Set)
       {
-        LOGGER.debug("Collect set of known defects");
+        if (LOGGER.isDebugEnabled())
+        {
+          LOGGER.debug("Collect set of known defects");
+        }
         ASN1Set setOfKnownDefects = (ASN1Set)objectAt;
         int sizeOfKnownDefects = setOfKnownDefects.size();
         for ( int j = 0 ; j < sizeOfKnownDefects ; j++ )
@@ -162,14 +174,7 @@ public class Defect
    */
   boolean containsIssuerAndSerialNumber()
   {
-    if (issuerAndSerialNumber == null)
-    {
-      return false;
-    }
-    else
-    {
-      return true;
-    }
+    return issuerAndSerialNumber != null;
   }
 
   /**
@@ -180,14 +185,7 @@ public class Defect
    */
   public boolean containsKnownDefectsOfType(DefectKnown.DefectType type)
   {
-    if (getKnownDefectsOfType(type).isEmpty())
-    {
-      return false;
-    }
-    else
-    {
-      return true;
-    }
+    return !getKnownDefectsOfType(type).isEmpty();
   }
 
   /**
@@ -197,14 +195,7 @@ public class Defect
    */
   private boolean containsSubjectKeyIdentifier()
   {
-    if (subjectKeyIdentifier == null || subjectKeyIdentifier.length < 1)
-    {
-      return false;
-    }
-    else
-    {
-      return true;
-    }
+    return subjectKeyIdentifier != null && subjectKeyIdentifier.length > 0;
   }
 
   /**
@@ -214,14 +205,7 @@ public class Defect
    */
   private boolean containsSignerDocumentCertificateHash()
   {
-    if (certificateHash == null || certificateHash.length < 1)
-    {
-      return false;
-    }
-    else
-    {
-      return true;
-    }
+    return certificateHash != null && certificateHash.length > 0;
   }
 
   /**
@@ -249,15 +233,15 @@ public class Defect
   public List<DefectKnown> getKnownDefectsOfType(DefectType type)
   {
     check();
-    List<DefectKnown> knownDefects = new ArrayList<>();
+    List<DefectKnown> filteredDefects = new ArrayList<>();
     for ( DefectKnown knownDefect : this.knownDefects )
     {
       if (knownDefect.isType(type))
       {
-        knownDefects.add(knownDefect);
+        filteredDefects.add(knownDefect);
       }
     }
-    return knownDefects;
+    return filteredDefects;
   }
 
   /**
@@ -315,9 +299,7 @@ public class Defect
     {
       return -1;
     }
-    {
-      return issuerAndSerialNumber.getCertificateSerialNumber().getValue().intValue();
-    }
+    return issuerAndSerialNumber.getCertificateSerialNumber().getValue().intValue();
   }
 
   /**

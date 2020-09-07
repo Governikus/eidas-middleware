@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019 Governikus KG. Licensed under the EUPL, Version 1.2 or as soon they will be approved by
+ * Copyright (c) 2020 Governikus KG. Licensed under the EUPL, Version 1.2 or as soon they will be approved by
  * the European Commission - subsequent versions of the EUPL (the "Licence"); You may not use this work except
  * in compliance with the Licence. You may obtain a copy of the Licence at:
  * http://joinup.ec.europa.eu/software/page/eupl Unless required by applicable law or agreed to in writing,
@@ -13,7 +13,7 @@ body > * {
 }
 
 .content {
-    width: 600px;
+    width: 800px;
     margin: 0 auto;
     padding: 10px;
 }
@@ -26,8 +26,19 @@ div.navigation a {
     margin: 0 30px;
 }
 
-td {
+td, th {
     padding: 2px;
+}
+
+table.center td{
+    text-align: center;
+}
+
+td.red {
+    background-color: #FFCCCC;
+}
+td.green {
+    background-color: #CCFFCC;
 }
 
 td.description {
@@ -36,4 +47,8 @@ td.description {
 
 h3 {
     margin: 20px 0 5px 0;
+}
+
+.initial-request-hint > p {
+    color: red;
 }

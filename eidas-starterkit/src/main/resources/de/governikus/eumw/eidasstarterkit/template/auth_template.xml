@@ -3,7 +3,6 @@
     Destination="$Destination"
     ID="$Id" IssueInstant="$IssuerInstand" Version="2.0"
     xmlns:saml2p="urn:oasis:names:tc:SAML:2.0:protocol" xmlns:eidas="http://eidas.europa.eu/saml-extensions"
-    ProviderName="$ProviderName"
     ForceAuthn="$ForceAuthn"
     IsPassive="$IsPassive">
     <saml2:Issuer Format="urn:oasis:names:tc:SAML:2.0:nameid-format:entity"
@@ -14,6 +13,9 @@
 			$requestAttributes
         </eidas:RequestedAttributes>
     </saml2p:Extensions>
+    <saml2p:Scoping>
+        <saml2p:RequesterID>$ProviderName</saml2p:RequesterID>
+    </saml2p:Scoping>
     <saml2p:NameIDPolicy AllowCreate="true"
         Format="$NameIDPolicy"/>
     <saml2p:RequestedAuthnContext Comparison="minimum">

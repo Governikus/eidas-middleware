@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019 Governikus KG. Licensed under the EUPL, Version 1.2 or as soon they will be approved by
+ * Copyright (c) 2020 Governikus KG. Licensed under the EUPL, Version 1.2 or as soon they will be approved by
  * the European Commission - subsequent versions of the EUPL (the "Licence"); You may not use this work except
  * in compliance with the Licence. You may obtain a copy of the Licence at:
  * http://joinup.ec.europa.eu/software/page/eupl Unless required by applicable law or agreed to in writing,
@@ -44,9 +44,9 @@ import iso.std.iso_iec._24727.tech.schema.TransmitResponse;
  * @see RetrictedIdentificationResult
  * @author Jens Wothe, jw@bos-bremen.de
  */
-public class RestrictedIdentification extends
-  AbstractFunctionStep<RestrictedIdentificationParameter, RestrictedIdentificationResult> implements
-  FunctionStep<RestrictedIdentificationParameter, RestrictedIdentificationResult>,
+public class RestrictedIdentification
+  extends AbstractFunctionStep<RestrictedIdentificationParameter, RestrictedIdentificationResult>
+  implements FunctionStep<RestrictedIdentificationParameter, RestrictedIdentificationResult>,
   TransmitCommandCreator<RestrictedIdentificationParameter>,
   TransmitResultEvaluator<RestrictedIdentificationResult>
 {
@@ -98,8 +98,7 @@ public class RestrictedIdentification extends
 
       TransmitAPDUParameter tap = new TransmitAPDUParameter(listTransmitCommand);
 
-      Transmit securedTransmitParameter = super.transmit.parameterStep(tap, sht);
-      return securedTransmitParameter;
+      return super.transmit.parameterStep(tap, sht);
     }
     catch (IOException e)
     {
@@ -113,8 +112,9 @@ public class RestrictedIdentification extends
   {
     AssertUtil.notNull(result, "result");
     TransmitAPDUResult unsecuredResult = super.transmit.resultStep(result);
-    return evaluate(unsecuredResult, unsecuredResult.getData().getOutputAPDU().size() == 2
-      ? DEFAULT_RESPONSE_INDICES_TO_EVALUATE_TWO_ID : null);
+    return evaluate(unsecuredResult,
+                    unsecuredResult.getData().getOutputAPDU().size() == 2
+                      ? DEFAULT_RESPONSE_INDICES_TO_EVALUATE_TWO_ID : null);
   }
 
   // default indices (two ID)
@@ -131,7 +131,8 @@ public class RestrictedIdentification extends
   /** {@inheritDoc} */
   @Override
   public List<InputAPDUInfoType> create(RestrictedIdentificationParameter parameter,
-                                        List<ResponseAPDU> acceptedResponseList) throws IOException
+                                        List<ResponseAPDU> acceptedResponseList)
+    throws IOException
   {
     List<InputAPDUInfoType> tcList = new ArrayList<>();
 
@@ -141,8 +142,8 @@ public class RestrictedIdentification extends
                              + EACServerUtil.makeTag(EACServerUtil.MSE_PRIVATE_KEY_REFERENCE_TAG,
                                                      Hex.hexify(riInfo.getParams().getKeyID()));
     CommandAPDU cmd = EACServerUtil.commandFromString(EACServerUtil.COMMAND_CHAINING_DISABLED
-                                                        + EACServerUtil.MSE_INS
-                                                        + EACServerUtil.MSE_SET_AT_PARAM_RI,
+                                                      + EACServerUtil.MSE_INS
+                                                      + EACServerUtil.MSE_SET_AT_PARAM_RI,
                                                       dataFieldString,
                                                       EACServerUtil.LENGTH_EXPECTED_NONE);
     InputAPDUInfoType tc = new InputAPDUInfoType();
@@ -173,7 +174,7 @@ public class RestrictedIdentification extends
       dataFieldString = EACServerUtil.makeTag(EACServerUtil.GA_DATA_TAG,
                                               EACServerUtil.makeTag(FIRST_KEY_TAG, Hex.hexify(firstKey)));
       cmd = EACServerUtil.commandFromString(EACServerUtil.COMMAND_CHAINING_DISABLED
-                                              + EACServerUtil.GENERAL_AUTHENTICATE_HEADER,
+                                            + EACServerUtil.GENERAL_AUTHENTICATE_HEADER,
                                             dataFieldString,
                                             expectedIDLength);
       tc = new InputAPDUInfoType();
@@ -187,7 +188,7 @@ public class RestrictedIdentification extends
       dataFieldString = EACServerUtil.makeTag(EACServerUtil.GA_DATA_TAG,
                                               EACServerUtil.makeTag(SECOND_KEY_TAG, Hex.hexify(secondKey)));
       cmd = EACServerUtil.commandFromString(EACServerUtil.COMMAND_CHAINING_DISABLED
-                                              + EACServerUtil.GENERAL_AUTHENTICATE_HEADER,
+                                            + EACServerUtil.GENERAL_AUTHENTICATE_HEADER,
                                             dataFieldString,
                                             expectedIDLength);
       tc = new InputAPDUInfoType();
@@ -202,10 +203,7 @@ public class RestrictedIdentification extends
   @Override
   public RestrictedIdentificationResult evaluate(TransmitAPDUResult transmitResult, int[] responseIndices)
   {
-    responseIndices = TransmitResultEvaluator.Util.checkArguments(transmitResult,
-                                                                  responseIndices,
-                                                                  getMinimumCount(),
-                                                                  getMaximumCount());
+    responseIndices = TransmitResultEvaluator.Util.checkArguments(transmitResult, responseIndices);
     if (transmitResult.getThrowable() != null)
     {
       return new RestrictedIdentificationResult(transmitResult.getThrowable());

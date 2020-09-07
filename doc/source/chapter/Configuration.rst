@@ -17,7 +17,7 @@ The following table describes the individual keystores:
 Keystore name                Description
 ============================ =====================================
 BerCAClientKeystore          This keystore is needed to
-                             access the :term:`Authorisation CA`.
+                             access the :term:`Authorization CA`.
 ServerTLSKeystore            This keystore is used to setup
                              the HTTPS port of the server
 SAMLSignKeystore             This keystore is used for
@@ -28,11 +28,11 @@ SAMLCryptKeystore            This keystore is used to decrypt
 
 Please use only JKS or PKCS#12 keystores with their file name endings ``.jks``,  ``.p12`` or ``.pfx`` respectively.
 
-It is advisable to create the BerCAClientKeystore in consultation with the respective :term:`Authorisation CA` as they might have additional requirements for the key.
+It is advisable to create the BerCAClientKeystore in consultation with the respective :term:`Authorization CA` as they might have additional requirements for the key.
 They will also provide you with their TLS server certificate which needs to be entered into the configuration as well.
 
 Be advised that the Common Name or Subject Alternative Name of the TLS Certificate must match with the URL of the middleware as it is reachable from the Internet.
-This is important as the AusweisApp2 will check the URL in the authorisation certificate against the URL that is received from the eIDAS Middleware.
+This is important as the AusweisApp2 will check the URL in the authorization certificate against the URL that is received from the eIDAS Middleware.
 E.g., if the middleware is running on ``https://your.eidas.domain.eu/eidas-middleware/`` or ``https://your.eidas.domain.eu:8443/eidas-middleware/``, the CN or SAN of the TLS certificate must include ``your.eidas.domain.eu``.
 
 For a test system, this TLS certificate may be self signed. However for a production system, this TLS certificate must meet the requirements of the `eIDAS Crypto Requirements, section 2.4 <https://ec.europa.eu/cefdigital/wiki/display/CEFDIGITAL/eIDAS+eID+Profile?preview=/82773108/82796976/eIDAS%20-%20Crypto%20Requirements%20for%20the%20eIDAS%20Interoperability%20Framework_v1.0.pdf>`_ which states that qualified website certificates must be used.
@@ -56,7 +56,7 @@ In case you are using your own environment, copy the JAR file to a folder of you
 
 You can start the application with the following command::
 
-    java -jar configuration-wizard-1.2.1.jar
+    java -jar configuration-wizard-2.0.0.jar
 
 This way the configuration wizard will be available at ``http://localhost:8080/config-wizard.``
 
@@ -81,7 +81,7 @@ to run the wizard again whenever you need it.
 To run the configuration wizard, execute the following command.
 It will mount the named volume in the container so that the configuration wizard can store the configuration in the volume. ::
 
-    docker run --rm -it -v eidas-configuration:/opt/eidas-middleware/configuration -p 8080:8080 --name eidas-configuration-wizard governikus/eidas-configuration-wizard:1.2.1
+    docker run --rm -it -v eidas-configuration:/opt/eidas-middleware/configuration -p 8080:8080 --name eidas-configuration-wizard governikus/eidas-configuration-wizard:2.0.0
 
 Running this command the configuration wizard will be available on http://localhost:8080/config-wizard.
 
@@ -95,7 +95,7 @@ with the alias ``localhost`` and the password ``123456`` for the keystore and th
 You can also use PKCS12 keystores,
 in this case you must change the value of ``SERVER_SSL_KEY_STORE_TYPE`` to ``PKCS12``. ::
 
-    docker run --rm -it -v eidas-configuration:/opt/eidas-middleware/configuration -v /home/user/keystore.jks:/opt/eidas-middleware/keystore.jks -p 443:8080 -e SERVER_SSL_KEY_STORE=file:/opt/eidas-middleware/keystore.jks -e SERVER_SSL_KEY_STORE_TYPE=JKS -e SERVER_SSL_KEY_STORE_PASSWORD=123456 -e SERVER_SSL_KEY_ALIAS=localhost -e SERVER_SSL_KEY_PASSWORD=123456 --name eidas-configuration-wizard governikus/eidas-configuration-wizard:1.2.1
+    docker run --rm -it -v eidas-configuration:/opt/eidas-middleware/configuration -v /home/user/keystore.jks:/opt/eidas-middleware/keystore.jks -p 443:8080 -e SERVER_SSL_KEY_STORE=file:/opt/eidas-middleware/keystore.jks -e SERVER_SSL_KEY_STORE_TYPE=JKS -e SERVER_SSL_KEY_STORE_PASSWORD=123456 -e SERVER_SSL_KEY_ALIAS=localhost -e SERVER_SSL_KEY_PASSWORD=123456 --name eidas-configuration-wizard governikus/eidas-configuration-wizard:2.0.0
 
 Because the application is now bound to the host in port 443,
 the configuration wizard is available at https://localhost/config-wizard.
@@ -132,6 +132,14 @@ so that you do not have to upload the trust anchors and enter the URLs.
 
 After you may have uploaded previous configurations, you can go to the page `application.properties file configuration`.
 As the name suggests, on this page the values for the `application.properties` for the eIDAS Middleware application are configured.
+
+.. hint::
+    If you change the TLS keystore for the eIDAS Middleware, you must inform the :term:`Authorization CA`
+    about the new TLS certificate. If you use a TLS keystore that is not known to the :term:`Authorization CA`,
+    the eIDAS Middleware may not work properly. If you change the TLS keystore, please send an e-mail with the
+    new TLS certificate and the CHR of your :term:`CVC` data to eidas-middleware@governikus.de. The CHR can be
+    found in the admin interface on the detail page of your provider. Once the new TLS certificate is stored in the
+    :term:`Authorization CA`, you will receive a reply and you can renew your :term:`CVC`.
 
 In order to select the keystore for the eIDAS Middleware, you must upload the keystore at the top of the page.
 Then you can select this keystore in the drop down list.
@@ -181,8 +189,8 @@ The entity ID is used for identifying the :term:`eID Service Provider`.
 In case the :term:`eID Service Provider` is dedicated for a private sector
 eIDAS SP it is imperative that the entity ID matches the ``providerName`` used in eIDAS SAML requests made by that SP.
 
-The client authentication keystore is used for the communication to the :term:`Authorisation CA`.
-The certificate of this keypair must be given to the :term:`Authorisation CA`.
+The client authentication keystore is used for the communication to the :term:`Authorization CA`.
+The certificate of this keypair must be given to the :term:`Authorization CA`.
 In case you use a PKCS11 HSM, this key must be stored in the HSM using label and ID identical to
 the ``CVCRefID`` of the :term:`eID Service Provider` (usually the same value as the entity ID).
 
@@ -235,6 +243,14 @@ This configuration file contains the following sections:
 #.  **TLS settings**
 
     To configure the TLS connection with your ServerTLSKeystore, insert the appropriate values in this section.
+
+    .. hint::
+        If you change the TLS keystore for the eIDAS Middleware, you must inform the :term:`Authorization CA`
+        about the new TLS certificate. If you use a TLS keystore that is not known to the :term:`Authorization CA`,
+        the eIDAS Middleware may not work properly. If you change the TLS keystore, please send an e-mail with the
+        new TLS certificate and the CHR of your :term:`CVC` data to eidas-middleware@governikus.de. The CHR can be
+        found in the admin interface on the detail page of your provider. Once the new TLS certificate is stored in the
+        :term:`Authorization CA`, you will receive a reply and you can renew your :term:`CVC`.
 
 #.  **Database Connection**
 
@@ -312,6 +328,12 @@ Additional details:
 #.  **SERVER_URL**
 
     This value is used for the URL in the middleware metadata. Use the following format: https://servername:port
+
+#.  **MIDDLEWARE_DO_SIGN_METADATA**
+
+    Set to true if you want metadata of the middleware to be signed, false otherwise. Default is true in order to
+    keep the behaviour which existed before introduction of this setting, however please note that the
+    specification implies to use unsigned metadata.
 
 #.  **MIDDLEWARE_SIGN_KEY**
 

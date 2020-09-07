@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019 Governikus KG. Licensed under the EUPL, Version 1.2 or as soon they will be approved by
+ * Copyright (c) 2020 Governikus KG. Licensed under the EUPL, Version 1.2 or as soon they will be approved by
  * the European Commission - subsequent versions of the EUPL (the "Licence"); You may not use this work except
  * in compliance with the Licence. You may obtain a copy of the Licence at:
  * http://joinup.ec.europa.eu/software/page/eupl Unless required by applicable law or agreed to in writing,
@@ -20,6 +20,7 @@ import java.security.NoSuchAlgorithmException;
 import java.security.NoSuchProviderException;
 import java.security.SignatureException;
 import java.security.UnrecoverableKeyException;
+import java.security.cert.Certificate;
 import java.security.cert.CertificateException;
 import java.security.spec.InvalidKeySpecException;
 import java.util.ArrayList;
@@ -32,9 +33,9 @@ import javax.crypto.SecretKey;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.bouncycastle.asn1.ASN1ObjectIdentifier;
 
 import de.governikus.eumw.poseidas.cardbase.AssertUtil;
-import de.governikus.eumw.poseidas.cardbase.ByteUtil;
 import de.governikus.eumw.poseidas.cardbase.Hex;
 import de.governikus.eumw.poseidas.cardbase.asn1.OID;
 import de.governikus.eumw.poseidas.cardbase.asn1.npa.AuthenticationTerminals;
@@ -45,9 +46,7 @@ import de.governikus.eumw.poseidas.cardbase.asn1.npa.SecurityInfos;
 import de.governikus.eumw.poseidas.cardbase.asn1.npa.si.ChipAuthenticationDomainParameterInfo;
 import de.governikus.eumw.poseidas.cardbase.asn1.npa.si.ChipAuthenticationInfo;
 import de.governikus.eumw.poseidas.cardbase.asn1.npa.si.ChipAuthenticationPublicKeyInfo;
-import de.governikus.eumw.poseidas.cardbase.asn1.npa.si.PACEDomainParameterInfo;
 import de.governikus.eumw.poseidas.cardbase.asn1.npa.si.PACEInfo;
-import de.governikus.eumw.poseidas.cardbase.asn1.npa.si.TerminalAuthenticationInfo;
 import de.governikus.eumw.poseidas.cardbase.constants.OIDConstants;
 import de.governikus.eumw.poseidas.cardbase.crypto.ec.ECUtil;
 import de.governikus.eumw.poseidas.cardbase.crypto.key.KeyHandler;
@@ -118,11 +117,6 @@ public class EACServer
   private KeyPair ephemeralTACAKeys = null;
 
   /**
-   * Reference to the compressed public key (part of the ephemeral key pair).
-   */
-  private byte[] compressedKey = null;
-
-  /**
    * Reference to the {@link SecurityInfos} read from EF.CardAccess.
    */
   private SecurityInfos efCardAccess = null;
@@ -153,10 +147,10 @@ public class EACServer
    * @throws SignatureException
    */
   private EAC2InputTypeWrapper produceSecondInput(EAC1OutputTypeWrapper firstOutput,
-                                                  Object[] additionalParameters) throws IOException,
-    InvalidAlgorithmParameterException, NoSuchAlgorithmException,
-    NoSuchProviderException, InvalidKeyException, InvalidKeySpecException, SignatureException,
-    UnrecoverableKeyException, KeyStoreException, CertificateException, HSMException
+                                                  Object[] additionalParameters)
+    throws IOException, InvalidAlgorithmParameterException, NoSuchAlgorithmException, NoSuchProviderException,
+    InvalidKeyException, InvalidKeySpecException, SignatureException, UnrecoverableKeyException,
+    KeyStoreException, CertificateException, HSMException
   {
     AssertUtil.notNull(firstOutput, "first output");
     AssertUtil.notNullOrEmpty(additionalParameters, "additional parameters");
@@ -202,7 +196,8 @@ public class EACServer
       kh = new KeyHandlerEC(ECUtil.parameterSpecFromDomainParameters(this.caData.getCaDomParamInfo())
                                   .getCurve()
                                   .getField()
-                                  .getFieldSize() / 8);
+                                  .getFieldSize()
+                            / 8);
     }
     else
     {
@@ -214,7 +209,7 @@ public class EACServer
     this.ephemeralTACAKeys = kh.generateKeyPair(this.caData.getCaDomParamInfo());
     LOG.debug("Generated key pair, public part: "
               + Hex.hexify(this.ephemeralTACAKeys.getPublic().getEncoded()));
-    this.compressedKey = kh.compressKey(this.ephemeralTACAKeys.getPublic());
+    byte[] compressedKey = kh.compressKey(this.ephemeralTACAKeys.getPublic());
     byte[] ephemeralPublicKey = kh.ephemeralKeyBytes(this.ephemeralTACAKeys.getPublic());
 
     List<byte[]> cl = new ArrayList<>();
@@ -224,13 +219,13 @@ public class EACServer
     for ( String car : firstOutput.getCertificationAuthorityReference() )
     {
       List<byte[]> certList = cakProvider.getCertChain(car, termHolder);
-      if (certList != null && certList.size() > 0)
+      if (certList != null && !certList.isEmpty())
       {
         cl = certList;
         break;
       }
     }
-    if (cl.size() == 0 && !firstOutput.getCertificationAuthorityReference().isEmpty())
+    if (cl.isEmpty() && !firstOutput.getCertificationAuthorityReference().isEmpty())
     {
       // certificate chain not available but requested
       return null;
@@ -256,7 +251,7 @@ public class EACServer
                                                    firstInput.getAuthenticatedAuxiliaryData(),
                                                    idPicc,
                                                    rPicc,
-                                                   this.compressedKey);
+                                                   compressedKey);
       result2.setSignature(convertedSignature);
     }
 
@@ -287,8 +282,8 @@ public class EACServer
                                          byte[] auxiliaryData,
                                          byte[] idPicc,
                                          byte[] rPicc,
-                                         byte[] compressedKey) throws InvalidKeyException,
-    UnrecoverableKeyException, InvalidKeySpecException, NoSuchAlgorithmException,
+                                         byte[] compressedKey)
+    throws InvalidKeyException, UnrecoverableKeyException, InvalidKeySpecException, NoSuchAlgorithmException,
     NoSuchProviderException, SignatureException, KeyStoreException, CertificateException, IOException,
     HSMException
   {
@@ -323,10 +318,10 @@ public class EACServer
    * @throws IllegalBlockSizeException
    * @throws InvalidEidException
    */
-  private EACFinal processCompleteTACAOutput(EAC2OutputTypeWrapper secondOutput, Object[] additionalParameters)
-    throws IOException, NoSuchAlgorithmException, NoSuchPaddingException,
-    InvalidKeyException, NoSuchProviderException, InvalidKeySpecException, IllegalBlockSizeException,
-    BadPaddingException, InvalidEidException
+  private EACFinal processCompleteTACAOutput(EAC2OutputTypeWrapper secondOutput,
+                                             Object[] additionalParameters)
+    throws IOException, NoSuchAlgorithmException, InvalidKeyException, NoSuchProviderException,
+    InvalidKeySpecException, InvalidEidException
   {
     AssertUtil.notNull(secondOutput, "second output");
     AssertUtil.notNullOrEmpty(additionalParameters, "additional parameters");
@@ -357,22 +352,22 @@ public class EACServer
     }
 
     // check signature on EF.CardSecurity
-    if (!checker.checkSignedData(cardSecurityBytes))
+    Certificate signerCert = checker.checkSignedData(cardSecurityBytes);
+    if (signerCert == null)
     {
       throw new InvalidEidException("signature on EF.CardSecurity could not be verified");
     }
     SecurityInfos cardSecurity = NPAUtil.fromCardSecurityBytes(cardSecurityBytes);
-    if (!matchSecurityInfos(this.efCardAccess, cardSecurity))
+    if (!matchSecurityInfos(this.efCardAccess, cardSecurity, extractSerialNumber(signerCert)))
     {
-      LOG.debug("contents of EF.CardSecurity and EF.CardAccess do not match");
-      //throw new InvalidEidException("contents of EF.CardSecurity and EF.CardAccess do not match");
+      throw new InvalidEidException("contents of EF.CardSecurity and EF.CardAccess do not match");
     }
 
     ChipAuthenticationPublicKeyInfo caPubKeyInfo = null;
     if (this.caData.getCaInfo().getVersion() != 3)
     {
       List<ChipAuthenticationPublicKeyInfo> caPubKeyInfoList = cardSecurity.getChipAuthenticationPublicKeyInfo();
-      if (caPubKeyInfoList == null || caPubKeyInfoList.size() == 0)
+      if (caPubKeyInfoList == null || caPubKeyInfoList.isEmpty())
       {
         throw new IllegalArgumentException("Required data for CA not available in EF.CardSecurity");
       }
@@ -523,120 +518,86 @@ public class EACServer
    * @param efCardSecurity
    * @return result of check
    */
-  private static boolean matchSecurityInfos(SecurityInfos efCardAccess, SecurityInfos efCardSecurity)
+  private static boolean matchSecurityInfos(SecurityInfos efCardAccess,
+                                            SecurityInfos efCardSecurity,
+                                            Integer serialNumber)
   {
-    if (efCardAccess.getPACEInfo().size() != efCardSecurity.getPACEInfo().size())
+    if (efCardSecurity.getPACEInfo() == null
+        || !efCardSecurity.getPACEInfo().containsAll(efCardAccess.getPACEInfo()))
     {
-      return false;
-    }
-    outer: for ( PACEInfo infoAccess : efCardAccess.getPACEInfo() )
-    {
-      for ( PACEInfo infoSecurity : efCardSecurity.getPACEInfo() )
-      {
-        if (ByteUtil.equals(infoAccess.getEncoded(), infoSecurity.getEncoded()))
-        {
-          continue outer;
-        }
-      }
       return false;
     }
 
-    if ((efCardAccess.getPACEDomainParameterInfo() == null) != (efCardSecurity.getPACEDomainParameterInfo() == null))
+    if (efCardAccess.getPACEDomainParameterInfo() != null
+        && (efCardSecurity.getPACEDomainParameterInfo() == null
+            || !efCardSecurity.getPACEDomainParameterInfo()
+                              .containsAll(efCardAccess.getPACEDomainParameterInfo())))
     {
       return false;
-    }
-    if (efCardAccess.getPACEDomainParameterInfo() != null)
-    {
-      if (efCardAccess.getPACEDomainParameterInfo().size() != efCardSecurity.getPACEDomainParameterInfo()
-                                                                            .size())
-      {
-        return false;
-      }
-      outer: for ( PACEDomainParameterInfo infoAccess : efCardAccess.getPACEDomainParameterInfo() )
-      {
-        for ( PACEDomainParameterInfo infoSecurity : efCardSecurity.getPACEDomainParameterInfo() )
-        {
-          if (ByteUtil.equals(infoAccess.getEncoded(), infoSecurity.getEncoded()))
-          {
-            continue outer;
-          }
-        }
-        return false;
-      }
     }
 
-    if ((efCardAccess.getChipAuthenticationInfo() == null) != (efCardSecurity.getChipAuthenticationInfo() == null))
+    // ID cards signed by document signers with serial number 106 and below have a defect according to
+    // TR-03127 section D, run full check only on others
+    if (serialNumber == null || serialNumber > 106)
     {
-      return false;
-    }
-    if (efCardAccess.getChipAuthenticationInfo() != null)
-    {
-      if (efCardAccess.getChipAuthenticationInfo().size() != efCardSecurity.getChipAuthenticationInfo()
-                                                                           .size())
+      if (efCardAccess.getChipAuthenticationInfo() != null
+          && (efCardSecurity.getChipAuthenticationInfo() == null
+              || !efCardSecurity.getChipAuthenticationInfo()
+                                .containsAll(efCardAccess.getChipAuthenticationInfo())))
       {
         return false;
       }
-      outer: for ( ChipAuthenticationInfo infoAccess : efCardAccess.getChipAuthenticationInfo() )
+
+      if (efCardAccess.getChipAuthenticationDomainParameterInfo() != null
+          && (efCardSecurity.getChipAuthenticationDomainParameterInfo() == null
+              || !efCardSecurity.getChipAuthenticationDomainParameterInfo()
+                                .containsAll(efCardAccess.getChipAuthenticationDomainParameterInfo())))
       {
-        for ( ChipAuthenticationInfo infoSecurity : efCardSecurity.getChipAuthenticationInfo() )
-        {
-          if (ByteUtil.equals(infoAccess.getEncoded(), infoSecurity.getEncoded()))
-          {
-            continue outer;
-          }
-        }
+        return false;
+      }
+    }
+    // run reduced check on defect cards: compare only first ChipAuthenticationInfo and
+    // ChipAuthenticationDomainParameterInfo
+    else
+    {
+      if (efCardAccess.getChipAuthenticationInfo() != null
+          && (efCardSecurity.getChipAuthenticationInfo() == null
+              || !efCardSecurity.getChipAuthenticationInfo()
+                                .contains(efCardAccess.getChipAuthenticationInfo().get(0))))
+      {
+        return false;
+      }
+
+      if (efCardAccess.getChipAuthenticationDomainParameterInfo() != null
+          && (efCardSecurity.getChipAuthenticationDomainParameterInfo() == null
+              || !efCardSecurity.getChipAuthenticationDomainParameterInfo()
+                                .contains(efCardAccess.getChipAuthenticationDomainParameterInfo().get(0))))
+      {
         return false;
       }
     }
 
-    if ((efCardAccess.getChipAuthenticationDomainParameterInfo() == null) != (efCardSecurity.getChipAuthenticationDomainParameterInfo() == null))
-    {
-      return false;
-    }
-    if (efCardAccess.getChipAuthenticationDomainParameterInfo() != null)
-    {
-      if (efCardAccess.getChipAuthenticationDomainParameterInfo().size() != efCardSecurity.getChipAuthenticationDomainParameterInfo()
-                                                                                          .size())
-      {
-        return false;
-      }
-      outer: for ( ChipAuthenticationDomainParameterInfo infoAccess : efCardAccess.getChipAuthenticationDomainParameterInfo() )
-      {
-        for ( ChipAuthenticationDomainParameterInfo infoSecurity : efCardSecurity.getChipAuthenticationDomainParameterInfo() )
-        {
-          if (ByteUtil.equals(infoAccess.getEncoded(), infoSecurity.getEncoded()))
-          {
-            continue outer;
-          }
-        }
-        return false;
-      }
-    }
+    return efCardAccess.getTerminalAuthenticationInfo() == null
+           || efCardSecurity.getTerminalAuthenticationInfo() != null
+              && efCardSecurity.getTerminalAuthenticationInfo()
+                               .containsAll(efCardAccess.getTerminalAuthenticationInfo());
+  }
 
-    if ((efCardAccess.getTerminalAuthenticationInfo() == null) != (efCardSecurity.getTerminalAuthenticationInfo() == null))
+  private static Integer extractSerialNumber(Certificate signerCert)
+  {
+    // attention: we use the serial number from the DN, not the usual one
+    // the spec does not say anything about this but the one from the DN fits better
+    try
     {
-      return false;
+      org.bouncycastle.asn1.x509.Certificate certStructure = org.bouncycastle.asn1.x509.Certificate.getInstance(signerCert.getEncoded());
+      return Integer.valueOf(certStructure.getSubject()
+                                          .getRDNs(new ASN1ObjectIdentifier("2.5.4.5"))[0].getFirst()
+                                                                                          .getValue()
+                                                                                          .toString());
     }
-    if (efCardAccess.getTerminalAuthenticationInfo() != null)
+    catch (Exception e)
     {
-      if (efCardAccess.getTerminalAuthenticationInfo().size() != efCardSecurity.getTerminalAuthenticationInfo()
-                                                                               .size())
-      {
-        return false;
-      }
-      outer: for ( TerminalAuthenticationInfo infoAccess : efCardAccess.getTerminalAuthenticationInfo() )
-      {
-        for ( TerminalAuthenticationInfo infoSecurity : efCardSecurity.getTerminalAuthenticationInfo() )
-        {
-          if (ByteUtil.equals(infoAccess.getEncoded(), infoSecurity.getEncoded()))
-          {
-            continue outer;
-          }
-        }
-        return false;
-      }
+      return null;
     }
-
-    return true;
   }
 }

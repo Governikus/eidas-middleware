@@ -11,25 +11,25 @@ After the middleware was configured successfully (see :ref:`configuration-mw`) y
 the application. If you are using an HSM, please make sure it is running before starting the middleware
 as failing to connect to the HSM will cause errors.
 
-To check the connection to the :term:`Authorisation CA` and to receive the :term:`Authorisation Certificate`, open https://<YOUR_SERVERURL>/admin-interface/list in your Browser.
+To check the connection to the :term:`Authorization CA` and to receive the :term:`Authorization Certificate`, open https://<YOUR_SERVERURL>/admin-interface/list in your Browser.
 Enter the login credentials that you have configured earlier.
 
 After logging in, you will see your :term:`eID Service Provider` s. Click on the name to open the details.
 
-At the top you can check the connection to the :term:`Authorisation CA`.
+At the top you can check the connection to the :term:`Authorization CA`.
 If this check does not succeed, take a look in the log for more details.
-Possible errors are firewalls that block the connection to the :term:`Authorisation CA` or the :term:`Authorisation CA` has not yet stored your client TLS certificate.
+Possible errors are firewalls that block the connection to the :term:`Authorization CA` or the :term:`Authorization CA` has not yet stored your client TLS certificate.
 If the error persists, send the log file and your error description to eidas-middleware@governikus.com.
 
-However, after a successful connection make sure that you can request the :term:`Authorisation Certificate`.
-To do that, fill in the form `Initial CVC Request to DVCA` with the values that you should have received from the :term:`Authorisation CA`.
+However, after a successful connection make sure that you can request the :term:`Authorization Certificate`.
+To do that, fill in the form `Initial CVC Request to DVCA` with the values that you should have received from the :term:`Authorization CA`.
 If the CA did not specify a sequence number, you can start with 1. Then click on `Send initial request to DVCA`.
 If this request was unsuccessful, take a look in the log for more details and double check that the country code and CHR Mnemonic are correct.
 If the error persists, send the log file and your error description to eidas-middleware@governikus.com.
 
 After a successful initial request the eIDAS Middleware should be ready to receive eIDAS requests from your eIDAS connector.
 
-The eIDAS Middleware automatically renews the :term:`Authorisation Certificate`.
+The eIDAS Middleware automatically renews the :term:`Authorization Certificate`.
 It also checks regularly for updates of the :term:`Black List`, :term:`Master List` and :term:`Defect List`.
 
 
@@ -86,13 +86,13 @@ To run the eIDAS Middleware, execute the following command.
 It will mount the named volumes containing the database and configuration in the container
 and the application will be available on port 8443. ::
 
-    docker run --rm -it -v eidas-configuration:/opt/eidas-middleware/configuration -v eidas-database:/opt/eidas-middleware/database -p 8443:8443 --name eidas-middleware-application governikus/eidas-middleware-application:1.2.1
+    docker run --rm -it -v eidas-configuration:/opt/eidas-middleware/configuration -v eidas-database:/opt/eidas-middleware/database -p 8443:8443 --name eidas-middleware-application governikus/eidas-middleware-application:2.0.0
 
 To stop and remove the container, just hit ``CTRL+C``.
 
 To keep the container running longer without being attached to the STDOUT and STDERR, change the command to the following::
 
-    docker run -d -v eidas-configuration:/opt/eidas-middleware/configuration -v eidas-database:/opt/eidas-middleware/database -p 8443:8443 --name eidas-middleware-application governikus/eidas-middleware-application:1.2.1
+    docker run -d -v eidas-configuration:/opt/eidas-middleware/configuration -v eidas-database:/opt/eidas-middleware/database -p 8443:8443 --name eidas-middleware-application governikus/eidas-middleware-application:2.0.0
 
 For more information on starting and stopping containers and viewing the logs,
 see the `Docker Docs <https://docs.docker.com/engine/reference/run/>`_.
@@ -125,6 +125,23 @@ The log level can be changed by adding properties to the ``application.propertie
 
 For more information, see the `Spring Boot documentation <https://docs.spring.io/spring-boot/docs/current/reference/html/boot-features-logging.html#boot-features-logging>`_.
 
+Startup checks
+^^^^^^^^^^^^^^
+Beginning with version 2.0.0, the middleware performs some checks when it is started. In details, these are:
+
+* Is the TLS server certificate valid?
+* Is the CVC valid?
+* Does the server URL match the one in the CVC?
+* Is the TLS server certificate correctly referenced in the CVC?
+
+The results of these checks can be found in the log. Failed checks are reported as warnings,
+while successful checks are logged on the info level. Also, you can see the results in the admin interface
+and trigger a rerun of the checks there.
+
+Note: The check for TLS certificate validity performs a call to the server URL in order to retrieve the certificate.
+If this call is blocked, or routed to a different point than calls originating from the internet,
+you may experience false negative results.
+
 
 VirtualBox Image
 ^^^^^^^^^^^^^^^^
@@ -137,7 +154,7 @@ Scalability
 The performance of the eIDAS Middleware improves by adding more memory (RAM) and using a faster CPU.
 In case the memory configuration has changed, the server needs to be restarted.
 To start the JVM with more memory, add ``-Xmx`` with the new maximum memory size to the start command,
-e.g. ``java -Xmx8g -jar eidas-middleware-1.2.1.jar`` for 8 GB.
+e.g. ``java -Xmx8g -jar eidas-middleware-2.0.0.jar`` for 8 GB.
 
 
 Monitoring
@@ -192,5 +209,5 @@ Before running the migration tool, please create a backup of your database.
 Stop the eIDAS Middleware Application and copy the database file to your backup location, e.g. ``cp /opt/eidas-middleware/database/eidasmw.mv.db /path/to/your/backup-location/eidasmw.mv.db``.
 
 To perform the migration, copy the database migration JAR file to the directory where your
-configuration file is available and execute the command ``java -jar database-migration-1.2.1.jar``.
+configuration file is available and execute the command ``java -jar database-migration-2.0.0.jar``.
 If there are errors in the log output, please send the complete log output and some information on your environment to eidas-middleware@governikus.com.

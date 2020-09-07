@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019 Governikus KG. Licensed under the EUPL, Version 1.2 or as soon they will be approved by
+ * Copyright (c) 2020 Governikus KG. Licensed under the EUPL, Version 1.2 or as soon they will be approved by
  * the European Commission - subsequent versions of the EUPL (the "Licence"); You may not use this work except
  * in compliance with the Licence. You may obtain a copy of the Licence at:
  * http://joinup.ec.europa.eu/software/page/eupl Unless required by applicable law or agreed to in writing,
@@ -28,6 +28,7 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 
 import com.gargoylesoftware.htmlunit.WebAssert;
@@ -46,14 +47,15 @@ import lombok.extern.slf4j.Slf4j;
 @ExtendWith(SpringExtension.class)
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 @DisplayName("test different scenarions with multiple metadata files")
-public class MultipleMetadataFilesTest extends ConfigWizardTestBase
+@ActiveProfiles("test")
+class MultipleMetadataFilesTest extends ConfigWizardTestBase
 {
 
   /**
    * Test the input validation
    */
   @Test
-  public void testValidationMessages() throws IOException, URISyntaxException
+  void testValidationMessages() throws IOException, URISyntaxException
   {
     // start the user journey until the full config is configured
     HtmlPage startPage = getWebClient().getPage(getRequestUrl(ROOT_PATH));
@@ -86,7 +88,7 @@ public class MultipleMetadataFilesTest extends ConfigWizardTestBase
    * Test that it is possible to store more than one metadata file
    */
   @Test
-  public void testMultipleMetadataFiles() throws IOException, URISyntaxException
+  void testMultipleMetadataFiles() throws IOException, URISyntaxException
   {
     // start the user journey until the full config is configured
     HtmlPage startPage = getWebClient().getPage(getRequestUrl(ROOT_PATH));
@@ -126,7 +128,7 @@ public class MultipleMetadataFilesTest extends ConfigWizardTestBase
    * Test that it is possible to remove a metadata file from the config
    */
   @Test
-  public void testDeleteMetadata() throws IOException, URISyntaxException
+  void testDeleteMetadata() throws IOException, URISyntaxException
   {
     // prepare the configuration that should be read
     Path configDir = prepareConfigDir(getClass().getResource("/test-configurations/full-config"));
@@ -159,7 +161,8 @@ public class MultipleMetadataFilesTest extends ConfigWizardTestBase
                                 "The files have been created at: "
                                              + configDir.resolveSibling(CONFIG_TO_BE_WRITTEN).toString());
 
-    File metadataDir = Paths.get(configDir.resolveSibling(CONFIG_TO_BE_WRITTEN).toString(), "serviceprovider-metadata")
+    File metadataDir = Paths.get(configDir.resolveSibling(CONFIG_TO_BE_WRITTEN).toString(),
+                                 "serviceprovider-metadata")
                             .toFile();
     File[] metadataFiles = metadataDir.listFiles();
     Assertions.assertEquals(1, metadataFiles.length, "One metadata file expected");

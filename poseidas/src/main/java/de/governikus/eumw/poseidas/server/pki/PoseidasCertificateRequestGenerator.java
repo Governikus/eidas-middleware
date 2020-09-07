@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019 Governikus KG. Licensed under the EUPL, Version 1.2 or as soon they will be approved by
+ * Copyright (c) 2020 Governikus KG. Licensed under the EUPL, Version 1.2 or as soon they will be approved by
  * the European Commission - subsequent versions of the EUPL (the "Licence"); You may not use this work except
  * in compliance with the Licence. You may obtain a copy of the Licence at:
  * http://joinup.ec.europa.eu/software/page/eupl Unless required by applicable law or agreed to in writing,
@@ -90,10 +90,11 @@ class PoseidasCertificateRequestGenerator
    * @param sequenceNumber
    */
   void setDataForFirstRequest(byte[] encodedRootCvc,
-                                     byte[] encodedDescription,
-                                     String countryCode,
-                                     String chrMnemonic,
-                                     int sequenceNumber) throws IOException
+                              byte[] encodedDescription,
+                              String countryCode,
+                              String chrMnemonic,
+                              int sequenceNumber)
+    throws IOException
   {
     rootCVC = new ECCVCertificate(encodedRootCvc);
 
@@ -101,8 +102,7 @@ class PoseidasCertificateRequestGenerator
     {
       description = new CertificateDescription(encodedDescription);
     }
-    CertificateHolderAuthorizationTemplate chat = new CertificateHolderAuthorizationTemplate(
-                                                                                             ATConstants.OID_AUTHENTICATION_TERMINALS,
+    CertificateHolderAuthorizationTemplate chat = new CertificateHolderAuthorizationTemplate(ATConstants.OID_AUTHENTICATION_TERMINALS,
                                                                                              new byte[ATConstants.VALUE_BYTE_COUNT]);
 
     addData = new AdditionalData(createChr(countryCode, chrMnemonic, sequenceNumber), null, chat);
@@ -118,9 +118,10 @@ class PoseidasCertificateRequestGenerator
    * @throws IOException
    */
   void prepareSubsequentRequest(byte[] encodedRootCVC,
-                                       byte[] encodedOldCVC,
-                                       byte[] oldPrivateKey,
-                                       byte[] descriptionAsBytes) throws IOException
+                                byte[] encodedOldCVC,
+                                byte[] oldPrivateKey,
+                                byte[] descriptionAsBytes)
+    throws IOException
   {
     rootCVC = new ECCVCertificate(encodedRootCVC);
     oldCVC = new ECCVCertificate(encodedOldCVC);
@@ -169,7 +170,6 @@ class PoseidasCertificateRequestGenerator
                                                          rootCVC,
                                                          description,
                                                          addData,
-                                                         policy.isRequestWithDescriptionHash(),
                                                          true);
     }
 
@@ -189,7 +189,6 @@ class PoseidasCertificateRequestGenerator
                                                        rootCVC,
                                                        description,
                                                        addData,
-                                                       policy.isRequestWithDescriptionHash(),
                                                        false);
   }
 

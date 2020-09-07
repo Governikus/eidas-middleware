@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019 Governikus KG. Licensed under the EUPL, Version 1.2 or as soon they will be approved by
+ * Copyright (c) 2020 Governikus KG. Licensed under the EUPL, Version 1.2 or as soon they will be approved by
  * the European Commission - subsequent versions of the EUPL (the "Licence"); You may not use this work except
  * in compliance with the Licence. You may obtain a copy of the Licence at:
  * http://joinup.ec.europa.eu/software/page/eupl Unless required by applicable law or agreed to in writing,
@@ -38,6 +38,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.security.crypto.bcrypt.BCrypt;
+import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 
 import com.gargoylesoftware.htmlunit.WebAssert;
@@ -60,7 +61,8 @@ import lombok.extern.slf4j.Slf4j;
 @ExtendWith(SpringExtension.class)
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 @DisplayName("test the complete user journey")
-public class CompleteUserJourneyTest extends ConfigWizardTestBase // NOPMD
+@ActiveProfiles("test")
+class CompleteUserJourneyTest extends ConfigWizardTestBase // NOPMD
 {
 
   /**
@@ -74,7 +76,7 @@ public class CompleteUserJourneyTest extends ConfigWizardTestBase // NOPMD
    * and new metadata is uploaded to check that the old metadata is deleted.
    */
   @Test
-  public void testCompleteUserJourney() throws IOException, CertificateException, UnrecoverableKeyException,
+  void testCompleteUserJourney() throws IOException, CertificateException, UnrecoverableKeyException,
     KeyStoreException, NoSuchAlgorithmException
   {
     HtmlPage startPage = getWebClient().getPage(getRequestUrl("/"));
@@ -104,8 +106,8 @@ public class CompleteUserJourneyTest extends ConfigWizardTestBase // NOPMD
    * Test the complete user journey with hsm configuration and without a previous configuration.
    */
   @Test
-  public void testCompleteUserJourneyWithHSM() throws IOException, CertificateException,
-    UnrecoverableKeyException, KeyStoreException, NoSuchAlgorithmException
+  void testCompleteUserJourneyWithHSM() throws IOException, CertificateException, UnrecoverableKeyException,
+    KeyStoreException, NoSuchAlgorithmException
   {
 
     HtmlPage startPage = getWebClient().getPage(getRequestUrl("/"));
@@ -133,7 +135,7 @@ public class CompleteUserJourneyTest extends ConfigWizardTestBase // NOPMD
    * this property key.
    */
   @Test
-  public void testConfigWithoutServerURL() throws IOException, JAXBException, CertificateException,
+  void testConfigWithoutServerURL() throws IOException, JAXBException, CertificateException,
     UnrecoverableKeyException, KeyStoreException, NoSuchAlgorithmException
   {
     createConfig();
@@ -193,8 +195,8 @@ public class CompleteUserJourneyTest extends ConfigWizardTestBase // NOPMD
   {
     // check that there is only one metadata file
     Path path = Paths.get(getTempDirectory(), "serviceprovider-metadata");
-    assertEquals(path.toFile().listFiles().length,
-                 1,
+    assertEquals(1,
+                 path.toFile().listFiles().length,
                  "There must be exactly one service provider metadata file");
 
     // Clear cookies to start from the first page
@@ -226,8 +228,8 @@ public class CompleteUserJourneyTest extends ConfigWizardTestBase // NOPMD
     WebAssert.assertTextPresent(currentPage, "Save location");
     click(currentPage, Button.SAVE);
 
-    assertEquals(path.toFile().listFiles().length,
-                 1,
+    assertEquals(1,
+                 path.toFile().listFiles().length,
                  "There must be exactly one service provider metadata file");
     assertEquals(new String(Files.readAllBytes(path.resolveSibling("newMetadata.xml"))),
                  newMetadataContent,
@@ -552,7 +554,7 @@ public class CompleteUserJourneyTest extends ConfigWizardTestBase // NOPMD
    * this test will fail to upload a certificate
    */
   @Test
-  public void failToUploadCertificate() throws IOException
+  void failToUploadCertificate() throws IOException
   {
     final String certName = "certificate-certificateName";
     final String certFile = "certificate-certificateFile";
@@ -581,7 +583,7 @@ public class CompleteUserJourneyTest extends ConfigWizardTestBase // NOPMD
    * this test will fail to upload a keystore
    */
   @Test
-  public void failToUploadKeystore() throws IOException
+  void failToUploadKeystore() throws IOException
   {
     final String keystoreNameErrorFieldId = "keystore-keystoreName-error";
     final String keystoreAliasErrorFieldId = "keystore-alias-error";

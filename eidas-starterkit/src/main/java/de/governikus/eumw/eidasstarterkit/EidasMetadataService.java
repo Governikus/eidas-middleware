@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019 Governikus KG. Licensed under the EUPL, Version 1.2 or as soon they will be approved by
+ * Copyright (c) 2020 Governikus KG. Licensed under the EUPL, Version 1.2 or as soon they will be approved by
  * the European Commission - subsequent versions of the EUPL (the "Licence"); You may not use this work except
  * in compliance with the Licence. You may obtain a copy of the Licence at:
  * http://joinup.ec.europa.eu/software/page/eupl Unless required by applicable law or agreed to in writing,
@@ -22,6 +22,7 @@ import java.util.Base64;
 import java.util.Date;
 import java.util.List;
 
+import javax.xml.namespace.QName;
 import javax.xml.transform.OutputKeys;
 import javax.xml.transform.Transformer;
 import javax.xml.transform.TransformerException;
@@ -32,6 +33,8 @@ import javax.xml.transform.stream.StreamResult;
 import org.apache.xml.security.algorithms.MessageDigestAlgorithm;
 import org.apache.xml.security.signature.XMLSignature;
 import org.joda.time.DateTime;
+import org.opensaml.core.xml.Namespace;
+import org.opensaml.core.xml.XMLObject;
 import org.opensaml.core.xml.config.XMLObjectProviderRegistrySupport;
 import org.opensaml.core.xml.io.MarshallingException;
 import org.opensaml.core.xml.io.Unmarshaller;
@@ -121,6 +124,12 @@ import net.shibboleth.utilities.java.support.xml.XMLParserException;
 class EidasMetadataService
 {
 
+  private static final String PROTOCOL_VERSION_URI = "http://eidas.europa.eu/entity-attributes/protocol-version";
+
+  private static final String APPLICATION_IDENTIFIER_URI = "http://eidas.europa.eu/entity-attributes/application-identifier";
+
+  private static final String SUPPORTED_PROTOCOL_VERSION = "1.2";
+
   private String id;
 
   private String entityId;
@@ -143,6 +152,12 @@ class EidasMetadataService
 
   private List<EidasPersonAttributes> attributes = new ArrayList<>();
 
+  private String middlewareVersion;
+
+  private boolean doSign;
+
+  private boolean requesterIdFlag;
+
   @Getter(AccessLevel.NONE)
   @Setter(AccessLevel.NONE)
   private List<EidasNameIdType> supportedNameIdTypes = new ArrayList<>();
@@ -158,7 +173,10 @@ class EidasMetadataService
                        String postEndpoint,
                        String redirectEndpoint,
                        List<EidasPersonAttributes> attributes,
-                       List<EidasNameIdType> supportedNameIdTypes)
+                       List<EidasNameIdType> supportedNameIdTypes,
+                       String middlewareVersion,
+                       boolean doSign,
+                       boolean requesterIdFlag)
   {
     super();
     this.id = id;
@@ -187,6 +205,10 @@ class EidasMetadataService
     {
       this.supportedNameIdTypes.add(EidasNameIdType.UNSPECIFIED);
     }
+
+    this.middlewareVersion = middlewareVersion;
+    this.doSign = doSign;
+    this.requesterIdFlag = requesterIdFlag;
   }
 
   byte[] generate(EidasSigner signer) throws CertificateEncodingException, IOException, MarshallingException,
@@ -306,7 +328,10 @@ class EidasMetadataService
     cp.setType(ContactPersonTypeEnumeration.SUPPORT);
     entityDescriptor.getContactPersons().add(cp);
 
-    EntityAttributes entAttr = new EntityAttributesBuilder().buildObject();
+    EntityAttributes entAttr = new EntityAttributesBuilder().buildObject(EntityAttributes.DEFAULT_ELEMENT_NAME);
+    Namespace assertion = new Namespace(SAMLConstants.SAML20_NS, SAMLConstants.SAML20_PREFIX);
+    entAttr.getNamespaceManager().registerNamespaceDeclaration(assertion);
+
     Attribute attr = new AttributeBuilder().buildObject();
     attr.setName("urn:oasis:names:tc:SAML:attribute:assurance-certification");
     attr.setNameFormat(Attribute.URI_REFERENCE);
@@ -314,6 +339,36 @@ class EidasMetadataService
     any.setTextContent("http://eidas.europa.eu/LoA/high");
     attr.getAttributeValues().add(any);
     entAttr.getAttributes().add(attr);
+
+    Attribute protocolAttribute = new AttributeBuilder().buildObject();
+    protocolAttribute.setName(PROTOCOL_VERSION_URI);
+    protocolAttribute.setNameFormat(Attribute.URI_REFERENCE);
+    XSAny protocolVersion = new XSAnyBuilder().buildObject(AttributeValue.DEFAULT_ELEMENT_NAME,
+                                                           new QName("xs:string"));
+    protocolVersion.setTextContent(SUPPORTED_PROTOCOL_VERSION);
+    protocolAttribute.getAttributeValues().add(protocolVersion);
+    entAttr.getAttributes().add(protocolAttribute);
+
+    Attribute appliccationIdentifier = new AttributeBuilder().buildObject();
+    appliccationIdentifier.setName(APPLICATION_IDENTIFIER_URI);
+    appliccationIdentifier.setNameFormat(Attribute.URI_REFERENCE);
+    XSAny applicationIdentifierVersion = new XSAnyBuilder().buildObject(AttributeValue.DEFAULT_ELEMENT_NAME,
+                                                                        new QName("xs:string"));
+    applicationIdentifierVersion.setTextContent("German eIDAS Middleware version: " + middlewareVersion);
+    appliccationIdentifier.getAttributeValues().add(applicationIdentifierVersion);
+    entAttr.getAttributes().add(appliccationIdentifier);
+
+    if (requesterIdFlag)
+    {
+      Attribute requesterIdAttribute = new AttributeBuilder().buildObject();
+      requesterIdAttribute.setName("http://macedir.org/entity-category");
+      requesterIdAttribute.setNameFormat(Attribute.URI_REFERENCE);
+      XSAny requesterIdValue = new XSAnyBuilder().buildObject(AttributeValue.DEFAULT_ELEMENT_NAME);
+      requesterIdValue.setTextContent("http://eidas.europa.eu/entity-attributes/termsofaccess/requesterid");
+      requesterIdAttribute.getAttributeValues().add(requesterIdValue);
+      entAttr.getAttributes().add(requesterIdAttribute);
+    }
+
     Extensions ext = new ExtensionsBuilder().buildObject();
     ext.getUnknownXMLObjects().add(entAttr);
 
@@ -335,15 +390,16 @@ class EidasMetadataService
 
     entityDescriptor.setExtensions(ext);
 
-    byte[] result = null;
     List<Signature> sigs = new ArrayList<>();
-
-    XMLSignatureHandler.addSignature(entityDescriptor,
-                                     signer.getSigKey(),
-                                     signer.getSigCert(),
-                                     signer.getSigType(),
-                                     signer.getSigDigestAlg());
-    sigs.add(entityDescriptor.getSignature());
+    if (doSign)
+    {
+      XMLSignatureHandler.addSignature(entityDescriptor,
+                                       signer.getSigKey(),
+                                       signer.getSigCert(),
+                                       signer.getSigType(),
+                                       signer.getSigDigestAlg());
+      sigs.add(entityDescriptor.getSignature());
+    }
 
     EntityDescriptorMarshaller arm = new EntityDescriptorMarshaller();
     Element all = arm.marshall(entityDescriptor);
@@ -354,6 +410,8 @@ class EidasMetadataService
 
     Transformer trans = Utils.getTransformer();
     trans.setOutputProperty(OutputKeys.ENCODING, StandardCharsets.UTF_8.name());
+
+    byte[] result = null;
     try (ByteArrayOutputStream bout = new ByteArrayOutputStream())
     {
       trans.transform(new DOMSource(all), new StreamResult(bout));
@@ -372,6 +430,7 @@ class EidasMetadataService
     UnmarshallerFactory unmarshallerFactory = XMLObjectProviderRegistrySupport.getUnmarshallerFactory();
     Unmarshaller unmarshaller = unmarshallerFactory.getUnmarshaller(metadataRoot);
     EntityDescriptor metaData = (EntityDescriptor)unmarshaller.unmarshall(metadataRoot);
+
     eidasMetadataService.setSupportContact(unmarshalContactPerson(metaData.getContactPersons(), "support"));
     eidasMetadataService.setTechnicalContact(unmarshalContactPerson(metaData.getContactPersons(),
                                                                     "technical"));
@@ -379,6 +438,8 @@ class EidasMetadataService
     eidasMetadataService.setId(metaData.getID());
     eidasMetadataService.setEntityId(metaData.getEntityID());
     eidasMetadataService.setValidUntil(metaData.getValidUntil().toDate());
+    Extensions extensions = metaData.getExtensions();
+    eidasMetadataService.setMiddlewareVersion(getMiddlewareVersionFromExtension(extensions));
     IDPSSODescriptor idpssoDescriptor = metaData.getIDPSSODescriptor("urn:oasis:names:tc:SAML:2.0:protocol");
     idpssoDescriptor.getSingleSignOnServices().forEach(s -> {
       String bindString = s.getBinding();
@@ -425,6 +486,48 @@ class EidasMetadataService
       }
     }
     return eidasMetadataService;
+  }
+
+  private static String getMiddlewareVersionFromExtension(Extensions extensions)
+  {
+    String middlewareVersion = null;
+    List<XMLObject> orderedChildren = extensions.getOrderedChildren();
+    if (orderedChildren != null)
+    {
+      for ( XMLObject xmlObject : orderedChildren )
+      {
+        if (xmlObject.getDOM() != null && "EntityAttributes".equals(xmlObject.getDOM().getLocalName()))
+        {
+          middlewareVersion = getMiddlewareVersionFromEntityAttributes((EntityAttributes)xmlObject);
+        }
+      }
+    }
+    return middlewareVersion;
+  }
+
+  private static String getMiddlewareVersionFromEntityAttributes(EntityAttributes entityAttributes)
+  {
+    String middlewareVersion = null;
+    List<Attribute> attributes = entityAttributes.getAttributes();
+    for ( Attribute attribute : attributes )
+    {
+      if (attribute.getName().contains("application-identifier"))
+      {
+        middlewareVersion = getMiddlewareVersionFromAttribute(attribute);
+      }
+    }
+    return middlewareVersion;
+  }
+
+  private static String getMiddlewareVersionFromAttribute(Attribute attribute)
+  {
+    List<XMLObject> attributeValues = attribute.getAttributeValues();
+    XSAny xsAnytextContent = (XSAny)attributeValues.get(0);
+    if (xsAnytextContent.getTextContent() != null)
+    {
+      return xsAnytextContent.getTextContent().substring("German eIDAS Middleware version: ".length());
+    }
+    return null;
   }
 
   private static EidasContactPerson unmarshalContactPerson(List<ContactPerson> cps, String contactType)

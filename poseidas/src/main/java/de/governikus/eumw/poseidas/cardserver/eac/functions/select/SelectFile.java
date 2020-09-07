@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019 Governikus KG. Licensed under the EUPL, Version 1.2 or as soon they will be approved by
+ * Copyright (c) 2020 Governikus KG. Licensed under the EUPL, Version 1.2 or as soon they will be approved by
  * the European Commission - subsequent versions of the EUPL (the "Licence"); You may not use this work except
  * in compliance with the Licence. You may obtain a copy of the Licence at:
  * http://joinup.ec.europa.eu/software/page/eupl Unless required by applicable law or agreed to in writing,
@@ -39,8 +39,8 @@ import iso.std.iso_iec._24727.tech.schema.TransmitResponse;
  * @see SelectResult
  * @author Jens Wothe, jw@bos-bremen.de
  */
-public class SelectFile extends AbstractFunctionStep<FileParameter, SelectResult> implements
-  FunctionStep<FileParameter, SelectResult>, TransmitCommandCreator<FileParameter>,
+public class SelectFile extends AbstractFunctionStep<FileParameter, SelectResult>
+  implements FunctionStep<FileParameter, SelectResult>, TransmitCommandCreator<FileParameter>,
   TransmitResultEvaluator<SelectResult>
 {
 
@@ -67,8 +67,7 @@ public class SelectFile extends AbstractFunctionStep<FileParameter, SelectResult
     }
     TransmitAPDUParameter tap = new TransmitAPDUParameter(listTransmitCommand);
 
-    Transmit securedTransmitParameter = super.transmit.parameterStep(tap, sht);
-    return securedTransmitParameter;
+    return super.transmit.parameterStep(tap, sht);
   }
 
   /** {@inheritDoc} */
@@ -108,18 +107,13 @@ public class SelectFile extends AbstractFunctionStep<FileParameter, SelectResult
   @Override
   public SelectResult evaluate(TransmitAPDUResult transmitResult, int[] responseIndices)
   {
-    responseIndices = TransmitResultEvaluator.Util.checkArguments(transmitResult,
-                                                                  responseIndices,
-                                                                  getMinimumCount(),
-                                                                  getMaximumCount());
+    responseIndices = TransmitResultEvaluator.Util.checkArguments(transmitResult, responseIndices);
     if (transmitResult.getThrowable() != null)
     {
       return new SelectResult(transmitResult.getThrowable());
     }
     ResponseAPDU resp = new ResponseAPDU(transmitResult.getData().getOutputAPDU().get(responseIndices[0]));
-    SelectResult selectResult = new SelectResult(resp.getSW() == 0x9000 ? Boolean.TRUE : Boolean.FALSE,
-                                                 resp.getData());
-    return selectResult;
+    return new SelectResult(resp.getSW() == 0x9000 ? Boolean.TRUE : Boolean.FALSE, resp.getData());
   }
 
   /** {@inheritDoc} */

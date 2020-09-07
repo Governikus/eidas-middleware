@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019 Governikus KG. Licensed under the EUPL, Version 1.2 or as soon they will be approved by
+ * Copyright (c) 2020 Governikus KG. Licensed under the EUPL, Version 1.2 or as soon they will be approved by
  * the European Commission - subsequent versions of the EUPL (the "Licence"); You may not use this work except
  * in compliance with the Licence. You may obtain a copy of the Licence at:
  * http://joinup.ec.europa.eu/software/page/eupl Unless required by applicable law or agreed to in writing,
@@ -120,12 +120,9 @@ public final class EIDSessionCallbackHandler implements ECardIDCallback
         LOG.warn(session.getLogPrefix() + "result minor from eCardAPI: "
                  + container.getResult().getResultMinor());
         LOG.warn(session.getLogPrefix() + "result message from eCardAPI: "
-                 + container.getResult().getResultMessage() == null ? "null"
-                   : container.getResult().getResultMessage().getValue());
-        session.setResult(createResult(Constants.EID_MAJOR_ERROR,
-                                       Constants.EID_MINOR_COMMON_INTERNALERROR,
-                                       container.getResult().getResultMessage() == null ? null
-                                         : container.getResult().getResultMessage().getValue()));
+                 + (container.getResult().getResultMessage() == null ? "null"
+                   : container.getResult().getResultMessage().getValue()));
+        session.setResult(container.getResult());
       }
       else
       {

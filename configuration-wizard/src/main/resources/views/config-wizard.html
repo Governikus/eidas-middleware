@@ -1,5 +1,5 @@
 <!--
-  ~ Copyright (c) 2019 Governikus KG. Licensed under the EUPL, Version 1.2 or as soon they will be approved by
+  ~ Copyright (c) 2020 Governikus KG. Licensed under the EUPL, Version 1.2 or as soon they will be approved by
   ~ the European Commission - subsequent versions of the EUPL (the "Licence"); You may not use this work except
   ~ in compliance with the Licence. You may obtain a copy of the Licence at:
   ~ http://joinup.ec.europa.eu/software/page/eupl Unless required by applicable law or agreed to in writing,
@@ -307,13 +307,6 @@
                                                         message           = #{masterlist.trust.anchor.descr}
                                                         )"></div>
 				<div
-					data-th-replace="fragments/view-components.html :: certificateSelection(
-                                                        description       = #{defectlist.trust.anchor},
-                                                        certificateList   = ${certificateList},
-                                                        fieldName         = defectListTrustAnchor,
-                                                        message           = #{defectlist.trust.anchor.descr}
-                                                        )"></div>
-				<div
 					data-th-object="${coreConfiguration.poseidasConfig.commonServiceProviderData.sslKeysForm}"
 					class="table-row"
 					data-th-include="fragments/view-components.html :: certificateSelection(
@@ -326,7 +319,7 @@
 					data-th-object="${coreConfiguration.poseidasConfig.commonServiceProviderData}"
 					class="table-row"
 					data-th-include="fragments/view-components.html :: radioButtonPolicyImplementation(
-                                                        fieldName = policyID,
+                                                        fieldName = dvcaProvider,
                                                         message   = #{dvca.setting.descr})">
 				</div>
 			</div>
@@ -473,6 +466,12 @@
                                                     fieldName     = countryCode,
                                                     description   = #{country},
                                                     message       = null)"></div>
+                <div
+					data-th-replace="fragments/view-components.html :: checkboxRow(
+                                              idBase        = serviceProvider,
+                                              fieldName     = doSignMetadata,
+                                              description   = #{middleware.sign.metadata},
+                                              message       = #{middleware.sign.metadata.descr})"></div>
             </div>
 			<h3 data-th-text="#{contact}"></h3>
 			<p data-th-text="#{contact.information.descr}"

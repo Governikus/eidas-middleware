@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019 Governikus KG. Licensed under the EUPL, Version 1.2 or as soon they will be approved by
+ * Copyright (c) 2020 Governikus KG. Licensed under the EUPL, Version 1.2 or as soon they will be approved by
  * the European Commission - subsequent versions of the EUPL (the "Licence"); You may not use this work except
  * in compliance with the Licence. You may obtain a copy of the Licence at:
  * http://joinup.ec.europa.eu/software/page/eupl Unless required by applicable law or agreed to in writing,
@@ -11,8 +11,9 @@
 package de.governikus.eumw.poseidas.server.pki.model;
 
 import java.io.Serializable;
-import java.text.DateFormat;
+import java.text.SimpleDateFormat;
 import java.util.Date;
+import java.util.Locale;
 import java.util.Map;
 
 import de.governikus.eumw.poseidas.gov2server.constants.admin.AdminPoseidasConstants;
@@ -144,8 +145,9 @@ public class CVCInfoBean implements Serializable {
 		if (date == null) {
 			return null;
 		}
-		DateFormat formater = DateFormat.getDateInstance(DateFormat.SHORT);
-		return formater.format(date);
+		String pattern = "yyyy-MM-dd";
+		SimpleDateFormat simpleDateFormat = new SimpleDateFormat(pattern, Locale.ENGLISH);
+		return simpleDateFormat.format(date);
 	}
 
 	public String getValidFrom() {

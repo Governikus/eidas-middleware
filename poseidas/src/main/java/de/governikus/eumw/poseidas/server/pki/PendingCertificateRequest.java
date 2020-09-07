@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019 Governikus KG. Licensed under the EUPL, Version 1.2 or as soon they will be approved by
+ * Copyright (c) 2020 Governikus KG. Licensed under the EUPL, Version 1.2 or as soon they will be approved by
  * the European Commission - subsequent versions of the EUPL (the "Licence"); You may not use this work except
  * in compliance with the Licence. You may obtain a copy of the Licence at:
  * http://joinup.ec.europa.eu/software/page/eupl Unless required by applicable law or agreed to in writing,
@@ -41,20 +41,13 @@ public class PendingCertificateRequest implements Serializable
   public enum Status
   {
     /** request has been created - private key is in HSM (in database for test only) */
-    Created,
+    CREATED,
     /** request has been sent and accepted by the BerCA service */
-    Sent,
-    /** certificate has been received and stored in the database */
-    @Deprecated
-    CertReceived,
+    SENT,
     /**
-     * black list and public sector key have been downloaded. There is no status for finished, the last step
-     * is downloading master and defect list, after that the pending request is simply deleted
+     * one step of the request process failed and some administrator should intervene - see additional info
      */
-    @Deprecated
-    SectorKeyReceived,
-    /** one step of the request process failed and some administrator should intervene - see additional info */
-    Failure
+    FAILURE
   }
 
   @Id
@@ -98,7 +91,7 @@ public class PendingCertificateRequest implements Serializable
   PendingCertificateRequest(String refID)
   {
     this.refID = refID;
-    status = Status.Created;
+    status = Status.CREATED;
     lastChanged = new Date();
   }
 

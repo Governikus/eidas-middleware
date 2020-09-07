@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019 Governikus KG. Licensed under the EUPL, Version 1.2 or as soon they will be approved by
+ * Copyright (c) 2020 Governikus KG. Licensed under the EUPL, Version 1.2 or as soon they will be approved by
  * the European Commission - subsequent versions of the EUPL (the "Licence"); You may not use this work except
  * in compliance with the Licence. You may obtain a copy of the Licence at:
  * http://joinup.ec.europa.eu/software/page/eupl Unless required by applicable law or agreed to in writing,
@@ -26,10 +26,14 @@ import javax.crypto.NoSuchPaddingException;
 import javax.crypto.SecretKey;
 import javax.crypto.spec.IvParameterSpec;
 
+import org.bouncycastle.crypto.BlockCipher;
+import org.bouncycastle.crypto.Mac;
+import org.bouncycastle.crypto.engines.AESEngine;
+import org.bouncycastle.crypto.macs.CMac;
+import org.bouncycastle.crypto.params.KeyParameter;
+
 import de.governikus.eumw.poseidas.cardbase.AssertUtil;
 import de.governikus.eumw.poseidas.cardbase.ByteUtil;
-import de.governikus.eumw.poseidas.cardbase.crypto.mac.CMAC;
-import de.governikus.eumw.poseidas.cardbase.crypto.mac.CMACFactory;
 
 
 /**
@@ -56,6 +60,11 @@ public final class CipherUtil
    * @see #AES_CMAC_MAXIMUM_LENGTH
    */
   private static final int AES_CMAC_MINIMUM_LENGTH = 1;
+
+  /**
+   * Constant for the expected length of a MAC.
+   */
+  public static final int AES_CMAC_DEFAULT_LENGTH = 8;
 
   /**
    * Constant of AES CMAC maximum length (same as initialization vector length, count of bytes): <tt>16</tt>.
@@ -98,10 +107,10 @@ public final class CipherUtil
    * @see Cipher#init(int, java.security.Key, java.security.spec.AlgorithmParameterSpec)
    */
   private static final Cipher getCipher(String algorithm,
-                                       SecretKey key,
-                                       int mode,
-                                       IvParameterSpec iv,
-                                       String provider)
+                                        SecretKey key,
+                                        int mode,
+                                        IvParameterSpec iv,
+                                        String provider)
   {
     // first check arguments contain valid values
     checkGetCipherArguments(algorithm, key, mode, iv, provider);
@@ -192,10 +201,8 @@ public final class CipherUtil
     if (mode != Cipher.ENCRYPT_MODE && mode != Cipher.DECRYPT_MODE && mode != Cipher.WRAP_MODE
         && mode != Cipher.UNWRAP_MODE)
     {
-      throw new IllegalArgumentException(
-                                         "illegal mode: "
-                                           + mode
-                                           + ", Cipher.ENCRYPT_MODE, Cipher.DECRYPT_MODE, Cipher.WRAP_MODE or Cipher.UNWRAP_MODE only permitted");
+      throw new IllegalArgumentException("illegal mode: " + mode
+                                         + ", Cipher.ENCRYPT_MODE, Cipher.DECRYPT_MODE, Cipher.WRAP_MODE or Cipher.UNWRAP_MODE only permitted");
     }
     if (!algorithm.startsWith(key.getAlgorithm()))
     {
@@ -331,9 +338,8 @@ public final class CipherUtil
     String[] result = new String[IDX_TRANSFORMATION_PADDING + 1];
     if (tmp.length > IDX_TRANSFORMATION_PADDING + 1)
     {
-      throw new IllegalArgumentException(
-                                         "transformation contains more parts as expected, maximum of parts is"
-                                           + (IDX_TRANSFORMATION_PADDING + 1));
+      throw new IllegalArgumentException("transformation contains more parts as expected, maximum of parts is"
+                                         + (IDX_TRANSFORMATION_PADDING + 1));
     }
     System.arraycopy(tmp, 0, result, 0, tmp.length);
     for ( int i = 0 ; i < result.length ; i++ )
@@ -369,8 +375,8 @@ public final class CipherUtil
                                          SecretKey key,
                                          IvParameterSpec iv,
                                          byte[] data,
-                                         String provider) throws
-    IllegalBlockSizeException, BadPaddingException
+                                         String provider)
+    throws IllegalBlockSizeException, BadPaddingException
   {
     return cipherAES(algorithm, key, Cipher.ENCRYPT_MODE, iv, data, provider);
   }
@@ -398,8 +404,8 @@ public final class CipherUtil
                                          SecretKey key,
                                          IvParameterSpec iv,
                                          byte[] data,
-                                         String provider) throws
-    IllegalBlockSizeException, BadPaddingException
+                                         String provider)
+    throws IllegalBlockSizeException, BadPaddingException
   {
     return cipherAES(algorithm, key, Cipher.DECRYPT_MODE, iv, data, provider);
   }
@@ -421,12 +427,12 @@ public final class CipherUtil
    * @throws IllegalBlockSizeException
    */
   private static final byte[] cipherAES(String algorithm,
-                                       SecretKey key,
-                                       int mode,
-                                       IvParameterSpec iv,
-                                       byte[] data,
-                                       String provider) throws
-    IllegalBlockSizeException, BadPaddingException
+                                        SecretKey key,
+                                        int mode,
+                                        IvParameterSpec iv,
+                                        byte[] data,
+                                        String provider)
+    throws IllegalBlockSizeException, BadPaddingException
   {
     checkCipherKey(key, ALGORITHM_AES, KEY_SIZES_LIST_AES);
     checkCipherMode(mode);
@@ -445,20 +451,13 @@ public final class CipherUtil
    *          <code>null</code> or empty byte array as IV ({@link IvParameterSpec#getIV()})
    * @param outputLength optional output length ({@link #AES_CMAC_MINIMUM_LENGTH} to
    *          {@value #AES_CMAC_MAXIMUM_LENGTH} bytes possible), <code>null</code> to use default
-   *          {@link #AES_CMAC_MAXIMUM_LENGTH}, if not <code>null</code> between
+   *          {@link #AES_CMAC_DEFAULT_LENGTH}
    * @return calculated checksum (CMAC as requested {@link #AES_CMAC_MINIMUM_LENGTH} to
    *         {@value #AES_CMAC_MAXIMUM_LENGTH} bytes)
    * @throws IllegalArgumentException if bytes, key or initialization vector invalid, also fails if padding
    *           not specified and passed bytes not externally padded to AES block size
-   * @throws BadPaddingException
-   * @throws IllegalBlockSizeException
-   * @throws NoSuchAlgorithmException
-   * @throws NoSuchPaddingException
-   * @throws InvalidKeyException
    */
   public static final byte[] cMAC(byte[] bytes, SecretKey macKey, IvParameterSpec iv, Integer outputLength)
-    throws InvalidKeyException, NoSuchPaddingException, NoSuchAlgorithmException,
-    IllegalBlockSizeException, BadPaddingException
   {
     AssertUtil.notNull(bytes, "data");
     AssertUtil.notNull(macKey, "MAC key");
@@ -487,21 +486,16 @@ public final class CipherUtil
    * @param macKey key for MAC calculation, <code>null</code> or other than AES key not permitted
    * @param outputLength optional output length ({@link #AES_CMAC_MINIMUM_LENGTH} to
    *          {@value #AES_CMAC_MAXIMUM_LENGTH} bytes possible), <code>null</code> to use default
-   *          {@link #AES_CMAC_MAXIMUM_LENGTH}, if not <code>null</code> between
+   *          {@link #AES_CMAC_DEFAULT_LENGTH}
    * @return calculated checksum (CMAC as requested {@link #AES_CMAC_MINIMUM_LENGTH} to
    *         {@value #AES_CMAC_MAXIMUM_LENGTH} bytes)
-   * @throws IllegalArgumentException if data <code>null</code> or empty, key invalid
-   * @throws NoSuchAlgorithmException
-   * @throws NoSuchPaddingException
-   * @throws InvalidKeyException
-   * @throws BadPaddingException
-   * @throws IllegalBlockSizeException
+   * @throws IllegalArgumentException if data <code>null</code> or empty, key invalid, output length not
+   *           within borders
    * @see #AES_CMAC_MINIMUM_LENGTH
+   * @see #AES_CMAC_DEFAULT_LENGTH
    * @see #AES_CMAC_MAXIMUM_LENGTH
    */
-  private static final byte[] cMAC(byte[] bytes, SecretKey macKey, Integer outputLength)
-    throws InvalidKeyException, NoSuchPaddingException, NoSuchAlgorithmException,
-    IllegalBlockSizeException, BadPaddingException
+  public static final byte[] cMAC(byte[] bytes, SecretKey macKey, Integer outputLength)
   {
     AssertUtil.notNull(bytes, "data");
     AssertUtil.notNull(macKey, "MAC key");
@@ -513,23 +507,25 @@ public final class CipherUtil
     Integer outputLengthInt = outputLength;
     if (outputLength == null)
     {
-      outputLengthInt = AES_CMAC_MAXIMUM_LENGTH;
+      outputLengthInt = AES_CMAC_DEFAULT_LENGTH;
     }
-    else
+    else if (outputLength < AES_CMAC_MINIMUM_LENGTH)
     {
-      if (outputLength < AES_CMAC_MINIMUM_LENGTH)
-      {
-        throw new IllegalArgumentException("output length exceeds minimum of " + AES_CMAC_MINIMUM_LENGTH
-                                           + " bytes");
-      }
-      if (outputLength > AES_CMAC_MAXIMUM_LENGTH)
-      {
-        throw new IllegalArgumentException("output length exceeds maximum of " + AES_CMAC_MAXIMUM_LENGTH
-                                           + " bytes");
-      }
+      throw new IllegalArgumentException("output length exceeds minimum of " + AES_CMAC_MINIMUM_LENGTH
+                                         + " bytes");
     }
-    // to be replaced as soon as Java provides own implementation of CMAC
-    CMAC cmac = CMACFactory.newMAC(macKey, "AES/ECB/NOPADDING");
-    return cmac.mac(bytes, outputLengthInt);
+    else if (outputLength > AES_CMAC_MAXIMUM_LENGTH)
+    {
+      throw new IllegalArgumentException("output length exceeds maximum of " + AES_CMAC_MAXIMUM_LENGTH
+                                         + " bytes");
+    }
+
+    BlockCipher bc = new AESEngine();
+    Mac m = new CMac(bc, outputLengthInt * 8);
+    m.init(new KeyParameter(macKey.getEncoded()));
+    byte[] result = new byte[outputLengthInt];
+    m.update(bytes, 0, bytes.length);
+    m.doFinal(result, 0);
+    return result;
   }
 }

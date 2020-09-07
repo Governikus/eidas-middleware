@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019 Governikus KG. Licensed under the EUPL, Version 1.2 or as soon they will be approved by
+ * Copyright (c) 2020 Governikus KG. Licensed under the EUPL, Version 1.2 or as soon they will be approved by
  * the European Commission - subsequent versions of the EUPL (the "Licence"); You may not use this work except
  * in compliance with the Licence. You may obtain a copy of the Licence at:
  * http://joinup.ec.europa.eu/software/page/eupl Unless required by applicable law or agreed to in writing,
@@ -62,6 +62,19 @@ import de.governikus.eumw.eidascommon.ErrorCodeException;
 final class XMLSignatureHandler
 {
 
+  private static final String SHA_1_PATTERN = "^SHA-?1";
+
+  private static final String SHA_256_PATTERN = "^SHA-?256";
+
+  private static final String SHA_256_PSS_PATTERN = "^SHA-?256-?PSS";
+
+  private static final String SHA_384_PATTERN = "^SHA-?384";
+
+  private static final String SHA_512_PATTERN = "^SHA-?512";
+
+  public static final String GIVEN_DIGEST_ALGORITHM = "Given digest algorithm ";
+
+
   /**
    * available kinds of key info
    */
@@ -96,6 +109,12 @@ final class XMLSignatureHandler
     {
       return;
     }
+
+    if (sigDigestAlg == null)
+    {
+      throw new IllegalArgumentException("Signature Digest Algorithm must not be null.");
+    }
+
     Signature sig = new SignatureBuilder().buildObject();
     BasicX509Credential credential = new BasicX509Credential(cert);
     credential.setPrivateKey(key);
@@ -104,77 +123,21 @@ final class XMLSignatureHandler
 
     if ("EC".equalsIgnoreCase(keyAlg) || "ECDSA".equalsIgnoreCase(keyAlg))
     {
-      if ("SHA1".equals(sigDigestAlg) || "SHA-1".equals(sigDigestAlg))
-      {
-        sig.setSignatureAlgorithm(SignatureConstants.ALGO_ID_SIGNATURE_ECDSA_SHA1);
-      }
-      else if ("SHA256".equals(sigDigestAlg) || "SHA-256".equals(sigDigestAlg)
-               || "SHA256-PSS".equals(sigDigestAlg)) // SHA256-PSS at the moment sigDigestAlg will be always
-                                                     // SHA256-PSS
-      {
-        sig.setSignatureAlgorithm(org.apache.xml.security.signature.XMLSignature.ALGO_ID_SIGNATURE_ECDSA_SHA256);
-      }
-
-      else if ("SHA384".equals(sigDigestAlg) || "SHA-384".equals(sigDigestAlg))
-      {
-        sig.setSignatureAlgorithm(SignatureConstants.ALGO_ID_SIGNATURE_ECDSA_SHA384);
-      }
-      else if ("SHA512".equals(sigDigestAlg) || "SHA-512".equals(sigDigestAlg))
-      {
-        sig.setSignatureAlgorithm(SignatureConstants.ALGO_ID_SIGNATURE_ECDSA_SHA512);
-      }
-      else
-      {
-        throw new IllegalArgumentException("Given digest algorithm " + sigDigestAlg + " not supported");
-      }
+      checkForECSignatures(sigDigestAlg, sig);
     }
     else if ("RSA".equalsIgnoreCase(keyAlg))
     {
-      if ("SHA1".equals(sigDigestAlg) || "SHA-1".equals(sigDigestAlg))
-      {
-        sig.setSignatureAlgorithm(SignatureConstants.ALGO_ID_SIGNATURE_RSA_SHA1);
-      }
-      else if ("SHA256".equals(sigDigestAlg) || "SHA-256".equals(sigDigestAlg))
-      {
-        sig.setSignatureAlgorithm(SignatureConstants.ALGO_ID_SIGNATURE_RSA_SHA256);
-      }
-      else if ("SHA256-PSS".equals(sigDigestAlg) || "SHA-256-PSS".equals(sigDigestAlg))
-      {
-        sig.setSignatureAlgorithm(XMLSignature.ALGO_ID_SIGNATURE_RSA_SHA256_MGF1);
-      }
-      else if ("SHA384".equals(sigDigestAlg) || "SHA-384".equals(sigDigestAlg))
-      {
-        sig.setSignatureAlgorithm(SignatureConstants.ALGO_ID_SIGNATURE_RSA_SHA384);
-      }
-      else if ("SHA512".equals(sigDigestAlg) || "SHA-512".equals(sigDigestAlg))
-      {
-        sig.setSignatureAlgorithm(SignatureConstants.ALGO_ID_SIGNATURE_RSA_SHA512);
-      }
-      else
-      {
-        throw new IllegalArgumentException("Given digest algorithm " + sigDigestAlg
-                                           + " not supported with RSA keys, use SHA1, SHA256, SHA384 or SHA512");
-      }
+      checkForRSASignatures(sigDigestAlg, sig);
     }
     else if ("DSA".equalsIgnoreCase(keyAlg))
     {
-      if ("SHA1".equals(sigDigestAlg) || "SHA-1".equals(sigDigestAlg))
-      {
-        sig.setSignatureAlgorithm(SignatureConstants.ALGO_ID_SIGNATURE_DSA_SHA1);
-      }
-      else
-      {
-        throw new IllegalArgumentException("Given digest algorithm " + sigDigestAlg
-                                           + " not supported with DSA keys, use SHA1");
-      }
+      checkForDSASignatures(sigDigestAlg, sig);
     }
     else
     {
       throw new IllegalArgumentException("Unsupported key algorithm " + keyAlg
                                          + ", use RSA, DSA, ECDSA or EC");
     }
-    // PSS
-    // org.apache.xml.security.signature.XMLSignature.ALGO_ID_SIGNATURE_RSA_SHA384_MGF1
     sig.setCanonicalizationAlgorithm(SignatureConstants.ALGO_ID_C14N_EXCL_OMIT_COMMENTS);
     KeyInfo keyInfo = new KeyInfoBuilder().buildObject();
     X509Data x509Data = new X509DataBuilder().buildObject();
@@ -194,6 +157,73 @@ final class XMLSignatureHandler
     {
       ((SAMLObjectContentReference)sig.getContentReferences()
                                       .get(0)).setDigestAlgorithm(EncryptionConstants.ALGO_ID_DIGEST_SHA256);
+    }
+  }
+
+  private static void checkForDSASignatures(String sigDigestAlg, Signature sig)
+  {
+    if (sigDigestAlg.matches(SHA_1_PATTERN))
+    {
+      sig.setSignatureAlgorithm(SignatureConstants.ALGO_ID_SIGNATURE_DSA_SHA1);
+    }
+    else
+    {
+      throw new IllegalArgumentException(GIVEN_DIGEST_ALGORITHM + sigDigestAlg
+                                         + " not supported with DSA keys, use SHA1");
+    }
+  }
+
+  private static void checkForRSASignatures(String sigDigestAlg, Signature sig)
+  {
+    if (sigDigestAlg.matches(SHA_1_PATTERN))
+    {
+      sig.setSignatureAlgorithm(SignatureConstants.ALGO_ID_SIGNATURE_RSA_SHA1);
+    }
+    else if (sigDigestAlg.matches(SHA_256_PATTERN))
+    {
+      sig.setSignatureAlgorithm(SignatureConstants.ALGO_ID_SIGNATURE_RSA_SHA256);
+    }
+    else if (sigDigestAlg.matches(SHA_256_PSS_PATTERN))
+    {
+      sig.setSignatureAlgorithm(XMLSignature.ALGO_ID_SIGNATURE_RSA_SHA256_MGF1);
+    }
+    else if (sigDigestAlg.matches(SHA_384_PATTERN))
+    {
+      sig.setSignatureAlgorithm(SignatureConstants.ALGO_ID_SIGNATURE_RSA_SHA384);
+    }
+    else if (sigDigestAlg.matches(SHA_512_PATTERN))
+    {
+      sig.setSignatureAlgorithm(SignatureConstants.ALGO_ID_SIGNATURE_RSA_SHA512);
+    }
+    else
+    {
+      throw new IllegalArgumentException(GIVEN_DIGEST_ALGORITHM + sigDigestAlg
+                                         + " not supported with RSA keys, use SHA1, SHA256, SHA384 or SHA512");
+    }
+  }
+
+  private static void checkForECSignatures(String sigDigestAlg, Signature sig)
+  {
+    if (sigDigestAlg.matches(SHA_1_PATTERN))
+    {
+      sig.setSignatureAlgorithm(SignatureConstants.ALGO_ID_SIGNATURE_ECDSA_SHA1);
+    }
+    else if (sigDigestAlg.matches(SHA_256_PATTERN) || sigDigestAlg.matches(SHA_256_PSS_PATTERN))
+    // SHA256-PSS at the moment sigDigestAlg will be always SHA256
+    {
+      sig.setSignatureAlgorithm(XMLSignature.ALGO_ID_SIGNATURE_ECDSA_SHA256);
+    }
+    else if (sigDigestAlg.matches(SHA_384_PATTERN))
+    {
+      sig.setSignatureAlgorithm(SignatureConstants.ALGO_ID_SIGNATURE_ECDSA_SHA384);
+    }
+    else if (sigDigestAlg.matches(SHA_512_PATTERN))
+    {
+      sig.setSignatureAlgorithm(SignatureConstants.ALGO_ID_SIGNATURE_ECDSA_SHA512);
+    }
+    else
+    {
+      throw new IllegalArgumentException(GIVEN_DIGEST_ALGORITHM + sigDigestAlg + " not supported");
     }
   }
 

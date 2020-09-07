@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019 Governikus KG. Licensed under the EUPL, Version 1.2 or as soon they will be approved by
+ * Copyright (c) 2020 Governikus KG. Licensed under the EUPL, Version 1.2 or as soon they will be approved by
  * the European Commission - subsequent versions of the EUPL (the "Licence"); You may not use this work except
  * in compliance with the Licence. You may obtain a copy of the Licence at:
  * http://joinup.ec.europa.eu/software/page/eupl Unless required by applicable law or agreed to in writing,
@@ -238,8 +238,8 @@ public final class ECMath
 
     BigInteger n = pubKey.getParams().getOrder();
 
-    if (n.compareTo(r) != 1 || n.compareTo(s) != 1 || r.compareTo(BigInteger.valueOf(0)) != 1
-        || s.compareTo(BigInteger.valueOf(0)) != 1)
+    if (n.compareTo(r) < 1 || n.compareTo(s) < 1 || r.compareTo(BigInteger.valueOf(0)) < 1
+        || s.compareTo(BigInteger.valueOf(0)) < 1)
     {
       return false;
     }
@@ -249,7 +249,7 @@ public final class ECMath
 
     BigInteger sInv = s.modInverse(n);
 
-    BigInteger u1 = sInv.multiply(OS2I(digest)).mod(n);
+    BigInteger u1 = sInv.multiply(os2i(digest)).mod(n);
     BigInteger u2 = sInv.multiply(r).mod(n);
 
     BigInteger a = pubKey.getParams().getCurve().getA();
@@ -260,11 +260,7 @@ public final class ECMath
     ECPoint q = addECPoints(q1, q2, a, prime);
 
     BigInteger v = q.getAffineX();
-    if (v.equals(r))
-    {
-      return true;
-    }
-    return false;
+    return v.equals(r);
   }
 
   /**
@@ -274,7 +270,7 @@ public final class ECMath
    * @return {@link BigInteger} representing converted octet string
    * @throws IllegalArgumentException if <code>null</code> given as octet string
    */
-  private static final BigInteger OS2I(byte[] os)
+  private static final BigInteger os2i(byte[] os)
   {
     if (os == null)
     {

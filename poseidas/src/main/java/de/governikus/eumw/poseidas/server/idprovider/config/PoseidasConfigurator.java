@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019 Governikus KG. Licensed under the EUPL, Version 1.2 or as soon they will be approved by
+ * Copyright (c) 2020 Governikus KG. Licensed under the EUPL, Version 1.2 or as soon they will be approved by
  * the European Commission - subsequent versions of the EUPL (the "Licence"); You may not use this work except
  * in compliance with the Licence. You may obtain a copy of the Licence at:
  * http://joinup.ec.europa.eu/software/page/eupl Unless required by applicable law or agreed to in writing,
@@ -22,12 +22,13 @@ import org.apache.commons.logging.LogFactory;
 import com.google.common.base.Strings;
 
 import de.governikus.eumw.eidascommon.Utils;
+import de.governikus.eumw.poseidas.server.idprovider.exceptions.InvalidConfigurationException;
 
 
 /**
- * Provides configuration for poseidas. Separate configurations may be needed for project specific
- * business delegates. All "worker" classes in poseidas shall not keep an own copy of the configuration (for
- * instance in serialized form) but re-fetch the configuration object from here if necessary.
+ * Provides configuration for poseidas. Separate configurations may be needed for project specific business
+ * delegates. All "worker" classes in poseidas shall not keep an own copy of the configuration (for instance
+ * in serialized form) but re-fetch the configuration object from here if necessary.
  *
  * @author TT
  */
@@ -68,13 +69,13 @@ public final class PoseidasConfigurator
         lastUpdate = System.currentTimeMillis();
         currentVersion = loadConfig();
       }
-      catch (FileNotFoundException e)
+      catch (FileNotFoundException | JAXBException e)
       {
         LOG.error("cannot get current configuration version", e);
       }
-      catch (JAXBException e)
+      catch (InvalidConfigurationException e)
       {
-        LOG.error("cannot get current configuration version", e);
+        LOG.error("current config is invalid", e);
       }
     }
     return currentVersion;
@@ -85,7 +86,8 @@ public final class PoseidasConfigurator
    *
    * @return null if there is no such configuration
    */
-  private CoreConfigurationDto loadConfig() throws FileNotFoundException, JAXBException
+  private CoreConfigurationDto loadConfig()
+    throws FileNotFoundException, JAXBException, InvalidConfigurationException
   {
     File configDir = null;
     if (!Strings.isNullOrEmpty(System.getProperty("spring.config.additional-location")))
@@ -104,4 +106,13 @@ public final class PoseidasConfigurator
     File configfile = new File(configDir, "POSeIDAS.xml");
     return CoreConfigurationDto.readFrom(new FileReader(configfile));
   }
+
+  /**
+   * Only meant for test purposes to reset the singleton object after every test
+   */
+  public static void reset()
+  {
+    instance = new PoseidasConfigurator();
+  }
+
 }

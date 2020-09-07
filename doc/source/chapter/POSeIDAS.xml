@@ -25,10 +25,6 @@
                     for better readability this certificate is excluded.
                     See template on the virtual machine
                 </masterListTrustAnchor>
-                <defectListTrustAnchor>
-                    for better readability this certificate is excluded.
-                    See template on the virtual machine
-                </defectListTrustAnchor>
                 <policyImplementationId>govDvca</policyImplementationId>
                 <sslKeys id="testDVCA">
                     <serverCertificate>

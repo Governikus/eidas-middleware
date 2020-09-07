@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019 Governikus KG. Licensed under the EUPL, Version 1.2 or as soon they will be approved by
+ * Copyright (c) 2020 Governikus KG. Licensed under the EUPL, Version 1.2 or as soon they will be approved by
  * the European Commission - subsequent versions of the EUPL (the "Licence"); You may not use this work except
  * in compliance with the Licence. You may obtain a copy of the Licence at:
  * http://joinup.ec.europa.eu/software/page/eupl Unless required by applicable law or agreed to in writing,
@@ -92,8 +92,7 @@ public class Session implements Serializable
    * @throws ChatOptionNotAllowedException if required or optional field is not allowed to be active
    * @throws IllegalArgumentException if the SessionInput contains invalid or missing data
    */
-  Session(SessionInput sessionInput, Long timeout)
-    throws ChatOptionNotAllowedException
+  Session(SessionInput sessionInput, Long timeout) throws ChatOptionNotAllowedException
   {
     if (sessionInput == null)
     {
@@ -133,7 +132,7 @@ public class Session implements Serializable
     }
     List<TerminalData> cvcList = formatCVCList(sessionInput.getTerminalCertificate(),
                                                sessionInput.getCvcChain());
-    if (cvcList == null || cvcList.isEmpty())
+    if (cvcList.isEmpty())
     {
       throw new IllegalArgumentException(sessionInput.getLogPrefix() + "CVC list is empty."
                                          + " At least one CVC must be set in the session input");
@@ -187,50 +186,46 @@ public class Session implements Serializable
    */
   private List<TerminalData> formatCVCList(TerminalData terminalCertificate, List<TerminalData> cvcChain)
   {
-    if (cvcChain == null || terminalCertificate == null || cvcChain.size() < 1)
+    if (cvcChain == null || terminalCertificate == null || cvcChain.isEmpty())
     {
       throw new IllegalArgumentException(sessionInput.getLogPrefix()
                                          + "Session input requires at last one CVC file: DV certificate");
     }
-    else
+    if (LOG.isDebugEnabled())
     {
       LOG.debug(sessionInput.getLogPrefix() + "RECEIVED " + getCVCListOutput(cvcChain));
+      LOG.debug(sessionInput.getLogPrefix() + "Parse session input CVC list with size: " + cvcChain.size());
     }
-    LOG.debug(sessionInput.getLogPrefix() + "Parse session input CVC list with size: "
-              + cvcChain.size());
     List<TerminalData> formattedChain = new ArrayList<>();
 
     // Check the terminal CVC and add it to the list as first element
     if (isSelfSigned(terminalCertificate))
     {
-      throw new IllegalArgumentException(sessionInput.getLogPrefix() + "First CVC in list is self signed and not the terminal CVC");
+      throw new IllegalArgumentException(sessionInput.getLogPrefix()
+                                         + "First CVC in list is self signed and not the terminal CVC");
     }
     TerminalData check = terminalCertificate;
     while (true)
     {
-      LOG.debug(sessionInput.getLogPrefix() + "Check CVC: " + check.getHolderReferenceString()
-                + "/" + check.getCAReferenceString());
-      TerminalData holder = getReference(check, cvcChain);
-      if (holder != null)
+      if (LOG.isDebugEnabled())
       {
-        if (isSelfSigned(holder))
-        {
-          break;
-        }
-        else
-        {
-          formattedChain.add(holder);
-          check = holder;
-        }
+        LOG.debug(sessionInput.getLogPrefix() + "Check CVC: " + check.getHolderReferenceString() + "/"
+                  + check.getCAReferenceString());
       }
-      else
+      TerminalData holder = getReference(check, cvcChain);
+      if (holder == null || isSelfSigned(holder))
       {
         break;
       }
+      formattedChain.add(holder);
+      check = holder;
     }
-    LOG.debug(sessionInput.getLogPrefix() + "SORT " + getCVCListOutput(formattedChain));
-    LOG.debug(sessionInput.getLogPrefix() + "Parsed session input and set new list with size: "
-              + formattedChain.size());
+    if (LOG.isDebugEnabled())
+    {
+      LOG.debug(sessionInput.getLogPrefix() + "SORT " + getCVCListOutput(formattedChain));
+      LOG.debug(sessionInput.getLogPrefix() + "Parsed session input and set new list with size: "
+                + formattedChain.size());
+    }
     return formattedChain;
   }
 
@@ -287,8 +282,8 @@ public class Session implements Serializable
 
   private static EIDSequence createSequence(TerminalData cvc,
                                             List<TerminalData> cvcList,
-                                            SessionInput sessionInput) throws
-    ChatOptionNotAllowedException
+                                            SessionInput sessionInput)
+    throws ChatOptionNotAllowedException
   {
     return new EIDSequence(cvc, cvcList, sessionInput);
   }

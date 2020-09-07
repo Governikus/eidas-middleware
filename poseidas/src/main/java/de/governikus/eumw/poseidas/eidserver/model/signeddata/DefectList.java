@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019 Governikus KG. Licensed under the EUPL, Version 1.2 or as soon they will be approved by
+ * Copyright (c) 2020 Governikus KG. Licensed under the EUPL, Version 1.2 or as soon they will be approved by
  * the European Commission - subsequent versions of the EUPL (the "Licence"); You may not use this work except
  * in compliance with the Licence. You may obtain a copy of the Licence at:
  * http://joinup.ec.europa.eu/software/page/eupl Unless required by applicable law or agreed to in writing,
@@ -117,8 +117,8 @@ public class DefectList extends AbstractASN1List
           if (objectAt instanceof ASN1Integer)
           {
             LOGGER.debug("{" + i + "} Get defect list version");
-            ASN1Integer version = (ASN1Integer)objectAt;
-            int value = version.getValue().intValue();
+            ASN1Integer versionInt = (ASN1Integer)objectAt;
+            int value = versionInt.getValue().intValue();
             if (value != DEFECT_LIST_VERSION)
             {
               LOGGER.warn("Defect list with unexpected version: " + value);
@@ -186,14 +186,7 @@ public class DefectList extends AbstractASN1List
    */
   public boolean containDefectsForCard(IssuerAndSerialNumber identifier)
   {
-    if (getDefects(identifier).isEmpty())
-    {
-      return false;
-    }
-    else
-    {
-      return true;
-    }
+    return !getDefects(identifier).isEmpty();
   }
 
 
@@ -217,7 +210,7 @@ public class DefectList extends AbstractASN1List
    */
   public List<Defect> getDefects(IssuerAndSerialNumber identifier)
   {
-    List<Defect> defects = new ArrayList<>();
+    List<Defect> foundDefects = new ArrayList<>();
     for ( Defect defect : this.defects )
     {
       if (defect.containsIssuerAndSerialNumber())
@@ -225,11 +218,11 @@ public class DefectList extends AbstractASN1List
         IssuerAndSerialNumber signerDocumentIdentifier = defect.getSignerDocumentIdentifier();
         if (identifier.equals(signerDocumentIdentifier))
         {
-          defects.add(defect);
+          foundDefects.add(defect);
         }
       }
     }
-    return defects;
+    return foundDefects;
   }
 
   /**

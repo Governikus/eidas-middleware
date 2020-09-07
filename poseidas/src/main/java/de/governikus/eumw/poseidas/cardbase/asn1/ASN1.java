@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019 Governikus KG. Licensed under the EUPL, Version 1.2 or as soon they will be approved by
+ * Copyright (c) 2020 Governikus KG. Licensed under the EUPL, Version 1.2 or as soon they will be approved by
  * the European Commission - subsequent versions of the EUPL (the "Licence"); You may not use this work except
  * in compliance with the Licence. You may obtain a copy of the Licence at:
  * http://joinup.ec.europa.eu/software/page/eupl Unless required by applicable law or agreed to in writing,
@@ -549,8 +549,7 @@ public class ASN1
   {
     if (!isSequence() && !isSet() && !isConstructed())
     {
-      throw new UnsupportedOperationException(
-                                              "not a sequence or set, no functionality to add or remove any child element");
+      throw new UnsupportedOperationException("not a sequence or set, no functionality to add or remove any child element");
     }
   }
 
@@ -834,10 +833,8 @@ public class ASN1
   public synchronized byte[] getEncoded()
   {
     byte[] result = null;
-    ByteArrayOutputStream baos = null;
-    try
+    try (ByteArrayOutputStream baos = new ByteArrayOutputStream())
     {
-      baos = new ByteArrayOutputStream();
       baos.write(this.dTagBytes);
       if (isChanged())
       {
@@ -875,21 +872,6 @@ public class ASN1
     catch (IOException e)
     {
       LOG.debug("getting encoded failed: " + e.getMessage());
-    }
-    finally
-    {
-      if (baos != null)
-      {
-        try
-        {
-          baos.flush();
-          baos.close();
-        }
-        catch (IOException e)
-        {
-          LOG.debug("closing stream failed: " + e.getMessage());
-        }
-      }
     }
     return result;
   }
@@ -1051,8 +1033,7 @@ public class ASN1
         return null;
       }
     }
-    Class<? extends ASN1Encoder> encoderClass = path.getEncoderClass();
-    if (tmp != null && encoderClass != null)
+    if (path.getEncoderClass() != null)
     {
       tmp = path.getASN1(tmp);
     }

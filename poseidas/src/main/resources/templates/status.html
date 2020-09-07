@@ -1,0 +1,71 @@
+<!--
+  ~ Copyright (c) 2020 Governikus KG. Licensed under the EUPL, Version 1.2 or as soon they will be approved by
+  ~ the European Commission - subsequent versions of the EUPL (the "Licence"); You may not use this work except
+  ~ in compliance with the Licence. You may obtain a copy of the Licence at:
+  ~ http://joinup.ec.europa.eu/software/page/eupl Unless required by applicable law or agreed to in writing,
+  ~ software distributed under the Licence is distributed on an "AS IS" basis, WITHOUT WARRANTIES OR CONDITIONS
+  ~ OF ANY KIND, either express or implied. See the Licence for the specific language governing permissions and
+  ~ limitations under the Licence.
+  -->
+
+<!DOCTYPE html>
+
+<html xmlns="http://www.w3.org/1999/xhtml" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title>POSeIDAS CVC status</title>
+    <!--Bootstrap-->
+    <link rel="stylesheet" th:href="@{/admin-interface/webjars/bootstrap/4.5.0/css/bootstrap.css}">
+    <script th:src="@{/admin-interface/webjars/jquery/3.5.1/jquery.min.js}"></script>
+    <script th:src="@{/admin-interface/webjars/bootstrap/4.5.0/js/bootstrap.bundle.min.js}"></script>
+    <script th:src="@{/admin-interface/js/poseidas.js}"></script>
+</head>
+<body>
+<div class="content">
+    <div th:replace="fragments/header :: header"/>
+    <div class="container mt-4">
+        <div class="row">
+            <div class="col-9">
+                <h1>Status of available eID Service Providers</h1>
+                <h2>Status TLS: <span th:text="${result.serverTlsValid} ? '✔' : '❌'"/></h2>
+            </div>
+            <div class="col-3 text-right">
+                <form action="#" th:action="@{/admin-interface/status}" method=get>
+                    <input type="submit" class="btn btn-primary" value="Restart check"/>
+                </form>
+                Last check at: <span th:text="${lastCheck}"/>
+            </div>
+        </div>
+        <table class="table table-striped">
+            <thead>
+            <tr>
+                <th scope="col">Entity Name</th>
+                <th scope="col">CVC is valid</th>
+                <th scope="col">Service Provider URL matches CVC URL</th>
+                <th scope="col">TLS hash found in CVC description</th>
+                <th scope="col">Hint</th>
+            </tr>
+            </thead>
+            <tbody>
+            <tr th:each="entity: ${result.providerCvcChecks}">
+                <td th:text="${entity.key}"/>
+                <td th:class="${entity.value.cvcValidity} ? 'table-success' : 'table-danger'"
+                    th:text="${entity.value.cvcValidity} ? '✔' : '❌'"/>
+                <td th:class="${entity.value.cvcUrlMatch} ? 'table-success' : 'table-danger'"
+                    th:text="${entity.value.cvcUrlMatch} ? '✔' : '❌'"/>
+                <td th:class="${entity.value.cvcTlsMatch} ? 'table-success' : 'table-danger'"
+                    th:text="${entity.value.cvcTlsMatch} ? '✔' : '❌'"/>
+                <td th:if="${entity.value.cvcPresent and not entity.value.cvcTlsMatch}">The TLS certificate has not been
+                    found in the CVC description. Please contact the DVCA support - <a
+                            th:href="${@CVCController.getMailto(entity)}">Send mail</a>
+                </td>
+                <td th:if="${not entity.value.cvcPresent}">No CVC present!</td>
+                <td th:if="${entity.value.cvcPresent and entity.value.cvcTlsMatch}">-</td>
+            </tr>
+            </tbody>
+        </table>
+    </div>
+</div>
+</div>
+</body>
+</html>
+

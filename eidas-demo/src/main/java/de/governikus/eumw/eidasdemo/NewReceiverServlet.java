@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019 Governikus KG. Licensed under the EUPL, Version 1.2 or as soon they will be approved by
+ * Copyright (c) 2020 Governikus KG. Licensed under the EUPL, Version 1.2 or as soon they will be approved by
  * the European Commission - subsequent versions of the EUPL (the "Licence"); You may not use this work except
  * in compliance with the Licence. You may obtain a copy of the Licence at:
  * http://joinup.ec.europa.eu/software/page/eupl Unless required by applicable law or agreed to in writing,
@@ -15,8 +15,6 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.security.cert.X509Certificate;
-import java.util.HashMap;
-import java.util.Map;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -26,10 +24,10 @@ import javax.xml.transform.Transformer;
 import javax.xml.transform.dom.DOMSource;
 import javax.xml.transform.stream.StreamResult;
 
+import org.apache.commons.lang.StringUtils;
 import org.opensaml.core.xml.config.XMLObjectProviderRegistrySupport;
 import org.opensaml.core.xml.io.UnmarshallingException;
 import org.springframework.stereotype.Controller;
-import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.w3c.dom.Document;
@@ -39,23 +37,14 @@ import de.governikus.eumw.eidascommon.HttpRedirectUtils;
 import de.governikus.eumw.eidascommon.Utils;
 import de.governikus.eumw.eidascommon.Utils.X509KeyPair;
 import de.governikus.eumw.eidasstarterkit.EidasResponse;
-import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
 import net.shibboleth.utilities.java.support.component.ComponentInitializationException;
 import net.shibboleth.utilities.java.support.xml.XMLParserException;
 
 
 /**
- * This is how to receive a eIDAS SAML response in HTTP Redirect binding.<br>
- * The eIDAS Middleware redirects the users browser to this servlet. The request contains the SAML response
- * and we parse it but there is no sessionID in this request. The result of the eIDAS response is stored with
- * a new sessionID in the {@link NewReceiverServlet#errorsMap} or {@link NewReceiverServlet#resultsXMLMap}.
- * Then this servlet redirects the user's browser to the same URL but this time with the sessionID. This time
- * the servlet retrieves the data to the corresponding sessionID and displays the result page.<br>
- * The URL at which this sevlet is deployed must match the same address as the subject URL in the CVC
- * description. (Beschreibung des Berechtigungszertifikats).
+ * Parse the incoming SAML response and show the data
  *
- * @author hme
  * @author prange
  */
 @Slf4j
@@ -64,36 +53,10 @@ import net.shibboleth.utilities.java.support.xml.XMLParserException;
 public class NewReceiverServlet
 {
 
-  private static final String UNPARSED = "unparsed";
-
   /**
    * Provides utility methods
    */
   private final SamlExampleHelper helper;
-
-  /**
-   * Class to store the errors of a SAML response.
-   */
-  @Data
-  private static class ErrorDetails
-  {
-
-    private String[] errors;
-  }
-
-  private static final long serialVersionUID = 1L;
-
-  /**
-   * Stores the sessionID and the ErrorDetails
-   */
-  private static Map<String, ErrorDetails> errorsMap = new HashMap<>();
-
-  /**
-   * Stores the sessionID and the raw XML eIDASResponse as well as the extracted data from the response if
-   * possible.
-   */
-  private static Map<String, String> resultsXMLMap = new HashMap<>();
-
 
   /**
    * Default constructor for spring autowiring
@@ -104,56 +67,24 @@ public class NewReceiverServlet
   }
 
   /**
-   * Show the decrypted eIDAS response after being redirected from this post request
-   */
-  @GetMapping
-  public void doGet(HttpServletRequest request, HttpServletResponse response)
-  {
-    processRequest(request, response);
-  }
-
-  /**
-   * The Middlware ResponseSender performs a post request with the SAML response to this endpoint
+   * The Middleware ResponseSender performs a post request with the SAML response to this endpoint
    */
   @PostMapping
   public void doPost(HttpServletRequest req, HttpServletResponse resp)
   {
-    processRequest(req, resp);
-  }
-
-  /**
-   * Process the incoming request dependent if the sessionID is present
-   */
-  private void processRequest(HttpServletRequest request, HttpServletResponse response)
-  {
-    try
-    {
-      String sessionID = request.getParameter("sessionID");
-      if (sessionID == null)
-      {
-        processIncomingSAMLResponse(request, response);
-      }
-      else
-      {
-        displayResultPage(response, sessionID);
-      }
-    }
-    catch (IOException e)
-    {
-      log.error(e.getMessage(), e);
-      helper.handleResponseException(response);
-    }
+    final SamlResult samlResult = processIncomingSAMLResponse(req);
+    displayResultPage(samlResult, resp);
   }
 
   /**
    * This method is called when the eIDAS Middleware sent the user's browser to this servlet. The eIDAs
-   * response data is extracted and the browser is redirected to this servlet with the sessionID.
+   * response data is extracted and the browser shows the data
+   *
+   * @param request The incoming HTTP request to extract the SAML and relay state data
+   * @return The SamlResult containing the retrieved data or an error message
    */
-  private void processIncomingSAMLResponse(HttpServletRequest request,
-                                           HttpServletResponse response)
-    throws IOException
+  private SamlResult processIncomingSAMLResponse(HttpServletRequest request)
   {
-    String sessionID = Utils.generateUniqueID();
     try
     {
       String samlResponseBase64 = request.getParameter(HttpRedirectUtils.RESPONSE_PARAMNAME);
@@ -161,126 +92,96 @@ public class NewReceiverServlet
       byte[] samlResponse = DatatypeConverter.parseBase64Binary(samlResponseBase64);
 
       String relayState = request.getParameter(HttpRedirectUtils.RELAYSTATE_PARAMNAME);
-      extractDataFromResponse(sessionID, samlResponse, relayState);
-
-      forwardToURL(request, response, sessionID);
+      return extractDataFromResponse(samlResponse, relayState);
     }
-    catch (Exception e)
+    catch (ErrorCodeException | IOException | ComponentInitializationException | XMLParserException
+      | UnmarshallingException e)
     {
-      log.error("got error code from SAML Server", e);
-      storeError(sessionID, request, response, e.getMessage(), "");
+      log.error("Error during SAML response processing", e);
+      SamlResult samlResult = new SamlResult();
+      samlResult.setErrorDetails(e.getMessage());
+      return samlResult;
     }
   }
 
   /**
-   * Parse the eIDAS response and store the data with the sessionID
+   * Parse the eIDAS response return the data
    *
-   * @param sessionID The ID for this response
    * @param samlResponse The response content
-   * @param relayState
+   * @param relayState The value of the relay state parameter
+   * @return The SAML result containing the retrieved data
    */
-  private void extractDataFromResponse(String sessionID, byte[] samlResponse, String relayState)
+  private SamlResult extractDataFromResponse(byte[] samlResponse, String relayState)
     throws XMLParserException, IOException, UnmarshallingException, ErrorCodeException,
     ComponentInitializationException
   {
     String saml = getXMLFromBytes(samlResponse);
-    resultsXMLMap.put(sessionID + UNPARSED, saml);
-    resultsXMLMap.put(sessionID + HttpRedirectUtils.RELAYSTATE_PARAMNAME, relayState);
+    SamlResult samlResult = new SamlResult();
+    samlResult.setSamlResponse(saml);
+    samlResult.setRelayState(relayState);
 
     try (InputStream is = new ByteArrayInputStream(samlResponse))
     {
       EidasResponse resp = EidasResponse.parse(is,
                                                new X509KeyPair[]{helper.demoDecryptionKeyPair},
                                                new X509Certificate[]{helper.serverSigCert});
-      StringBuilder sb = new StringBuilder();
+      StringBuilder attributes = new StringBuilder();
 
       resp.getAttributes().forEach(e -> {
-        sb.append(e.toString());
-        sb.append("\n");
+        attributes.append(e.toString());
+        attributes.append("\n");
       });
-
-      resultsXMLMap.put(sessionID, sb.toString());
+      samlResult.setAttributes(attributes.toString());
+      return samlResult;
     }
   }
 
   /**
-   * Load the data or errors with the sessionID and display this in the user's browser.
+   * Display the result in the user's browser.
    *
+   * @param samlResult The SamlResult do be displayed
    * @param response response object
-   * @param sessionID the sessionID
    */
-  private void displayResultPage(HttpServletResponse response, String sessionID) throws IOException
+  private void displayResultPage(SamlResult samlResult, HttpServletResponse response)
   {
-    response.setContentType("text/plain");
-    response.setCharacterEncoding("UTF-8");
-    if (resultsXMLMap.containsKey(sessionID + HttpRedirectUtils.RELAYSTATE_PARAMNAME))
+    try
     {
-      response.getWriter().write("Relay State: ");
-      if (resultsXMLMap.get(sessionID + HttpRedirectUtils.RELAYSTATE_PARAMNAME) == null)
+      if (samlResult.getErrorDetails() == null)
       {
-        response.getWriter().write("<null>");
-      }
-      else if ("".equals(resultsXMLMap.get(sessionID + HttpRedirectUtils.RELAYSTATE_PARAMNAME)))
-      {
-        response.getWriter().write("<emtpy string>");
+        response.setContentType("text/plain");
+        response.setCharacterEncoding("UTF-8");
+        response.getWriter().write("Relay State: ");
+        if (samlResult.getRelayState() == null)
+        {
+          response.getWriter().write("<null>");
+        }
+        else if (StringUtils.isBlank(samlResult.getRelayState()))
+        {
+          response.getWriter().write("<emtpy string>");
+        }
+        else
+        {
+          response.getWriter().write(samlResult.getRelayState());
+        }
+        response.getWriter().write("\n\r");
+        response.getWriter().write("\n\r");
+        response.getWriter().write(samlResult.getSamlResponse());
+        response.getWriter().write("\n\r");
+        response.getWriter().write("\n\r");
+        response.getWriter().write(samlResult.getAttributes());
       }
       else
       {
-        response.getWriter().write(resultsXMLMap.get(sessionID + HttpRedirectUtils.RELAYSTATE_PARAMNAME));
-      }
-      response.getWriter().write("\n\r");
-      response.getWriter().write("\n\r");
-    }
-    if (resultsXMLMap.containsKey(sessionID + UNPARSED))
-    {
-      response.getWriter().write("" + resultsXMLMap.get(sessionID + UNPARSED));
-      resultsXMLMap.remove(sessionID + UNPARSED);
-    }
-    response.getWriter().write("\n\r");
-    response.getWriter().write("\n\r");
-    if (resultsXMLMap.containsKey(sessionID))
-    {
-      response.getWriter().write("" + resultsXMLMap.get(sessionID));
-      resultsXMLMap.remove(sessionID);
-    }
-    if (errorsMap.containsKey(sessionID))
-    {
-      response.getWriter().write("Error ");
-      for ( String s : errorsMap.get(sessionID).getErrors() )
-      {
+        response.getWriter().write("Error:");
         response.getWriter().write("\n\r");
-        response.getWriter().write(s);
+        response.getWriter().write(samlResult.getErrorDetails());
       }
     }
-  }
-
-  /**
-   * This stores an error in our session and forwards the Browser to the result page.
-   */
-  private void storeError(String sessionID,
-                          HttpServletRequest request,
-                          HttpServletResponse response,
-                          String... details)
-    throws IOException
-  {
-    ErrorDetails result = new ErrorDetails();
-    result.setErrors(details);
-    errorsMap.put(sessionID, result);
-
-    forwardToURL(request, response, sessionID);
-  }
-
-  /**
-   * Redirects the browser to the result page.
-   */
-  private void forwardToURL(HttpServletRequest request, HttpServletResponse response, String sessionID)
-    throws IOException
-  {
-    response.setHeader("Cache-Control", "no-cache, no-store");
-    response.setHeader("Pragma", "no-cache");
-    response.sendRedirect(response.encodeRedirectURL(Utils.createOwnUrlPrefix(request)
-                                                     + request.getContextPath() + "/NewReceiverServlet"
-                                                     + "?sessionID=" + sessionID));
+    catch (IOException e)
+    {
+      log.error("Cannot show result page", e);
+      response.setStatus(500);
+    }
   }
 
   /**

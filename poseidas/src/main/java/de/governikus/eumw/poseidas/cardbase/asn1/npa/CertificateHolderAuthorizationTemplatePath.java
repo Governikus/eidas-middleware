@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019 Governikus KG. Licensed under the EUPL, Version 1.2 or as soon they will be approved by
+ * Copyright (c) 2020 Governikus KG. Licensed under the EUPL, Version 1.2 or as soon they will be approved by
  * the European Commission - subsequent versions of the EUPL (the "Licence"); You may not use this work except
  * in compliance with the Licence. You may obtain a copy of the Licence at:
  * http://joinup.ec.europa.eu/software/page/eupl Unless required by applicable law or agreed to in writing,
@@ -77,20 +77,6 @@ public class CertificateHolderAuthorizationTemplatePath extends ASN1Path
    * Constructor.
    *
    * @param name name
-   * @param tagBytes tag bytes of child element
-   * @param index index of child element
-   * @param parent optional parent path element
-   * @see ASN1Path#ASN1Path(String, byte[], int, ASN1Path)
-   */
-  private CertificateHolderAuthorizationTemplatePath(String name, byte[] tagBytes, int index, ASN1Path parent)
-  {
-    super(name, tagBytes, index, parent);
-  }
-
-  /**
-   * Constructor.
-   *
-   * @param name name
    * @param tagByte tag of child element
    * @param index index of child element
    * @param parent optional parent path element
@@ -108,29 +94,26 @@ public class CertificateHolderAuthorizationTemplatePath extends ASN1Path
   /**
    * Path to holder authorization template of certificate body.
    */
-  static final CertificateHolderAuthorizationTemplatePath CERTIFICATE_HOLDER_AUTHORIZATION_TEMPLATE = new CertificateHolderAuthorizationTemplatePath(
-                                                                                                                                                            "HOLDER_AUTH_TEMPLATE",
+  static final CertificateHolderAuthorizationTemplatePath CERTIFICATE_HOLDER_AUTHORIZATION_TEMPLATE = new CertificateHolderAuthorizationTemplatePath("HOLDER_AUTH_TEMPLATE",
                                                                                                                                                      ASN1EidConstants.TAG_CERTIFICATE_HOLDER_AUTHORIZATION_TEMPLATE.toArray(),
-                                                                                                                                                            0,
-                                                                                                                                                            null,
-                                                                                                                                                            CertificateHolderAuthorizationTemplate.class);
+                                                                                                                                                     0,
+                                                                                                                                                     null,
+                                                                                                                                                     CertificateHolderAuthorizationTemplate.class);
 
   /**
    * Path to OID of holder authorization template.
    */
-  static final CertificateHolderAuthorizationTemplatePath HAT_OID = new CertificateHolderAuthorizationTemplatePath(
-                                                                                                                          "HAT_OID",
-                                                                                                                          ASN1Constants.UNIVERSAL_TAG_OID,
-                                                                                                                          0,
-                                                                                                                          CERTIFICATE_HOLDER_AUTHORIZATION_TEMPLATE,
-                                                                                                                          OID.class);
+  static final CertificateHolderAuthorizationTemplatePath HAT_OID = new CertificateHolderAuthorizationTemplatePath("HAT_OID",
+                                                                                                                   ASN1Constants.UNIVERSAL_TAG_OID,
+                                                                                                                   0,
+                                                                                                                   CERTIFICATE_HOLDER_AUTHORIZATION_TEMPLATE,
+                                                                                                                   OID.class);
 
   /**
    * Path to role and access rights of holder authorization template.
    */
-  static final CertificateHolderAuthorizationTemplatePath HAT_ACCESS_ROLE_AND_RIGHTS = new CertificateHolderAuthorizationTemplatePath(
-                                                                                                                                             "HAT_ACCESS_ROLE_AND_RIGHTS",
-                                                                                                                                             ASN1EidConstants.TAG_DISCRETIONARY_DATA,
-                                                                                                                                             0,
-                                                                                                                                             CERTIFICATE_HOLDER_AUTHORIZATION_TEMPLATE);
+  static final CertificateHolderAuthorizationTemplatePath HAT_ACCESS_ROLE_AND_RIGHTS = new CertificateHolderAuthorizationTemplatePath("HAT_ACCESS_ROLE_AND_RIGHTS",
+                                                                                                                                      ASN1EidConstants.TAG_DISCRETIONARY_DATA,
+                                                                                                                                      0,
+                                                                                                                                      CERTIFICATE_HOLDER_AUTHORIZATION_TEMPLATE);
 }

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019 Governikus KG. Licensed under the EUPL, Version 1.2 or as soon they will be approved by
+ * Copyright (c) 2020 Governikus KG. Licensed under the EUPL, Version 1.2 or as soon they will be approved by
  * the European Commission - subsequent versions of the EUPL (the "Licence"); You may not use this work except
  * in compliance with the Licence. You may obtain a copy of the Licence at:
  * http://joinup.ec.europa.eu/software/page/eupl Unless required by applicable law or agreed to in writing,
@@ -52,6 +52,7 @@ import de.governikus.eumw.eidascommon.ErrorCodeException;
 import de.governikus.eumw.eidascommon.Utils;
 import de.governikus.eumw.eidasstarterkit.person_attributes.EidasPersonAttributes;
 import de.governikus.eumw.eidasstarterkit.template.TemplateLoader;
+import lombok.extern.slf4j.Slf4j;
 import net.shibboleth.utilities.java.support.component.ComponentInitializationException;
 import net.shibboleth.utilities.java.support.xml.BasicParserPool;
 import net.shibboleth.utilities.java.support.xml.XMLParserException;
@@ -60,6 +61,7 @@ import net.shibboleth.utilities.java.support.xml.XMLParserException;
 /**
  * @author hohnholt
  */
+@Slf4j
 public class EidasRequest
 {
 
@@ -74,6 +76,8 @@ public class EidasRequest
   private String issueInstant;
 
   private String providerName;
+
+  private String requesterId;
 
   private boolean forceAuthn;
 
@@ -109,14 +113,14 @@ public class EidasRequest
   }
 
   EidasRequest(String destination,
-               EidasRequestSectorType selectorType,
+               EidasRequestSectorType sectorType,
                EidasNameIdType nameIdPolicy,
                EidasLoA loa,
                String issuer,
                String providerName,
                EidasSigner signer)
   {
-    this("_" + Utils.generateUniqueID(), destination, selectorType, nameIdPolicy, loa, issuer, providerName,
+    this("_" + Utils.generateUniqueID(), destination, sectorType, nameIdPolicy, loa, issuer, providerName,
          signer);
   }
 
@@ -222,7 +226,7 @@ public class EidasRequest
     this.isPassive = isPassive;
   }
 
-  public void setIsForceAuthn(Boolean forceAuthn)
+  public void setIsForceAuthn(boolean forceAuthn)
   {
     this.forceAuthn = forceAuthn;
   }
@@ -298,6 +302,11 @@ public class EidasRequest
     return providerName;
   }
 
+  public String getRequesterId()
+  {
+    return requesterId;
+  }
+
   public void setProviderName(String providerName)
   {
     this.providerName = providerName;
@@ -336,77 +345,126 @@ public class EidasRequest
       checkSignature(eidasReq.request.getSignature(), authors);
     }
 
-    // isPassive SHOULD be false
-    if (!eidasReq.request.isPassive())
-    {
-      eidasReq.setPassive(eidasReq.request.isPassive());
-    }
-    else
-    {
-      throw new ErrorCodeException(ErrorCode.ILLEGAL_REQUEST_SYNTAX,
-                                   "Unsupported IsPassive value:" + eidasReq.request.isPassive());
-    }
-
-    // forceAuthn MUST be true as per spec
-    if (eidasReq.request.isForceAuthn())
-    {
-      eidasReq.setIsForceAuthn(eidasReq.request.isForceAuthn());
-    }
-    else
-    {
-      throw new ErrorCodeException(ErrorCode.ILLEGAL_REQUEST_SYNTAX,
-                                   "Unsupported ForceAuthn value:" + eidasReq.request.isForceAuthn());
-    }
+    eidasReq.setPassive(getIsPassiveFromAuthnRequest(eidasReq));
+    eidasReq.setIsForceAuthn(getIsForceAuthnFromAuthnRequest(eidasReq));
 
     eidasReq.id = eidasReq.request.getID();
-    // there should be one AuthnContextClassRef
-    AuthnContextClassRef ref = eidasReq.request.getRequestedAuthnContext().getAuthnContextClassRefs().get(0);
-    if (null != ref)
-    {
-      eidasReq.authClassRef = EidasLoA.getValueOf(ref.getDOM().getTextContent());
-    }
-    else
-    {
-      throw new ErrorCodeException(ErrorCode.ILLEGAL_REQUEST_SYNTAX, "No AuthnContextClassRef element.");
-    }
+    eidasReq.authClassRef = getAuthnContextClassRefFromAuthnRequest(eidasReq);
     String namiIdformat = eidasReq.request.getNameIDPolicy().getFormat();
     eidasReq.nameIdPolicy = EidasNameIdType.getValueOf(namiIdformat);
 
     eidasReq.issueInstant = Constants.format(eidasReq.request.getIssueInstant().toDate());
     eidasReq.issuer = eidasReq.request.getIssuer().getDOM().getTextContent();
     eidasReq.destination = eidasReq.request.getDestination();
+    setRequesterIdOrProviderName(eidasReq);
+    processAuthnRequestExtension(eidasReq);
 
-    if (null != eidasReq.request.getProviderName() && !eidasReq.request.getProviderName().isEmpty())
-    {
-      eidasReq.providerName = eidasReq.request.getProviderName();
-    }
-    else
-    {
-      throw new ErrorCodeException(ErrorCode.ILLEGAL_REQUEST_SYNTAX, "No providerName attribute.");
-    }
+    return eidasReq;
+  }
 
+  private static void processAuthnRequestExtension(EidasRequest eidasReq) throws ErrorCodeException
+  {
     for ( XMLObject extension : eidasReq.request.getExtensions().getOrderedChildren() )
     {
       if ("RequestedAttributes".equals(extension.getElementQName().getLocalPart()))
       {
-        for ( XMLObject attribute : extension.getOrderedChildren() )
-        {
-          Element el = attribute.getDOM();
-          EidasPersonAttributes eidasPersonAttributes = getEidasPersonAttributes(el);
-          if (null != eidasPersonAttributes)
-          {
-            eidasReq.requestedAttributes.put(eidasPersonAttributes,
-                                             Boolean.parseBoolean(el.getAttribute("isRequired")));
-          }
-        }
+        collectEidasPersonAttributes(eidasReq, extension);
       }
       else if ("SPType".equals(extension.getElementQName().getLocalPart()))
       {
         eidasReq.sectorType = EidasRequestSectorType.getValueOf(extension.getDOM().getTextContent());
       }
     }
+  }
 
-    return eidasReq;
+  private static void collectEidasPersonAttributes(EidasRequest eidasReq, XMLObject extension)
+  {
+    for ( XMLObject attribute : extension.getOrderedChildren() )
+    {
+      Element el = attribute.getDOM();
+      EidasPersonAttributes eidasPersonAttributes = getEidasPersonAttributes(el);
+      if (null != eidasPersonAttributes)
+      {
+        eidasReq.requestedAttributes.put(eidasPersonAttributes,
+                                         Boolean.parseBoolean(el.getAttribute("isRequired")));
+      }
+    }
+  }
+
+  private static void setRequesterIdOrProviderName(EidasRequest eidasReq) throws ErrorCodeException
+  {
+    checkIfRequesterIdAndProviderNameArePresent(eidasReq);
+
+    if (isRequesterIdPresent(eidasReq))
+    {
+      eidasReq.requesterId = eidasReq.request.getScoping().getRequesterIDs().get(0).getRequesterID();
+    }
+    else if (isProviderNamePresent(eidasReq))
+    {
+      eidasReq.providerName = eidasReq.request.getProviderName();
+    }
+    else
+    {
+      log.debug("No requesterId or providerName attribute are present.");
+      throw new ErrorCodeException(ErrorCode.ILLEGAL_REQUEST_SYNTAX,
+                                   "No requesterId or providerName attribute are present");
+    }
+  }
+
+  private static void checkIfRequesterIdAndProviderNameArePresent(EidasRequest eidasReq)
+    throws ErrorCodeException
+  {
+    if (isRequesterIdPresent(eidasReq) && isProviderNamePresent(eidasReq))
+    {
+      log.debug("Both requesterId and providerName attributes are present.");
+      throw new ErrorCodeException(ErrorCode.ILLEGAL_REQUEST_SYNTAX,
+                                   "Both requesterId and providerName attributes are present");
+    }
+  }
+
+  private static EidasLoA getAuthnContextClassRefFromAuthnRequest(EidasRequest eidasReq)
+    throws ErrorCodeException
+  {
+    // there should be one AuthnContextClassRef
+    AuthnContextClassRef ref = eidasReq.request.getRequestedAuthnContext().getAuthnContextClassRefs().get(0);
+    if (ref == null)
+    {
+      throw new ErrorCodeException(ErrorCode.ILLEGAL_REQUEST_SYNTAX, "No AuthnContextClassRef element.");
+    }
+    return EidasLoA.getValueOf(ref.getDOM().getTextContent());
+  }
+
+  private static boolean getIsForceAuthnFromAuthnRequest(EidasRequest eidasReq) throws ErrorCodeException
+  {
+    // forceAuthn MUST be true as per spec
+    if (Boolean.TRUE.equals(eidasReq.request.isForceAuthn()))
+    {
+      return true;
+    }
+    throw new ErrorCodeException(ErrorCode.ILLEGAL_REQUEST_SYNTAX,
+                                 "Unsupported ForceAuthn value:" + eidasReq.request.isForceAuthn());
+  }
+
+  private static boolean getIsPassiveFromAuthnRequest(EidasRequest eidasReq) throws ErrorCodeException
+  {
+    // isPassive SHOULD be false
+    if (Boolean.FALSE.equals(eidasReq.request.isPassive()))
+    {
+      return false;
+    }
+    throw new ErrorCodeException(ErrorCode.ILLEGAL_REQUEST_SYNTAX,
+                                 "Unsupported IsPassive value:" + eidasReq.request.isPassive());
+  }
+
+  private static boolean isRequesterIdPresent(EidasRequest eidasReq)
+  {
+    return eidasReq.request.getScoping() != null && eidasReq.request.getScoping().getRequesterIDs() != null
+           && eidasReq.request.getScoping().getRequesterIDs().size() == 1;
+  }
+
+  private static boolean isProviderNamePresent(EidasRequest eidasReq)
+  {
+    return null != eidasReq.request.getProviderName() && !eidasReq.request.getProviderName().isEmpty();
   }
 
   /**
@@ -437,8 +495,7 @@ public class EidasRequest
     return eidasPersonAttributes;
   }
 
-  static void checkSignature(Signature sig, List<X509Certificate> trustedAnchorList)
-    throws ErrorCodeException
+  static void checkSignature(Signature sig, List<X509Certificate> trustedAnchorList) throws ErrorCodeException
   {
     if (sig == null)
     {

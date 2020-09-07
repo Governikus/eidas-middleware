@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019 Governikus KG. Licensed under the EUPL, Version 1.2 or as soon they will be approved by
+ * Copyright (c) 2020 Governikus KG. Licensed under the EUPL, Version 1.2 or as soon they will be approved by
  * the European Commission - subsequent versions of the EUPL (the "Licence"); You may not use this work except
  * in compliance with the Licence. You may obtain a copy of the Licence at:
  * http://joinup.ec.europa.eu/software/page/eupl Unless required by applicable law or agreed to in writing,
@@ -58,7 +58,8 @@ public class InputDataCVCChecker
                              byte[][] chain,
                              byte[] masterList,
                              byte[] defectList,
-                             byte[] blackList) throws GovManagementException
+                             byte[] blackList)
+    throws GovManagementException
   {
     assertNotEmpty(cvc, "ID.jsp.nPaConfiguration.cvc");
     assertNotEmpty(cvcDescription, "ID.jsp.nPaConfiguration.cvcDescription");
@@ -68,15 +69,19 @@ public class InputDataCVCChecker
     assertNotEmpty(blackList, "ID.jsp.nPaConfiguration.blackList");
     if (chain == null || chain.length == 0)
     {
-      throw new GovManagementException(IDManagementCodes.MISSING_INPUT_VALUE, "ID.jsp.nPaConfiguration.chain");
+      throw new GovManagementException(IDManagementCodes.MISSING_INPUT_VALUE,
+                                       "ID.jsp.nPaConfiguration.chain");
     }
     assertNotEmpty(chain[0], "ID.jsp.nPaConfiguration.chain");
     checkCVCAndDescription(cvc, cvcDescription, cvcPrivateKey, riKey1, psKey);
     checkMasterList(masterList);
     checkDefectList(defectList);
-    try {
-    checkBlackList(blackList, new ECCVCertificate(cvc).getSectorPublicKeyHash());
-    } catch (IOException e) {
+    try
+    {
+      checkBlackList(blackList, new ECCVCertificate(cvc).getSectorPublicKeyHash());
+    }
+    catch (IOException e)
+    {
       throw new IllegalArgumentException("unable to parse given cvc", e);
     }
   }
@@ -97,9 +102,9 @@ public class InputDataCVCChecker
         new MasterList(masterList);
       }
     }
-    catch (Throwable t)
+    catch (Exception e)
     {
-      throw invalidInput("masterList", t, false);
+      throw invalidInput("masterList", e, false);
     }
   }
 
@@ -115,9 +120,9 @@ public class InputDataCVCChecker
     {
       new DefectList(defectList);
     }
-    catch (Throwable t)
+    catch (Exception e)
     {
-      throw invalidInput("defectList", t, false);
+      throw invalidInput("defectList", e, false);
     }
   }
 
@@ -127,13 +132,17 @@ public class InputDataCVCChecker
     {
       new CertificateDescription(cvcDescription);
     }
-    catch (Throwable t)
+    catch (Exception e)
     {
-      throw invalidInput("cvcDescription", t, false);
+      throw invalidInput("cvcDescription", e, false);
     }
   }
 
-  private void checkCVCAndDescription(byte[] cvc, byte[] cvcDescription, byte[] cvcPrivateKey, byte[] riKey1, byte[] psKey)
+  private void checkCVCAndDescription(byte[] cvc,
+                                      byte[] cvcDescription,
+                                      byte[] cvcPrivateKey,
+                                      byte[] riKey1,
+                                      byte[] psKey)
     throws GovManagementException
   {
     TerminalData parsed = null;
@@ -159,9 +168,9 @@ public class InputDataCVCChecker
       }
       throw invalidInput("cvc", e, true);
     }
-    catch (Throwable t)
+    catch (Exception e)
     {
-      throw invalidInput("cvc", t, true);
+      throw invalidInput("cvc", e, true);
     }
     if (parsed.getCVCDescription() == null || stringMissing(parsed.getCVCDescription().getSubjectName()))
     {
@@ -209,9 +218,9 @@ public class InputDataCVCChecker
     {
       throw e;
     }
-    catch (Throwable t)
+    catch (Exception e)
     {
-      throw invalidInput("blackList", t, false);
+      throw invalidInput("blackList", e, false);
     }
   }
 
@@ -221,6 +230,7 @@ public class InputDataCVCChecker
     {
       LOG.error("unspecified problem parsing input data", t);
     }
-    return new GovManagementException(IDManagementCodes.INVALID_INPUT_DATA, "ID.jsp.nPaConfiguration." + name);
+    return new GovManagementException(IDManagementCodes.INVALID_INPUT_DATA,
+                                      "ID.jsp.nPaConfiguration." + name);
   }
 }

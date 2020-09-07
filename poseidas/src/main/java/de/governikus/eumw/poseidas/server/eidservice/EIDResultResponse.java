@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019 Governikus KG. Licensed under the EUPL, Version 1.2 or as soon they will be approved by
+ * Copyright (c) 2020 Governikus KG. Licensed under the EUPL, Version 1.2 or as soon they will be approved by
  * the European Commission - subsequent versions of the EUPL (the "Licence"); You may not use this work except
  * in compliance with the Licence. You may obtain a copy of the Licence at:
  * http://joinup.ec.europa.eu/software/page/eupl Unless required by applicable law or agreed to in writing,
@@ -10,13 +10,14 @@
 
 package de.governikus.eumw.poseidas.server.eidservice;
 
-import java.util.HashMap;
+import java.util.EnumMap;
 import java.util.Map;
 
 import de.governikus.eumw.poseidas.ecardcore.utilities.ECardCoreUtil;
 import de.governikus.eumw.poseidas.eidmodel.data.EIDKeys;
 import de.governikus.eumw.poseidas.eidserver.convenience.EIDInfoResult;
 import de.governikus.eumw.poseidas.eidserver.ecardid.EIDInfoContainer.EIDStatus;
+
 import oasis.names.tc.dss._1_0.core.schema.Result;
 
 
@@ -39,13 +40,13 @@ public class EIDResultResponse
 
   private final String logPrefix;
 
-  private final Map<EIDKeys, EIDInfoResult> infoMap = new HashMap<>();
+  private final Map<EIDKeys, EIDInfoResult> infoMap = new EnumMap<>(EIDKeys.class);
 
   EIDResultResponse(EIDStatus status,
-                           String resultMajor,
-                           String resultMinor,
-                           String resultMessage,
-                           String logPrefix)
+                    String resultMajor,
+                    String resultMinor,
+                    String resultMessage,
+                    String logPrefix)
   {
     this.status = status;
     this.resultMajor = resultMajor;
@@ -54,10 +55,7 @@ public class EIDResultResponse
     this.logPrefix = logPrefix;
   }
 
-  EIDResultResponse(EIDStatus status,
-                           Result result,
-                           Map<EIDKeys, EIDInfoResult> infoMap,
-                           String logPrefix)
+  EIDResultResponse(EIDStatus status, Result result, Map<EIDKeys, EIDInfoResult> infoMap, String logPrefix)
   {
     this.status = status;
     this.resultMajor = result.getResultMajor();

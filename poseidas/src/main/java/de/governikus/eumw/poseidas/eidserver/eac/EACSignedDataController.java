@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019 Governikus KG. Licensed under the EUPL, Version 1.2 or as soon they will be approved by
+ * Copyright (c) 2020 Governikus KG. Licensed under the EUPL, Version 1.2 or as soon they will be approved by
  * the European Commission - subsequent versions of the EUPL (the "Licence"); You may not use this work except
  * in compliance with the Licence. You may obtain a copy of the Licence at:
  * http://joinup.ec.europa.eu/software/page/eupl Unless required by applicable law or agreed to in writing,
@@ -89,14 +89,7 @@ public class EACSignedDataController extends EACSignedDataParser
    */
   public boolean isCardAffectedBy(DefectKnown.DefectType type)
   {
-    if (getDefectsWithType(type).isEmpty())
-    {
-      return false;
-    }
-    else
-    {
-      return true;
-    }
+    return !getDefectsWithType(type).isEmpty();
   }
 
   /**
@@ -236,13 +229,14 @@ public class EACSignedDataController extends EACSignedDataParser
       SignerInfo signatureInfo = new SignerInfo(signatureInfosFromCard.nextElement());
       IssuerAndSerialNumber identifier = signatureInfo.getIssuerAndSerialNumber();
 
-      switch (shouldBeOne)
+      if (shouldBeOne == 2 && LOG.isInfoEnabled())
       {
-        case 2:
-          LOG.info(logPrefix + "Fond multiple card identifier");
-          break;
+        LOG.info(logPrefix + "Found multiple card identifier");
       }
-      LOG.debug(logPrefix + "Check issuer and serial for card: " + identifier.toString());
+      if (LOG.isDebugEnabled())
+      {
+        LOG.debug(logPrefix + "Check issuer and serial for card: " + identifier.toString());
+      }
       if (list.containDefectsForCard(identifier))
       {
         cardDefects.addAll(list.getDefects(identifier));

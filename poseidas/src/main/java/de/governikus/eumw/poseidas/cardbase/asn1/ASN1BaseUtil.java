@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019 Governikus KG. Licensed under the EUPL, Version 1.2 or as soon they will be approved by
+ * Copyright (c) 2020 Governikus KG. Licensed under the EUPL, Version 1.2 or as soon they will be approved by
  * the European Commission - subsequent versions of the EUPL (the "Licence"); You may not use this work except
  * in compliance with the Licence. You may obtain a copy of the Licence at:
  * http://joinup.ec.europa.eu/software/page/eupl Unless required by applicable law or agreed to in writing,
@@ -98,13 +98,11 @@ final class ASN1BaseUtil
     }
     if (bytesOfLength.length == 1 && bytesOfLength[0] < 0)
     {
-      throw new IllegalArgumentException(
-                                         "wrong length coding: one byte length, but more than one byte announced");
+      throw new IllegalArgumentException("wrong length coding: one byte length, but more than one byte announced");
     }
     if (bytesOfLength[0] < 0 && ((bytesOfLength[0] & 0x7f) != bytesOfLength.length - 1))
     {
-      throw new IllegalArgumentException(
-                                         "wrong length coding: number of bytes announced not matching number of bytes present");
+      throw new IllegalArgumentException("wrong length coding: number of bytes announced not matching number of bytes present");
     }
     if (bytesOfLength.length == 1 && bytesOfLength[0] > 0)// && bytesOfLength[0] <= 127)
     {
@@ -266,10 +264,8 @@ final class ASN1BaseUtil
     if (asn1s != null && asn1s.length > 0)
     {
 
-      ByteArrayOutputStream baos = null;
-      try
+      try (ByteArrayOutputStream baos = new ByteArrayOutputStream())
       {
-        baos = new ByteArrayOutputStream();
         for ( ASN1 asn1 : asn1s )
         {
           baos.write(asn1.getEncoded());
@@ -279,19 +275,6 @@ final class ASN1BaseUtil
       {
         result = new byte[0];
       }
-      finally
-      {
-        if (baos != null)
-        {
-          baos.flush();
-          baos.close();
-          if (result == null)
-          {
-            result = baos.toByteArray();
-          }
-        }
-      }
-
     }
     else
     {
@@ -448,28 +431,24 @@ final class ASN1BaseUtil
       {
         if (i == dTagBytes.length - 1 && ByteUtil.areBitsSet(dTagBytes[i], ByteConstants.MASK_BIT8))
         {
-          throw new IllegalArgumentException(
-                                             "tag bytes not valid, most significant bit not expected to be set at last byte, but found: "
-                                               + Hex.hexify(dTagBytes[i]));
+          throw new IllegalArgumentException("tag bytes not valid, most significant bit not expected to be set at last byte, but found: "
+                                             + Hex.hexify(dTagBytes[i]));
         }
         else if (i != dTagBytes.length - 1 && !ByteUtil.areBitsSet(dTagBytes[i], ByteConstants.MASK_BIT8))
         {
-          throw new IllegalArgumentException(
-                                             "tag bytes not valid, at all tag bytes from second up to next to last most significant bit expected to be set, but not found at byte index "
-                                               + i + ": " + Hex.hexify(dTagBytes[i]));
+          throw new IllegalArgumentException("tag bytes not valid, at all tag bytes from second up to next to last most significant bit expected to be set, but not found at byte index "
+                                             + i + ": " + Hex.hexify(dTagBytes[i]));
         }
         else if ((dTagBytes[i] & ASN1Constants.TAG_BITS_MASK) == 0x00)
         {
-          throw new IllegalArgumentException(
-                                             "tag bytes not valid, at all tag bytes from first up to last at least one bit expected to be set, but not found at byte index "
-                                               + i + ": " + Hex.hexify(dTagBytes[i]));
+          throw new IllegalArgumentException("tag bytes not valid, at all tag bytes from first up to last at least one bit expected to be set, but not found at byte index "
+                                             + i + ": " + Hex.hexify(dTagBytes[i]));
         }
       }
     }
     else if (dTagBytes.length != 1)
     {
-      throw new IllegalArgumentException(
-                                         "only one byte for tag permitted, because extended tag not indicated at first byte, tag bytes  not valid");
+      throw new IllegalArgumentException("only one byte for tag permitted, because extended tag not indicated at first byte, tag bytes  not valid");
     }
     return dTagBytes;
   }
@@ -517,8 +496,7 @@ final class ASN1BaseUtil
     {
       if ((dTagBytes.length - offset) != 1)
       {
-        throw new IllegalArgumentException(
-                                           "only 1 byte expected as tag descriptor bytes (leading null-byte ignored)");
+        throw new IllegalArgumentException("only 1 byte expected as tag descriptor bytes (leading null-byte ignored)");
       }
       // FIXME: doing & TAG_BITS_MASK is wrong here the first bit is also important and part of the tag class
       result = BigInteger.valueOf(firstTagByte & ASN1Constants.TAG_BITS_MASK);

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019 Governikus KG. Licensed under the EUPL, Version 1.2 or as soon they will be approved by
+ * Copyright (c) 2020 Governikus KG. Licensed under the EUPL, Version 1.2 or as soon they will be approved by
  * the European Commission - subsequent versions of the EUPL (the "Licence"); You may not use this work except
  * in compliance with the Licence. You may obtain a copy of the Licence at:
  * http://joinup.ec.europa.eu/software/page/eupl Unless required by applicable law or agreed to in writing,
@@ -75,21 +75,12 @@ public class ECardException extends Exception
     errorCode = errorMapper.toErrorCode(eCardMessage);
   }
 
-  // -------------------------------------------------------------
-  // The following constructors are depreciated and should
-  // only be used until the complete code was cleaned during
-  // the refactoring
-
-
-
   /**
    * Create a new Exception with a ResultMajor.ERROR and the given ResultMinor code.
    *
    * @param minorCode the ResultMinor that should be use.
    * @param message a custom message that will describe the problem.
-   * @deprecated use an defined ECardErrorCode
    */
-  @Deprecated
   public ECardException(ResultMinor minorCode, String message)
   {
     super();
@@ -108,9 +99,7 @@ public class ECardException extends Exception
    *
    * @param minorCode the ResultMinor that should be use.
    * @param cause the throwable that lead to the problem.
-   * @deprecated the minor code
    */
-  @Deprecated
   public ECardException(ResultMinor minorCode, Throwable cause)
   {
     super(cause);
@@ -129,9 +118,7 @@ public class ECardException extends Exception
    * @param minorCode the ResultMinor that should be use.
    * @param message a custom message that will describe the problem.
    * @param cause the throwable that lead to the problem.
-   * @deprecated
    */
-  @Deprecated
   public ECardException(ResultMinor minorCode, String message, Throwable cause)
   {
     super(cause);
@@ -143,9 +130,6 @@ public class ECardException extends Exception
     eCardMessage = message;
     errorCode = errorMapper.toErrorCode(cause);
   }
-
-  // End of deprecated constructors.
-  // -------------------------------------------------------------
 
   /**
    * Return the ResultMinor code associated with the ECardException
@@ -169,8 +153,8 @@ public class ECardException extends Exception
     Result lResult = new Result();
     lResult.setResultMajor(ResultMajor.ERROR.toString());
     lResult.setResultMinor(minorCode.toString());
-    lResult.setResultMessage(ECardCoreUtil.generateInternationalStringType(eCardMessage != null
-      ? eCardMessage : super.getLocalizedMessage()));
+    lResult.setResultMessage(ECardCoreUtil.generateInternationalStringType(eCardMessage != null ? eCardMessage
+      : super.getLocalizedMessage()));
     Throwable lCause = getCause();
     if (lCause != null)
     {

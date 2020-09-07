@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019 Governikus KG. Licensed under the EUPL, Version 1.2 or as soon they will be approved by
+ * Copyright (c) 2020 Governikus KG. Licensed under the EUPL, Version 1.2 or as soon they will be approved by
  * the European Commission - subsequent versions of the EUPL (the "Licence"); You may not use this work except
  * in compliance with the Licence. You may obtain a copy of the Licence at:
  * http://joinup.ec.europa.eu/software/page/eupl Unless required by applicable law or agreed to in writing,
@@ -39,7 +39,9 @@ public class PkiConnectorConfigurationDto extends AbstractConfigDto<PkiConnector
 
   private static final Log LOG = LogFactory.getLog(PkiConnectorConfigurationDto.class);
 
-  private X509Certificate blackListTrustAnchor, masterListTrustAnchor, defectListTrustAnchor;
+  private X509Certificate blackListTrustAnchor;
+
+  private X509Certificate masterListTrustAnchor;
 
   private Map<String, SslKeysDto> sslKeys;
 
@@ -59,7 +61,6 @@ public class PkiConnectorConfigurationDto extends AbstractConfigDto<PkiConnector
     this.jaxbConfig = jaxBConfig;
     blackListTrustAnchor = getCert(jaxbConfig.getBlackListTrustAnchor());
     masterListTrustAnchor = getCert(jaxbConfig.getMasterListTrustAnchor());
-    defectListTrustAnchor = getCert(jaxbConfig.getDefectListTrustAnchor());
     if (jaxbConfig.getPolicyImplementationId() == null)
     {
       jaxbConfig.setPolicyImplementationId(BerCaPolicyConstants.POLICY_SIGNTRUST_A);
@@ -172,25 +173,6 @@ public class PkiConnectorConfigurationDto extends AbstractConfigDto<PkiConnector
   }
 
   /**
-   * @see #getDefectListTrustAnchor()
-   */
-  public void setDefectListTrustAnchor(X509Certificate defectListTrustAnchor) throws CertificateException
-  {
-    this.defectListTrustAnchor = defectListTrustAnchor;
-    jaxbConfig.setDefectListTrustAnchor(defectListTrustAnchor == null ? null
-      : defectListTrustAnchor.getEncoded());
-
-  }
-
-  /**
-   * Return signer certificate or signers issuer certificate for checking signature of defect list.
-   */
-  public X509Certificate getDefectListTrustAnchor()
-  {
-    return defectListTrustAnchor;
-  }
-
-  /**
    * @see #getBlackListTrustAnchor()
    */
   public void setBlackListTrustAnchor(X509Certificate blackListTrustAnchor) throws CertificateException
@@ -235,8 +217,8 @@ public class PkiConnectorConfigurationDto extends AbstractConfigDto<PkiConnector
   }
 
   /**
-   * Return the URL of the poseidas server connector to be used by the BerCA - need an own connector in case the
-   * BerCA does not implement configurable trust anchors for SSL.
+   * Return the URL of the poseidas server connector to be used by the BerCA - need an own connector in case
+   * the BerCA does not implement configurable trust anchors for SSL.
    */
   public String getAutentURL()
   {
@@ -272,7 +254,6 @@ public class PkiConnectorConfigurationDto extends AbstractConfigDto<PkiConnector
     {
       setBlackListTrustAnchor(other.getBlackListTrustAnchor());
       setMasterListTrustAnchor(other.getMasterListTrustAnchor());
-      setDefectListTrustAnchor(other.getDefectListTrustAnchor());
     }
     catch (CertificateException e)
     {

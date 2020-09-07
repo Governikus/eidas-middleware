@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019 Governikus KG. Licensed under the EUPL, Version 1.2 or as soon they will be approved by
+ * Copyright (c) 2020 Governikus KG. Licensed under the EUPL, Version 1.2 or as soon they will be approved by
  * the European Commission - subsequent versions of the EUPL (the "Licence"); You may not use this work except
  * in compliance with the Licence. You may obtain a copy of the Licence at:
  * http://joinup.ec.europa.eu/software/page/eupl Unless required by applicable law or agreed to in writing,
@@ -43,7 +43,7 @@ import lombok.extern.slf4j.Slf4j;
  */
 @ExtendWith(SpringExtension.class)
 @Slf4j
-public class ConfigHolderTest
+class ConfigHolderTest
 {
 
   /**
@@ -88,7 +88,7 @@ public class ConfigHolderTest
    * Test that the values from the properties file are properly parsed
    */
   @Test
-  public void testProperties() throws IOException, URISyntaxException, GeneralSecurityException
+  void testProperties() throws IOException, URISyntaxException, GeneralSecurityException
   {
     prepareProperties();
     System.setProperty("spring.config.additional-location", Paths.get(tempDirectory).toString());
@@ -165,7 +165,7 @@ public class ConfigHolderTest
    * Make sure that trailing slashes are removed from the SERVER_URL property
    */
   @Test
-  public void testServerUrl()
+  void testServerUrl()
   {
     Properties properties = new Properties();
     String serverUrl = "https://middleware";

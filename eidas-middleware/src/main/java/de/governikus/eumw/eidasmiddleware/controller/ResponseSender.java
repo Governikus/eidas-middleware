@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019 Governikus KG. Licensed under the EUPL, Version 1.2 or as soon they will be approved by
+ * Copyright (c) 2020 Governikus KG. Licensed under the EUPL, Version 1.2 or as soon they will be approved by
  * the European Commission - subsequent versions of the EUPL (the "Licence"); You may not use this work except
  * in compliance with the Licence. You may obtain a copy of the Licence at:
  * http://joinup.ec.europa.eu/software/page/eupl Unless required by applicable law or agreed to in writing,
@@ -21,7 +21,6 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.servlet.ModelAndView;
 
 import de.governikus.eumw.eidascommon.ContextPaths;
-import de.governikus.eumw.eidascommon.ErrorCode;
 import de.governikus.eumw.eidasmiddleware.RequestProcessingException;
 import de.governikus.eumw.eidasmiddleware.handler.ResponseHandler;
 import de.governikus.eumw.eidasmiddleware.model.ResponseModel;
@@ -54,9 +53,7 @@ public class ResponseSender
    * the user's browser to this endpoint
    */
   @GetMapping
-  public ModelAndView doGet(@RequestParam(REF_ID) String refID,
-                            @RequestParam(required = false, name = "ResultMajor") String resultMajor,
-                            @RequestParam(required = false, name = "ResultMinor") String resultMinor)
+  public ModelAndView doGet(@RequestParam(REF_ID) String refID)
   {
     if (refID == null)
     {
@@ -71,16 +68,8 @@ public class ResponseSender
 
     try
     {
-      String samlResponse;
-      if (resultMajor != null && !"ok".equals(resultMajor))
-      {
-        samlResponse = responseHandler.createSAMLErrorResponse(refID, ErrorCode.EID_ERROR, resultMinor);
-      }
-      else
-      {
+      String samlResponse = responseHandler.getResultForRefID(refID);
 
-        samlResponse = responseHandler.getResultForRefID(refID);
-      }
       ModelAndView response = new ModelAndView("response");
       response.addObject("SAML", samlResponse);
       response.addObject("consumerURL", responseHandler.getConsumerURLForRefID(refID));

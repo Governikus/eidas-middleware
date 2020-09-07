@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019 Governikus KG. Licensed under the EUPL, Version 1.2 or as soon they will be approved by
+ * Copyright (c) 2020 Governikus KG. Licensed under the EUPL, Version 1.2 or as soon they will be approved by
  * the European Commission - subsequent versions of the EUPL (the "Licence"); You may not use this work except
  * in compliance with the Licence. You may obtain a copy of the Licence at:
  * http://joinup.ec.europa.eu/software/page/eupl Unless required by applicable law or agreed to in writing,
@@ -11,19 +11,31 @@
 package de.governikus.eumw.configuration.wizard.web.model.poseidasxml;
 
 import java.io.File;
+import java.io.IOException;
+import java.io.InputStream;
 import java.net.URL;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Paths;
+import java.security.KeyStore;
 import java.security.cert.Certificate;
 import java.security.cert.CertificateEncodingException;
+import java.security.cert.CertificateException;
+import java.security.cert.CertificateFactory;
+import java.security.cert.X509Certificate;
+import java.util.Collections;
 
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 
 import de.governikus.eumw.configuration.wizard.identifier.FileNames;
 import de.governikus.eumw.configuration.wizard.web.model.AbstractConfigFileTest;
 import de.governikus.eumw.configuration.wizard.web.model.CertificateForm;
+import de.governikus.eumw.configuration.wizard.web.model.KeystoreForm;
 import de.governikus.eumw.poseidas.config.schema.EPAConnectorConfigurationType;
 import de.governikus.eumw.poseidas.config.schema.PkiConnectorConfigurationType;
 import de.governikus.eumw.poseidas.config.schema.PkiServiceType;
@@ -31,6 +43,7 @@ import de.governikus.eumw.poseidas.config.schema.PoseidasCoreConfiguration;
 import de.governikus.eumw.poseidas.config.schema.ServiceProviderType;
 import de.governikus.eumw.poseidas.config.schema.SslKeysType;
 import de.governikus.eumw.poseidas.config.schema.TimerConfigurationType;
+import de.governikus.eumw.utils.key.KeyStoreSupporter;
 import de.governikus.eumw.utils.xml.XmlHelper;
 import lombok.extern.slf4j.Slf4j;
 
@@ -43,6 +56,7 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 @ExtendWith(SpringExtension.class)
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
+@ActiveProfiles("test")
 public class PoseidasCoreConfigFormTest extends AbstractConfigFileTest
 {
 
@@ -79,7 +93,7 @@ public class PoseidasCoreConfigFormTest extends AbstractConfigFileTest
    * will read the POSeIDAS.xml from the resources and will assert that the values are read correctly
    */
   @Test
-  public void testReadPoseidasXmlConfiguration()
+  void testReadPoseidasXmlConfiguration()
   {
     URL poseidasXmlUrl = getPoseidasXmlFilePath(CONFIG_DIR_SUCCESS);
     PoseidasCoreConfiguration poseidasCoreConfiguration = getPoseidasCoreConfiguration(poseidasXmlUrl);
@@ -158,12 +172,12 @@ public class PoseidasCoreConfigFormTest extends AbstractConfigFileTest
     Assertions.assertNotNull(pkiConnectorConfiguration1);
     Assertions.assertNotNull(pkiConnectorConfiguration2);
 
-    final String policyImplementationId = "govDvca";
-    EQUAL_NULL_CHECK.accept(policyImplementationId, pkiConnectorConfiguration1.getPolicyImplementationId());
+    final String dvcaProvider = "govDvca";
+    EQUAL_NULL_CHECK.accept(dvcaProvider, pkiConnectorConfiguration1.getPolicyImplementationId());
     EQUAL_NULL_CHECK.accept(pkiConnectorConfiguration1.getPolicyImplementationId(),
                             pkiConnectorConfiguration2.getPolicyImplementationId());
     EQUAL_NULL_CHECK.accept(pkiConnectorConfiguration1.getPolicyImplementationId(),
-                            serviceProviderForm.getPolicyID().getValue());
+                            serviceProviderForm.getDvcaProvider().getValue());
 
     checkPkiServiceTypeEquality(pkiConnectorConfiguration1.getTerminalAuthService(),
                                 pkiConnectorConfiguration2.getTerminalAuthService());
@@ -177,10 +191,6 @@ public class PoseidasCoreConfigFormTest extends AbstractConfigFileTest
     checkCertificateAnchor(pkiConnectorConfiguration1.getBlackListTrustAnchor(),
                            pkiConnectorConfiguration2.getBlackListTrustAnchor(),
                            serviceProviderForm.getBlackListTrustAnchor());
-
-    checkCertificateAnchor(pkiConnectorConfiguration1.getDefectListTrustAnchor(),
-                           pkiConnectorConfiguration2.getDefectListTrustAnchor(),
-                           serviceProviderForm.getDefectListTrustAnchor());
 
     checkCertificateAnchor(pkiConnectorConfiguration1.getMasterListTrustAnchor(),
                            pkiConnectorConfiguration2.getMasterListTrustAnchor(),
@@ -306,5 +316,78 @@ public class PoseidasCoreConfigFormTest extends AbstractConfigFileTest
                             timerConfiguration2.getMasterAndDefectListRenewal().getUnit());
     Assertions.assertEquals(timerConfiguration1.getMasterAndDefectListRenewal().getUnit(),
                             timerConfiguration2.getMasterAndDefectListRenewal().getUnit());
+  }
+
+  /**
+   * Create a simple sPOSeIDAS.xml using the config wizard, assert that the correct values are stored, and
+   * assert that the config wizard can load this saved POSeIDAS.xml correctly
+   */
+  @Test
+  void testSave() throws CertificateException, IOException
+  {
+    testSaveAndLoadForSpecificDvca(DvcaProvider.GOV_DVCA,
+                                   DvcaProvider.GOV_DVCA.getValue(),
+                                   "https://dev.governikus-eid.de:9444/gov_dvca/ta-service");
+    testSaveAndLoadForSpecificDvca(DvcaProvider.NEW_GOV_DVCA,
+                                   DvcaProvider.GOV_DVCA.getValue(),
+                                   "https://dvca-r1.governikus-eid.de:8444/gov_dvca/ta-service");
+    testSaveAndLoadForSpecificDvca(DvcaProvider.BUDRU,
+                                   DvcaProvider.BUDRU.getValue(),
+                                   "https://berca-ps.d-trust.net/ps/dvca-at");
+  }
+
+  private void testSaveAndLoadForSpecificDvca(DvcaProvider dvcaProvider,
+                                              String policyImplementationId,
+                                              String taUrl)
+    throws CertificateException, IOException
+  {
+    // Create the core config from scratch with a single service provider and dummy keys and certificates
+    PoseidasCoreConfigForm referenceCoreConfigForm = new PoseidasCoreConfigForm();
+    ServiceProviderForm serviceProviderForm = new ServiceProviderForm();
+    serviceProviderForm.setPublicServiceProvider(true);
+    String entityID = "entityID";
+    serviceProviderForm.setEntityID(entityID);
+    serviceProviderForm.setDvcaProvider(dvcaProvider);
+    CertificateForm certificateForm = new CertificateForm(null, "test", readTestCert());
+    serviceProviderForm.setBlackListTrustAnchor(certificateForm);
+    serviceProviderForm.setMasterListTrustAnchor(certificateForm);
+    KeystoreForm clientKeyForm = KeystoreForm.builder()
+                                             .alias("ssl")
+                                             .keystore(readTestKeyStore())
+                                             .keystoreName("ssl")
+                                             .keystorePassword("123456")
+                                             .privateKeyPassword("123456")
+                                             .build();
+    serviceProviderForm.setSslKeysForm(SslKeysForm.builder()
+                                                  .clientKeyForm(clientKeyForm)
+                                                  .serverCertificate(certificateForm)
+                                                  .build());
+    referenceCoreConfigForm.setServiceProviders(Collections.singletonList(serviceProviderForm));
+
+    // Save the config to a POSeIDAS.xml and check the DVCA specific contents
+    referenceCoreConfigForm.save(getTempDirectory());
+    String content = new String(Files.readAllBytes(Paths.get(getTempDirectory(), "POSeIDAS.xml")),
+                                StandardCharsets.UTF_8);
+    Assertions.assertTrue(content.contains(policyImplementationId));
+    Assertions.assertTrue(content.contains(taUrl));
+
+    // Load the config from the POSeIDAS.xml and check the DVCA provider
+    PoseidasCoreConfigForm loadedCoreConfigForm = new PoseidasCoreConfigForm();
+    loadedCoreConfigForm.loadConfiguration(Paths.get(getTempDirectory(), "POSeIDAS.xml").toFile());
+    Assertions.assertEquals(dvcaProvider.getValue(),
+                            loadedCoreConfigForm.getCommonServiceProviderData().getDvcaProvider().getValue());
+  }
+
+  private X509Certificate readTestCert() throws CertificateException
+  {
+    InputStream certStream = PoseidasCoreConfigFormTest.class.getResourceAsStream("/test-files/test.cer");
+    CertificateFactory factory = CertificateFactory.getInstance("X.509");
+    return (X509Certificate)factory.generateCertificate(certStream);
+  }
+
+  private KeyStore readTestKeyStore()
+  {
+    InputStream keyStoreStream = PoseidasCoreConfigFormTest.class.getResourceAsStream("/test-files/ssl.jks");
+    return KeyStoreSupporter.readKeyStore(keyStoreStream, KeyStoreSupporter.KeyStoreType.JKS, "123456");
   }
 }

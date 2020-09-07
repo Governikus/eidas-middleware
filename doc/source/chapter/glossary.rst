@@ -10,7 +10,7 @@ Glossary
         <https://www.bsi.bund.de/EN/Topics/ElectrIDDocuments/CVCAeID/CVCAeID_node.html>`_
 
     BerCA
-        Part of the :term:`German eID PKI`, see :term:`Authorisation CA`
+        Part of the :term:`German eID PKI`, see :term:`Authorization CA`
 
     TLS
         Transport Layer Security.
@@ -38,17 +38,17 @@ Glossary
     Open Virtualization Format
         Open format for exchanging virtual machines.
 
-    Authorisation Certificate
-        The Authorisation CA issues Authorisation Certificates that enables the eID Service Provider`
-        to read data from the German eID Card. The Authorisation Certificate contains a set of attributes that the
+    Authorization Certificate
+        The Authorization CA issues Authorization Certificates that enables the eID Service Provider`
+        to read data from the German eID Card. The Authorization Certificate contains a set of attributes that the
         eID Service Provider is allowed to access. It also contains the hash value of the SSL certificate of
         the eID Service Provider so verify that the data of the eID Card is send to the correct consumer.
-        Because the Authorisation Certificates are only a couple of days valid, the eIDAS Middleware will renew them
+        Because the Authorization Certificates are only a couple of days valid, the eIDAS Middleware will renew them
         automatically before expiration.
 
-    Authorisation CA
-        The Authorisation CA issues Authorisation Certificates to eID Service Providers. The CA
-        provides a SOAP Endpoint that is used by the eIDAS Middleware to request and renew Authorisation Certificates.
+    Authorization CA
+        The Authorization CA issues Authorization Certificates to eID Service Providers. The CA
+        provides a SOAP Endpoint that is used by the eIDAS Middleware to request and renew Authorization Certificates.
 
     eID Service Provider
         In the German eID scheme the Service Provider is the instance that initially receives the data from the eID Card.
@@ -69,4 +69,4 @@ Glossary
         will be added to the Defect List.
 
     CVC
-        CVC (Card Verifiable Certificate) is the technical term for the :term:`Authorisation Certificate`.
+        CVC (Card Verifiable Certificate) is the technical term for the :term:`Authorization Certificate`.

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019 Governikus KG. Licensed under the EUPL, Version 1.2 or as soon they will be approved by
+ * Copyright (c) 2020 Governikus KG. Licensed under the EUPL, Version 1.2 or as soon they will be approved by
  * the European Commission - subsequent versions of the EUPL (the "Licence"); You may not use this work except
  * in compliance with the Licence. You may obtain a copy of the Licence at:
  * http://joinup.ec.europa.eu/software/page/eupl Unless required by applicable law or agreed to in writing,
@@ -97,10 +97,10 @@ public class TerminalData
    *           does not match the cvcDescription.
    */
   private TerminalData(ECCVCertificate cvcWrapper,
-                      byte[] cvcDescriptionBytes,
-                      byte[] pkcs8PrivateKeyBytes,
-                      byte[] riKeyIBytes,
-                      byte[] psKeyBytes)
+                       byte[] cvcDescriptionBytes,
+                       byte[] pkcs8PrivateKeyBytes,
+                       byte[] riKeyIBytes,
+                       byte[] psKeyBytes)
   {
     // Check if the CVC wrapper is available
     if (cvcWrapper == null)
@@ -186,7 +186,8 @@ public class TerminalData
                       byte[] cvcDescriptionBytes,
                       byte[] pkcs8PrivateKeyBytes,
                       byte[] riKeyIBytes,
-                      byte[] psKeyBytes) throws IOException
+                      byte[] psKeyBytes)
+    throws IOException
   {
     this(new ECCVCertificate(cvcBytes), cvcDescriptionBytes, pkcs8PrivateKeyBytes, riKeyIBytes, psKeyBytes);
   }
@@ -584,7 +585,7 @@ public class TerminalData
           return false;
       }
     }
-    catch (Throwable e)
+    catch (Exception e)
     {
       LOG.debug("Fail to verify CVC element", e);
     }
@@ -614,8 +615,7 @@ public class TerminalData
    * @throws GeneralSecurityException if key material is not available and verification fails
    * @throws IllegalArgumentException if any illegal parameter was submitted
    */
-  private boolean verify(TerminalData signingCVC) throws IOException,
-    GeneralSecurityException
+  private boolean verify(TerminalData signingCVC) throws IOException, GeneralSecurityException
   {
     if (signingCVC.isSelfSigned())
     {
@@ -639,8 +639,7 @@ public class TerminalData
    * @throws IllegalArgumentException if any illegal parameter was submitted
    */
   private boolean verify(TerminalData signingCVC, TerminalData paramSpecCVC)
-    throws IOException,
-    GeneralSecurityException
+    throws IOException, GeneralSecurityException
   {
     if (signingCVC == null || paramSpecCVC == null)
     {
@@ -656,9 +655,9 @@ public class TerminalData
       // Get the latest param specification from CVC
       ECCVCertificate paramSpecCertificate = new ECCVCertificate(paramSpecCVC.getEncoded());
       ECParameterSpec paramSpec = ECUtil.parameterSpecFromCVC(paramSpecCertificate);
-      KeyHandler keyHandlerEC = KeyHandlerFactory.newKeyHandler("EC", paramSpec.getCurve()
-                                                                               .getField()
-                                                                               .getFieldSize() / 8);
+      KeyHandler keyHandlerEC = KeyHandlerFactory.newKeyHandler("EC",
+                                                                paramSpec.getCurve().getField().getFieldSize()
+                                                                      / 8);
       // Get the public key from signing CVC
       de.governikus.eumw.poseidas.cardbase.asn1.npa.ECPublicKey publicKey = signingCVC.getPublicKey();
       ASN1 child = publicKey.getChildElementByPath(ECPublicKeyPath.PUBLIC_POINT_Y);

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019 Governikus KG. Licensed under the EUPL, Version 1.2 or as soon they will be approved by
+ * Copyright (c) 2020 Governikus KG. Licensed under the EUPL, Version 1.2 or as soon they will be approved by
  * the European Commission - subsequent versions of the EUPL (the "Licence"); You may not use this work except
  * in compliance with the Licence. You may obtain a copy of the Licence at:
  * http://joinup.ec.europa.eu/software/page/eupl Unless required by applicable law or agreed to in writing,
@@ -13,12 +13,14 @@ package de.governikus.eumw.poseidas.cardbase.asn1.npa;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.security.GeneralSecurityException;
+import java.security.MessageDigest;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Arrays;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.List;
+import java.util.TimeZone;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -149,7 +151,7 @@ public class ECCVCertificate extends AbstractASN1Encoder
       Date date = this.getDate(bodyChildList.get(6).getValue());
       Calendar calendar = Calendar.getInstance();
       calendar.setTime(date);
-      calendar.add(Calendar.DATE, 1);
+      calendar.add(Calendar.HOUR, 24);
       this.expirationDate = calendar.getTime();
     }
     catch (IOException | ParseException e)
@@ -263,7 +265,7 @@ public class ECCVCertificate extends AbstractASN1Encoder
     throw new IllegalStateException("change not enabled");
   }
 
-  public ECPublicKey getPublicKey() throws IOException
+  public ECPublicKey getPublicKey()
   {
     return this.publicKey;
   }
@@ -331,9 +333,11 @@ public class ECCVCertificate extends AbstractASN1Encoder
     {
       throw new IOException("date in unknown format");
     }
-    String dateString = "" + dateByte[0] + dateByte[1] + dateByte[2] + dateByte[3] + dateByte[4]
+    String dateString = "20" + dateByte[0] + dateByte[1] + dateByte[2] + dateByte[3] + dateByte[4]
                         + dateByte[5];
-    return new SimpleDateFormat("yyMMdd").parse(dateString);
+    SimpleDateFormat df = new SimpleDateFormat("yyyyMMdd");
+    df.setTimeZone(TimeZone.getTimeZone("UTC"));
+    return df.parse(dateString);
   }
 
   /**
@@ -350,7 +354,7 @@ public class ECCVCertificate extends AbstractASN1Encoder
       byte[] hashCertDescription = CertificateDescription.hashCertDescription(this, cvcDescription);
       byte[] certificateDescriptionHash = this.getChildElementByPath(ECCVCPath.EXTENSIONS_DISCRETIONARY_DATA_CERTIFICATE_DESCRIPTION_HASH)
                                               .getValue();
-      return Arrays.equals(certificateDescriptionHash, hashCertDescription);
+      return MessageDigest.isEqual(certificateDescriptionHash, hashCertDescription);
     }
     catch (IllegalArgumentException | GeneralSecurityException | IOException e)
     {
@@ -360,5 +364,17 @@ public class ECCVCertificate extends AbstractASN1Encoder
       LOGGER.info("can't compare CVC description hashes: " + e.getMessage(), e);
       return false;
     }
+  }
+
+  @Override
+  public boolean equals(Object object)
+  {
+    return super.equals(object);
+  }
+
+  @Override
+  public int hashCode()
+  {
+    return super.hashCode();
   }
 }

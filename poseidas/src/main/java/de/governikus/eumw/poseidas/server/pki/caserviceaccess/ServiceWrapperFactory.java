@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019 Governikus KG. Licensed under the EUPL, Version 1.2 or as soon they will be approved by
+ * Copyright (c) 2020 Governikus KG. Licensed under the EUPL, Version 1.2 or as soon they will be approved by
  * the European Commission - subsequent versions of the EUPL (the "Licence"); You may not use this work except
  * in compliance with the Licence. You may obtain a copy of the Licence at:
  * http://joinup.ec.europa.eu/software/page/eupl Unless required by applicable law or agreed to in writing,
@@ -12,6 +12,9 @@ package de.governikus.eumw.poseidas.server.pki.caserviceaccess;
 
 import java.net.URISyntaxException;
 
+import lombok.AccessLevel;
+import lombok.NoArgsConstructor;
+
 
 /**
  * Factory to the the service wrappers. Using this factory enables the client code to cope with different
@@ -19,6 +22,7 @@ import java.net.URISyntaxException;
  *
  * @author tautenhahn
  */
+@NoArgsConstructor(access = AccessLevel.PRIVATE)
 public class ServiceWrapperFactory
 {
 
@@ -105,12 +109,10 @@ public class ServiceWrapperFactory
    *
    * @param con
    * @param uri
-   * @param wsdlVersion
    * @throws URISyntaxException
    */
   public static DvcaCertDescriptionWrapper createDvcaCertDescriptionWrapper(PKIServiceConnector con,
-                                                                            String uri,
-                                                                            String wsdlVersion)
+                                                                            String uri)
     throws URISyntaxException
   {
     return new DvcaCertDescriptionWrapper10(con, uri);

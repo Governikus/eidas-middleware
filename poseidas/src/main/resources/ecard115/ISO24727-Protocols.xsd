@@ -681,7 +681,7 @@
 	<!-- ============================= -->
 
 
-	<!--complexType name="EAC1InputType">
+	<complexType name="EAC1InputType">
 		<complexContent>
 			<restriction base="iso:DIDAuthenticationDataType">
 				<sequence>
@@ -699,49 +699,9 @@
 				</sequence>
 			</restriction>
 		</complexContent>
-	</complexType-->
+	</complexType>
 
-<complexType name="EAC1InputType">
-     <complexContent>
-          <restriction base="iso:DIDAuthenticationDataType">
-                <sequence>
-                     <element name="Certificate" type="hexBinary" maxOccurs="unbounded" minOccurs="1" />
-                     <element name="CertificateDescription" type="hexBinary" />
-                     <element name="RequiredCHAT" type="hexBinary" maxOccurs="1" minOccurs="0" />
-                     <element name="OptionalCHAT" type="hexBinary" maxOccurs="1" minOccurs="0" />
-                     <element name="AuthenticatedAuxiliaryData" type="hexBinary" maxOccurs="1" minOccurs="0" />
-                     <element name="TransactionInfo" type="string" maxOccurs="1" minOccurs="0"></element>
-                     <element name="RequiredPermission" type="iso:ExtendedAccessPermission" maxOccurs="unbounded" minOccurs="0" />
-                     <element name="OptionalPermission" type="iso:ExtendedAccessPermission" maxOccurs="unbounded" minOccurs="0" />
-                </sequence>
-          </restriction>
-     </complexContent>
-</complexType>
-
-<complexType name="EAC1OutputType">
-     <complexContent>
-          <restriction base="iso:DIDAuthenticationDataType">
-                <sequence>
-                     <element name="CertificateHolderAuthorizationTemplate" type="hexBinary" maxOccurs="1" minOccurs="0" />
-                     <element name="CertificationAuthorityReference" type="string" maxOccurs="2" minOccurs="0" />
-                     <element name="EFCardAccess" type="hexBinary" />
-                     <element name="IDPICC" type="hexBinary" />
-                     <element name="Challenge" type="hexBinary"/>
-                     <element name="GrantedPermission" type="iso:ExtendedAccessPermission" maxOccurs="unbounded" minOccurs="0" />
-                </sequence>
-          </restriction>
-     </complexContent>
-</complexType>
-     
-<complexType name="ExtendedAccessPermission">
-     <simpleContent>
-          <extension base="hexBinary">
-                <attribute name="type" type="string" use="required" />
-          </extension>
-     </simpleContent>
-</complexType>
-
-	<!--complexType name="EAC1OutputType">
+	<complexType name="EAC1OutputType">
 		<complexContent>
 			<restriction base="iso:DIDAuthenticationDataType">
 				<sequence>
@@ -756,7 +716,7 @@
 				</sequence>
 			</restriction>
 		</complexContent>
-	</complexType-->
+	</complexType>
 
 	<complexType name="EAC2InputType">
 		<complexContent>
@@ -776,27 +736,7 @@
 		</complexContent>
 	</complexType>
 
-<complexType name="EAC2OutputType">
-     <complexContent>
-          <restriction base="iso:DIDAuthenticationDataType">
-                <choice>
-                     <sequence>
-                          <element name="EFCardSecurity" type="hexBinary" />
-                          <choice>
-                               <sequence>
-                                    <element name="AuthenticationToken" type="hexBinary" />
-                                    <element name="Nonce" type="hexBinary" />
-                               </sequence>
-                               <element name="EphemeralPublicKey" type="hexBinary" />
-                          </choice>
-                     </sequence>
-                     <element name="Challenge" type="hexBinary" />
-                </choice>
-          </restriction>
-     </complexContent>
-</complexType>
-
-	<!--complexType name="EAC2OutputType">
+	<complexType name="EAC2OutputType">
 		<complexContent>
 			<restriction base="iso:DIDAuthenticationDataType">
 				<choice>
@@ -811,7 +751,7 @@
 				</choice>
 			</restriction>
 		</complexContent>
-	</complexType-->
+	</complexType>
 
 	<complexType name="EACAdditionalInputType">
 		<complexContent>

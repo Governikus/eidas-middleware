@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019 Governikus KG. Licensed under the EUPL, Version 1.2 or as soon they will be approved by
+ * Copyright (c) 2020 Governikus KG. Licensed under the EUPL, Version 1.2 or as soon they will be approved by
  * the European Commission - subsequent versions of the EUPL (the "Licence"); You may not use this work except
  * in compliance with the Licence. You may obtain a copy of the Licence at:
  * http://joinup.ec.europa.eu/software/page/eupl Unless required by applicable law or agreed to in writing,
@@ -137,8 +137,8 @@ public class ASN1Path
    */
   protected ASN1Path(String name, String tagHexString, int index, ASN1Path parent)
   {
-    this(name, Hex.parse(AssertUtil.notNullOrEmpty(tagHexString, STRING_TAG_HEX_STRING)), index, parent,
-         null, ASN1PathType.NO_INFORMATION);
+    this(name, Hex.parse(AssertUtil.notNullOrEmpty(tagHexString, STRING_TAG_HEX_STRING)), index, parent, null,
+         ASN1PathType.NO_INFORMATION);
   }
 
   /**
@@ -239,11 +239,11 @@ public class ASN1Path
    * @see ASN1Path#ASN1Path(String, BigInteger, int, ASN1Path, Class, ASN1PathType)
    */
   private ASN1Path(String name,
-                     byte[] tagBytes,
-                     int index,
-                     ASN1Path parent,
-                     Class<? extends ASN1Encoder> encoderClass,
-                     ASN1PathType type)
+                   byte[] tagBytes,
+                   int index,
+                   ASN1Path parent,
+                   Class<? extends ASN1Encoder> encoderClass,
+                   ASN1PathType type)
   {
     this(name, new BigInteger(ASN1Util.checkTagBytes(tagBytes)), index, parent, encoderClass,
          AssertUtil.notNullReturn(type, STRING_TYPE));
@@ -296,15 +296,15 @@ public class ASN1Path
    * @see ASN1Path#ASN1Path(String, BigInteger, int, Filter, ASN1Path, Class, ASN1PathType)
    */
   private ASN1Path(String name,
-                     BigInteger tag,
-                     Filter<ASN1> filter,
-                     ASN1Path parent,
-                     Class<? extends ASN1Encoder> encoderClass,
-                     ASN1PathType type)
+                   BigInteger tag,
+                   Filter<ASN1> filter,
+                   ASN1Path parent,
+                   Class<? extends ASN1Encoder> encoderClass,
+                   ASN1PathType type)
   {
-    this(name, AssertUtil.notNullReturn(tag, STRING_TAG), NO_INDEX, AssertUtil.notNullReturn(filter,
-                                                                                             STRING_FILTER),
-         parent, encoderClass, AssertUtil.notNullReturn(type, STRING_TYPE));
+    this(name, AssertUtil.notNullReturn(tag, STRING_TAG), NO_INDEX,
+         AssertUtil.notNullReturn(filter, STRING_FILTER), parent, encoderClass,
+         AssertUtil.notNullReturn(type, STRING_TYPE));
   }
 
   /**
@@ -327,12 +327,12 @@ public class ASN1Path
    *           for initialization or arguments not valid
    */
   private ASN1Path(String name,
-                     BigInteger tag,
-                     int index,
-                     Filter<ASN1> filter,
-                     ASN1Path parent,
-                     Class<? extends ASN1Encoder> encoderClass,
-                     ASN1PathType type)
+                   BigInteger tag,
+                   int index,
+                   Filter<ASN1> filter,
+                   ASN1Path parent,
+                   Class<? extends ASN1Encoder> encoderClass,
+                   ASN1PathType type)
   {
     super();
     AssertUtil.notNull(tag, STRING_TAG);
@@ -358,13 +358,11 @@ public class ASN1Path
       }
       catch (SecurityException e)
       {
-        throw new IllegalArgumentException(
-                                           "Class of encoder not permitted, expected empty constructor does not exist or not accessible");
+        throw new IllegalArgumentException("Class of encoder not permitted, expected empty constructor does not exist or not accessible");
       }
       catch (NoSuchMethodException e)
       {
-        throw new IllegalArgumentException(
-                                           "Class of encoder not permitted, expected empty constructor does not exist");
+        throw new IllegalArgumentException("Class of encoder not permitted, expected empty constructor does not exist");
       }
       catch (InstantiationException e)
       {
@@ -372,14 +370,12 @@ public class ASN1Path
       }
       catch (IllegalAccessException e)
       {
-        throw new IllegalArgumentException(
-                                           "Class of encoder not permitted, expected empty constructor does not accessible");
+        throw new IllegalArgumentException("Class of encoder not permitted, expected empty constructor does not accessible");
       }
-      catch (Throwable e)
+      catch (Exception e)
       {
-        throw new IllegalArgumentException(
-                                           "Class of encoder not permitted, instantiation of encoder instance failed: "
-                                             + e.getMessage(), e);
+        throw new IllegalArgumentException("Class of encoder not permitted, instantiation of encoder instance failed: "
+                                           + e.getMessage(), e);
 
       }
     }
@@ -437,11 +433,11 @@ public class ASN1Path
    * @see ASN1Path#ASN1Path(String, BigInteger, Filter, ASN1Path, Class, ASN1PathType)
    */
   private ASN1Path(String name,
-                     byte[] tagBytes,
-                     Filter<ASN1> filter,
-                     ASN1Path parent,
-                     Class<? extends ASN1Encoder> encoderClass,
-                     ASN1PathType type)
+                   byte[] tagBytes,
+                   Filter<ASN1> filter,
+                   ASN1Path parent,
+                   Class<? extends ASN1Encoder> encoderClass,
+                   ASN1PathType type)
   {
     this(name, new BigInteger(ASN1Util.checkTagBytes(tagBytes)), filter, parent, encoderClass, type);
   }

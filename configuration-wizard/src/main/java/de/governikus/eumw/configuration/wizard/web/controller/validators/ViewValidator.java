@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019 Governikus KG. Licensed under the EUPL, Version 1.2 or as soon they will be approved by
+ * Copyright (c) 2020 Governikus KG. Licensed under the EUPL, Version 1.2 or as soon they will be approved by
  * the European Commission - subsequent versions of the EUPL (the "Licence"); You may not use this work except
  * in compliance with the Licence. You may obtain a copy of the Licence at:
  * http://joinup.ec.europa.eu/software/page/eupl Unless required by applicable law or agreed to in writing,
@@ -24,7 +24,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 import de.governikus.eumw.configuration.wizard.web.handler.NamedObject;
 import de.governikus.eumw.configuration.wizard.web.model.ConfigurationForm;
-import de.governikus.eumw.configuration.wizard.web.model.poseidasxml.PolicyImplementationId;
+import de.governikus.eumw.configuration.wizard.web.model.poseidasxml.DvcaProvider;
 import de.governikus.eumw.utils.xml.XmlHelper;
 import lombok.extern.slf4j.Slf4j;
 
@@ -56,11 +56,6 @@ public abstract class ViewValidator
   private static final String KEY_INVALIDE_NUMBER = "wizard.status.validation.number";
 
   /**
-   * message key to the validation message if a number is under zero
-   */
-  private static final String KEY_NUMBER_UNDER_NULL = "wizard.status.validation.number.negative";
-
-  /**
    * validate a specific part of the configuration form
    *
    * @param configurationForm the configuration form to be validated
@@ -82,7 +77,7 @@ public abstract class ViewValidator
     }
     else if (!fieldValue.matches("\\d+"))
     {
-      bindingResult.rejectValue(fieldName, "wizard.status.validation.number", DEFAULT_MESSAGE_INVALID);
+      bindingResult.rejectValue(fieldName, KEY_INVALIDE_NUMBER, DEFAULT_MESSAGE_INVALID);
     }
   }
 
@@ -241,7 +236,7 @@ public abstract class ViewValidator
    * @param policyID the policyId that should be checked
    */
   protected void checkRadioButton(String fieldName,
-                                  PolicyImplementationId policyID,
+                                  DvcaProvider policyID,
                                   BindingResult bindingResult)
   {
     if (policyID == null)

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019 Governikus KG. Licensed under the EUPL, Version 1.2 or as soon they will be approved by
+ * Copyright (c) 2020 Governikus KG. Licensed under the EUPL, Version 1.2 or as soon they will be approved by
  * the European Commission - subsequent versions of the EUPL (the "Licence"); You may not use this work except
  * in compliance with the Licence. You may obtain a copy of the Licence at:
  * http://joinup.ec.europa.eu/software/page/eupl Unless required by applicable law or agreed to in writing,
@@ -172,14 +172,11 @@ public class CertificateHolderAuthorizationTemplate extends AbstractASN1Encoder 
 
   public enum ChatTerminalType
   {
-    NONE("none", 0, null),
-    AUTHENTICATION_TERMINAL("Authentication Terminal",
-                            ATConstants.VALUE_BYTE_COUNT,
-                            ATConstants.OID_AUTHENTICATION_TERMINALS),;
+    NONE(0), AUTHENTICATION_TERMINAL(ATConstants.VALUE_BYTE_COUNT);
 
     private int byteMatrixCount = -1;
 
-    private ChatTerminalType(String description, int byteMatrixCount, OID oid)
+    private ChatTerminalType(int byteMatrixCount)
     {
       this.byteMatrixCount = byteMatrixCount;
     }
@@ -479,5 +476,17 @@ public class CertificateHolderAuthorizationTemplate extends AbstractASN1Encoder 
       throw new IllegalArgumentException("ChatTerminalType is 'NULL' or of unknown type.");
     }
     return stringBuilder.toString();
+  }
+
+  @Override
+  public boolean equals(Object object)
+  {
+    return super.equals(object);
+  }
+
+  @Override
+  public int hashCode()
+  {
+    return super.hashCode();
   }
 }

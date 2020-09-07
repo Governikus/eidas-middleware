@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019 Governikus KG. Licensed under the EUPL, Version 1.2 or as soon they will be approved by
+ * Copyright (c) 2020 Governikus KG. Licensed under the EUPL, Version 1.2 or as soon they will be approved by
  * the European Commission - subsequent versions of the EUPL (the "Licence"); You may not use this work except
  * in compliance with the Licence. You may obtain a copy of the Licence at:
  * http://joinup.ec.europa.eu/software/page/eupl Unless required by applicable law or agreed to in writing,
@@ -36,7 +36,7 @@ import org.springframework.test.context.junit.jupiter.SpringExtension;
  */
 @ExtendWith(MockitoExtension.class)
 @ExtendWith(SpringExtension.class)
-public class ServiceProviderConfigTest
+class ServiceProviderConfigTest
 {
 
   /**
@@ -65,7 +65,7 @@ public class ServiceProviderConfigTest
    * test that a single metadata file can be read
    */
   @Test
-  public void testSingleMetadataFile() throws CertificateException, URISyntaxException, FileNotFoundException
+  void testSingleMetadataFile() throws CertificateException, URISyntaxException, FileNotFoundException
   {
     URL metadataDirURL = this.getClass().getResource("/singleMetadataFile");
     Mockito.when(mockConfigHolder.getProviderConfigDir()).thenReturn(new File(metadataDirURL.toURI()));
@@ -82,7 +82,7 @@ public class ServiceProviderConfigTest
    * Test that it is possible to read multiple metadata files
    */
   @Test
-  public void testTwoMetadataFiles() throws CertificateException, URISyntaxException, FileNotFoundException
+  void testTwoMetadataFiles() throws CertificateException, URISyntaxException, FileNotFoundException
   {
     URL metadataDirURL = this.getClass().getResource("/twoMetadataFiles");
     Mockito.when(mockConfigHolder.getProviderConfigDir()).thenReturn(new File(metadataDirURL.toURI()));
@@ -101,8 +101,7 @@ public class ServiceProviderConfigTest
    * Test that a missing or wrong certificate is detected
    */
   @Test
-  public void missingSignatureCertificate()
-    throws CertificateException, URISyntaxException, FileNotFoundException
+  void missingSignatureCertificate() throws CertificateException, URISyntaxException, FileNotFoundException
   {
     URL metadataDirURL = this.getClass().getResource("/singleMetadataFile");
     Mockito.when(mockConfigHolder.getProviderConfigDir()).thenReturn(new File(metadataDirURL.toURI()));

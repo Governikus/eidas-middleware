@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019 Governikus KG. Licensed under the EUPL, Version 1.2 or as soon they will be approved by
+ * Copyright (c) 2020 Governikus KG. Licensed under the EUPL, Version 1.2 or as soon they will be approved by
  * the European Commission - subsequent versions of the EUPL (the "Licence"); You may not use this work except
  * in compliance with the Licence. You may obtain a copy of the Licence at:
  * http://joinup.ec.europa.eu/software/page/eupl Unless required by applicable law or agreed to in writing,
@@ -20,21 +20,21 @@ import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import org.springframework.web.bind.annotation.GetMapping;
 
 import de.governikus.eumw.eidascommon.ContextPaths;
-import de.governikus.eumw.eidasmiddleware.handler.RequestHandler;
 import de.governikus.eumw.eidasmiddleware.controller.RequestReceiver;
+import de.governikus.eumw.eidasmiddleware.handler.RequestHandler;
 
 
 /**
  * Test the port filter
  */
-public class PortFilterTest
+class PortFilterTest
 {
 
   @Mock
   private RequestHandler requestHandler;
 
   @Test
-  public void testPortsAndPaths() throws Exception
+  void testPortsAndPaths() throws Exception
   {
     MockMvc requestReceiver = MockMvcBuilders.standaloneSetup(new RequestReceiver(requestHandler))
                                              .addFilters(new PortFilter(8443, 10000))
@@ -48,7 +48,7 @@ public class PortFilterTest
                                                     mockHttpServletRequest.setLocalPort(8443);
                                                     return mockHttpServletRequest;
                                                   }))
-                   .andExpect(MockMvcResultMatchers.status().is2xxSuccessful());
+                   .andExpect(MockMvcResultMatchers.status().isBadRequest());
 
     // eidas request on port 10000
     requestReceiver.perform(MockMvcRequestBuilders.get(ContextPaths.EIDAS_CONTEXT_PATH

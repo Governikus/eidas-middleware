@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019 Governikus KG. Licensed under the EUPL, Version 1.2 or as soon they will be approved by
+ * Copyright (c) 2020 Governikus KG. Licensed under the EUPL, Version 1.2 or as soon they will be approved by
  * the European Commission - subsequent versions of the EUPL (the "Licence"); You may not use this work except
  * in compliance with the Licence. You may obtain a copy of the Licence at:
  * http://joinup.ec.europa.eu/software/page/eupl Unless required by applicable law or agreed to in writing,
@@ -28,7 +28,6 @@ import javax.xml.validation.SchemaFactory;
 import javax.xml.validation.Validator;
 
 import org.opensaml.core.config.InitializationException;
-import org.opensaml.core.config.InitializationService;
 import org.opensaml.core.xml.io.MarshallingException;
 import org.opensaml.core.xml.io.UnmarshallingException;
 import org.opensaml.xmlsec.encryption.support.EncryptionException;
@@ -43,6 +42,8 @@ import de.governikus.eumw.eidasstarterkit.person_attributes.EidasPersonAttribute
 import de.governikus.eumw.eidasstarterkit.template.TemplateLoader;
 import net.shibboleth.utilities.java.support.component.ComponentInitializationException;
 import net.shibboleth.utilities.java.support.xml.XMLParserException;
+import se.swedenconnect.opensaml.OpenSAMLInitializer;
+import se.swedenconnect.opensaml.OpenSAMLSecurityExtensionConfig;
 
 
 /**
@@ -65,7 +66,15 @@ public class EidasSaml
   {
     if (!isInit)
     {
-      InitializationService.initialize();
+      try
+      {
+        OpenSAMLInitializer.getInstance().initialize(new OpenSAMLSecurityExtensionConfig());
+      }
+      catch (Exception e)
+      {
+        throw new InitializationException("EidasSaml: Can not init OpenSAML", e);
+      }
+
       try
       {
         TemplateLoader.init();
@@ -136,7 +145,7 @@ public class EidasSaml
    * @param providerName the response provider
    * @param signer the author of the message
    * @param requestedAttributes a list of the requestAttributes
-   * @param selectorType private sector or public sector SP
+   * @param sectorType private sector or public sector SP
    * @param nameIdPolicy defines the treatment of identifiers to be used in a cross-border context
    * @param loa the Level of Assurance
    * @return signed saml xml request as byte array
@@ -157,7 +166,7 @@ public class EidasSaml
                                      String providerName,
                                      EidasSigner signer,
                                      Map<EidasPersonAttributes, Boolean> requestedAttributes,
-                                     EidasRequestSectorType selectorType,
+                                     EidasRequestSectorType sectorType,
                                      EidasNameIdType nameIdPolicy,
                                      EidasLoA loa)
     throws InitializationException, CertificateEncodingException, IOException, XMLParserException,
@@ -165,7 +174,7 @@ public class EidasSaml
     TransformerException, ComponentInitializationException
   {
     init();
-    EidasRequest eidasRequest = new EidasRequest(destination, selectorType, nameIdPolicy, loa, issuer,
+    EidasRequest eidasRequest = new EidasRequest(destination, sectorType, nameIdPolicy, loa, issuer,
                                                  providerName, signer);
     return eidasRequest.generate(requestedAttributes);
   }
@@ -176,7 +185,7 @@ public class EidasSaml
                                      String providerName,
                                      EidasSigner signer,
                                      Map<EidasPersonAttributes, Boolean> requestedAttributes,
-                                     EidasRequestSectorType selectorType,
+                                     EidasRequestSectorType sectorType,
                                      EidasNameIdType nameIdPolicy,
                                      EidasLoA loa)
     throws CertificateEncodingException, IOException, XMLParserException, UnmarshallingException,
@@ -184,7 +193,7 @@ public class EidasSaml
     InitializationException, ComponentInitializationException
   {
     init();
-    EidasRequest eidasRequest = new EidasRequest(id, destination, selectorType, nameIdPolicy, loa, issuer,
+    EidasRequest eidasRequest = new EidasRequest(id, destination, sectorType, nameIdPolicy, loa, issuer,
                                                  providerName, signer);
     return eidasRequest.generate(requestedAttributes);
   }
@@ -193,7 +202,7 @@ public class EidasSaml
                                      String destination,
                                      EidasSigner signer,
                                      Map<EidasPersonAttributes, Boolean> requestedAttributes,
-                                     EidasRequestSectorType selectorType,
+                                     EidasRequestSectorType sectorType,
                                      EidasNameIdType nameIdPolicy,
                                      EidasLoA loa)
     throws InitializationException, CertificateEncodingException, IOException, XMLParserException,
@@ -201,7 +210,7 @@ public class EidasSaml
     TransformerException, ComponentInitializationException
   {
     init();
-    EidasRequest eidasRequest = new EidasRequest(destination, selectorType, nameIdPolicy, loa, issuer,
+    EidasRequest eidasRequest = new EidasRequest(destination, sectorType, nameIdPolicy, loa, issuer,
                                                  Constants.DEFAULT_PROVIDER_NAME, signer);
     return eidasRequest.generate(requestedAttributes);
   }
@@ -340,6 +349,9 @@ public class EidasSaml
    * @param supportedNameIdTypes
    * @param attributes
    * @param signer
+   * @param middlewareVersion
+   * @param doSign
+   * @param requesterIdFlag
    * @return
    * @throws InitializationException
    * @throws CertificateEncodingException
@@ -364,7 +376,10 @@ public class EidasSaml
                                              String redirectEndpoint,
                                              List<EidasNameIdType> supportedNameIdTypes,
                                              List<EidasPersonAttributes> attributes,
-                                             EidasSigner signer)
+                                             EidasSigner signer,
+                                             String middlewareVersion,
+                                             boolean doSign,
+                                             boolean requesterIdFlag)
     throws CertificateEncodingException, IOException, MarshallingException, SignatureException,
     TransformerFactoryConfigurationError, TransformerException, InitializationException
   {
@@ -372,7 +387,8 @@ public class EidasSaml
     EidasMetadataService meta = new EidasMetadataService(id, entityId, validUntil, sigCert, encCert,
                                                          organisation, technicalcontact, supportContact,
                                                          postEndpoint, redirectEndpoint, attributes,
-                                                         supportedNameIdTypes);
+                                                         supportedNameIdTypes, middlewareVersion, doSign,
+                                                         requesterIdFlag);
     return meta.generate(signer);
   }
 
@@ -405,17 +421,12 @@ public class EidasSaml
    * @param supportedNameIdTypes
    * @param signer
    * @return
-   * @throws ConfigurationException
    * @throws CertificateEncodingException
    * @throws IOException
-   * @throws XMLParserException
-   * @throws UnmarshallingException
    * @throws MarshallingException
    * @throws SignatureException
-   * @throws TransformerFactoryConfigurationError
    * @throws TransformerException
    * @throws InitializationException
-   * @throws ComponentInitializationException
    */
   public static byte[] createMetaDataNode(String id,
                                           String entityId,
@@ -429,9 +440,8 @@ public class EidasSaml
                                           EidasRequestSectorType spType,
                                           List<EidasNameIdType> supportedNameIdTypes,
                                           EidasSigner signer)
-    throws InitializationException, CertificateEncodingException, IOException, XMLParserException,
-    UnmarshallingException, MarshallingException, SignatureException, TransformerFactoryConfigurationError,
-    TransformerException, ComponentInitializationException
+    throws InitializationException, CertificateEncodingException, IOException, MarshallingException,
+    SignatureException, TransformerException
   {
     init();
     EidasMetadataNode meta = new EidasMetadataNode(id, entityId, validUntil, sigCert, encCert, organisation,

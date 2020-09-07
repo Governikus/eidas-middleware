@@ -49,7 +49,6 @@
         <xs:sequence>
             <xs:element name="blackListTrustAnchor" type="xs:base64Binary"/>
             <xs:element name="masterListTrustAnchor" type="xs:base64Binary"/>
-            <xs:element name="defectListTrustAnchor" type="xs:base64Binary"/>
             <xs:element name="autentServerUrl" type="xs:anyURI"/>
             <xs:element name="policyImplementationId" type="xs:string"/>
             <xs:element name="sslKeys" type="tns:sslKeysType" maxOccurs="unbounded"/>
@@ -81,6 +80,8 @@
             <xs:element name="certRenewal" type="tns:TimerType"/>
             <xs:element name="blacklistRenewal" type="tns:TimerType"/>
             <xs:element name="masterAndDefectListRenewal" type="tns:TimerType"/>
+            <xs:element name="crlRenewal" type="tns:TimerType"/>
+            <xs:element name="crlCacheTime" type="tns:TimerType"/>
         </xs:sequence>
     </xs:complexType>
     <xs:complexType name="TimerType">

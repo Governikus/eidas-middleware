@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019 Governikus KG. Licensed under the EUPL, Version 1.2 or as soon they will be approved by
+ * Copyright (c) 2020 Governikus KG. Licensed under the EUPL, Version 1.2 or as soon they will be approved by
  * the European Commission - subsequent versions of the EUPL (the "Licence"); You may not use this work except
  * in compliance with the Licence. You may obtain a copy of the Licence at:
  * http://joinup.ec.europa.eu/software/page/eupl Unless required by applicable law or agreed to in writing,
@@ -60,8 +60,8 @@ public enum ResultMinor
    */
   VII_NOT_QUALIFIED("http://www.bos-bremen.de/ecard/api/1.0/resultminor/vii/vii#not_qualified_certificate"),
   /**
-   * Es konnte keine Inhaltsdaten für die Verifikation einer PKCS#7 Detached Datei gefunden werden. URI
-   * value: http://www.bos-bremen.de/ecard/api/1.0/resultminor/vr/vr#no_content
+   * Es konnte keine Inhaltsdaten für die Verifikation einer PKCS#7 Detached Datei gefunden werden. URI value:
+   * http://www.bos-bremen.de/ecard/api/1.0/resultminor/vr/vr#no_content
    */
   VR_NO_CONTENT("http://www.bos-bremen.de/ecard/api/1.0/resultminor/vr/vr#no_content"),
   /**
@@ -180,12 +180,6 @@ public enum ResultMinor
    */
   COMMON_UNKNOWN_API_FUNCTION("http://www.bsi.bund.de/ecard/api/1.1/resultminor/al/common#unknownAPIFunction"),
   /**
-   * API-Funktion unbekannt Deprecated: do not use this, the "u" should not be a capital letter, see TR-03112
-   * part 1. URI value: http://www.bsi.bund.de/ecard/api/1.1/resultminor/al/common#UnknownAPIFunction
-   */
-  @Deprecated
-  common_UnknownAPIFunction("http://www.bsi.bund.de/ecard/api/1.1/resultminor/al/common#UnknownAPIFunction"),
-  /**
    * Framework nicht initialisiert URI value:
    * http://www.bsi.bund.de/ecard/api/1.1/resultminor/al/common#notInitialized
    */
@@ -195,12 +189,6 @@ public enum ResultMinor
    * http://www.bsi.bund.de/ecard/api/1.1/resultminor/al/common#warningConnectionDisconnected
    */
   COMMON_WARNING_CONNECTION_DISCONNECTED("http://www.bsi.bund.de/ecard/api/1.1/resultminor/al/common#warningConnectionDisconnected"),
-  /**
-   * Warnung, da eine aktive Session beendet wurde Deprecated: This is not defined in TR-03112 URI value:
-   * http://www.bsi.bund.de/ecard/api/1.1/resultminor/al/common#sessionTerminatedWarning
-   */
-  @Deprecated
-  common_sessionTerminatedWarning("http://www.bsi.bund.de/ecard/api/1.1/resultminor/al/common#sessionTerminatedWarning"),
   /**
    * Warnung, da eine aktive Session beendet wurde URI value:
    * http://www.bsi.bund.de/ecard/api/1.1/resultminor/al/common#SessionTerminatedWarning
@@ -302,8 +290,8 @@ public enum ResultMinor
    */
   DP_NODE_NOT_REACHABLE("http://www.bsi.bund.de/ecard/api/1.1/resultminor/dp#nodeNotReachable"),
   /**
-   * Zeitüberschreitung (Timeout) Die Operation wurde wegen Zeitüberschreitung abgebrochen. Deprecated:
-   * This is not defined in TR-03112 URI value: http://www.bsi.bund.de/ecard/api/1.1/resultminor/dp/dp#timeout
+   * Zeitüberschreitung (Timeout) Die Operation wurde wegen Zeitüberschreitung abgebrochen. Deprecated: This
+   * is not defined in TR-03112 URI value: http://www.bsi.bund.de/ecard/api/1.1/resultminor/dp/dp#timeout
    */
   @Deprecated
   DP_TIMEOUT("http://www.bsi.bund.de/ecard/api/1.1/resultminor/dp/dp#timeout"),
@@ -394,8 +382,7 @@ public enum ResultMinor
    */
   CERTIFICATE_REQUEST_SUBMISSION_FAILED("http://www.bsi.bund.de/ecard/api/1.1/resultminor/il/certificateRequest#submissionFailed"),
   /**
-   * Bestimmte Knoten können nur bei einem XML-Dokument verschlüsselt werden URI value:
-   * http://www.bsi.bund
+   * Bestimmte Knoten können nur bei einem XML-Dokument verschlüsselt werden URI value: http://www.bsi.bund
    * .de/ecard/api/1.1/resultminor/il/encryption#encryptionOfCertainNodesOnlyForXMLDocuments
    */
   ENCRYPTION_ENCRYPTION_OF_CERTAIN_NODES_ONLY_FOR_XML_DOCUMENTS("http://www.bsi.bund.de/ecard/api/1.1/resultminor/il/encryption#encryptionOfCertainNodesOnlyForXMLDocuments"),
@@ -435,9 +422,8 @@ public enum ResultMinor
    */
   SERVICE_TIME_STAMP_SERVICE_UNREACHABLE("http://www.bsi.bund.de/ecard/api/1.1/resultminor/il/service#timeStampServiceUnreachable"),
   /**
-   * Signaturformat nicht unterstützt Das angegebene Signatur- oder Zeitstempel-Format wird nicht
-   * unterstützt. URI value:
-   * http://www.bsi.bund.de/ecard/api/1.1/resultminor/il/signature#signatureFormatNotSupported
+   * Signaturformat nicht unterstützt Das angegebene Signatur- oder Zeitstempel-Format wird nicht unterstützt.
+   * URI value: http://www.bsi.bund.de/ecard/api/1.1/resultminor/il/signature#signatureFormatNotSupported
    */
   SIGNATURE_SIGNATURE_FORMAT_NOT_SUPPORTED("http://www.bsi.bund.de/ecard/api/1.1/resultminor/il/signature#signatureFormatNotSupported"),
   /**
@@ -446,9 +432,9 @@ public enum ResultMinor
    */
   SIGNATURE_PDF_SIGNATURE_FOR_NON_PDF_DOCUMENT("http://www.bsi.bund.de/ecard/api/1.1/resultminor/il/signature#PDFSignatureForNonPDFDocument"),
   /**
-   * IncludeEContent nicht möglich Diese Warnung wird zurückgeliefert, wenn das IncludeEContent-Flag bei
-   * der Erzeugung einer PDF-Signatur, eines Zeitstempels oder bei der übergabe eines Hashwertes zur
-   * Erzeugung einer Signatur gesetzt wird. URI value:
+   * IncludeEContent nicht möglich Diese Warnung wird zurückgeliefert, wenn das IncludeEContent-Flag bei der
+   * Erzeugung einer PDF-Signatur, eines Zeitstempels oder bei der übergabe eines Hashwertes zur Erzeugung
+   * einer Signatur gesetzt wird. URI value:
    * http://www.bsi.bund.de/ecard/api/1.1/resultminor/il/signature#unableToIncludeEContentWarning
    */
   SIGNATURE_UNABLE_TO_INCLUDE_E_CONTENT_WARNING("http://www.bsi.bund.de/ecard/api/1.1/resultminor/il/signature#unableToIncludeEContentWarning"),
@@ -472,9 +458,9 @@ public enum ResultMinor
    */
   SIGNATURE_CERTIFICATE_FORMAT_NOT_CORRECT_WARNING("http://www.bsi.bund.de/ecard/api/1.1/resultminor/il/signature#certificateFormatNotCorrectWarning"),
   /**
-   * Das Zertifikat wurde nicht ausreichend überprüft. Zum Beispiel weil es nicht geht, weil es zum
-   * Beispiel nicht qualifiziert ist. Das ist eine Warnung, die bedeutet das das Verifikationsergebniss mit
-   * vorsicht zu geniessen ist. URI value:
+   * Das Zertifikat wurde nicht ausreichend überprüft. Zum Beispiel weil es nicht geht, weil es zum Beispiel
+   * nicht qualifiziert ist. Das ist eine Warnung, die bedeutet das das Verifikationsergebniss mit vorsicht zu
+   * geniessen ist. URI value:
    * http://www.bsi.bund.de/ecard/api/1.1/resultminor/il/signature#certificateStatusNotCheckedWarning
    */
   SIGNATURE_CERTIFICATE_STATUS_NOT_CHECKED_WARNING("http://www.bsi.bund.de/ecard/api/1.1/resultminor/il/signature#certificateStatusNotCheckedWarning"),
@@ -534,8 +520,8 @@ public enum ResultMinor
   SIGNATURE_IMPROPER_REVOCATION_INFORMATION_WARNING("http://www.bsi.bund.de/ecard/api/1.1/resultminor/il/signature#improperRevocationInformationWarning"),
   /**
    * Signaturformat fehlerhaft Das Format der übergebenen Signatur entspricht nicht der vorgesehenen
-   * Spezifikation. Dieser Fehler tritt auf, wenn zwar ein unterstütztes Format (z.B. gemäß [RFC3275]
-   * oder [RFC3369]) erkannt wurde, die Signatur aber nicht der vorgesehenen Form genügt. Wird bereits das
+   * Spezifikation. Dieser Fehler tritt auf, wenn zwar ein unterstütztes Format (z.B. gemäß [RFC3275] oder
+   * [RFC3369]) erkannt wurde, die Signatur aber nicht der vorgesehenen Form genügt. Wird bereits das
    * übergebene Format nicht erkannt, so wird Fehler 2801 zurück geliefert. URI value:
    * http://www.bsi.bund.de/ecard/api/1.1/resultminor/il/signature#invalidSignatureFormat
    */
@@ -561,8 +547,7 @@ public enum ResultMinor
    */
   SIGNATURE_CERTIFICATE_REVOKED("http://www.bsi.bund.de/ecard/api/1.1/resultminor/il/signature#certificateRevoked"),
   /**
-   * Referenzzeitpunkt außerhalb des Gültigkeitszeitraumes eines Zertifikates URI value:
-   * http://www.bsi.bund
+   * Referenzzeitpunkt außerhalb des Gültigkeitszeitraumes eines Zertifikates URI value: http://www.bsi.bund
    * .de/ecard/api/1.1/resultminor/il/signature#referenceTimeNotWithinCertificateValidityPeriod
    */
   SIGNATURE_REFERENCE_TIME_NOT_WITHIN_CERTIFICATE_VALIDITY_PERIOD("http://www.bsi.bund.de/ecard/api/1.1/resultminor/il/signature#referenceTimeNotWithinCertificateValidityPeriod"),
@@ -577,8 +562,7 @@ public enum ResultMinor
    */
   SIGNATURE_SIGNATURE_MANIFEST_NOT_CORRECT("http://www.bsi.bund.de/ecard/api/1.1/resultminor/il/signature#signatureManifestNotCorrect"),
   /**
-   * Angegebener SignatureType untersützt keine SignatureForm-Präzisierung URI value:
-   * http://www.bsi.bund.de
+   * Angegebener SignatureType untersützt keine SignatureForm-Präzisierung URI value: http://www.bsi.bund.de
    * /ecard/api/1.1/resultminor/il/signature#signatureTypeDoesNotSupportSignatureFormClarificationWarning
    */
   SIGNATURE_SIGNATURE_TYPE_DOES_NOT_SUPPORT_SIGNATURE_FORM_CLARIFICATION_WARNING("http://www.bsi.bund.de/ecard/api/1.1/resultminor/il/signature#signatureTypeDoesNotSupportSignatureFormClarificationWarning"),
@@ -605,8 +589,8 @@ public enum ResultMinor
    */
   SIGNATURE_UNKNOWN_SIGNATURE_POLICY("http://www.bsi.bund.de/ecard/api/1.1/resultminor/il/signature#unknownSignaturePolicy"),
   /**
-   * Ungeeignetes Stylesheet für übergebenes Dokument Deprecated: This is not defined in TR-03112 URI
-   * value: http://www.bsi.bund.de/ecard/api/1.1/resultminor/il/viewer#unsuiteableSylesheetForDocument
+   * Ungeeignetes Stylesheet für übergebenes Dokument Deprecated: This is not defined in TR-03112 URI value:
+   * http://www.bsi.bund.de/ecard/api/1.1/resultminor/il/viewer#unsuiteableSylesheetForDocument
    */
   @Deprecated
   VIEWER_UNSUITEABLE_SYLESHEET_FOR_DOCUMENT("http://www.bsi.bund.de/ecard/api/1.1/resultminor/il/viewer#unsuiteableSylesheetForDocument"),
@@ -848,9 +832,8 @@ public enum ResultMinor
    */
   SAL_INVALID_ACCESS_CONTROL_INFORMATION("http://www.bsi.bund.de/ecard/api/1.1/resultminor/sal#invalidAccessControlInformation"),
   /**
-   * Kein Platz verfügbar Unter der angegebenen Referenz ist kein Speicherplatz verfügbar. Deprecated:
-   * This is not defined in TR-03112 URI value:
-   * http://www.bsi.bund.de/ecard/api/1.1/resultminor/sal#noSpaceAvailable
+   * Kein Platz verfügbar Unter der angegebenen Referenz ist kein Speicherplatz verfügbar. Deprecated: This is
+   * not defined in TR-03112 URI value: http://www.bsi.bund.de/ecard/api/1.1/resultminor/sal#noSpaceAvailable
    */
   @Deprecated
   SAL_NO_SPACE_AVAILABLE("http://www.bsi.bund.de/ecard/api/1.1/resultminor/sal#noSpaceAvailable"),
@@ -892,9 +875,9 @@ public enum ResultMinor
   SAL_REFERENCE_DATA_BLOCKED("http://www.bsi.bund.de/ecard/api/1.1/resultminor/sal#referenceDataBlocked"),
   /**
    * Authentisierungsfunktion nicht freigeschaltet Die Authentisierungsfunktion kann noch nicht genutzt
-   * werden, weil beispielsweise die Applikation noch nicht vollständig ist. Das kann bei einer
-   * SigG-Anwendung ein fehlender Schlüssel oder ein noch nicht freigeschaltetes Zertifikat sein.
-   * Deprecated: This is not defined in TR-03112 URI value:
+   * werden, weil beispielsweise die Applikation noch nicht vollständig ist. Das kann bei einer SigG-Anwendung
+   * ein fehlender Schlüssel oder ein noch nicht freigeschaltetes Zertifikat sein. Deprecated: This is not
+   * defined in TR-03112 URI value:
    * http://www.bsi.bund.de/ecard/api/1.1/resultminor/sal#authenticationNotActivated
    */
   @Deprecated
@@ -902,8 +885,8 @@ public enum ResultMinor
   /**
    * Bedingungen für die Nutzung der Identifikationsdaten nicht erfällt Die Authentisierung mit Hilfe der
    * Identifikationsdaten kann nicht durchgeführt werden, weil sie nicht die notwendigen Anforderungen
-   * erfüllt; beispielsweise muss eine Transport-PIN erst geändert werden. (Condition OF USE) Deprecated:
-   * This is not defined in TR-03112 URI value:
+   * erfüllt; beispielsweise muss eine Transport-PIN erst geändert werden. (Condition OF USE) Deprecated: This
+   * is not defined in TR-03112 URI value:
    * http://www.bsi.bund.de/ecard/api/1.1/resultminor/sal#conditionOfUseNotSatisfied
    */
   @Deprecated
@@ -915,8 +898,8 @@ public enum ResultMinor
   @Deprecated
   SAL_FUNCTION_NOT_SUPPORTED("http://www.bsi.bund.de/ecard/api/1.1/resultminor/sal#functionNotSupported"),
   /**
-   * Funktionalität wird von der aktuellen Version der API nicht unterstützt. Deprecated: This is not
-   * defined in TR-03112 URI value:
+   * Funktionalität wird von der aktuellen Version der API nicht unterstützt. Deprecated: This is not defined
+   * in TR-03112 URI value:
    * http://www.bsi.bund.de/ecard/api/1.1/resultminor/sal/FunctionalityByCurrentProtocolVersionNotSupported
    */
   @Deprecated
@@ -1058,9 +1041,8 @@ public enum ResultMinor
    */
   IO_UNKNOWN_OUTPUT_DEVICE("http://www.bsi.bund.de/ecard/api/1.1/resultminor/ifdl/IO#unknownOutputDevice"),
   /**
-   * Abbruch des Kommandos nicht möglich (IFD_CANCEL_NOT_POSSIBLE) Deprecated: This is not defined in
-   * TR-03112 URI value:
-   * http://www.bsi.bund.de/ecard/api/1.1/resultminor/ifdl/IO#cancelationNotPossibleWarning
+   * Abbruch des Kommandos nicht möglich (IFD_CANCEL_NOT_POSSIBLE) Deprecated: This is not defined in TR-03112
+   * URI value: http://www.bsi.bund.de/ecard/api/1.1/resultminor/ifdl/IO#cancelationNotPossibleWarning
    */
   @Deprecated
   IO_CANCELATION_NOT_POSSIBLE_WARNING("http://www.bsi.bund.de/ecard/api/1.1/resultminor/ifdl/IO#cancelationNotPossibleWarning"),
@@ -1076,8 +1058,8 @@ public enum ResultMinor
    */
   IO_NO_TRANSACTION_STARTED("http://www.bsi.bund.de/ecard/api/1.1/resultminor/ifdl/IO#noTransactionStarted"),
   /**
-   * Erneut erfasste Identifikationsdaten stimmen nicht überein (IFD_REPEATED_DATA_MISMATCH) Deprecated:
-   * This is not defined in TR-03112 URI value:
+   * Erneut erfasste Identifikationsdaten stimmen nicht überein (IFD_REPEATED_DATA_MISMATCH) Deprecated: This
+   * is not defined in TR-03112 URI value:
    * http://www.bsi.bund.de/ecard/api/1.1/resultminor/ifdl/IO#repeatedIdentificationDataMismatch
    */
   @Deprecated
@@ -1103,19 +1085,19 @@ public enum ResultMinor
    */
   IO_CANCEL_NOT_POSSIBLE("http://www.bsi.bund.de/ecard/api/1.1/resultminor/ifdl/IO#cancelNotPossible"),
   /**
-   * Exklusive Reservierung nicht möglich Die exklusive Reservierung der eCard ist nicht möglich.
-   * Mögliche Ursachen sind, dass weitere Anwendungen auf die eCard zugreifen oder die Rechte für die
-   * exklusive Reservierung der eCard nicht vorhanden sind (API_EXCLUSIVE_NOT_AVAILABLE) Deprecated: This is
-   * not defined in TR-03112 URI value:
+   * Exklusive Reservierung nicht möglich Die exklusive Reservierung der eCard ist nicht möglich. Mögliche
+   * Ursachen sind, dass weitere Anwendungen auf die eCard zugreifen oder die Rechte für die exklusive
+   * Reservierung der eCard nicht vorhanden sind (API_EXCLUSIVE_NOT_AVAILABLE) Deprecated: This is not defined
+   * in TR-03112 URI value:
    * http://www.bsi.bund.de/ecard/api/1.1/resultminor/ifdl/terminal#exclusiveNotAvailable
    */
   @Deprecated
   TERMINAL_EXCLUSIVE_NOT_AVAILABLE("http://www.bsi.bund.de/ecard/api/1.1/resultminor/ifdl/terminal#exclusiveNotAvailable"),
   /**
-   * Exklusive Reservierung nicht möglich Die exklusive Reservierung der eCard ist nicht möglich.
-   * Mögliche Ursachen sind, dass weitere Anwendungen auf die eCard zugreifen oder die Rechte für die
-   * exklusive Reservierung der eCard nicht vorhanden sind (API_EXCLUSIVE_NOT_AVAILABLE) Deprecated: This is
-   * not avaliable in TR-03112 version 1.1.5 any more URI value:
+   * Exklusive Reservierung nicht möglich Die exklusive Reservierung der eCard ist nicht möglich. Mögliche
+   * Ursachen sind, dass weitere Anwendungen auf die eCard zugreifen oder die Rechte für die exklusive
+   * Reservierung der eCard nicht vorhanden sind (API_EXCLUSIVE_NOT_AVAILABLE) Deprecated: This is not
+   * avaliable in TR-03112 version 1.1.5 any more URI value:
    * http://www.bsi.bund.de/ecard/api/1.1/resultminor/sal#exclusiveNotAvailable
    */
   @Deprecated
@@ -1176,14 +1158,12 @@ public enum ResultMinor
   @Deprecated
   TERMINAL_MECHANICAL_FUNCTION_NOT_SUPPORTED("http://www.bsi.bund.de/ecard/api/1.1/resultminor/ifdl/terminal#mechanicalFunctionNotSupported"),
   /**
-   * Kartenterminal beschäftigt (IFD_SHARING_VIOLATION) Deprecated: This is not defined in TR-03112 URI
-   * value: http://www.bsi.bund.de/ecard/api/1.1/resultminor/ifdl/terminal#IFDBusy
+   * Kartenterminal beschäftigt (IFD_SHARING_VIOLATION) Deprecated: This is not defined in TR-03112 URI value:
+   * http://www.bsi.bund.de/ecard/api/1.1/resultminor/ifdl/terminal#IFDBusy
    */
   @Deprecated
   TERMINAL_IFD_BUSY("http://www.bsi.bund.de/ecard/api/1.1/resultminor/ifdl/terminal#IFDBusy");
 
-  // FIXME: ECA-351 This is a temporary workaround for an error in the BuergerClient
-  // TesVersion 3 (Look in EnumeratonTemplate.vm)
   private static final Log LOGGER = LogFactory.getLog(ResultMinor.class.getName());
 
   private final String uri;

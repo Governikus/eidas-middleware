@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019 Governikus KG. Licensed under the EUPL, Version 1.2 or as soon they will be approved by
+ * Copyright (c) 2020 Governikus KG. Licensed under the EUPL, Version 1.2 or as soon they will be approved by
  * the European Commission - subsequent versions of the EUPL (the "Licence"); You may not use this work except
  * in compliance with the Licence. You may obtain a copy of the Licence at:
  * http://joinup.ec.europa.eu/software/page/eupl Unless required by applicable law or agreed to in writing,
@@ -34,7 +34,7 @@ import lombok.extern.slf4j.Slf4j;
 public class PortFilter extends OncePerRequestFilter
 {
 
-  @Value("${server.adminInterfacePort:0}")
+  @Value("#{${server.adminInterfacePort:}?:0}")
   private int adminInterfacePort;
 
   @Value("${server.port}")

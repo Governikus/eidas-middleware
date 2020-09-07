@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019 Governikus KG. Licensed under the EUPL, Version 1.2 or as soon they will be approved by
+ * Copyright (c) 2020 Governikus KG. Licensed under the EUPL, Version 1.2 or as soon they will be approved by
  * the European Commission - subsequent versions of the EUPL (the "Licence"); You may not use this work except
  * in compliance with the Licence. You may obtain a copy of the Licence at:
  * http://joinup.ec.europa.eu/software/page/eupl Unless required by applicable law or agreed to in writing,
@@ -47,8 +47,7 @@ public class BlackListDetails
     // Finished parsing BlackList, check if all is done
     if (sectorID == null || sectorSpecificIDs == null)
     {
-      throw new IOException(
-                            "Could not find any blacklistdetails in the asn1 structure. Was the right asn1 structure used?");
+      throw new IOException("Could not find any blacklistdetails in the asn1 structure. Was the right asn1 structure used?");
     }
   }
 
@@ -73,8 +72,7 @@ public class BlackListDetails
     sectorID = ((ASN1OctetString)sequence.getObjectAt(0)).getOctets();
 
     ASN1Sequence seq = (ASN1Sequence)sequence.getObjectAt(1);
-    ASN1SequenceParser parser = seq.parser();
-    return parser;
+    return seq.parser();
   }
 
   private void parseDetailList(ASN1SequenceParser parser) throws IOException

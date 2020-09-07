@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019 Governikus KG. Licensed under the EUPL, Version 1.2 or as soon they will be approved by
+ * Copyright (c) 2020 Governikus KG. Licensed under the EUPL, Version 1.2 or as soon they will be approved by
  * the European Commission - subsequent versions of the EUPL (the "Licence"); You may not use this work except
  * in compliance with the Licence. You may obtain a copy of the Licence at:
  * http://joinup.ec.europa.eu/software/page/eupl Unless required by applicable law or agreed to in writing,
@@ -11,28 +11,27 @@
 package de.governikus.eumw.poseidas.server.pki.caserviceaccess;
 
 import java.io.IOException;
-import java.net.InetAddress;
 import java.net.Socket;
 import java.net.URISyntaxException;
-import java.net.URL;
-import java.net.URLConnection;
-import java.net.UnknownHostException;
 import java.security.GeneralSecurityException;
 import java.security.Key;
+import java.security.KeyManagementException;
 import java.security.KeyStore;
 import java.security.KeyStoreException;
+import java.security.NoSuchAlgorithmException;
 import java.security.Principal;
 import java.security.PrivateKey;
 import java.security.SecureRandom;
+import java.security.UnrecoverableKeyException;
+import java.security.cert.CertificateException;
 import java.security.cert.X509Certificate;
+import java.util.Arrays;
 import java.util.List;
 
-import javax.net.ssl.HttpsURLConnection;
 import javax.net.ssl.KeyManager;
 import javax.net.ssl.KeyManagerFactory;
 import javax.net.ssl.SSLContext;
-import javax.net.ssl.SSLSocket;
-import javax.net.ssl.SSLSocketFactory;
+import javax.net.ssl.TrustManager;
 import javax.net.ssl.TrustManagerFactory;
 import javax.net.ssl.X509KeyManager;
 import javax.xml.ws.BindingProvider;
@@ -44,6 +43,12 @@ import org.apache.cxf.configuration.jsse.TLSClientParameters;
 import org.apache.cxf.frontend.ClientProxy;
 import org.apache.cxf.transport.http.HTTPConduit;
 import org.apache.cxf.transports.http.configuration.HTTPClientPolicy;
+import org.apache.http.client.methods.CloseableHttpResponse;
+import org.apache.http.client.methods.HttpGet;
+import org.apache.http.conn.ssl.SSLConnectionSocketFactory;
+import org.apache.http.impl.client.CloseableHttpClient;
+import org.apache.http.impl.client.HttpClients;
+import org.apache.tomcat.util.net.Constants;
 import org.bouncycastle.jce.provider.BouncyCastleProvider;
 
 import de.governikus.eumw.eidascommon.Utils;
@@ -59,6 +64,11 @@ import de.governikus.eumw.eidascommon.Utils;
 public class PKIServiceConnector
 {
 
+  /**
+   * special log category to write berCA connection data and dialog content to
+   */
+  private static final Log SSL_LOGGER = LogFactory.getLog("de.governikus.eumw.poseidas.server.pki.debug");
+
   private static final Log LOG = LogFactory.getLog(PKIServiceConnector.class);
 
   /**
@@ -66,10 +76,26 @@ public class PKIServiceConnector
    */
   private static final long MILLISECOND_FACTOR = 1000L;
 
-  /**
-   * special log category to write berCA connection data and dialog content to
-   */
-  public static final Log SSL_LOGGER = LogFactory.getLog("de.governikus.eumw.poseidas.server.pki.debug");
+  private static final String[] ENABLED_CIPHER_SUITES = {"TLS_ECDHE_ECDSA_WITH_AES_256_CBC_SHA384",
+                                                         "TLS_ECDHE_ECDSA_WITH_AES_128_CBC_SHA256",
+                                                         "TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384",
+                                                         "TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256",
+                                                         "TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA384",
+                                                         "TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256",
+                                                         "TLS_DHE_RSA_WITH_AES_256_GCM_SHA384",
+                                                         "TLS_DHE_RSA_WITH_AES_128_GCM_SHA256",
+                                                         "TLS_DHE_RSA_WITH_AES_256_CBC_SHA256",
+                                                         "TLS_DHE_RSA_WITH_AES_128_CBC_SHA256",
+                                                         "TLS_DHE_DSS_WITH_AES_256_GCM_SHA384",
+                                                         "TLS_DHE_DSS_WITH_AES_128_GCM_SHA256",
+                                                         "TLS_DHE_DSS_WITH_AES_256_CBC_SHA256",
+                                                         "TLS_DHE_DSS_WITH_AES_128_CBC_SHA256"};
+
+  private static final char[] DUMMY_KEYPASS = "123456".toCharArray();
+
+  private static boolean sslContextLocked = false;
+
+  private static long lockStealTime;
 
   private final X509Certificate sslServersCert;
 
@@ -81,7 +107,6 @@ public class PKIServiceConnector
 
   private final String entityID;
 
-  private static final char[] DUMMY_KEYPASS = "123456".toCharArray();
 
   /**
    * Create new instance for specifies SSL parameters
@@ -103,6 +128,27 @@ public class PKIServiceConnector
          entityID);
   }
 
+  /**
+   * Create instance with given certificates.
+   *
+   * @param timeout timeout in seconds
+   * @param sslServersCert
+   * @param clientCertAndKey
+   * @param storePass
+   * @param entityID
+   */
+  public PKIServiceConnector(int timeout,
+                             X509Certificate sslServersCert,
+                             KeyStore clientCertAndKey,
+                             char[] storePass,
+                             String entityID)
+  {
+    this.timeout = timeout;
+    this.sslServersCert = sslServersCert;
+    this.clientCertAndKey = clientCertAndKey;
+    this.storePass = storePass;
+    this.entityID = entityID;
+  }
 
   private static KeyStore createKeystore(Key sslClientKey,
                                          List<X509Certificate> sslClientCert,
@@ -129,28 +175,72 @@ public class PKIServiceConnector
     return clientKeyStore;
   }
 
+  /**
+   * return human-readable String for identifying a certificate
+   *
+   * @param cert
+   */
+  private static String certificateToString(X509Certificate cert)
+  {
+    if (cert == null)
+    {
+      return "\tno certificate given";
+    }
+    StringBuilder builder = new StringBuilder();
+    builder.append("\tSubjectDN: \t")
+           .append(cert.getSubjectDN())
+           .append("\n\tIssuerDN: \t")
+           .append(cert.getIssuerDN())
+           .append("\n\tSerialNumber: \t")
+           .append(cert.getSerialNumber());
+    return builder.toString();
+  }
 
   /**
-   * Create instance with given certificates.
-   *
-   * @param timeout timeout in seconds
-   * @param sslServersCert
-   * @param clientCertAndKey
-   * @param storePass
-   * @throws GeneralSecurityException
+   * Block as long as another thread uses the SSL context. After calling this method, a client can set its own
+   * static properties to the SSL context without breaking some other process.
    */
-  public PKIServiceConnector(int timeout,
-                             X509Certificate sslServersCert,
-                             KeyStore clientCertAndKey,
-                             char[] storePass,
-                             String entityID)
-    throws GeneralSecurityException
+  public static synchronized void getContextLock()
   {
-    this.timeout = timeout;
-    this.sslServersCert = sslServersCert;
-    this.clientCertAndKey = clientCertAndKey;
-    this.storePass = storePass;
-    this.entityID = entityID;
+    long now = System.currentTimeMillis();
+    while (sslContextLocked && now < lockStealTime)
+    {
+      try
+      {
+        PKIServiceConnector.class.wait(lockStealTime - now);
+      }
+      catch (InterruptedException e)
+      {
+        LOG.error("Thread was interrupted while waiting for the SSL context lock", e);
+        // Reinterrupt the current thread to make sure we are not ignoring the interrupt signal
+        Thread.currentThread().interrupt();
+      }
+      now = System.currentTimeMillis();
+    }
+    if (sslContextLocked)
+    {
+      LOG.error("stealing lock on SSL context: another thread did not release it after two minutes",
+                new Exception("this is only for printing the stack trace"));
+    }
+    final long twoMinutesInMillis = 2 * 60 * 1000L;
+    lockStealTime = System.currentTimeMillis() + twoMinutesInMillis;
+    sslContextLocked = true;
+    SSL_LOGGER.debug("Starting communication:");
+  }
+
+  /**
+   * Release the lock on the SSL context - other threads may now set their static properties
+   */
+  public static synchronized void releaseContextLock()
+  {
+    if (SSL_LOGGER.isDebugEnabled())
+    {
+      SSL_LOGGER.debug("Communication finished\n\n"
+                       + "######################################################################################"
+                       + "\n");
+    }
+    sslContextLocked = false;
+    PKIServiceConnector.class.notifyAll();
   }
 
   /**
@@ -162,191 +252,57 @@ public class PKIServiceConnector
    */
   public byte[] getFile(String uri) throws IOException
   {
-    URL url = new URL(uri);
-    URLConnection con = url.openConnection();
-    con.setConnectTimeout(timeout * 1000);
-    con.setReadTimeout(timeout * 1000);
+    CloseableHttpClient client;
     try
     {
-      if (con instanceof HttpsURLConnection)
-      {
-        HttpsURLConnection scon = (HttpsURLConnection)con;
-        scon.setSSLSocketFactory(getSSLFactory());
-      }
+      SSLContext ctx = createSSLContext();
+      SSLConnectionSocketFactory sslSocketFactory = new SSLConnectionSocketFactory(ctx,
+                                                                                   new String[]{Constants.SSL_PROTO_TLSv1_2},
+                                                                                   ENABLED_CIPHER_SUITES,
+                                                                                   SSLConnectionSocketFactory.getDefaultHostnameVerifier());
+      client = HttpClients.custom().setSSLSocketFactory(sslSocketFactory).build();
     }
-    catch (GeneralSecurityException e)
+    catch (CertificateException | NoSuchAlgorithmException | UnrecoverableKeyException | KeyStoreException
+      | KeyManagementException e)
     {
-      LOG.error(entityID + ": should not have happened, security stuff was done before", e);
+      throw new IOException("Cannot create http client", e);
     }
-    return Utils.readBytesFromStream(con.getInputStream());
+    try (CloseableHttpResponse response = client.execute(new HttpGet(uri)))
+    {
+      return Utils.readBytesFromStream(response.getEntity().getContent());
+    }
   }
 
-  /**
-   * Create an SSLSocketFactory which supports client authentication.
-   *
-   * @throws GeneralSecurityException
-   * @throws IOException
-   */
-  private SSLSocketFactory getSSLFactory() throws GeneralSecurityException, IOException
+  private SSLContext createSSLContext() throws NoSuchAlgorithmException, KeyStoreException,
+    UnrecoverableKeyException, KeyManagementException, IOException, CertificateException
   {
-    SSLContext ctx = SSLContext.getInstance("TLSv1.2");
+    SSLContext ctx = SSLContext.getInstance(Constants.SSL_PROTO_TLSv1_2);
+    KeyManager[] km = createKeyManager();
+    ctx.init(km, createTrustManager(), new SecureRandom());
+    return ctx;
+  }
 
-    KeyManager km = null;
+  private TrustManager[] createTrustManager()
+    throws NoSuchAlgorithmException, KeyStoreException, IOException, CertificateException
+  {
     TrustManagerFactory tmf = TrustManagerFactory.getInstance(TrustManagerFactory.getDefaultAlgorithm());
-    if (clientCertAndKey != null)
-    {
-      KeyManagerFactory kmf = KeyManagerFactory.getInstance(KeyManagerFactory.getDefaultAlgorithm());
-      kmf.init(clientCertAndKey, storePass);
-      X509KeyManager origKM = (X509KeyManager)kmf.getKeyManagers()[0];
-      // force the key manager to use a defined key in case there is more than one
-      km = new AliasKeyManager(origKM, entityID);
-    }
-
     KeyStore trustStore = KeyStore.getInstance("jks");
     trustStore.load(null, null);
     trustStore.setCertificateEntry("alias", sslServersCert);
     tmf.init(trustStore);
-
-    ctx.init(km == null ? null : new KeyManager[]{km}, tmf.getTrustManagers(), new SecureRandom());
-    return new PoseidasSSLSocketFactory(ctx.getSocketFactory());
+    return tmf.getTrustManagers();
   }
 
-
-  private static class PoseidasSSLSocketFactory extends SSLSocketFactory
+  private KeyManager[] createKeyManager()
+    throws NoSuchAlgorithmException, KeyStoreException, UnrecoverableKeyException
   {
-
-    private static final String[] ENABLED_CIPHER_SUITES = {
-                                                           // "TLS_ECDHE_ECDSA_WITH_AES_256_GCM_SHA384",
-                                                           // "TLS_ECDHE_ECDSA_WITH_AES_128_GCM_SHA256",
-                                                           "TLS_ECDHE_ECDSA_WITH_AES_256_CBC_SHA384",
-                                                           "TLS_ECDHE_ECDSA_WITH_AES_128_CBC_SHA256",
-                                                           // "TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384",
-                                                           // "TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256",
-                                                           "TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA384",
-                                                           "TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256",
-                                                           // "TLS_DHE_RSA_WITH_AES_256_GCM_SHA384",
-                                                           // "TLS_DHE_RSA_WITH_AES_128_GCM_SHA256",
-                                                           "TLS_DHE_RSA_WITH_AES_256_CBC_SHA256",
-                                                           "TLS_DHE_RSA_WITH_AES_128_CBC_SHA256",
-                                                           // "TLS_DHE_DSS_WITH_AES_256_GCM_SHA384",
-                                                           // "TLS_DHE_DSS_WITH_AES_128_GCM_SHA256",
-                                                           "TLS_DHE_DSS_WITH_AES_256_CBC_SHA256",
-                                                           "TLS_DHE_DSS_WITH_AES_128_CBC_SHA256",
-                                                           "TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA",
-                                                           "TLS_ECDH_RSA_WITH_AES_256_CBC_SHA",
-                                                           "TLS_DHE_RSA_WITH_AES_256_CBC_SHA",
-                                                           "TLS_RSA_WITH_AES_256_CBC_SHA",
-                                                           "TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA",
-                                                           "TLS_ECDH_RSA_WITH_AES_128_CBC_SHA",
-                                                           "TLS_DHE_RSA_WITH_AES_128_CBC_SHA",
-                                                           "TLS_RSA_WITH_AES_128_CBC_SHA"};
-
-    private final SSLSocketFactory innerFactory;
-
-    private PoseidasSSLSocketFactory(SSLSocketFactory inner)
-    {
-      this.innerFactory = inner;
-    }
-
-    @Override
-    public Socket createSocket() throws IOException
-    {
-      SSLSocket s = (SSLSocket)innerFactory.createSocket();
-      s.setEnabledCipherSuites(ENABLED_CIPHER_SUITES);
-      return s;
-    }
-
-    @Override
-    public Socket createSocket(InetAddress arg0, int arg1, InetAddress arg2, int arg3) throws IOException
-    {
-      SSLSocket s = (SSLSocket)innerFactory.createSocket(arg0, arg1, arg2, arg3);
-      s.setEnabledCipherSuites(ENABLED_CIPHER_SUITES);
-      return s;
-    }
-
-    @Override
-    public Socket createSocket(InetAddress arg0, int arg1) throws IOException
-    {
-      SSLSocket s = (SSLSocket)innerFactory.createSocket(arg0, arg1);
-      s.setEnabledCipherSuites(ENABLED_CIPHER_SUITES);
-      return s;
-    }
-
-    @Override
-    public Socket createSocket(Socket arg0, String arg1, int arg2, boolean arg3) throws IOException
-    {
-      SSLSocket s = (SSLSocket)innerFactory.createSocket(arg0, arg1, arg2, arg3);
-      s.setEnabledCipherSuites(ENABLED_CIPHER_SUITES);
-      return s;
-    }
-
-    @Override
-    public Socket createSocket(String arg0, int arg1, InetAddress arg2, int arg3)
-      throws IOException, UnknownHostException
-    {
-      SSLSocket s = (SSLSocket)innerFactory.createSocket(arg0, arg1, arg2, arg3);
-      s.setEnabledCipherSuites(ENABLED_CIPHER_SUITES);
-      return s;
-    }
-
-    @Override
-    public Socket createSocket(String arg0, int arg1) throws IOException, UnknownHostException
-    {
-      SSLSocket s = (SSLSocket)innerFactory.createSocket(arg0, arg1);
-      s.setEnabledCipherSuites(ENABLED_CIPHER_SUITES);
-      return s;
-    }
-
-    @Override
-    public String[] getDefaultCipherSuites()
-    {
-      return ENABLED_CIPHER_SUITES;
-    }
-
-    @Override
-    public String[] getSupportedCipherSuites()
-    {
-      return ENABLED_CIPHER_SUITES;
-    }
-
-    @Override
-    public boolean equals(Object arg0)
-    {
-      return innerFactory.equals(arg0);
-    }
-
-    @Override
-    public int hashCode()
-    {
-      return innerFactory.hashCode();
-    }
-
-    @Override
-    public String toString()
-    {
-      return "MySSLSocketFactory: " + innerFactory.toString();
-    }
-  }
-
-  /**
-   * return human-readable String for identifying a certificate
-   *
-   * @param cert
-   */
-  public static String certificateToString(X509Certificate cert)
-  {
-    if (cert == null)
-    {
-      return "\tno certificate given";
-    }
-    StringBuilder builder = new StringBuilder();
-    builder.append("\tSubjectDN: \t");
-    builder.append(cert.getSubjectDN());
-    builder.append("\n\tIssuerDN: \t");
-    builder.append(cert.getIssuerDN());
-    builder.append("\n\tSerialNumber: \t");
-    builder.append(cert.getSerialNumber());
-    return builder.toString();
+    KeyManager km;
+    KeyManagerFactory kmf = KeyManagerFactory.getInstance(KeyManagerFactory.getDefaultAlgorithm());
+    kmf.init(clientCertAndKey, storePass);
+    X509KeyManager origKM = (X509KeyManager)kmf.getKeyManagers()[0];
+    // force the key manager to use a defined key in case there is more than one
+    km = new AliasKeyManager(origKM, entityID);
+    return new KeyManager[]{km};
   }
 
   void setHttpsConnectionSetting(BindingProvider port, String uri) throws URISyntaxException
@@ -386,7 +342,8 @@ public class PKIServiceConnector
       policy.setReceiveTimeout(MILLISECOND_FACTOR * timeout);
       conduit.setClient(policy);
       TLSClientParameters tlsClientParameters = new TLSClientParameters();
-      tlsClientParameters.setSSLSocketFactory(getSSLFactory());
+      tlsClientParameters.setSslContext(createSSLContext());
+      tlsClientParameters.setCipherSuites(Arrays.asList(ENABLED_CIPHER_SUITES));
       conduit.setTlsClientParameters(tlsClientParameters);
     }
     catch (WebServiceException e)
@@ -405,52 +362,6 @@ public class PKIServiceConnector
     {
       LOG.error(entityID + ": should not have happened because no I/O is done", e);
     }
-  }
-
-  private static boolean sslContextLocked = false;
-
-  private static long lockStealTime;
-
-  /**
-   * Block as long as another thread uses the SSL context. After calling this method, a client can set its own
-   * static properties to the SSL context without breaking some other process.
-   */
-  public static synchronized void getContextLock()
-  {
-    long now = System.currentTimeMillis();
-    while (sslContextLocked && now < lockStealTime)
-    {
-      try
-      {
-        PKIServiceConnector.class.wait(lockStealTime - now);
-      }
-      catch (InterruptedException e)
-      {
-        // just continue waiting;
-        LOG.error("handle me", e);
-      }
-      now = System.currentTimeMillis();
-    }
-    if (sslContextLocked)
-    {
-      LOG.error("stealing lock on SSL context: another thread did not release it after two minutes",
-                new Exception("this is only for printing the stack trace"));
-    }
-    lockStealTime = System.currentTimeMillis() + 120000L;
-    sslContextLocked = true;
-    SSL_LOGGER.debug("Starting communication:");
-  }
-
-  /**
-   * Release the lock on the SSL context - other threads may now set their static properties
-   */
-  public static synchronized void releaseContextLock()
-  {
-    SSL_LOGGER.debug("Communication finished\n\n"
-                     + "######################################################################################"
-                     + "\n");
-    sslContextLocked = false;
-    PKIServiceConnector.class.notifyAll();
   }
 
   /**
@@ -481,42 +392,54 @@ public class PKIServiceConnector
       this.alias = alias;
     }
 
-    /** {@inheritDoc} */
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public String chooseClientAlias(String[] keyType, Principal[] issuers, Socket socket)
     {
       return alias;
     }
 
-    /** {@inheritDoc} */
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public String chooseServerAlias(String keyType, Principal[] issuers, Socket socket)
     {
       return wrapped.chooseServerAlias(keyType, issuers, socket);
     }
 
-    /** {@inheritDoc} */
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public X509Certificate[] getCertificateChain(String alias)
     {
       return wrapped.getCertificateChain(alias);
     }
 
-    /** {@inheritDoc} */
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public String[] getClientAliases(String keyType, Principal[] issuers)
     {
       return wrapped.getClientAliases(keyType, issuers);
     }
 
-    /** {@inheritDoc} */
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public PrivateKey getPrivateKey(String alias)
     {
       return wrapped.getPrivateKey(alias);
     }
 
-    /** {@inheritDoc} */
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public String[] getServerAliases(String keyType, Principal[] issuers)
     {

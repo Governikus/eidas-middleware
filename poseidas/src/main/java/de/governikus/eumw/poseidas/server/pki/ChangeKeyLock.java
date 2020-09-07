@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019 Governikus KG. Licensed under the EUPL, Version 1.2 or as soon they will be approved by
+ * Copyright (c) 2020 Governikus KG. Licensed under the EUPL, Version 1.2 or as soon they will be approved by
  * the European Commission - subsequent versions of the EUPL (the "Licence"); You may not use this work except
  * in compliance with the Licence. You may obtain a copy of the Licence at:
  * http://joinup.ec.europa.eu/software/page/eupl Unless required by applicable law or agreed to in writing,
@@ -14,21 +14,31 @@ import java.io.Serializable;
 
 import javax.persistence.Entity;
 import javax.persistence.Id;
+import javax.persistence.NamedQuery;
 
 import de.governikus.eumw.poseidas.cardbase.AssertUtil;
 
 
 /**
  * Lock for synchronizing changes in keys stored in HSM instances.
-
  *
  * @author Arne Stahlbock, ast@bos-bremen.de
  */
 @Entity
+@NamedQuery(name = ChangeKeyLock.QUERY_NAME_GETOWNLOCKS, query = "SELECT l FROM ChangeKeyLock l WHERE l.autentIP = :"
+                                                                 + ChangeKeyLock.PARAM_IP)
+@NamedQuery(name = ChangeKeyLock.QUERY_NAME_GETFOREIGNLOCKS, query = "SELECT l FROM ChangeKeyLock l WHERE l.autentIP <> :"
+                                                                     + ChangeKeyLock.PARAM_IP)
 public class ChangeKeyLock implements Serializable
 {
 
   private static final long serialVersionUID = 1828942536669759458L;
+
+  static final String QUERY_NAME_GETOWNLOCKS = "getOwnLocks";
+
+  static final String QUERY_NAME_GETFOREIGNLOCKS = "getForeignLocks";
+
+  static final String PARAM_IP = "pIp";
 
   /**
    * Constant for key deletion lock type.

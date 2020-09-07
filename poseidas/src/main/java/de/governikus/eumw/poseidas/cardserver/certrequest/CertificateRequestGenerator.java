@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019 Governikus KG. Licensed under the EUPL, Version 1.2 or as soon they will be approved by
+ * Copyright (c) 2020 Governikus KG. Licensed under the EUPL, Version 1.2 or as soon they will be approved by
  * the European Commission - subsequent versions of the EUPL (the "Licence"); You may not use this work except
  * in compliance with the Licence. You may obtain a copy of the Licence at:
  * http://joinup.ec.europa.eu/software/page/eupl Unless required by applicable law or agreed to in writing,
@@ -280,8 +280,6 @@ public class CertificateRequestGenerator
    * @param description optional old or changed description, <code>null</code> permitted
    * @param additionalData optional additional data that overwrites informations provided by old CVC,
    *          <code>null</code> not permitted, if old CVC is not given
-   * @param requestWithDescriptionHash <code>true</code> for inserting hash of description into request,
-   *          <code>false</code> otherwise, currently ignored
    * @param usePresentKey <code>true</code> to use key already in HSM, <code>false</code> to generate new
    * @return request with key
    * @throws IllegalArgumentException when old CVC is <code>null</code> and additional data not given,
@@ -301,7 +299,6 @@ public class CertificateRequestGenerator
                                                            ECCVCertificate rootCVC,
                                                            CertificateDescription description,
                                                            AdditionalData additionalData,
-                                                           boolean requestWithDescriptionHash,
                                                            boolean usePresentKey)
     throws IOException, SignatureException
   {
@@ -693,8 +690,8 @@ public class CertificateRequestGenerator
    * @throws InvalidKeyException
    * @throws SignatureException
    */
-  private static void checkSignature(CertificateRequest cr) throws IOException, FileNotFoundException,
-    NoSuchAlgorithmException, NoSuchProviderException, InvalidKeyException, SignatureException
+  private static void checkSignature(CertificateRequest cr) throws IOException, NoSuchAlgorithmException,
+    NoSuchProviderException, InvalidKeyException, SignatureException
   {
     ASN1 sig = cr.getRequestPart(CertificateRequestPath.SIGNATURE);
     ASN1 body = cr.getRequestPart(CertificateRequestPath.CV_CERTIFICATE_BODY);
@@ -706,7 +703,7 @@ public class CertificateRequestGenerator
     {
       s = SignatureUtil.createSignature(pubKeyASN1.getOID());
     }
-    catch (Throwable t)
+    catch (Exception e)
     {
       s = Signature.getInstance("SHA256withCVC-ECDSA", BouncyCastleProvider.PROVIDER_NAME);
     }

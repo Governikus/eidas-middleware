@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019 Governikus KG. Licensed under the EUPL, Version 1.2 or as soon they will be approved by
+ * Copyright (c) 2020 Governikus KG. Licensed under the EUPL, Version 1.2 or as soon they will be approved by
  * the European Commission - subsequent versions of the EUPL (the "Licence"); You may not use this work except
  * in compliance with the Licence. You may obtain a copy of the Licence at:
  * http://joinup.ec.europa.eu/software/page/eupl Unless required by applicable law or agreed to in writing,
@@ -14,6 +14,9 @@ import java.io.ByteArrayInputStream;
 import java.security.GeneralSecurityException;
 import java.security.cert.X509Certificate;
 import java.util.Base64;
+import java.util.HashSet;
+import java.util.Optional;
+import java.util.Set;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -26,10 +29,12 @@ import org.bouncycastle.jce.provider.BouncyCastleProvider;
 import org.bouncycastle.util.Store;
 
 import de.governikus.eumw.eidascommon.Utils;
+import de.governikus.eumw.poseidas.eidserver.model.signeddata.MasterList;
 
 
 /**
- * wrapper for checking a CMS signature
+ * Wrapper for checking a CMS signature, trust must either be given with single a trust anchor or with a
+ * master list containing several trust anchors.
  *
  * @author tautenhahn
  */
@@ -38,7 +43,7 @@ public class CmsSignatureChecker
 
   private static final Log LOG = LogFactory.getLog(CmsSignatureChecker.class);
 
-  private final X509Certificate trustAnchor;
+  private final Set<X509Certificate> trustAnchors = new HashSet<>();
 
   /**
    * Create new instance with given trust anchor
@@ -47,7 +52,17 @@ public class CmsSignatureChecker
    */
   CmsSignatureChecker(X509Certificate trustAnchor)
   {
-    this.trustAnchor = trustAnchor;
+    this.trustAnchors.add(trustAnchor);
+  }
+
+  /**
+   * Create new instance with given master list
+   *
+   * @param trustAnchors
+   */
+  CmsSignatureChecker(MasterList masterList)
+  {
+    this.trustAnchors.addAll(masterList.getCertificates());
   }
 
   /**
@@ -92,23 +107,30 @@ public class CmsSignatureChecker
     return false;
   }
 
+  /**
+   * Find cert (or signer of cert) in trust anchor list.
+   *
+   * @param cert
+   * @return <code>true</code> if found, <code>false</code> otherwise
+   */
   private boolean matches(X509Certificate cert)
   {
-    if (trustAnchor == null)
-    {
-      return false;
-    }
-    if (cert.equals(trustAnchor))
+    if (trustAnchors.contains(cert))
     {
       return true;
     }
-    if (!cert.getIssuerX500Principal().equals(trustAnchor.getSubjectX500Principal()))
+    Optional<X509Certificate> signer = trustAnchors.stream()
+                                                   .filter(s -> s.getSubjectX500Principal()
+                                                                 .equals(cert.getIssuerX500Principal()))
+                                                   .findAny();
+    if (!signer.isPresent())
     {
       return false;
     }
+
     try
     {
-      cert.verify(trustAnchor.getPublicKey());
+      cert.verify(signer.get().getPublicKey());
       return true;
     }
     catch (GeneralSecurityException e)

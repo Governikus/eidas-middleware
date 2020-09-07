@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019 Governikus KG. Licensed under the EUPL, Version 1.2 or as soon they will be approved by
+ * Copyright (c) 2020 Governikus KG. Licensed under the EUPL, Version 1.2 or as soon they will be approved by
  * the European Commission - subsequent versions of the EUPL (the "Licence"); You may not use this work except
  * in compliance with the Licence. You may obtain a copy of the Licence at:
  * http://joinup.ec.europa.eu/software/page/eupl Unless required by applicable law or agreed to in writing,
@@ -84,8 +84,17 @@ public class PolicyImplementationFactory
 
     private final String id;
 
-    private final boolean initialRequestAsynchron, initialSequenceNumberChoosable,
-      refreshOutdatedCVCsAsynchronously, certDescriptionFetch, passiveAuthService, authorizationService;
+    private final boolean initialRequestAsynchron;
+
+    private final boolean initialSequenceNumberChoosable;
+
+    private final boolean refreshOutdatedCVCsAsynchronously;
+
+    private final boolean certDescriptionFetch;
+
+    private final boolean passiveAuthService;
+
+    private final boolean authorizationService;
 
     private final String wsdlVersionPA;
 
@@ -147,12 +156,6 @@ public class PolicyImplementationFactory
     public boolean isRefreshOutdatedCVCsAsynchronously()
     {
       return refreshOutdatedCVCsAsynchronously;
-    }
-
-    @Override
-    public boolean isRequestWithDescriptionHash()
-    {
-      return false;
     }
 
     @Override

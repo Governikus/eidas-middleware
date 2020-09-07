@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019 Governikus KG. Licensed under the EUPL, Version 1.2 or as soon they will be approved by
+ * Copyright (c) 2020 Governikus KG. Licensed under the EUPL, Version 1.2 or as soon they will be approved by
  * the European Commission - subsequent versions of the EUPL (the "Licence"); You may not use this work except
  * in compliance with the Licence. You may obtain a copy of the Licence at:
  * http://joinup.ec.europa.eu/software/page/eupl Unless required by applicable law or agreed to in writing,
@@ -31,6 +31,8 @@ import de.governikus.eumw.poseidas.cardbase.asn1.npa.si.DomainParameterInfo;
 import de.governikus.eumw.poseidas.cardbase.asn1.npa.si.GeneralDomainParameterInfo;
 import de.governikus.eumw.poseidas.cardbase.asn1.npa.si.StandardDomainParameterInfo;
 import de.governikus.eumw.poseidas.cardbase.constants.OIDConstants;
+import lombok.AccessLevel;
+import lombok.NoArgsConstructor;
 
 
 /**
@@ -39,6 +41,7 @@ import de.governikus.eumw.poseidas.cardbase.constants.OIDConstants;
  * @author Arne Stahlbock, ast@bos-bremen.de
  * @author Jens Wothe, jw@bos-bremen.de
  */
+@NoArgsConstructor(access = AccessLevel.PRIVATE)
 public class ECUtil
 {
 
@@ -90,17 +93,12 @@ public class ECUtil
     }
 
     ASN1 params = ai.getParameters();
-    BigInteger primeModulus = new BigInteger(
-                                             ByteUtil.addLeadingZero(params.getChildElementsByTag(0x30)[0].getChildElementsByTag(0x02)[0].getValue()));
-    BigInteger firstCoefficient = new BigInteger(
-                                                 ByteUtil.addLeadingZero(params.getChildElementsByTag(0x30)[1].getChildElementsByTag(0x04)[0].getValue()));
-    BigInteger secondCoefficient = new BigInteger(
-                                                  ByteUtil.addLeadingZero(params.getChildElementsByTag(0x30)[1].getChildElementsByTag(0x04)[1].getValue()));
+    BigInteger primeModulus = new BigInteger(ByteUtil.addLeadingZero(params.getChildElementsByTag(0x30)[0].getChildElementsByTag(0x02)[0].getValue()));
+    BigInteger firstCoefficient = new BigInteger(ByteUtil.addLeadingZero(params.getChildElementsByTag(0x30)[1].getChildElementsByTag(0x04)[0].getValue()));
+    BigInteger secondCoefficient = new BigInteger(ByteUtil.addLeadingZero(params.getChildElementsByTag(0x30)[1].getChildElementsByTag(0x04)[1].getValue()));
     byte[] pointBytes = params.getChildElementsByTag(0x04)[0].getValue();
-    BigInteger orderOfBasePoint = new BigInteger(
-                                                 ByteUtil.addLeadingZero(params.getChildElementsByTag(0x02)[1].getValue()));
-    BigInteger cofactor = new BigInteger(
-                                         ByteUtil.addLeadingZero(params.getChildElementsByTag(0x02)[2].getValue()));
+    BigInteger orderOfBasePoint = new BigInteger(ByteUtil.addLeadingZero(params.getChildElementsByTag(0x02)[1].getValue()));
+    BigInteger cofactor = new BigInteger(ByteUtil.addLeadingZero(params.getChildElementsByTag(0x02)[2].getValue()));
 
     return buildParameterSpec(primeModulus,
                               firstCoefficient,
@@ -119,28 +117,22 @@ public class ECUtil
    * @throws IllegalArgumentException if cert <code>null</code> or not containing domain parameters
    * @throws IOException
    */
-  public static ECParameterSpec parameterSpecFromCVC(ECCVCertificate cert) throws
-    IOException
+  public static ECParameterSpec parameterSpecFromCVC(ECCVCertificate cert) throws IOException
   {
     AssertUtil.notNull(cert, "CVC");
     AssertUtil.notNull(cert.getChildElementByPath(ECCVCPath.PUBLIC_KEY_COEFFICIENT_A),
                        "domain parameters in CVC");
 
-    BigInteger primeModulus = new BigInteger(
-                                             ByteUtil.addLeadingZero(cert.getChildElementByPath(ECCVCPath.PUBLIC_KEY_PRIME_MODULUS)
+    BigInteger primeModulus = new BigInteger(ByteUtil.addLeadingZero(cert.getChildElementByPath(ECCVCPath.PUBLIC_KEY_PRIME_MODULUS)
                                                                          .getValue()));
-    BigInteger firstCoefficient = new BigInteger(
-                                                 ByteUtil.addLeadingZero(cert.getChildElementByPath(ECCVCPath.PUBLIC_KEY_COEFFICIENT_A)
+    BigInteger firstCoefficient = new BigInteger(ByteUtil.addLeadingZero(cert.getChildElementByPath(ECCVCPath.PUBLIC_KEY_COEFFICIENT_A)
                                                                              .getValue()));
-    BigInteger secondCoefficient = new BigInteger(
-                                                  ByteUtil.addLeadingZero(cert.getChildElementByPath(ECCVCPath.PUBLIC_KEY_COEFFICIENT_B)
+    BigInteger secondCoefficient = new BigInteger(ByteUtil.addLeadingZero(cert.getChildElementByPath(ECCVCPath.PUBLIC_KEY_COEFFICIENT_B)
                                                                               .getValue()));
     byte[] pointBytes = cert.getChildElementByPath(ECCVCPath.PUBLIC_KEY_BASE_POINT_G).getValue();
-    BigInteger orderOfBasePoint = new BigInteger(
-                                                 ByteUtil.addLeadingZero(cert.getChildElementByPath(ECCVCPath.PUBLIC_KEY_ORDER_OF_BASE_POINT_R)
+    BigInteger orderOfBasePoint = new BigInteger(ByteUtil.addLeadingZero(cert.getChildElementByPath(ECCVCPath.PUBLIC_KEY_ORDER_OF_BASE_POINT_R)
                                                                              .getValue()));
-    BigInteger cofactor = new BigInteger(
-                                         ByteUtil.addLeadingZero(cert.getChildElementByPath(ECCVCPath.PUBLIC_KEY_CO_FACTOR_F)
+    BigInteger cofactor = new BigInteger(ByteUtil.addLeadingZero(cert.getChildElementByPath(ECCVCPath.PUBLIC_KEY_CO_FACTOR_F)
                                                                      .getValue()));
 
     return buildParameterSpec(primeModulus,
@@ -167,21 +159,16 @@ public class ECUtil
     AssertUtil.notNull(key, "key");
     AssertUtil.notNull(key.getChildElementByPath(ECPublicKeyPath.COEFFICIENT_A), "domain parameters in key");
 
-    BigInteger primeModulus = new BigInteger(
-                                             ByteUtil.addLeadingZero(key.getChildElementByPath(ECPublicKeyPath.PRIME_MODULUS)
+    BigInteger primeModulus = new BigInteger(ByteUtil.addLeadingZero(key.getChildElementByPath(ECPublicKeyPath.PRIME_MODULUS)
                                                                         .getValue()));
-    BigInteger firstCoefficient = new BigInteger(
-                                                 ByteUtil.addLeadingZero(key.getChildElementByPath(ECPublicKeyPath.COEFFICIENT_A)
+    BigInteger firstCoefficient = new BigInteger(ByteUtil.addLeadingZero(key.getChildElementByPath(ECPublicKeyPath.COEFFICIENT_A)
                                                                             .getValue()));
-    BigInteger secondCoefficient = new BigInteger(
-                                                  ByteUtil.addLeadingZero(key.getChildElementByPath(ECPublicKeyPath.COEFFICIENT_B)
+    BigInteger secondCoefficient = new BigInteger(ByteUtil.addLeadingZero(key.getChildElementByPath(ECPublicKeyPath.COEFFICIENT_B)
                                                                              .getValue()));
     byte[] pointBytes = key.getChildElementByPath(ECPublicKeyPath.BASE_POINT_G).getValue();
-    BigInteger orderOfBasePoint = new BigInteger(
-                                                 ByteUtil.addLeadingZero(key.getChildElementByPath(ECPublicKeyPath.ORDER_OF_BASE_POINT_R)
+    BigInteger orderOfBasePoint = new BigInteger(ByteUtil.addLeadingZero(key.getChildElementByPath(ECPublicKeyPath.ORDER_OF_BASE_POINT_R)
                                                                             .getValue()));
-    BigInteger cofactor = new BigInteger(
-                                         ByteUtil.addLeadingZero(key.getChildElementByPath(ECPublicKeyPath.CO_FACTOR_F)
+    BigInteger cofactor = new BigInteger(ByteUtil.addLeadingZero(key.getChildElementByPath(ECPublicKeyPath.CO_FACTOR_F)
                                                                     .getValue()));
 
     return buildParameterSpec(primeModulus,
@@ -237,8 +224,8 @@ public class ECUtil
    * is the variant to be used if the curve parameters are contained in the
    * {@link de.governikus.eumw.poseidas.cardbase.asn1.npa.ECPublicKey} structure.
    *
-   * @param keyASN1 {@link de.governikus.eumw.poseidas.cardbase.asn1.npa.ECPublicKey} structure containing data of
-   *          the public key to be created.
+   * @param keyASN1 {@link de.governikus.eumw.poseidas.cardbase.asn1.npa.ECPublicKey} structure containing
+   *          data of the public key to be created.
    * @return the created {@link ECPublicKey}, <code>null</code> if creating fails
    * @throws IllegalArgumentException if <code>null</code> given as argument
    */
@@ -256,15 +243,15 @@ public class ECUtil
    * is the variant to be used if the curve parameters are not contained in the
    * {@link de.governikus.eumw.poseidas.cardbase.asn1.npa.ECPublicKey} structure.
    *
-   * @param keyASN1 {@link de.governikus.eumw.poseidas.cardbase.asn1.npa.ECPublicKey} structure containing data of
-   *          the public key to be created.
+   * @param keyASN1 {@link de.governikus.eumw.poseidas.cardbase.asn1.npa.ECPublicKey} structure containing
+   *          data of the public key to be created.
    * @param paramSpec curve parameters given separately
    * @return the created {@link ECPublicKey}, <code>null</code> if creating fails
    * @throws IllegalArgumentException if <code>null</code> given as argument
    */
   private static ECPublicKey createKeyFromASN1(de.governikus.eumw.poseidas.cardbase.asn1.npa.ECPublicKey keyASN1,
-                                              ECParameterSpec paramSpec) throws
-    IOException
+                                               ECParameterSpec paramSpec)
+    throws IOException
   {
     AssertUtil.notNull(keyASN1, "key data");
     AssertUtil.notNull(paramSpec, "curve parameters");

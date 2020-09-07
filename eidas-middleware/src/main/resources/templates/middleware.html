@@ -1,5 +1,5 @@
 <!--
-  ~ Copyright (c) 2019 Governikus KG. Licensed under the EUPL, Version 1.2 or as soon they will be approved by
+  ~ Copyright (c) 2020 Governikus KG. Licensed under the EUPL, Version 1.2 or as soon they will be approved by
   ~ the European Commission - subsequent versions of the EUPL (the "Licence"); You may not use this work except
   ~ in compliance with the Licence. You may obtain a copy of the Licence at:
   ~ http://joinup.ec.europa.eu/software/page/eupl Unless required by applicable law or agreed to in writing,
@@ -9,36 +9,38 @@
   -->
 
 <!DOCTYPE html>
-<html xmlns="http://www.w3.org/1999/xhtml"
-      xmlns:th="http://www.thymeleaf.org" lang="de">
+<html lang="de"
+      xmlns="http://www.w3.org/1999/xhtml" xmlns:th="http://www.thymeleaf.org">
 <head>
     <title th:text="#{title.title}">German eIDAS Middleware</title>
-    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
-    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta content="text/html; charset=UTF-8" http-equiv="Content-Type">
+    <meta content="IE=edge" http-equiv="X-UA-Compatible">
     <meta charset="utf-8">
     <!-- Viewport Meta Tag -->
-    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta content="width=device-width, initial-scale=1" name="viewport">
     <!-- Bootstrap -->
-    <link rel="stylesheet" type="text/css" th:href="@{/css/bootstrap.css}">
+    <link rel="stylesheet" th:href="@{/eidas-middleware/css/bootstrap.css}" type="text/css">
     <!-- Main Style -->
-    <link rel="stylesheet" type="text/css" th:href="@{/css/main.css}">
+    <link rel="stylesheet" th:href="@{/eidas-middleware/css/main.css}" type="text/css">
     <!-- custom Style -->
-    <link rel="stylesheet" type="text/css" th:href="@{/css/custom.css}">
+    <link rel="stylesheet" th:href="@{/eidas-middleware/css/custom.css}" type="text/css">
     <!-- Slicknav CSS -->
-    <link rel="stylesheet" type="text/css" th:href="@{/css/slicknav.css}">
+    <link rel="stylesheet" th:href="@{/eidas-middleware/css/slicknav.css}" type="text/css">
     <!-- Responsive Style -->
-    <link rel="stylesheet" type="text/css" th:href="@{/css/responsive.css}">
+    <link rel="stylesheet" th:href="@{/eidas-middleware/css/responsive.css}" type="text/css">
     <!--Fonts-->
-    <link rel="stylesheet" media="screen" th:href="@{/css/font-awesome.css}">
-    <link rel="stylesheet" media="screen" th:href="@{/css/simple-line-icons.css}">
+    <link media="screen" rel="stylesheet" th:href="@{/eidas-middleware/css/font-awesome.css}">
+    <link media="screen" rel="stylesheet" th:href="@{/eidas-middleware/css/simple-line-icons.css}">
     <!-- Extras -->
-    <link rel="stylesheet" type="text/css" th:href="@{/css/owl.css}">
-    <link rel="stylesheet" type="text/css" th:href="@{/css/owl_002.css}">
-    <link rel="stylesheet" type="text/css" th:href="@{/css/animate.css}">
-    <link rel="stylesheet" type="text/css" th:href="@{/css/normalize.css}">
+    <link rel="stylesheet" th:href="@{/eidas-middleware/css/owl.css}" type="text/css">
+    <link rel="stylesheet" th:href="@{/eidas-middleware/css/owl_002.css}" type="text/css">
+    <link rel="stylesheet" th:href="@{/eidas-middleware/css/animate.css}" type="text/css">
+    <link rel="stylesheet" th:href="@{/eidas-middleware/css/normalize.css}" type="text/css">
     <!-- Color CSS Styles  -->
-    <link rel="stylesheet" type="text/css" th:href="@{/css/mblue.css}" media="screen">
+    <link media="screen" rel="stylesheet" th:href="@{/eidas-middleware/css/mblue.css}" type="text/css">
     <!-- HTML5 Shim and Respond.js IE8 support of HTML5 elements and media queries -->
+    <script th:src="@{/eidas-middleware/js/jquery-3.4.1.min.js}"></script>
+    <script th:src="@{/eidas-middleware/js/CheckAa2.js}"></script>
 
 </head>
 <body>
@@ -51,37 +53,42 @@
 
 
     <div class="container">
-        <div><h5 th:text="#{content.title}">Use your identity card for European applications as well</h5></div>
+        <div><h5 th:text="#{content.title}">Use your identity card for European applications as well</h5>
+        </div>
         <div th:text="#{content.language}">Choose your language</div>
         <a th:href="${linkToSelf} + '&lang=en'" title="Change language to english.">
-            <img src="../../img/english.jpg"
-                 alt="english flag"
-                 th:attr="src=@{/img/english.jpg}"
-                 style="float: left; height: 25px; margin-right:10px; margin-top: 0px; margin-bottom: 5px; position: relative;">
+            <img alt="english flag"
+                 src="/eidas-middleware/img/english.jpg"
+                 style="float: left; height: 25px; margin-right:10px; margin-top: 0px; margin-bottom: 5px; position: relative;"
+                 th:attr="src=@{/eidas-middleware/img/english.jpg}">
         </a>
         <a th:href="${linkToSelf} + '&lang=de'" title="Seite auf Deutsch anzeigen.">
-            <img src="../../img/german.png"
-                 alt="german flag"
-                 th:attr="src=@{/img/german.png}"
-                 style="float: left; height: 25px; margin-top: 0px; margin-bottom: 5px; position: relative;">
+            <img alt="german flag"
+                 src="/eidas-middleware/img/german.png"
+                 style="float: left; height: 25px; margin-top: 0px; margin-bottom: 5px; position: relative;"
+                 th:attr="src=@{/eidas-middleware/img/german.png}">
         </a><br/><br/>
         <div class="row brdr-first">
             <div class="container-1" style="margin-left: 14px;">
-                <h2 class="title" th:text="#{content.requirements.title}">To use the online id function you need</h2>
+                <h2 class="title" th:text="#{content.requirements.title}">To use the online id function you
+                    need</h2>
             </div>
         </div>
         <div class="row brdr">
             <div class="col-md-4 col-sm-6 col-xs-12 about1">
                 <div class="images">
-                    <img src="../../img/npa-left.png" th:attr="src=@{/img/npa-left.png}" th:alt="#{image.npa-left}"
-                         style="margin-top: 0px;" th:title="#{image.npa-left}">
+                    <img src="/eidas-middleware/img/npa-left.png"
+                         style="margin-top: 0px;" th:alt="#{image.npa-left}"
+                         th:attr="src=@{/eidas-middleware/img/npa-left.png}" th:title="#{image.npa-left}">
                 </div>
             </div>
             <div class="col-md-8 col-sm-6 col-xs-12 about">
                 <div class="details-list">
-                    <h3 th:text="#{content.requirements.npa}">1. An identity card / electronic residence permit</h3>
+                    <h3 th:text="#{content.requirements.npa}">1. An identity card / electronic residence
+                        permit</h3>
                     <p class="lead" th:text="#{content.requirements.npa.hint}">
-                        (issued from 01.11.2010 or 01.09.2011) with unlocked online ID function and your personal
+                        (issued from 01.11.2010 or 01.09.2011) with unlocked online ID function and your
+                        personal
                         PIN</p>
                 </div>
             </div>
@@ -89,16 +96,19 @@
         <div class="row brdr">
             <div class="col-md-4 col-sm-6 col-xs-12 about1">
                 <div class="images">
-                    <img src="../../img/cr-phone.png" th:attr="src=@{/img/cr-phone.png}"
-                         th:alt="#{image.cr-phone}" style="margin-top: 0px;"
+                    <img src="/eidas-middleware/img/cr-phone.png"
+                         style="margin-top: 0px;"
+                         th:alt="#{image.cr-phone}" th:attr="src=@{/eidas-middleware/img/cr-phone.png}"
                          th:title="#{image.cr-phone}">
                 </div>
             </div>
             <div class="col-md-8 col-sm-6 col-xs-12 about">
                 <div class="details-list">
-                    <h3 th:text="#{content.requirements.device}">2. A card reader / Android device for direct readout
+                    <h3 th:text="#{content.requirements.device}">2. A card reader / Android device for direct
+                        readout
                         via NFC</h3>
-                    <p class="lead" th:utext="#{content.requirements.device.hint}">An overview of suitable card readers
+                    <p class="lead" th:utext="#{content.requirements.device.hint}">An overview of suitable
+                        card readers
                         or mobile devices can be found at ausweisapp.bund.de/en/ (<a
                                 href="https://www.ausweisapp.bund.de/en/compatible-devices/card-readers/"
                                 title="List of  suitable card readers">card reader</a> / <a
@@ -110,8 +120,10 @@
         <div class="row brdr-last">
             <div class="col-md-4 col-sm-6 col-xs-12 about1">
                 <div class="images">
-                    <img src="../../img/logo-ausweisapp2.png" th:attr="src=@{/img/logo-ausweisapp2.png}"
-                         th:alt="#{image.ausweisapp2}" style="margin-top: 0px;" th:title="#{image.ausweisapp2}">
+                    <img src="/eidas-middleware/img/logo-ausweisapp2.png"
+                         style="margin-top: 0px;"
+                         th:alt="#{image.ausweisapp2}" th:attr="src=@{/eidas-middleware/img/logo-ausweisapp2.png}"
+                         th:title="#{image.ausweisapp2}">
                 </div>
             </div>
             <div class="col-md-8 col-sm-6 col-xs-12 about">
@@ -123,13 +135,27 @@
                             <br> <a href="/ausweisapp-redirect"
                                     title="Redirect to download page"><b>ausweisapp.bund.de/en/</b></a>
                         </p>
+                        <div id="status">
+                            <p>
+                                <img id="eid-status-image">
+                                <span id="status-eid-client"></span>
+                            </p>
+                            <p hidden>
+                                <span id="stateInactive" th:utext="#{content.eid.status.inactive}">not running!</span>
+                                <span id="stateActive" th:utext="#{content.eid.status.active}">running!</span>
+                                <span id="redCross" th:utext="#{image.icon.decline}">red cross</span>
+                                <span id="greenTick" th:utext="#{image.icon.accept}">green tick</span>
+                                <span id="eidLink" th:utext="${ausweisapp}">eIDLink</span>
+                            </p>
+                        </div>
                     </div>
                 </div>
                 <br>
             </div>
         </div>
         <div class="row brdr-last">
-            <div class="col-md-12" style="margin-top: 8px; margin-bottom: 8px; font-weight:300; font-size: 15px;">
+            <div class="col-md-12"
+                 style="margin-top: 8px; margin-bottom: 8px; font-weight:300; font-size: 15px;">
                 <div th:utext="#{content.help}">
                 </div>
 
@@ -144,11 +170,12 @@
 
         <div class="row">
             <div class="col-md-12 nopad wow fadeInUp animated" style="visibility: visible;">
-                <a th:href="${ausweisapp}" class="btn btn-common mt-20 btn-lg re">
-                    <img src="../../img/logo-ausweisapp2-xl.png"
-                         th:attr="src=@{/img/logo-ausweisapp2-xl.png}"
-                         style="height: 30px; margin-right:10px; margin-top: -2px;" th:utext="#{content.start}"
-                         th:alt="#{image.ausweisapp2}" th:title="#{image.ausweisapp2}">
+                <a class="btn btn-common mt-20 btn-lg re" id="goToAa2" th:href="${ausweisapp}">
+                    <img src="/eidas-middleware/img/logo-ausweisapp2-xl.png"
+                         style="height: 30px; margin-right:10px; margin-top: -2px;"
+                         th:alt="#{image.ausweisapp2}"
+                         th:attr="src=@{/eidas-middleware/img/logo-ausweisapp2-xl.png}"
+                         th:title="#{image.ausweisapp2}" th:utext="#{content.start}">
                 </a>
             </div>
         </div>
@@ -159,7 +186,9 @@
 
 
 <footer>
-    <div align="center" th:text="#{footer.footer}">eIDAS Middleware provided by Governikus KG on behalf of BSI</div>
+    <div align="center" th:text="#{footer.footer}">eIDAS Middleware provided by Governikus KG on behalf of
+        BSI
+    </div>
 </footer>
 
 

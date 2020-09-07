@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019 Governikus KG. Licensed under the EUPL, Version 1.2 or as soon they will be approved by
+ * Copyright (c) 2020 Governikus KG. Licensed under the EUPL, Version 1.2 or as soon they will be approved by
  * the European Commission - subsequent versions of the EUPL (the "Licence"); You may not use this work except
  * in compliance with the Licence. You may obtain a copy of the Licence at:
  * http://joinup.ec.europa.eu/software/page/eupl Unless required by applicable law or agreed to in writing,
@@ -160,6 +160,7 @@ class ConfigWizardTestBase extends AbstractWebTest
    */
 
   static final String SERVICEPROVIDER_ENTITY_ID = "myEntityID";
+
   /**
    * the server url used in the poseidas.xml and the eidasmiddleware.properties
    */
@@ -186,13 +187,11 @@ class ConfigWizardTestBase extends AbstractWebTest
 
   static final String MASTER_LIST_FIELD_ID = "poseidasConfig.commonServiceProviderData.masterListTrustAnchor";
 
-  static final String DEFECT_LIST_FIELD_ID = "poseidasConfig.commonServiceProviderData.defectListTrustAnchor";
-
   static final String SERVER_CERTIFICATE_FIELD_ID = "poseidasConfig.commonServiceProviderData.sslKeysForm.serverCertificate";
 
-  static final String DVCA_BUDRU_FIELD_ID = "poseidasConfig.commonServiceProviderData.policyID1";
+  static final String DVCA_BUDRU_FIELD_ID = "poseidasConfig.commonServiceProviderData.dvcaProvider1";
 
-  private static final String DVCA_GOVDVCA_FIELD_ID = "poseidasConfig.commonServiceProviderData.policyID2";
+  private static final String DVCA_GOVDVCA_FIELD_ID = "poseidasConfig.commonServiceProviderData.dvcaProvider2";
 
   static final String ENTITY_ID_FIELD_ID = "minimalServiceProviderForm-minimalServiceProviderForm.entityID";
 
@@ -201,8 +200,6 @@ class ConfigWizardTestBase extends AbstractWebTest
   private static final String PUBLIC_SERVICE_PROVIDER_FIELD_ID = "minimalServiceProviderForm-minimalServiceProviderForm.publicServiceProvider";
 
   static final String BLACKLIST_CERT_NAME = "blacklist";
-
-  static final String DEFECTLIST_CERT_NAME = "defectlist";
 
   static final String MASTERLIST_CERT_NAME = "masterlist";
 
@@ -623,14 +620,11 @@ class ConfigWizardTestBase extends AbstractWebTest
                                    "masterListTrustAnchor-error",
                                    getMessage(KEY_VALIDATE_CERTIFICATE));
     assertValidationMessagePresent(emptyPage,
-                                   "defectListTrustAnchor-error",
-                                   getMessage(KEY_VALIDATE_CERTIFICATE));
-    assertValidationMessagePresent(emptyPage,
                                    "serverCertificate-error",
                                    getMessage(KEY_VALIDATE_CERTIFICATE));
     // assertValidationMessagePresent(emptyPage, "clientKeyForm-error", getMessage(KEY_VALIDATE_KEYSTORE));
     assertValidationMessagePresent(emptyPage,
-                                   "policyID-error",
+                                   "dvcaProvider-error",
                                    getMessage("wizard.status.validation.dvca.missing"));
 
     // fill in form
@@ -638,7 +632,6 @@ class ConfigWizardTestBase extends AbstractWebTest
     setTextValue(selectedRadioButtonPage, SERVER_URL_FIELD_ID, SERVER_URL);
     setSelectValue(selectedRadioButtonPage, BLACK_LIST_FIELD_ID, BLACKLIST_CERT_NAME);
     setSelectValue(selectedRadioButtonPage, MASTER_LIST_FIELD_ID, MASTERLIST_CERT_NAME);
-    setSelectValue(selectedRadioButtonPage, DEFECT_LIST_FIELD_ID, DEFECTLIST_CERT_NAME);
     setSelectValue(selectedRadioButtonPage, SERVER_CERTIFICATE_FIELD_ID, SERVER_CERT_NAME);
 
     setTextValue(selectedRadioButtonPage, ENTITY_ID_FIELD_ID, SERVICEPROVIDER_ENTITY_ID);
@@ -674,14 +667,11 @@ class ConfigWizardTestBase extends AbstractWebTest
                                    "masterListTrustAnchor-error",
                                    getMessage(KEY_VALIDATE_CERTIFICATE));
     assertValidationMessagePresent(emptyPage,
-                                   "defectListTrustAnchor-error",
-                                   getMessage(KEY_VALIDATE_CERTIFICATE));
-    assertValidationMessagePresent(emptyPage,
                                    "serverCertificate-error",
                                    getMessage(KEY_VALIDATE_CERTIFICATE));
     // assertValidationMessagePresent(emptyPage, "clientKeyForm-error", getMessage(KEY_VALIDATE_KEYSTORE));
     assertValidationMessagePresent(emptyPage,
-                                   "policyID-error",
+                                   "dvcaProvider-error",
                                    getMessage("wizard.status.validation.dvca.missing"));
 
     // fill in form
@@ -689,7 +679,6 @@ class ConfigWizardTestBase extends AbstractWebTest
     setTextValue(selectedRadioButtonPage, SERVER_URL_FIELD_ID, SERVER_URL);
     setSelectValue(selectedRadioButtonPage, BLACK_LIST_FIELD_ID, BLACKLIST_CERT_NAME);
     setSelectValue(selectedRadioButtonPage, MASTER_LIST_FIELD_ID, MASTERLIST_CERT_NAME);
-    setSelectValue(selectedRadioButtonPage, DEFECT_LIST_FIELD_ID, DEFECTLIST_CERT_NAME);
     setSelectValue(selectedRadioButtonPage, SERVER_CERTIFICATE_FIELD_ID, SERVER_CERT_NAME);
 
     setTextValue(selectedRadioButtonPage, ENTITY_ID_FIELD_ID, SERVICEPROVIDER_ENTITY_ID);
@@ -714,13 +703,7 @@ class ConfigWizardTestBase extends AbstractWebTest
     assertValidationMessagePresent(blacklistUploaded,
                                    CERTIFICATE_UPLOAD_SUCCESS,
                                    getMessage(KEY_UPLOAD_SUCCESS));
-    HtmlPage defectlistUploaded = uploadCertificate(blacklistUploaded,
-                                                    "defectlist",
-                                                    "/test-files/defectlist.pem");
-    assertValidationMessagePresent(defectlistUploaded,
-                                   CERTIFICATE_UPLOAD_SUCCESS,
-                                   getMessage(KEY_UPLOAD_SUCCESS));
-    HtmlPage masterlistUploaded = uploadCertificate(defectlistUploaded,
+    HtmlPage masterlistUploaded = uploadCertificate(blacklistUploaded,
                                                     "masterlist",
                                                     "/test-files/masterlist.pem");
     assertValidationMessagePresent(masterlistUploaded,
@@ -914,11 +897,7 @@ class ConfigWizardTestBase extends AbstractWebTest
     assertEquals(numberOfServiceProviders, spList.size(), VALIDATE_POSEIDAS_XML_MESSAGE); // NOPMD
     ServiceProviderType serviceProvider = spList.get(0);
 
-    validateServiceProvider(sslKeysId,
-                            serviceProvider,
-                            SERVICEPROVIDER_ENTITY_ID,
-                            null,
-                            null);
+    validateServiceProvider(sslKeysId, serviceProvider, SERVICEPROVIDER_ENTITY_ID, null, null);
   }
 
   private void validatePoseidasCoreConfiguration(PoseidasCoreConfiguration poseidasConfig)
@@ -985,8 +964,6 @@ class ConfigWizardTestBase extends AbstractWebTest
     PkiConnectorConfigurationType pkiConnectorConfigurationType = epaConnectorConfigurationType.getPkiConnectorConfiguration();
     assertEqualCertificates(getClass().getResource("/test-files/blacklist.pem"),
                             pkiConnectorConfigurationType.getBlackListTrustAnchor());
-    assertEqualCertificates(getClass().getResource("/test-files/defectlist.pem"),
-                            pkiConnectorConfigurationType.getDefectListTrustAnchor());
     assertEqualCertificates(getClass().getResource("/test-files/masterlist.pem"),
                             pkiConnectorConfigurationType.getMasterListTrustAnchor());
     assertEquals("govDvca",
