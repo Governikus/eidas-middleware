@@ -57,6 +57,7 @@ class EidasRequestTest
                             errorCodeException.getMessage());
   }
 
+/*
   @Test
   void throwsExceptionWhenProviderNameAndRequesterIdPresent() throws Exception
   {
@@ -72,6 +73,7 @@ class EidasRequestTest
     Assertions.assertEquals("It was not possible to parse the SAML request: Both requesterId and providerName attributes are present.",
                             errorCodeException.getMessage());
   }
+*/
 
   @Test
   void parseSamlRequestWithOnlyProviderName() throws Exception
