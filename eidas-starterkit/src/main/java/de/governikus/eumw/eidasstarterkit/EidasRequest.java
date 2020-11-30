@@ -393,7 +393,8 @@ public class EidasRequest
 
   private static void setRequesterIdOrProviderName(EidasRequest eidasReq) throws ErrorCodeException
   {
-    checkIfRequesterIdAndProviderNameArePresent(eidasReq);
+    // This check is in error. There is no conflict if requesterID and Provider name are present
+    //checkIfRequesterIdAndProviderNameArePresent(eidasReq);
 
     if (isRequesterIdPresent(eidasReq))
     {
@@ -411,6 +412,7 @@ public class EidasRequest
     }
   }
 
+/*
   private static void checkIfRequesterIdAndProviderNameArePresent(EidasRequest eidasReq)
     throws ErrorCodeException
   {
@@ -421,6 +423,7 @@ public class EidasRequest
                                    "Both requesterId and providerName attributes are present");
     }
   }
+*/
 
   private static EidasLoA getAuthnContextClassRefFromAuthnRequest(EidasRequest eidasReq)
     throws ErrorCodeException
