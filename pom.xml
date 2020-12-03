@@ -14,7 +14,7 @@
 
     <groupId>de.governikus.eumw</groupId>
     <artifactId>eumw</artifactId>
-    <version>1.2.1</version>
+    <version>1.2.2</version>
     <packaging>pom</packaging>
 
     <name>EU Middleware</name>
@@ -37,7 +37,7 @@
     <scm>
         <url>https://github.com/Governikus/${project.artifactId}</url>
         <connection>${governikus.scm.connection}</connection>
-      <tag>eumw-1.2.1</tag>
+      <tag>eumw-1.2.2</tag>
   </scm>
 
     <developers>
@@ -861,7 +861,6 @@
                                 <id>attach-javadocs</id>
                                 <goals>
                                     <goal>jar</goal>
-                                    <goal>test-jar</goal>
                                 </goals>
                             </execution>
                         </executions>
@@ -966,3 +965,4 @@
     </profiles>
 
 </project>
+
