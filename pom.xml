@@ -14,7 +14,7 @@
 
     <groupId>de.governikus.eumw</groupId>
     <artifactId>eumw</artifactId>
-    <version>1.1.0</version>
+    <version>1.1.1</version>
     <packaging>pom</packaging>
 
     <name>EU Middleware</name>
@@ -37,7 +37,7 @@
     <scm>
         <url>https://github.com/Governikus/${project.artifactId}</url>
         <connection>${governikus.scm.connection}</connection>
-      <tag>eumw-1.1.0</tag>
+      <tag>eumw-1.1.1</tag>
   </scm>
 
     <developers>
@@ -348,19 +348,15 @@
                 <plugin>
                     <groupId>org.apache.maven.plugins</groupId>
                     <artifactId>maven-jarsigner-plugin</artifactId>
-                    <version>1.4</version>
+                    <version>3.0.0</version>
                     <configuration>
                         <keystore>NONE</keystore>
                         <storetype>PKCS11</storetype>
                         <tsa>http://timestamp.globalsign.com/scripts/timestamp.dll</tsa>
                         <providerClass>sun.security.pkcs11.SunPKCS11</providerClass>
-                        <providerArg>${java.home}/../bin/eToken.cfg</providerArg>
+                        <providerArg>${globalsign.config}</providerArg>
                         <alias>${globalsign.alias}</alias>
                         <storepass>${globalsign.storepass}</storepass>
-                        <arguments>
-                            <argument>${sign.proxy.host}</argument>
-                            <argument>${sign.proxy.port}</argument>
-                        </arguments>
                     </configuration>
                 </plugin>
             </plugins>
@@ -853,7 +849,6 @@
                                 <id>attach-javadocs</id>
                                 <goals>
                                     <goal>jar</goal>
-                                    <goal>test-jar</goal>
                                 </goals>
                             </execution>
                         </executions>

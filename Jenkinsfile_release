@@ -1,0 +1,59 @@
+pipeline {
+
+    agent { label 'eumw' }
+
+	environment{
+            // As this runs on a dedicated eumw slave with docker already installed, do not use the docker swarm
+            DOCKER_HOST = ''
+            // This build should be pushed to docker.io so unset the jenkins global environment variable
+            DOCKER_REGISTRY=''
+        }
+
+	parameters {
+	    string(name: 'TAG', description: 'Mercurial Release Tag für dieses Release.')
+	}
+
+    tools {
+        jdk 'JDK8'
+        maven 'default'
+    }
+
+    options {
+        buildDiscarder(logRotator(numToKeepStr:'10'))
+
+        // 'wrapper' steps that should wrap the entire build execution
+        // Adds timestamps to the output logged by steps inside the wrapper.
+        timestamps()
+        timeout(time: 30, unit: 'MINUTES')
+    }
+
+    stages {
+        stage('Checkout') {
+            steps {
+                deleteDir()
+                // checkoutout repository contents to the working directory
+                checkout scm: [$class: 'MercurialSCM', source: 'https://hg.govkg.de/Autent/eumw', revision: params.TAG, revisionType: 'TAG', clean: true]
+            }
+        }
+
+        stage('Build') {
+            steps {
+                withMaven(
+                    maven: 'default',
+                     mavenSettingsConfig: 'bf027fa5-0956-42ce-a4bc-441a76737b0a')
+				{
+                    sh 'mvn clean deploy -PattachSourceAndJavaDoc,sign -Dgovernikus.scm.connection=scm:hg:https://hg.govkg.de/Autent/eumw -DaltSnapshotDeploymentRepository=nexus::default::https://repo.govkg.de/repository/autent-snapshots/ -DaltReleaseDeploymentRepository=nexus::default::https://repo.govkg.de/repository/autent-releases/ -DconnectionUrl=scm:hg:https://hg.govkg.de/Autent/eumw'
+                }
+            }
+        }
+
+        stage('BuildDoc') {
+            agent { label 'Docs' }
+            steps {
+                sh '''cd doc
+                    make clean latexpdf'''
+                archiveArtifacts 'doc/_build/latex/*.pdf'
+            }
+        }
+    }
+}

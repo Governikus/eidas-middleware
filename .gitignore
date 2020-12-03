@@ -1,6 +1,6 @@
 target/
 packer/
-*Jenkinsfile*
+*Jenkinsfile
 .hg/
 
 # IntelliJ project files
