@@ -1,21 +1,20 @@
 /*
- * Copyright (c) 2020 Governikus KG. Licensed under the EUPL, Version 1.2 or as soon they will be approved by
- * the European Commission - subsequent versions of the EUPL (the "Licence"); You may not use this work except
- * in compliance with the Licence. You may obtain a copy of the Licence at:
- * http://joinup.ec.europa.eu/software/page/eupl Unless required by applicable law or agreed to in writing,
- * software distributed under the Licence is distributed on an "AS IS" basis, WITHOUT WARRANTIES OR CONDITIONS
- * OF ANY KIND, either express or implied. See the Licence for the specific language governing permissions and
- * limitations under the Licence.
+ * Copyright (c) 2020 Governikus KG. Licensed under the EUPL, Version 1.2 or as soon they will be approved by the
+ * European Commission - subsequent versions of the EUPL (the "Licence"); You may not use this work except in compliance
+ * with the Licence. You may obtain a copy of the Licence at: http://joinup.ec.europa.eu/software/page/eupl Unless
+ * required by applicable law or agreed to in writing, software distributed under the Licence is distributed on an
+ * "AS IS" basis, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the Licence for the
+ * specific language governing permissions and limitations under the Licence.
  */
 
 package de.governikus.eumw.poseidas.cardbase.npa;
 
 import java.io.IOException;
 import java.util.Collection;
-import java.util.HashSet;
+import java.util.HashMap;
+import java.util.Map;
 
 import de.governikus.eumw.poseidas.cardbase.AssertUtil;
-import de.governikus.eumw.poseidas.cardbase.asn1.OID;
 import de.governikus.eumw.poseidas.cardbase.asn1.npa.si.AlgorithmIdentifier;
 import de.governikus.eumw.poseidas.cardbase.asn1.npa.si.ChipAuthenticationDomainParameterInfo;
 import de.governikus.eumw.poseidas.cardbase.asn1.npa.si.ChipAuthenticationInfo;
@@ -29,9 +28,8 @@ import de.governikus.eumw.poseidas.cardbase.constants.OIDConstants;
 
 
 /**
- * Selector for several kinds of info as {@link PACEInfo}, {@link PACEDomainParameterInfo},
- * {@link DomainParameterInfo}, {@link TerminalAuthenticationInfo}, {@link ChipAuthenticationInfo} and
- * {@link ChipAuthenticationDomainParameterInfo}.
+ * Selector for several kinds of info as {@link PACEInfo}, {@link PACEDomainParameterInfo}, {@link DomainParameterInfo},
+ * {@link TerminalAuthenticationInfo}, {@link ChipAuthenticationInfo} and {@link ChipAuthenticationDomainParameterInfo}.
  *
  * @author Arne Stahlbock, ast@bos-bremen.de
  * @author Jens Wothe, jw@bos-bremen.de
@@ -42,8 +40,8 @@ public final class InfoSelector
   /**
    * Selects a set of domain parameters for CA.
    *
-   * @param setCADomainParameterInfos set of available {@link ChipAuthenticationDomainParameterInfo},
-   *          <code>null</code> or empty not permitted
+   * @param setCADomainParameterInfos set of available {@link ChipAuthenticationDomainParameterInfo}, <code>null</code>
+   *          or empty not permitted
    * @return selected {@link ChipAuthenticationDomainParameterInfo}
    * @throws IllegalArgumentException if given set <code>null</code> or empty
    */
@@ -81,10 +79,10 @@ public final class InfoSelector
   /**
    * Selects Chip Authentication variant to be used.
    *
-   * @param listCAInfos list of {@link ChipAuthenticationInfo} from which to select, <code>null</code> or
-   *          empty not permitted
-   * @param caDomainParameterInfo previously selected {@link ChipAuthenticationDomainParameterInfo},
-   *          <code>null</code> not permitted
+   * @param listCAInfos list of {@link ChipAuthenticationInfo} from which to select, <code>null</code> or empty not
+   *          permitted
+   * @param caDomainParameterInfo previously selected {@link ChipAuthenticationDomainParameterInfo}, <code>null</code>
+   *          not permitted
    * @return selected {@link ChipAuthenticationData}, <code>null</code> if no selection possible
    * @throws IllegalArgumentException if any parameter <code>null</code> or empty
    */
@@ -95,50 +93,23 @@ public final class InfoSelector
     AssertUtil.notNullOrEmpty(listCAInfos, "list of chip authentication info");
     AssertUtil.notNullOrEmpty(listCaDomParams, "list of chip authentication domain parameter info");
 
-    Collection<ChipAuthenticationDomainParameterInfo> matchingDomParamInfoSet = new HashSet<>();
+    Map<ChipAuthenticationDomainParameterInfo, ChipAuthenticationInfo> matchingDomParamInfoMap = new HashMap<>();
     for ( ChipAuthenticationInfo caInfo : listCAInfos )
     {
       for ( ChipAuthenticationDomainParameterInfo cadpi : listCaDomParams )
       {
-        if ((caInfo.getKeyID() == null && cadpi.getKeyID() == null)
-            || (caInfo.getKeyID() != null && caInfo.getKeyID().equals(cadpi.getKeyID())))
+        if (caInfo.getVersion() == 2 && ((caInfo.getKeyID() == null && cadpi.getKeyID() == null)
+                                         || (caInfo.getKeyID() != null && caInfo.getKeyID().equals(cadpi.getKeyID()))))
         {
-          matchingDomParamInfoSet.add(cadpi);
+          matchingDomParamInfoMap.put(cadpi, caInfo);
         }
       }
     }
 
-    ChipAuthenticationDomainParameterInfo selectedDomainParams = selectCADomainParameterInfo(matchingDomParamInfoSet);
-    for ( ChipAuthenticationInfo caInfo : listCAInfos )
+    ChipAuthenticationDomainParameterInfo selectedDomainParams = selectCADomainParameterInfo(matchingDomParamInfoMap.keySet());
+    if (selectedDomainParams != null)
     {
-      try
-      {
-        if (caInfo.getKeyID() != null && caInfo.getKeyID().equals(selectedDomainParams.getKeyID()))
-        {
-          return new ChipAuthenticationData(caInfo, selectedDomainParams);
-        }
-      }
-      catch (IOException e)
-      {
-        // nothing
-      }
-    }
-
-    OID protocol = selectedDomainParams.getProtocol();
-    for ( ChipAuthenticationInfo caInfo : listCAInfos )
-    {
-      try
-      {
-        OID caInfoProt = caInfo.getProtocol();
-        if (caInfoProt.toString().startsWith(protocol.toString()))
-        {
-          return new ChipAuthenticationData(caInfo, selectedDomainParams);
-        }
-      }
-      catch (IOException e)
-      {
-        // nothing
-      }
+      return new ChipAuthenticationData(matchingDomParamInfoMap.get(selectedDomainParams), selectedDomainParams);
     }
     return null;
   }
@@ -146,8 +117,7 @@ public final class InfoSelector
   /**
    * Selects {@link PACEInfo} to be used.
    *
-   * @param listPACEInfos list of {@link PACEInfo} from which to select, <code>null</code> or empty list not
-   *          permitted
+   * @param listPACEInfos list of {@link PACEInfo} from which to select, <code>null</code> or empty list not permitted
    * @return selected {@link PACEInfo}
    * @throws IllegalArgumentException if given list <code>null</code> or empty
    */
@@ -187,8 +157,8 @@ public final class InfoSelector
   /**
    * Selects {@link ChipAuthenticationPublicKeyInfo} to be used.
    *
-   * @param caPubKeyList list of {@link ChipAuthenticationPublicKeyInfo} from which to select,
-   *          <code>null</code> or empty not permitted
+   * @param caPubKeyList list of {@link ChipAuthenticationPublicKeyInfo} from which to select, <code>null</code> or
+   *          empty not permitted
    * @param caInfo previously selected {@link ChipAuthenticationInfo}, <code>null</code> not permitted
    * @return selected {@link ChipAuthenticationPublicKeyInfo}, <code>null</code> if no selection possible
    * @throws IllegalArgumentException if any parameter <code>null</code> or empty
@@ -254,8 +224,7 @@ public final class InfoSelector
     private final ChipAuthenticationDomainParameterInfo caDomParamInfo;
 
 
-    private ChipAuthenticationData(ChipAuthenticationInfo caInfo,
-                                   ChipAuthenticationDomainParameterInfo caDomParamInfo)
+    private ChipAuthenticationData(ChipAuthenticationInfo caInfo, ChipAuthenticationDomainParameterInfo caDomParamInfo)
     {
       super();
       AssertUtil.notNull(caInfo, "ca info");
