@@ -10,7 +10,6 @@
 
 package de.governikus.eumw.eidasstarterkit;
 
-import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -19,6 +18,7 @@ import java.security.cert.CertificateEncodingException;
 import java.security.cert.X509Certificate;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.Date;
 import java.util.EnumMap;
 import java.util.LinkedList;
@@ -33,6 +33,8 @@ import javax.xml.transform.TransformerFactoryConfigurationError;
 import javax.xml.transform.dom.DOMSource;
 import javax.xml.transform.stream.StreamResult;
 
+import org.joda.time.DateTime;
+import org.opensaml.core.xml.Namespace;
 import org.opensaml.core.xml.XMLObject;
 import org.opensaml.core.xml.config.XMLObjectProviderRegistrySupport;
 import org.opensaml.core.xml.io.Marshaller;
@@ -43,9 +45,39 @@ import org.opensaml.core.xml.io.UnmarshallingException;
 import org.opensaml.saml.saml2.core.Assertion;
 import org.opensaml.saml.saml2.core.Attribute;
 import org.opensaml.saml.saml2.core.AttributeStatement;
+import org.opensaml.saml.saml2.core.Audience;
+import org.opensaml.saml.saml2.core.AudienceRestriction;
+import org.opensaml.saml.saml2.core.AuthnContext;
+import org.opensaml.saml.saml2.core.AuthnContextClassRef;
+import org.opensaml.saml.saml2.core.AuthnStatement;
+import org.opensaml.saml.saml2.core.Conditions;
 import org.opensaml.saml.saml2.core.EncryptedAssertion;
+import org.opensaml.saml.saml2.core.Issuer;
+import org.opensaml.saml.saml2.core.NameID;
 import org.opensaml.saml.saml2.core.Response;
+import org.opensaml.saml.saml2.core.Status;
 import org.opensaml.saml.saml2.core.StatusCode;
+import org.opensaml.saml.saml2.core.StatusMessage;
+import org.opensaml.saml.saml2.core.Subject;
+import org.opensaml.saml.saml2.core.SubjectConfirmation;
+import org.opensaml.saml.saml2.core.SubjectConfirmationData;
+import org.opensaml.saml.saml2.core.impl.AssertionBuilder;
+import org.opensaml.saml.saml2.core.impl.AttributeStatementBuilder;
+import org.opensaml.saml.saml2.core.impl.AudienceBuilder;
+import org.opensaml.saml.saml2.core.impl.AudienceRestrictionBuilder;
+import org.opensaml.saml.saml2.core.impl.AuthnContextBuilder;
+import org.opensaml.saml.saml2.core.impl.AuthnContextClassRefBuilder;
+import org.opensaml.saml.saml2.core.impl.AuthnStatementBuilder;
+import org.opensaml.saml.saml2.core.impl.ConditionsBuilder;
+import org.opensaml.saml.saml2.core.impl.IssuerBuilder;
+import org.opensaml.saml.saml2.core.impl.NameIDBuilder;
+import org.opensaml.saml.saml2.core.impl.ResponseBuilder;
+import org.opensaml.saml.saml2.core.impl.StatusBuilder;
+import org.opensaml.saml.saml2.core.impl.StatusCodeBuilder;
+import org.opensaml.saml.saml2.core.impl.StatusMessageBuilder;
+import org.opensaml.saml.saml2.core.impl.SubjectBuilder;
+import org.opensaml.saml.saml2.core.impl.SubjectConfirmationBuilder;
+import org.opensaml.saml.saml2.core.impl.SubjectConfirmationDataBuilder;
 import org.opensaml.saml.saml2.encryption.Decrypter;
 import org.opensaml.security.credential.Credential;
 import org.opensaml.security.credential.CredentialSupport;
@@ -63,11 +95,15 @@ import de.governikus.eumw.eidascommon.Utils;
 import de.governikus.eumw.eidascommon.Utils.X509KeyPair;
 import de.governikus.eumw.eidasstarterkit.person_attributes.AbstractNonLatinScriptAttribute;
 import de.governikus.eumw.eidasstarterkit.person_attributes.EidasPersonAttributes;
-import de.governikus.eumw.eidasstarterkit.template.TemplateConstants;
-import de.governikus.eumw.eidasstarterkit.template.TemplateLoader;
+import de.governikus.eumw.eidasstarterkit.person_attributes.natural_persons_attribute.CurrentAddressAttribute;
+import lombok.Getter;
+import lombok.Setter;
 import net.shibboleth.utilities.java.support.component.ComponentInitializationException;
 import net.shibboleth.utilities.java.support.xml.BasicParserPool;
 import net.shibboleth.utilities.java.support.xml.XMLParserException;
+import se.litsec.eidas.opensaml.common.EidasConstants;
+import se.litsec.eidas.opensaml.common.EidasLoaEnum;
+import se.litsec.eidas.opensaml.ext.attributes.CurrentAddressType;
 import se.swedenconnect.opensaml.xmlsec.encryption.support.DecryptionUtils;
 
 
@@ -77,31 +113,110 @@ import se.swedenconnect.opensaml.xmlsec.encryption.support.DecryptionUtils;
 public class EidasResponse
 {
 
-  private static final long ONE_MINUTE_IN_MILLIS = 60000;// millisecs
+  // List of Strings contains the statusCode in the right order. The first Code is the outer statusCode.
+  private static Map<ErrorCode, List<String>> errorCodeToSamlStatus = new EnumMap<>(ErrorCode.class);
 
+  static
+  {
+    errorCodeToSamlStatus.put(ErrorCode.SUCCESS, Collections.singletonList(StatusCode.SUCCESS));
+    errorCodeToSamlStatus.put(ErrorCode.ERROR, Collections.singletonList(StatusCode.RESPONDER));
+    errorCodeToSamlStatus.put(ErrorCode.INTERNAL_ERROR, Collections.singletonList(StatusCode.RESPONDER));
+    errorCodeToSamlStatus.put(ErrorCode.UNSIGNED_ASSERTIONCONSUMER_URL,
+                              Collections.singletonList(StatusCode.REQUESTER));
+    errorCodeToSamlStatus.put(ErrorCode.INVALID_SESSION_ID, Collections.singletonList(StatusCode.REQUESTER));
+    errorCodeToSamlStatus.put(ErrorCode.TOO_MANY_OPEN_SESSIONS,
+                              Collections.singletonList(StatusCode.REQUESTER));
+    errorCodeToSamlStatus.put(ErrorCode.MISSING_REQUEST_ID, Collections.singletonList(StatusCode.REQUESTER));
+    errorCodeToSamlStatus.put(ErrorCode.SIGNATURE_CHECK_FAILED,
+                              Collections.singletonList(StatusCode.REQUESTER));
+    errorCodeToSamlStatus.put(ErrorCode.SIGNATURE_MISSING, Collections.singletonList(StatusCode.REQUESTER));
+    errorCodeToSamlStatus.put(ErrorCode.ILLEGAL_REQUEST_SYNTAX,
+                              Collections.singletonList(StatusCode.REQUESTER));
+    errorCodeToSamlStatus.put(ErrorCode.AUTHORIZATION_FAILED,
+                              Arrays.asList(StatusCode.RESPONDER, StatusCode.AUTHN_FAILED));
+    errorCodeToSamlStatus.put(ErrorCode.AUTHORIZATION_UNFINISHED,
+                              Collections.singletonList(StatusCode.REQUESTER));
+    errorCodeToSamlStatus.put(ErrorCode.UNKNOWN_PROVIDER,
+                              Arrays.asList(StatusCode.RESPONDER, StatusCode.REQUEST_UNSUPPORTED));
+    errorCodeToSamlStatus.put(ErrorCode.ILLEGAL_CONFIGURATION,
+                              Collections.singletonList(StatusCode.RESPONDER));
+    errorCodeToSamlStatus.put(ErrorCode.CANNOT_ACCESS_CREDENTIALS,
+                              Collections.singletonList(StatusCode.RESPONDER));
+    errorCodeToSamlStatus.put(ErrorCode.INVALID_CERTIFICATE,
+                              Arrays.asList(StatusCode.RESPONDER, StatusCode.AUTHN_FAILED));
+    errorCodeToSamlStatus.put(ErrorCode.ILLEGAL_ACCESS_METHOD,
+                              Arrays.asList(StatusCode.RESPONDER, StatusCode.REQUEST_UNSUPPORTED));
+    errorCodeToSamlStatus.put(ErrorCode.SOAP_RESPONSE_WRONG_SYNTAX,
+                              Arrays.asList(StatusCode.RESPONDER, StatusCode.AUTHN_FAILED));
+    errorCodeToSamlStatus.put(ErrorCode.UNENCRYPTED_ACCESS_NOT_ALLOWED,
+                              Arrays.asList(StatusCode.RESPONDER, StatusCode.REQUEST_UNSUPPORTED));
+    errorCodeToSamlStatus.put(ErrorCode.OUTDATED_ASSERTION, Collections.singletonList(StatusCode.REQUESTER));
+    errorCodeToSamlStatus.put(ErrorCode.WRONG_DESTINATION, Collections.singletonList(StatusCode.REQUESTER));
+    errorCodeToSamlStatus.put(ErrorCode.UNEXPECTED_EVENT, Collections.singletonList(StatusCode.REQUESTER));
+    errorCodeToSamlStatus.put(ErrorCode.OUTDATED_REQUEST, Collections.singletonList(StatusCode.REQUESTER));
+    errorCodeToSamlStatus.put(ErrorCode.REQUEST_FROM_FUTURE, Collections.singletonList(StatusCode.REQUESTER));
+    errorCodeToSamlStatus.put(ErrorCode.DUPLICATE_REQUEST_ID,
+                              Collections.singletonList(StatusCode.REQUESTER));
+    errorCodeToSamlStatus.put(ErrorCode.EID_ERROR, Collections.singletonList(StatusCode.RESPONDER));
+    errorCodeToSamlStatus.put(ErrorCode.ECARD_ERROR,
+                              Arrays.asList(StatusCode.RESPONDER, StatusCode.AUTHN_FAILED));
+    errorCodeToSamlStatus.put(ErrorCode.EID_MISSING_TERMINAL_RIGHTS,
+                              Collections.singletonList(StatusCode.RESPONDER));
+    errorCodeToSamlStatus.put(ErrorCode.EID_MISSING_ARGUMENT,
+                              Collections.singletonList(StatusCode.RESPONDER));
+    errorCodeToSamlStatus.put(ErrorCode.PASSWORD_EXPIRED,
+                              Arrays.asList(StatusCode.RESPONDER, StatusCode.AUTHN_FAILED));
+    errorCodeToSamlStatus.put(ErrorCode.PASSWORD_LOCKED,
+                              Arrays.asList(StatusCode.RESPONDER, StatusCode.AUTHN_FAILED));
+    errorCodeToSamlStatus.put(ErrorCode.CANNOT_DECRYPT, Collections.singletonList(StatusCode.REQUESTER));
+    errorCodeToSamlStatus.put(ErrorCode.ILLEGAL_PSK, Collections.singletonList(StatusCode.REQUESTER));
+    errorCodeToSamlStatus.put(ErrorCode.CLIENT_ERROR,
+                              Arrays.asList(StatusCode.RESPONDER, StatusCode.AUTHN_FAILED));
+    errorCodeToSamlStatus.put(ErrorCode.PROXY_COUNT_EXCEEDED,
+                              Arrays.asList(StatusCode.RESPONDER, StatusCode.PROXY_COUNT_EXCEEDED));
+    errorCodeToSamlStatus.put(ErrorCode.NO_SUPPORTED_IDP,
+                              Arrays.asList(StatusCode.RESPONDER, StatusCode.NO_SUPPORTED_IDP));
+    errorCodeToSamlStatus.put(ErrorCode.REQUEST_DENIED,
+                              Arrays.asList(StatusCode.RESPONDER, StatusCode.REQUEST_DENIED));
+    errorCodeToSamlStatus.put(ErrorCode.CANCELLATION_BY_USER,
+                              Arrays.asList(StatusCode.RESPONDER, StatusCode.AUTHN_FAILED));
+    errorCodeToSamlStatus.put(ErrorCode.INVALID_NAME_ID_TYPE,
+                              Arrays.asList(StatusCode.REQUESTER, StatusCode.INVALID_NAMEID_POLICY));
+  }
+
+  @Getter
+  private final List<EidasAttribute> attributes;
+
+  @Getter
   private String id;
 
+  @Getter
   private String destination;
 
+  @Getter
   private String recipient;
 
+  @Getter
   private String issuer;
 
+  @Getter
   private String inResponseTo;
 
+  @Getter
   private String issueInstant;
 
-  private EidasLoA loa;
+  private EidasLoaEnum loa;
 
   private EidasEncrypter encrypter;
 
   private EidasSigner signer;
 
-  private final List<EidasAttribute> attributes;
+  @Getter
+  @Setter
+  private EidasNameId nameId;
 
-  private EidasNameId nameId = null;
-
-  private Response openSamlResp = null;
+  @Getter
+  private Response openSamlResponse;
 
   private EidasResponse()
   {
@@ -113,7 +228,7 @@ public class EidasResponse
                        EidasNameId nameid,
                        String inResponseTo,
                        String issuer,
-                       EidasLoA loa,
+                       EidasLoaEnum loa,
                        EidasSigner signer,
                        EidasEncrypter encrypter)
   {
@@ -136,7 +251,7 @@ public class EidasResponse
                 EidasNameId nameid,
                 String inResponseTo,
                 String issuer,
-                EidasLoA loa,
+                EidasLoaEnum loa,
                 EidasSigner signer,
                 EidasEncrypter encrypter)
   {
@@ -153,242 +268,16 @@ public class EidasResponse
     this.attributes = att;
   }
 
-  public byte[] generateErrorRsp(ErrorCode code, String... msg) throws IOException, XMLParserException,
-    UnmarshallingException, CertificateEncodingException, MarshallingException, SignatureException,
-    TransformerFactoryConfigurationError, TransformerException, ComponentInitializationException
-  {
-    BasicParserPool ppMgr = Utils.getBasicParserPool();
-    byte[] returnValue;
-    String respTemp = TemplateLoader.getTemplateByName("failresp");
-    respTemp = respTemp.replace(TemplateConstants.IN_RESPONSE_TO, inResponseTo);
-    respTemp = respTemp.replace(TemplateConstants.ISSUE_INSTANT, issueInstant);
-    respTemp = respTemp.replace(TemplateConstants.ISSUER, issuer);
-    respTemp = respTemp.replace(TemplateConstants.ID, id);
-    respTemp = respTemp.replace(TemplateConstants.DESTINATION, destination);
-    respTemp = respTemp.replace(TemplateConstants.CODE, errorCodeToSamlStatus.get(code));
-    if (msg == null)
-    {
-      respTemp = respTemp.replace(TemplateConstants.ERR_MSG, code.toDescription());
-    }
-    else
-    {
-      respTemp = respTemp.replace(TemplateConstants.ERR_MSG, code.toDescription(msg));
-    }
-    List<Signature> sigs = new ArrayList<>();
-
-    try (InputStream is = new ByteArrayInputStream(respTemp.getBytes(StandardCharsets.UTF_8)))
-    {
-      Document inCommonMDDoc = ppMgr.parse(is);
-      Element metadataRoot = inCommonMDDoc.getDocumentElement();
-      // Get apropriate unmarshaller
-      UnmarshallerFactory unmarshallerFactory = XMLObjectProviderRegistrySupport.getUnmarshallerFactory();
-      Unmarshaller unmarshaller = unmarshallerFactory.getUnmarshaller(metadataRoot);
-      Response resp = (Response)unmarshaller.unmarshall(metadataRoot);
-
-      XMLSignatureHandler.addSignature(resp,
-                                       signer.getSigKey(),
-                                       signer.getSigCert(),
-                                       signer.getSigType(),
-                                       signer.getSigDigestAlg());
-
-      if (resp.getSignature() != null)
-      {
-        sigs.add(resp.getSignature());
-      }
-
-      Marshaller rm = XMLObjectProviderRegistrySupport.getMarshallerFactory()
-                                                      .getMarshaller(resp.getElementQName());
-      Element all = rm.marshall(resp);
-      if (resp.getSignature() != null)
-      {
-        sigs.add(resp.getSignature());
-      }
-      Signer.signObjects(sigs);
-
-      openSamlResp = resp;
-      Transformer trans = Utils.getTransformer();
-      trans.setOutputProperty(OutputKeys.ENCODING, "UTF-8");
-      // Please note: you cannot format the output without breaking signature!
-      try (ByteArrayOutputStream bout = new ByteArrayOutputStream())
-      {
-        trans.transform(new DOMSource(all), new StreamResult(bout));
-        returnValue = bout.toByteArray();
-      }
-    }
-    return returnValue;
-  }
-
-  byte[] generate() throws XMLParserException, IOException, UnmarshallingException,
-    CertificateEncodingException, EncryptionException, MarshallingException, SignatureException,
-    TransformerFactoryConfigurationError, TransformerException, ComponentInitializationException
-  {
-    byte[] returnValue;
-
-    String notBefore = Constants.format(new Date());
-    String notAfter = Constants.format(new Date(new Date().getTime() + (10 * ONE_MINUTE_IN_MILLIS)));
-
-    if (nameId == null)
-    {
-      throw new XMLParserException("Document does not contains a NameID value");
-    }
-    StringBuilder attributeString = new StringBuilder();
-    for ( EidasAttribute eidasAtt : this.attributes )
-    {
-      attributeString.append(eidasAtt.generate());
-    }
-    String assoTemp = TemplateLoader.getTemplateByName("asso");
-    assoTemp = assoTemp.replace(TemplateConstants.NAME_FORMAT, nameId.getType().value);
-    assoTemp = assoTemp.replace(TemplateConstants.NAME_ID, nameId.getValue());
-    assoTemp = assoTemp.replace(TemplateConstants.ASSERTION_ID, "_" + Utils.generateUniqueID());
-    assoTemp = assoTemp.replace(TemplateConstants.RECIPIENT, recipient);
-    assoTemp = assoTemp.replace(TemplateConstants.AUTHN_INSTANT, issueInstant);
-    assoTemp = assoTemp.replace(TemplateConstants.LOA, loa.value);
-    assoTemp = assoTemp.replace(TemplateConstants.SESSION_INDEX, "_" + Utils.generateUniqueID());
-    assoTemp = assoTemp.replace(TemplateConstants.ATTRIBUTES, attributeString.toString());
-    assoTemp = assoTemp.replace(TemplateConstants.NOT_BEFORE, notBefore);
-    assoTemp = assoTemp.replace(TemplateConstants.NOT_ON_OR_AFTER, notAfter);
-    assoTemp = assoTemp.replace(TemplateConstants.IN_RESPONSE_TO, inResponseTo);
-    assoTemp = assoTemp.replace(TemplateConstants.ISSUE_INSTANT, issueInstant);
-    assoTemp = assoTemp.replace(TemplateConstants.ISSUER, issuer);
-    assoTemp = assoTemp.replace(TemplateConstants.ID, id);
-    assoTemp = assoTemp.replace(TemplateConstants.DESTINATION, destination);
-
-    String generatedAssertionXML = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>" + assoTemp;
-    Assertion ass = null;
-    BasicParserPool ppMgr = Utils.getBasicParserPool();
-    try (InputStream is = new ByteArrayInputStream(generatedAssertionXML.getBytes(StandardCharsets.UTF_8)))
-    {
-      Document inCommonMDDoc = ppMgr.parse(is);
-      Element metadataRoot = inCommonMDDoc.getDocumentElement();
-      // Get apropriate unmarshaller
-      UnmarshallerFactory unmarshallerFactory = XMLObjectProviderRegistrySupport.getUnmarshallerFactory();
-      Unmarshaller unmarshaller = unmarshallerFactory.getUnmarshaller(metadataRoot);
-      ass = (Assertion)unmarshaller.unmarshall(metadataRoot);
-    }
-
-    Assertion[] assertions = new Assertion[]{ass};
-
-    String respTemp = TemplateLoader.getTemplateByName("resp");
-    respTemp = respTemp.replace(TemplateConstants.IN_RESPONSE_TO, inResponseTo);
-    respTemp = respTemp.replace(TemplateConstants.ISSUE_INSTANT, issueInstant);
-    respTemp = respTemp.replace(TemplateConstants.ISSUER, issuer);
-    respTemp = respTemp.replace(TemplateConstants.ID, id);
-    respTemp = respTemp.replace(TemplateConstants.DESTINATION, destination);
-
-    List<Signature> sigs = new ArrayList<>();
-
-    try (InputStream is = new ByteArrayInputStream(respTemp.getBytes(StandardCharsets.UTF_8)))
-    {
-      Document inCommonMDDoc = ppMgr.parse(is);
-      Element metadataRoot = inCommonMDDoc.getDocumentElement();
-      // Get apropriate unmarshaller
-      UnmarshallerFactory unmarshallerFactory = XMLObjectProviderRegistrySupport.getUnmarshallerFactory();
-      Unmarshaller unmarshaller = unmarshallerFactory.getUnmarshaller(metadataRoot);
-      Response resp = (Response)unmarshaller.unmarshall(metadataRoot);
-
-      XMLSignatureHandler.addSignature(resp,
-                                       signer.getSigKey(),
-                                       signer.getSigCert(),
-                                       signer.getSigType(),
-                                       signer.getSigDigestAlg());
-      for ( Assertion a : assertions )
-      {
-        a.setParent(null);
-        resp.getEncryptedAssertions().add(this.encrypter.encrypter.encrypt(a));
-      }
-
-      if (resp.getSignature() != null)
-      {
-        sigs.add(resp.getSignature());
-      }
-
-      Marshaller rm = XMLObjectProviderRegistrySupport.getMarshallerFactory()
-                                                      .getMarshaller(resp.getElementQName());
-      Element all = rm.marshall(resp);
-      if (resp.getSignature() != null)
-      {
-        sigs.add(resp.getSignature());
-      }
-      Signer.signObjects(sigs);
-
-      openSamlResp = resp;
-      Transformer trans = Utils.getTransformer();
-      trans.setOutputProperty(OutputKeys.ENCODING, "UTF-8");
-      // Please note: you cannot format the output without breaking signature!
-      try (ByteArrayOutputStream bout = new ByteArrayOutputStream())
-      {
-        trans.transform(new DOMSource(all), new StreamResult(bout));
-        returnValue = bout.toByteArray();
-      }
-    }
-    return returnValue;
-  }
-
-  public String getId()
-  {
-    return id;
-  }
-
-  public String getRecipient()
-  {
-    return recipient;
-  }
-
-  public String getDestination()
-  {
-    return destination;
-  }
-
-  public String getIssuer()
-  {
-    return issuer;
-  }
-
-  public String getInResponseTo()
-  {
-    return inResponseTo;
-  }
-
-  public String getIssueInstant()
-  {
-    return issueInstant;
-  }
-
-  public void addAttribute(EidasAttribute e)
-  {
-    attributes.add(e);
-  }
-
-  public List<EidasAttribute> getAttributes()
-  {
-    return attributes;
-  }
-
-  public EidasNameId getNameId()
-  {
-    return nameId;
-  }
-
-  public void setNameId(EidasNameId nameid)
-  {
-    this.nameId = nameid;
-  }
-
-  public Response getOpenSamlResponse()
-  {
-    return openSamlResp;
-  }
-
   public static EidasResponse parse(InputStream is,
                                     X509KeyPair[] decryptionKeyPairs,
-                                    X509Certificate[] signatureAuthors)
+                                    X509Certificate... signatureAuthors)
     throws XMLParserException, UnmarshallingException, ErrorCodeException, ComponentInitializationException
   {
     EidasResponse eidasResp = new EidasResponse();
     List<X509Certificate> trustedAnchorList = getTrustedAnchorList(signatureAuthors);
     List<Credential> decryptionCredentialList = getDecryptionCredentialList(decryptionKeyPairs);
     Response resp = getOpenSamlResponse(is);
-    eidasResp.openSamlResp = resp;
+    eidasResp.openSamlResponse = resp;
 
     checkSignature(resp.getSignature(), trustedAnchorList);
     processSAMLResponse(eidasResp, trustedAnchorList, decryptionCredentialList, resp);
@@ -397,7 +286,7 @@ public class EidasResponse
     eidasResp.inResponseTo = resp.getInResponseTo();
     eidasResp.issueInstant = Constants.format(resp.getIssueInstant().toDate());
     eidasResp.issuer = resp.getIssuer().getDOM().getTextContent();
-    eidasResp.openSamlResp = resp;
+    eidasResp.openSamlResponse = resp;
 
     return eidasResp;
   }
@@ -408,22 +297,7 @@ public class EidasResponse
                                           Response resp)
     throws ErrorCodeException
   {
-    if (!StatusCode.SUCCESS.equals(resp.getStatus().getStatusCode().getValue()))
-    {
-      ErrorCode code = findErrorCode(resp.getStatus().getStatusCode().getValue());
-      if (code == null)
-      {
-        code = ErrorCode.INTERNAL_ERROR;
-        throw new ErrorCodeException(code,
-                                     "Unkown statuscode " + resp.getStatus().getStatusCode().getValue());
-      }
-      // Error respose, so un-encrypted assertion!
-      for ( Assertion assertion : resp.getAssertions() )
-      {
-        setEidasResponseNameIdFromAssertion(eidasResp, assertion);
-      }
-    }
-    else
+    if (StatusCode.SUCCESS.equals(resp.getStatus().getStatusCode().getValue()))
     {
       Decrypter decr = new Decrypter(DecryptionUtils.createDecryptionParameters(decryptionCredentialList.toArray(new Credential[0])));
       decr.setRootInNewDocument(true);
@@ -435,6 +309,21 @@ public class EidasResponse
       resp.getAssertions().clear();
       resp.getAssertions().addAll(assertions);
       eidasResp.recipient = getAudience(resp);
+    }
+    else
+    {
+      ErrorCode code = findErrorCode(resp.getStatus().getStatusCode().getValue());
+      if (code == null)
+      {
+        code = ErrorCode.INTERNAL_ERROR;
+        throw new ErrorCodeException(code,
+                                     "Unkown statuscode " + resp.getStatus().getStatusCode().getValue());
+      }
+      // Error response, so un-encrypted assertion!
+      for ( Assertion assertion : resp.getAssertions() )
+      {
+        setEidasResponseNameIdFromAssertion(eidasResp, assertion);
+      }
     }
   }
 
@@ -464,22 +353,27 @@ public class EidasResponse
       }
 
       EidasPersonAttributes personAttributes = getEidasPersonAttributes(att);
-      XMLObject attributeValue = att.getAttributeValues().get(0); // IN EIDAS there is just one value
-                                                                  // except familyname!
-      Element domElement = attributeValue.getDOM();
       EidasAttribute eidasAttribute = personAttributes.getInstance();
+      XMLObject attributeValue = att.getAttributeValues().get(0);
       if (eidasAttribute instanceof AbstractNonLatinScriptAttribute)
       {
-        AbstractNonLatinScriptAttribute abstractAttribute = (AbstractNonLatinScriptAttribute)eidasAttribute;
-        abstractAttribute.setLatinScript(att.getAttributeValues().get(0).getDOM().getTextContent());
+        AbstractNonLatinScriptAttribute attribute = (AbstractNonLatinScriptAttribute)eidasAttribute;
+        attribute.setValue(attributeValue.getDOM().getTextContent());
         if (att.getAttributeValues().size() == 2)
         {
-          abstractAttribute.setNonLatinScript(att.getAttributeValues().get(1).getDOM().getTextContent());
+          attribute.setNonLatinScript(att.getAttributeValues().get(1).getDOM().getTextContent());
         }
+      }
+      else if (eidasAttribute instanceof CurrentAddressAttribute
+               && attributeValue instanceof CurrentAddressType)
+      {
+        CurrentAddressAttribute attribute = (CurrentAddressAttribute)eidasAttribute;
+        CurrentAddressType cat = (CurrentAddressType)attributeValue;
+        attribute.setFromCurrentAddressType(cat);
       }
       else
       {
-        eidasAttribute.setLatinScript(domElement.getTextContent());
+        eidasAttribute.setValue(attributeValue.getDOM().getTextContent());
       }
       eidasResp.attributes.add(eidasAttribute);
     }
@@ -487,24 +381,15 @@ public class EidasResponse
 
   private static EidasPersonAttributes getEidasPersonAttributes(Attribute att)
   {
-    EidasPersonAttributes personAttributes;
     /* Get Person Attribute from the DOM */
     try
     {
-      personAttributes = EidasNaturalPersonAttributes.getValueOf(att.getName());
+      return EidasNaturalPersonAttributes.getValueOf(att.getName());
     }
     catch (ErrorCodeException e1)
     {
-      try
-      {
-        personAttributes = EidasLegalPersonAttributes.getValueOf(att.getName());
-      }
-      catch (ErrorCodeException e2)
-      {
-        throw new IllegalArgumentException("No attribute known with name: " + att.getName());
-      }
+      throw new IllegalArgumentException("No attribute known with name: " + att.getName());
     }
-    return personAttributes;
   }
 
   private static void checkSignature(List<X509Certificate> trustedAnchorList, Assertion assertion)
@@ -615,7 +500,6 @@ public class EidasResponse
                .getAudienceURI();
   }
 
-
   private static void checkSignature(Signature sig, List<X509Certificate> trustedAnchorList)
     throws ErrorCodeException
   {
@@ -627,58 +511,225 @@ public class EidasResponse
                                        trustedAnchorList.toArray(new X509Certificate[trustedAnchorList.size()]));
   }
 
-  private static Map<ErrorCode, String> errorCodeToSamlStatus = new EnumMap<>(ErrorCode.class);
-  static
-  {
-    errorCodeToSamlStatus.put(ErrorCode.SUCCESS, StatusCode.SUCCESS);
-    errorCodeToSamlStatus.put(ErrorCode.ERROR, StatusCode.RESPONDER);
-    errorCodeToSamlStatus.put(ErrorCode.INTERNAL_ERROR, StatusCode.RESPONDER);
-    errorCodeToSamlStatus.put(ErrorCode.UNSIGNED_ASSERTIONCONSUMER_URL, StatusCode.REQUESTER);
-    errorCodeToSamlStatus.put(ErrorCode.INVALID_SESSION_ID, StatusCode.REQUESTER);
-    errorCodeToSamlStatus.put(ErrorCode.TOO_MANY_OPEN_SESSIONS, StatusCode.REQUESTER);
-    errorCodeToSamlStatus.put(ErrorCode.MISSING_REQUEST_ID, StatusCode.REQUESTER);
-    errorCodeToSamlStatus.put(ErrorCode.SIGNATURE_CHECK_FAILED, StatusCode.REQUESTER);
-    errorCodeToSamlStatus.put(ErrorCode.SIGNATURE_MISSING, StatusCode.REQUESTER);
-    errorCodeToSamlStatus.put(ErrorCode.ILLEGAL_REQUEST_SYNTAX, StatusCode.REQUESTER);
-    errorCodeToSamlStatus.put(ErrorCode.AUTHORIZATION_FAILED, StatusCode.AUTHN_FAILED);
-    errorCodeToSamlStatus.put(ErrorCode.AUTHORIZATION_UNFINISHED, StatusCode.REQUESTER);
-    errorCodeToSamlStatus.put(ErrorCode.UNKNOWN_PROVIDER, StatusCode.REQUEST_UNSUPPORTED);
-    errorCodeToSamlStatus.put(ErrorCode.ILLEGAL_CONFIGURATION, StatusCode.RESPONDER);
-    errorCodeToSamlStatus.put(ErrorCode.CANNOT_ACCESS_CREDENTIALS, StatusCode.RESPONDER);
-    errorCodeToSamlStatus.put(ErrorCode.INVALID_CERTIFICATE, StatusCode.AUTHN_FAILED);
-    errorCodeToSamlStatus.put(ErrorCode.ILLEGAL_ACCESS_METHOD, StatusCode.REQUEST_UNSUPPORTED);
-    errorCodeToSamlStatus.put(ErrorCode.SOAP_RESPONSE_WRONG_SYNTAX, StatusCode.AUTHN_FAILED);
-    errorCodeToSamlStatus.put(ErrorCode.UNENCRYPTED_ACCESS_NOT_ALLOWED, StatusCode.REQUEST_UNSUPPORTED);
-    errorCodeToSamlStatus.put(ErrorCode.OUTDATED_ASSERTION, StatusCode.REQUESTER);
-    errorCodeToSamlStatus.put(ErrorCode.WRONG_DESTINATION, StatusCode.REQUESTER);
-    errorCodeToSamlStatus.put(ErrorCode.UNEXPECTED_EVENT, StatusCode.REQUESTER);
-    errorCodeToSamlStatus.put(ErrorCode.OUTDATED_REQUEST, StatusCode.REQUESTER);
-    errorCodeToSamlStatus.put(ErrorCode.REQUEST_FROM_FUTURE, StatusCode.REQUESTER);
-    errorCodeToSamlStatus.put(ErrorCode.DUPLICATE_REQUEST_ID, StatusCode.REQUESTER);
-    errorCodeToSamlStatus.put(ErrorCode.EID_ERROR, StatusCode.RESPONDER);
-    errorCodeToSamlStatus.put(ErrorCode.ECARD_ERROR, StatusCode.AUTHN_FAILED);
-    errorCodeToSamlStatus.put(ErrorCode.EID_MISSING_TERMINAL_RIGHTS, StatusCode.RESPONDER);
-    errorCodeToSamlStatus.put(ErrorCode.EID_MISSING_ARGUMENT, StatusCode.RESPONDER);
-    errorCodeToSamlStatus.put(ErrorCode.PASSWORD_EXPIRED, StatusCode.AUTHN_FAILED);
-    errorCodeToSamlStatus.put(ErrorCode.PASSWORD_LOCKED, StatusCode.AUTHN_FAILED);
-    errorCodeToSamlStatus.put(ErrorCode.CANNOT_DECRYPT, StatusCode.REQUESTER);
-    errorCodeToSamlStatus.put(ErrorCode.ILLEGAL_PSK, StatusCode.REQUESTER);
-    errorCodeToSamlStatus.put(ErrorCode.CLIENT_ERROR, StatusCode.AUTHN_FAILED);
-    errorCodeToSamlStatus.put(ErrorCode.PROXY_COUNT_EXCEEDED, StatusCode.PROXY_COUNT_EXCEEDED);
-    errorCodeToSamlStatus.put(ErrorCode.NO_SUPPORTED_IDP, StatusCode.NO_SUPPORTED_IDP);
-    errorCodeToSamlStatus.put(ErrorCode.REQUEST_DENIED, StatusCode.REQUEST_DENIED);
-    errorCodeToSamlStatus.put(ErrorCode.CANCELLATION_BY_USER, StatusCode.AUTHN_FAILED);
-  }
-
   private static ErrorCode findErrorCode(String s)
   {
-    for ( Entry<ErrorCode, String> e : errorCodeToSamlStatus.entrySet() )
+    for ( Entry<ErrorCode, List<String>> e : errorCodeToSamlStatus.entrySet() )
     {
-      if (e.getValue().equals(s))
+      if (e.getValue().contains(s))
       {
         return e.getKey();
       }
     }
     return null;
+  }
+
+  public byte[] generateErrorRsp(ErrorCode code, String... msg)
+    throws IOException, CertificateEncodingException, MarshallingException, SignatureException,
+    TransformerFactoryConfigurationError, TransformerException
+  {
+    Response response = new ResponseBuilder().buildObject();
+    response.setDestination(destination);
+    response.setInResponseTo(inResponseTo);
+    response.setIssueInstant(DateTime.now());
+    response.setID(id);
+
+    setSamlIssuer(response);
+    setSamlStatusError(response, code, msg);
+
+    List<Signature> signatures = new ArrayList<>();
+    XMLSignatureHandler.addSignature(response,
+                                     signer.getSigKey(),
+                                     signer.getSigCert(),
+                                     signer.getSigType(),
+                                     signer.getSigDigestAlg());
+
+    if (response.getSignature() != null)
+    {
+      signatures.add(response.getSignature());
+    }
+
+    return samlToByteArray(response, signatures);
+  }
+
+  byte[] generate() throws XMLParserException, IOException, CertificateEncodingException, EncryptionException,
+    MarshallingException, SignatureException, TransformerFactoryConfigurationError, TransformerException
+  {
+
+
+    if (nameId == null)
+    {
+      throw new XMLParserException("Document does not contains a NameID value");
+    }
+    DateTime now = DateTime.now();
+
+    Assertion assertion = new AssertionBuilder().buildObject();
+    assertion.getNamespaceManager()
+             .registerNamespaceDeclaration(new Namespace(EidasConstants.EIDAS_NP_NS,
+                                                         EidasConstants.EIDAS_NP_PREFIX));
+    assertion.setIssueInstant(now);
+    assertion.setID("_" + Utils.generateUniqueID());
+
+    setSamlIssuer(assertion);
+    setSamlSubject(assertion, now);
+    setSamlConditions(assertion, now);
+    setSamlAuthnStatement(assertion, now);
+    setSamlAttribute(assertion);
+
+    Response response = new ResponseBuilder().buildObject();
+    response.setDestination(destination);
+    response.setID(id);
+    response.setInResponseTo(inResponseTo);
+    response.setIssueInstant(now);
+    setSamlIssuer(response);
+    setSamlStatusSuccess(response);
+
+    List<Signature> signatures = new ArrayList<>();
+    XMLSignatureHandler.addSignature(response,
+                                     signer.getSigKey(),
+                                     signer.getSigCert(),
+                                     signer.getSigType(),
+                                     signer.getSigDigestAlg());
+    assertion.setParent(null);
+    response.getEncryptedAssertions().add(this.encrypter.encrypter.encrypt(assertion));
+
+    if (response.getSignature() != null)
+    {
+      signatures.add(response.getSignature());
+    }
+
+    return samlToByteArray(response, signatures);
+  }
+
+  private byte[] samlToByteArray(Response response, List<Signature> signatures)
+    throws IOException, TransformerException, MarshallingException, SignatureException
+  {
+
+    Marshaller rm = XMLObjectProviderRegistrySupport.getMarshallerFactory()
+                                                    .getMarshaller(response.getElementQName());
+    Element all = rm.marshall(response);
+    Signer.signObjects(signatures);
+
+    openSamlResponse = response;
+    Transformer trans = Utils.getTransformer();
+    trans.setOutputProperty(OutputKeys.ENCODING, StandardCharsets.UTF_8.name());
+    // Please note: you cannot format the output without breaking signature!
+    try (ByteArrayOutputStream bout = new ByteArrayOutputStream())
+    {
+      trans.transform(new DOMSource(all), new StreamResult(bout));
+      return bout.toByteArray();
+    }
+  }
+
+  void setSamlStatusError(Response response, ErrorCode code, String... msg)
+  {
+    Status status = new StatusBuilder().buildObject();
+    StatusCode statusCode = new StatusCodeBuilder().buildObject();
+    List<String> samlStatusCodes = errorCodeToSamlStatus.get(code);
+    statusCode.setValue(samlStatusCodes.get(0));
+    if (samlStatusCodes.size() > 1)
+    {
+      StatusCode statusCodeInner = new StatusCodeBuilder().buildObject();
+      statusCodeInner.setValue(samlStatusCodes.get(1));
+      statusCode.setStatusCode(statusCodeInner);
+    }
+    status.setStatusCode(statusCode);
+    StatusMessage statusMessage = new StatusMessageBuilder().buildObject();
+    if (msg == null)
+    {
+      statusMessage.setMessage(code.toDescription());
+    }
+    else
+    {
+      statusMessage.setMessage(code.toDescription(msg));
+    }
+    status.setStatusMessage(statusMessage);
+    response.setStatus(status);
+  }
+
+  private void setSamlStatusSuccess(Response response)
+  {
+    Status status = new StatusBuilder().buildObject();
+    StatusCode statusCode = new StatusCodeBuilder().buildObject();
+    statusCode.setValue(StatusCode.SUCCESS);
+    status.setStatusCode(statusCode);
+    response.setStatus(status);
+  }
+
+  private void setSamlIssuer(Response response)
+  {
+    Issuer issuerSaml = new IssuerBuilder().buildObject();
+    issuerSaml.setValue(issuer);
+    response.setIssuer(issuerSaml);
+  }
+
+  private void setSamlIssuer(Assertion assertion)
+  {
+    Issuer issuerSaml = new IssuerBuilder().buildObject();
+    issuerSaml.setValue(issuer);
+    assertion.setIssuer(issuerSaml);
+  }
+
+  private void setSamlSubject(Assertion assertion, DateTime now)
+  {
+    Subject subject = new SubjectBuilder().buildObject();
+    NameID nameID = new NameIDBuilder().buildObject();
+    nameID.setValue(nameId.getValue());
+    nameID.setFormat(nameId.getType().getValue());
+    subject.setNameID(nameID);
+
+    SubjectConfirmation subjectConfirmation = new SubjectConfirmationBuilder().buildObject();
+    SubjectConfirmationData subjectConfirmationData = new SubjectConfirmationDataBuilder().buildObject();
+    subjectConfirmationData.setInResponseTo(inResponseTo);
+    subjectConfirmationData.setNotBefore(now);
+    subjectConfirmationData.setNotOnOrAfter(now.plusMinutes(10));
+    subjectConfirmationData.setRecipient(destination);
+
+    subjectConfirmation.setSubjectConfirmationData(subjectConfirmationData);
+    subject.getSubjectConfirmations().add(subjectConfirmation);
+
+    assertion.setSubject(subject);
+  }
+
+  private void setSamlConditions(Assertion assertion, DateTime now)
+  {
+    Conditions conditions = new ConditionsBuilder().buildObject();
+    AudienceRestriction audienceRestriction = new AudienceRestrictionBuilder().buildObject();
+    Audience audience = new AudienceBuilder().buildObject();
+    audience.setAudienceURI(recipient);
+    audienceRestriction.getAudiences().add(audience);
+    conditions.getAudienceRestrictions().add(audienceRestriction);
+    conditions.setNotBefore(now);
+    conditions.setNotOnOrAfter(now.plusMinutes(10));
+    assertion.setConditions(conditions);
+  }
+
+  private void setSamlAuthnStatement(Assertion assertion, DateTime now)
+  {
+    AuthnStatement authnStatement = new AuthnStatementBuilder().buildObject();
+    authnStatement.setAuthnInstant(now);
+    authnStatement.setSessionIndex("_" + Utils.generateUniqueID());
+    AuthnContext authnContext = new AuthnContextBuilder().buildObject();
+
+    AuthnContextClassRef authnContextClassRef = new AuthnContextClassRefBuilder().buildObject();
+    authnContextClassRef.setAuthnContextClassRef(loa.getUri());
+    authnContext.setAuthnContextClassRef(authnContextClassRef);
+    authnStatement.setAuthnContext(authnContext);
+    assertion.getAuthnStatements().add(authnStatement);
+  }
+
+  private void setSamlAttribute(Assertion assertion)
+  {
+    AttributeStatement attributeStatement = new AttributeStatementBuilder().buildObject();
+    for ( EidasAttribute eidasAttribute : this.attributes )
+    {
+      Attribute att = eidasAttribute.generate();
+      attributeStatement.getAttributes().add(att);
+    }
+    assertion.getAttributeStatements().add(attributeStatement);
+  }
+
+  public void addAttribute(EidasAttribute e)
+  {
+    attributes.add(e);
   }
 }

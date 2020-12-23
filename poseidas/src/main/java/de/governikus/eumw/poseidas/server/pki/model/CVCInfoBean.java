@@ -18,209 +18,294 @@ import java.util.Map;
 
 import de.governikus.eumw.poseidas.gov2server.constants.admin.AdminPoseidasConstants;
 import de.governikus.eumw.poseidas.gov2server.constants.admin.ManagementMessage;
-import de.governikus.eumw.poseidas.server.idprovider.config.PoseidasConfigurator;
 import de.governikus.eumw.poseidas.server.idprovider.config.CoreConfigurationDto;
+import de.governikus.eumw.poseidas.server.idprovider.config.PoseidasConfigurator;
 import de.governikus.eumw.poseidas.server.idprovider.config.ServiceProviderDto;
 import de.governikus.eumw.poseidas.server.pki.PermissionDataHandlingMBean;
 
+
 /**
- * This class represents a single service provider entity. It provides methods
- * for setting and getting entity details as well as CVC operations and renewing
- * the three lists.
+ * This class represents a single service provider entity. It provides methods for setting and getting entity
+ * details as well as CVC operations and renewing the three lists.
  *
  * @author bpr
- *
  */
-public class CVCInfoBean implements Serializable {
+public class CVCInfoBean implements Serializable
+{
 
-	private static final long serialVersionUID = 1L;
+  private static final long serialVersionUID = 1L;
 
-	private PermissionDataHandlingMBean data;
+  private PermissionDataHandlingMBean data;
 
-	private ServiceProviderDto entry;
+  private ServiceProviderDto entry;
 
-	private Map<String, Object> info;
+  private Map<String, Object> info;
 
-	private String entityID;
+  private String entityID;
 
-	private String countryCode;
+  private String countryCode;
 
-	private String chrMnemonic;
+  private String chrMnemonic;
 
-	private int sequenceNumber;
+  private int sequenceNumber;
 
-	public CVCInfoBean() {
-		super();
-	}
+  public CVCInfoBean()
+  {
+    super();
+  }
 
-	public CVCInfoBean(ServiceProviderDto entry, PermissionDataHandlingMBean data) {
-		this();
-		this.entry = entry;
-		entityID = entry.getEntityID();
-		this.data = data;
-		fetchInfo();
-	}
+  public CVCInfoBean(ServiceProviderDto entry, PermissionDataHandlingMBean data)
+  {
+    this();
+    this.entry = entry;
+    entityID = entry.getEntityID();
+    this.data = data;
+    fetchInfo();
+  }
 
-	public void fetchInfo() {
-		if (entry == null) {
-			CoreConfigurationDto config = PoseidasConfigurator.getInstance().getCurrentConfig();
-			entry = config.getServiceProvider().get(entityID);
-		}
-		info = data.getPermissionDataInfo(entry.getEpaConnectorConfiguration().getCVCRefID(), true);
-	}
+  public void fetchInfo()
+  {
+    if (entry == null)
+    {
+      CoreConfigurationDto config = PoseidasConfigurator.getInstance().getCurrentConfig();
+      entry = config.getServiceProvider().get(entityID);
+    }
+    info = data.getPermissionDataInfo(entry.getEpaConnectorConfiguration().getCVCRefID(), true);
+  }
 
-	public void setEntityID(String entityID) {
-		this.entityID = entityID;
-	}
+  public void setEntityID(String entityID)
+  {
+    this.entityID = entityID;
+  }
 
-	public String getEntityID() {
-		return entityID;
-	}
+  public String getEntityID()
+  {
+    return entityID;
+  }
 
-	public String getCountryCode() {
-		return countryCode;
-	}
+  public String getCountryCode()
+  {
+    return countryCode;
+  }
 
-	public void setCountryCode(String countryCode) {
-		this.countryCode = countryCode;
-	}
+  public void setCountryCode(String countryCode)
+  {
+    this.countryCode = countryCode;
+  }
 
-	public String getChrMnemonic() {
-		return chrMnemonic;
-	}
+  public String getChrMnemonic()
+  {
+    return chrMnemonic;
+  }
 
-	public void setChrMnemonic(String chrMnemonic) {
-		this.chrMnemonic = chrMnemonic;
-	}
+  public void setChrMnemonic(String chrMnemonic)
+  {
+    this.chrMnemonic = chrMnemonic;
+  }
 
-	public int getSequenceNumber() {
-		return sequenceNumber;
-	}
+  public int getSequenceNumber()
+  {
+    return sequenceNumber;
+  }
 
-	public void setSequenceNumber(int sequenceNumber) {
-		this.sequenceNumber = sequenceNumber;
-	}
+  public void setSequenceNumber(int sequenceNumber)
+  {
+    this.sequenceNumber = sequenceNumber;
+  }
 
-	public String getCVCRefID() {
-		return entry.getEpaConnectorConfiguration().getCVCRefID();
-	}
+  public String getCVCRefID()
+  {
+    return entry.getEpaConnectorConfiguration().getCVCRefID();
+  }
 
-	public boolean isInfo() {
-		return info != null;
-	}
+  public boolean isInfo()
+  {
+    return info != null;
+  }
 
-	public String getCHR() {
-		try {
-			return (String) info.get(AdminPoseidasConstants.VALUE_PERMISSION_DATA_HOLDERREFERENCE);
-		} catch (NullPointerException e) {
-			return "";
-		}
-	}
+  public String getCHR()
+  {
+    try
+    {
+      return (String)info.get(AdminPoseidasConstants.VALUE_PERMISSION_DATA_HOLDERREFERENCE);
+    }
+    catch (NullPointerException e)
+    {
+      return "";
+    }
+  }
 
-	public String getSubjectName() {
-		try {
-			return (String) info.get(AdminPoseidasConstants.VALUE_PERMISSION_DATA_SUBJECT_NAME);
-		} catch (NullPointerException e) {
-			return "";
-		}
-	}
+  public String getSubjectName()
+  {
+    try
+    {
+      return (String)info.get(AdminPoseidasConstants.VALUE_PERMISSION_DATA_SUBJECT_NAME);
+    }
+    catch (NullPointerException e)
+    {
+      return "";
+    }
+  }
 
-	public String getSubjectURL() {
-		try {
-			return (String) info.get(AdminPoseidasConstants.VALUE_PERMISSION_DATA_SUBJECT_URL);
-		} catch (NullPointerException e) {
-			return "";
-		}
-	}
+  public String getSubjectURL()
+  {
+    try
+    {
+      return (String)info.get(AdminPoseidasConstants.VALUE_PERMISSION_DATA_SUBJECT_URL);
+    }
+    catch (NullPointerException e)
+    {
+      return "";
+    }
+  }
 
-	public String getCAR() {
-		try {
-			return (String) info.get(AdminPoseidasConstants.VALUE_PERMISSION_DATA_CA_REFERENCE);
-		} catch (NullPointerException e) {
-			return "";
-		}
-	}
+  public String getCAR()
+  {
+    try
+    {
+      return (String)info.get(AdminPoseidasConstants.VALUE_PERMISSION_DATA_CA_REFERENCE);
+    }
+    catch (NullPointerException e)
+    {
+      return "";
+    }
+  }
 
-	private String dateToString(Date date) {
-		if (date == null) {
-			return null;
-		}
-		String pattern = "yyyy-MM-dd";
-		SimpleDateFormat simpleDateFormat = new SimpleDateFormat(pattern, Locale.ENGLISH);
-		return simpleDateFormat.format(date);
-	}
+  private String dateToString(Date date)
+  {
+    if (date == null)
+    {
+      return null;
+    }
+    String pattern = "yyyy-MM-dd";
+    SimpleDateFormat simpleDateFormat = new SimpleDateFormat(pattern, Locale.ENGLISH);
+    return simpleDateFormat.format(date);
+  }
 
-	public String getValidFrom() {
-		try {
-			return dateToString((Date) info.get(AdminPoseidasConstants.VALUE_PERMISSION_DATA_EFFECTIVE_DATE));
-		} catch (NullPointerException e) {
-			return "";
-		}
-	}
+  public String getValidFrom()
+  {
+    try
+    {
+      return dateToString((Date)info.get(AdminPoseidasConstants.VALUE_PERMISSION_DATA_EFFECTIVE_DATE));
+    }
+    catch (NullPointerException e)
+    {
+      return "";
+    }
+  }
 
-	public String getInvalidOn() {
-		try {
-			return dateToString((Date) info.get(AdminPoseidasConstants.VALUE_PERMISSION_DATA_EXPIRATION_DATE));
-		} catch (NullPointerException e) {
-			return "";
-		}
-	}
+  public String getInvalidOn()
+  {
+    try
+    {
+      return dateToString((Date)info.get(AdminPoseidasConstants.VALUE_PERMISSION_DATA_EXPIRATION_DATE));
+    }
+    catch (NullPointerException e)
+    {
+      return "";
+    }
+  }
 
-	public String getIssuerName() {
-		try {
-			return (String) info.get(AdminPoseidasConstants.VALUE_PERMISSION_DATA_ISSUER_NAME);
-		} catch (NullPointerException e) {
-			return "";
-		}
-	}
+  public String getIssuerName()
+  {
+    try
+    {
+      return (String)info.get(AdminPoseidasConstants.VALUE_PERMISSION_DATA_ISSUER_NAME);
+    }
+    catch (NullPointerException e)
+    {
+      return "";
+    }
+  }
 
-	public String getIssuerURL() {
-		try {
-			return (String) info.get(AdminPoseidasConstants.VALUE_PERMISSION_DATA_ISSUER_URL);
-		} catch (NullPointerException e) {
-			return "";
-		}
-	}
+  public String getIssuerURL()
+  {
+    try
+    {
+      return (String)info.get(AdminPoseidasConstants.VALUE_PERMISSION_DATA_ISSUER_URL);
+    }
+    catch (NullPointerException e)
+    {
+      return "";
+    }
+  }
 
-	public String getRedirectURL() {
-		try {
-			return (String) info.get(AdminPoseidasConstants.VALUE_PERMISSION_DATA_REDIRECT_URL);
-		} catch (NullPointerException e) {
-			return "";
-		}
-	}
+  public String getRedirectURL()
+  {
+    try
+    {
+      return (String)info.get(AdminPoseidasConstants.VALUE_PERMISSION_DATA_REDIRECT_URL);
+    }
+    catch (NullPointerException e)
+    {
+      return "";
+    }
+  }
 
-	public String getTermsOfUsagePlanText() {
-		try {
-			return (String) info.get(AdminPoseidasConstants.VALUE_PERMISSION_DATA_TERMS_OF_USAGE_PLAIN_TEXT);
-		} catch (NullPointerException e) {
-			return "";
-		}
-	}
+  public String getTermsOfUsagePlanText()
+  {
+    try
+    {
+      return (String)info.get(AdminPoseidasConstants.VALUE_PERMISSION_DATA_TERMS_OF_USAGE_PLAIN_TEXT);
+    }
+    catch (NullPointerException e)
+    {
+      return "";
+    }
+  }
 
-	public String checkReadyForFirstRequest() {
-		ManagementMessage result = data.checkReadyForFirstRequest(entityID);
-		return result.toString();
-	}
+  public String checkReadyForFirstRequest()
+  {
+    ManagementMessage result = data.checkReadyForFirstRequest(entityID);
+    return result.toString();
+  }
 
-	public String initRequest() {
-		ManagementMessage result = data.requestFirstTerminalCertificate(entityID, countryCode, chrMnemonic,
-				sequenceNumber);
-		return result.toString();
-	}
+  public String initRequest()
+  {
+    ManagementMessage result = data.requestFirstTerminalCertificate(entityID,
+                                                                    countryCode,
+                                                                    chrMnemonic,
+                                                                    sequenceNumber);
+    return result.toString();
+  }
 
-	public String renewBlackList() {
-		ManagementMessage result = data.renewBlackList(entityID);
-		return result.toString();
-	}
+  public String renewBlackList()
+  {
+    ManagementMessage result = data.renewBlackList(entityID);
+    return result.toString();
+  }
 
-	public String renewMasterAndDefectList() {
-		ManagementMessage result = data.renewMasterAndDefectList(entityID);
-		return result.toString();
-	}
+  public String renewMasterAndDefectList()
+  {
+    ManagementMessage result = data.renewMasterAndDefectList(entityID);
+    return result.toString();
+  }
 
-	public String triggerCertRenewal() {
-		ManagementMessage result = data.triggerCertRenewal(entityID);
-		return result.toString();
-	}
+  public String triggerCertRenewal()
+  {
+    ManagementMessage result = data.triggerCertRenewal(entityID);
+    return result.toString();
+  }
+
+  public Integer getRscId()
+  {
+    try
+    {
+      return (Integer)info.get(AdminPoseidasConstants.VALUE_REQUEST_SIGNER_CERTIFICATE_ID);
+    }
+    catch (NullPointerException e)
+    {
+      return null;
+    }
+  }
+
+  public boolean hasPendingRsc()
+  {
+    return (boolean)info.get(AdminPoseidasConstants.VALUE_PENDING_REQUEST_SIGNER_CERTIFICATE_AVAILABLE);
+  }
+
+  public boolean isPublicClient()
+  {
+    return (boolean)info.get(AdminPoseidasConstants.VALUE_IS_PUBLIC_CLIENT);
+  }
 }

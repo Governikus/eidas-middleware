@@ -212,6 +212,10 @@ public class KeystoreForm implements NamedObject
   {
     try
     {
+      if (!keystore.isKeyEntry(alias))
+      {
+        throw new InvalidKeystoreException("Entry with alias '" + alias + "' is not a key pair");
+      }
       if (keystore.getKey(alias, privateKeyPassword.toCharArray()) == null)
       {
         throw new WrongAliasException("alias '" + alias

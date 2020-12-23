@@ -181,7 +181,11 @@ public enum ErrorCode
   /**
    * Cancellation by user
    */
-  CANCELLATION_BY_USER;
+  CANCELLATION_BY_USER,
+  /**
+   * The id name type is not supported
+   */
+  INVALID_NAME_ID_TYPE;
 
 
   /**

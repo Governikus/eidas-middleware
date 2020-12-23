@@ -23,46 +23,8 @@ import javax.persistence.NamedQuery;
  * @author hme
  */
 @Entity
-@NamedQuery(name = BlackListEntry.COUNT_SPECIFICID, query = "SELECT COUNT( b.key.specificID ) FROM BlackListEntry b WHERE b.key.sectorID = :"
-                                                            + BlackListEntry.PARAM_SECTORID
-                                                            + " AND b.key.specificID = :"
-                                                            + BlackListEntry.PARAM_SPECIFICID)
-@NamedQuery(name = BlackListEntry.SELECT_SPECIFICID_WHERE_SECTORID, query = "SELECT b.key.specificID FROM BlackListEntry b WHERE b.key.sectorID = :"
-                                                                            + BlackListEntry.PARAM_SECTORID)
-@NamedQuery(name = BlackListEntry.COUNT_SPECIFICID_WHERE_SECTORID, query = "SELECT COUNT( b.key.specificID ) FROM BlackListEntry b WHERE b.key.sectorID = :"
-                                                                           + BlackListEntry.PARAM_SECTORID)
-@NamedQuery(name = BlackListEntry.DELETE_WHERE_SECTORID, query = "DELETE FROM BlackListEntry WHERE key.sectorID = :"
-                                                                 + BlackListEntry.PARAM_SECTORID)
-@NamedQuery(name = BlackListEntry.DELETE_WHERE_SECTORID_AND_SPECIFICID, query = "DELETE FROM BlackListEntry WHERE key.sectorID = :"
-                                                                                + BlackListEntry.PARAM_SECTORID
-                                                                                + " AND key.specificID in :"
-                                                                                + BlackListEntry.PARAM_SPECIFICID)
-@NamedQuery(name = BlackListEntry.UPDATE_WHERE_SECTORID, query = "UPDATE BlackListEntry SET key.sectorID = :"
-                                                                 + BlackListEntry.PARAM_NEWSECTORID
-                                                                 + " WHERE key.sectorID = :"
-                                                                 + BlackListEntry.PARAM_SECTORID)
 public class BlackListEntry implements Serializable
 {
-
-  private static final long serialVersionUID = -7951678084421950262L;
-
-  static final String COUNT_SPECIFICID = "countSpecificidWhereSectoridAndSpecificid";
-
-  static final String SELECT_SPECIFICID_WHERE_SECTORID = "selectSpecificidWhereSectorid";
-
-  static final String COUNT_SPECIFICID_WHERE_SECTORID = "countSpecificidWhereSectorid";
-
-  static final String DELETE_WHERE_SECTORID = "deleteWhereSectorid";
-
-  static final String DELETE_WHERE_SECTORID_AND_SPECIFICID = "deleteWhereSectoridAndSpecificid";
-
-  static final String UPDATE_WHERE_SECTORID = "updateWhereSectorid";
-
-  static final String PARAM_SECTORID = "pSectorID";
-
-  static final String PARAM_NEWSECTORID = "pNewSectorID";
-
-  static final String PARAM_SPECIFICID = "pSpecificID";
 
   @EmbeddedId
   private BlackListEntryPK key;

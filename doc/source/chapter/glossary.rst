@@ -39,16 +39,17 @@ Glossary
         Open format for exchanging virtual machines.
 
     Authorization Certificate
-        The Authorization CA issues Authorization Certificates that enables the eID Service Provider`
+        The :term:`Authorization CA` issues Authorization Certificates that enables the :term:`eID Service Provider`
         to read data from the German eID Card. The Authorization Certificate contains a set of attributes that the
-        eID Service Provider is allowed to access. It also contains the hash value of the SSL certificate of
-        the eID Service Provider so verify that the data of the eID Card is send to the correct consumer.
+        :term:`eID Service Provider` is allowed to access. It also contains the hash value of the SSL certificate of
+        the :term:`eID Service Provider` so verify that the data of the eID Card is send to the correct consumer.
         Because the Authorization Certificates are only a couple of days valid, the eIDAS Middleware will renew them
         automatically before expiration.
 
     Authorization CA
-        The Authorization CA issues Authorization Certificates to eID Service Providers. The CA
-        provides a SOAP Endpoint that is used by the eIDAS Middleware to request and renew Authorization Certificates.
+        The Authorization CA issues :term:`Authorization Certificates<Authorization Certificate>` to eID Service Providers.
+        The CA provides a SOAP Endpoint that is used by the eIDAS Middleware to request and renew
+        :term:`Authorization Certificates<Authorization Certificate>`.
 
     eID Service Provider
         In the German eID scheme the Service Provider is the instance that initially receives the data from the eID Card.
@@ -70,3 +71,10 @@ Glossary
 
     CVC
         CVC (Card Verifiable Certificate) is the technical term for the :term:`Authorization Certificate`.
+
+    Request Signer Certificate
+        This is a long-term certificate used to sign requests for :term:`Authorization Certificates<Authorization Certificate>`.
+        It will become mandatory at some point in the future, so it is highly recommended to start using it right away.
+
+    CHR
+        Certificate Holder Reference

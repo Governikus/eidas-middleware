@@ -12,9 +12,11 @@ package de.governikus.eumw.poseidas;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.core.annotation.Order;
 import org.springframework.http.HttpMethod;
 import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
+import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configuration.WebSecurityConfigurerAdapter;
 import org.springframework.security.web.util.matcher.AntPathRequestMatcher;
 
@@ -22,45 +24,70 @@ import de.governikus.eumw.eidascommon.ContextPaths;
 
 
 /**
- * This configuration ensures that only authenticated users can access the admin interface.
+ * Spring Security configuration for the two application parts eIDAS (SAML) and web admin
  *
  * @author bpr
  */
-@Configuration
-public class POSeIDASSecurityConfig extends WebSecurityConfigurerAdapter
+@EnableWebSecurity
+public class POSeIDASSecurityConfig
 {
 
   @Autowired
   PasswordFileAuthenticationProvider authenticationProvider;
 
-  @Override
-  protected void configure(HttpSecurity http) throws Exception
+  /**
+   * This security configuration limits the access to the web admin. Static resources and the login page can
+   * be accessed without authentication, everything else must be authenticated.
+   */
+  @Configuration
+  @Order(1)
+  public static class WebAdminSecurity extends WebSecurityConfigurerAdapter
   {
-    http.csrf()
-        .ignoringAntMatchers(ContextPaths.EIDAS_CONTEXT_PATH + "/**")
-        .and()
-        .authorizeRequests()
-        .antMatchers(ContextPaths.ADMIN_CONTEXT_PATH + "/list/**",
-                     ContextPaths.ADMIN_CONTEXT_PATH + "/details/**")
-        .authenticated()
-        .antMatchers("/**")
-        .permitAll()
-        .and()
-        .formLogin()
-        .loginPage(ContextPaths.ADMIN_CONTEXT_PATH + "/login")
-        .defaultSuccessUrl(ContextPaths.ADMIN_CONTEXT_PATH + "/list")
-        .permitAll()
-        .and()
-        .logout()
-        .logoutRequestMatcher(new AntPathRequestMatcher(ContextPaths.ADMIN_CONTEXT_PATH + "/logout",
-                                                        HttpMethod.GET.name()))
-        .logoutSuccessUrl(ContextPaths.ADMIN_CONTEXT_PATH + "/login?success")
-        .permitAll()
-        .and()
-        .headers()
-        // TODO: Change to scrip-src 'self' as soon as thymeleaf is used in the middleware and JS is loaded
-        // via URL and not inline
-        .contentSecurityPolicy("script-src 'self'");
+
+    @Override
+    protected void configure(HttpSecurity http) throws Exception
+    {
+      http.antMatcher(ContextPaths.ADMIN_CONTEXT_PATH + "/**");
+      http.authorizeRequests(authorize -> authorize.mvcMatchers(ContextPaths.ADMIN_CONTEXT_PATH
+                                                                + "/webjars/**",
+                                                                ContextPaths.ADMIN_CONTEXT_PATH + "/css/**",
+                                                                ContextPaths.ADMIN_CONTEXT_PATH + "/images/**",
+                                                                ContextPaths.ADMIN_CONTEXT_PATH + "/js/**")
+                                                   .permitAll()
+                                                   .mvcMatchers(ContextPaths.ADMIN_CONTEXT_PATH + "/**")
+                                                   .authenticated());
+      http.formLogin()
+          .loginPage(ContextPaths.ADMIN_CONTEXT_PATH + "/login")
+          .defaultSuccessUrl(ContextPaths.ADMIN_CONTEXT_PATH + "/list")
+          .permitAll()
+          .and()
+          .logout()
+          .logoutRequestMatcher(new AntPathRequestMatcher(ContextPaths.ADMIN_CONTEXT_PATH + "/logout",
+                                                          HttpMethod.GET.name()))
+          .logoutSuccessUrl(ContextPaths.ADMIN_CONTEXT_PATH + "/login?success")
+          .permitAll()
+          .and()
+          .headers()
+          .contentSecurityPolicy("script-src 'self'");
+    }
+  }
+
+  /**
+   * Spring security for the eIDAS (SAML) part. No authentication is necessary.
+   */
+  @Configuration
+  @Order(2)
+  public static class EidasSecurity extends WebSecurityConfigurerAdapter
+  {
+
+    @Override
+    protected void configure(HttpSecurity http) throws Exception
+    {
+      http.antMatcher(ContextPaths.EIDAS_CONTEXT_PATH + "/**");
+      http.authorizeRequests(authorize -> authorize.anyRequest().permitAll());
+      http.csrf().disable();
+    }
+
   }
 
   @Autowired

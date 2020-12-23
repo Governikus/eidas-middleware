@@ -1,11 +1,10 @@
 /*
- * Copyright (c) 2020 Governikus KG. Licensed under the EUPL, Version 1.2 or as soon they will be approved by
- * the European Commission - subsequent versions of the EUPL (the "Licence"); You may not use this work except
- * in compliance with the Licence. You may obtain a copy of the Licence at:
- * http://joinup.ec.europa.eu/software/page/eupl Unless required by applicable law or agreed to in writing,
- * software distributed under the Licence is distributed on an "AS IS" basis, WITHOUT WARRANTIES OR CONDITIONS
- * OF ANY KIND, either express or implied. See the Licence for the specific language governing permissions and
- * limitations under the Licence.
+ * Copyright (c) 2020 Governikus KG. Licensed under the EUPL, Version 1.2 or as soon they will be approved by the
+ * European Commission - subsequent versions of the EUPL (the "Licence"); You may not use this work except in compliance
+ * with the Licence. You may obtain a copy of the Licence at: http://joinup.ec.europa.eu/software/page/eupl Unless
+ * required by applicable law or agreed to in writing, software distributed under the Licence is distributed on an
+ * "AS IS" basis, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the Licence for the
+ * specific language governing permissions and limitations under the Licence.
  */
 
 package de.governikus.eumw.eidasstarterkit;
@@ -22,7 +21,6 @@ import java.util.Base64;
 import java.util.Date;
 import java.util.List;
 
-import javax.xml.namespace.QName;
 import javax.xml.transform.OutputKeys;
 import javax.xml.transform.Transformer;
 import javax.xml.transform.TransformerException;
@@ -32,13 +30,12 @@ import javax.xml.transform.stream.StreamResult;
 import org.apache.xml.security.algorithms.MessageDigestAlgorithm;
 import org.apache.xml.security.signature.XMLSignature;
 import org.joda.time.DateTime;
+import org.opensaml.core.xml.Namespace;
 import org.opensaml.core.xml.config.XMLObjectProviderRegistrySupport;
 import org.opensaml.core.xml.io.MarshallingException;
 import org.opensaml.core.xml.io.Unmarshaller;
 import org.opensaml.core.xml.io.UnmarshallerFactory;
 import org.opensaml.core.xml.io.UnmarshallingException;
-import org.opensaml.core.xml.schema.XSAny;
-import org.opensaml.core.xml.schema.impl.XSAnyBuilder;
 import org.opensaml.saml.common.xml.SAMLConstants;
 import org.opensaml.saml.ext.saml2alg.DigestMethod;
 import org.opensaml.saml.ext.saml2alg.SigningMethod;
@@ -103,7 +100,12 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 import net.shibboleth.utilities.java.support.component.ComponentInitializationException;
 import net.shibboleth.utilities.java.support.xml.BasicParserPool;
+import net.shibboleth.utilities.java.support.xml.XMLConstants;
 import net.shibboleth.utilities.java.support.xml.XMLParserException;
+import se.litsec.eidas.opensaml.common.EidasConstants;
+import se.litsec.eidas.opensaml.ext.SPType;
+import se.litsec.eidas.opensaml.ext.SPTypeEnumeration;
+import se.litsec.eidas.opensaml.ext.impl.SPTypeBuilder;
 
 
 /**
@@ -135,7 +137,7 @@ public class EidasMetadataNode
 
   private String postEndpoint;
 
-  private EidasRequestSectorType spType;
+  private SPTypeEnumeration spType;
 
   @Getter(AccessLevel.NONE)
   @Setter(AccessLevel.NONE)
@@ -150,7 +152,7 @@ public class EidasMetadataNode
                     EidasContactPerson technicalContact,
                     EidasContactPerson supportContact,
                     String postEndpoint,
-                    EidasRequestSectorType spType,
+                    SPTypeEnumeration spType,
                     List<EidasNameIdType> supportedNameIdTypes)
   {
     super();
@@ -176,10 +178,19 @@ public class EidasMetadataNode
     }
   }
 
-  byte[] generate(EidasSigner signer) throws CertificateEncodingException, MarshallingException,
-    SignatureException, TransformerException, IOException
+  byte[] generate(EidasSigner signer)
+    throws CertificateEncodingException, MarshallingException, SignatureException, TransformerException, IOException
   {
     EntityDescriptor entityDescriptor = new EntityDescriptorBuilder().buildObject();
+    entityDescriptor.getNamespaceManager()
+                    .registerNamespaceDeclaration(new Namespace(EidasConstants.EIDAS_NS, EidasConstants.EIDAS_PREFIX));
+    entityDescriptor.getNamespaceManager()
+                    .registerNamespaceDeclaration(new Namespace(SAMLConstants.SAML20ALG_NS,
+                                                                SAMLConstants.SAML20ALG_PREFIX));
+    entityDescriptor.getNamespaceManager()
+                    .registerNamespaceDeclaration(new Namespace(XMLConstants.XSD_NS, XMLConstants.XSD_PREFIX));
+    entityDescriptor.getNamespaceManager()
+                    .registerNamespaceDeclaration(new Namespace(XMLConstants.XSI_NS, XMLConstants.XSI_PREFIX));
     entityDescriptor.setID(id);
     entityDescriptor.setEntityID(entityId);
     entityDescriptor.setValidUntil(new DateTime(validUntil.getTime()));
@@ -224,7 +235,7 @@ public class EidasMetadataNode
     for ( EidasNameIdType nameIDType : this.supportedNameIdTypes )
     {
       NameIDFormat nif = new NameIDFormatBuilder().buildObject();
-      nif.setFormat(nameIDType.value);
+      nif.setFormat(nameIDType.getValue());
       spDescriptor.getNameIDFormats().add(nif);
     }
 
@@ -294,10 +305,12 @@ public class EidasMetadataNode
     sm.setMinKeySize(256);
     ext.getUnknownXMLObjects().add(sm);
 
-    XSAny any = new XSAnyBuilder().buildObject(new QName("http://eidas.europa.eu/saml-extensions", "SPType",
-                                                         "eidas"));
-    any.setTextContent(spType.value);
-    ext.getUnknownXMLObjects().add(any);
+    if (spType != null)
+    {
+      SPType spTypeInt = new SPTypeBuilder().buildObject();
+      spTypeInt.setType(spType);
+      ext.getUnknownXMLObjects().add(spTypeInt);
+    }
 
     sm = new SigningMethodBuilder().buildObject();
     sm.setAlgorithm(EidasSigner.DIGEST_NONSPEC.equals(signer.getSigDigestAlg())
@@ -367,27 +380,26 @@ public class EidasMetadataNode
 
     eidasMetadataNode.setId(metaData.getID());
     eidasMetadataNode.setEntityId(metaData.getEntityID());
-    eidasMetadataNode.setValidUntil(metaData.getValidUntil() == null ? null
-      : metaData.getValidUntil().toDate());
+    eidasMetadataNode.setValidUntil(metaData.getValidUntil() == null ? null : metaData.getValidUntil().toDate());
     if (metaData.getExtensions() != null)
     {
       Element extension = metaData.getExtensions().getDOM();
       for ( int i = 0 ; i < extension.getChildNodes().getLength() ; i++ )
       {
         Node n = extension.getChildNodes().item(i);
-        if ("SPType".equals(n.getLocalName()))
+        if (SPType.DEFAULT_ELEMENT_LOCAL_NAME.equals(n.getLocalName()))
         {
-          eidasMetadataNode.spType = EidasRequestSectorType.getValueOf(n.getTextContent());
+          eidasMetadataNode.spType = SPTypeHelper.getSPTypeFromString(n.getTextContent());
           break;
         }
       }
     }
 
-    SPSSODescriptor ssoDescriptor = metaData.getSPSSODescriptor("urn:oasis:names:tc:SAML:2.0:protocol");
+    SPSSODescriptor ssoDescriptor = metaData.getSPSSODescriptor(SAMLConstants.SAML20P_NS);
 
     ssoDescriptor.getAssertionConsumerServices().forEach(s -> {
       String bindString = s.getBinding();
-      if ("urn:oasis:names:tc:SAML:2.0:bindings:HTTP-POST".equals(bindString))
+      if (SAMLConstants.SAML2_POST_BINDING_URI.equals(bindString))
       {
         eidasMetadataNode.setPostEndpoint(s.getLocation());
       }

@@ -18,7 +18,7 @@ import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 
 import de.governikus.eumw.eidasstarterkit.EidasRequest;
-import de.governikus.eumw.eidasstarterkit.EidasRequestSectorType;
+import se.litsec.eidas.opensaml.ext.SPTypeEnumeration;
 
 
 class RequestSessionTest
@@ -33,36 +33,7 @@ class RequestSessionTest
     Mockito.when(eidasRequest.getId()).thenReturn("reqId");
     Mockito.when(eidasRequest.getDestination()).thenReturn("destination");
     Mockito.when(eidasRequest.getIssuer()).thenReturn("issuer");
-    Mockito.when(eidasRequest.getRequestedAttributesMap()).thenReturn(Collections.emptyMap());
+    Mockito.when(eidasRequest.getRequestedAttributes()).thenReturn(Collections.emptyMap());
   }
 
-  @Test
-  void whenRequestTypePrivateThenProviderNameIsRequesterId()
-  {
-    Mockito.when(eidasRequest.getSectorType()).thenReturn(EidasRequestSectorType.PRIVATE);
-    Mockito.when(eidasRequest.getRequesterId()).thenReturn("private_SP");
-    RequestSession requestSession = new RequestSession("relayState", eidasRequest);
-
-    Assertions.assertEquals("private_SP", requestSession.getReqProviderName());
-  }
-
-  @Test
-  void whenRequestTypePrivateAndRequesterIdNullThenProviderNameIsProviderName()
-  {
-    Mockito.when(eidasRequest.getSectorType()).thenReturn(EidasRequestSectorType.PRIVATE);
-    Mockito.when(eidasRequest.getRequesterId()).thenReturn(null);
-    Mockito.when(eidasRequest.getProviderName()).thenReturn("providerName");
-    RequestSession requestSession = new RequestSession("relayState", eidasRequest);
-
-    Assertions.assertEquals("providerName", requestSession.getReqProviderName());
-  }
-
-  @Test
-  void whenRequesterTypePublicThenProviderNameNull()
-  {
-    Mockito.when(eidasRequest.getSectorType()).thenReturn(EidasRequestSectorType.PUBLIC);
-    RequestSession requestSession = new RequestSession("relayState", eidasRequest);
-
-    Assertions.assertNull(requestSession.getReqProviderName());
-  }
 }

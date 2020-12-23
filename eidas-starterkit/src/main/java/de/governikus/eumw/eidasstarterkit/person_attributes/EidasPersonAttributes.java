@@ -10,6 +10,8 @@
 
 package de.governikus.eumw.eidasstarterkit.person_attributes;
 
+import javax.xml.namespace.QName;
+
 import de.governikus.eumw.eidasstarterkit.EidasAttribute;
 
 
@@ -21,8 +23,9 @@ public interface EidasPersonAttributes
 
   public EidasAttribute getInstance();
 
-  public String getValue();
+  public String getName();
 
   public String getFriendlyName();
 
+  public QName getQName();
 }

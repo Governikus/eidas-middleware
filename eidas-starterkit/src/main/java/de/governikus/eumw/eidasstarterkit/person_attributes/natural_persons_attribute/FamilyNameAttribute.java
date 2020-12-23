@@ -10,42 +10,28 @@
 
 package de.governikus.eumw.eidasstarterkit.person_attributes.natural_persons_attribute;
 
-import de.governikus.eumw.eidascommon.Utils;
 import de.governikus.eumw.eidasstarterkit.EidasNaturalPersonAttributes;
 import de.governikus.eumw.eidasstarterkit.person_attributes.AbstractNonLatinScriptAttribute;
 import de.governikus.eumw.eidasstarterkit.person_attributes.EidasPersonAttributes;
+import lombok.NoArgsConstructor;
 
 
+@NoArgsConstructor
 public class FamilyNameAttribute extends AbstractNonLatinScriptAttribute
 {
 
-  public FamilyNameAttribute()
-  {}
+  public FamilyNameAttribute(String latinScript)
+  {
+    super(latinScript);
+  }
 
   public FamilyNameAttribute(String latinScript, String nonLatinScript)
   {
     super(latinScript, nonLatinScript);
   }
 
-  public FamilyNameAttribute(String value)
-  {
-    super(value);
-  }
-
   @Override
-  public String getTemplateName()
-  {
-    return Utils.isNullOrEmpty(getNonLatinScript()) ? "familyname" : "familyname_transliterated";
-  }
-
-  @Override
-  public EidasAttributeType type()
-  {
-    return EidasAttributeType.FAMILY_NAME;
-  }
-
-  @Override
-  public EidasPersonAttributes getPersonAttributeType()
+  public EidasPersonAttributes type()
   {
     return EidasNaturalPersonAttributes.FAMILY_NAME;
   }

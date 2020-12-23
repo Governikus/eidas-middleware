@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?><saml2p:AuthnRequest xmlns:saml2p="urn:oasis:names:tc:SAML:2.0:protocol" xmlns:eidas="http://eidas.europa.eu/saml-extensions" Destination="http://eu-middleware/receiver" ForceAuthn="true" ID="_5e3222c1-c55e-4df0-83ad-16b68b38e79f" IsPassive="false" IssueInstant="2020-10-28T13:27:01.989Z" Version="2.0"><saml2:Issuer xmlns:saml2="urn:oasis:names:tc:SAML:2.0:assertion" Format="urn:oasis:names:tc:SAML:2.0:nameid-format:entity">http://testSP</saml2:Issuer><ds:Signature xmlns:ds="http://www.w3.org/2000/09/xmldsig#">
+<ds:SignedInfo>
+<ds:CanonicalizationMethod Algorithm="http://www.w3.org/2001/10/xml-exc-c14n#"/>
+<ds:SignatureMethod Algorithm="http://www.w3.org/2007/05/xmldsig-more#sha256-rsa-MGF1"/>
+<ds:Reference URI="#_5e3222c1-c55e-4df0-83ad-16b68b38e79f">
+<ds:Transforms>
+<ds:Transform Algorithm="http://www.w3.org/2000/09/xmldsig#enveloped-signature"/>
+<ds:Transform Algorithm="http://www.w3.org/2001/10/xml-exc-c14n#"/>
+</ds:Transforms>
+<ds:DigestMethod Algorithm="http://www.w3.org/2001/04/xmlenc#sha256"/>
+<ds:DigestValue>08mmnxQxwvB0gjiNL4WejmIQ6+W+wuBlAeD5grFB0e0=</ds:DigestValue>
+</ds:Reference>
+</ds:SignedInfo>
+<ds:SignatureValue>
+mzcQB/BBVePuEZOp8pIaVyFLwzd2HQfqE4cLHxX9nkmbnEp+e9PII2V59mWOQJcCV1ibk1dXbMIa&#13;
+iNYlI7y5gxmCd/Nm9C5rlqqZOsnpxEIOH1k01fIOgRAPhxLAzlb1QQY1NJgEz63qHFwDo6jh2PBV&#13;
+tIIi60hFrH9sIxrLah0hFv7nbcqZGlhUTOPLY7JTh9AxtHOaxOiThN82258x0PeXDKLBou8Egkyp&#13;
+AJdo/tiw/VyNzptr6+KxxCRNGQcuSInWIIQFpeUvv1CgFv2WBOo4fi7oElDYVfbqwESevm9J6rqk&#13;
+1xz8iCwVgUG6s6Zncd1oVP+55p8JR3Jyd3NJCQ==
+</ds:SignatureValue>
+<ds:KeyInfo><ds:X509Data><ds:X509Certificate>MIIELjCCAxagAwIBAgIIOX9rkw1qavIwDQYJKoZIhvcNAQELBQAwVzEnMCUGA1UEAwweYm9zIENBIGVJRCBDb21tdW5pY2F0aW9uIENlcnRzMR8wHQYDVQQKDBZicmVtZW4gb25saW5lIHNlcnZpY2VzMQswCQYDVQQGEwJERTAeFw0xMzA2MDcwODQ1MzJaFw0xNjA2MDYwODQ1MzJaMGUxGzAZBgNVBAMMEmJvcy10ZXN0LnNhbWwtc2lnbjEYMBYGA1UECwwPdGVzdGNlcnRpZmljYXRlMR8wHQYDVQQKDBZicmVtZW4gb25saW5lIHNlcnZpY2VzMQswCQYDVQQGEwJkZTCCASIwDQYJKoZIhvcNAQEBBQADggEPADCCAQoCggEBALMskg70SLmo5iwPzsRz8i6Dg5RTspsFMpNVP/WTKIMDYSKLrF0zT3rwv+6As0KEnVi1NZDUUY1FPF8pGDjiFdhvAmBKIbuK20sY9OzoC0/GxYeHzpllVXtC4EPYNmnu/E3RH8uykqUw4sq4xFRK6Jc7pElw/7Jdbv0affLw2gw1bm2+g5y23M0x/RveaNdR6Ze3WPc4usvYdYHJKhEZMplz0VBa4DRHtaze0mPbZsS+pmsJcmuUWKLdGeqI2pC98hBlmHJBDbC6FZ75CS66QSW5clqbBi1Zag9+1T5enCim5hU04pNPFs+QPe84wJ7ne3WvwB5etORxeJPUtsDrbOkCAwEAAaOB7zCB7DAMBgNVHRMBAf8EAjAAMD8GA1UdJQQ4MDYGCCsGAQUFBwMBBggrBgEFBQcDAgYIKwYBBQUHAwQGCisGAQQBgjcUAgIGCisGAQQBgjcKAwwwHwYDVR0jBBgwFoAUBSKpPPikEf0rWuNy8POXM1SZcY8wDgYDVR0PAQH/BAQDAgSwMB0GA1UdDgQWBBS+7FbnpV8d+6wGLH3BmxAdE7XQSTBLBggrBgEFBQcBAQQ/MD0wOwYIKwYBBQUHMAGGL2h0dHA6Ly9vY3NwLmJvcy1icmVtZW4uZGUvcHVibGljd2ViL3N0YXR1cy9vY3NwMA0GCSqGSIb3DQEBCwUAA4IBAQAqoKn+/Di8zmfTdKFQo9MrdoEjWaW32/28BwxI9387bqKtqGAD6L2UELK13YdmN5jUi0vYQ10ZbKc3WValDYwUZqV2JyXOhGjEk1Co07P4JECScVJDCsJh+l/ce13YK3l/8Kbaq98l8gCgiDqD+bMtvliOEJoQGTO6Tga/oKAD6/KQi9SnSeqNljenZj6hz8Ga6BkC2kZMfzB9qJW2bV7dVKraUlh4NVjJsdOfztSbKuf692NKIIY51Lj1InJqE6otd7iVtOI/vhQbSb/yXyshWNTjBaA3RISm2eHhWB9lPBqn9Rhdagd2Q/s5/EPSXfFltNxIfETl0J7tbUr5rxpT</ds:X509Certificate></ds:X509Data></ds:KeyInfo></ds:Signature><saml2p:Extensions><eidas:SPType>private</eidas:SPType><req-attr:RequestedAttributes xmlns:req-attr="urn:oasis:names:tc:SAML:protocol:ext:req-attr"><eidas:RequestedAttribute Name="http://eidas.europa.eu/attributes/naturalperson/CurrentGivenName" NameFormat="urn:oasis:names:tc:SAML:2.0:attrname-format:uri" isRequired="true"/><eidas:RequestedAttribute Name="http://eidas.europa.eu/attributes/naturalperson/CurrentFamilyName" NameFormat="urn:oasis:names:tc:SAML:2.0:attrname-format:uri" isRequired="false"/><eidas:RequestedAttribute Name="http://eidas.europa.eu/attributes/naturalperson/PersonIdentifier" NameFormat="urn:oasis:names:tc:SAML:2.0:attrname-format:uri" isRequired="true"/></req-attr:RequestedAttributes></saml2p:Extensions><saml2p:RequestedAuthnContext Comparison="minimum"><saml2:AuthnContextClassRef xmlns:saml2="urn:oasis:names:tc:SAML:2.0:assertion">http://eidas.europa.eu/LoA/low</saml2:AuthnContextClassRef></saml2p:RequestedAuthnContext><saml2p:Scoping><saml2p:RequesterID>DefaultProvider</saml2p:RequesterID></saml2p:Scoping></saml2p:AuthnRequest>

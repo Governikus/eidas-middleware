@@ -15,9 +15,9 @@
 <head>
     <title>POSeIDAS CVC Info</title>
     <!--Bootstrap-->
-    <link rel="stylesheet" th:href="@{/admin-interface/webjars/bootstrap/4.5.0/css/bootstrap.css}">
+    <link rel="stylesheet" th:href="@{/admin-interface/webjars/bootstrap/4.5.2/css/bootstrap.css}">
     <script th:src="@{/admin-interface/webjars/jquery/3.5.1/jquery.min.js}"></script>
-    <script th:src="@{/admin-interface/webjars/bootstrap/4.5.0/js/bootstrap.bundle.min.js}"></script>
+    <script th:src="@{/admin-interface/webjars/bootstrap/4.5.2/js/bootstrap.bundle.min.js}"></script>
     <script th:src="@{/admin-interface/js/poseidas.js}"></script>
 </head>
 <body>
@@ -187,6 +187,32 @@
                                     <input type="submit" class="btn btn-primary"
                                            value="Send initial request to DVCA"/>
                                 </div>
+                            </div>
+                        </form>
+                        <form method="POST"
+                              th:action="@{/admin-interface/details/__${entityID}__/generateRSC}" th:object="${form}"
+                              th:if="${entity.getRscId() == null}">
+                            <div class="form-group row" th:unless="${entity.isPublicClient()}">
+                                <label class="col-sm-4 col-form-label" for="form:rscChrId">Holder for request signer
+                                    certificate</label>
+                                <div class="col-sm-8">
+                                    <input type="text" name="form:rscChrId" class="form-control"
+                                           id="form:rscChrId"
+                                           th:field="*{rscChr}">
+                                </div>
+                            </div>
+                            <button name="submit" type="submit" value="value" class="btn btn-primary">Generate
+                                Request Signer Certificate
+                            </button>
+                        </form>
+                        <form action="#" method=get
+                              th:action="@{/admin-interface/details/__${entityID}__/downloadRSC}"
+                              th:unless="${entity.getRscId() == null}">
+                            <input type="submit" class="btn btn-primary"
+                                   value="Download Request Signer Certificate"/>
+                            <div th:if="${entity.hasPendingRsc()}">
+                                <p class="text-danger">There is a new request signer certificate. Please make sure to send
+                                    it manually (via email) to the DVCA if you have not yet done so.</p>
                             </div>
                         </form>
                     </div>

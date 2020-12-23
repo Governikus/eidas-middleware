@@ -30,7 +30,6 @@ import org.springframework.web.bind.annotation.GetMapping;
 import de.governikus.eumw.eidasstarterkit.EidasContactPerson;
 import de.governikus.eumw.eidasstarterkit.EidasNameIdType;
 import de.governikus.eumw.eidasstarterkit.EidasOrganisation;
-import de.governikus.eumw.eidasstarterkit.EidasRequestSectorType;
 import de.governikus.eumw.eidasstarterkit.EidasSaml;
 import de.governikus.eumw.eidasstarterkit.EidasSigner;
 import lombok.extern.slf4j.Slf4j;
@@ -84,7 +83,7 @@ public class Metadata
                                                      eidasContactPerson,
                                                      eidasContactPerson,
                                                      postEndpoint,
-                                                     EidasRequestSectorType.PUBLIC,
+                                                     helper.getMetadataSPType(),
                                                      Arrays.asList(EidasNameIdType.PERSISTENT,
                                                                    EidasNameIdType.TRANSIENT,
                                                                    EidasNameIdType.UNSPECIFIED),

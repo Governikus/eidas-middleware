@@ -40,6 +40,9 @@ import de.governikus.eumw.poseidas.cardserver.service.hsm.impl.HSMService;
 public class CVCKeyPairBuilder
 {
 
+  // Lifespan of key pair in month
+  public static final int LIFESPAN = 2;
+
   /**
    * Dispositions for HSM keys.
    * <p>
@@ -83,8 +86,8 @@ public class CVCKeyPairBuilder
    * @throws IllegalStateException
    */
   static KeyPair getKeyPair(ECCVCertificate cert, String alias, KeyDisposition disposition)
-    throws IOException, HSMException, NoSuchAlgorithmException,
-    NoSuchProviderException, InvalidAlgorithmParameterException
+    throws IOException, HSMException, NoSuchAlgorithmException, NoSuchProviderException,
+    InvalidAlgorithmParameterException
   {
     AssertUtil.notNull(cert, "CVC");
     AssertUtil.notNullOrEmpty(alias, "key alias");
@@ -122,16 +125,16 @@ public class CVCKeyPairBuilder
     catch (UnsupportedOperationException e)
     {
       // BOS simulator is unable to retrieve public key, therefore generate new
-      KeyPair kp = hsm.generateKeyPair(algorithm, spec, alias, true);
+      KeyPair kp = hsm.generateKeyPair(algorithm, spec, alias, null, true, LIFESPAN);
       return new KeyPair(new OIDPublicKeyImpl(kp.getPublic(), kh, oid), kp.getPrivate());
     }
 
     if (disposition == KeyDisposition.REPLACE)
     {
-      KeyPair kp = hsm.generateKeyPair(algorithm, spec, alias, true);
+      KeyPair kp = hsm.generateKeyPair(algorithm, spec, alias, null, true, LIFESPAN);
       return new KeyPair(new OIDPublicKeyImpl(kp.getPublic(), kh, oid), kp.getPrivate());
     }
-    KeyPair kp = hsm.generateKeyPair(algorithm, spec, alias, false);
+    KeyPair kp = hsm.generateKeyPair(algorithm, spec, alias, null, false, LIFESPAN);
     return new KeyPair(new OIDPublicKeyImpl(kp.getPublic(), kh, oid), kp.getPrivate());
   }
 }

@@ -26,7 +26,6 @@ import org.apache.commons.codec.binary.Hex;
 import org.apache.commons.lang3.StringUtils;
 import org.opensaml.core.config.InitializationException;
 import org.opensaml.core.xml.io.MarshallingException;
-import org.opensaml.core.xml.io.UnmarshallingException;
 import org.opensaml.xmlsec.encryption.support.EncryptionException;
 import org.opensaml.xmlsec.signature.support.SignatureException;
 import org.springframework.stereotype.Service;
@@ -44,7 +43,6 @@ import de.governikus.eumw.eidasmiddleware.WebServiceHelper;
 import de.governikus.eumw.eidasmiddleware.eid.RequestingServiceProvider;
 import de.governikus.eumw.eidasstarterkit.EidasAttribute;
 import de.governikus.eumw.eidasstarterkit.EidasEncrypter;
-import de.governikus.eumw.eidasstarterkit.EidasLoA;
 import de.governikus.eumw.eidasstarterkit.EidasNameId;
 import de.governikus.eumw.eidasstarterkit.EidasNaturalPersonAttributes;
 import de.governikus.eumw.eidasstarterkit.EidasResponse;
@@ -73,8 +71,8 @@ import de.governikus.eumw.poseidas.server.eidservice.EIDInternal;
 import de.governikus.eumw.poseidas.server.eidservice.EIDResultResponse;
 import de.governikus.eumw.poseidas.server.pki.HSMServiceHolder;
 import lombok.extern.slf4j.Slf4j;
-import net.shibboleth.utilities.java.support.component.ComponentInitializationException;
 import net.shibboleth.utilities.java.support.xml.XMLParserException;
+import se.litsec.eidas.opensaml.common.EidasLoaEnum;
 
 
 /**
@@ -102,15 +100,19 @@ public class ResponseHandler
 
   private final HSMServiceHolder hsmServiceHolder;
 
+  private final EIDInternal eidInternal;
+
   public ResponseHandler(SessionStore sessionStore,
                          ConfigHolder configHolder,
                          ServiceProviderConfig serviceProviderConfig,
-                         HSMServiceHolder hsmServiceHolder)
+                         HSMServiceHolder hsmServiceHolder,
+                         EIDInternal eidInternal)
   {
     this.sessionStore = sessionStore;
     this.configHolder = configHolder;
     this.serviceProviderConfig = serviceProviderConfig;
     this.hsmServiceHolder = hsmServiceHolder;
+    this.eidInternal = eidInternal;
   }
 
   private RequestSession getSAMLReqSession(String refID)
@@ -141,7 +143,7 @@ public class ResponseHandler
     }
     RequestingServiceProvider reqSP = serviceProviderConfig.getProviderByEntityID(samlReqSession.getReqProviderEntityId());
 
-    EIDResultResponse eidResponse = EIDInternal.getInstance().getResult(refID, 0);
+    EIDResultResponse eidResponse = eidInternal.getResult(refID, 0);
     if (WebServiceHelper.checkResult(eidResponse.getResult(), Constants.EID_MAJOR_OK, null))
     {
       String response;
@@ -185,24 +187,25 @@ public class ResponseHandler
     }
   }
 
-  private String prepareSAMLErrorResponse(RequestingServiceProvider reqSP,
-                                          String samlReqId,
-                                          ErrorCode errorCode,
-                                          String... msg)
+  public String prepareSAMLErrorResponse(RequestingServiceProvider reqSP,
+                                            String samlReqId,
+                                            ErrorCode errorCode,
+                                            String... msg)
   {
     log.warn(prepareLogMessage(reqSP, samlReqId, errorCode.toDescription(msg)));
     try
     {
       EidasSigner signer = getEidasSigner();
       EidasResponse rsp = new EidasResponse(reqSP.getAssertionConsumerURL(), reqSP.getEntityID(), null,
-                                            samlReqId, configHolder.getServerURLWithContextPath()
+                                            samlReqId,
+                                            configHolder.getServerURLWithContextPath()
                                                        + ContextPaths.METADATA,
-                                            EidasLoA.HIGH, signer, null);
+                                            EidasLoaEnum.LOA_HIGH, signer, null);
       byte[] eidasResp = rsp.generateErrorRsp(errorCode, msg);
       return DatatypeConverter.printBase64Binary(eidasResp);
     }
-    catch (IOException | GeneralSecurityException | XMLParserException | UnmarshallingException
-      | MarshallingException | SignatureException | TransformerException | ComponentInitializationException e)
+    catch (IOException | GeneralSecurityException | MarshallingException | SignatureException
+      | TransformerException e)
     {
       throw new RequestProcessingException("Cannot create SAML response", e);
     }
@@ -239,9 +242,9 @@ public class ResponseHandler
     return result.toString();
   }
 
-  private String prepareSAMLResponse(RequestingServiceProvider reqSP,
-                                     RequestSession samlReqSession,
-                                     EIDResultResponse eidResponse)
+  protected String prepareSAMLResponse(RequestingServiceProvider reqSP,
+                                       RequestSession samlReqSession,
+                                       EIDResultResponse eidResponse)
   {
     ArrayList<EidasAttribute> attributes = new ArrayList<>();
 
@@ -332,7 +335,7 @@ public class ResponseHandler
                                                                    + Hex.encodeHexString(restrID.getID1())
                                                                         .toUpperCase(Locale.GERMANY));
       attributes.add(pi);
-      nameId = new EidasTransientNameId(pi.getId());
+      nameId = new EidasTransientNameId(pi.getValue());
     }
 
 
@@ -348,15 +351,14 @@ public class ResponseHandler
                                                   nameId,
                                                   configHolder.getServerURLWithContextPath()
                                                           + ContextPaths.METADATA,
-                                                  EidasLoA.HIGH,
+                                                  EidasLoaEnum.LOA_HIGH,
                                                   samlReqSession.getReqId(),
                                                   encrypter,
                                                   signer);
       return DatatypeConverter.printBase64Binary(eidasResp);
     }
     catch (IOException | GeneralSecurityException | InitializationException | XMLParserException
-      | UnmarshallingException | EncryptionException | MarshallingException | SignatureException
-      | TransformerException | ComponentInitializationException e)
+      | EncryptionException | MarshallingException | SignatureException | TransformerException e)
     {
       throw new RequestProcessingException("Cannot create SAML response", e);
     }
@@ -369,9 +371,9 @@ public class ResponseHandler
    * @param attributes The list with the eIDAS attributes
    * @param samlReqSession The original SAML request
    */
-  private boolean createAllNames(EIDResultResponse eIDrespInt,
-                                 List<EidasAttribute> attributes,
-                                 RequestSession samlReqSession)
+  protected boolean createAllNames(EIDResultResponse eIDrespInt,
+                                   List<EidasAttribute> attributes,
+                                   RequestSession samlReqSession)
   {
     EIDInfoResult birthName = eIDrespInt.getEIDInfo(EIDKeys.BIRTH_NAME);
     EIDInfoResult familyNames = eIDrespInt.getEIDInfo(EIDKeys.FAMILY_NAMES);
@@ -450,9 +452,9 @@ public class ResponseHandler
    * @param eIDrespInt The list with the eID responses
    * @param attributes The list with the eIDAS attributes
    */
-  private boolean createPlaceOfResidence(EIDResultResponse eIDrespInt,
-                                         List<EidasAttribute> attributes,
-                                         RequestSession samlReqSession)
+  protected boolean createPlaceOfResidence(EIDResultResponse eIDrespInt,
+                                           List<EidasAttribute> attributes,
+                                           RequestSession samlReqSession)
   {
     EIDInfoResult placeOfResidence = eIDrespInt.getEIDInfo(EIDKeys.PLACE_OF_RESIDENCE);
     if (placeOfResidence != null)

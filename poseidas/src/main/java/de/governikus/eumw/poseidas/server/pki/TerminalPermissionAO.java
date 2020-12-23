@@ -10,11 +10,13 @@
 
 package de.governikus.eumw.poseidas.server.pki;
 
+import java.security.cert.X509Certificate;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
 
 import org.springframework.context.ApplicationContext;
+
 
 /**
  * Access to terminal permission data.
@@ -23,19 +25,6 @@ import org.springframework.context.ApplicationContext;
  */
 public interface TerminalPermissionAO
 {
-
-  /**
-   * Create a new database entry with given data. It is assumed that no entry with same refID exists.
-   */
-  void importData(String refId,
-                  byte[] cvc,
-                  byte[] cvcDescription,
-                  byte[] cvcPrivateKey,
-                  byte[] riKey1,
-                  byte[] psKey,
-                  byte[][] chain,
-                  byte[] masterList,
-                  byte[] defectList);
 
   /**
    * Stores a new chain for this refID
@@ -182,8 +171,8 @@ public interface TerminalPermissionAO
   void updateBlackListStoreDate(String refID, byte[] sectorID, Long blackListId);
 
   /**
-   * Adds a new blacklist into the database. Note: call {@link #updateBlackListStoreDate(String, byte[], Long)}
-   * afterwards to achieve same behaviour as before
+   * Adds a new blacklist into the database. Note: call
+   * {@link #updateBlackListStoreDate(String, byte[], Long)} afterwards to achieve same behaviour as before
    *
    * @param refID the refID of the service provider to add the blacklist for.
    * @param sectorID the sectorID of the blacklist.
@@ -307,8 +296,82 @@ public interface TerminalPermissionAO
   List<String> getTerminalPermissionRefIDList();
 
   /**
-   * Returns the spring application context to access spring beans from non spring managed classes.
-   * @return the application context of this bean
+   * Getter
+   *
+   * @param refID RefId of a {@link TerminalPermission}
+   * @return rscChrId, <code>null</code> if not found
    */
-  ApplicationContext getApplicationContext();
+  Integer getCurrentRscChrId(String refID);
+
+  /**
+   * Getter
+   *
+   * @param refID RefId of a {@link TerminalPermission}
+   * @return rscChrId, <code>null</code> if not found
+   */
+  Integer getPendingRscChrId(String refID);
+
+  /**
+   * Changes the pending Request Signer Certificate to the current one.
+   *
+   * @param refID RefId of a {@link TerminalPermission}
+   */
+  void makePendingRscToCurrentRsc(String refID);
+
+  /**
+   * Sets the pending Request Signer Certificate.
+   *
+   * @param refID RefId of a {@link TerminalPermission}
+   * @throws TerminalPermissionNotFoundException
+   */
+  void setPendingRequestSignerCertificate(String refID,
+                                          RequestSignerCertificate pendingRequestSignerCertificate)
+    throws TerminalPermissionNotFoundException;
+
+  /**
+   * Get the request signer certificate.
+   *
+   * @param refID RefId of a {@link TerminalPermission}
+   * @return pending rsc if present, current otherwise
+   */
+  X509Certificate getRequestSignerCertificate(String refID);
+
+  /**
+   * Get the request signer certificate.
+   *
+   * @param refID RefId of a {@link TerminalPermission}
+   * @param current <code>true</code> for the current certificate, <code>false</code> for pending
+   * @return certificate, <code>null</code> if not present
+   */
+  X509Certificate getRequestSignerCertificate(String refID, boolean current);
+
+  /**
+   * Get the request signer key.
+   *
+   * @param refID RefId of a {@link TerminalPermission}
+   * @param current <code>true</code> for the current key, <code>false</code> for pending
+   * @return key, <code>null</code> if not present
+   */
+  byte[] getRequestSignerKey(String refID, boolean current);
+
+
+  boolean isPublicClient(String entityId);
+
+  /**
+   * Get the request signer certificate holder for a given refID.
+   *
+   * @param refID the refID
+   * @return the rsc holder
+   */
+  String getRequestSignerCertificateHolder(String refID);
+
+  /**
+   * Set the request signer certificate holder for a given refID.
+   *
+   * @param refID the refID
+   * @param holder the new holder to set
+   * @throws TerminalPermissionNotFoundException
+   */
+  void setRequestSignerCertificateHolder(String refID, String holder)
+    throws TerminalPermissionNotFoundException;
 }

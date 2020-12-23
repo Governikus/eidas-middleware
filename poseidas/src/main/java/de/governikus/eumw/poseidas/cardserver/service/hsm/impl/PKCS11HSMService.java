@@ -12,7 +12,6 @@ package de.governikus.eumw.poseidas.cardserver.service.hsm.impl;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
-import java.math.BigInteger;
 import java.security.InvalidAlgorithmParameterException;
 import java.security.InvalidKeyException;
 import java.security.KeyPair;
@@ -20,7 +19,6 @@ import java.security.KeyPairGenerator;
 import java.security.KeyStore;
 import java.security.KeyStoreException;
 import java.security.NoSuchAlgorithmException;
-import java.security.NoSuchProviderException;
 import java.security.PrivateKey;
 import java.security.Provider;
 import java.security.PublicKey;
@@ -33,27 +31,19 @@ import java.security.cert.CertificateException;
 import java.security.cert.X509Certificate;
 import java.security.interfaces.ECPublicKey;
 import java.security.spec.AlgorithmParameterSpec;
-import java.security.spec.ECParameterSpec;
-import java.security.spec.InvalidKeySpecException;
 import java.util.ArrayList;
-import java.util.Calendar;
 import java.util.Date;
 import java.util.Enumeration;
 import java.util.List;
 
-import org.bouncycastle.asn1.x500.X500Name;
-import org.bouncycastle.cert.jcajce.JcaX509CertificateConverter;
-import org.bouncycastle.cert.jcajce.JcaX509v3CertificateBuilder;
-import org.bouncycastle.jce.provider.BouncyCastleProvider;
-import org.bouncycastle.operator.ContentSigner;
-import org.bouncycastle.operator.OperatorCreationException;
-import org.bouncycastle.operator.jcajce.JcaContentSignerBuilder;
-
 import de.governikus.eumw.poseidas.cardbase.AssertUtil;
 import de.governikus.eumw.poseidas.cardbase.ByteUtil;
+import de.governikus.eumw.poseidas.cardbase.StringUtil;
 import de.governikus.eumw.poseidas.cardbase.asn1.ASN1;
 import de.governikus.eumw.poseidas.cardbase.asn1.OID;
 import de.governikus.eumw.poseidas.cardbase.constants.OIDConstants;
+import de.governikus.eumw.poseidas.cardserver.CertificateUtil;
+import de.governikus.eumw.poseidas.server.pki.RequestSignerCertificateServiceImpl;
 import lombok.Getter;
 
 
@@ -112,14 +102,20 @@ public final class PKCS11HSMService implements HSMService
 
   /** {@inheritDoc} */
   @Override
-  public KeyPair generateKeyPair(String algorithm, AlgorithmParameterSpec spec, String alias, boolean replace)
-    throws IOException, NoSuchAlgorithmException, NoSuchProviderException, IllegalArgumentException,
-    HSMException, InvalidAlgorithmParameterException, IllegalStateException
+  public KeyPair generateKeyPair(String algorithm,
+                                 AlgorithmParameterSpec spec,
+                                 String alias,
+                                 String issuerAlias,
+                                 boolean replace,
+                                 int lifespan)
+    throws NoSuchAlgorithmException, IllegalArgumentException, HSMException,
+    InvalidAlgorithmParameterException, IllegalStateException
   {
     if (keyStore == null)
     {
       throw new IllegalStateException(MESSAGE_NOT_INITIALIZED);
     }
+
     if (containsKey(alias))
     {
       if (replace)
@@ -137,48 +133,57 @@ public final class PKCS11HSMService implements HSMService
     kpg.initialize(spec);
     KeyPair kp = kpg.generateKeyPair();
 
-    String algo = "SHA256withRSA";
-    if (spec instanceof ECParameterSpec)
+    PrivateKey signer = kp.getPrivate();
+    String issuerCN = "CN=" + alias;
+
+    if (StringUtil.notNullOrEmpty(issuerAlias))
     {
-      ECParameterSpec ecSpec = (ECParameterSpec)spec;
-      int fieldSize = ecSpec.getCurve().getField().getFieldSize();
-      switch (fieldSize)
+      try
       {
-        case 192:
-        case 224:
-          algo = "SHA224withECDSA";
-          break;
-        case 256:
-          algo = "SHA256withECDSA";
-          break;
-        case 320:
-        case 384:
-          algo = "SHA384withECDSA";
-          break;
-        case 512:
-        default:
-          algo = "SHA512withECDSA";
-          break;
+        signer = (PrivateKey)keyStore.getKey(issuerAlias, null);
+        issuerCN = "CN=" + issuerAlias;
+      }
+      catch (UnrecoverableKeyException | KeyStoreException e)
+      {
+        // nothing, use self sign
       }
     }
+
     try
     {
-      Certificate cert = createSelfSignedCert(kp, "CN=" + alias, algo);
+      Certificate cert = CertificateUtil.createSignedCert(kp.getPublic(),
+                                                          signer,
+                                                          "CN=" + alias + (isRscAlias(alias)
+                                                            ? RequestSignerCertificateServiceImpl.OU_REQUEST_SIGNER_CERTIFICATE
+                                                            : ""),
+                                                          issuerCN + (isRscAlias(issuerCN)
+                                                            ? RequestSignerCertificateServiceImpl.OU_REQUEST_SIGNER_CERTIFICATE
+                                                            : ""),
+                                                          lifespan,
+                                                          provider.getName());
       keyStore.setKeyEntry(alias, kp.getPrivate(), null, new Certificate[]{cert});
     }
-    catch (OperatorCreationException | CertificateException | KeyStoreException e)
+    catch (KeyStoreException e)
     {
       throw new HSMException(e);
     }
     return kp;
   }
 
+  static boolean isRscAlias(String alias)
+  {
+    if (alias == null || alias.length() < 5)
+    {
+      return false;
+    }
+    return "RSC".equals(alias.substring(alias.length() - 5, alias.length() - 2));
+  }
+
   /** {@inheritDoc} */
   @Override
   public byte[] sign(String alias, OID sigAlgOID, byte[] data)
-    throws IllegalArgumentException, NoSuchAlgorithmException, NoSuchProviderException, IOException,
-    UnrecoverableKeyException, KeyStoreException, CertificateException, InvalidKeyException,
-    SignatureException, InvalidKeySpecException, HSMException, IllegalStateException
+    throws IllegalArgumentException, NoSuchAlgorithmException, IOException, UnrecoverableKeyException,
+    KeyStoreException, InvalidKeyException, SignatureException, IllegalStateException
   {
     if (keyStore == null)
     {
@@ -329,7 +334,7 @@ public final class PKCS11HSMService implements HSMService
   /** {@inheritDoc} */
   @Override
   public boolean containsKey(String alias)
-    throws IllegalArgumentException, IOException, HSMException, IllegalStateException
+    throws IllegalArgumentException, HSMException, IllegalStateException
   {
     if (keyStore == null)
     {
@@ -375,7 +380,7 @@ public final class PKCS11HSMService implements HSMService
 
   /** {@inheritDoc} */
   @Override
-  public void logout() throws HSMException, IOException, IllegalStateException
+  public void logout() throws IllegalStateException
   {
     if (keyStore == null)
     {
@@ -390,7 +395,7 @@ public final class PKCS11HSMService implements HSMService
   /** {@inheritDoc} */
   @Override
   public Date getGenerationDate(String alias)
-    throws IllegalArgumentException, IllegalStateException, HSMException, IOException
+    throws IllegalArgumentException, IllegalStateException, HSMException
   {
     if (keyStore == null)
     {
@@ -413,7 +418,7 @@ public final class PKCS11HSMService implements HSMService
 
   /** {@inheritDoc} */
   @Override
-  public PublicKey getPublicKey(String alias) throws HSMException, IOException
+  public PublicKey getPublicKey(String alias) throws HSMException
   {
     if (keyStore == null)
     {
@@ -491,7 +496,7 @@ public final class PKCS11HSMService implements HSMService
 
   /** {@inheritDoc} */
   @Override
-  public void distributeKey(String alias) throws IOException, HSMException
+  public void distributeKey(String alias)
   {
     // nothing to do
   }
@@ -512,41 +517,5 @@ public final class PKCS11HSMService implements HSMService
     {
       throw new HSMException(e);
     }
-  }
-
-  /**
-   * Creates a self signed certificate from given key pair.
-   *
-   * @param keyPair key pair
-   * @param subject subject for the certificate as X.500 name
-   * @param algorithm signature algorithm
-   * @return self-signed certificate
-   * @throws OperatorCreationException
-   * @throws CertificateException
-   */
-  private static Certificate createSelfSignedCert(KeyPair keyPair, String subject, String algorithm)
-    throws OperatorCreationException, CertificateException
-  {
-    Provider bouncyProvider = new BouncyCastleProvider();
-    Security.addProvider(bouncyProvider);
-
-    Date startDate = new Date();
-
-    X500Name dnName = new X500Name(subject);
-    BigInteger certSerialNumber = new BigInteger(Long.toString(startDate.getTime()));
-
-    Calendar calendar = Calendar.getInstance();
-    calendar.setTime(startDate);
-    // this should be high enough so that CVC keys are not deleted prematurely, must be increased if someone
-    // decides to introduce long-living CVC
-    calendar.add(Calendar.MONTH, 2);
-    Date endDate = calendar.getTime();
-
-    ContentSigner contentSigner = new JcaContentSignerBuilder(algorithm).build(keyPair.getPrivate());
-    JcaX509v3CertificateBuilder certBuilder = new JcaX509v3CertificateBuilder(dnName, certSerialNumber,
-                                                                              startDate, endDate, dnName,
-                                                                              keyPair.getPublic());
-    return new JcaX509CertificateConverter().setProvider(bouncyProvider)
-                                            .getCertificate(certBuilder.build(contentSigner));
   }
 }

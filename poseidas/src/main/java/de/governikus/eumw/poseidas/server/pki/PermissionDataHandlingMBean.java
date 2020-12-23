@@ -10,7 +10,6 @@
 
 package de.governikus.eumw.poseidas.server.pki;
 
-import java.util.List;
 import java.util.Map;
 
 import de.governikus.eumw.poseidas.gov2server.GovManagementException;
@@ -51,26 +50,6 @@ public interface PermissionDataHandlingMBean
    * renew each CVC only once.
    */
   void renewOutdatedCVCs();
-
-  /**
-   * Request a new terminal certificate to access the nPA with. The system will generate and store a key pair,
-   * create a certificate request, send it and store the results.
-   *
-   * @param entityID defines the service provider to work for
-   * @param cvcDescription obtained by a previous call of
-   *          {@link #prepareFirstCertificateRequest(String, String, String, String, boolean, boolean, String, String, String, List)}
-   * @param requestedAccessRights obtained by a previous call of
-   *          {@link #prepareFirstCertificateRequest(String, String, String, String, boolean, boolean, String, String, String, List)}
-   * @param countryCode
-   * @param chrMnemonic
-   * @param sequenceNumber
-   * @return status message
-   */
-  ManagementMessage requestFirstTerminalCertificate(String entityID,
-                                                    byte[] cvcDescription,
-                                                    String countryCode,
-                                                    String chrMnemonic,
-                                                    int sequenceNumber);
 
   /**
    * Request a new terminal certificate to access the nPA with. The system will generate and store a key pair,

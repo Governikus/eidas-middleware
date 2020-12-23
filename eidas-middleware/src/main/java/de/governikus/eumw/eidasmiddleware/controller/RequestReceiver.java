@@ -13,6 +13,7 @@ package de.governikus.eumw.eidasmiddleware.controller;
 import java.io.UnsupportedEncodingException;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
+import java.util.Arrays;
 import java.util.Locale;
 
 import org.apache.commons.lang.StringUtils;
@@ -26,9 +27,14 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.servlet.ModelAndView;
 
 import de.governikus.eumw.eidascommon.ContextPaths;
+import de.governikus.eumw.eidascommon.ErrorCodeWithResponseException;
 import de.governikus.eumw.eidascommon.HttpRedirectUtils;
 import de.governikus.eumw.eidasmiddleware.RequestProcessingException;
+import de.governikus.eumw.eidasmiddleware.ServiceProviderConfig;
+import de.governikus.eumw.eidasmiddleware.eid.RequestingServiceProvider;
 import de.governikus.eumw.eidasmiddleware.handler.RequestHandler;
+import de.governikus.eumw.eidasmiddleware.handler.ResponseHandler;
+import de.governikus.eumw.eidasmiddleware.model.ResponseModel;
 import de.governikus.eumw.poseidas.cardbase.StringUtil;
 import lombok.extern.slf4j.Slf4j;
 
@@ -44,9 +50,17 @@ public class RequestReceiver
 
   private final RequestHandler requestHandler;
 
-  public RequestReceiver(RequestHandler requestHandler)
+  private final ResponseHandler responseHandler;
+
+  private final ServiceProviderConfig serviceProviderConfig;
+
+  public RequestReceiver(RequestHandler requestHandler,
+                         ResponseHandler responseHandler,
+                         ServiceProviderConfig serviceProviderConfig)
   {
     this.requestHandler = requestHandler;
+    this.responseHandler = responseHandler;
+    this.serviceProviderConfig = serviceProviderConfig;
   }
 
   /**
@@ -66,6 +80,12 @@ public class RequestReceiver
       try
       {
         createdSessionId = requestHandler.handleSAMLRequest(relayState, samlRequestBase64, false);
+      }
+      catch (ErrorCodeWithResponseException e)
+      {
+        Arrays.stream(e.getDetails()).forEach(log::warn);
+        log.debug(e.getMessage(), e);
+        return showSamlErrorPage(e, relayState);
       }
       catch (RequestProcessingException e)
       {
@@ -100,7 +120,13 @@ public class RequestReceiver
       String sessionId = requestHandler.handleSAMLRequest(relayState, samlRequestBase64, true);
       return showMiddlewarePage(sessionId, userAgent);
     }
-    catch (RequestProcessingException e)
+    catch (ErrorCodeWithResponseException e)
+    {
+      Arrays.stream(e.getDetails()).forEach(log::warn);
+      log.debug(e.getMessage(), e);
+      return showSamlErrorPage(e, relayState);
+    }
+    catch (Exception e)
     {
       log.debug("There was an error while processing the request", e);
       return showErrorPage(e.getMessage());
@@ -156,6 +182,20 @@ public class RequestReceiver
     {
       return showErrorPage(e.getMessage());
     }
+  }
+
+  private ModelAndView showSamlErrorPage(ErrorCodeWithResponseException e, String relayState)
+  {
+    RequestingServiceProvider reqSP = serviceProviderConfig.getProviderByEntityID(e.getIssuer());
+    String samlResponse = responseHandler.prepareSAMLErrorResponse(reqSP, e.getRequestId(), e.getCode(), e.getDetails());
+
+    ModelAndView response = new ModelAndView("response");
+    response.addObject("SAML", samlResponse);
+    response.addObject("consumerURL", reqSP.getAssertionConsumerURL());
+    response.addObject("relayState", relayState);
+    response.addObject("linkToSelf", ContextPaths.EIDAS_CONTEXT_PATH + ContextPaths.RESPONSE_SENDER);
+    response.addObject("responseModel", new ResponseModel());
+    return response;
   }
 
   private boolean isMobileDevice(String userAgentHeader)

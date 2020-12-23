@@ -10,8 +10,13 @@
 
 package de.governikus.eumw.poseidas.server.pki;
 
+import java.io.ByteArrayInputStream;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
+import java.security.NoSuchProviderException;
+import java.security.cert.CertificateException;
+import java.security.cert.CertificateFactory;
+import java.security.cert.X509Certificate;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
@@ -21,26 +26,28 @@ import java.util.LinkedHashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
+import java.util.concurrent.atomic.AtomicLong;
+import java.util.concurrent.locks.ReentrantLock;
+import java.util.stream.Collectors;
 
-import javax.persistence.EntityManager;
-import javax.persistence.NoResultException;
-import javax.persistence.PersistenceContext;
-import javax.persistence.Query;
-import javax.persistence.TypedQuery;
 import javax.xml.bind.DatatypeConverter;
 
+import org.bouncycastle.jce.provider.BouncyCastleProvider;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.context.ApplicationContext;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Repository;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.google.common.collect.Lists;
 
+import de.governikus.eumw.poseidas.cardbase.ArrayUtil;
 import de.governikus.eumw.poseidas.cardbase.AssertUtil;
 import de.governikus.eumw.poseidas.cardbase.asn1.npa.ECCVCertificate;
 import de.governikus.eumw.poseidas.eidmodel.TerminalData;
 import de.governikus.eumw.poseidas.server.pki.PendingCertificateRequest.Status;
+import de.governikus.eumw.poseidas.service.ConfigHolderInterface;
 import lombok.extern.slf4j.Slf4j;
 
 
@@ -56,93 +63,63 @@ import lombok.extern.slf4j.Slf4j;
 public class TerminalPermissionAOBean implements TerminalPermissionAO
 {
 
-  private static final int MAX_DB_ARGS = 5000;
+  private static final String TERMINAL_PERMISSION_FOR_NOT_FOUND = "TerminalPermission for {} not found";
 
-  private static final int DEFAULT_BATCH_SIZE = 1000;
+  private static final int MAX_DB_ARGS = 1_000;
+
+  private static final int BLACKLIST_FLUSH_COUNTER = 5_000;
+
+  private static final ReentrantLock BLACK_LIST_FLUSH_LOCK = new ReentrantLock();
+
+  private static int blacklistStoreCounter;
+
+  private final TerminalPermissionRepository terminalPermissionRepository;
+
+  private final RequestSignerCertificateRepository requestSignerCertificateRepository;
+
+  private final CertInChainRepository certInChainRepository;
+
+  private final CVCUpdateLockRepository cvcUpdateLockRepository;
+
+  private final BlackListEntryRepository blackListEntryRepository;
+
+  private final PendingCertificateRequestRepository pendingCertificateRequestRepository;
+
+  private final ChangeKeyLockRepository changeKeyLockRepository;
+
+  private final KeyArchiveRepository keyArchiveRepository;
+
+  private final ConfigHolderInterface configHolder;
 
   @Autowired
-  private ApplicationContext applicationContext;
-
-  @PersistenceContext
-  EntityManager entityManager;
-
-  /** {@inheritDoc} */
-  @Override
-  @Transactional
-  public void importData(String refID,
-                         byte[] cvc,
-                         byte[] cvcDescription,
-                         byte[] cvcPrivateKey,
-                         byte[] riKey1,
-                         byte[] psKey,
-                         byte[][] chain,
-                         byte[] masterList,
-                         byte[] defectList)
+  public TerminalPermissionAOBean(TerminalPermissionRepository terminalPermissionRepository,
+                                  RequestSignerCertificateRepository requestSignerCertificateRepository,
+                                  CertInChainRepository certInChainRepository,
+                                  CVCUpdateLockRepository cvcUpdateLockRepository,
+                                  BlackListEntryRepository blackListEntryRepository,
+                                  PendingCertificateRequestRepository pendingCertificateRequestRepository,
+                                  ChangeKeyLockRepository changeKeyLockRepository,
+                                  KeyArchiveRepository keyArchiveRepository,
+                                  ConfigHolderInterface configHolder)
   {
-    boolean merge = true;
-    TerminalPermission data = entityManager.find(TerminalPermission.class, refID);
-    if (data == null)
-    {
-      data = new TerminalPermission(refID);
-      entityManager.persist(data);
-      merge = false;
-    }
-    if (cvc != null)
-    {
-      data.setCvc(cvc);
-    }
-    if (cvcDescription != null)
-    {
-      data.setCvcDescription(cvcDescription);
-    }
-    if (cvcPrivateKey != null)
-    {
-      data.setCvcPrivateKey(cvcPrivateKey);
-    }
-    if (riKey1 != null)
-    {
-      data.setRiKey1(riKey1);
-    }
-    if (psKey != null)
-    {
-      data.setPSKey(psKey);
-    }
-    if (defectList != null)
-    {
-      data.setDefectList(defectList);
-      data.setDefectListStoreDate(new Date());
-    }
-    if (masterList != null)
-    {
-      data.setMasterList(masterList);
-      data.setMasterListStoreDate(new Date());
-    }
-    if (chain != null && chain.length != 0)
-    {
-      for ( CertInChain entry : data.getChain() )
-      {
-        entityManager.remove(entry);
-      }
-      data.getChain().clear();
-      // do not set notOnOrAfter - we do not want the renewal timer to get this entry
-      for ( int i = 0 ; i < chain.length ; i++ )
-      {
-        CertInChain entry = new CertInChain(data, new CertInChainPK(refID, i), chain[i]);
-        entityManager.persist(entry);
-        data.getChain().add(entry);
-      }
-    }
-    if (merge)
-    {
-      entityManager.merge(data);
-    }
+    this.terminalPermissionRepository = terminalPermissionRepository;
+    this.requestSignerCertificateRepository = requestSignerCertificateRepository;
+    this.certInChainRepository = certInChainRepository;
+    this.cvcUpdateLockRepository = cvcUpdateLockRepository;
+    this.blackListEntryRepository = blackListEntryRepository;
+    this.pendingCertificateRequestRepository = pendingCertificateRequestRepository;
+    this.changeKeyLockRepository = changeKeyLockRepository;
+    this.keyArchiveRepository = keyArchiveRepository;
+    this.configHolder = configHolder;
   }
 
-  /** {@inheritDoc} */
+  /**
+   * {@inheritDoc}
+   */
   @Override
   public void storeCertInChain(String refID, byte[][] chain)
   {
-    TerminalPermission data = entityManager.find(TerminalPermission.class, refID);
+    TerminalPermission data = terminalPermissionRepository.findById(refID).orElse(null);
     if (chain != null)
     {
       storeCertInChain(chain, data);
@@ -176,44 +153,41 @@ public class TerminalPermissionAOBean implements TerminalPermissionAO
       if (oldEntry == null)
       {
         data.getChain().add(entry);
-        entityManager.persist(entry);
+        certInChainRepository.save(entry);
       }
       else
       {
         oldEntry.setData(entry.getData());
-        entityManager.merge(oldEntry);
+        certInChainRepository.save(entry);
         oldChain.remove(oldEntry.getKey());
       }
     }
     for ( CertInChain entry : oldChain.values() )
     {
       data.getChain().remove(entry);
-      entityManager.remove(entry);
+      certInChainRepository.delete(entry);
     }
   }
 
-  /** {@inheritDoc} */
+  /**
+   * {@inheritDoc}
+   */
   @Override
   public TerminalPermission getTerminalPermission(String refID)
   {
-    TerminalPermission result = entityManager.find(TerminalPermission.class, refID);
-    // pre-fetch the chain before we detach the Entity
-    if (result != null)
-    {
-      result.getChain().size();
-      result.getPendingCertificateRequest();
-    }
-    return result;
+    return terminalPermissionRepository.findById(refID).orElse(null);
   }
 
-  /** {@inheritDoc} */
+  /**
+   * {@inheritDoc}
+   */
   @Override
   public Map<String, Date> getExpirationDates()
   {
     Map<String, Date> result = new HashMap<>();
-    TypedQuery<TerminalPermission> query = entityManager.createNamedQuery(TerminalPermission.QUERY_NAME_GETTERMINALPERMISSIONLIST,
-                                                                          TerminalPermission.class);
-    for ( TerminalPermission permission : query.getResultList() )
+    List<TerminalPermission> tpList = terminalPermissionRepository.findAll(Sort.by(Sort.Direction.ASC,
+                                                                                   "notOnOrAfter"));
+    for ( TerminalPermission permission : tpList )
     {
       if (permission.getNotOnOrAfter() != null)
       {
@@ -223,20 +197,20 @@ public class TerminalPermissionAOBean implements TerminalPermissionAO
     return result;
   }
 
-  /** {@inheritDoc} */
+  /**
+   * {@inheritDoc}
+   */
   @Override
   @Transactional
   public CVCUpdateLock obtainCVCUpdateLock(String serviceProvider)
   {
     long now = System.currentTimeMillis();
-    CVCUpdateLock lock = entityManager.find(CVCUpdateLock.class, serviceProvider);
-    if (lock == null)
+
+    Optional<CVCUpdateLock> lockOptional = cvcUpdateLockRepository.findById(serviceProvider);
+    CVCUpdateLock lock;
+    if (lockOptional.isPresent())
     {
-      lock = new CVCUpdateLock(serviceProvider, now);
-      entityManager.persist(lock);
-    }
-    else
-    {
+      lock = lockOptional.get();
       // accepted maximum for a single CVC update: ten minutes
       if (lock.getLockedAt() > now - 1000L * 60 * 10)
       {
@@ -245,18 +219,34 @@ public class TerminalPermissionAOBean implements TerminalPermissionAO
       log.error("{}: Found out-dated CVC update lock - will steal it to repair earlier problem",
                 serviceProvider);
       lock.setLockedAt(now);
-      entityManager.merge(lock);
+      cvcUpdateLockRepository.save(lock);
+    }
+    else
+    {
+      lock = new CVCUpdateLock(serviceProvider, now);
+      cvcUpdateLockRepository.save(lock);
     }
     return lock;
   }
 
-  /** {@inheritDoc} */
+  /**
+   * {@inheritDoc}
+   */
   @Override
   @Transactional
   public boolean releaseCVCUpdateLock(CVCUpdateLock toRelease)
   {
-    CVCUpdateLock lock = entityManager.find(CVCUpdateLock.class, toRelease.getServiceProvider());
-    if (lock == null)
+    if (toRelease == null)
+    {
+      throw new IllegalArgumentException("Lock to be released cannot be null");
+    }
+    Optional<CVCUpdateLock> lockOptional = cvcUpdateLockRepository.findById(toRelease.getServiceProvider());
+    CVCUpdateLock lock;
+    if (lockOptional.isPresent())
+    {
+      lock = lockOptional.get();
+    }
+    else
     {
       return false;
     }
@@ -264,74 +254,77 @@ public class TerminalPermissionAOBean implements TerminalPermissionAO
     {
       return false;
     }
-    entityManager.remove(lock);
+    cvcUpdateLockRepository.delete(lock);
     return true;
   }
 
-  /** {@inheritDoc} */
+  /**
+   * {@inheritDoc}
+   */
   @Override
   public TerminalPermission getTerminalPermissionByMessage(String messageID)
   {
-    TypedQuery<TerminalPermission> query = entityManager.createNamedQuery(TerminalPermission.QUERY_NAME_GETBYMESSAGEID,
-                                                                          TerminalPermission.class);
-    query.setParameter("pMessageID", messageID);
-    try
-    {
-      return query.getSingleResult();
-    }
-    catch (NoResultException e)
-    {
-      return null;
-    }
+    Optional<TerminalPermission> terminalPermission = terminalPermissionRepository.findByPendingRequest_MessageID(messageID);
+    return terminalPermission.orElse(null);
   }
 
-  /** {@inheritDoc} */
+  /**
+   * {@inheritDoc}
+   */
   @Override
   public boolean isOnBlackList(byte[] sectorID, byte[] specificID)
   {
     String sectorIDBase64 = DatatypeConverter.printBase64Binary(sectorID);
     String specificIDBase64 = DatatypeConverter.printBase64Binary(specificID);
-    TypedQuery<Long> query = entityManager.createNamedQuery(BlackListEntry.COUNT_SPECIFICID, Long.class);
-    query.setParameter(BlackListEntry.PARAM_SECTORID, sectorIDBase64);
-    query.setParameter(BlackListEntry.PARAM_SPECIFICID, specificIDBase64);
-    try
-    {
-      return !Long.valueOf(0).equals(query.getSingleResult());
-    }
-    catch (NoResultException e)
-    {
-      log.error("problem while checking blacklist entry", e);
-      return true;
-    }
+
+    return blackListEntryRepository.existsByKey_SectorIDAndKey_SpecificID(sectorIDBase64, specificIDBase64);
   }
 
-  /** {@inheritDoc} */
+  /**
+   * {@inheritDoc}
+   */
   @Override
   @Transactional
   public void updateBlackListStoreDate(String refID, byte[] sectorID, Long blackListId)
   {
     log.debug("updateBlackListStoreDate called");
-    TerminalPermission tp = entityManager.find(TerminalPermission.class, refID);
+    Optional<TerminalPermission> terminalPermissionOptional = terminalPermissionRepository.findById(refID);
+    if (!terminalPermissionOptional.isPresent())
+    {
+      log.warn(TERMINAL_PERMISSION_FOR_NOT_FOUND, refID);
+      return;
+    }
+
+    TerminalPermission terminalPermission = terminalPermissionOptional.get();
     if (sectorID != null)
     {
-      tp.setSectorID(sectorID);
+      terminalPermission.setSectorID(sectorID);
     }
-    tp.setBlackListStoreDate(new Date());
+    terminalPermission.setBlackListStoreDate(new Date());
     if (blackListId != null)
     {
-      tp.setBlackListVersion(blackListId);
+      terminalPermission.setBlackListVersion(blackListId);
     }
-    log.debug("Before merging BlackListStoreDate");
-    entityManager.merge(tp);
-    log.debug("After merging BlackListStoreDate");
+    log.debug("Before saving BlackListStoreDate");
+    terminalPermissionRepository.save(terminalPermission);
+    log.debug("After saving BlackListStoreDate");
   }
 
-  /** {@inheritDoc} */
+  /**
+   * {@inheritDoc}
+   */
   @Override
   @Transactional
   public boolean replaceBlackList(String refID, byte[] sectorID, List<byte[]> specificIDList)
   {
-    TerminalPermission tp = entityManager.find(TerminalPermission.class, refID);
+    Optional<TerminalPermission> terminalPermissionOptional = terminalPermissionRepository.findById(refID);
+    if (!terminalPermissionOptional.isPresent())
+    {
+      log.warn(TERMINAL_PERMISSION_FOR_NOT_FOUND, refID);
+      return false;
+    }
+
+    TerminalPermission tp = terminalPermissionOptional.get();
     String oldSectorID = null;
     boolean replaceRiKey1 = !Arrays.equals(tp.getSectorID(), sectorID);
     if (tp.getSectorID() != null)
@@ -359,10 +352,8 @@ public class TerminalPermissionAOBean implements TerminalPermissionAO
   private void removeOldSectorID(String oldSectorID, String sectorIDBase64)
   {
     log.debug("SectorID has changed, change all entries with the old SectorID");
-    Query updateQuery = entityManager.createNamedQuery(BlackListEntry.UPDATE_WHERE_SECTORID);
-    updateQuery.setParameter(BlackListEntry.PARAM_NEWSECTORID, sectorIDBase64);
-    updateQuery.setParameter(BlackListEntry.PARAM_SECTORID, oldSectorID);
-    updateQuery.executeUpdate();
+
+    blackListEntryRepository.updateToNewSectorId(oldSectorID, sectorIDBase64);
   }
 
   private void removeAllNotAnyMoreUsedBlacklistEntries(String sectorID,
@@ -380,28 +371,53 @@ public class TerminalPermissionAOBean implements TerminalPermissionAO
     removeSpecificIDs(sectorID, new LinkedList<>(uniqueSpecificIds));
   }
 
-  private void removeSpecificIDs(String sectorID, List<String> specificIds)
+  void removeSpecificIDs(String sectorID, List<String> specificIds)
   {
-    log.info("{} entries that are no longer blacklisted will be removed", specificIds.size());
-    for ( List<String> partition : Lists.partition(specificIds, MAX_DB_ARGS) )
+    if (specificIds.isEmpty())
     {
-      Query deleteQuery = entityManager.createNamedQuery(BlackListEntry.DELETE_WHERE_SECTORID_AND_SPECIFICID);
-      deleteQuery.setParameter(BlackListEntry.PARAM_SECTORID, sectorID);
-      deleteQuery.setParameter(BlackListEntry.PARAM_SPECIFICID, partition);
-      deleteQuery.executeUpdate();
+      return;
+    }
+
+    log.info("{} entries that are no longer blacklisted will be removed", specificIds.size());
+
+    long startTime = System.currentTimeMillis();
+
+    List<List<String>> partitions = Lists.partition(specificIds, MAX_DB_ARGS);
+    AtomicLong deletedCounter = new AtomicLong(0);
+    partitions.parallelStream().forEach(partition -> {
+      blackListEntryRepository.deleteAllByKey_SectorIDAndKey_SpecificIDIn(sectorID, partition);
+      blackListEntryRepository.flush();
+      if (log.isDebugEnabled())
+      {
+        deletedCounter.addAndGet(partition.size());
+        long progress = 100 * deletedCounter.get() / specificIds.size();
+        log.debug("Deleted already {} removed Blacklist Entrys. {} still left to delete. ({}% progress)",
+                  deletedCounter.get(),
+                  specificIds.size() - deletedCounter.get(),
+                  progress);
+      }
+    });
+
+    if (log.isInfoEnabled())
+    {
+      log.info("finished removing {} entries, that are no longer blacklisted. Took {} ms",
+               specificIds.size(),
+               System.currentTimeMillis() - startTime);
     }
   }
 
 
   private List<String> getBlackListEntries(String sectorIDBase64)
   {
-    TypedQuery<String> typedQuery = entityManager.createNamedQuery(BlackListEntry.SELECT_SPECIFICID_WHERE_SECTORID,
-                                                                   String.class);
-    typedQuery.setParameter(BlackListEntry.PARAM_SECTORID, sectorIDBase64);
-    return typedQuery.getResultList();
+    List<BlackListEntry> blackListEntries = blackListEntryRepository.findAllByKey_SectorID(sectorIDBase64);
+    return blackListEntries.stream()
+                           .map(blackListEntry -> blackListEntry.getKey().getSpecificID())
+                           .collect(Collectors.toList());
   }
 
-  /** {@inheritDoc} */
+  /**
+   * {@inheritDoc}
+   */
   @Override
   public void addBlackListEntries(byte[] sectorID, List<byte[]> specificIDList)
   {
@@ -421,45 +437,62 @@ public class TerminalPermissionAOBean implements TerminalPermissionAO
                                    List<String> blackListEntries,
                                    Set<String> inpUniqueSpecificIds)
   {
-    long count = 0;
     Set<String> uniqueSpecificIds = new LinkedHashSet<>(inpUniqueSpecificIds);
     uniqueSpecificIds.removeAll(new LinkedHashSet<>(blackListEntries));
+
     log.info("{} new blacklist entries will be added", uniqueSpecificIds.size());
 
-    for ( String specificIDBase64 : uniqueSpecificIds )
+    if (uniqueSpecificIds.isEmpty())
     {
-      BlackListEntry newEntry = new BlackListEntry(new BlackListEntryPK(sectorIDBase64, specificIDBase64));
-      entityManager.persist(newEntry);
-      flushSessionIfNeeded(DEFAULT_BATCH_SIZE, ++count);
+      return;
     }
+
+    long startTime = System.currentTimeMillis();
+    blacklistStoreCounter = 0;
+    uniqueSpecificIds.parallelStream()
+                     .map(s -> new BlackListEntry(new BlackListEntryPK(sectorIDBase64, s)))
+                     .forEach(this::saveAndFlushIfNeeded);
+    blackListEntryRepository.flush();
+
+    log.info("Took {} ms for saving {} entries into the database",
+             System.currentTimeMillis() - startTime,
+             uniqueSpecificIds.size());
   }
 
-  private void flushSessionIfNeeded(int batchSize, long count)
+  /**
+   * Save a BlacklistEntry and flush after a specific amount.
+   *
+   * @param entry
+   */
+  private void saveAndFlushIfNeeded(BlackListEntry entry)
   {
-    if (count % batchSize == 0)
+    blackListEntryRepository.save(entry);
+    if (blacklistStoreCounter % BLACKLIST_FLUSH_COUNTER == 0 && BLACK_LIST_FLUSH_LOCK.tryLock())
     {
-      entityManager.flush();
-      entityManager.clear();
+      blackListEntryRepository.flush();
+      log.info("Currently stored entries: {}", blacklistStoreCounter);
+      BLACK_LIST_FLUSH_LOCK.unlock();
     }
+    blacklistStoreCounter++;
   }
 
   private Set<String> getUniqueSpecificIds(List<byte[]> specificIDList)
   {
-    Set<String> uniqueSpecificIds = new LinkedHashSet<>(specificIDList.size());
-    for ( byte[] specificID : specificIDList )
-    {
-      uniqueSpecificIds.add(DatatypeConverter.printBase64Binary(specificID));
-    }
-    return uniqueSpecificIds;
+    return specificIDList.stream().map(DatatypeConverter::printBase64Binary).collect(Collectors.toSet());
   }
 
   @Override
   @Transactional
   public void removeBlackListEntries(String refID, byte[] sectorID, List<byte[]> specificIDList)
   {
-    String sectorIDBase64 = DatatypeConverter.printBase64Binary(sectorID);
+    Optional<TerminalPermission> tpOptional = terminalPermissionRepository.findById(refID);
+    if (!tpOptional.isPresent())
+    {
+      return;
+    }
 
-    TerminalPermission tp = entityManager.find(TerminalPermission.class, refID);
+    TerminalPermission tp = tpOptional.get();
+    String sectorIDBase64 = DatatypeConverter.printBase64Binary(sectorID);
     String oldSectorID = null;
     boolean replaceRiKey1 = !Arrays.equals(tp.getSectorID(), sectorID);
     if (tp.getSectorID() != null)
@@ -483,37 +516,38 @@ public class TerminalPermissionAOBean implements TerminalPermissionAO
   public void create(String refId)
   {
     TerminalPermission data = new TerminalPermission(refId);
-    entityManager.persist(data);
+    terminalPermissionRepository.save(data);
   }
 
   @Override
   @Transactional
   public boolean remove(String refId)
   {
-    TerminalPermission element = entityManager.find(TerminalPermission.class, refId);
-    if (element == null)
+    Optional<TerminalPermission> terminalPermissionOptional = terminalPermissionRepository.findById(refId);
+
+    if (!terminalPermissionOptional.isPresent())
     {
       return false;
     }
-    if (element.getChain() != null)
+
+    TerminalPermission terminalPermission = terminalPermissionOptional.get();
+
+    if (terminalPermission.getChain() != null)
     {
-      for ( CertInChain cert : element.getChain() )
+      for ( CertInChain cert : terminalPermission.getChain() )
       {
-        entityManager.remove(cert);
+        certInChainRepository.delete(cert);
       }
     }
-    if (element.getPendingCertificateRequest() != null)
+    if (terminalPermission.getPendingRequest() != null)
     {
-      entityManager.remove(element.getPendingCertificateRequest());
+      pendingCertificateRequestRepository.delete(terminalPermission.getPendingRequest());
     }
-    if (element.getSectorID() != null)
+    if (terminalPermission.getSectorID() != null)
     {
-      Query query = entityManager.createNamedQuery(BlackListEntry.DELETE_WHERE_SECTORID);
-      query.setParameter(BlackListEntry.PARAM_SECTORID,
-                         DatatypeConverter.printBase64Binary(element.getSectorID()));
-      query.executeUpdate();
+      blackListEntryRepository.deleteAllByKey_SectorID(DatatypeConverter.printBase64Binary(terminalPermission.getSectorID()));
     }
-    entityManager.remove(element);
+    terminalPermissionRepository.delete(terminalPermission);
     return true;
   }
 
@@ -521,13 +555,20 @@ public class TerminalPermissionAOBean implements TerminalPermissionAO
   @Transactional
   public void storeCVCObtained(String refID, byte[] cvc, byte[][] chain, byte[] certDescription)
   {
-    TerminalPermission tp = entityManager.find(TerminalPermission.class, refID);
-    tp.setCvcPrivateKey(tp.getPendingCertificateRequest().getPrivateKey());
+    Optional<TerminalPermission> tpOptional = terminalPermissionRepository.findById(refID);
+    if (!tpOptional.isPresent())
+    {
+      log.warn(TERMINAL_PERMISSION_FOR_NOT_FOUND, refID);
+      return;
+    }
+
+    TerminalPermission tp = tpOptional.get();
+    tp.setCvcPrivateKey(tp.getPendingRequest().getPrivateKey());
     if (certDescription == null)
     {
-      if (tp.getPendingCertificateRequest().getNewCvcDescription() != null)
+      if (tp.getPendingRequest().getNewCvcDescription() != null)
       {
-        tp.setCvcDescription(tp.getPendingCertificateRequest().getNewCvcDescription());
+        tp.setCvcDescription(tp.getPendingRequest().getNewCvcDescription());
       }
     }
     else
@@ -546,8 +587,8 @@ public class TerminalPermissionAOBean implements TerminalPermissionAO
     {
       log.error("{}: stored CVC data might cause problems with eCard API: {}", refID, e.getMessage());
     }
-    entityManager.remove(tp.getPendingCertificateRequest());
-    tp.setPendingCertificateRequest(null);
+    pendingCertificateRequestRepository.delete(tp.getPendingRequest());
+    tp.setPendingRequest(null);
     if (chain != null)
     {
       storeCertInChain(chain, tp);
@@ -555,7 +596,6 @@ public class TerminalPermissionAOBean implements TerminalPermissionAO
   }
 
   @Override
-  @Transactional
   public void storeCVCRequestCreated(String refID,
                                      String messageId,
                                      byte[] request,
@@ -563,13 +603,20 @@ public class TerminalPermissionAOBean implements TerminalPermissionAO
                                      byte[][] chain,
                                      byte[] privKey)
   {
-    TerminalPermission data = entityManager.find(TerminalPermission.class, refID);
-    PendingCertificateRequest pending = data.getPendingCertificateRequest();
+    Optional<TerminalPermission> tpOptional = terminalPermissionRepository.findById(refID);
+    if (!tpOptional.isPresent())
+    {
+      log.warn(TERMINAL_PERMISSION_FOR_NOT_FOUND, refID);
+      return;
+    }
+
+    TerminalPermission tp = tpOptional.get();
+    PendingCertificateRequest pending = tp.getPendingRequest();
     if (pending == null)
     {
       pending = new PendingCertificateRequest(refID);
-      data.setPendingCertificateRequest(pending);
-      entityManager.persist(pending);
+      pendingCertificateRequestRepository.saveAndFlush(pending);
+      tp.setPendingRequest(pending);
     }
     else
     {
@@ -581,64 +628,110 @@ public class TerminalPermissionAOBean implements TerminalPermissionAO
     pending.setNewCvcDescription(description);
     if (chain != null)
     {
-      storeCertInChain(chain, data);
+      storeCertInChain(chain, tp);
     }
+
+    pendingCertificateRequestRepository.saveAndFlush(pending);
+    terminalPermissionRepository.saveAndFlush(tp);
   }
 
   @Override
   public void storeCVCRequestSent(String refID)
   {
-    TerminalPermission tp = entityManager.find(TerminalPermission.class, refID);
-    tp.getPendingCertificateRequest().setStatus(PendingCertificateRequest.Status.SENT);
+    TerminalPermission tp = terminalPermissionRepository.findById(refID).orElse(null);
+    if (tp == null)
+    {
+      log.error("Could not find refID: {}", refID);
+      return;
+    }
+    tp.getPendingRequest().setStatus(Status.SENT);
+    terminalPermissionRepository.saveAndFlush(tp);
   }
 
   @Override
   @Transactional
   public void deleteCVCRequest(String refID)
   {
-    TerminalPermission data = entityManager.find(TerminalPermission.class, refID);
-    PendingCertificateRequest pending = data.getPendingCertificateRequest();
-    if (pending != null)
+    TerminalPermission tp = terminalPermissionRepository.findById(refID).orElse(null);
+    if (tp == null)
     {
-      entityManager.remove(pending);
-      data.setPendingCertificateRequest(null);
+      log.error("Could not find refID: {}", refID);
+      return;
     }
+    PendingCertificateRequest pending = tp.getPendingRequest();
+    if (pending == null)
+    {
+      return;
+    }
+    pendingCertificateRequestRepository.delete(pending);
+    tp.setPendingRequest(null);
+    terminalPermissionRepository.saveAndFlush(tp);
   }
 
   @Override
   @Transactional
   public void storeDefectList(String refID, byte[] defectList)
   {
-    TerminalPermission data = entityManager.find(TerminalPermission.class, refID);
-    data.setDefectList(defectList);
-    data.setDefectListStoreDate(new Date());
+    Optional<TerminalPermission> tpOptional = terminalPermissionRepository.findById(refID);
+    if (!tpOptional.isPresent())
+    {
+      log.warn(TERMINAL_PERMISSION_FOR_NOT_FOUND, refID);
+      return;
+    }
+
+    TerminalPermission tp = tpOptional.get();
+    tp.setDefectList(defectList);
+    tp.setDefectListStoreDate(new Date());
   }
 
   @Override
   public void storeMasterList(String refID, byte[] masterList)
   {
-    TerminalPermission data = entityManager.find(TerminalPermission.class, refID);
-    data.setMasterList(masterList);
-    data.setMasterListStoreDate(new Date());
+    Optional<TerminalPermission> tpOptional = terminalPermissionRepository.findById(refID);
+    if (!tpOptional.isPresent())
+    {
+      log.warn(TERMINAL_PERMISSION_FOR_NOT_FOUND, refID);
+      return;
+    }
+
+    TerminalPermission tp = tpOptional.get();
+    tp.setMasterList(masterList);
+    tp.setMasterListStoreDate(new Date());
   }
 
   @Override
   @Transactional
   public void storePublicSectorKey(String refID, byte[] publicSectorKey)
   {
-    TerminalPermission data = entityManager.find(TerminalPermission.class, refID);
-    data.setRiKey1(publicSectorKey);
+    Optional<TerminalPermission> tpOptional = terminalPermissionRepository.findById(refID);
+    if (!tpOptional.isPresent())
+    {
+      log.warn(TERMINAL_PERMISSION_FOR_NOT_FOUND, refID);
+      return;
+    }
+
+    TerminalPermission tp = tpOptional.get();
+    tp.setRiKey1(publicSectorKey);
   }
 
   @Override
   public void storeCVCObtainedError(String refID, String additionalInfo)
   {
-    TerminalPermission data = entityManager.find(TerminalPermission.class, refID);
-    data.getPendingCertificateRequest().setStatus(Status.FAILURE);
-    data.getPendingCertificateRequest().setAdditionalInfo(additionalInfo);
+    Optional<TerminalPermission> tpOptional = terminalPermissionRepository.findById(refID);
+    if (!tpOptional.isPresent())
+    {
+      log.warn(TERMINAL_PERMISSION_FOR_NOT_FOUND, refID);
+      return;
+    }
+
+    TerminalPermission tp = tpOptional.get();
+    tp.getPendingRequest().setStatus(Status.FAILURE);
+    tp.getPendingRequest().setAdditionalInfo(additionalInfo);
   }
 
-  /** {@inheritDoc} */
+  /**
+   * {@inheritDoc}
+   */
   @Override
   @Transactional
   public ChangeKeyLock obtainChangeKeyLock(String keyName, int type)
@@ -655,20 +748,18 @@ public class TerminalPermissionAOBean implements TerminalPermissionAO
       return null;
     }
 
-    ChangeKeyLock lock = this.entityManager.find(ChangeKeyLock.class, keyName);
-    if (lock == null)
+    Optional<ChangeKeyLock> lockOptional = changeKeyLockRepository.findById(keyName);
+
+    ChangeKeyLock lock;
+    if (lockOptional.isPresent())
     {
-      lock = new ChangeKeyLock(keyName, myAddress, now, type);
-      this.entityManager.persist(lock);
-    }
-    else
-    {
+      lock = lockOptional.get();
       // it is already my own
       if (myAddress.equals(lock.getAutentIP()) && type == lock.getType())
       {
         // just update time
         lock.setLockedAt(now);
-        entityManager.merge(lock);
+        changeKeyLockRepository.save(lock);
         return lock;
       }
       // only same type lock can be stolen
@@ -680,74 +771,85 @@ public class TerminalPermissionAOBean implements TerminalPermissionAO
       log.error("Found out-dated key update lock - will steal it to repair earlier problem for: {}", keyName);
       lock.setLockedAt(now);
       lock.setAutentIP(myAddress);
-      entityManager.merge(lock);
     }
+    else
+    {
+      lock = new ChangeKeyLock(keyName, myAddress, now, type);
+    }
+    changeKeyLockRepository.save(lock);
     return lock;
   }
 
-  /** {@inheritDoc} */
+  /**
+   * {@inheritDoc}
+   */
   @Override
   @Transactional
   public boolean releaseChangeKeyLock(ChangeKeyLock toRelease)
   {
-    ChangeKeyLock lock = this.entityManager.find(ChangeKeyLock.class, toRelease.getKeyName());
-    if (lock == null)
+    Optional<ChangeKeyLock> lockOptional = changeKeyLockRepository.findById(toRelease.getKeyName());
+    if (!lockOptional.isPresent())
     {
       return false;
     }
-    this.entityManager.remove(lock);
+    changeKeyLockRepository.delete(lockOptional.get());
     return true;
   }
 
-  /** {@inheritDoc} */
+  /**
+   * {@inheritDoc}
+   */
   @Override
   @Transactional
   public boolean releaseChangeKeyLockOwner(ChangeKeyLock toRelease)
   {
-    ChangeKeyLock lock = this.entityManager.find(ChangeKeyLock.class, toRelease.getKeyName());
-    if (lock == null)
+    Optional<ChangeKeyLock> lockOptional = changeKeyLockRepository.findById(toRelease.getKeyName());
+    if (!lockOptional.isPresent())
     {
       return false;
     }
+    ChangeKeyLock lock = lockOptional.get();
+
     lock.setAutentIP("VOID");
-    this.entityManager.merge(lock);
+    changeKeyLockRepository.save(lock);
     return true;
   }
 
-  /** {@inheritDoc} */
+  /**
+   * {@inheritDoc}
+   */
   @Override
   public List<ChangeKeyLock> getAllChangeKeyLocksByInstance(boolean own)
   {
-    List<ChangeKeyLock> resultList = new ArrayList<>();
+    String myAddress = null;
     try
     {
-      String myAddress = InetAddress.getLocalHost().toString();
-      TypedQuery<ChangeKeyLock> query = this.entityManager.createNamedQuery(own
-        ? ChangeKeyLock.QUERY_NAME_GETOWNLOCKS : ChangeKeyLock.QUERY_NAME_GETFOREIGNLOCKS,
-                                                                            ChangeKeyLock.class);
-      query.setParameter(ChangeKeyLock.PARAM_IP, myAddress);
-      for ( ChangeKeyLock q : query.getResultList() )
-      {
-        resultList.add(q);
-      }
+      myAddress = InetAddress.getLocalHost().toString();
     }
     catch (UnknownHostException e)
     {
-      // nothing to do
+      return new ArrayList<>();
     }
-    return resultList;
+
+    return own ? changeKeyLockRepository.getAllByAutentIP(myAddress)
+      : changeKeyLockRepository.getAllByAutentIPNot(myAddress);
   }
 
-  /** {@inheritDoc} */
+  /**
+   * {@inheritDoc}
+   */
   @Override
   public boolean changeKeyLockExists(String keyName)
   {
     AssertUtil.notNull(keyName, "key alias");
-    ChangeKeyLock lock = this.entityManager.find(ChangeKeyLock.class, keyName);
-    return lock != null && lock.getType() == ChangeKeyLock.TYPE_DISTRIBUTE;
+    Optional<ChangeKeyLock> lockOptional = changeKeyLockRepository.findById(keyName);
+
+    return lockOptional.isPresent() && lockOptional.get().getType() == ChangeKeyLock.TYPE_DISTRIBUTE;
   }
 
-  /** {@inheritDoc} */
+  /**
+   * {@inheritDoc}
+   */
   @Override
   @Transactional
   public boolean iHaveLock(String keyAlias)
@@ -760,11 +862,12 @@ public class TerminalPermissionAOBean implements TerminalPermissionAO
     try
     {
       String myAddress = InetAddress.getLocalHost().toString();
-      ChangeKeyLock lock = this.entityManager.find(ChangeKeyLock.class, keyAlias);
-      if (lock != null && myAddress.equals(lock.getAutentIP()))
+      Optional<ChangeKeyLock> lockOptional = changeKeyLockRepository.findById(keyAlias);
+      if (lockOptional.isPresent() && myAddress.equals(lockOptional.get().getAutentIP()))
       {
+        ChangeKeyLock lock = lockOptional.get();
         lock.setLockedAt(System.currentTimeMillis());
-        entityManager.merge(lock);
+        changeKeyLockRepository.save(lock);
         return true;
       }
     }
@@ -775,7 +878,9 @@ public class TerminalPermissionAOBean implements TerminalPermissionAO
     return false;
   }
 
-  /** {@inheritDoc} */
+  /**
+   * {@inheritDoc}
+   */
   @Override
   @Transactional
   public void archiveCVC(String alias, byte[] cvcData)
@@ -791,20 +896,14 @@ public class TerminalPermissionAOBean implements TerminalPermissionAO
       return;
     }
 
-    KeyArchive ka = this.entityManager.find(KeyArchive.class, alias);
-    if (ka == null)
-    {
-      ka = new KeyArchive(alias, cvcData);
-      this.entityManager.persist(ka);
-    }
-    else
-    {
-      ka.setCvc(cvcData);
-      this.entityManager.merge(ka);
-    }
+    KeyArchive ka = keyArchiveRepository.findById(alias).orElse(new KeyArchive(alias, cvcData));
+    ka.setCvc(cvcData);
+    keyArchiveRepository.save(ka);
   }
 
-  /** {@inheritDoc} */
+  /**
+   * {@inheritDoc}
+   */
   @Override
   @Transactional
   public void archiveKey(String alias, byte[] keyData)
@@ -820,55 +919,230 @@ public class TerminalPermissionAOBean implements TerminalPermissionAO
       return;
     }
 
-    KeyArchive ka = this.entityManager.find(KeyArchive.class, alias);
-    if (ka == null)
+    Optional<KeyArchive> kaOptional = keyArchiveRepository.findById(alias);
+    KeyArchive ka;
+    if (kaOptional.isPresent())
     {
-      ka = new KeyArchive(alias);
-      ka.setPrivateKey(keyData);
-      this.entityManager.persist(ka);
+      ka = kaOptional.get();
     }
     else
     {
-      ka.setPrivateKey(keyData);
-      this.entityManager.merge(ka);
+      ka = new KeyArchive(alias);
     }
+    ka.setPrivateKey(keyData);
+    keyArchiveRepository.save(ka);
   }
 
   @Override
   public Long getNumberBlacklistEntries(byte[] sectorID)
   {
     String sectorIDBase64 = DatatypeConverter.printBase64Binary(sectorID);
-    TypedQuery<Long> query = entityManager.createNamedQuery(BlackListEntry.COUNT_SPECIFICID_WHERE_SECTORID,
-                                                            Long.class);
-    query.setParameter(BlackListEntry.PARAM_SECTORID, sectorIDBase64);
-    try
-    {
-      return query.getSingleResult();
-    }
-    catch (NoResultException e)
-    {
-      log.error("problem while checking blacklist entry", e);
-      return Long.valueOf(0);
-    }
+    return blackListEntryRepository.countSpecifcIdWhereSectorId(sectorIDBase64);
   }
 
   @Override
   public List<String> getTerminalPermissionRefIDList()
   {
-    TypedQuery<TerminalPermission> query = entityManager.createNamedQuery(TerminalPermission.QUERY_NAME_GETTERMINALPERMISSIONLIST,
-                                                                          TerminalPermission.class);
-    List<String> entityIDList = new ArrayList<>();
-    for ( TerminalPermission tp : query.getResultList() )
-    {
-      entityIDList.add(tp.getRefID());
-    }
-    return entityIDList;
+    return terminalPermissionRepository.findAll(Sort.by(Sort.Direction.ASC, "notOnOrAfter"))
+                                       .stream()
+                                       .map(term -> term.getRefID())
+                                       .collect(Collectors.toList());
   }
 
-  /** {@inheritDoc} */
+  /**
+   * {@inheritDoc}
+   */
   @Override
-  public ApplicationContext getApplicationContext()
+  public Integer getCurrentRscChrId(String refID)
   {
-    return applicationContext;
+    return getRscChrId(refID, true);
+  }
+
+  /**
+   * {@inheritDoc}
+   */
+  @Override
+  public Integer getPendingRscChrId(String refID)
+  {
+    return getRscChrId(refID, false);
+  }
+
+  private Integer getRscChrId(String refID, boolean current)
+  {
+    Optional<TerminalPermission> tpOptional = terminalPermissionRepository.findById(refID);
+    if (!tpOptional.isPresent())
+    {
+      log.error("RefID does not exist");
+      return null;
+    }
+    RequestSignerCertificate rsc = current ? tpOptional.get().getCurrentRequestSignerCertificate()
+      : tpOptional.get().getPendingRequestSignerCertificate();
+    if (rsc == null)
+    {
+      return null;
+    }
+    return rsc.getKey().getPosInChain();
+  }
+
+  /**
+   * {@inheritDoc}
+   */
+  @Override
+  @Transactional
+  public void makePendingRscToCurrentRsc(String refID)
+  {
+    Optional<TerminalPermission> terminalPermissionOptional = terminalPermissionRepository.findById(refID);
+    if (!terminalPermissionOptional.isPresent())
+    {
+      log.error("{}: Could not set current request signer certificate. RefID does not exist.", refID);
+      return;
+    }
+
+    TerminalPermission terminalPermission = terminalPermissionOptional.get();
+
+    if (terminalPermission.getPendingRequestSignerCertificate() == null)
+    {
+      log.error("{}: Could not change pending request signer certificate to current, because there is no pending one!",
+                refID);
+      return;
+    }
+
+    if (terminalPermission.getCurrentRequestSignerCertificate() != null)
+    {
+      requestSignerCertificateRepository.delete(terminalPermission.getCurrentRequestSignerCertificate());
+    }
+
+    terminalPermission.setCurrentRequestSignerCertificate(terminalPermission.getPendingRequestSignerCertificate());
+    terminalPermission.setPendingRequestSignerCertificate(null);
+
+    terminalPermissionRepository.saveAndFlush(terminalPermission);
+    log.info("{}: Successfully set current request signer certificate", refID);
+  }
+
+  /**
+   * {@inheritDoc}
+   */
+  @Override
+  @Transactional
+  public void setPendingRequestSignerCertificate(String refID,
+                                                 RequestSignerCertificate pendingRequestSignerCertificate)
+    throws TerminalPermissionNotFoundException
+  {
+    Optional<TerminalPermission> terminalPermissionOptional = terminalPermissionRepository.findById(refID);
+    if (!terminalPermissionOptional.isPresent())
+    {
+      log.error("Could not set pending RSC for {}. RefID does not exist.", refID);
+      throw new TerminalPermissionNotFoundException();
+    }
+
+    TerminalPermission terminalPermission = terminalPermissionOptional.get();
+    RequestSignerCertificate oldRequestSignerCertificate = terminalPermission.getPendingRequestSignerCertificate();
+    terminalPermission.setPendingRequestSignerCertificate(pendingRequestSignerCertificate);
+    if (oldRequestSignerCertificate != null)
+    {
+      requestSignerCertificateRepository.delete(oldRequestSignerCertificate);
+    }
+    requestSignerCertificateRepository.save(pendingRequestSignerCertificate);
+    terminalPermissionRepository.saveAndFlush(terminalPermission);
+  }
+
+  @Override
+  public X509Certificate getRequestSignerCertificate(String refID)
+  {
+    X509Certificate pending = getRequestSignerCertificate(refID, false);
+    if (pending == null)
+    {
+      return getRequestSignerCertificate(refID, true);
+    }
+    return pending;
+  }
+
+  @Override
+  public X509Certificate getRequestSignerCertificate(String refID, boolean current)
+  {
+    byte[] certByteArray = null;
+    RequestSignerCertificate rsc = getRscInternal(refID, current);
+    if (rsc != null)
+    {
+      certByteArray = rsc.getX509RequestSignerCertificate();
+    }
+    if (ArrayUtil.isNullOrEmpty(certByteArray))
+    {
+      log.error("No request signer certificate for refId {} found", refID);
+      return null;
+    }
+    try
+    {
+      CertificateFactory certificateFactory = CertificateFactory.getInstance("X509",
+                                                                             BouncyCastleProvider.PROVIDER_NAME);
+      return (X509Certificate)certificateFactory.generateCertificate(new ByteArrayInputStream(certByteArray));
+    }
+    catch (CertificateException e)
+    {
+      log.error("Can not create certificate factory", e);
+    }
+    catch (NoSuchProviderException e)
+    {
+      log.error("No Bouncycastle provider found", e);
+    }
+    return null;
+  }
+
+  @Override
+  public byte[] getRequestSignerKey(String refID, boolean current)
+  {
+    RequestSignerCertificate rsc = getRscInternal(refID, current);
+    if (rsc != null)
+    {
+      return rsc.getPrivateKey();
+    }
+    log.error("No request signer certificate for refID {} found", refID);
+    return null;
+  }
+
+  private RequestSignerCertificate getRscInternal(String refID, boolean current)
+  {
+    Optional<TerminalPermission> tp = terminalPermissionRepository.findById(refID);
+    if (tp.isPresent())
+    {
+      TerminalPermission terminalPermission = tp.get();
+      return current ? terminalPermission.getCurrentRequestSignerCertificate()
+        : terminalPermission.getPendingRequestSignerCertificate();
+    }
+    log.error("No terminal permission for refID {} found", refID);
+    return null;
+  }
+
+  @Override
+  public String getRequestSignerCertificateHolder(String refID)
+  {
+    Optional<TerminalPermission> tp = terminalPermissionRepository.findById(refID);
+    if (tp.isPresent())
+    {
+      return tp.get().getRscChr();
+    }
+    log.error("No terminal permission for refID {} found", refID);
+    return null;
+  }
+
+  @Override
+  public boolean isPublicClient(String entityId)
+  {
+    return configHolder.getEntityIDInt().equals(entityId);
+  }
+
+  @Override
+  public void setRequestSignerCertificateHolder(String refID, String holder)
+    throws TerminalPermissionNotFoundException
+  {
+    Optional<TerminalPermission> tp = terminalPermissionRepository.findById(refID);
+    if (!tp.isPresent())
+    {
+      log.error("Could not set RSC holder for {}. RefID does not exist.", refID);
+      throw new TerminalPermissionNotFoundException();
+    }
+    TerminalPermission permission = tp.get();
+    permission.setRscChr(holder);
+    terminalPermissionRepository.saveAndFlush(permission);
   }
 }

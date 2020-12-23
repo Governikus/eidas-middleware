@@ -1,11 +1,10 @@
 /*
- * Copyright (c) 2020 Governikus KG. Licensed under the EUPL, Version 1.2 or as soon they will be approved by
- * the European Commission - subsequent versions of the EUPL (the "Licence"); You may not use this work except
- * in compliance with the Licence. You may obtain a copy of the Licence at:
- * http://joinup.ec.europa.eu/software/page/eupl Unless required by applicable law or agreed to in writing,
- * software distributed under the Licence is distributed on an "AS IS" basis, WITHOUT WARRANTIES OR CONDITIONS
- * OF ANY KIND, either express or implied. See the Licence for the specific language governing permissions and
- * limitations under the Licence.
+ * Copyright (c) 2020 Governikus KG. Licensed under the EUPL, Version 1.2 or as soon they will be approved by the
+ * European Commission - subsequent versions of the EUPL (the "Licence"); You may not use this work except in compliance
+ * with the Licence. You may obtain a copy of the Licence at: http://joinup.ec.europa.eu/software/page/eupl Unless
+ * required by applicable law or agreed to in writing, software distributed under the Licence is distributed on an
+ * "AS IS" basis, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the Licence for the
+ * specific language governing permissions and limitations under the Licence.
  */
 
 package de.governikus.eumw.eidasdemo;
@@ -16,37 +15,33 @@ import java.nio.charset.StandardCharsets;
 import java.security.GeneralSecurityException;
 import java.security.cert.CertificateEncodingException;
 import java.util.HashMap;
-import java.util.UUID;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.xml.transform.TransformerException;
 import javax.xml.transform.TransformerFactoryConfigurationError;
 
-import de.governikus.eumw.eidasstarterkit.EidasLoA;
-import de.governikus.eumw.eidasstarterkit.EidasNameIdType;
 import org.apache.commons.io.IOUtils;
 import org.opensaml.core.config.InitializationException;
 import org.opensaml.core.xml.io.MarshallingException;
-import org.opensaml.core.xml.io.UnmarshallingException;
 import org.opensaml.xmlsec.signature.support.SignatureException;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.GetMapping;
 
 import de.governikus.eumw.eidascommon.HttpRedirectUtils;
+import de.governikus.eumw.eidasstarterkit.EidasNameIdType;
 import de.governikus.eumw.eidasstarterkit.EidasNaturalPersonAttributes;
 import de.governikus.eumw.eidasstarterkit.EidasSaml;
 import de.governikus.eumw.eidasstarterkit.EidasSigner;
 import de.governikus.eumw.eidasstarterkit.person_attributes.EidasPersonAttributes;
 import lombok.extern.slf4j.Slf4j;
-import net.shibboleth.utilities.java.support.component.ComponentInitializationException;
-import net.shibboleth.utilities.java.support.xml.XMLParserException;
+import se.litsec.eidas.opensaml.common.EidasLoaEnum;
+import se.litsec.eidas.opensaml.ext.SPTypeEnumeration;
 
 
 /**
  * This is how to send an eIDAS SAML Request in HTTP Redirect binding to the eIDAS Middleware.<br>
- * This servlet generates a eIDAS SAML Request and the user is forwarded to the eIDAS Middleware in a HTTP
- * redirect.
+ * This servlet generates a eIDAS SAML Request and the user is forwarded to the eIDAS Middleware in a HTTP redirect.
  *
  * @author hme
  * @author prange
@@ -76,6 +71,8 @@ public class NewRequesterServlet
   public void doGet(HttpServletRequest request, HttpServletResponse response)
   {
     byte[] samlRequest;
+    byte[] samlRequestPublicSP;
+    byte[] samlRequestPrivateSP;
 
     // You may specify a free String of length at most 80 characters called RelayState. This value is not
     // interpreted by the server but returned unchanged with the SAML response. It is for your use only. This
@@ -103,10 +100,25 @@ public class NewRequesterServlet
                                             reqAtt,
                                             null,
                                             EidasNameIdType.TRANSIENT,
-                                            EidasLoA.HIGH);
+                                            EidasLoaEnum.LOA_HIGH);
+      samlRequestPublicSP = EidasSaml.createRequest(ownURL.replace("NewRequesterServlet", "Metadata"),
+                                                    ownURL.replace("NewRequesterServlet", "NewReceiverServlet"),
+                                                    signer,
+                                                    reqAtt,
+                                                    SPTypeEnumeration.PUBLIC,
+                                                    EidasNameIdType.TRANSIENT,
+                                                    EidasLoaEnum.LOA_HIGH);
+      samlRequestPrivateSP = EidasSaml.createRequest(ownURL.replace("NewRequesterServlet", "Metadata"),
+                                                     ownURL.replace("NewRequesterServlet", "NewReceiverServlet"),
+                                                     "providerName",
+                                                     "providerB",
+                                                     signer,
+                                                     reqAtt,
+                                                     SPTypeEnumeration.PRIVATE,
+                                                     EidasNameIdType.TRANSIENT,
+                                                     EidasLoaEnum.LOA_HIGH);
     }
-    catch (CertificateEncodingException | ComponentInitializationException | InitializationException
-      | XMLParserException | UnmarshallingException | MarshallingException | SignatureException
+    catch (CertificateEncodingException | InitializationException | MarshallingException | SignatureException
       | TransformerFactoryConfigurationError | TransformerException | IOException e)
     {
       log.error("Can not create Request", e);
@@ -133,12 +145,27 @@ public class NewRequesterServlet
                                                                    "SHA256");
       String withoutRelayState = emptyRelayState.replace("&RelayState=", "");
 
+      String queryPublicSP = HttpRedirectUtils.createQueryString(helper.serverSamlReceiverUrl,
+                                                                 samlRequestPublicSP,
+                                                                 true,
+                                                                 relayState,
+                                                                 helper.demoSignatureKey,
+                                                                 "SHA256");
+      String queryPrivateSP = HttpRedirectUtils.createQueryString(helper.serverSamlReceiverUrl,
+                                                                  samlRequestPrivateSP,
+                                                                  true,
+                                                                  relayState,
+                                                                  helper.demoSignatureKey,
+                                                                  "SHA256");
+
       String html = IOUtils.toString(this.getClass().getResourceAsStream("/NewRequesterServlet.html"),
                                      StandardCharsets.UTF_8);
       html = html.replace("DEFAULTREQUEST", response.encodeURL(query));
       html = html.replace("CURRENTRELAYSTATE", relayState);
       html = html.replace("EMPTYRELAYSTATE", response.encodeURL(emptyRelayState));
       html = html.replace("WITHOUTRELAYSTATE", response.encodeURL(withoutRelayState));
+      html = html.replace("REQUESTPUBLICSP", response.encodeURL(queryPublicSP));
+      html = html.replace("REQUESTPRIVATESP", response.encodeURL(queryPrivateSP));
 
 
       Writer writer = response.getWriter();

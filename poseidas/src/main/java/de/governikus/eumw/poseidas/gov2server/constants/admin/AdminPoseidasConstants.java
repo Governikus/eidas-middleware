@@ -15,6 +15,9 @@ import java.util.Collection;
 import javax.management.MalformedObjectNameException;
 import javax.management.ObjectName;
 
+import lombok.AccessLevel;
+import lombok.NoArgsConstructor;
+
 
 /**
  * Definition of all constants needed to access the MBean layer of the identity manger. Do not define these
@@ -22,37 +25,26 @@ import javax.management.ObjectName;
  *
  * @author hme
  */
+@NoArgsConstructor(access = AccessLevel.PRIVATE)
 public final class AdminPoseidasConstants
 {
-
-  private AdminPoseidasConstants()
-  {
-    // Nothing to do
-  }
+  /**
+   * Boolean if the client is public
+   * Type: Boolean
+   */
+  public static final String VALUE_IS_PUBLIC_CLIENT = "isPublicClient";
 
   /**
    * Unique name of poseidas component
    */
   private static final String APPLICATION_NAME = "poseidas";
 
-  private static ObjectName getObjetctName(String domain, String key, String value)
-  {
-    try
-    {
-      return ObjectName.getInstance(domain, key, value);
-    }
-    catch (MalformedObjectNameException e)
-    {
-      throw new RuntimeException("can not create ObjectName", e);
-    }
-  }
-
   /**
    * Object name for the permission data handling MBean.
    */
-  public static final ObjectName OBJ_PERMISSION_DATA_HANDLING = getObjetctName(APPLICATION_NAME,
-                                                                               "service",
-                                                                               "permissisonDataHandling");
+  public static final ObjectName OBJ_PERMISSION_DATA_HANDLING = getObjectName(APPLICATION_NAME,
+                                                                              "service",
+                                                                              "permissisonDataHandling");
 
   /**
    * Terms of use including contact address of subject and Datenschutzbehörde html formated. <br>
@@ -195,4 +187,27 @@ public final class AdminPoseidasConstants
    */
   public static final String VALUE_PERMISSION_DATA_BLACK_LIST_DATE = "blackListStoreDate";
 
+  /**
+   * Returns the id of the request signer certificate<br>
+   * Type: String
+   */
+  public static final String VALUE_REQUEST_SIGNER_CERTIFICATE_ID = "rscId";
+
+  /**
+   * Returns a boolean if a pending request signer certificate is available or not<br>
+   * Type: boolean
+   */
+  public static final String VALUE_PENDING_REQUEST_SIGNER_CERTIFICATE_AVAILABLE = "isPendingRscAvailable";
+
+  private static ObjectName getObjectName(String domain, String key, String value)
+  {
+    try
+    {
+      return ObjectName.getInstance(domain, key, value);
+    }
+    catch (MalformedObjectNameException e)
+    {
+      throw new RuntimeException("can not create ObjectName", e);
+    }
+  }
 }

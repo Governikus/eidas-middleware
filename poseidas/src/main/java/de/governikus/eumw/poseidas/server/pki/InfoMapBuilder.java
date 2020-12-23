@@ -57,7 +57,8 @@ public class InfoMapBuilder
   /**
    * Return a map containing the most interesting attributes from given terminalPermission as parsed objects.
    *
-   * @param terminal
+   * @param facade
+   * @param cvcRefID Reference ID for the provider
    * @param withBlkNumber include the number of entries in the blacklist, this could take some more time.
    */
   static Map<String, Object> createInfoMap(TerminalPermissionAO facade,
@@ -68,14 +69,18 @@ public class InfoMapBuilder
     {
       return null;
     }
+
+    Map<String, Object> result = new HashMap<>();
+    result.put(AdminPoseidasConstants.VALUE_PENDING_REQUEST_SIGNER_CERTIFICATE_AVAILABLE, false);
+    result.put(AdminPoseidasConstants.VALUE_PERMISSION_DATA_ERROR_MESSAGE, new HashSet<ManagementMessage>());
+    result.put(AdminPoseidasConstants.VALUE_IS_PUBLIC_CLIENT, facade.isPublicClient(cvcRefID));
+
     TerminalPermission terminal = facade.getTerminalPermission(cvcRefID);
     if (terminal == null)
     {
-      return null;
+      return result;
     }
 
-    Map<String, Object> result = new HashMap<>();
-    result.put(AdminPoseidasConstants.VALUE_PERMISSION_DATA_ERROR_MESSAGE, new HashSet<ManagementMessage>());
 
     result.put(AdminPoseidasConstants.VALUE_PERMISSION_DATA_BLACK_LIST_DATE,
                terminal.getBlackListStoreDate());
@@ -84,17 +89,16 @@ public class InfoMapBuilder
     result.put(AdminPoseidasConstants.VALUE_PERMISSION_DATA_DEFECT_LIST_DATE,
                terminal.getDefectListStoreDate());
 
-    if (terminal.getPendingCertificateRequest() != null)
+    if (terminal.getPendingRequest() != null)
     {
       result.put(AdminPoseidasConstants.VALUE_PERMISSION_DATA_PENDING_CERT_REQUEST,
-                 DatatypeConverter.printBase64Binary(terminal.getPendingCertificateRequest()
-                                                             .getRequestData()));
+                 DatatypeConverter.printBase64Binary(terminal.getPendingRequest().getRequestData()));
       result.put(AdminPoseidasConstants.VALUE_PERMISSION_DATA_PENDING_CERT_REQUEST_DATE,
-                 terminal.getPendingCertificateRequest().getLastChanged());
+                 terminal.getPendingRequest().getLastChanged());
       result.put(AdminPoseidasConstants.VALUE_PERMISSION_DATA_PENDING_CERT_REQUEST_STATUS,
-                 terminal.getPendingCertificateRequest().getStatus().toString());
+                 terminal.getPendingRequest().getStatus().toString());
       result.put(AdminPoseidasConstants.VALUE_PERMISSION_DATA_PENDING_CERT_REQUEST_MESSAGE_ID,
-                 terminal.getPendingCertificateRequest().getMessageID());
+                 terminal.getPendingRequest().getMessageID());
     }
 
     if (terminal.getCvcDescription() != null)
@@ -107,6 +111,7 @@ public class InfoMapBuilder
       {
         TerminalData cvc = new TerminalData(terminal.getCvc());
         getInfoFromCvc(result, cvc, terminal.getRefID(), terminal.getSectorID());
+        // TODO: The number of BlackListEntries is never shown anywhere but this query can be expensive
         if (cvc.getSectorPublicKeyHash() != null && withBlkNumber)
         {
           result.put(AdminPoseidasConstants.VALUE_PERMISSION_DATA_BLACKLIST_ENTRIES,
@@ -118,6 +123,18 @@ public class InfoMapBuilder
         throw new IllegalArgumentException("unable to parse given cvc", e);
       }
     }
+    if (facade.getPendingRscChrId(cvcRefID) != null)
+    {
+      result.put(AdminPoseidasConstants.VALUE_REQUEST_SIGNER_CERTIFICATE_ID,
+                 facade.getPendingRscChrId(cvcRefID));
+      result.put(AdminPoseidasConstants.VALUE_PENDING_REQUEST_SIGNER_CERTIFICATE_AVAILABLE, true);
+    }
+    else if (facade.getCurrentRscChrId(cvcRefID) != null)
+    {
+      result.put(AdminPoseidasConstants.VALUE_REQUEST_SIGNER_CERTIFICATE_ID,
+                 facade.getCurrentRscChrId(cvcRefID));
+    }
+
     @SuppressWarnings("unchecked")
     Collection<ManagementMessage> errorMessages = (Collection<ManagementMessage>)result.get(AdminPoseidasConstants.VALUE_PERMISSION_DATA_ERROR_MESSAGE);
     if (!errorMessages.isEmpty() || terminal.getCvc() == null || terminal.getCvcDescription() == null)
@@ -129,7 +146,7 @@ public class InfoMapBuilder
     try
     {
       new TerminalData(terminal.getCvc(), terminal.getCvcDescription(), terminal.getCvcPrivateKey(),
-                       terminal.getRiKey1(), terminal.getPSKey());
+                       terminal.getRiKey1(), terminal.getPsKey());
     }
     catch (Exception e)
     {

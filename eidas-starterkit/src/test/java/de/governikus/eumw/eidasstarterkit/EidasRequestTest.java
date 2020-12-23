@@ -34,7 +34,7 @@ class EidasRequestTest
   private List<X509Certificate> authors;
 
   @BeforeEach
-  public void setUp() throws Exception
+  void setUp() throws Exception
   {
     EidasSaml.init();
     Security.addProvider(new BouncyCastleProvider());
@@ -47,30 +47,22 @@ class EidasRequestTest
   void createParseRequestWithoutProviderName() throws Exception
   {
     byte[] request = Files.readAllBytes(Paths.get("src/test/resources/EidasSamlRequestWithoutProviderName.xml"));
-    ErrorCodeException errorCodeException = Assertions.assertThrows(ErrorCodeException.class,
-                                                                    () -> EidasSaml.parseRequest(new ByteArrayInputStream(request),
-                                                                                                 authors));
+    EidasRequest eidasRequest = EidasSaml.parseRequest(new ByteArrayInputStream(request), authors);
 
-    Assertions.assertEquals(ErrorCode.ILLEGAL_REQUEST_SYNTAX, errorCodeException.getCode());
-    Assertions.assertEquals(1, errorCodeException.getDetails().length);
-    Assertions.assertEquals("It was not possible to parse the SAML request: No requesterId or providerName attribute are present.",
-                            errorCodeException.getMessage());
+    Assertions.assertNull(eidasRequest.getProviderName());
+    Assertions.assertNull(eidasRequest.getRequesterId());
   }
 
   @Test
-  void throwsExceptionWhenProviderNameAndRequesterIdPresent() throws Exception
+  void parseRequestProviderNameAndRequesterIdPresent() throws Exception
   {
     byte[] request = Files.readAllBytes(Paths.get("src/test/resources/EidasSamlRequestWithProviderNameAndRequesterId.xml"));
 
 
-    ErrorCodeException errorCodeException = Assertions.assertThrows(ErrorCodeException.class,
-                                                                    () -> EidasSaml.parseRequest(new ByteArrayInputStream(request),
-                                                                                                 authors));
+    EidasRequest eidasRequest = EidasSaml.parseRequest(new ByteArrayInputStream(request), authors);
 
-    Assertions.assertEquals(ErrorCode.ILLEGAL_REQUEST_SYNTAX, errorCodeException.getCode());
-    Assertions.assertEquals(1, errorCodeException.getDetails().length);
-    Assertions.assertEquals("It was not possible to parse the SAML request: Both requesterId and providerName attributes are present.",
-                            errorCodeException.getMessage());
+    Assertions.assertEquals("DefaultProvider", eidasRequest.getProviderName());
+    Assertions.assertEquals("Requester Provider", eidasRequest.getRequesterId());
   }
 
   @Test
@@ -91,5 +83,27 @@ class EidasRequestTest
 
     Assertions.assertNull(eidasRequest.getProviderName());
     Assertions.assertEquals("TestProvider", eidasRequest.getRequesterId());
+  }
+
+  @Test
+  void parseSamlRequestWithoutNameIDPolicy() throws Exception
+  {
+    byte[] request = Files.readAllBytes(Paths.get("src/test/resources/EidasSamlRequestWithoutNameIDPolicy.xml"));
+    EidasRequest eidasRequest = EidasSaml.parseRequest(new ByteArrayInputStream(request), null);
+
+    Assertions.assertNull(eidasRequest.getNameIdPolicy());
+  }
+
+  @Test
+  void parseSamlRequestWithUnsupportedNameIDPolicyType() throws Exception
+  {
+    byte[] request = Files.readAllBytes(Paths.get("src/test/resources/EidasSamlRequestWithWrongNameIDPolicyType.xml"));
+    ErrorCodeException errorCodeException = Assertions.assertThrows(ErrorCodeException.class,
+                                                                    () -> EidasSaml.parseRequest(new ByteArrayInputStream(request),
+                                                                                                 null));
+    Assertions.assertEquals(ErrorCode.INVALID_NAME_ID_TYPE, errorCodeException.getCode());
+    Assertions.assertEquals(0, errorCodeException.getDetails().length);
+    Assertions.assertEquals("Name id type is not supported.",
+                            errorCodeException.getMessage());
   }
 }

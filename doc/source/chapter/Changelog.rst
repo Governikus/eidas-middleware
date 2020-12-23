@@ -53,8 +53,8 @@ Changelog
 
 * 1.1.0
 
-    - eIDAS Middleware: Support multiple metadata files as well as multiple :term:`eID Service Provider` s.
-    - Configuration Wizard: Support multiple metadata files and multiple :term:`eID Service Provider` s.
+    - eIDAS Middleware: Support multiple metadata files as well as multiple :term:`eID Service Providers<eID Service Provider>`.
+    - Configuration Wizard: Support multiple metadata files and multiple :term:`eID Service Providers<eID Service Provider>`.
     - eIDAS Middleware: Implement the recommendations from the latest pen test.
     - eIDAS Middleware: The admin interface can listen on a different port than the actual application endpoints. The admin interface is now available on a different context path, e.g. ``https://[host]:[port]/admin-interface/list``
     - eIDAS Middleware: New HTML designs for starting the AusweisApp2 and error messages.
@@ -103,3 +103,19 @@ Changelog
 
   Note: The new test CA is introduced to slowly replace the old one. Do not change CA settings on your own.
   The process of phasing out the old and migrating to the new will be initiated and guided by Governikus.
+
+* 2.0.1, 1.2.2 and 1.1.1
+
+    - eIDAS Middleware: Fix a bug where the newest generation of German eID cards were not accepted.
+
+* 2.1.0
+
+    - eIDAS Middleware: The new eID card for citizens of the European Union and the European Economic Area is
+      automatically accepted by default.
+    - eIDAS Middleware: Support for :term:`Request Signer Certificates<Request Signer Certificate>`.
+    - eIDAS Middleware: Replace the template-based SAML message generation with OpenSAML methods.
+    - eIDAS Middleware: ProviderName is treated as optional in AuthnRequests, it is independent of the RequesterID.
+    - eIDAS Middleware: NameIDPolicy is treated as optional in AuthnRequests, illegal values will be rejected.
+    - eIDAS Middleware: SAML metadata and responses no longer include line breaks in <SignatureValue> or <CipherValue>.
+    - eIDAS Middleware: SAML error responses will always contain one of the allowed top level SAML status codes. Sub
+      status codes and status message contain more specific information.

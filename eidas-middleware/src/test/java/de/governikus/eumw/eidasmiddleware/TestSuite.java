@@ -17,9 +17,8 @@ import org.junit.runners.Suite.SuiteClasses;
 
 
 @RunWith(Suite.class)
-@SuiteClasses({AssoParseTest.class, CurrentAddress.class, EidasRoundTrip.class,
-               FindNumber.class, Metadatatest.class, NPADateParseTest.class, SamlShemaValidation.class,
-               SessionStoreTest.class})
+@SuiteClasses({AssoParseTest.class, EidasRoundTrip.class, FindNumber.class, Metadatatest.class,
+               NPADateParseTest.class, SamlShemaValidation.class, SessionStoreTest.class})
 public class TestSuite
 {
 

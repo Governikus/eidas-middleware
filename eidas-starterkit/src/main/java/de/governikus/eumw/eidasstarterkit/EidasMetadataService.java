@@ -22,7 +22,6 @@ import java.util.Base64;
 import java.util.Date;
 import java.util.List;
 
-import javax.xml.namespace.QName;
 import javax.xml.transform.OutputKeys;
 import javax.xml.transform.Transformer;
 import javax.xml.transform.TransformerException;
@@ -41,7 +40,9 @@ import org.opensaml.core.xml.io.Unmarshaller;
 import org.opensaml.core.xml.io.UnmarshallerFactory;
 import org.opensaml.core.xml.io.UnmarshallingException;
 import org.opensaml.core.xml.schema.XSAny;
+import org.opensaml.core.xml.schema.XSString;
 import org.opensaml.core.xml.schema.impl.XSAnyBuilder;
+import org.opensaml.core.xml.schema.impl.XSStringBuilder;
 import org.opensaml.saml.common.xml.SAMLConstants;
 import org.opensaml.saml.ext.saml2alg.DigestMethod;
 import org.opensaml.saml.ext.saml2alg.SigningMethod;
@@ -96,21 +97,26 @@ import org.opensaml.xmlsec.signature.X509Data;
 import org.opensaml.xmlsec.signature.impl.KeyInfoBuilder;
 import org.opensaml.xmlsec.signature.impl.X509CertificateBuilder;
 import org.opensaml.xmlsec.signature.impl.X509DataBuilder;
+import org.opensaml.xmlsec.signature.support.SignatureConstants;
 import org.opensaml.xmlsec.signature.support.SignatureException;
 import org.opensaml.xmlsec.signature.support.Signer;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.NodeList;
 
+import de.governikus.eumw.eidascommon.ErrorCodeException;
 import de.governikus.eumw.eidascommon.Utils;
 import de.governikus.eumw.eidasstarterkit.person_attributes.EidasPersonAttributes;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import lombok.extern.slf4j.Slf4j;
 import net.shibboleth.utilities.java.support.component.ComponentInitializationException;
 import net.shibboleth.utilities.java.support.xml.BasicParserPool;
+import net.shibboleth.utilities.java.support.xml.XMLConstants;
 import net.shibboleth.utilities.java.support.xml.XMLParserException;
+import se.litsec.eidas.opensaml.common.EidasConstants;
 
 
 /**
@@ -121,12 +127,9 @@ import net.shibboleth.utilities.java.support.xml.XMLParserException;
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
 @Getter
 @Setter
+@Slf4j
 class EidasMetadataService
 {
-
-  private static final String PROTOCOL_VERSION_URI = "http://eidas.europa.eu/entity-attributes/protocol-version";
-
-  private static final String APPLICATION_IDENTIFIER_URI = "http://eidas.europa.eu/entity-attributes/application-identifier";
 
   private static final String SUPPORTED_PROTOCOL_VERSION = "1.2";
 
@@ -215,6 +218,21 @@ class EidasMetadataService
     SignatureException, TransformerFactoryConfigurationError, TransformerException
   {
     EntityDescriptor entityDescriptor = new EntityDescriptorBuilder().buildObject();
+    entityDescriptor.getNamespaceManager()
+                    .registerNamespaceDeclaration(new Namespace(SAMLConstants.SAML20_NS,
+                                                                SAMLConstants.SAML20_PREFIX));
+    entityDescriptor.getNamespaceManager()
+                    .registerNamespaceDeclaration(new Namespace(SAMLConstants.SAML20ALG_NS,
+                                                                SAMLConstants.SAML20ALG_PREFIX));
+    entityDescriptor.getNamespaceManager()
+                    .registerNamespaceDeclaration(new Namespace(XMLConstants.XSD_NS,
+                                                                XMLConstants.XSD_PREFIX));
+    entityDescriptor.getNamespaceManager()
+                    .registerNamespaceDeclaration(new Namespace(XMLConstants.XSI_NS,
+                                                                XMLConstants.XSI_PREFIX));
+    entityDescriptor.getNamespaceManager()
+                    .registerNamespaceDeclaration(new Namespace(SignatureConstants.XMLSIG_NS,
+                                                                SignatureConstants.XMLSIG_PREFIX));
     entityDescriptor.setID(id);
     entityDescriptor.setEntityID(entityId);
     entityDescriptor.setValidUntil(new DateTime(validUntil.getTime()));
@@ -261,7 +279,7 @@ class EidasMetadataService
     for ( EidasNameIdType nameIDType : this.supportedNameIdTypes )
     {
       NameIDFormat nif = new NameIDFormatBuilder().buildObject();
-      nif.setFormat(nameIDType.value);
+      nif.setFormat(nameIDType.getValue());
       idpDescriptor.getNameIDFormats().add(nif);
     }
 
@@ -269,7 +287,7 @@ class EidasMetadataService
     {
       Attribute a = new AttributeBuilder().buildObject();
       a.setFriendlyName(att.getFriendlyName());
-      a.setName(att.getValue());
+      a.setName(att.getName());
       idpDescriptor.getAttributes().add(a);
     }
 
@@ -329,32 +347,30 @@ class EidasMetadataService
     entityDescriptor.getContactPersons().add(cp);
 
     EntityAttributes entAttr = new EntityAttributesBuilder().buildObject(EntityAttributes.DEFAULT_ELEMENT_NAME);
-    Namespace assertion = new Namespace(SAMLConstants.SAML20_NS, SAMLConstants.SAML20_PREFIX);
-    entAttr.getNamespaceManager().registerNamespaceDeclaration(assertion);
 
     Attribute attr = new AttributeBuilder().buildObject();
     attr.setName("urn:oasis:names:tc:SAML:attribute:assurance-certification");
     attr.setNameFormat(Attribute.URI_REFERENCE);
     XSAny any = new XSAnyBuilder().buildObject(AttributeValue.DEFAULT_ELEMENT_NAME);
-    any.setTextContent("http://eidas.europa.eu/LoA/high");
+    any.setTextContent(EidasConstants.EIDAS_LOA_HIGH);
     attr.getAttributeValues().add(any);
     entAttr.getAttributes().add(attr);
 
     Attribute protocolAttribute = new AttributeBuilder().buildObject();
-    protocolAttribute.setName(PROTOCOL_VERSION_URI);
+    protocolAttribute.setName(EidasConstants.EIDAS_PROTOCOL_VERSION_ATTRIBUTE_NAME);
     protocolAttribute.setNameFormat(Attribute.URI_REFERENCE);
-    XSAny protocolVersion = new XSAnyBuilder().buildObject(AttributeValue.DEFAULT_ELEMENT_NAME,
-                                                           new QName("xs:string"));
-    protocolVersion.setTextContent(SUPPORTED_PROTOCOL_VERSION);
+    XSString protocolVersion = new XSStringBuilder().buildObject(AttributeValue.DEFAULT_ELEMENT_NAME,
+                                                                 XSString.TYPE_NAME);
+    protocolVersion.setValue(SUPPORTED_PROTOCOL_VERSION);
     protocolAttribute.getAttributeValues().add(protocolVersion);
     entAttr.getAttributes().add(protocolAttribute);
 
     Attribute appliccationIdentifier = new AttributeBuilder().buildObject();
-    appliccationIdentifier.setName(APPLICATION_IDENTIFIER_URI);
+    appliccationIdentifier.setName(EidasConstants.EIDAS_APPLICATION_IDENTIFIER_ATTRIBUTE_NAME);
     appliccationIdentifier.setNameFormat(Attribute.URI_REFERENCE);
-    XSAny applicationIdentifierVersion = new XSAnyBuilder().buildObject(AttributeValue.DEFAULT_ELEMENT_NAME,
-                                                                        new QName("xs:string"));
-    applicationIdentifierVersion.setTextContent("German eIDAS Middleware version: " + middlewareVersion);
+    XSString applicationIdentifierVersion = new XSStringBuilder().buildObject(AttributeValue.DEFAULT_ELEMENT_NAME,
+                                                                              XSString.TYPE_NAME);
+    applicationIdentifierVersion.setValue("German eIDAS Middleware version: " + middlewareVersion);
     appliccationIdentifier.getAttributeValues().add(applicationIdentifierVersion);
     entAttr.getAttributes().add(appliccationIdentifier);
 
@@ -440,38 +456,28 @@ class EidasMetadataService
     eidasMetadataService.setValidUntil(metaData.getValidUntil().toDate());
     Extensions extensions = metaData.getExtensions();
     eidasMetadataService.setMiddlewareVersion(getMiddlewareVersionFromExtension(extensions));
-    IDPSSODescriptor idpssoDescriptor = metaData.getIDPSSODescriptor("urn:oasis:names:tc:SAML:2.0:protocol");
+    IDPSSODescriptor idpssoDescriptor = metaData.getIDPSSODescriptor(SAMLConstants.SAML20P_NS);
     idpssoDescriptor.getSingleSignOnServices().forEach(s -> {
       String bindString = s.getBinding();
-      if ("urn:oasis:names:tc:SAML:2.0:bindings:HTTP-POST".equals(bindString))
+      if (SAMLConstants.SAML2_POST_BINDING_URI.equals(bindString))
       {
         eidasMetadataService.setPostEndpoint(s.getLocation());
       }
-      else if ("urn:oasis:names:tc:SAML:2.0:bindings:HTTP-Redirect".equals(bindString))
+      else if (SAMLConstants.SAML2_REDIRECT_BINDING_URI.equals(bindString))
       {
         eidasMetadataService.setRedirectEndpoint(s.getLocation());
       }
     });
     List<EidasPersonAttributes> attributes = new ArrayList<>();
     idpssoDescriptor.getAttributes().forEach(a -> {
-      EidasPersonAttributes eidasPersonAttributes = null;
       try
       {
-        eidasPersonAttributes = EidasNaturalPersonAttributes.getValueOf(a.getName());
+        attributes.add(EidasNaturalPersonAttributes.getValueOf(a.getName()));
       }
-      catch (Exception e1)
-      { // legal person?
-        try
-        {
-          eidasPersonAttributes = EidasLegalPersonAttributes.getValueOf(a.getName());
-        }
-        catch (Exception e)
-        { // no natural and no legal
-          // ignore error, perhaps log?
-        }
+      catch (ErrorCodeException e)
+      {
+        log.info("Unsupported attribute found", e);
       }
-
-      attributes.add(eidasPersonAttributes);
     });
     eidasMetadataService.setAttributes(attributes);
     for ( KeyDescriptor k : idpssoDescriptor.getKeyDescriptors() )
@@ -522,10 +528,10 @@ class EidasMetadataService
   private static String getMiddlewareVersionFromAttribute(Attribute attribute)
   {
     List<XMLObject> attributeValues = attribute.getAttributeValues();
-    XSAny xsAnytextContent = (XSAny)attributeValues.get(0);
-    if (xsAnytextContent.getTextContent() != null)
+    XSString xsAnytextContent = (XSString)attributeValues.get(0);
+    if (xsAnytextContent.getValue() != null)
     {
-      return xsAnytextContent.getTextContent().substring("German eIDAS Middleware version: ".length());
+      return xsAnytextContent.getValue().substring("German eIDAS Middleware version: ".length());
     }
     return null;
   }
@@ -569,8 +575,7 @@ class EidasMetadataService
     throws CertificateException
   {
     X509Certificate cert = null;
-    if (keyDescriptor.getKeyInfo().getX509Datas() != null
-        && !keyDescriptor.getKeyInfo().getX509Datas().isEmpty())
+    if (keyDescriptor.getKeyInfo() != null && !keyDescriptor.getKeyInfo().getX509Datas().isEmpty())
     {
       X509Data data = keyDescriptor.getKeyInfo().getX509Datas().get(0);
       if (data != null)

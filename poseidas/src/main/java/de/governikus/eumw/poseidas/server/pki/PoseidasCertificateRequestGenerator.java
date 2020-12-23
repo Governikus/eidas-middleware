@@ -27,6 +27,7 @@ import de.governikus.eumw.poseidas.cardserver.service.ServiceRegistry;
 import de.governikus.eumw.poseidas.cardserver.service.hsm.HSMServiceFactory;
 import de.governikus.eumw.poseidas.cardserver.service.hsm.impl.HSMException;
 import de.governikus.eumw.poseidas.cardserver.service.hsm.impl.HSMService;
+import lombok.Setter;
 
 
 /**
@@ -54,6 +55,12 @@ class PoseidasCertificateRequestGenerator
   private final BerCaPolicy policy;
 
   private final String entityID;
+
+  @Setter
+  private byte[] rscPrivateKey;
+
+  @Setter
+  private String rscAlias;
 
   /**
    * Create instance for one-time use on behalf of specified service provider
@@ -170,7 +177,9 @@ class PoseidasCertificateRequestGenerator
                                                          rootCVC,
                                                          description,
                                                          addData,
-                                                         true);
+                                                         true,
+                                                         rscAlias,
+                                                         rscPrivateKey);
     }
 
     ChangeKeyLock lock = null;
@@ -189,7 +198,9 @@ class PoseidasCertificateRequestGenerator
                                                        rootCVC,
                                                        description,
                                                        addData,
-                                                       false);
+                                                       false,
+                                                       rscAlias,
+                                                       rscPrivateKey);
   }
 
   /**
@@ -199,5 +210,4 @@ class PoseidasCertificateRequestGenerator
   {
     return description.getEncoded();
   }
-
 }

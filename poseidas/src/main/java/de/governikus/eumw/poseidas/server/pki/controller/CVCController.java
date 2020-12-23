@@ -13,6 +13,8 @@ package de.governikus.eumw.poseidas.server.pki.controller;
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.net.URLEncoder;
+import java.security.cert.CertificateEncodingException;
+import java.security.cert.X509Certificate;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.HashMap;
@@ -35,12 +37,15 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import de.governikus.eumw.eidascommon.ContextPaths;
 import de.governikus.eumw.poseidas.gov2server.constants.admin.ManagementMessage;
 import de.governikus.eumw.poseidas.server.exception.MetadataDownloadException;
+import de.governikus.eumw.poseidas.server.exception.RequestSignerDownloadException;
 import de.governikus.eumw.poseidas.server.idprovider.config.CoreConfigurationDto;
 import de.governikus.eumw.poseidas.server.idprovider.config.CvcTlsCheck;
 import de.governikus.eumw.poseidas.server.idprovider.config.PoseidasConfigurator;
 import de.governikus.eumw.poseidas.server.idprovider.config.ServiceProviderDto;
 import de.governikus.eumw.poseidas.server.pki.PermissionDataHandling;
 import de.governikus.eumw.poseidas.server.pki.PermissionDataHandlingMBean;
+import de.governikus.eumw.poseidas.server.pki.RequestSignerCertificateService;
+import de.governikus.eumw.poseidas.server.pki.RequestSignerCertificateServiceImpl;
 import de.governikus.eumw.poseidas.server.pki.model.CVCInfoBean;
 import de.governikus.eumw.poseidas.server.pki.model.CVCRequestModel;
 import de.governikus.eumw.poseidas.service.MetadataService;
@@ -70,15 +75,20 @@ public class CVCController
 
   private final CvcTlsCheck cvcTlsCheck;
 
+  private final RequestSignerCertificateService requestSignerCertificateService;
+
   /**
    * On startup, create a hashmap containing the entityID and the corresponding {@link CVCInfoBean} object
    *
    * @param data the reference to the {@link PermissionDataHandling}
+   * @param requestSignerCertificateService
    */
   public CVCController(PermissionDataHandlingMBean data,
                        MetadataService metadataService,
-                       CvcTlsCheck cvcTlsCheck)
+                       CvcTlsCheck cvcTlsCheck,
+                       RequestSignerCertificateService requestSignerCertificateService)
   {
+    this.requestSignerCertificateService = requestSignerCertificateService;
     cvcList = new HashMap<>();
     this.metadataService = metadataService;
     this.cvcTlsCheck = cvcTlsCheck;
@@ -167,8 +177,7 @@ public class CVCController
    * This route represents the details view for the given entityID
    */
   @GetMapping("details/{entityID}")
-  public String details(@PathVariable String entityID, Model model, HttpServletResponse response)
-    throws IOException
+  public String details(@PathVariable String entityID, Model model, HttpServletResponse response) throws IOException
   {
     if (entityID == null || cvcList.get(entityID) == null)
     {
@@ -210,12 +219,11 @@ public class CVCController
    * This route peforms the initial certificate request
    */
   @PostMapping("details/{entityID}/initialRequest")
-  public String initialRequest(@PathVariable String entityID,
-                               Model model,
-                               @ModelAttribute CVCRequestModel form)
+  public String initialRequest(@PathVariable String entityID, Model model, @ModelAttribute CVCRequestModel form)
   {
     model.addAttribute("entityID", entityID);
     model.addAttribute("form", form);
+
 
     cvcList.get(entityID).setCountryCode(form.getCountryCode());
     cvcList.get(entityID).setChrMnemonic(form.getCHRMnemonic());
@@ -333,6 +341,68 @@ public class CVCController
   }
 
   /**
+   * This route performs the generation of
+   * a @{@link de.governikus.eumw.poseidas.server.pki.RequestSignerCertificate}
+   **/
+  @PostMapping("/details/{entityID}/generateRSC")
+  public String generateRSC(@PathVariable String entityID, Model model, @ModelAttribute CVCRequestModel form)
+  {
+    model.addAttribute("entity", cvcList.get(entityID));
+    model.addAttribute("entityID", entityID);
+    model.addAttribute("form", form);
+    boolean isSuccess = requestSignerCertificateService.generateNewPendingRequestSignerCertificate(entityID,
+                                                                                                   form.getRscChr(),
+                                                                                                   RequestSignerCertificateServiceImpl.MAXIMUM_LIFESPAN_IN_MONTHS);
+    if (isSuccess)
+    {
+      model.addAttribute("success", true);
+      model.addAttribute("resultMessage", "Request signer certificate successfully created");
+    }
+    else
+    {
+      model.addAttribute("error", true);
+      model.addAttribute("resultMessage", "Creation of request signer certificate failed");
+    }
+    CVCInfoBean cvcInfoBean = cvcList.get(entityID);
+    // For test purpose the null check is necessary
+    if (cvcInfoBean != null)
+    {
+      cvcInfoBean.fetchInfo();
+    }
+    return "details";
+  }
+
+  /**
+   * This route performs the download of a request signer certificate.
+   *
+   * @return ResponseEntity with the request signer certificate as byte array
+   */
+  @GetMapping(value = "/details/{entityID}/downloadRSC", produces = MediaType.APPLICATION_OCTET_STREAM_VALUE)
+  public ResponseEntity<byte[]> downloadRequestSignerCertificate(@PathVariable String entityID)
+    throws RequestSignerDownloadException
+  {
+    X509Certificate requestSignerCertificate = requestSignerCertificateService.getRequestSignerCertificate(entityID);
+    if (requestSignerCertificate != null)
+    {
+      String filename = requestSignerCertificate.getSubjectDN().toString();
+      try
+      {
+        return ResponseEntity.ok()
+                             .header("Content-Disposition", "attachment; filename=\"" + filename + ".cer\"")
+                             .contentType(MediaType.APPLICATION_OCTET_STREAM)
+                             .body(requestSignerCertificate.getEncoded());
+      }
+      catch (CertificateEncodingException e)
+      {
+        log.error("Can not encode request signer certificate", e);
+        throw new RequestSignerDownloadException(entityID);
+      }
+    }
+    log.error("No request signer certificate found");
+    throw new RequestSignerDownloadException(entityID);
+  }
+
+  /**
    * This {@link ExceptionHandler} handles the {@link MetadataDownloadException}. In case of exception the
    * client is returned to a html site where an error message will be displayed.
    *
@@ -342,8 +412,28 @@ public class CVCController
   @ExceptionHandler(MetadataDownloadException.class)
   public String handleMetadataDownloadException(Model model)
   {
-    model.addAttribute("errorMessage",
-                       "Can not download Metadata. Please check your log and your configuration.");
+    model.addAttribute("errorMessage", "Can not download Metadata. Please check your log and your configuration.");
     return list(model);
+  }
+
+  /**
+   * This {@link ExceptionHandler} handles the {@link RequestSignerDownloadException}. In case of exception
+   * the client is returned to a html site where an error message will be displayed.
+   *
+   * @param model Model with the information to be displayed
+   * @param response {@link HttpServletResponse} the response to the client
+   * @param exception the {@link RequestSignerDownloadException} with information about the error
+   * @return String as html site
+   */
+  @ExceptionHandler(RequestSignerDownloadException.class)
+  public String handleRequestSignerDownloadException(Model model,
+                                                     HttpServletResponse response,
+                                                     RequestSignerDownloadException exception)
+    throws IOException
+  {
+    String entityId = exception.getEntityId();
+    model.addAttribute("error", true);
+    model.addAttribute("resultMessage", "Download of request signer certificate failed. Please check your log.");
+    return details(entityId, model, response);
   }
 }

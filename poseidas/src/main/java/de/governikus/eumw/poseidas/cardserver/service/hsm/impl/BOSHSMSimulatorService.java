@@ -10,22 +10,18 @@
 
 package de.governikus.eumw.poseidas.cardserver.service.hsm.impl;
 
-import java.io.IOException;
 import java.security.InvalidAlgorithmParameterException;
 import java.security.InvalidKeyException;
 import java.security.KeyFactory;
 import java.security.KeyPair;
 import java.security.KeyPairGenerator;
 import java.security.KeyStore;
-import java.security.KeyStoreException;
 import java.security.NoSuchAlgorithmException;
 import java.security.NoSuchProviderException;
 import java.security.PrivateKey;
 import java.security.PublicKey;
 import java.security.Signature;
 import java.security.SignatureException;
-import java.security.UnrecoverableKeyException;
-import java.security.cert.CertificateException;
 import java.security.spec.AlgorithmParameterSpec;
 import java.security.spec.InvalidKeySpecException;
 import java.security.spec.PKCS8EncodedKeySpec;
@@ -78,9 +74,13 @@ public class BOSHSMSimulatorService implements HSMService
 
   /** {@inheritDoc} */
   @Override
-  public KeyPair generateKeyPair(String algorithm, AlgorithmParameterSpec spec, String alias, boolean replace)
-    throws IOException, NoSuchAlgorithmException, NoSuchProviderException,
-    InvalidAlgorithmParameterException
+  public KeyPair generateKeyPair(String algorithm,
+                                 AlgorithmParameterSpec spec,
+                                 String alias,
+                                 String issuerAlias,
+                                 boolean replace,
+                                 int lifespan)
+    throws NoSuchAlgorithmException, NoSuchProviderException, InvalidAlgorithmParameterException
   {
     AssertUtil.notNullOrEmpty(algorithm, "algorithm");
     AssertUtil.notNull(spec, "algorithm parameters");
@@ -104,15 +104,25 @@ public class BOSHSMSimulatorService implements HSMService
 
   /** {@inheritDoc} */
   @Override
-  public byte[] sign(String alias, OID sigAlgOID, byte[] data) throws
-    NoSuchAlgorithmException, NoSuchProviderException, IOException, UnrecoverableKeyException,
-    KeyStoreException, CertificateException, InvalidKeyException, SignatureException, InvalidKeySpecException
+  public byte[] sign(String alias, OID sigAlgOID, byte[] data) throws NoSuchAlgorithmException,
+    NoSuchProviderException, InvalidKeyException, SignatureException, InvalidKeySpecException
   {
     AssertUtil.notNullOrEmpty(alias, "alias of key");
     AssertUtil.notNull(sigAlgOID, "OID for signature algorithm");
     AssertUtil.notNullOrEmpty(data, "data to be signed");
 
     byte[] keyBytes = this.lcakp.getKeyByHolder(alias);
+    PrivateKey privSignKey = buildPrivateKey(keyBytes);
+
+    Signature signature = SignatureUtil.createSignature(sigAlgOID);
+    signature.initSign(privSignKey);
+    signature.update(data);
+    return signature.sign();
+  }
+
+  public static PrivateKey buildPrivateKey(byte[] keyBytes)
+    throws NoSuchAlgorithmException, NoSuchProviderException, InvalidKeySpecException
+  {
     AssertUtil.notNullOrEmpty(keyBytes, "bytes of received key");
 
     PKCS8EncodedKeySpec keySpec = new PKCS8EncodedKeySpec(keyBytes);
@@ -126,11 +136,7 @@ public class BOSHSMSimulatorService implements HSMService
       privSignKey = KeyFactory.getInstance("RSA", BouncyCastleProvider.PROVIDER_NAME)
                               .generatePrivate(keySpec);
     }
-
-    Signature signature = SignatureUtil.createSignature(sigAlgOID);
-    signature.initSign(privSignKey);
-    signature.update(data);
-    return signature.sign();
+    return privSignKey;
   }
 
   /** {@inheritDoc} */

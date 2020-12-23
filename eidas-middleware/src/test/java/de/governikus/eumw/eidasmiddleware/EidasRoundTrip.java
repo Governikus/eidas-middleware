@@ -46,11 +46,9 @@ import de.governikus.eumw.eidascommon.Utils.X509KeyPair;
 import de.governikus.eumw.eidasstarterkit.Constants;
 import de.governikus.eumw.eidasstarterkit.EidasAttribute;
 import de.governikus.eumw.eidasstarterkit.EidasEncrypter;
-import de.governikus.eumw.eidasstarterkit.EidasLoA;
 import de.governikus.eumw.eidasstarterkit.EidasNameIdType;
 import de.governikus.eumw.eidasstarterkit.EidasNaturalPersonAttributes;
 import de.governikus.eumw.eidasstarterkit.EidasRequest;
-import de.governikus.eumw.eidasstarterkit.EidasRequestSectorType;
 import de.governikus.eumw.eidasstarterkit.EidasResponse;
 import de.governikus.eumw.eidasstarterkit.EidasSaml;
 import de.governikus.eumw.eidasstarterkit.EidasSigner;
@@ -61,6 +59,8 @@ import de.governikus.eumw.eidasstarterkit.person_attributes.natural_persons_attr
 import de.governikus.eumw.eidasstarterkit.person_attributes.natural_persons_attribute.PersonIdentifierAttribute;
 import net.shibboleth.utilities.java.support.component.ComponentInitializationException;
 import net.shibboleth.utilities.java.support.xml.XMLParserException;
+import se.litsec.eidas.opensaml.common.EidasLoaEnum;
+import se.litsec.eidas.opensaml.ext.SPTypeEnumeration;
 
 
 public class EidasRoundTrip
@@ -111,9 +111,10 @@ public class EidasRoundTrip
                                               destination,
                                               signer,
                                               requestedAttributes,
-                                              EidasRequestSectorType.PRIVATE,
+                                              SPTypeEnumeration.PRIVATE,
                                               EidasNameIdType.PERSISTENT,
-                                              EidasLoA.LOW);
+                                              EidasLoaEnum.LOA_LOW);
+
 
       String s = new String(result, StandardCharsets.UTF_8);
       Assert.assertTrue(s != null);
@@ -127,9 +128,10 @@ public class EidasRoundTrip
         Assert.assertTrue(Constants.DEFAULT_PROVIDER_NAME.equals(eidasRequest.getProviderName()));
         Assert.assertTrue(destination.equals(eidasRequest.getDestination()));
         Assert.assertTrue(issuer.equals(eidasRequest.getIssuer()));
-        Assert.assertTrue(EidasRequestSectorType.PRIVATE == eidasRequest.getSectorType());
-        Assert.assertTrue(EidasNameIdType.PERSISTENT == eidasRequest.getNameIdPolicy());
-        Assert.assertTrue(EidasLoA.LOW == eidasRequest.getLevelOfAssurance());
+        Assert.assertTrue(SPTypeEnumeration.PRIVATE == eidasRequest.getSectorType());
+        Assert.assertTrue(EidasNameIdType.PERSISTENT.equals(eidasRequest.getNameIdPolicy()));
+        Assert.assertTrue(EidasLoaEnum.LOA_LOW == eidasRequest.getAuthClassRef());
+
       }
       catch (ErrorCodeException e)
       {
@@ -148,7 +150,7 @@ public class EidasRoundTrip
                                           "http://testSP/receive",
                                           new EidasTransientNameId("asdasdads"),
                                           "http://eu-middleware",
-                                          EidasLoA.LOW,
+                                          EidasLoaEnum.LOA_LOW,
                                           "_inresp",
                                           new EidasEncrypter(true, keyPair2.getCert()),
                                           signer);
@@ -166,10 +168,10 @@ public class EidasRoundTrip
 
             for ( EidasAttribute atr : eidasResponse.getAttributes() )
             {
-              if (atr.getPersonAttributeType() == EidasNaturalPersonAttributes.FAMILY_NAME)
+              if (atr instanceof FamilyNameAttribute)
               {
                 FamilyNameAttribute fatr = (FamilyNameAttribute)atr;
-                Assert.assertTrue("Meyer".equals(fatr.getLatinScript()));
+                Assert.assertTrue("Meyer".equals(fatr.getValue()));
                 Assert.assertTrue("Wurst".equals(fatr.getNonLatinScript()));
               }
             }

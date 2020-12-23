@@ -26,10 +26,9 @@ import de.governikus.eumw.eidascommon.Utils.X509KeyPair;
 import de.governikus.eumw.eidasstarterkit.EidasContactPerson;
 import de.governikus.eumw.eidasstarterkit.EidasNameIdType;
 import de.governikus.eumw.eidasstarterkit.EidasOrganisation;
-import de.governikus.eumw.eidasstarterkit.EidasRequestSectorType;
 import de.governikus.eumw.eidasstarterkit.EidasSaml;
 import de.governikus.eumw.eidasstarterkit.EidasSigner;
-
+import se.litsec.eidas.opensaml.ext.SPTypeEnumeration;
 
 
 public class Metadatatest
@@ -68,7 +67,7 @@ public class Metadatatest
                                               p,
                                               p,
                                               "https://eubuild.tf.bos-test.de/EidasSAMLDemo/NewReceiverServlet",
-                                              EidasRequestSectorType.PUBLIC,
+                                              SPTypeEnumeration.PUBLIC,
                                               supportedNameIdTypes,
                                               signer);
     String xml = new String(res, StandardCharsets.UTF_8);

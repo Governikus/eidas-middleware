@@ -35,7 +35,7 @@ class XMLSignatureHandlerTest
   private SignableXMLObject signableXMLObject;
 
   @BeforeEach
-  public void setUp() throws Exception
+  void setUp() throws Exception
   {
     Security.addProvider(new BouncyCastleProvider());
     EidasSaml.init();

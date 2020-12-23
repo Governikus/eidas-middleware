@@ -10,7 +10,7 @@ Software Requirements
 
 The eIDAS Middleware is a Spring Boot Application. This means that you can start the application with a JRE,
 there is no need for an application server. We support the latest available Zulu JDK in Version 8,
-at the time of this release this is 8u252.
+at the time of this release this is 8u265.
 
 For the operating system we support Debian 9 (LTS).
 
@@ -18,11 +18,13 @@ Hardware Requirements
 ---------------------
 
 For productive environments, we recommend the following requirements:
-* 2 CPU cores with at least 2 GHz
-* 8 GB of RAM
-* 10 GB of file system space
+
+* 4 CPU cores with at least 2 GHz
+* 16 GB of RAM
+* 100 GB of file system space
 
 For test environments, we recommend the following requirements:
+
 * 2 CPU cores with at least 2 GHz
 * 4 GB of RAM
 * 10 GB of file system space

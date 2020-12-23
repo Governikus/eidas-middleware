@@ -1,16 +1,14 @@
 /*
- * Copyright (c) 2020 Governikus KG. Licensed under the EUPL, Version 1.2 or as soon they will be approved by
- * the European Commission - subsequent versions of the EUPL (the "Licence"); You may not use this work except
- * in compliance with the Licence. You may obtain a copy of the Licence at:
- * http://joinup.ec.europa.eu/software/page/eupl Unless required by applicable law or agreed to in writing,
- * software distributed under the Licence is distributed on an "AS IS" basis, WITHOUT WARRANTIES OR CONDITIONS
- * OF ANY KIND, either express or implied. See the Licence for the specific language governing permissions and
- * limitations under the Licence.
+ * Copyright (c) 2020 Governikus KG. Licensed under the EUPL, Version 1.2 or as soon they will be approved by the
+ * European Commission - subsequent versions of the EUPL (the "Licence"); You may not use this work except in compliance
+ * with the Licence. You may obtain a copy of the Licence at: http://joinup.ec.europa.eu/software/page/eupl Unless
+ * required by applicable law or agreed to in writing, software distributed under the Licence is distributed on an
+ * "AS IS" basis, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the Licence for the
+ * specific language governing permissions and limitations under the Licence.
  */
 
 package de.governikus.eumw.eidasstarterkit;
 
-import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -18,7 +16,6 @@ import java.nio.charset.StandardCharsets;
 import java.security.cert.CertificateEncodingException;
 import java.security.cert.X509Certificate;
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -32,15 +29,36 @@ import javax.xml.transform.TransformerFactoryConfigurationError;
 import javax.xml.transform.dom.DOMSource;
 import javax.xml.transform.stream.StreamResult;
 
+import org.joda.time.DateTime;
+import org.opensaml.core.xml.Namespace;
 import org.opensaml.core.xml.XMLObject;
 import org.opensaml.core.xml.config.XMLObjectProviderRegistrySupport;
 import org.opensaml.core.xml.io.MarshallingException;
 import org.opensaml.core.xml.io.Unmarshaller;
 import org.opensaml.core.xml.io.UnmarshallerFactory;
 import org.opensaml.core.xml.io.UnmarshallingException;
+import org.opensaml.saml.ext.reqattr.RequestedAttributes;
+import org.opensaml.saml.ext.reqattr.impl.RequestedAttributesBuilder;
+import org.opensaml.saml.saml2.core.Attribute;
 import org.opensaml.saml.saml2.core.AuthnContextClassRef;
+import org.opensaml.saml.saml2.core.AuthnContextComparisonTypeEnumeration;
 import org.opensaml.saml.saml2.core.AuthnRequest;
+import org.opensaml.saml.saml2.core.Extensions;
+import org.opensaml.saml.saml2.core.Issuer;
+import org.opensaml.saml.saml2.core.NameIDPolicy;
+import org.opensaml.saml.saml2.core.NameIDType;
+import org.opensaml.saml.saml2.core.RequestedAuthnContext;
+import org.opensaml.saml.saml2.core.RequesterID;
+import org.opensaml.saml.saml2.core.Scoping;
+import org.opensaml.saml.saml2.core.impl.AuthnContextClassRefBuilder;
+import org.opensaml.saml.saml2.core.impl.AuthnRequestBuilder;
 import org.opensaml.saml.saml2.core.impl.AuthnRequestMarshaller;
+import org.opensaml.saml.saml2.core.impl.ExtensionsBuilder;
+import org.opensaml.saml.saml2.core.impl.IssuerBuilder;
+import org.opensaml.saml.saml2.core.impl.NameIDPolicyBuilder;
+import org.opensaml.saml.saml2.core.impl.RequestedAuthnContextBuilder;
+import org.opensaml.saml.saml2.core.impl.RequesterIDBuilder;
+import org.opensaml.saml.saml2.core.impl.ScopingBuilder;
 import org.opensaml.xmlsec.signature.Signature;
 import org.opensaml.xmlsec.signature.support.SignatureException;
 import org.opensaml.xmlsec.signature.support.Signer;
@@ -49,277 +67,224 @@ import org.w3c.dom.Element;
 
 import de.governikus.eumw.eidascommon.ErrorCode;
 import de.governikus.eumw.eidascommon.ErrorCodeException;
+import de.governikus.eumw.eidascommon.ErrorCodeWithResponseException;
 import de.governikus.eumw.eidascommon.Utils;
 import de.governikus.eumw.eidasstarterkit.person_attributes.EidasPersonAttributes;
-import de.governikus.eumw.eidasstarterkit.template.TemplateLoader;
+import lombok.AccessLevel;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 import net.shibboleth.utilities.java.support.component.ComponentInitializationException;
 import net.shibboleth.utilities.java.support.xml.BasicParserPool;
 import net.shibboleth.utilities.java.support.xml.XMLParserException;
+import se.litsec.eidas.opensaml.common.EidasConstants;
+import se.litsec.eidas.opensaml.common.EidasLoaEnum;
+import se.litsec.eidas.opensaml.ext.RequestedAttribute;
+import se.litsec.eidas.opensaml.ext.SPType;
+import se.litsec.eidas.opensaml.ext.SPTypeEnumeration;
+import se.litsec.eidas.opensaml.ext.impl.RequestedAttributeBuilder;
+import se.litsec.eidas.opensaml.ext.impl.SPTypeBuilder;
+
 
 
 /**
  * @author hohnholt
  */
 @Slf4j
+@NoArgsConstructor(access = AccessLevel.PRIVATE)
 public class EidasRequest
 {
 
-  private static final String ATTRIBUTE_TEMPLATE = "<eidas:RequestedAttribute Name=\"$NAME\" NameFormat=\"urn:oasis:names:tc:SAML:2.0:attrname-format:uri\" isRequired=\"$ISREQ\"/>";
-
+  @Getter
   private String id;
 
+  @Getter
   private String destination;
 
+  @Getter
   private String issuer;
 
-  private String issueInstant;
+  private DateTime issueInstant;
 
+  @Getter
+  @Setter
   private String providerName;
 
+  @Getter
   private String requesterId;
 
+  @Getter
+  @Setter
   private boolean forceAuthn;
 
+  @Getter
+  @Setter
   private boolean isPassive;
 
-  private EidasRequestSectorType sectorType;
+  @Getter
+  @Setter
+  private SPTypeEnumeration sectorType;
 
+  @Getter
+  @Setter
   private EidasNameIdType nameIdPolicy = EidasNameIdType.TRANSIENT;
 
-  private EidasLoA authClassRef = EidasLoA.HIGH;
+  @Getter
+  @Setter
+  private EidasLoaEnum authClassRef = EidasLoaEnum.LOA_HIGH;
 
-  private EidasSigner signer = null;
+  private EidasSigner signer;
 
-  private AuthnRequest request = null;
+  @Getter
+  private AuthnRequest authnRequest;
 
+  @Getter
   private final Map<EidasPersonAttributes, Boolean> requestedAttributes = new HashMap<>();
-
-  private EidasRequest()
-  {
-    super();
-  }
 
   EidasRequest(String destination, String issuer, String providerName, EidasSigner signer)
   {
-    this(destination, EidasRequestSectorType.PUBLIC, EidasNameIdType.TRANSIENT, EidasLoA.HIGH, issuer,
-         providerName, signer);
+    this(destination, SPTypeEnumeration.PUBLIC, EidasNameIdType.TRANSIENT, EidasLoaEnum.LOA_HIGH, issuer, providerName,
+         null, signer);
   }
 
   EidasRequest(String destination, String issuer, String providerName, EidasSigner signer, String id)
   {
-    this(id, destination, EidasRequestSectorType.PUBLIC, EidasNameIdType.TRANSIENT, EidasLoA.HIGH, issuer,
-         providerName, signer);
+    this(id, destination, SPTypeEnumeration.PUBLIC, EidasNameIdType.TRANSIENT, EidasLoaEnum.LOA_HIGH, issuer,
+         providerName, null, signer);
   }
 
   EidasRequest(String destination,
-               EidasRequestSectorType sectorType,
+               SPTypeEnumeration sectorType,
                EidasNameIdType nameIdPolicy,
-               EidasLoA loa,
+               EidasLoaEnum loa,
                String issuer,
                String providerName,
+               String requesterId,
                EidasSigner signer)
   {
-    this("_" + Utils.generateUniqueID(), destination, sectorType, nameIdPolicy, loa, issuer, providerName,
+    this("_" + Utils.generateUniqueID(), destination, sectorType, nameIdPolicy, loa, issuer, providerName, requesterId,
          signer);
   }
 
   EidasRequest(String id,
                String destination,
-               EidasRequestSectorType sectorType,
+               SPTypeEnumeration sectorType,
                EidasNameIdType nameIdPolicy,
-               EidasLoA loa,
+               EidasLoaEnum loa,
                String issuer,
                String providerName,
+               String requesterId,
                EidasSigner signer)
   {
     this.id = id;
     this.destination = destination;
     this.issuer = issuer;
     this.providerName = providerName;
+    this.requesterId = requesterId;
     this.signer = signer;
     this.sectorType = sectorType;
     this.nameIdPolicy = nameIdPolicy;
     this.authClassRef = loa;
-    issueInstant = Constants.format(new Date());
+    issueInstant = DateTime.now();
     this.forceAuthn = true;
     this.isPassive = false;
   }
 
-  byte[] generate(Map<EidasPersonAttributes, Boolean> requestedAttributes)
-    throws IOException, XMLParserException, UnmarshallingException, CertificateEncodingException,
-    MarshallingException, SignatureException, TransformerFactoryConfigurationError, TransformerException,
-    ComponentInitializationException
+  byte[] generate(Map<EidasPersonAttributes, Boolean> requestedAttributes) throws CertificateEncodingException,
+    MarshallingException, SignatureException, TransformerFactoryConfigurationError, TransformerException, IOException
   {
-    byte[] returnvalue = null;
-    StringBuilder attributesBuilder = new StringBuilder();
-    for ( Map.Entry<EidasPersonAttributes, Boolean> entry : requestedAttributes.entrySet() )
+    authnRequest = new AuthnRequestBuilder().buildObject();
+    authnRequest.getNamespaceManager()
+                .registerNamespaceDeclaration(new Namespace(EidasConstants.EIDAS_NS, EidasConstants.EIDAS_PREFIX));
+    authnRequest.setDestination(destination);
+    authnRequest.setID(id);
+    authnRequest.setIssueInstant(issueInstant);
+    authnRequest.setForceAuthn(forceAuthn);
+    authnRequest.setIsPassive(isPassive);
+    authnRequest.setProviderName(providerName);
+
+    Issuer iss = new IssuerBuilder().buildObject();
+    iss.setFormat(NameIDType.ENTITY);
+    iss.setValue(issuer);
+    authnRequest.setIssuer(iss);
+
+    if (requesterId != null)
     {
-      attributesBuilder.append(ATTRIBUTE_TEMPLATE.replace("$NAME", entry.getKey().getValue())
-                                                 .replace("$ISREQ", entry.getValue().toString()));
+      Scoping scoping = new ScopingBuilder().buildObject();
+      RequesterID requesterID = new RequesterIDBuilder().buildObject();
+      requesterID.setRequesterID(requesterId);
+      scoping.getRequesterIDs().add(requesterID);
+      authnRequest.setScoping(scoping);
     }
 
-    String template = TemplateLoader.getTemplateByName("auth");
-    template = template.replace("$ForceAuthn", Boolean.toString(this.forceAuthn));
-    template = template.replace("$IsPassive", Boolean.toString(this.isPassive));
-    template = template.replace("$Destination", destination);
-    template = template.replace("$Id", id);
-    template = template.replace("$IssuerInstand", issueInstant);
-    template = template.replace("$ProviderName", providerName);
-    template = template.replace("$Issuer", issuer);
-    template = template.replace("$requestAttributes", attributesBuilder.toString());
-    template = template.replace("$NameIDPolicy", nameIdPolicy.value);
-    template = template.replace("$AuthClassRef", authClassRef.value);
-
-    if (sectorType == null)
+    if (nameIdPolicy != null)
     {
-      template = template.replace("$SPType", "");
-    }
-    else
-    {
-      template = template.replace("$SPType", "<eidas:SPType>" + sectorType.value + "</eidas:SPType>");
+      NameIDPolicy nameIDPolicy = new NameIDPolicyBuilder().buildObject();
+      nameIDPolicy.setFormat(nameIdPolicy.getValue());
+      nameIDPolicy.setAllowCreate(true);
+      authnRequest.setNameIDPolicy(nameIDPolicy);
     }
 
-    BasicParserPool ppMgr = Utils.getBasicParserPool();
+    RequestedAuthnContext requestedAuthnContext = new RequestedAuthnContextBuilder().buildObject();
+    requestedAuthnContext.setComparison(AuthnContextComparisonTypeEnumeration.MINIMUM);
+    AuthnContextClassRef authnContextClassRef = new AuthnContextClassRefBuilder().buildObject();
+    authnContextClassRef.setAuthnContextClassRef(authClassRef.getUri());
+    requestedAuthnContext.getAuthnContextClassRefs().add(authnContextClassRef);
+    authnRequest.setRequestedAuthnContext(requestedAuthnContext);
+
+    Extensions extensions = new ExtensionsBuilder().buildObject();
+
+    if (sectorType != null)
+    {
+      SPType spType = new SPTypeBuilder().buildObject();
+      spType.setType(sectorType);
+      extensions.getUnknownXMLObjects().add(spType);
+    }
+
+    if (!requestedAttributes.isEmpty())
+    {
+      RequestedAttributes requestedAttributesElement = new RequestedAttributesBuilder().buildObject();
+      for ( Map.Entry<EidasPersonAttributes, Boolean> entry : requestedAttributes.entrySet() )
+      {
+        RequestedAttribute reqAttr = new RequestedAttributeBuilder().buildObject();
+        reqAttr.setName(entry.getKey().getName());
+        reqAttr.setNameFormat(Attribute.URI_REFERENCE);
+        reqAttr.setIsRequired(entry.getValue());
+        requestedAttributesElement.getRequestedAttributes().add(reqAttr);
+      }
+      extensions.getUnknownXMLObjects().add(requestedAttributesElement);
+    }
+    authnRequest.setExtensions(extensions);
+
     List<Signature> sigs = new ArrayList<>();
+    XMLSignatureHandler.addSignature(authnRequest,
+                                     signer.getSigKey(),
+                                     signer.getSigCert(),
+                                     signer.getSigType(),
+                                     signer.getSigDigestAlg());
+    sigs.add(authnRequest.getSignature());
+    AuthnRequestMarshaller arm = new AuthnRequestMarshaller();
+    Element all = arm.marshall(authnRequest);
+    Signer.signObjects(sigs);
 
-    try (InputStream is = new ByteArrayInputStream(template.getBytes(StandardCharsets.UTF_8)))
+    Transformer trans = Utils.getTransformer();
+    trans.setOutputProperty(OutputKeys.ENCODING, StandardCharsets.UTF_8.name());
+    try (ByteArrayOutputStream bout = new ByteArrayOutputStream())
     {
-      Document inCommonMDDoc = ppMgr.parse(is);
-      Element metadataRoot = inCommonMDDoc.getDocumentElement();
-      UnmarshallerFactory unmarshallerFactory = XMLObjectProviderRegistrySupport.getUnmarshallerFactory();
-      Unmarshaller unmarshaller = unmarshallerFactory.getUnmarshaller(metadataRoot);
-      request = (AuthnRequest)unmarshaller.unmarshall(metadataRoot);
-
-      XMLSignatureHandler.addSignature(request,
-                                       signer.getSigKey(),
-                                       signer.getSigCert(),
-                                       signer.getSigType(),
-                                       signer.getSigDigestAlg());
-      sigs.add(request.getSignature());
-
-      AuthnRequestMarshaller arm = new AuthnRequestMarshaller();
-      Element all = arm.marshall(request);
-      if (!sigs.isEmpty())
-      {
-        Signer.signObjects(sigs);
-      }
-
-      Transformer trans = Utils.getTransformer();
-      trans.setOutputProperty(OutputKeys.ENCODING, "UTF-8");
-      try (ByteArrayOutputStream bout = new ByteArrayOutputStream())
-      {
-        trans.transform(new DOMSource(all), new StreamResult(bout));
-        returnvalue = bout.toByteArray();
-      }
+      trans.transform(new DOMSource(all), new StreamResult(bout));
+      return bout.toByteArray();
     }
-    return returnvalue;
   }
 
-  public boolean isPassive()
+  public String getIssueInstantAsString()
   {
-    return isPassive;
+    return Constants.format(issueInstant.toDate());
   }
 
-  public void setPassive(boolean isPassive)
-  {
-    this.isPassive = isPassive;
-  }
-
-  public void setIsForceAuthn(boolean forceAuthn)
-  {
-    this.forceAuthn = forceAuthn;
-  }
-
-  public boolean isForceAuthn()
-  {
-    return this.forceAuthn;
-  }
-
-  public String getId()
-  {
-    return id;
-  }
-
-  public String getDestination()
-  {
-    return destination;
-  }
-
-  public String getIssuer()
-  {
-    return issuer;
-  }
-
-  public String getIssueInstant()
-  {
-    return issueInstant;
-  }
-
-  public Set<Entry<EidasPersonAttributes, Boolean>> getRequestedAttributes()
+  public Set<Entry<EidasPersonAttributes, Boolean>> getRequestedAttributesEntries()
   {
     return requestedAttributes.entrySet();
-  }
-
-  public Map<EidasPersonAttributes, Boolean> getRequestedAttributesMap()
-  {
-    return requestedAttributes;
-  }
-
-  /**
-   * running EidasRequest.generate or EidasRequest.Parse creates is object
-   *
-   * @return the opensaml authnrespuest object or null. if not null, this object provides all information u
-   *         can get via opensaml
-   */
-  public AuthnRequest getAuthnRequest()
-  {
-    return request;
-  }
-
-  public EidasRequestSectorType getSectorType()
-  {
-    return sectorType;
-  }
-
-  public void setSectorType(EidasRequestSectorType sectorType)
-  {
-    this.sectorType = sectorType;
-  }
-
-  public EidasNameIdType getNameIdPolicy()
-  {
-    return nameIdPolicy;
-  }
-
-  public void setNameIdPolicy(EidasNameIdType nameIdPolicy)
-  {
-    this.nameIdPolicy = nameIdPolicy;
-  }
-
-  public String getProviderName()
-  {
-    return providerName;
-  }
-
-  public String getRequesterId()
-  {
-    return requesterId;
-  }
-
-  public void setProviderName(String providerName)
-  {
-    this.providerName = providerName;
-  }
-
-  public EidasLoA getLevelOfAssurance()
-  {
-    return authClassRef;
-  }
-
-  public void setLevelOfAssurance(EidasLoA levelOfAssurance)
-  {
-    this.authClassRef = levelOfAssurance;
   }
 
   static EidasRequest parse(InputStream is)
@@ -338,33 +303,49 @@ public class EidasRequest
     Element metadataRoot = inCommonMDDoc.getDocumentElement();
     UnmarshallerFactory unmarshallerFactory = XMLObjectProviderRegistrySupport.getUnmarshallerFactory();
     Unmarshaller unmarshaller = unmarshallerFactory.getUnmarshaller(metadataRoot);
-    eidasReq.request = (AuthnRequest)unmarshaller.unmarshall(metadataRoot);
+    eidasReq.authnRequest = (AuthnRequest)unmarshaller.unmarshall(metadataRoot);
 
     if (authors != null)
     {
-      checkSignature(eidasReq.request.getSignature(), authors);
+      checkSignature(eidasReq.authnRequest.getSignature(), authors);
     }
 
     eidasReq.setPassive(getIsPassiveFromAuthnRequest(eidasReq));
-    eidasReq.setIsForceAuthn(getIsForceAuthnFromAuthnRequest(eidasReq));
+    eidasReq.setForceAuthn(getIsForceAuthnFromAuthnRequest(eidasReq));
 
-    eidasReq.id = eidasReq.request.getID();
+    eidasReq.id = eidasReq.authnRequest.getID();
     eidasReq.authClassRef = getAuthnContextClassRefFromAuthnRequest(eidasReq);
-    String namiIdformat = eidasReq.request.getNameIDPolicy().getFormat();
-    eidasReq.nameIdPolicy = EidasNameIdType.getValueOf(namiIdformat);
+    eidasReq.issuer = eidasReq.authnRequest.getIssuer().getDOM().getTextContent();
+    eidasReq.nameIdPolicy = getNameIdPolicy(eidasReq);
 
-    eidasReq.issueInstant = Constants.format(eidasReq.request.getIssueInstant().toDate());
-    eidasReq.issuer = eidasReq.request.getIssuer().getDOM().getTextContent();
-    eidasReq.destination = eidasReq.request.getDestination();
+    eidasReq.issueInstant = eidasReq.authnRequest.getIssueInstant();
+    eidasReq.destination = eidasReq.authnRequest.getDestination();
     setRequesterIdOrProviderName(eidasReq);
     processAuthnRequestExtension(eidasReq);
 
     return eidasReq;
   }
 
-  private static void processAuthnRequestExtension(EidasRequest eidasReq) throws ErrorCodeException
+  private static EidasNameIdType getNameIdPolicy(EidasRequest eidasReq) throws ErrorCodeException
   {
-    for ( XMLObject extension : eidasReq.request.getExtensions().getOrderedChildren() )
+    NameIDPolicy nameIDPolicy = eidasReq.authnRequest.getNameIDPolicy();
+    if (nameIDPolicy == null)
+    {
+      return null;
+    }
+    try
+    {
+      return EidasNameIdType.getValueOf(nameIDPolicy.getFormat());
+    }
+    catch (ErrorCodeException e)
+    {
+      throw new ErrorCodeWithResponseException(ErrorCode.INVALID_NAME_ID_TYPE, eidasReq.issuer, eidasReq.getId());
+    }
+  }
+
+  private static void processAuthnRequestExtension(EidasRequest eidasReq)
+  {
+    for ( XMLObject extension : eidasReq.authnRequest.getExtensions().getOrderedChildren() )
     {
       if ("RequestedAttributes".equals(extension.getElementQName().getLocalPart()))
       {
@@ -372,7 +353,7 @@ public class EidasRequest
       }
       else if ("SPType".equals(extension.getElementQName().getLocalPart()))
       {
-        eidasReq.sectorType = EidasRequestSectorType.getValueOf(extension.getDOM().getTextContent());
+        eidasReq.sectorType = SPTypeHelper.getSPTypeFromString(extension.getDOM().getTextContent());
       }
     }
   }
@@ -385,91 +366,71 @@ public class EidasRequest
       EidasPersonAttributes eidasPersonAttributes = getEidasPersonAttributes(el);
       if (null != eidasPersonAttributes)
       {
-        eidasReq.requestedAttributes.put(eidasPersonAttributes,
-                                         Boolean.parseBoolean(el.getAttribute("isRequired")));
+        eidasReq.requestedAttributes.put(eidasPersonAttributes, Boolean.parseBoolean(el.getAttribute("isRequired")));
       }
     }
   }
 
   private static void setRequesterIdOrProviderName(EidasRequest eidasReq) throws ErrorCodeException
   {
-    checkIfRequesterIdAndProviderNameArePresent(eidasReq);
 
     if (isRequesterIdPresent(eidasReq))
     {
-      eidasReq.requesterId = eidasReq.request.getScoping().getRequesterIDs().get(0).getRequesterID();
+      eidasReq.requesterId = eidasReq.authnRequest.getScoping().getRequesterIDs().get(0).getRequesterID();
     }
-    else if (isProviderNamePresent(eidasReq))
+    if (isProviderNamePresent(eidasReq))
     {
-      eidasReq.providerName = eidasReq.request.getProviderName();
-    }
-    else
-    {
-      log.debug("No requesterId or providerName attribute are present.");
-      throw new ErrorCodeException(ErrorCode.ILLEGAL_REQUEST_SYNTAX,
-                                   "No requesterId or providerName attribute are present");
+      eidasReq.providerName = eidasReq.authnRequest.getProviderName();
     }
   }
 
-  private static void checkIfRequesterIdAndProviderNameArePresent(EidasRequest eidasReq)
-    throws ErrorCodeException
-  {
-    if (isRequesterIdPresent(eidasReq) && isProviderNamePresent(eidasReq))
-    {
-      log.debug("Both requesterId and providerName attributes are present.");
-      throw new ErrorCodeException(ErrorCode.ILLEGAL_REQUEST_SYNTAX,
-                                   "Both requesterId and providerName attributes are present");
-    }
-  }
-
-  private static EidasLoA getAuthnContextClassRefFromAuthnRequest(EidasRequest eidasReq)
-    throws ErrorCodeException
+  private static EidasLoaEnum getAuthnContextClassRefFromAuthnRequest(EidasRequest eidasReq) throws ErrorCodeException
   {
     // there should be one AuthnContextClassRef
-    AuthnContextClassRef ref = eidasReq.request.getRequestedAuthnContext().getAuthnContextClassRefs().get(0);
+    AuthnContextClassRef ref = eidasReq.authnRequest.getRequestedAuthnContext().getAuthnContextClassRefs().get(0);
     if (ref == null)
     {
       throw new ErrorCodeException(ErrorCode.ILLEGAL_REQUEST_SYNTAX, "No AuthnContextClassRef element.");
     }
-    return EidasLoA.getValueOf(ref.getDOM().getTextContent());
+    return EidasLoaEnum.parse(ref.getDOM().getTextContent());
   }
 
   private static boolean getIsForceAuthnFromAuthnRequest(EidasRequest eidasReq) throws ErrorCodeException
   {
     // forceAuthn MUST be true as per spec
-    if (Boolean.TRUE.equals(eidasReq.request.isForceAuthn()))
+    if (Boolean.TRUE.equals(eidasReq.authnRequest.isForceAuthn()))
     {
       return true;
     }
     throw new ErrorCodeException(ErrorCode.ILLEGAL_REQUEST_SYNTAX,
-                                 "Unsupported ForceAuthn value:" + eidasReq.request.isForceAuthn());
+                                 "Unsupported ForceAuthn value:" + eidasReq.authnRequest.isForceAuthn());
   }
 
   private static boolean getIsPassiveFromAuthnRequest(EidasRequest eidasReq) throws ErrorCodeException
   {
     // isPassive SHOULD be false
-    if (Boolean.FALSE.equals(eidasReq.request.isPassive()))
+    if (Boolean.FALSE.equals(eidasReq.authnRequest.isPassive()))
     {
       return false;
     }
     throw new ErrorCodeException(ErrorCode.ILLEGAL_REQUEST_SYNTAX,
-                                 "Unsupported IsPassive value:" + eidasReq.request.isPassive());
+                                 "Unsupported IsPassive value:" + eidasReq.authnRequest.isPassive());
   }
 
   private static boolean isRequesterIdPresent(EidasRequest eidasReq)
   {
-    return eidasReq.request.getScoping() != null && eidasReq.request.getScoping().getRequesterIDs() != null
-           && eidasReq.request.getScoping().getRequesterIDs().size() == 1;
+    return eidasReq.authnRequest.getScoping() != null && eidasReq.authnRequest.getScoping().getRequesterIDs() != null
+           && eidasReq.authnRequest.getScoping().getRequesterIDs().size() == 1;
   }
 
   private static boolean isProviderNamePresent(EidasRequest eidasReq)
   {
-    return null != eidasReq.request.getProviderName() && !eidasReq.request.getProviderName().isEmpty();
+    return null != eidasReq.authnRequest.getProviderName() && !eidasReq.authnRequest.getProviderName().isEmpty();
   }
 
   /**
-   * Returns {@link EidasPersonAttributes} enum from given {@link Element}. In case enum can not be found null
-   * is returned; unknown attributes should be ignored.
+   * Returns {@link EidasPersonAttributes} enum from given {@link Element}. In case enum can not be found null is
+   * returned; unknown attributes should be ignored.
    *
    * @param el
    * @return
@@ -483,14 +444,9 @@ public class EidasRequest
     }
     catch (ErrorCodeException e)
     {
-      try
-      {
-        eidasPersonAttributes = EidasLegalPersonAttributes.getValueOf(el.getAttribute("Name"));
-      }
-      catch (ErrorCodeException e1)
-      {
-        // nothing
-      }
+
+      // nothing
+
     }
     return eidasPersonAttributes;
   }
@@ -502,10 +458,6 @@ public class EidasRequest
       throw new ErrorCodeException(ErrorCode.SIGNATURE_CHECK_FAILED);
     }
 
-    XMLSignatureHandler.checkSignature(sig,
-                                       trustedAnchorList.toArray(new X509Certificate[trustedAnchorList.size()]));
-
-
+    XMLSignatureHandler.checkSignature(sig, trustedAnchorList.toArray(new X509Certificate[trustedAnchorList.size()]));
   }
-
 }

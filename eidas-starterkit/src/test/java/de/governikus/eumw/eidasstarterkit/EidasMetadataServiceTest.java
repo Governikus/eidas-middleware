@@ -52,7 +52,7 @@ class EidasMetadataServiceTest
   private X509KeyPair keyPair;
 
   @BeforeEach
-  public void setUp() throws Exception
+  void setUp() throws Exception
   {
     EidasSaml.init();
     Security.addProvider(new BouncyCastleProvider());

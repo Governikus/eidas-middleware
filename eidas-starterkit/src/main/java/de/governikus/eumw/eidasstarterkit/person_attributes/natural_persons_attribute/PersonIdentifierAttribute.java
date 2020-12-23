@@ -10,72 +10,40 @@
 
 package de.governikus.eumw.eidasstarterkit.person_attributes.natural_persons_attribute;
 
-import de.governikus.eumw.eidasstarterkit.EidasAttribute;
+import org.opensaml.saml.saml2.core.Attribute;
+import org.opensaml.saml.saml2.core.AttributeValue;
+
 import de.governikus.eumw.eidasstarterkit.EidasNaturalPersonAttributes;
+import de.governikus.eumw.eidasstarterkit.person_attributes.AbstractEidasAttribute;
 import de.governikus.eumw.eidasstarterkit.person_attributes.EidasPersonAttributes;
-import de.governikus.eumw.eidasstarterkit.template.TemplateLoader;
+import lombok.NoArgsConstructor;
+import se.litsec.eidas.opensaml.ext.attributes.PersonIdentifierType;
+import se.litsec.eidas.opensaml.ext.attributes.impl.PersonIdentifierTypeBuilder;
 
 
-public class PersonIdentifierAttribute implements EidasAttribute
+@NoArgsConstructor
+public class PersonIdentifierAttribute extends AbstractEidasAttribute
 {
-
-  private String id;
-
-  public PersonIdentifierAttribute()
-  {
-
-  }
 
   public PersonIdentifierAttribute(String id)
   {
-    super();
-    this.id = id;
-  }
-
-  public String getId()
-  {
-    return id;
-  }
-
-  public String getNonLatinScript()
-  {
-    return getId();
+    super(id);
   }
 
   @Override
-  public String generate()
-  {
-    return TemplateLoader.getTemplateByName("personId").replace("$value", this.id);
-  }
-
-  @Override
-  public EidasAttributeType type()
-  {
-    return EidasAttributeType.PERSON_ID;
-  }
-
-  @Override
-  public String toString()
-  {
-    return type() + " " + id;
-  }
-
-  @Override
-  public EidasPersonAttributes getPersonAttributeType()
+  public EidasPersonAttributes type()
   {
     return EidasNaturalPersonAttributes.PERSON_IDENTIFIER;
   }
 
   @Override
-  public void setLatinScript(String value)
+  public Attribute generate()
   {
-    this.id = value;
+    Attribute attr = super.generate();
+    PersonIdentifierType pit = new PersonIdentifierTypeBuilder().buildObject(AttributeValue.DEFAULT_ELEMENT_NAME,
+                                                                             type().getQName());
+    pit.setValue(getValue());
+    attr.getAttributeValues().add(pit);
+    return attr;
   }
-
-  @Override
-  public String getLatinScript()
-  {
-    return this.id;
-  }
-
 }

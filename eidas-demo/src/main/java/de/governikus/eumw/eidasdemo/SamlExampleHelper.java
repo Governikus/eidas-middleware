@@ -1,11 +1,10 @@
 /*
- * Copyright (c) 2020 Governikus KG. Licensed under the EUPL, Version 1.2 or as soon they will be approved by
- * the European Commission - subsequent versions of the EUPL (the "Licence"); You may not use this work except
- * in compliance with the Licence. You may obtain a copy of the Licence at:
- * http://joinup.ec.europa.eu/software/page/eupl Unless required by applicable law or agreed to in writing,
- * software distributed under the Licence is distributed on an "AS IS" basis, WITHOUT WARRANTIES OR CONDITIONS
- * OF ANY KIND, either express or implied. See the Licence for the specific language governing permissions and
- * limitations under the Licence.
+ * Copyright (c) 2020 Governikus KG. Licensed under the EUPL, Version 1.2 or as soon they will be approved by the
+ * European Commission - subsequent versions of the EUPL (the "Licence"); You may not use this work except in compliance
+ * with the Licence. You may obtain a copy of the Licence at: http://joinup.ec.europa.eu/software/page/eupl Unless
+ * required by applicable law or agreed to in writing, software distributed under the Licence is distributed on an
+ * "AS IS" basis, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the Licence for the
+ * specific language governing permissions and limitations under the Licence.
  */
 
 package de.governikus.eumw.eidasdemo;
@@ -29,12 +28,12 @@ import org.springframework.web.util.HtmlUtils;
 import de.governikus.eumw.eidascommon.Utils;
 import de.governikus.eumw.eidascommon.Utils.X509KeyPair;
 import lombok.extern.slf4j.Slf4j;
+import se.litsec.eidas.opensaml.ext.SPTypeEnumeration;
 
 
 /**
- * A helper and configuration store for the eIDAS Demo Application. This stores the certificates and URLs
- * needed to communicate with the eIDAS Middleware and also provides some generic functions used in this
- * example
+ * A helper and configuration store for the eIDAS Demo Application. This stores the certificates and URLs needed to
+ * communicate with the eIDAS Middleware and also provides some generic functions used in this example
  *
  * @author prange
  */
@@ -50,8 +49,7 @@ public class SamlExampleHelper
   String serverSamlReceiverUrl;
 
   /**
-   * Signature certificate of eIDAS Middleware. It used to verify the eIDAS response from the eIDAS
-   * Middleware.<br>
+   * Signature certificate of eIDAS Middleware. It used to verify the eIDAS response from the eIDAS Middleware.<br>
    * Obtain the certificate from the eIDAS Middleware administrator or extract it from the metadata located at
    * http://[eIDAS-MW]/eidas-middleware/Metadata
    */
@@ -66,9 +64,9 @@ public class SamlExampleHelper
   /**
    * Your own signature certificate belonging to the {@link #demoSignatureKey}.<br>
    * The eIDAS SAML Requests are signed with the key belonging to this certificate. <br>
-   * Give this certificate to the eIDAS Middleware Server administrator so the server can verify your
-   * requests. This should be a signature certificate, but does not have to be issued by any special
-   * certificate authority, it could be, a self signed certificate also fits the needs.<br>
+   * Give this certificate to the eIDAS Middleware Server administrator so the server can verify your requests. This
+   * should be a signature certificate, but does not have to be issued by any special certificate authority, it could
+   * be, a self signed certificate also fits the needs.<br>
    * You could just generate this certificate and a key with openssl or java keytool on your locale machine.
    */
   X509Certificate demoSignatureCertificate;
@@ -98,8 +96,8 @@ public class SamlExampleHelper
   private String demoSignatureKeystorePin;
 
   /**
-   * Keypair to decrypt the incoming eIDAS responses that are signed by the eIDAS Middleware with the public
-   * certificate of this key pair. <br>
+   * Keypair to decrypt the incoming eIDAS responses that are signed by the eIDAS Middleware with the public certificate
+   * of this key pair. <br>
    * You should not give the private key to anyone including the eIDAS Middleware Server administrator.
    */
   X509KeyPair demoDecryptionKeyPair;
@@ -121,6 +119,9 @@ public class SamlExampleHelper
    */
   @Value("${demo.decryption.pin}")
   private String demoDecryptionKeystorePin;
+
+  @Value("${demo.metadata.sptype:public}")
+  private String demoMetadataSPType;
 
   /**
    * This method is called on application startup to load the keystores and URLs.
@@ -168,9 +169,28 @@ public class SamlExampleHelper
     }
   }
 
+  SPTypeEnumeration getMetadataSPType()
+  {
+    if (SPTypeEnumeration.PUBLIC.getValue().equalsIgnoreCase(demoMetadataSPType))
+    {
+      return SPTypeEnumeration.PUBLIC;
+    }
+    else if (SPTypeEnumeration.PRIVATE.getValue().equalsIgnoreCase(demoMetadataSPType))
+    {
+      return SPTypeEnumeration.PRIVATE;
+    }
+    else if ("none".equalsIgnoreCase(demoMetadataSPType))
+    {
+      return null;
+    }
+    else
+    {
+      throw new IllegalArgumentException("Unknown value for 'demo.metadata.sptype': " + demoMetadataSPType);
+    }
+  }
+
   /**
-   * Return the keystore type. The keystore must be of the type JKS or PKCS12, otherwise an IOException is
-   * thrown.
+   * Return the keystore type. The keystore must be of the type JKS or PKCS12, otherwise an IOException is thrown.
    *
    * @param path Path on the filesystem
    * @return the Keystore type

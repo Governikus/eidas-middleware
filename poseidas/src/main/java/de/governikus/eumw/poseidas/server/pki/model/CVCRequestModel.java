@@ -10,39 +10,24 @@
 
 package de.governikus.eumw.poseidas.server.pki.model;
 
+import lombok.Data;
+
+
 /**
  * This model represents the form for the initial CVC request
  *
  * @author bpr
- *
  */
-public class CVCRequestModel {
+@Data
+public class CVCRequestModel
+{
 
-	private String countryCode;
-	private String CHRMnemonic;
-	private int sequenceNumber;
+  private String countryCode;
 
-	public String getCountryCode() {
-		return countryCode;
-	}
+  private String CHRMnemonic;
 
-	public void setCountryCode(String countryCode) {
-		this.countryCode = countryCode;
-	}
+  private int sequenceNumber;
 
-	public String getCHRMnemonic() {
-		return CHRMnemonic;
-	}
+  private String rscChr;
 
-	public void setCHRMnemonic(String cHRMnemonic) {
-		CHRMnemonic = cHRMnemonic;
-	}
-
-	public int getSequenceNumber() {
-		return sequenceNumber;
-	}
-
-	public void setSequenceNumber(int sequenceNumber) {
-		this.sequenceNumber = sequenceNumber;
-	}
 }

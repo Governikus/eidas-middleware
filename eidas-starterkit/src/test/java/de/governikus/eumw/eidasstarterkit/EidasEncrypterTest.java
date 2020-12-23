@@ -32,6 +32,7 @@ import de.governikus.eumw.eidasstarterkit.person_attributes.natural_persons_attr
 import net.shibboleth.utilities.java.support.component.ComponentInitializationException;
 import net.shibboleth.utilities.java.support.xml.BasicParserPool;
 import net.shibboleth.utilities.java.support.xml.XMLParserException;
+import se.litsec.eidas.opensaml.common.EidasLoaEnum;
 import se.swedenconnect.opensaml.OpenSAMLInitializer;
 import se.swedenconnect.opensaml.OpenSAMLSecurityDefaultsConfig;
 import se.swedenconnect.opensaml.OpenSAMLSecurityExtensionConfig;
@@ -47,7 +48,7 @@ class EidasEncrypterTest
   public static final String EC_KEYSTORE = "/eidassignertest_ec.p12";
 
   @BeforeEach
-  public void setUp() throws Exception
+  void setUp() throws Exception
   {
     OpenSAMLInitializer.getInstance()
                        .initialize(new OpenSAMLSecurityDefaultsConfig(new SAML2IntSecurityConfiguration()),
@@ -64,7 +65,7 @@ class EidasEncrypterTest
     EidasNameId nameid = new EidasPersistentNameId("eidasnameidTest");
     String issuer = "test issuer";
     String inResponseTo = "test inResponseTo";
-    EidasLoA loa = EidasLoA.SUBSTANTIAL;
+    EidasLoaEnum loa = EidasLoaEnum.LOA_SUBSTANTIAL;
     Utils.X509KeyPair[] keypair = {Utils.readPKCS12(EidasEncrypterTest.class.getResourceAsStream(EC_KEYSTORE),
                                                     "123456".toCharArray())};
     PrivateKey pk = keypair[0].getKey();
@@ -104,7 +105,7 @@ class EidasEncrypterTest
     EidasNameId nameid = new EidasPersistentNameId("eidasnameidTest");
     String issuer = "test issuer";
     String inResponseTo = "test inResponseTo";
-    EidasLoA loa = EidasLoA.SUBSTANTIAL;
+    EidasLoaEnum loa = EidasLoaEnum.LOA_SUBSTANTIAL;
     Utils.X509KeyPair[] keypair = {Utils.readPKCS12(EidasEncrypterTest.class.getResourceAsStream(RSA_KEYSTORE),
                                                     "123456".toCharArray())};
     PrivateKey pk = keypair[0].getKey();

@@ -20,8 +20,10 @@ import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import org.springframework.web.bind.annotation.GetMapping;
 
 import de.governikus.eumw.eidascommon.ContextPaths;
+import de.governikus.eumw.eidasmiddleware.ServiceProviderConfig;
 import de.governikus.eumw.eidasmiddleware.controller.RequestReceiver;
 import de.governikus.eumw.eidasmiddleware.handler.RequestHandler;
+import de.governikus.eumw.eidasmiddleware.handler.ResponseHandler;
 
 
 /**
@@ -33,10 +35,18 @@ class PortFilterTest
   @Mock
   private RequestHandler requestHandler;
 
+  @Mock
+  private ResponseHandler responseHandler;
+
+  @Mock
+  private ServiceProviderConfig serviceProviderConfig;
+
   @Test
   void testPortsAndPaths() throws Exception
   {
-    MockMvc requestReceiver = MockMvcBuilders.standaloneSetup(new RequestReceiver(requestHandler))
+    MockMvc requestReceiver = MockMvcBuilders.standaloneSetup(new RequestReceiver(requestHandler,
+                                                                                  responseHandler,
+                                                                                  serviceProviderConfig))
                                              .addFilters(new PortFilter(8443, 10000))
                                              .build();
     // eidas request on port 8443

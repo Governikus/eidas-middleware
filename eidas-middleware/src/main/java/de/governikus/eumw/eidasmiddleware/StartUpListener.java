@@ -15,11 +15,12 @@ import java.util.Timer;
 
 import javax.servlet.ServletContextEvent;
 import javax.servlet.ServletContextListener;
-import javax.servlet.annotation.WebListener;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.opensaml.core.config.InitializationException;
+import org.springframework.stereotype.Component;
+import org.springframework.web.context.ContextLoaderListener;
 
 import de.governikus.eumw.eidasstarterkit.EidasSaml;
 import de.governikus.eumw.poseidas.server.eidservice.EIDInternal;
@@ -28,35 +29,39 @@ import de.governikus.eumw.poseidas.server.eidservice.EIDInternal;
 /**
  * Application Lifecycle Listener implementation class StartUpListener
  */
-@WebListener
-public class StartUpListener implements ServletContextListener
+@Component
+public class StartUpListener extends ContextLoaderListener
 {
 
   private static final Log LOG = LogFactory.getLog(StartUpListener.class);
-
-  private SessionStore store;
-
-  private SessionStoreCleanUpTask task;
 
   /**
    * Initialize a scheduler
    */
   private static final Timer SCHEDULER = new Timer();
 
-
   /**
    * Calculation of one minute
    */
   private static final int MINUTE = 1000 * 60;
 
+  private final EIDInternal eidInternal;
+
+  private final SessionStore store;
+
+  private final SessionStoreCleanUpTask task;
+
   /**
    * Default constructor.
    */
-  public StartUpListener(SessionStore sessionStore, SessionStoreCleanUpTask sessionStoreCleanUpTask)
+  public StartUpListener(SessionStore sessionStore,
+                         SessionStoreCleanUpTask sessionStoreCleanUpTask,
+                         EIDInternal eidInternal)
   {
     super();
     this.store = sessionStore;
     this.task = sessionStoreCleanUpTask;
+    this.eidInternal = eidInternal;
   }
 
   /**
@@ -96,6 +101,6 @@ public class StartUpListener implements ServletContextListener
 
     SCHEDULER.schedule(task, MINUTE, SessionStore.DAY_IN_MILLISECONDS);
 
-    EIDInternal.getInstance().init();
+    eidInternal.init();
   }
 }

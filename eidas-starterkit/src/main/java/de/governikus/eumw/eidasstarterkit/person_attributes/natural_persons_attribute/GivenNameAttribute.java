@@ -10,28 +10,19 @@
 
 package de.governikus.eumw.eidasstarterkit.person_attributes.natural_persons_attribute;
 
-import de.governikus.eumw.eidascommon.Utils;
 import de.governikus.eumw.eidasstarterkit.EidasNaturalPersonAttributes;
 import de.governikus.eumw.eidasstarterkit.person_attributes.AbstractNonLatinScriptAttribute;
 import de.governikus.eumw.eidasstarterkit.person_attributes.EidasPersonAttributes;
+import lombok.NoArgsConstructor;
 
 
+@NoArgsConstructor
 public class GivenNameAttribute extends AbstractNonLatinScriptAttribute
 {
 
-  public GivenNameAttribute()
-  {}
-
-  public GivenNameAttribute(String value)
+  public GivenNameAttribute(String latinScript)
   {
-    super(value);
-  }
-
-  @Override
-  public String getTemplateName()
-  {
-    return Utils.isNullOrEmpty(getNonLatinScript()) ? "givenname" : "givenname_transliterated";
-
+    super(latinScript);
   }
 
   public GivenNameAttribute(String latinScript, String nonLatinScript)
@@ -39,15 +30,8 @@ public class GivenNameAttribute extends AbstractNonLatinScriptAttribute
     super(latinScript, nonLatinScript);
   }
 
-
   @Override
-  public EidasAttributeType type()
-  {
-    return EidasAttributeType.GIVEN_NAME;
-  }
-
-  @Override
-  public EidasPersonAttributes getPersonAttributeType()
+  public EidasPersonAttributes type()
   {
     return EidasNaturalPersonAttributes.FIRST_NAME;
   }

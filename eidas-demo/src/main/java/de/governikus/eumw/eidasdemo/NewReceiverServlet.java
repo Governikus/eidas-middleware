@@ -14,7 +14,6 @@ import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.security.cert.X509Certificate;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -25,6 +24,7 @@ import javax.xml.transform.dom.DOMSource;
 import javax.xml.transform.stream.StreamResult;
 
 import org.apache.commons.lang.StringUtils;
+import org.opensaml.core.config.InitializationException;
 import org.opensaml.core.xml.config.XMLObjectProviderRegistrySupport;
 import org.opensaml.core.xml.io.UnmarshallingException;
 import org.springframework.stereotype.Controller;
@@ -37,6 +37,7 @@ import de.governikus.eumw.eidascommon.HttpRedirectUtils;
 import de.governikus.eumw.eidascommon.Utils;
 import de.governikus.eumw.eidascommon.Utils.X509KeyPair;
 import de.governikus.eumw.eidasstarterkit.EidasResponse;
+import de.governikus.eumw.eidasstarterkit.EidasSaml;
 import lombok.extern.slf4j.Slf4j;
 import net.shibboleth.utilities.java.support.component.ComponentInitializationException;
 import net.shibboleth.utilities.java.support.xml.XMLParserException;
@@ -67,11 +68,47 @@ public class NewReceiverServlet
   }
 
   /**
+   * Convert the byte array to String containing the xml data
+   *
+   * @param value the byte array containing the xml data
+   * @return the xml data as a String
+   */
+  private static String getXMLFromBytes(byte[] value)
+  {
+    try
+    {
+      Document doc = XMLObjectProviderRegistrySupport.getParserPool().parse(new ByteArrayInputStream(value));
+
+      Transformer trans = Utils.getTransformer();
+      trans.setOutputProperty(OutputKeys.INDENT, "yes");
+      ByteArrayOutputStream bout = new ByteArrayOutputStream();
+      trans.transform(new DOMSource(doc), new StreamResult(bout));
+
+      return new String(bout.toByteArray(), Utils.ENCODING);
+    }
+    catch (Exception e)
+    {
+      log.error("Cannot convert the byte array to String", e);
+      return "";
+    }
+  }
+
+  /**
    * The Middleware ResponseSender performs a post request with the SAML response to this endpoint
    */
   @PostMapping
   public void doPost(HttpServletRequest req, HttpServletResponse resp)
   {
+    try
+    {
+      EidasSaml.init();
+    }
+    catch (InitializationException e)
+    {
+      log.error("Could not initialize SAML ", e);
+      helper.showErrorPage(resp, "Can not initialize SAML", e.getMessage());
+      return;
+    }
     final SamlResult samlResult = processIncomingSAMLResponse(req);
     displayResultPage(samlResult, resp);
   }
@@ -124,7 +161,7 @@ public class NewReceiverServlet
     {
       EidasResponse resp = EidasResponse.parse(is,
                                                new X509KeyPair[]{helper.demoDecryptionKeyPair},
-                                               new X509Certificate[]{helper.serverSigCert});
+                                               helper.serverSigCert);
       StringBuilder attributes = new StringBuilder();
 
       resp.getAttributes().forEach(e -> {
@@ -132,8 +169,9 @@ public class NewReceiverServlet
         attributes.append("\n");
       });
       samlResult.setAttributes(attributes.toString());
-      return samlResult;
     }
+    return samlResult;
+
   }
 
   /**
@@ -181,32 +219,6 @@ public class NewReceiverServlet
     {
       log.error("Cannot show result page", e);
       response.setStatus(500);
-    }
-  }
-
-  /**
-   * Convert the byte array to String containing the xml data
-   *
-   * @param value the byte array containing the xml data
-   * @return the xml data as a String
-   */
-  private static String getXMLFromBytes(byte[] value)
-  {
-    try
-    {
-      Document doc = XMLObjectProviderRegistrySupport.getParserPool().parse(new ByteArrayInputStream(value));
-
-      Transformer trans = Utils.getTransformer();
-      trans.setOutputProperty(OutputKeys.INDENT, "yes");
-      ByteArrayOutputStream bout = new ByteArrayOutputStream();
-      trans.transform(new DOMSource(doc), new StreamResult(bout));
-
-      return new String(bout.toByteArray(), Utils.ENCODING);
-    }
-    catch (Exception e)
-    {
-      log.error("Cannot convert the byte array to String", e);
-      return "";
     }
   }
 }

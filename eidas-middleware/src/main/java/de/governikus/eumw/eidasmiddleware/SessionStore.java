@@ -144,7 +144,7 @@ public class SessionStore implements AutoCloseable
         PreparedStatement preparedStatement = dbConnection.prepareStatement(INSERT_REQUESTED_ATTRIBUTES_QUERY))
       {
         preparedStatement.setString(1, session.getReqId());
-        preparedStatement.setString(2, entry.getKey().getValue());
+        preparedStatement.setString(2, entry.getKey().getName());
         preparedStatement.setInt(3, entry.getValue() != null && entry.getValue() ? 1 : 0);
         preparedStatement.execute();
       }

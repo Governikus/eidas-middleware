@@ -66,10 +66,13 @@ public class PermissionDataHandling implements PermissionDataHandlingMBean
   private static final String ID_CONNECTOR_CONFIGURATION = "ID.jsp.serviceProvider.nPaPkiConnectorConfiguration.";
 
   @Autowired
+  protected HSMServiceHolder hsmServiceHolder;
+
+  @Autowired
   private TerminalPermissionAO facade;
 
   @Autowired
-  protected HSMServiceHolder hsmServiceHolder;
+  private EIDInternal eidInternal;
 
   private CVCRequestHandler getCvcRequestHandler(EPAConnectorConfigurationDto nPaConf)
     throws GovManagementException
@@ -487,26 +490,10 @@ public class PermissionDataHandling implements PermissionDataHandlingMBean
         return;
       }
       TerminalPermission tp = getTerminalPermissionForRenewal(nPaConf.getCVCRefID());
-      boolean makeAsyncSubsequentRequest = false;
       if (containsExpiredCVC(tp))
       {
-        BerCaPolicy policy = PolicyImplementationFactory.getInstance()
-                                                        .getPolicy(nPaConf.getPkiConnectorConfiguration()
-                                                                          .getBerCaPolicyId());
-        if (policy != null && policy.isRefreshOutdatedCVCsAsynchronously())
-        {
-          makeAsyncSubsequentRequest = true;
-          if (nPaConf.getPkiConnectorConfiguration().getAutentURL() == null)
-          {
-            throw new IllegalStateException("Cannot make asynchronous request because no return URL for "
-                                            + serviceProvider + " is specified");
-          }
-        }
-        else
-        {
-          log.error("{}: Can not renew CVC because old CVC is already expired", serviceProvider);
-          return;
-        }
+        log.error("{}: Can not renew CVC because old CVC is already expired", serviceProvider);
+        return;
       }
 
       if (lockedServiceProviders.contains(serviceProvider))
@@ -521,16 +508,8 @@ public class PermissionDataHandling implements PermissionDataHandlingMBean
         lockedServiceProviders.add(serviceProvider);
         return;
       }
-      if (makeAsyncSubsequentRequest)
-      {
-        SNMPDelegate.getInstance()
-                    .sendSNMPTrap(OID.CERT_RENEWAL_ASYNCHRONOUS,
-                                  SNMPDelegate.CERT_RENEWAL_ASYNCHRONOUS + " "
-                                                                 + "async subsequence request for "
-                                                                 + serviceProvider);
-      }
 
-      getCvcRequestHandler(nPaConf).makeSubsequentRequest(tp, null, makeAsyncSubsequentRequest);
+      getCvcRequestHandler(nPaConf).makeSubsequentRequest(tp);
     }
     catch (Exception e)
     {
@@ -551,31 +530,13 @@ public class PermissionDataHandling implements PermissionDataHandlingMBean
   @Override
   public ManagementMessage triggerCertRenewal(String entityID)
   {
-    return makeSubsequentRequest(entityID, true);
-  }
-
-  private ManagementMessage makeSubsequentRequest(String entityID, boolean forceSendAgain)
-  {
     try
     {
       assertHsmAlive();
       EPAConnectorConfigurationDto npaConf = getnPaConfigWithCheck(entityID);
 
-      BerCaPolicy policy = PolicyImplementationFactory.getInstance()
-                                                      .getPolicy(npaConf.getPkiConnectorConfiguration()
-                                                                        .getBerCaPolicyId());
-
       TerminalPermission tp = getTerminalPermissionForRenewal(npaConf.getCVCRefID());
-      boolean forceAsyncron = false;
-      if (policy != null && policy.isRefreshOutdatedCVCsAsynchronously())
-      {
-        forceAsyncron = containsExpiredCVC(tp);
-      }
-      byte[] cvcDescription = null;
-      ManagementMessage message = getCvcRequestHandler(npaConf).makeSubsequentRequest(tp,
-                                                                                      cvcDescription,
-                                                                                      forceAsyncron,
-                                                                                      forceSendAgain);
+      ManagementMessage message = getCvcRequestHandler(npaConf).makeSubsequentRequest(tp, true);
       return message == null ? GlobalManagementCodes.OK.createMessage() : message;
     }
     catch (GovManagementException e)
@@ -638,7 +599,7 @@ public class PermissionDataHandling implements PermissionDataHandlingMBean
   @PostConstruct
   public void registerInJMX()
   {
-    EIDInternal.getInstance().setCVCFacade(facade);
+    eidInternal.setCVCFacade(facade);
   }
 
   @Override
@@ -656,7 +617,6 @@ public class PermissionDataHandling implements PermissionDataHandlingMBean
 
   @Override
   public ManagementMessage requestFirstTerminalCertificate(String entityID,
-                                                           byte[] file,
                                                            String countryCode,
                                                            String chrMnemonic,
                                                            int sequenceNumber)
@@ -692,15 +652,6 @@ public class PermissionDataHandling implements PermissionDataHandlingMBean
       log.error("{}: unspecified problem", entityID, e);
       return e.getManagementMessage();
     }
-  }
-
-  @Override
-  public ManagementMessage requestFirstTerminalCertificate(String entityID,
-                                                           String countryCode,
-                                                           String chrMnemonic,
-                                                           int sequenceNumber)
-  {
-    return requestFirstTerminalCertificate(entityID, null, countryCode, chrMnemonic, sequenceNumber);
   }
 
   @Override

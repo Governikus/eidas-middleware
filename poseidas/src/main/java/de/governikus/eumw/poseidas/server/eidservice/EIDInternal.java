@@ -26,6 +26,7 @@ import java.util.zip.ZipInputStream;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.bouncycastle.jce.provider.BouncyCastleProvider;
+import org.springframework.stereotype.Component;
 
 import de.governikus.eumw.eidascommon.Constants;
 import de.governikus.eumw.eidascommon.ErrorCode;
@@ -56,16 +57,37 @@ import oasis.names.tc.dss._1_0.core.schema.Result;
  * @author hauke
  */
 
-public final class EIDInternal
+@Component
+public class EIDInternal
 {
 
   private static final String COLON_AND_SPACE = ": ";
 
   private static final Log LOG = LogFactory.getLog(EIDInternal.class);
 
-  private static EIDInternal instance = new EIDInternal();
+  private final AuthenticationSessionManager sessionManager = AuthenticationSessionManager.getInstance();
 
   private boolean initDone = false;
+
+  private TerminalPermissionAO cvcFacade;
+
+  private static X509Certificate tryGenerateCertFromZip(String logPrefix,
+                                                        CertificateFactory certFactory,
+                                                        ZipInputStream zis)
+  {
+    try
+    {
+      return (X509Certificate)certFactory.generateCertificate(zis);
+    }
+    catch (CertificateException e)
+    {
+      if (LOG.isInfoEnabled())
+      {
+        LOG.info(logPrefix + "Can not read a certificate from the master list zip file.", e);
+      }
+      return null;
+    }
+  }
 
   public synchronized void init()
   {
@@ -77,18 +99,6 @@ public final class EIDInternal
     server.setECardIDCallbackListener(EIDSessionCallbackHandler.getInstance());
     initDone = true;
   }
-
-  /**
-   * for getting the single instance of EIDInternal
-   *
-   * @return single instance of EIDInternal
-   */
-  public static EIDInternal getInstance()
-  {
-    return instance;
-  }
-
-  private final AuthenticationSessionManager sessionManager = AuthenticationSessionManager.getInstance();
 
   /**
    * Perform a useID-Request as described in the WSDL.
@@ -254,7 +264,6 @@ public final class EIDInternal
     return cvcFacade.getTerminalPermission(refId);
   }
 
-
   private SessionInput startEcardApiRequest(EIDSession session,
                                             EIDRequestInput request,
                                             String refId,
@@ -358,24 +367,6 @@ public final class EIDInternal
       LOG.error(logPrefix + "fake masterlist not readable", e);
     }
     return Collections.emptyList();
-  }
-
-  private static X509Certificate tryGenerateCertFromZip(String logPrefix,
-                                                        CertificateFactory certFactory,
-                                                        ZipInputStream zis)
-  {
-    try
-    {
-      return (X509Certificate)certFactory.generateCertificate(zis);
-    }
-    catch (CertificateException e)
-    {
-      if (LOG.isInfoEnabled())
-      {
-        LOG.info(logPrefix + "Can not read a certificate from the master list zip file.", e);
-      }
-      return null;
-    }
   }
 
   private void translateSelector(EIDRequestInput request, SessionInputImpl input, Authorizations auth)
@@ -497,8 +488,6 @@ public final class EIDInternal
     }
     return false;
   }
-
-  private TerminalPermissionAO cvcFacade;
 
   public void setCVCFacade(TerminalPermissionAO facade)
   {

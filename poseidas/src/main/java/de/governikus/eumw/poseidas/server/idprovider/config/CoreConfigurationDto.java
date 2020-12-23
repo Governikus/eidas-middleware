@@ -208,6 +208,7 @@ public class CoreConfigurationDto extends AbstractConfigDto<CoreConfigurationTyp
     Set<String> result = new HashSet<>();
     result.add("A");
     result.add("ID");
+    result.add("UB");
     String typesString = jaxbConfig.getAllowedDocumentTypes();
     if (typesString != null)
     {

@@ -41,6 +41,8 @@ import org.opensaml.xmlsec.signature.support.SignatureValidator;
 
 import de.governikus.eumw.eidascommon.ErrorCode;
 import de.governikus.eumw.eidascommon.ErrorCodeException;
+import lombok.AccessLevel;
+import lombok.NoArgsConstructor;
 
 
 /**
@@ -59,6 +61,7 @@ import de.governikus.eumw.eidascommon.ErrorCodeException;
  *
  * @author TT / AHO
  */
+@NoArgsConstructor(access = AccessLevel.PRIVATE)
 final class XMLSignatureHandler
 {
 
@@ -99,10 +102,10 @@ final class XMLSignatureHandler
    * @throws CertificateEncodingException
    */
   static void addSignature(SignableXMLObject signable,
-                                  PrivateKey key,
-                                  X509Certificate cert,
-                                  SigEntryType type,
-                                  String sigDigestAlg)
+                           PrivateKey key,
+                           X509Certificate cert,
+                           SigEntryType type,
+                           String sigDigestAlg)
     throws CertificateEncodingException
   {
     if (type == SigEntryType.NONE)
@@ -303,7 +306,4 @@ final class XMLSignatureHandler
     }
     throw new ErrorCodeException(ErrorCode.SIGNATURE_CHECK_FAILED);
   }
-
-  private XMLSignatureHandler()
-  {}
 }

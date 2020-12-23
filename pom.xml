@@ -14,7 +14,7 @@
 
     <groupId>de.governikus.eumw</groupId>
     <artifactId>eumw</artifactId>
-    <version>2.0.1</version>
+    <version>2.1.0</version>
     <packaging>pom</packaging>
 
     <name>EU Middleware</name>
@@ -37,7 +37,7 @@
     <scm>
         <url>https://hg.govkg.de/Autent/eumw</url>
         <connection>scm:hg:https://hg.govkg.de/Autent/eumw</connection>
-        <tag>eumw-2.0.1</tag>
+        <tag>eumw-2.1.0</tag>
     </scm>
 
     <developers>
@@ -79,29 +79,32 @@
 
         <!-- crypto -->
         <version.bouncycastle>1.66</version.bouncycastle>
+        <version.eidas-opensaml3>1.4.3</version.eidas-opensaml3>
         <version.javasupport>7.5.1</version.javasupport>
         <version.opensaml-security-ext>1.0.7</version.opensaml-security-ext>
         <version.opensaml>3.4.5</version.opensaml>
         <version.xmlsec>2.2.0</version.xmlsec>
 
-        <version.cxf>3.3.7</version.cxf>
-        <version.springboot>2.2.8.RELEASE</version.springboot>
+        <version.cxf>3.4.1</version.cxf>
+        <version.springboot>2.3.7.RELEASE</version.springboot>
         <version.thymeleaf>3.0.11.RELEASE</version.thymeleaf>
-        <version.thymeleaf-layout-dialect>2.4.1</version.thymeleaf-layout-dialect>
+        <version.thymeleaf-layout-dialect>2.5.1</version.thymeleaf-layout-dialect>
 
-        <version.asm>8.0.1</version.asm>
-        <version.commons.codec>1.14</version.commons.codec>
+        <version.asm>9.0</version.asm>
+        <version.commons.codec>1.15</version.commons.codec>
         <version.commons.collections>3.2.2</version.commons.collections>
         <version.commons.fileupload>1.4</version.commons.fileupload>
-        <version.commons.io>2.7</version.commons.io>
-        <version.commons.lang3>3.10</version.commons.lang3>
-        <version.guava>29.0-jre</version.guava>
+        <version.commons.io>2.8.0</version.commons.io>
+        <version.commons.lang3>3.11</version.commons.lang3>
+        <version.guava>30.1-jre</version.guava>
         <version.h2>1.4.200</version.h2>
         <version.istack-commons-runtime>3.0.11</version.istack-commons-runtime>
-        <version.jackson>2.11.1</version.jackson>
+        <version.jackson>2.11.2</version.jackson>
         <version.jaxb2-basics>1.11.1</version.jaxb2-basics>
+        <version.joda-time>2.10.6</version.joda-time>
         <version.json-schema-validator>2.2.14</version.json-schema-validator>
         <version.jsr305>3.0.2</version.jsr305>
+        <version.groovy>2.5.14</version.groovy>
         <!-- 3.x.x available but not executable with Java 8 -->
         <version.snmp4j>2.8.3</version.snmp4j>
 
@@ -113,18 +116,19 @@
         <version.slf4j>1.7.30</version.slf4j>
 
         <!-- test dependencies -->
-        <!-- 2.39.0 available but any higher than 2.31 causes test failures -->
+        <!-- 2.39.0 available for htmlunit but any higher than 2.31 causes test failures. Therefore Httpclient had to me managed separately -->
         <version.htmlunit>2.31</version.htmlunit>
-        <version.junit-bom>5.6.2</version.junit-bom>
-        <version.mockserver>5.11.0</version.mockserver>
+        <version.httpclient>4.5.13</version.httpclient>
+        <version.junit-bom>5.7.0</version.junit-bom>
+        <version.mockserver>5.11.1</version.mockserver>
         <version.opentest4j>1.2.0</version.opentest4j>
 
         <!-- version for dependency check, can be overwritten by Jenkins -->
-        <version.dependency-check-maven>5.2.2</version.dependency-check-maven>
+        <version.dependency-check-maven>6.0.1</version.dependency-check-maven>
 
         <!-- version for bootstrap -->
         <!-- ATTENTION you need to change the templates on updating these versions -->
-        <version.bootstrap>4.5.0</version.bootstrap>
+        <version.bootstrap>4.5.2</version.bootstrap>
         <version.jquery>3.5.1</version.jquery>
     </properties>
 
@@ -647,6 +651,12 @@
             </dependency>
             <!--OpenSAML -->
             <dependency>
+                <groupId>se.litsec.eidas</groupId>
+                <artifactId>eidas-opensaml3</artifactId>
+                <version>${version.eidas-opensaml3}</version>
+            </dependency>
+
+            <dependency>
                 <groupId>se.swedenconnect.opensaml</groupId>
                 <artifactId>opensaml-security-ext</artifactId>
                 <version>${version.opensaml-security-ext}</version>
@@ -778,6 +788,12 @@
                 <version>${version.json-schema-validator}</version>
             </dependency>
 
+            <dependency>
+                <groupId>joda-time</groupId>
+                <artifactId>joda-time</artifactId>
+                <version>${version.joda-time}</version>
+            </dependency>
+
             <!-- test dependencies -->
             <dependency>
                 <groupId>org.slf4j</groupId>
@@ -807,6 +823,16 @@
                 <groupId>org.webjars</groupId>
                 <artifactId>jquery</artifactId>
                 <version>${version.jquery}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.apache.httpcomponents</groupId>
+                <artifactId>httpclient</artifactId>
+                <version>${version.httpclient}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.codehaus.groovy</groupId>
+                <artifactId>groovy</artifactId>
+                <version>${version.groovy}</version>
             </dependency>
         </dependencies>
     </dependencyManagement>

@@ -1,11 +1,10 @@
 /*
- * Copyright (c) 2020 Governikus KG. Licensed under the EUPL, Version 1.2 or as soon they will be approved by
- * the European Commission - subsequent versions of the EUPL (the "Licence"); You may not use this work except
- * in compliance with the Licence. You may obtain a copy of the Licence at:
- * http://joinup.ec.europa.eu/software/page/eupl Unless required by applicable law or agreed to in writing,
- * software distributed under the Licence is distributed on an "AS IS" basis, WITHOUT WARRANTIES OR CONDITIONS
- * OF ANY KIND, either express or implied. See the Licence for the specific language governing permissions and
- * limitations under the Licence.
+ * Copyright (c) 2020 Governikus KG. Licensed under the EUPL, Version 1.2 or as soon they will be approved by the
+ * European Commission - subsequent versions of the EUPL (the "Licence"); You may not use this work except in compliance
+ * with the Licence. You may obtain a copy of the Licence at: http://joinup.ec.europa.eu/software/page/eupl Unless
+ * required by applicable law or agreed to in writing, software distributed under the Licence is distributed on an
+ * "AS IS" basis, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the Licence for the
+ * specific language governing permissions and limitations under the Licence.
  */
 
 package de.governikus.eumw.poseidas.server.timer;
@@ -14,30 +13,26 @@ import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
 import de.governikus.eumw.poseidas.eidserver.crl.CertificationRevocationListImpl;
-import de.governikus.eumw.poseidas.server.pki.KeyLockChecker;
 import de.governikus.eumw.poseidas.server.pki.PermissionDataHandling;
-import lombok.extern.slf4j.Slf4j;
+import de.governikus.eumw.poseidas.server.pki.RequestSignerCertificateService;
 
 
 /**
  * This class activates the timer for various tasks <br>
- * The value for the timer rate are set via SpEL Bean Injection, the beans are generated
- * in @{@link TimerValues}.
+ * The value for the timer rate are set via SpEL Bean Injection, the beans are generated in @{@link TimerValues}.
  */
-@Slf4j
 @Component
 public class ApplicationTimer
 {
 
   private final PermissionDataHandling permissionDataHandling;
 
-  private final KeyLockChecker keyLockChecker;
+  private final RequestSignerCertificateService rscService;
 
-  public ApplicationTimer(PermissionDataHandling permissionDataHandling,
-                          KeyLockChecker keyLockChecker)
+  public ApplicationTimer(PermissionDataHandling permissionDataHandling, RequestSignerCertificateService rscService)
   {
     this.permissionDataHandling = permissionDataHandling;
-    this.keyLockChecker = keyLockChecker;
+    this.rscService = rscService;
   }
 
   @Scheduled(fixedRateString = "#{@getFullBlacklistRate}", initialDelay = 30 * TimerValues.SECOND)
@@ -70,9 +65,9 @@ public class ApplicationTimer
     CertificationRevocationListImpl.getInstance().renewCrls();
   }
 
-  @Scheduled(fixedRateString = "#{@getKeyLockRate}", initialDelay = 30 * TimerValues.SECOND)
-  public void checkKeyLocks()
+  @Scheduled(fixedRateString = "#{@getRSCRate}", initialDelay = 2 * TimerValues.MINUTE)
+  public void renewRequestSigners()
   {
-    keyLockChecker.checkKeyLocks();
+    rscService.renewOutdated();
   }
 }

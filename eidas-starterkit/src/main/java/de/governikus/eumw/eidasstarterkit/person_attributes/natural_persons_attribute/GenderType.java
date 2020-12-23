@@ -10,19 +10,18 @@
 
 package de.governikus.eumw.eidasstarterkit.person_attributes.natural_persons_attribute;
 
+import lombok.AllArgsConstructor;
+import lombok.Getter;
 
 
+@Getter
+@AllArgsConstructor
 public enum GenderType
 {
 
   MALE("Male"), FEMALE("Female"), UNSPECIFIED("Unspecified");
 
-  public final String value;
-
-  private GenderType(String value)
-  {
-    this.value = value;
-  }
+  private final String value;
 
   public static GenderType getValueOf(String s)
   {
@@ -43,5 +42,4 @@ public enum GenderType
 
     return null;
   }
-
 }

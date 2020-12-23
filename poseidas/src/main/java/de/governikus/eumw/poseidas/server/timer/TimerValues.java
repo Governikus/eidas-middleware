@@ -1,11 +1,10 @@
 /*
- * Copyright (c) 2020 Governikus KG. Licensed under the EUPL, Version 1.2 or as soon they will be approved by
- * the European Commission - subsequent versions of the EUPL (the "Licence"); You may not use this work except
- * in compliance with the Licence. You may obtain a copy of the Licence at:
- * http://joinup.ec.europa.eu/software/page/eupl Unless required by applicable law or agreed to in writing,
- * software distributed under the Licence is distributed on an "AS IS" basis, WITHOUT WARRANTIES OR CONDITIONS
- * OF ANY KIND, either express or implied. See the Licence for the specific language governing permissions and
- * limitations under the Licence.
+ * Copyright (c) 2020 Governikus KG. Licensed under the EUPL, Version 1.2 or as soon they will be approved by the
+ * European Commission - subsequent versions of the EUPL (the "Licence"); You may not use this work except in compliance
+ * with the Licence. You may obtain a copy of the Licence at: http://joinup.ec.europa.eu/software/page/eupl Unless
+ * required by applicable law or agreed to in writing, software distributed under the Licence is distributed on an
+ * "AS IS" basis, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the Licence for the
+ * specific language governing permissions and limitations under the Licence.
  */
 
 package de.governikus.eumw.poseidas.server.timer;
@@ -23,9 +22,8 @@ import lombok.extern.slf4j.Slf4j;
 
 /**
  * This class provides beans that return timer rates as strings that can be used
- * in @{@link org.springframework.scheduling.annotation.Scheduled} annotations. This way the rate does not
- * have to be a constant number in the @{@link ApplicationTimer} class itself and can be calculated more
- * easily.
+ * in @{@link org.springframework.scheduling.annotation.Scheduled} annotations. This way the rate does not have to be a
+ * constant number in the @{@link ApplicationTimer} class itself and can be calculated more easily.
  */
 @Configuration
 @Slf4j
@@ -85,8 +83,7 @@ public class TimerValues
       TimerType blacklistRenewal = timerConfiguration.getBlacklistRenewal();
       if (blacklistRenewal.getUnit() != 0 && blacklistRenewal.getLength() != 0)
       {
-        String rate = String.valueOf(getUnitOfTime(blacklistRenewal.getUnit())
-                                     * blacklistRenewal.getLength());
+        String rate = String.valueOf(getUnitOfTime(blacklistRenewal.getUnit()) * blacklistRenewal.getLength());
         logRateForTimer(timerName, rate);
         return rate;
       }
@@ -178,8 +175,40 @@ public class TimerValues
     return rate;
   }
 
+  @Bean
+  public String getRSCRate()
+  {
+    String timerName = "RSC renewal check";
+
+    // Set default value to every day
+    String rate = String.valueOf(24 * HOUR);
+    logRateForTimer(timerName, rate);
+    return rate;
+  }
+
   private void logRateForTimer(String timerName, String rate)
   {
-    log.debug(" The timer '{}' will be executed every {} ms", timerName, rate);
+    log.info(" The timer '{}' will be executed every {}", timerName, getHumanReadableRate(rate));
+  }
+
+  String getHumanReadableRate(String rateInMs)
+  {
+    long rate = Long.parseLong(rateInMs);
+    if (rate >= HOUR && rate % HOUR == 0)
+    {
+      return rate / HOUR + " hours";
+    }
+    else if (rate >= MINUTE && rate % MINUTE == 0)
+    {
+      return rate / MINUTE + " minutes";
+    }
+    else if (rate >= SECOND && rate % SECOND == 0)
+    {
+      return rate / SECOND + " seconds";
+    }
+    else
+    {
+      return rateInMs + " milliseconds";
+    }
   }
 }

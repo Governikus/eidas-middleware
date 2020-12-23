@@ -50,10 +50,13 @@ public class TcToken
 
   private final ConfigHolder configHolder;
 
-  public TcToken(SessionStore store, ConfigHolder configHolder)
+  private final EIDInternal eidInternal;
+
+  public TcToken(SessionStore store, ConfigHolder configHolder, EIDInternal eidInternal)
   {
     this.store = store;
     this.configHolder = configHolder;
+    this.eidInternal = eidInternal;
   }
 
   /**
@@ -194,7 +197,7 @@ public class TcToken
       log.error("Cannot get service provider from config with name {}", reqParser.getReqProviderName());
     }
 
-    EIDRequestResponse eidResult = EIDInternal.getInstance().useID(intRequest, provider);
+    EIDRequestResponse eidResult = eidInternal.useID(intRequest, provider);
 
     String refID = URLEncoder.encode(eidResult.getRequestId(), "UTF-8");
 

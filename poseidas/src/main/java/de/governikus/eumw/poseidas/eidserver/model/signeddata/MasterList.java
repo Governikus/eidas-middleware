@@ -100,9 +100,9 @@ public class MasterList extends AbstractASN1List
 
                 // Add certificate for master list
                 certificates.add(x509cert);
-                if (LOGGER.isDebugEnabled())
+                if (LOGGER.isTraceEnabled())
                 {
-                  LOGGER.debug("Adding certificate" + x509cert.toString());
+                  LOGGER.trace("Adding certificate" + x509cert.toString());
                 }
               }
               catch (CertificateException e)

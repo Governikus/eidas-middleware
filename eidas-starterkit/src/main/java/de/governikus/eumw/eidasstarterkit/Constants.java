@@ -15,7 +15,11 @@ import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.TimeZone;
 
+import lombok.AccessLevel;
+import lombok.NoArgsConstructor;
 
+
+@NoArgsConstructor(access = AccessLevel.PRIVATE)
 public class Constants
 {
 
@@ -37,7 +41,4 @@ public class Constants
     samlDateFormat.setTimeZone(TimeZone.getTimeZone("UTC"));
     return samlDateFormat;
   }
-
-  private Constants()
-  {}
 }

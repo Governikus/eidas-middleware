@@ -29,6 +29,7 @@ import org.springframework.web.bind.support.SessionStatus;
 import org.springframework.web.servlet.ModelAndView;
 
 import de.governikus.eumw.configuration.wizard.exceptions.ApplicationPropertiesSaveException;
+import de.governikus.eumw.configuration.wizard.exceptions.InvalidKeystoreException;
 import de.governikus.eumw.configuration.wizard.exceptions.InvalidNameException;
 import de.governikus.eumw.configuration.wizard.exceptions.MiddlewarePropertiesSaveException;
 import de.governikus.eumw.configuration.wizard.exceptions.PoseidasConfigSaveException;
@@ -327,7 +328,7 @@ public class ConfigurationWizardController
       log.error(ex.getMessage(), ex);
       bindingResult.rejectValue(KEYSTORE_FILE, null, ex.getMessage());
     }
-    catch (WrongAliasException ex)
+    catch (WrongAliasException | InvalidKeystoreException ex)
     {
       log.error("could not find given alias within keystore", ex);
       bindingResult.rejectValue(KEYSTORE_FILE, null, ex.getMessage());

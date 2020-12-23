@@ -315,8 +315,7 @@ public class PKIServiceConnector
       if (clientCertAndKey != null)
       {
         SSL_LOGGER.debug(entityID + ": Certificate for SSL client key:\n"
-                         + certificateToString((X509Certificate)clientCertAndKey.getCertificate(clientCertAndKey.aliases()
-                                                                                                                .nextElement())));
+                         + certificateToString((X509Certificate)clientCertAndKey.getCertificate(entityID)));
       }
       else
       {

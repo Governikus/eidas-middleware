@@ -15,66 +15,41 @@ import java.util.Objects;
 
 import javax.persistence.Embeddable;
 
+import lombok.AccessLevel;
+import lombok.AllArgsConstructor;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+
 
 /**
  * Composite primary key for certificate chain elements
  *
  * @author tt
  */
+@Getter
+@AllArgsConstructor(access = AccessLevel.PACKAGE)
+@NoArgsConstructor(access = AccessLevel.PUBLIC)
 @Embeddable
 public class CertInChainPK implements Serializable
 {
 
   private static final long serialVersionUID = -6815901659279702286L;
 
+  /**
+   * The artificial primary key of the corresponding TerminalPermission entity
+   */
   private String refID;
 
+  /**
+   * The position in the chain beginning with 0 - root
+   */
   private int posInChain;
-
-  /**
-   * create new instance
-   *
-   * @param refID
-   * @param posInChain
-   */
-  CertInChainPK(String refID, int posInChain)
-  {
-    super();
-    this.refID = refID;
-    this.posInChain = posInChain;
-  }
-
-
-  /**
-   * probably needed by server
-   */
-  public CertInChainPK()
-  {
-    // nothing to do here
-  }
-
-  /**
-   * Return the artificial primary key of the corresponding TerminalPermission entity
-   */
-  public String getRefID()
-  {
-    return refID;
-  }
-
-  /**
-   * Return the position in the chain beginning with 0 - root
-   */
-  public int getPosInChain()
-  {
-    return posInChain;
-  }
 
   @Override
   public int hashCode()
   {
     return posInChain + Objects.hashCode(refID);
   }
-
 
   @Override
   public boolean equals(Object obj)

@@ -10,9 +10,17 @@
 
 package de.governikus.eumw.eidasstarterkit;
 
+import lombok.AllArgsConstructor;
+import lombok.Getter;
+import lombok.Setter;
+
+
 /**
  * @author hohnholt
  */
+@Getter
+@Setter
+@AllArgsConstructor
 public class EidasOrganisation
 {
 
@@ -23,53 +31,4 @@ public class EidasOrganisation
   private String url;
 
   private String langId;
-
-  public EidasOrganisation(String name, String displayName, String url, String langId)
-  {
-    super();
-    this.name = name;
-    this.displayName = displayName;
-    this.url = url;
-    this.langId = langId;
-  }
-
-  public String getLangId()
-  {
-    return langId;
-  }
-
-  public void setLangId(String langId)
-  {
-    this.langId = langId;
-  }
-
-  public String getName()
-  {
-    return name;
-  }
-
-  public void setName(String name)
-  {
-    this.name = name;
-  }
-
-  public String getDisplayName()
-  {
-    return displayName;
-  }
-
-  public void setDisplayName(String displayName)
-  {
-    this.displayName = displayName;
-  }
-
-  public String getUrl()
-  {
-    return url;
-  }
-
-  public void setUrl(String url)
-  {
-    this.url = url;
-  }
 }

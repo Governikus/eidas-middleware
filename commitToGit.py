@@ -41,7 +41,7 @@ if os.path.exists(hg_tmp_path):
         pretty_print('Aborting')
         sys.exit()
 
-call(["hg", "clone", "https://scm.governikus.de/Autent/eumw", hg_tmp_path])
+call(["hg", "clone", "https://hg.govkg.de/Autent/eumw", hg_tmp_path])
 
 tag = raw_input("Specify the hg tag name of the release\n")
 

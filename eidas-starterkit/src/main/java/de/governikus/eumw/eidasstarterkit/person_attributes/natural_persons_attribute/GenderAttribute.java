@@ -10,65 +10,53 @@
 
 package de.governikus.eumw.eidasstarterkit.person_attributes.natural_persons_attribute;
 
-import de.governikus.eumw.eidasstarterkit.EidasAttribute;
+import org.opensaml.saml.saml2.core.Attribute;
+import org.opensaml.saml.saml2.core.AttributeValue;
+
 import de.governikus.eumw.eidasstarterkit.EidasNaturalPersonAttributes;
+import de.governikus.eumw.eidasstarterkit.person_attributes.AbstractEidasAttribute;
 import de.governikus.eumw.eidasstarterkit.person_attributes.EidasPersonAttributes;
-import de.governikus.eumw.eidasstarterkit.template.TemplateLoader;
+import lombok.AllArgsConstructor;
+import lombok.EqualsAndHashCode;
+import lombok.NoArgsConstructor;
+import se.litsec.eidas.opensaml.ext.attributes.GenderTypeEnumeration;
+import se.litsec.eidas.opensaml.ext.attributes.impl.GenderTypeBuilder;
 
 
-public class GenderAttribute implements EidasAttribute
+@NoArgsConstructor
+@AllArgsConstructor
+@EqualsAndHashCode(callSuper = true)
+public class GenderAttribute extends AbstractEidasAttribute
 {
 
   private GenderType value;
 
-  public GenderAttribute(GenderType value)
-  {
-    super();
-    this.value = value;
-  }
-
-  public GenderAttribute()
-  {}
-
-  public String getNonLatinScript()
-  {
-    return value.value;
-  }
-
-  public void setValue(GenderType value)
-  {
-    this.value = value;
-  }
-
   @Override
-  public String generate()
-  {
-    return TemplateLoader.getTemplateByName("gender").replace("$value", value.value);
-  }
-
-  @Override
-  public EidasAttributeType type()
-  {
-    return EidasAttributeType.GENDER;
-  }
-
-  @Override
-  public EidasPersonAttributes getPersonAttributeType()
+  public EidasPersonAttributes type()
   {
     return EidasNaturalPersonAttributes.GENDER;
   }
 
   @Override
-  public void setLatinScript(String value)
+  public void setValue(String value)
   {
     this.value = GenderType.getValueOf(value);
   }
 
   @Override
-  public String getLatinScript()
+  public String getValue()
   {
-    return this.value.name();
+    return this.value.getValue();
   }
 
-
+  @Override
+  public Attribute generate()
+  {
+    Attribute attr = super.generate();
+    se.litsec.eidas.opensaml.ext.attributes.GenderType gt = new GenderTypeBuilder().buildObject(AttributeValue.DEFAULT_ELEMENT_NAME,
+                                                                                                type().getQName());
+    gt.setGender(GenderTypeEnumeration.fromValue(getValue()));
+    attr.getAttributeValues().add(gt);
+    return attr;
+  }
 }

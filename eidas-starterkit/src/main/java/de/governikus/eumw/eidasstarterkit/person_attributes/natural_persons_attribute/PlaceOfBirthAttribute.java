@@ -10,60 +10,40 @@
 
 package de.governikus.eumw.eidasstarterkit.person_attributes.natural_persons_attribute;
 
-import de.governikus.eumw.eidasstarterkit.EidasAttribute;
+import org.opensaml.saml.saml2.core.Attribute;
+import org.opensaml.saml.saml2.core.AttributeValue;
+
 import de.governikus.eumw.eidasstarterkit.EidasNaturalPersonAttributes;
+import de.governikus.eumw.eidasstarterkit.person_attributes.AbstractEidasAttribute;
 import de.governikus.eumw.eidasstarterkit.person_attributes.EidasPersonAttributes;
-import de.governikus.eumw.eidasstarterkit.template.TemplateLoader;
+import lombok.NoArgsConstructor;
+import se.litsec.eidas.opensaml.ext.attributes.PlaceOfBirthType;
+import se.litsec.eidas.opensaml.ext.attributes.impl.PlaceOfBirthTypeBuilder;
 
 
-public class PlaceOfBirthAttribute implements EidasAttribute
+@NoArgsConstructor
+public class PlaceOfBirthAttribute extends AbstractEidasAttribute
 {
-
-  private String value;
-
-  public PlaceOfBirthAttribute()
-  {}
 
   public PlaceOfBirthAttribute(String value)
   {
-    super();
-    this.value = value;
+    super(value);
   }
 
   @Override
-  public String getLatinScript()
-  {
-    return value;
-  }
-
-  @Override
-  public void setLatinScript(String value)
-  {
-    this.value = value;
-  }
-
-  @Override
-  public String generate()
-  {
-    return TemplateLoader.getTemplateByName("placeOfBirth").replace("$value", value);
-  }
-
-  @Override
-  public EidasAttributeType type()
-  {
-    return EidasAttributeType.PLACE_OF_BIRTH;
-  }
-
-  @Override
-  public String toString()
-  {
-    return type() + " " + getLatinScript();
-  }
-
-  @Override
-  public EidasPersonAttributes getPersonAttributeType()
+  public EidasPersonAttributes type()
   {
     return EidasNaturalPersonAttributes.PLACE_OF_BIRTH;
   }
 
+  @Override
+  public Attribute generate()
+  {
+    Attribute attr = super.generate();
+    PlaceOfBirthType pobt = new PlaceOfBirthTypeBuilder().buildObject(AttributeValue.DEFAULT_ELEMENT_NAME,
+                                                                      type().getQName());
+    pobt.setValue(getValue());
+    attr.getAttributeValues().add(pobt);
+    return attr;
+  }
 }

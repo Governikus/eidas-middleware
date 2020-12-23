@@ -14,71 +14,44 @@ import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.Locale;
 
-import de.governikus.eumw.eidasstarterkit.EidasAttribute;
+import org.opensaml.core.xml.schema.XSAny;
+import org.opensaml.core.xml.schema.impl.XSAnyBuilder;
+import org.opensaml.saml.saml2.core.Attribute;
+import org.opensaml.saml.saml2.core.AttributeValue;
+
 import de.governikus.eumw.eidasstarterkit.EidasNaturalPersonAttributes;
+import de.governikus.eumw.eidasstarterkit.person_attributes.AbstractEidasAttribute;
 import de.governikus.eumw.eidasstarterkit.person_attributes.EidasPersonAttributes;
-import de.governikus.eumw.eidasstarterkit.template.TemplateLoader;
+import lombok.NoArgsConstructor;
 
 
-public class DateOfBirthAttribute implements EidasAttribute
+@NoArgsConstructor
+public class DateOfBirthAttribute extends AbstractEidasAttribute
 {
-
-  private String dateOfBirth;
-
-  public DateOfBirthAttribute()
-  {}
 
   public DateOfBirthAttribute(String date)
   {
-    super();
-    this.dateOfBirth = date;
+    super(date);
   }
 
   public DateOfBirthAttribute(Date date)
   {
-    super();
-    this.dateOfBirth = new SimpleDateFormat("yyyy-MM-dd", Locale.GERMANY).format(date);
-  }
-
-  public String getDate()
-  {
-    return dateOfBirth;
+    super(new SimpleDateFormat("yyyy-MM-dd", Locale.GERMANY).format(date));
   }
 
   @Override
-  public String generate()
-  {
-    return TemplateLoader.getTemplateByName("dateOfBirth").replace("$value", this.dateOfBirth);
-  }
-
-  @Override
-  public EidasAttributeType type()
-  {
-    return EidasAttributeType.DATE_OF_BIRTH;
-  }
-
-  @Override
-  public String toString()
-  {
-    return type() + " " + getDate();
-  }
-
-  @Override
-  public EidasPersonAttributes getPersonAttributeType()
+  public EidasPersonAttributes type()
   {
     return EidasNaturalPersonAttributes.DATE_OF_BIRTH;
   }
 
   @Override
-  public void setLatinScript(String value)
+  public Attribute generate()
   {
-    this.dateOfBirth = value;
+    Attribute attr = super.generate();
+    XSAny dobt = new XSAnyBuilder().buildObject(AttributeValue.DEFAULT_ELEMENT_NAME, type().getQName());
+    dobt.setTextContent(getValue());
+    attr.getAttributeValues().add(dobt);
+    return attr;
   }
-
-  @Override
-  public String getLatinScript()
-  {
-    return getDate();
-  }
-
 }

@@ -1,5 +1,0 @@
-<saml2:Attribute FriendlyName="SIC"
-                 Name="http://eidas.europa.eu/attributes/legalperson/SIC"
-                 NameFormat="urn:oasis:names:tc:SAML:2.0:attrname-format:uri">
-    <saml2:AttributeValue xsi:type="eidas:SICType">$latinScript</saml2:AttributeValue>
-</saml2:Attribute>

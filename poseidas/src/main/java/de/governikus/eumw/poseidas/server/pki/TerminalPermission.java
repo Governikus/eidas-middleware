@@ -20,17 +20,17 @@ import java.util.Set;
 
 import javax.persistence.CascadeType;
 import javax.persistence.Entity;
+import javax.persistence.FetchType;
 import javax.persistence.Id;
 import javax.persistence.JoinColumn;
 import javax.persistence.Lob;
-import javax.persistence.NamedQuery;
 import javax.persistence.OneToMany;
 import javax.persistence.OneToOne;
 import javax.persistence.Temporal;
 import javax.persistence.TemporalType;
 
 import de.governikus.eumw.poseidas.eidmodel.TerminalData;
-
+import lombok.Data;
 
 
 /**
@@ -40,19 +40,11 @@ import de.governikus.eumw.poseidas.eidmodel.TerminalData;
  * @author TT
  */
 @Entity
-@NamedQuery(name = TerminalPermission.QUERY_NAME_GETTERMINALPERMISSIONLIST, query = "SELECT t FROM TerminalPermission t ORDER BY t.notOnOrAfter")
-@NamedQuery(name = TerminalPermission.QUERY_NAME_GETBYMESSAGEID, query = "SELECT t FROM TerminalPermission t WHERE t.pendingRequest.messageID = :"
-                                                                         + TerminalPermission.PARAM_MESSAGEID)
+@Data
 public class TerminalPermission implements Serializable
 {
 
   private static final long serialVersionUID = 8085421165844034269L * 5;
-
-  static final String QUERY_NAME_GETTERMINALPERMISSIONLIST = "getTerminalPermissionList";
-
-  static final String QUERY_NAME_GETBYMESSAGEID = "getByMessageId";
-
-  static final String PARAM_MESSAGEID = "pMessageID";
 
   @Id
   private String refID;
@@ -82,7 +74,7 @@ public class TerminalPermission implements Serializable
   @Temporal(TemporalType.TIMESTAMP)
   private Date notOnOrAfter;
 
-  @OneToMany(mappedBy = "terminalPermission", cascade = CascadeType.REMOVE)
+  @OneToMany(mappedBy = "terminalPermission", cascade = CascadeType.REMOVE, fetch = FetchType.EAGER)
   private Set<CertInChain> chain;
 
   @Lob
@@ -102,6 +94,14 @@ public class TerminalPermission implements Serializable
 
   private Long blackListVersion;
 
+  private String rscChr;
+
+  @OneToOne(cascade = CascadeType.ALL)
+  private RequestSignerCertificate currentRequestSignerCertificate;
+
+  @OneToOne(cascade = CascadeType.ALL)
+  private RequestSignerCertificate pendingRequestSignerCertificate;
+
   /**
    * Constructor needed by hibernate
    */
@@ -120,245 +120,6 @@ public class TerminalPermission implements Serializable
     super();
     this.refID = refID;
     chain = new HashSet<>();
-  }
-
-  /**
-   * Return the currently active terminal access certificate
-   */
-  public byte[] getCvc()
-  {
-    return cvc;
-  }
-
-  /**
-   * @see #getCvc()
-   */
-  public void setCvc(byte[] cvc)
-  {
-    this.cvc = cvc;
-  }
-
-  /**
-   * Return the description (additional information needed for using the cvc with an nPA)
-   */
-  public byte[] getCvcDescription()
-  {
-    return cvcDescription;
-  }
-
-  /**
-   * @see #getCvcDescription()
-   */
-  public void setCvcDescription(byte[] cvcDescription)
-  {
-    this.cvcDescription = cvcDescription;
-  }
-
-  /**
-   * Return the private key for the CVS (PKCS#8, but encrypted)
-   */
-  public byte[] getCvcPrivateKey()
-  {
-    return cvcPrivateKey;
-  }
-
-  /**
-   * @see #setCvcPrivateKey(byte[])
-   */
-  public void setCvcPrivateKey(byte[] cvcPrivateKey)
-  {
-    this.cvcPrivateKey = cvcPrivateKey;
-  }
-
-  /**
-   * Return the expiry date of the CVC
-   */
-  public Date getNotOnOrAfter()
-  {
-    return notOnOrAfter;
-  }
-
-  /**
-   * @see #setNotOnOrAfter(Date)
-   */
-  public void setNotOnOrAfter(Date notOnOrAfter)
-  {
-    this.notOnOrAfter = notOnOrAfter;
-  }
-
-  /**
-   * Return the artificial primary key
-   */
-  public String getRefID()
-  {
-    return refID;
-  }
-
-  /**
-   * Return all Attributes defined for that user.
-   */
-  public Set<CertInChain> getChain()
-  {
-    return chain;
-  }
-
-  /**
-   * Return the key for generation of the restricted ID (pseudonym).
-   */
-  public byte[] getRiKey1()
-  {
-    return riKey1;
-  }
-
-  /**
-   * @see #getRiKey1()
-   */
-  public void setRiKey1(byte[] riKey1)
-  {
-    this.riKey1 = riKey1;
-  }
-
-  /**
-   * Return the key for pseudonymous signatures.
-   */
-  public byte[] getPSKey()
-  {
-    return psKey;
-  }
-
-  /**
-   * Set the key for pseudonymous signatures.
-   */
-  public void setPSKey(byte[] psKey)
-  {
-    this.psKey = psKey;
-  }
-
-  /**
-   * Return information about a certificate request which has been created but not yet answered by the trust
-   * center - you may want to send this request again.
-   */
-  public PendingCertificateRequest getPendingCertificateRequest()
-  {
-    return pendingRequest;
-  }
-
-  /**
-   * @see #getPendingCertificateRequest()
-   */
-  public void setPendingCertificateRequest(PendingCertificateRequest request)
-  {
-    pendingRequest = request;
-  }
-
-  /**
-   * Returns the sector ID of this service provider. This id came from the blacklist.
-   */
-  public byte[] getSectorID()
-  {
-    return sectorID;
-  }
-
-  /**
-   * @see #getSectorID()
-   */
-  public void setSectorID(byte[] sectorID)
-  {
-    this.sectorID = sectorID;
-  }
-
-  /**
-   * Returns the master list for this service provider.
-   */
-  public byte[] getMasterList()
-  {
-    return masterList;
-  }
-
-  /**
-   * @see #getMasterList()
-   */
-  public void setMasterList(byte[] masterList)
-  {
-    this.masterList = masterList;
-  }
-
-  /**
-   * Returns the date when the master list was stored.
-   */
-  public Date getMasterListStoreDate()
-  {
-    return masterListStoreDate;
-  }
-
-  /**
-   * @see #getMasterListStoreDate()
-   */
-  public void setMasterListStoreDate(Date masterListStoreDate)
-  {
-    this.masterListStoreDate = masterListStoreDate;
-  }
-
-  /**
-   * Returns the defect list for this service provider.
-   */
-  public byte[] getDefectList()
-  {
-    return defectList;
-  }
-
-  /**
-   * @see #getDefectList()
-   */
-  public void setDefectList(byte[] defectList)
-  {
-    this.defectList = defectList;
-  }
-
-  /**
-   * Returns the date when the defect list was stored.
-   */
-  public Date getDefectListStoreDate()
-  {
-    return defectListStoreDate;
-  }
-
-  /**
-   * @see #getDefectListStoreDate()
-   */
-  public void setDefectListStoreDate(Date defectListStoreDate)
-  {
-    this.defectListStoreDate = defectListStoreDate;
-  }
-
-  public Date getBlackListStoreDate()
-  {
-    return blackListStoreDate;
-  }
-
-  public void setBlackListStoreDate(Date blackListStoreDate)
-  {
-    this.blackListStoreDate = blackListStoreDate;
-  }
-
-  /**
-   * Gets the blacklist ID.
-   *
-   * @return blacklist ID
-   */
-  public Long getBlackListVersion()
-  {
-    return blackListVersion;
-  }
-
-  /**
-   * Sets the blacklist ID.
-   *
-   * @param blackListVersion ID
-   */
-  public void setBlackListVersion(Long blackListVersion)
-  {
-    this.blackListVersion = blackListVersion;
   }
 
   /**

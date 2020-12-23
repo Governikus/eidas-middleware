@@ -24,7 +24,8 @@ import de.governikus.eumw.eidascommon.Utils;
 
 @SpringBootApplication
 @ComponentScan(basePackages = {"de.governikus.eumw"})
-@ServletComponentScan(basePackages = { "de.governikus.eumw.poseidas.paosservlet.authentication.paos", "de.governikus.eumw.eidasmiddleware" })
+@ServletComponentScan(basePackages = {"de.governikus.eumw.poseidas.paosservlet.authentication.paos",
+                                      "de.governikus.eumw.eidasmiddleware"})
 @EnableTransactionManagement
 public class EIDASMiddlewareApplication
 {
@@ -36,11 +37,14 @@ public class EIDASMiddlewareApplication
     System.setProperty("jdk.tls.namedGroups", "secp521r1,secp384r1,secp256r1,secp224r1");
     System.setProperty("jdk.tls.ephemeralDHKeySize", "2048");
     Security.setProperty("jdk.tls.disabledAlgorithms",
-                         "SSLv3, RC4, MD5, SHA1, DSA, DH keySize < " + Utils.MIN_KEY_SIZE_RSA_TLS
-                                                       + ", ECDH keySize < " + Utils.MIN_KEY_SIZE_EC_TLS
-                                                       + ", EC keySize < " + Utils.MIN_KEY_SIZE_EC_TLS
-                                                       + ", RSA keySize < " + Utils.MIN_KEY_SIZE_RSA_TLS);
+                         "SSLv3, RC4, MD5, DSA, DH keySize < " + Utils.MIN_KEY_SIZE_RSA_TLS + ", ECDH keySize < "
+                                                       + Utils.MIN_KEY_SIZE_EC_TLS + ", EC keySize < "
+                                                       + Utils.MIN_KEY_SIZE_EC_TLS + ", RSA keySize < "
+                                                       + Utils.MIN_KEY_SIZE_RSA_TLS);
     Security.setProperty("crypto.policy", "unlimited");
+
+    // Do not break SAML CipherValue content to prevent CR HTML entities in the content
+    System.setProperty("org.apache.xml.security.ignoreLineBreaks", "true");
 
     SpringApplication.run(EIDASMiddlewareApplication.class, args);
   }

@@ -10,22 +10,22 @@
 
 package de.governikus.eumw.eidasstarterkit;
 
+import org.opensaml.saml.saml2.core.NameIDType;
+
 import de.governikus.eumw.eidascommon.ErrorCode;
 import de.governikus.eumw.eidascommon.ErrorCodeException;
+import lombok.AccessLevel;
+import lombok.AllArgsConstructor;
+import lombok.Getter;
 
 
+@Getter
+@AllArgsConstructor(access = AccessLevel.PRIVATE)
 public enum EidasNameIdType
 {
-  PERSISTENT("urn:oasis:names:tc:SAML:2.0:nameid-format:persistent"),
-  TRANSIENT("urn:oasis:names:tc:SAML:2.0:nameid-format:transient"),
-  UNSPECIFIED("urn:oasis:names:tc:SAML:1.1:nameid-format:unspecified");
+  PERSISTENT(NameIDType.PERSISTENT), TRANSIENT(NameIDType.TRANSIENT), UNSPECIFIED(NameIDType.UNSPECIFIED);
 
-  public final String value;
-
-  private EidasNameIdType(String value)
-  {
-    this.value = value;
-  }
+  private final String value;
 
   static EidasNameIdType getValueOf(String s) throws ErrorCodeException
   {
@@ -36,6 +36,6 @@ public enum EidasNameIdType
         return e;
       }
     }
-    throw new ErrorCodeException(ErrorCode.ILLEGAL_REQUEST_SYNTAX, "Unsupported NameIdType value:" + s);
+    throw new ErrorCodeException(ErrorCode.ILLEGAL_REQUEST_SYNTAX, "Unsupported NameIdType value: " + s);
   }
 }

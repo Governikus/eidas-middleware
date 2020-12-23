@@ -10,35 +10,22 @@
 
 package de.governikus.eumw.eidasstarterkit;
 
+import lombok.AccessLevel;
+import lombok.AllArgsConstructor;
+import lombok.Getter;
+import lombok.Setter;
+
+
 /**
  * @author hohnholt
  */
+@Getter
+@AllArgsConstructor(access = AccessLevel.PACKAGE)
 public abstract class EidasNameId
 {
 
   private final EidasNameIdType type;
 
+  @Setter
   private String value;
-
-  EidasNameId(EidasNameIdType type, String value)
-  {
-    super();
-    this.type = type;
-    this.value = value;
-  }
-
-  public String getValue()
-  {
-    return value;
-  }
-
-  public void setValue(String value)
-  {
-    this.value = value;
-  }
-
-  public EidasNameIdType getType()
-  {
-    return type;
-  }
 }

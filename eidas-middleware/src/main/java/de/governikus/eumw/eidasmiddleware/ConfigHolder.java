@@ -29,6 +29,7 @@ import de.governikus.eumw.eidascommon.Utils.X509KeyPair;
 import de.governikus.eumw.eidasstarterkit.EidasContactPerson;
 import de.governikus.eumw.eidasstarterkit.EidasOrganisation;
 import de.governikus.eumw.poseidas.cardbase.StringUtil;
+import de.governikus.eumw.poseidas.service.ConfigHolderInterface;
 import lombok.extern.slf4j.Slf4j;
 
 
@@ -37,7 +38,7 @@ import lombok.extern.slf4j.Slf4j;
  */
 @Component
 @Slf4j
-public class ConfigHolder
+public class ConfigHolder implements ConfigHolderInterface
 {
 
   private static final String CONFIG_FILE_NAME = "eidasmiddleware.properties";

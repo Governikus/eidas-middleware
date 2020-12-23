@@ -24,6 +24,7 @@ import org.springframework.boot.web.context.WebServerInitializedEvent;
 import de.governikus.eumw.poseidas.eidserver.crl.CertificationRevocationListImpl;
 import de.governikus.eumw.poseidas.server.idprovider.config.CvcTlsCheck;
 import de.governikus.eumw.poseidas.server.idprovider.config.PoseidasConfigurator;
+import de.governikus.eumw.poseidas.server.pki.PermissionDataHandling;
 import de.governikus.eumw.poseidas.server.pki.TerminalPermission;
 import de.governikus.eumw.poseidas.server.pki.TerminalPermissionAO;
 import lombok.extern.slf4j.Slf4j;
@@ -41,10 +42,10 @@ class StartupListenerTest
   private static String tempDirectory;
 
   @Mock
-  private TerminalPermissionAO facade;
+  private PermissionDataHandling permissionDataHandling;
 
   @Mock
-  private ApplicationTimer timer;
+  private TerminalPermissionAO facade;
 
   @Mock
   private CvcTlsCheck cvcTlsCheck;
@@ -82,10 +83,10 @@ class StartupListenerTest
     File dest = new File(tempDirectory + "/POSeIDAS.xml");
     Files.copy(source.toPath(), dest.toPath(), StandardCopyOption.REPLACE_EXISTING);
     System.setProperty("spring.config.additional-location", Paths.get(tempDirectory).toString());
-    startupListener = new StartupListener(facade, timer, cvcTlsCheck);
+    startupListener = new StartupListener(permissionDataHandling, facade, cvcTlsCheck);
     startupListener.onApplicationEvent(webServerInitializedEvent);
 
-    Mockito.verify(timer, Mockito.times(1)).renewMasterDefectList();
+    Mockito.verify(permissionDataHandling, Mockito.times(1)).renewMasterAndDefectList();
     Assertions.assertThrows(IllegalStateException.class, CertificationRevocationListImpl::getInstance);
     Mockito.verify(cvcTlsCheck, Mockito.times(1)).check();
 
@@ -102,14 +103,14 @@ class StartupListenerTest
     File dest = new File(tempDirectory + "/POSeIDAS.xml");
     Files.copy(source.toPath(), dest.toPath(), StandardCopyOption.REPLACE_EXISTING);
     System.setProperty("spring.config.additional-location", Paths.get(tempDirectory).toString());
-    startupListener = new StartupListener(facade, timer, cvcTlsCheck);
+    startupListener = new StartupListener(permissionDataHandling, facade, cvcTlsCheck);
     TerminalPermission terminalPermission = Mockito.mock(TerminalPermission.class);
     Mockito.when(facade.getTerminalPermission(Mockito.anyString())).thenReturn(terminalPermission);
     Mockito.when(terminalPermission.getMasterList())
            .thenReturn(Base64.getDecoder().decode(MASTERLIST_BASE64));
     startupListener.onApplicationEvent(webServerInitializedEvent);
 
-    Mockito.verify(timer, Mockito.times(1)).renewMasterDefectList();
+    Mockito.verify(permissionDataHandling, Mockito.times(1)).renewMasterAndDefectList();
     Assertions.assertNotNull(CertificationRevocationListImpl.getInstance());
     Mockito.verify(cvcTlsCheck, Mockito.times(1)).check();
   }

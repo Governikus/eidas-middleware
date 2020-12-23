@@ -10,6 +10,8 @@
 
 package de.governikus.eumw.eidasstarterkit;
 
+import javax.xml.namespace.QName;
+
 import de.governikus.eumw.eidascommon.ErrorCode;
 import de.governikus.eumw.eidascommon.ErrorCodeException;
 import de.governikus.eumw.eidasstarterkit.person_attributes.EidasPersonAttributes;
@@ -21,51 +23,71 @@ import de.governikus.eumw.eidasstarterkit.person_attributes.natural_persons_attr
 import de.governikus.eumw.eidasstarterkit.person_attributes.natural_persons_attribute.GivenNameAttribute;
 import de.governikus.eumw.eidasstarterkit.person_attributes.natural_persons_attribute.PersonIdentifierAttribute;
 import de.governikus.eumw.eidasstarterkit.person_attributes.natural_persons_attribute.PlaceOfBirthAttribute;
+import lombok.AllArgsConstructor;
+import lombok.Getter;
+import se.litsec.eidas.opensaml.ext.attributes.AttributeConstants;
+import se.litsec.eidas.opensaml.ext.attributes.BirthNameType;
+import se.litsec.eidas.opensaml.ext.attributes.CurrentAddressType;
+import se.litsec.eidas.opensaml.ext.attributes.CurrentFamilyNameType;
+import se.litsec.eidas.opensaml.ext.attributes.CurrentGivenNameType;
+import se.litsec.eidas.opensaml.ext.attributes.DateOfBirthType;
+import se.litsec.eidas.opensaml.ext.attributes.GenderType;
+import se.litsec.eidas.opensaml.ext.attributes.PersonIdentifierType;
+import se.litsec.eidas.opensaml.ext.attributes.PlaceOfBirthType;
 
 
+@AllArgsConstructor
 public enum EidasNaturalPersonAttributes implements EidasPersonAttributes
 {
-  FIRST_NAME("http://eidas.europa.eu/attributes/naturalperson/CurrentGivenName",
-            "FirstName",
-            GivenNameAttribute.class),
-  BIRTH_NAME("http://eidas.europa.eu/attributes/naturalperson/BirthName",
-            "BirthName",
-            BirthNameAttribute.class),
-  FAMILY_NAME("http://eidas.europa.eu/attributes/naturalperson/CurrentFamilyName",
-             "FamilyName",
-             FamilyNameAttribute.class),
-  DATE_OF_BIRTH("http://eidas.europa.eu/attributes/naturalperson/DateOfBirth",
-              "DateOfBirth",
-              DateOfBirthAttribute.class),
-  PLACE_OF_BIRTH("http://eidas.europa.eu/attributes/naturalperson/PlaceOfBirth",
-               "PlaceOfBirth",
-               PlaceOfBirthAttribute.class),
-  GENDER("http://eidas.europa.eu/attributes/naturalperson/Gender", "Gender", GenderAttribute.class),
-  CURRENT_ADDRESS("http://eidas.europa.eu/attributes/naturalperson/CurrentAddress",
-                 "CurrentAddress",
-                 CurrentAddressAttribute.class),
-  PERSON_IDENTIFIER("http://eidas.europa.eu/attributes/naturalperson/PersonIdentifier",
-                   "PersonIdentifier",
-                   PersonIdentifierAttribute.class);
+  FIRST_NAME(AttributeConstants.EIDAS_CURRENT_GIVEN_NAME_ATTRIBUTE_NAME,
+             AttributeConstants.EIDAS_CURRENT_GIVEN_NAME_ATTRIBUTE_FRIENDLY_NAME,
+             CurrentGivenNameType.TYPE_NAME,
+             GivenNameAttribute.class),
+  BIRTH_NAME(AttributeConstants.EIDAS_BIRTH_NAME_ATTRIBUTE_NAME,
+             AttributeConstants.EIDAS_BIRTH_NAME_ATTRIBUTE_FRIENDLY_NAME,
+             BirthNameType.TYPE_NAME,
+             BirthNameAttribute.class),
+  FAMILY_NAME(AttributeConstants.EIDAS_CURRENT_FAMILY_NAME_ATTRIBUTE_NAME,
+              AttributeConstants.EIDAS_CURRENT_FAMILY_NAME_ATTRIBUTE_FRIENDLY_NAME,
+              CurrentFamilyNameType.TYPE_NAME,
+              FamilyNameAttribute.class),
+  DATE_OF_BIRTH(AttributeConstants.EIDAS_DATE_OF_BIRTH_ATTRIBUTE_NAME,
+                AttributeConstants.EIDAS_DATE_OF_BIRTH_ATTRIBUTE_FRIENDLY_NAME,
+                DateOfBirthType.TYPE_NAME,
+                DateOfBirthAttribute.class),
+  PLACE_OF_BIRTH(AttributeConstants.EIDAS_PLACE_OF_BIRTH_ATTRIBUTE_NAME,
+                 AttributeConstants.EIDAS_PLACE_OF_BIRTH_ATTRIBUTE_FRIENDLY_NAME,
+                 PlaceOfBirthType.TYPE_NAME,
+                 PlaceOfBirthAttribute.class),
+  GENDER(AttributeConstants.EIDAS_GENDER_ATTRIBUTE_NAME,
+         AttributeConstants.EIDAS_GENDER_ATTRIBUTE_FRIENDLY_NAME,
+         GenderType.TYPE_NAME,
+         GenderAttribute.class),
+  CURRENT_ADDRESS(AttributeConstants.EIDAS_CURRENT_ADDRESS_ATTRIBUTE_NAME,
+                  AttributeConstants.EIDAS_CURRENT_ADDRESS_ATTRIBUTE_FRIENDLY_NAME,
+                  CurrentAddressType.TYPE_NAME,
+                  CurrentAddressAttribute.class),
+  PERSON_IDENTIFIER(AttributeConstants.EIDAS_PERSON_IDENTIFIER_ATTRIBUTE_NAME,
+                    AttributeConstants.EIDAS_PERSON_IDENTIFIER_ATTRIBUTE_FRIENDLY_NAME,
+                    PersonIdentifierType.TYPE_NAME,
+                    PersonIdentifierAttribute.class);
 
-  public final String value;
+  @Getter
+  private final String name;
 
-  public final String friendlyName;
+  @Getter
+  private final String friendlyName;
 
-  public final Class<? extends EidasAttribute> attributeClass;
+  @Getter
+  private final QName qName;
 
-  EidasNaturalPersonAttributes(String value, String friendlyName, Class<? extends EidasAttribute> attrClass)
-  {
-    this.value = value;
-    this.friendlyName = friendlyName;
-    this.attributeClass = attrClass;
-  }
+  private final Class<? extends EidasAttribute> attributeClass;
 
   public static EidasNaturalPersonAttributes getValueOf(String s) throws ErrorCodeException
   {
     for ( EidasNaturalPersonAttributes enpa : EidasNaturalPersonAttributes.values() )
     {
-      if (enpa.value.equals(s))
+      if (enpa.name.equals(s))
       {
         return enpa;
       }
@@ -90,17 +112,5 @@ public enum EidasNaturalPersonAttributes implements EidasPersonAttributes
     {
       throw new IllegalStateException("Unable to instantiate attribute type.", e);
     }
-  }
-
-  @Override
-  public String getValue()
-  {
-    return value;
-  }
-
-  @Override
-  public String getFriendlyName()
-  {
-    return friendlyName;
   }
 }

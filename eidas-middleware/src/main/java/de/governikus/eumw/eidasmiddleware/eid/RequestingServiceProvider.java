@@ -12,9 +12,10 @@ package de.governikus.eumw.eidasmiddleware.eid;
 
 import java.security.cert.X509Certificate;
 
-import de.governikus.eumw.eidasstarterkit.EidasRequestSectorType;
 import lombok.Getter;
 import lombok.Setter;
+import se.litsec.eidas.opensaml.ext.SPTypeEnumeration;
+
 
 /**
  * Class to hold data of requesting service providers.
@@ -32,7 +33,7 @@ public class RequestingServiceProvider
 
   private X509Certificate encryptionCert = null;
 
-  private EidasRequestSectorType sectorType;
+  private SPTypeEnumeration sectorType;
 
   public RequestingServiceProvider(String entityID)
   {

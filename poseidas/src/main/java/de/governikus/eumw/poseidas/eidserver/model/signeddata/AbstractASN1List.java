@@ -139,7 +139,7 @@ public abstract class AbstractASN1List // ocard asn1
       }
     }
 
-    if (!identifiers.isEmpty() && LOGGER.isDebugEnabled())
+    if (!identifiers.isEmpty() && LOGGER.isTraceEnabled())
     {
       StringBuilder finer = new StringBuilder("Found no match for list object identifier in this sequence: ");
       finer.append(identifier).append("\nIdentified others:");
@@ -147,7 +147,7 @@ public abstract class AbstractASN1List // ocard asn1
       {
         finer.append("  " + identifierInList);
       }
-      LOGGER.debug(finer.toString());
+      LOGGER.trace(finer.toString());
     }
   }
 

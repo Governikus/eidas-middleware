@@ -14,7 +14,6 @@ import java.io.ByteArrayInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
-import java.security.InvalidAlgorithmParameterException;
 import java.security.InvalidKeyException;
 import java.security.KeyPair;
 import java.security.NoSuchAlgorithmException;
@@ -22,7 +21,6 @@ import java.security.NoSuchProviderException;
 import java.security.Signature;
 import java.security.SignatureException;
 import java.security.interfaces.ECPublicKey;
-import java.security.spec.InvalidKeySpecException;
 import java.util.Arrays;
 
 import org.bouncycastle.jce.provider.BouncyCastleProvider;
@@ -34,6 +32,7 @@ import de.governikus.eumw.poseidas.cardbase.asn1.npa.CertificateDescription;
 import de.governikus.eumw.poseidas.cardbase.asn1.npa.CertificateHolderAuthorizationTemplate;
 import de.governikus.eumw.poseidas.cardbase.asn1.npa.ECCVCPath;
 import de.governikus.eumw.poseidas.cardbase.asn1.npa.ECCVCertificate;
+import de.governikus.eumw.poseidas.cardbase.constants.OIDConstants;
 import de.governikus.eumw.poseidas.cardbase.crypto.ec.ECUtil;
 import de.governikus.eumw.poseidas.cardserver.SignatureUtil;
 import de.governikus.eumw.poseidas.cardserver.certrequest.CVCKeyPairBuilder.KeyDisposition;
@@ -281,25 +280,25 @@ public class CertificateRequestGenerator
    * @param additionalData optional additional data that overwrites informations provided by old CVC,
    *          <code>null</code> not permitted, if old CVC is not given
    * @param usePresentKey <code>true</code> to use key already in HSM, <code>false</code> to generate new
+   * @param rscAlias alias of RSC to sign the request with, <code>null</code> to use old CVC for signing
+   * @param rscPrivateKey key of RSC to sign the request with, only needed if no rscAlias given and no HSM
+   *          used
    * @return request with key
    * @throws IllegalArgumentException when old CVC is <code>null</code> and additional data not given,
    *           sequence counter of used old CVC or additional data can not be increased correctly to create a
    *           certificate holder reference, root CA CVC <code>null</code> or no key can be generated for
    *           curve of CVC CA
    * @throws IOException
-   * @throws NoSuchAlgorithmException
    * @throws SignatureException
-   * @throws NoSuchProviderException
-   * @throws InvalidAlgorithmParameterException
-   * @throws InvalidKeyException
-   * @throws InvalidKeySpecException
    */
   public static CertificateRequestResponse generateRequest(ECCVCertificate oldCVC,
                                                            byte[] oldPrivKey,
                                                            ECCVCertificate rootCVC,
                                                            CertificateDescription description,
                                                            AdditionalData additionalData,
-                                                           boolean usePresentKey)
+                                                           boolean usePresentKey,
+                                                           String rscAlias,
+                                                           byte[] rscPrivateKey)
     throws IOException, SignatureException
   {
     // checks for required information
@@ -324,11 +323,10 @@ public class CertificateRequestGenerator
 
     setCertificateDescription(cr, rootCVC, description);
 
-    KeyPair keypair = setSignature(cr,
-                                   rootCVC,
-                                   newCHR,
-                                   usePresentKey ? KeyDisposition.USE_PRESENT : oldCVC == null
-                                     ? KeyDisposition.REPLACE : KeyDisposition.GENERATE_IF_NOT_PRESENT);
+    KeyDisposition keyDisposition = usePresentKey ? KeyDisposition.USE_PRESENT
+      : oldCVC == null ? KeyDisposition.REPLACE : KeyDisposition.GENERATE_IF_NOT_PRESENT;
+
+    KeyPair keypair = setSignature(cr, rootCVC, newCHR, keyDisposition);
 
     CertificateHolderAuthorizationTemplate chat = null;
     if (additionalData != null)
@@ -350,7 +348,11 @@ public class CertificateRequestGenerator
     }
 
     CertificateRequest nCR = cr;
-    if (oldCVC == null)
+    if (rscAlias != null)
+    {
+      setOuterSignatureWithRsc(rscAlias, rscPrivateKey, nCR);
+    }
+    else if (oldCVC == null)
     {
       ByteArrayInputStream bais = new ByteArrayInputStream(cr.getChildElementByPath(CertificateRequestPath.CV_CERTIFICATE)
                                                              .getEncoded());
@@ -381,6 +383,19 @@ public class CertificateRequestGenerator
 
     return new CertificateRequestResponseImpl(description, chat, nCR, keypair.getPrivate() != null
       ? keypair.getPrivate().getEncoded() : null);
+  }
+
+  private static void setOuterSignatureWithRsc(String rscAlias, byte[] rscPrivateKey, CertificateRequest nCR)
+    throws IOException, SignatureException
+  {
+    ASN1 outerCAR = new ASN1(CertificateRequestPath.OUTER_CA_REFERENCE.getTag().toByteArray(),
+                             rscAlias.getBytes());
+    nCR.addChildElement(outerCAR, nCR);
+    setOuterSignature(nCR,
+                      rscPrivateKey,
+                      rscAlias,
+                      // See TR-3116 Part 2 2.2
+                      OIDConstants.OID_TA_ECDSA_SHA_256);
   }
 
   /**

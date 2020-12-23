@@ -10,7 +10,7 @@ is provided by the Sending MS and every Receiving MS operates its own eIDAS Midd
 
 The eIDAS Middleware consists of two parts:
 Firstly, the middleware contains an eID server to communicate with German eID backend systems and with the user's browser and eID client.
-Secondly, the middleware contains an SAML adapter to communicate with the eIDAS connector of the Member State.
+Secondly, the middleware contains a SAML adapter to communicate with the eIDAS connector of the Member State.
 
 It should also be mentioned that the term `service provider` is ambiguous in this specific scenario:
 In terms of the eIDAS environment, the service provider receives the authorization data from the eIDAS connector to authenticate the user.
@@ -24,13 +24,16 @@ For additional information see the page about the `eIDAS Notification of the Ger
 
 The following brief description facilitates the understanding and configuration of the eIDAS Middleware.
 
-A single eIDAS Middleware supports a multiple :term:`eID Service Provider` s and multiple eIDAS connectors.
+A single eIDAS Middleware supports a multiple :term:`eID Service Providers<eID Service Provider>` and multiple eIDAS connectors.
 An :term:`eID Service Provider` needs an :term:`Authorization Certificate` to access data on the eID Card.
 The Authorization Certificate is issued to the :term:`eID Service Provider` by the :term:`Authorization CA`, also called :term:`BerCA`.
 The eIDAS Middleware technically receives the :term:`Authorization Certificate` via SOAP requests
 to the :term:`Authorization CA`.
-These requests are secured by TLS client authentication.
-Therefore the public certificates of the :term:`Authorization CA` and your eIDAS Middleware must be exchanged before the eIDAS Middleware can request the first Authorization Certificate.
+These requests are secured by TLS client authentication and signed with a so-called :term:`Request Signer Certificate`
+or the currently valid :term:`Authorization Certificate`.
+Therefore, the public certificates of the :term:`Authorization CA` and your eIDAS Middleware must be exchanged before the eIDAS Middleware can request the first Authorization Certificate.
+If you decide to use a :term:`Request Signer Certificate` (which is highly recommended as it will become mandatory
+at some point), this certificate must be given to the :term:`Authorization CA` as well.
 For more information on how to get in contact with the :term:`Authorization CA`, see the document `Three Steps to integrate the German eIDAS Middleware on the German Country Page <https://ec.europa.eu/cefdigital/wiki/display/EIDIMPL/Germany#Germany-GermaneIDAS-Middleware>`_.
 The :term:`Authorization Certificate` is presented to the German eID Card to ensure the authenticity of the :term:`eID Service Provider` and to verify that the :term:`eID Service Provider` only requests attributes allowed by the :term:`Authorization CA`.
 

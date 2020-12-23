@@ -47,17 +47,17 @@ public interface HSMService extends Service
   /**
    * Constant for using the Utimaco eID HSM.
    */
-  //public static final int UTIMACO_EID_HSM = 2;
+  // public static final int UTIMACO_EID_HSM = 2;
 
   /**
    * Constant for using the Thales HSM.
    */
-  //public static final int THALES_HSM = 3;
+  // public static final int THALES_HSM = 3;
 
   /**
    * Constant for using an Utimaco eID HSM cluster.
    */
-  //public static final int UTIMACO_EID_HSM_CLUSTER = 4;
+  // public static final int UTIMACO_EID_HSM_CLUSTER = 4;
 
   /**
    * Constant for using an HSM offering PKCS#11 interface.
@@ -74,7 +74,10 @@ public interface HSMService extends Service
    * @param spec parameter spec to use, <code>null</code> not permitted
    * @param alias alias for storing the new private key, WITHOUT prefix, <code>null</code> or empty not
    *          permitted
+   * @param issuerAlias alias for signing the new key, WITHOUT prefix, <code>null</code> or empty permitted
+   *          for self-signing
    * @param replace flag indicating if (possibly existing) key with same alias should be replaced
+   * @param lifespan key validity in months
    * @return generated key pair
    * @throws IOException
    * @throws NoSuchAlgorithmException
@@ -87,7 +90,9 @@ public interface HSMService extends Service
   public abstract KeyPair generateKeyPair(String algorithm,
                                           AlgorithmParameterSpec spec,
                                           String alias,
-                                          boolean replace)
+                                          String issuerAlias,
+                                          boolean replace,
+                                          int lifespan)
     throws IOException, NoSuchAlgorithmException, NoSuchProviderException, HSMException,
     InvalidAlgorithmParameterException;
 

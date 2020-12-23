@@ -12,7 +12,12 @@ package de.governikus.eumw.configuration.wizard.projectconfig;
 
 import java.util.Observable;
 
+import javax.annotation.PostConstruct;
+
 import org.apache.commons.lang3.StringUtils;
+
+import lombok.AllArgsConstructor;
+import lombok.Data;
 
 
 /**
@@ -23,6 +28,8 @@ import org.apache.commons.lang3.StringUtils;
  * this bean is used to determine or to reset the configuration directory. Chosen was this solution to have an
  * easier workout with JUnit tests while letting the complexity of the main program untouched
  */
+@Data
+@AllArgsConstructor
 public class ConfigDirectory extends Observable
 {
 
@@ -32,9 +39,10 @@ public class ConfigDirectory extends Observable
    */
   private String configDirectoryValue;
 
-  public ConfigDirectory(String configDirectory)
+  @PostConstruct
+  private void init()
   {
-    setConfigDirectory(configDirectory);
+    setConfigDirectory(configDirectoryValue);
   }
 
   /**
@@ -48,7 +56,7 @@ public class ConfigDirectory extends Observable
   /**
    * @see #configDirectoryValue
    */
-  public final void setConfigDirectory(String configDirectory)
+  public void setConfigDirectory(String configDirectory)
   {
     if (StringUtils.isBlank(configDirectory))
     {

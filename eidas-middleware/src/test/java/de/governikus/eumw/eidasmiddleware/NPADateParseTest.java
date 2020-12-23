@@ -58,6 +58,6 @@ public class NPADateParseTest
     {
       d = new DateOfBirthAttribute(year + "-" + month + "-" + day);
     }
-    assertTrue(d.getDate().equals("2015-10-31"));
+    assertTrue("2015-10-31".equals(d.getValue()));
   }
 }

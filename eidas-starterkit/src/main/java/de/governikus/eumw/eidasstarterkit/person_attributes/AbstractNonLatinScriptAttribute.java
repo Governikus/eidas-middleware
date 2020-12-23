@@ -10,19 +10,26 @@
 
 package de.governikus.eumw.eidasstarterkit.person_attributes;
 
+import org.opensaml.core.xml.config.XMLObjectProviderRegistrySupport;
+import org.opensaml.saml.saml2.core.Attribute;
+import org.opensaml.saml.saml2.core.AttributeValue;
+
 import de.governikus.eumw.eidascommon.Utils;
-import de.governikus.eumw.eidasstarterkit.template.TemplateLoader;
+import lombok.EqualsAndHashCode;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
+import se.litsec.eidas.opensaml.ext.attributes.TransliterationStringType;
 
 
-public abstract class AbstractNonLatinScriptAttribute extends AbstractLatinScriptAttribute
+@Getter
+@Setter
+@NoArgsConstructor
+@EqualsAndHashCode(callSuper = true)
+public abstract class AbstractNonLatinScriptAttribute extends AbstractEidasAttribute
 {
 
   private String nonLatinScript;
-
-  public AbstractNonLatinScriptAttribute()
-  {
-
-  }
 
   public AbstractNonLatinScriptAttribute(String latinScript)
   {
@@ -36,43 +43,33 @@ public abstract class AbstractNonLatinScriptAttribute extends AbstractLatinScrip
     this.nonLatinScript = nonLatinScript;
   }
 
-  public String getNonLatinScript()
-  {
-    return this.nonLatinScript;
-  }
-
-  public void setNonLatinScript(String nonLatinScript)
-  {
-    this.nonLatinScript = nonLatinScript;
-  }
-
-  /**
-   * Return the template used for the generation of XML
-   *
-   * @return The template of the NameAttribute, which will be used to create the XML representation of the
-   *         attribute.
-   */
   @Override
-  public abstract String getTemplateName();
-
-  @Override
-  public String generate()
+  public Attribute generate()
   {
-    String template = TemplateLoader.getTemplateByName(getTemplateName());
-    if (Utils.isNullOrEmpty(this.nonLatinScript))
+    Attribute attr = super.generate();
+    TransliterationStringType tst = (TransliterationStringType)XMLObjectProviderRegistrySupport.getBuilderFactory()
+                                                                                               .getBuilder(type().getQName())
+                                                                                               .buildObject(AttributeValue.DEFAULT_ELEMENT_NAME,
+                                                                                                            type().getQName());
+    tst.setLatinScript(true);
+    tst.setValue(getValue());
+    attr.getAttributeValues().add(tst);
+    if (!Utils.isNullOrEmpty(this.nonLatinScript))
     {
-      return template.replace("$latinScript", super.getLatinScript());
+      tst = (TransliterationStringType)XMLObjectProviderRegistrySupport.getBuilderFactory()
+                                                                       .getBuilder(type().getQName())
+                                                                       .buildObject(AttributeValue.DEFAULT_ELEMENT_NAME,
+                                                                                    type().getQName());
+      tst.setLatinScript(false);
+      tst.setValue(this.nonLatinScript);
+      attr.getAttributeValues().add(tst);
     }
-    else
-    {
-      return template.replace("$latinScript", super.getLatinScript()).replace("$nonLatinScript",
-                                                                              this.nonLatinScript);
-    }
+    return attr;
   }
 
   @Override
   public String toString()
   {
-    return type() + " " + (getNonLatinScript() == null ? getLatinScript() : getNonLatinScript());
+    return type().getFriendlyName() + " " + (nonLatinScript == null ? getValue() : nonLatinScript);
   }
 }

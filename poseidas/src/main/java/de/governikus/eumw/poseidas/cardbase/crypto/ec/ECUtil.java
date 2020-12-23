@@ -111,8 +111,6 @@ public class ECUtil
   /**
    * Builds {@link ECParameterSpec} from {@link ECCVCertificate}.
    *
-   * @param cert {@link ECCVCertificate} to use for creation, <code>null</code> not permitted, must be a CVC
-   *          which contains domain parameters (not every specimen does)
    * @return generated {@link ECParameterSpec}
    * @throws IllegalArgumentException if cert <code>null</code> or not containing domain parameters
    * @throws IOException

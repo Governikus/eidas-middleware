@@ -12,56 +12,73 @@ package de.governikus.eumw.eidasstarterkit.person_attributes.natural_persons_att
 
 import java.io.IOException;
 
-import org.junit.Assert;
-import org.junit.Test;
+import javax.xml.transform.TransformerException;
 
-import de.governikus.eumw.eidasstarterkit.template.TemplateLoader;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Test;
+import org.opensaml.core.config.InitializationException;
+import org.opensaml.core.xml.io.MarshallingException;
+import org.opensaml.saml.saml2.core.Attribute;
+
+import de.governikus.eumw.eidasstarterkit.EidasSaml;
+import lombok.extern.slf4j.Slf4j;
 
 
-public class FamilyNameAttributeTest
+@Slf4j
+class FamilyNameAttributeTest
 {
 
-  @Test
-  public void testGenerateFamilyNameAttributeWithNonLatinScript() throws IOException
+  @BeforeAll
+  static void init() throws InitializationException
   {
-    TemplateLoader.init();
-    FamilyNameAttribute attribute = new FamilyNameAttribute("name", "\u03A9\u03BD\u03AC\u03C3\u03B7\u03C2");
-    String xml = attribute.generate();
-    System.out.println(xml);
-    Assert.assertTrue(xml.contains("LatinScript=\"false\">"));
-    Assert.assertTrue(xml.contains("\u03A9\u03BD\u03AC\u03C3\u03B7\u03C2"));
+    EidasSaml.init();
   }
 
   @Test
-  public void testGenerateFamilyNameAttributeEmptyNonLatin() throws IOException
+  void testGenerateFamilyNameAttributeWithNonLatinScript()
+    throws IOException, TransformerException, MarshallingException
   {
-    TemplateLoader.init();
-    FamilyNameAttribute attribute = new FamilyNameAttribute("name", "");
-    String xml = attribute.generate();
-    System.out.println(xml);
-    Assert.assertTrue(xml.contains("name"));
-    Assert.assertFalse(xml.contains("LatinScript=\"false\">"));
+    FamilyNameAttribute attribute = new FamilyNameAttribute(TestUtils.NAME, TestUtils.ONASIS);
+    Attribute xml = attribute.generate();
+    String attributeAsString = TestUtils.attributeToString(xml);
+    log.debug(attributeAsString);
+    Assertions.assertTrue(attributeAsString.contains(TestUtils.LATIN_SCRIPT_FALSE));
+    Assertions.assertTrue(attributeAsString.contains(TestUtils.ONASIS));
   }
 
   @Test
-  public void testGenerateFamilyNameAttributeNullNonLatin() throws IOException
+  void testGenerateFamilyNameAttributeEmptyNonLatin()
+    throws IOException, TransformerException, MarshallingException
   {
-    TemplateLoader.init();
-    FamilyNameAttribute attribute = new FamilyNameAttribute("name", null);
-    String xml = attribute.generate();
-    System.out.println(xml);
-    Assert.assertTrue(xml.contains("name"));
-    Assert.assertFalse(xml.contains("LatinScript=\"false\">"));
+    FamilyNameAttribute attribute = new FamilyNameAttribute(TestUtils.NAME, "");
+    Attribute xml = attribute.generate();
+    String attributeAsString = TestUtils.attributeToString(xml);
+    log.debug(attributeAsString);
+    Assertions.assertTrue(attributeAsString.contains(TestUtils.NAME));
+    Assertions.assertFalse(attributeAsString.contains(TestUtils.LATIN_SCRIPT_FALSE));
   }
 
   @Test
-  public void testGenerateFamilyNameAttribute() throws IOException
+  void testGenerateFamilyNameAttributeNullNonLatin()
+    throws IOException, TransformerException, MarshallingException
   {
-    TemplateLoader.init();
-    FamilyNameAttribute attribute = new FamilyNameAttribute("name");
-    String xml = attribute.generate();
-    System.out.println(xml);
-    Assert.assertTrue(xml.contains("name"));
-    Assert.assertFalse(xml.contains("LatinScript=\"false\">"));
+    FamilyNameAttribute attribute = new FamilyNameAttribute(TestUtils.NAME, null);
+    Attribute xml = attribute.generate();
+    String attributeAsString = TestUtils.attributeToString(xml);
+    log.debug(attributeAsString);
+    Assertions.assertTrue(attributeAsString.contains(TestUtils.NAME));
+    Assertions.assertFalse(attributeAsString.contains(TestUtils.LATIN_SCRIPT_FALSE));
+  }
+
+  @Test
+  void testGenerateFamilyNameAttribute() throws IOException, TransformerException, MarshallingException
+  {
+    FamilyNameAttribute attribute = new FamilyNameAttribute(TestUtils.NAME);
+    Attribute xml = attribute.generate();
+    String attributeAsString = TestUtils.attributeToString(xml);
+    log.debug(attributeAsString);
+    Assertions.assertTrue(attributeAsString.contains(TestUtils.NAME));
+    Assertions.assertFalse(attributeAsString.contains(TestUtils.LATIN_SCRIPT_FALSE));
   }
 }
