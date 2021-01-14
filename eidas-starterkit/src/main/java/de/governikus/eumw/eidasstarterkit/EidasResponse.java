@@ -678,6 +678,7 @@ public class EidasResponse
     subject.setNameID(nameID);
 
     SubjectConfirmation subjectConfirmation = new SubjectConfirmationBuilder().buildObject();
+    subjectConfirmation.setMethod("urn:oasis:names:tc:SAML:2.0:cm:bearer");
     SubjectConfirmationData subjectConfirmationData = new SubjectConfirmationDataBuilder().buildObject();
     subjectConfirmationData.setInResponseTo(inResponseTo);
     subjectConfirmationData.setNotBefore(now);
