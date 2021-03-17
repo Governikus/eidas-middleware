@@ -1,11 +1,10 @@
 /*
- * Copyright (c) 2020 Governikus KG. Licensed under the EUPL, Version 1.2 or as soon they will be approved by
- * the European Commission - subsequent versions of the EUPL (the "Licence"); You may not use this work except
- * in compliance with the Licence. You may obtain a copy of the Licence at:
- * http://joinup.ec.europa.eu/software/page/eupl Unless required by applicable law or agreed to in writing,
- * software distributed under the Licence is distributed on an "AS IS" basis, WITHOUT WARRANTIES OR CONDITIONS
- * OF ANY KIND, either express or implied. See the Licence for the specific language governing permissions and
- * limitations under the Licence.
+ * Copyright (c) 2020 Governikus KG. Licensed under the EUPL, Version 1.2 or as soon they will be approved by the
+ * European Commission - subsequent versions of the EUPL (the "Licence"); You may not use this work except in compliance
+ * with the Licence. You may obtain a copy of the Licence at: http://joinup.ec.europa.eu/software/page/eupl Unless
+ * required by applicable law or agreed to in writing, software distributed under the Licence is distributed on an
+ * "AS IS" basis, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the Licence for the
+ * specific language governing permissions and limitations under the Licence.
  */
 
 package de.governikus.eumw.poseidas.server.pki;
@@ -36,8 +35,8 @@ public interface PermissionDataHandlingMBean
   ManagementMessage removePermissionData(String cvcRefId);
 
   /**
-   * Returns informations about the Permission data object. Use AdminPoseidasConstants.VALUE_PERMISSION_DATA_*
-   * to access the map.
+   * Returns informations about the Permission data object. Use AdminPoseidasConstants.VALUE_PERMISSION_DATA_* to access
+   * the map.
    *
    * @param cvcRefId
    * @param withBlkNumber include the number of entries in the blacklist, this could take some more time.
@@ -45,15 +44,15 @@ public interface PermissionDataHandlingMBean
   Map<String, Object> getPermissionDataInfo(String cvcRefId, boolean withBlkNumber);
 
   /**
-   * Request a new CVC for each service provider where the current CVC will expire within the time specified
-   * in configuration. When called in parallel on several servers using the same database, this method will
-   * renew each CVC only once.
+   * Request a new CVC for each service provider where the current CVC will expire within the time specified in
+   * configuration. When called in parallel on several servers using the same database, this method will renew each CVC
+   * only once.
    */
   void renewOutdatedCVCs();
 
   /**
-   * Request a new terminal certificate to access the nPA with. The system will generate and store a key pair,
-   * create a certificate request, send it and store the results.
+   * Request a new terminal certificate to access the nPA with. The system will generate and store a key pair, create a
+   * certificate request, send it and store the results.
    *
    * @param entityID defines the service provider to work for
    * @param countryCode
@@ -91,8 +90,8 @@ public interface PermissionDataHandlingMBean
   ManagementMessage checkReadyForFirstRequest(String entityID);
 
   /**
-   * Trigger renewal of all existing black lists. Furthermore, for all entries where a certificate is obtained
-   * but getting the blacklist failed, the missing blacklist and sector public key is requested. <br>
+   * Trigger renewal of all existing black lists. Furthermore, for all entries where a certificate is obtained but
+   * getting the blacklist failed, the missing blacklist and sector public key is requested. <br>
    * Normally, this method is triggered by a timer. Call it only for test purposes!
    *
    * @param delta flag indicating a delta request
@@ -132,4 +131,20 @@ public interface PermissionDataHandlingMBean
    * @return ok, if everything was ok or an error message.
    */
   ManagementMessage deletePendingCertRequest(String entityID);
+
+  /**
+   * Checks if the PA service for a given entityID is reachable.
+   * 
+   * @param entityID
+   * @return <code>true</code> if reachable, <code>false</code> if not
+   */
+  boolean pingPAService(String entityID);
+
+  /**
+   * Checks if the RI service for a given entityID is reachable.
+   * 
+   * @param entityID
+   * @return <code>true</code> if reachable, <code>false</code> if not
+   */
+  boolean pingRIService(String entityID);
 }

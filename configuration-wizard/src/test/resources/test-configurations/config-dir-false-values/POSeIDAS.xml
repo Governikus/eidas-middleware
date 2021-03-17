@@ -53,7 +53,7 @@
                 e.g. https://myhost:8443/eidas-middleware/paosreceiver
                 - please note you need the port number even if it is the default]
             </PaosReceiverURL>
-            <hoursRefreshCVCBeforeExpires>48</hoursRefreshCVCBeforeExpires>
+            <hoursRefreshCVCBeforeExpires>240</hoursRefreshCVCBeforeExpires>
         </EPAConnectorConfiguration>
     </ServiceProvider>
 </CoreConfiguration>

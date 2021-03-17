@@ -1,24 +1,18 @@
 /*
- * Copyright (c) 2020 Governikus KG. Licensed under the EUPL, Version 1.2 or as soon they will be approved by
- * the European Commission - subsequent versions of the EUPL (the "Licence"); You may not use this work except
- * in compliance with the Licence. You may obtain a copy of the Licence at:
- * http://joinup.ec.europa.eu/software/page/eupl Unless required by applicable law or agreed to in writing,
- * software distributed under the Licence is distributed on an "AS IS" basis, WITHOUT WARRANTIES OR CONDITIONS
- * OF ANY KIND, either express or implied. See the Licence for the specific language governing permissions and
- * limitations under the Licence.
+ * Copyright (c) 2020 Governikus KG. Licensed under the EUPL, Version 1.2 or as soon they will be approved by the
+ * European Commission - subsequent versions of the EUPL (the "Licence"); You may not use this work except in compliance
+ * with the Licence. You may obtain a copy of the Licence at: http://joinup.ec.europa.eu/software/page/eupl Unless
+ * required by applicable law or agreed to in writing, software distributed under the Licence is distributed on an
+ * "AS IS" basis, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the Licence for the
+ * specific language governing permissions and limitations under the Licence.
  */
 
 package de.governikus.eumw.poseidas.server.pki.controller;
 
 import java.io.IOException;
-import java.io.UnsupportedEncodingException;
-import java.net.URLEncoder;
 import java.security.cert.CertificateEncodingException;
 import java.security.cert.X509Certificate;
-import java.text.SimpleDateFormat;
-import java.util.Date;
 import java.util.HashMap;
-import java.util.Locale;
 import java.util.Map;
 
 import javax.servlet.http.HttpServletResponse;
@@ -33,10 +27,10 @@ import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import de.governikus.eumw.eidascommon.ContextPaths;
 import de.governikus.eumw.poseidas.gov2server.constants.admin.ManagementMessage;
-import de.governikus.eumw.poseidas.server.exception.MetadataDownloadException;
 import de.governikus.eumw.poseidas.server.exception.RequestSignerDownloadException;
 import de.governikus.eumw.poseidas.server.idprovider.config.CoreConfigurationDto;
 import de.governikus.eumw.poseidas.server.idprovider.config.CvcTlsCheck;
@@ -46,21 +40,20 @@ import de.governikus.eumw.poseidas.server.pki.PermissionDataHandling;
 import de.governikus.eumw.poseidas.server.pki.PermissionDataHandlingMBean;
 import de.governikus.eumw.poseidas.server.pki.RequestSignerCertificateService;
 import de.governikus.eumw.poseidas.server.pki.RequestSignerCertificateServiceImpl;
+import de.governikus.eumw.poseidas.server.pki.TerminalPermissionAO;
 import de.governikus.eumw.poseidas.server.pki.model.CVCInfoBean;
 import de.governikus.eumw.poseidas.server.pki.model.CVCRequestModel;
-import de.governikus.eumw.poseidas.service.MetadataService;
 import lombok.extern.slf4j.Slf4j;
 
 
 /**
- * This controller provides the different routes for listing the entities and viewing the details page for a
- * single entity.
+ * This controller shows the details page for a single entity.
  *
  * @author bpr
  */
 @Slf4j
 @Controller
-@RequestMapping(ContextPaths.ADMIN_CONTEXT_PATH)
+@RequestMapping(ContextPaths.ADMIN_CONTEXT_PATH + ContextPaths.DETAILS)
 public class CVCController
 {
 
@@ -69,11 +62,15 @@ public class CVCController
    */
   private static final String CO_MSG_OK_OK = "CO.msg.ok.ok";
 
+  private static final String SUCCESS = "success";
+
+  private static final String RESULT_MESSAGE = "resultMessage";
+
+  private static final String ERROR = "error";
+
+  private static final String REDIRECT_PREFIX = "redirect:";
+
   private final Map<String, CVCInfoBean> cvcList;
-
-  private final MetadataService metadataService;
-
-  private final CvcTlsCheck cvcTlsCheck;
 
   private final RequestSignerCertificateService requestSignerCertificateService;
 
@@ -84,14 +81,12 @@ public class CVCController
    * @param requestSignerCertificateService
    */
   public CVCController(PermissionDataHandlingMBean data,
-                       MetadataService metadataService,
+                       RequestSignerCertificateService requestSignerCertificateService,
                        CvcTlsCheck cvcTlsCheck,
-                       RequestSignerCertificateService requestSignerCertificateService)
+                       TerminalPermissionAO facade)
   {
     this.requestSignerCertificateService = requestSignerCertificateService;
     cvcList = new HashMap<>();
-    this.metadataService = metadataService;
-    this.cvcTlsCheck = cvcTlsCheck;
     CoreConfigurationDto config = PoseidasConfigurator.getInstance().getCurrentConfig();
     for ( ServiceProviderDto entry : config.getServiceProvider().values() )
     {
@@ -99,84 +94,15 @@ public class CVCController
       {
         continue;
       }
-      cvcList.put(entry.getEntityID(), new CVCInfoBean(entry, data));
+      cvcList.put(entry.getEntityID(),
+                  new CVCInfoBean(entry, data, cvcTlsCheck, facade, requestSignerCertificateService));
     }
-  }
-
-  /**
-   * The index route redirects to /list
-   */
-  @GetMapping("")
-  public void index(HttpServletResponse response) throws IOException
-  {
-    response.sendRedirect(ContextPaths.ADMIN_CONTEXT_PATH + "/list");
-  }
-
-  @GetMapping("login")
-  public String login()
-  {
-    return "login";
-  }
-
-  /**
-   * This route represents the list view
-   */
-  @GetMapping("list")
-  public String list(Model model)
-  {
-    model.addAttribute("entities", cvcList.values());
-
-    return "list";
-  }
-
-  public String getMailto(Map.Entry<String, CvcTlsCheck.CvcCheckResults> entry)
-  {
-    String recipient = "eidas-middleware@governikus.de";
-    String subject = encodeURIComponent("TLS CVC subject");
-    String body = encodeURIComponent("Lorem ipsum..." + entry.getKey());
-    return String.format("mailto:%s?subject=%s&body=%s", recipient, subject, body);
-  }
-
-  private String encodeURIComponent(String component)
-  {
-    String result = null;
-    try
-    {
-      result = URLEncoder.encode(component, "UTF-8")
-                         .replaceAll("\\%28", "(")
-                         .replaceAll("\\%29", ")")
-                         .replaceAll("\\+", "%20")
-                         .replaceAll("\\%27", "'")
-                         .replaceAll("\\%21", "!")
-                         .replaceAll("\\%7E", "~");
-    }
-    catch (UnsupportedEncodingException e)
-    {
-      log.debug("Failed to encode URI for mailto: href", e);
-      result = component;
-    }
-
-    return result;
-  }
-
-
-  /**
-   * This route represents the list view
-   */
-  @GetMapping("status")
-  public String status(Model model)
-  {
-    CvcTlsCheck.CvcTlsCheckResult cvcTlsCheckResult = cvcTlsCheck.check();
-    SimpleDateFormat formatter = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault());
-    model.addAttribute("result", cvcTlsCheckResult);
-    model.addAttribute("lastCheck", formatter.format(new Date()));
-    return "status";
   }
 
   /**
    * This route represents the details view for the given entityID
    */
-  @GetMapping("details/{entityID}")
+  @GetMapping("{entityID}")
   public String details(@PathVariable String entityID, Model model, HttpServletResponse response) throws IOException
   {
     if (entityID == null || cvcList.get(entityID) == null)
@@ -194,37 +120,31 @@ public class CVCController
   /**
    * This route performs the connection check to the DVCA
    */
-  @PostMapping("details/{entityID}/check")
-  public String check(@PathVariable String entityID, Model model)
+  @PostMapping("{entityID}/check")
+  public String check(@PathVariable String entityID, RedirectAttributes redirectAttributes)
   {
-    model.addAttribute("entity", cvcList.get(entityID));
-    model.addAttribute("entityID", entityID);
-    model.addAttribute("form", new CVCRequestModel());
-
     String result = cvcList.get(entityID).checkReadyForFirstRequest();
     if (CO_MSG_OK_OK.equals(result))
     {
-      model.addAttribute("success", true);
-      model.addAttribute("resultMessage", "Connection check succeeded");
+      redirectAttributes.addFlashAttribute(SUCCESS, true);
+      redirectAttributes.addFlashAttribute(RESULT_MESSAGE, "Connection check succeeded");
     }
     else
     {
-      model.addAttribute("error", true);
-      model.addAttribute("resultMessage", "Connection check failed");
+      redirectAttributes.addFlashAttribute(ERROR, true);
+      redirectAttributes.addFlashAttribute(RESULT_MESSAGE, "Connection check failed");
     }
-    return "details";
+    return REDIRECT_PREFIX + ContextPaths.ADMIN_CONTEXT_PATH + ContextPaths.DETAILS + "/" + entityID;
   }
 
   /**
    * This route peforms the initial certificate request
    */
-  @PostMapping("details/{entityID}/initialRequest")
-  public String initialRequest(@PathVariable String entityID, Model model, @ModelAttribute CVCRequestModel form)
+  @PostMapping("{entityID}/initialRequest")
+  public String initialRequest(@PathVariable String entityID,
+                               @ModelAttribute CVCRequestModel form,
+                               RedirectAttributes redirectAttributes)
   {
-    model.addAttribute("entityID", entityID);
-    model.addAttribute("form", form);
-
-
     cvcList.get(entityID).setCountryCode(form.getCountryCode());
     cvcList.get(entityID).setChrMnemonic(form.getCHRMnemonic());
     cvcList.get(entityID).setSequenceNumber(form.getSequenceNumber());
@@ -232,144 +152,100 @@ public class CVCController
     String result = cvcList.get(entityID).initRequest();
     if (CO_MSG_OK_OK.equals(result))
     {
-      model.addAttribute("success", true);
-      model.addAttribute("resultMessage", "Initial request succeeded");
+      redirectAttributes.addFlashAttribute(SUCCESS, true);
+      redirectAttributes.addFlashAttribute(RESULT_MESSAGE, "Initial request succeeded");
     }
     else
     {
-      model.addAttribute("error", true);
-      model.addAttribute("resultMessage", "Initial request failed");
+      redirectAttributes.addFlashAttribute(ERROR, true);
+      redirectAttributes.addFlashAttribute(RESULT_MESSAGE, "Initial request failed");
     }
 
-    cvcList.get(entityID).fetchInfo();
-    model.addAttribute("entity", cvcList.get(entityID));
-
-    return "details";
+    return REDIRECT_PREFIX + ContextPaths.ADMIN_CONTEXT_PATH + ContextPaths.DETAILS + "/" + entityID;
   }
 
   /**
    * This route performs the renewal of the black list
    */
-  @PostMapping("details/{entityID}/renewBlackList")
-  public String renewBlackList(@PathVariable String entityID, Model model)
+  @PostMapping("{entityID}/renewBlackList")
+  public String renewBlackList(@PathVariable String entityID, RedirectAttributes redirectAttributes)
   {
-    model.addAttribute("entity", cvcList.get(entityID));
-    model.addAttribute("entityID", entityID);
-    model.addAttribute("form", new CVCRequestModel());
-
     String result = cvcList.get(entityID).renewBlackList();
     if (CO_MSG_OK_OK.equals(result))
     {
-      model.addAttribute("success", true);
-      model.addAttribute("resultMessage", "Renew black list succeeded");
+      redirectAttributes.addFlashAttribute(SUCCESS, true);
+      redirectAttributes.addFlashAttribute(RESULT_MESSAGE, "Renew black list succeeded");
     }
     else
     {
-      model.addAttribute("error", true);
-      model.addAttribute("resultMessage", "Renew black list failed");
+      redirectAttributes.addFlashAttribute(ERROR, true);
+      redirectAttributes.addFlashAttribute(RESULT_MESSAGE, "Renew black list failed");
     }
-    return "details";
+    return REDIRECT_PREFIX + ContextPaths.ADMIN_CONTEXT_PATH + ContextPaths.DETAILS + "/" + entityID;
   }
 
   /**
    * This route performs the renewal of the master defect list
    */
-  @PostMapping("details/{entityID}/renewMasterDefectList")
-  public String renewMasterDefectList(@PathVariable String entityID, Model model)
+  @PostMapping("{entityID}/renewMasterDefectList")
+  public String renewMasterDefectList(@PathVariable String entityID, RedirectAttributes redirectAttributes)
   {
-    model.addAttribute("entity", cvcList.get(entityID));
-    model.addAttribute("entityID", entityID);
-    model.addAttribute("form", new CVCRequestModel());
-
     String result = cvcList.get(entityID).renewMasterAndDefectList();
     if (CO_MSG_OK_OK.equals(result))
     {
-      model.addAttribute("success", true);
-      model.addAttribute("resultMessage", "Renew master and defect list succeeded");
+      redirectAttributes.addFlashAttribute(SUCCESS, true);
+      redirectAttributes.addFlashAttribute(RESULT_MESSAGE, "Renew master and defect list succeeded");
     }
     else
     {
-      model.addAttribute("error", true);
-      model.addAttribute("resultMessage", "Renew master and defect list failed");
+      redirectAttributes.addFlashAttribute(ERROR, true);
+      redirectAttributes.addFlashAttribute(RESULT_MESSAGE, "Renew master and defect list failed");
     }
-    return "details";
+    return REDIRECT_PREFIX + ContextPaths.ADMIN_CONTEXT_PATH + ContextPaths.DETAILS + "/" + entityID;
   }
 
   /**
    * This route performs the renewal CVC
    */
-  @PostMapping("/details/{entityID}/renewCVC")
-  public String renewCVC(@PathVariable String entityID, Model model)
+  @PostMapping("{entityID}/renewCVC")
+  public String renewCVC(@PathVariable String entityID, RedirectAttributes redirectAttributes)
   {
-    model.addAttribute("entityID", entityID);
-    model.addAttribute("form", new CVCRequestModel());
-
     String result = cvcList.get(entityID).triggerCertRenewal();
     if (CO_MSG_OK_OK.equals(result))
     {
-      model.addAttribute("success", true);
-      model.addAttribute("resultMessage", "Renew CVC succeeded");
+      redirectAttributes.addFlashAttribute(SUCCESS, true);
+      redirectAttributes.addFlashAttribute(RESULT_MESSAGE, "Renew CVC succeeded");
     }
     else
     {
-      model.addAttribute("error", true);
-      model.addAttribute("resultMessage", "Renew CVC failed");
+      redirectAttributes.addFlashAttribute(ERROR, true);
+      redirectAttributes.addFlashAttribute(RESULT_MESSAGE, "Renew CVC failed");
     }
-    cvcList.get(entityID).fetchInfo();
-    model.addAttribute("entity", cvcList.get(entityID));
-    return "details";
+    return REDIRECT_PREFIX + ContextPaths.ADMIN_CONTEXT_PATH + ContextPaths.DETAILS + "/" + entityID;
   }
 
   /**
-   * This route performs the download of the middleware metadata as an xml file.
-   *
-   * @return ResponseEntity with the metadata as a byte stream
-   */
-  @GetMapping(value = "/download", produces = MediaType.APPLICATION_OCTET_STREAM_VALUE)
-  public ResponseEntity<byte[]> downloadMetadata() throws MetadataDownloadException
-  {
-    byte[] metadataArray = metadataService.getMetadata();
-    if (metadataArray.length != 0)
-    {
-      return ResponseEntity.ok()
-                           .header("Content-Disposition", "attachment; filename=Metadata.xml")
-                           .contentType(MediaType.APPLICATION_OCTET_STREAM)
-                           .body(metadataArray);
-    }
-    log.error("No Metadata were created. Can not download metadata.");
-    throw new MetadataDownloadException();
-  }
-
-  /**
-   * This route performs the generation of
-   * a @{@link de.governikus.eumw.poseidas.server.pki.RequestSignerCertificate}
+   * This route performs the generation of a @{@link de.governikus.eumw.poseidas.server.pki.RequestSignerCertificate}
    **/
-  @PostMapping("/details/{entityID}/generateRSC")
-  public String generateRSC(@PathVariable String entityID, Model model, @ModelAttribute CVCRequestModel form)
+  @PostMapping("{entityID}/generateRSC")
+  public String generateRSC(@PathVariable String entityID,
+                            RedirectAttributes redirectAttributes,
+                            @ModelAttribute CVCRequestModel form)
   {
-    model.addAttribute("entity", cvcList.get(entityID));
-    model.addAttribute("entityID", entityID);
-    model.addAttribute("form", form);
     boolean isSuccess = requestSignerCertificateService.generateNewPendingRequestSignerCertificate(entityID,
                                                                                                    form.getRscChr(),
                                                                                                    RequestSignerCertificateServiceImpl.MAXIMUM_LIFESPAN_IN_MONTHS);
     if (isSuccess)
     {
-      model.addAttribute("success", true);
-      model.addAttribute("resultMessage", "Request signer certificate successfully created");
+      redirectAttributes.addFlashAttribute(SUCCESS, true);
+      redirectAttributes.addFlashAttribute(RESULT_MESSAGE, "Request signer certificate successfully created");
     }
     else
     {
-      model.addAttribute("error", true);
-      model.addAttribute("resultMessage", "Creation of request signer certificate failed");
+      redirectAttributes.addFlashAttribute(ERROR, true);
+      redirectAttributes.addFlashAttribute(RESULT_MESSAGE, "Creation of request signer certificate failed");
     }
-    CVCInfoBean cvcInfoBean = cvcList.get(entityID);
-    // For test purpose the null check is necessary
-    if (cvcInfoBean != null)
-    {
-      cvcInfoBean.fetchInfo();
-    }
-    return "details";
+    return REDIRECT_PREFIX + ContextPaths.ADMIN_CONTEXT_PATH + ContextPaths.DETAILS + "/" + entityID;
   }
 
   /**
@@ -377,7 +253,7 @@ public class CVCController
    *
    * @return ResponseEntity with the request signer certificate as byte array
    */
-  @GetMapping(value = "/details/{entityID}/downloadRSC", produces = MediaType.APPLICATION_OCTET_STREAM_VALUE)
+  @GetMapping(value = "{entityID}/downloadRSC", produces = MediaType.APPLICATION_OCTET_STREAM_VALUE)
   public ResponseEntity<byte[]> downloadRequestSignerCertificate(@PathVariable String entityID)
     throws RequestSignerDownloadException
   {
@@ -403,22 +279,8 @@ public class CVCController
   }
 
   /**
-   * This {@link ExceptionHandler} handles the {@link MetadataDownloadException}. In case of exception the
-   * client is returned to a html site where an error message will be displayed.
-   *
-   * @param model Model with the information to be displayed
-   * @return String as html site
-   */
-  @ExceptionHandler(MetadataDownloadException.class)
-  public String handleMetadataDownloadException(Model model)
-  {
-    model.addAttribute("errorMessage", "Can not download Metadata. Please check your log and your configuration.");
-    return list(model);
-  }
-
-  /**
-   * This {@link ExceptionHandler} handles the {@link RequestSignerDownloadException}. In case of exception
-   * the client is returned to a html site where an error message will be displayed.
+   * This {@link ExceptionHandler} handles the {@link RequestSignerDownloadException}. In case of exception the client
+   * is returned to a html site where an error message will be displayed.
    *
    * @param model Model with the information to be displayed
    * @param response {@link HttpServletResponse} the response to the client
@@ -432,8 +294,8 @@ public class CVCController
     throws IOException
   {
     String entityId = exception.getEntityId();
-    model.addAttribute("error", true);
-    model.addAttribute("resultMessage", "Download of request signer certificate failed. Please check your log.");
+    model.addAttribute(ERROR, true);
+    model.addAttribute(RESULT_MESSAGE, "Download of request signer certificate failed. Please check your log.");
     return details(entityId, model, response);
   }
 }

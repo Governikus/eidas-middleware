@@ -1,11 +1,10 @@
 /*
- * Copyright (c) 2020 Governikus KG. Licensed under the EUPL, Version 1.2 or as soon they will be approved by
- * the European Commission - subsequent versions of the EUPL (the "Licence"); You may not use this work except
- * in compliance with the Licence. You may obtain a copy of the Licence at:
- * http://joinup.ec.europa.eu/software/page/eupl Unless required by applicable law or agreed to in writing,
- * software distributed under the Licence is distributed on an "AS IS" basis, WITHOUT WARRANTIES OR CONDITIONS
- * OF ANY KIND, either express or implied. See the Licence for the specific language governing permissions and
- * limitations under the Licence.
+ * Copyright (c) 2020 Governikus KG. Licensed under the EUPL, Version 1.2 or as soon they will be approved by the
+ * European Commission - subsequent versions of the EUPL (the "Licence"); You may not use this work except in compliance
+ * with the Licence. You may obtain a copy of the Licence at: http://joinup.ec.europa.eu/software/page/eupl Unless
+ * required by applicable law or agreed to in writing, software distributed under the Licence is distributed on an
+ * "AS IS" basis, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the Licence for the
+ * specific language governing permissions and limitations under the Licence.
  */
 
 package de.governikus.eumw.poseidas.server.pki;
@@ -40,14 +39,14 @@ import de.governikus.eumw.poseidas.gov2server.constants.admin.GlobalManagementCo
 import de.governikus.eumw.poseidas.gov2server.constants.admin.IDManagementCodes;
 import de.governikus.eumw.poseidas.gov2server.constants.admin.ManagementMessage;
 import de.governikus.eumw.poseidas.server.eidservice.EIDInternal;
-import de.governikus.eumw.poseidas.server.idprovider.accounting.SNMPDelegate;
-import de.governikus.eumw.poseidas.server.idprovider.accounting.SNMPDelegate.OID;
 import de.governikus.eumw.poseidas.server.idprovider.config.CoreConfigurationDto;
 import de.governikus.eumw.poseidas.server.idprovider.config.EPAConnectorConfigurationDto;
 import de.governikus.eumw.poseidas.server.idprovider.config.PkiConnectorConfigurationDto;
 import de.governikus.eumw.poseidas.server.idprovider.config.PoseidasConfigurator;
 import de.governikus.eumw.poseidas.server.idprovider.config.ServiceProviderDto;
 import de.governikus.eumw.poseidas.server.idprovider.config.SslKeysDto;
+import de.governikus.eumw.poseidas.server.monitoring.SNMPConstants;
+import de.governikus.eumw.poseidas.server.monitoring.SNMPTrapSender;
 import de.governikus.eumw.poseidas.server.pki.caserviceaccess.PKIServiceConnector;
 import lombok.extern.slf4j.Slf4j;
 
@@ -74,8 +73,7 @@ public class PermissionDataHandling implements PermissionDataHandlingMBean
   @Autowired
   private EIDInternal eidInternal;
 
-  private CVCRequestHandler getCvcRequestHandler(EPAConnectorConfigurationDto nPaConf)
-    throws GovManagementException
+  private CVCRequestHandler getCvcRequestHandler(EPAConnectorConfigurationDto nPaConf) throws GovManagementException
   {
     return new CVCRequestHandler(nPaConf, facade, hsmServiceHolder.getKeyStore());
   }
@@ -111,8 +109,7 @@ public class PermissionDataHandling implements PermissionDataHandlingMBean
     return getnPaConfigWithCheck(prov);
   }
 
-  private EPAConnectorConfigurationDto getnPaConfigWithCheck(ServiceProviderDto prov)
-    throws GovManagementException
+  private EPAConnectorConfigurationDto getnPaConfigWithCheck(ServiceProviderDto prov) throws GovManagementException
   {
     if (prov == null)
     {
@@ -185,20 +182,15 @@ public class PermissionDataHandling implements PermissionDataHandlingMBean
     }
     catch (Exception e)
     {
-      SNMPDelegate.getInstance()
-                  .sendSNMPTrap(OID.MASTERLIST_RENEWAL_FAILED, SNMPDelegate.MASTERLIST_RENEWAL_FAILED);
       log.error("unable to renew any master and defect list", e);
     }
   }
 
-  private ManagementMessage renewMasterAndDefectList(ServiceProviderDto prov,
-                                                     EPAConnectorConfigurationDto npaConf)
+  private ManagementMessage renewMasterAndDefectList(ServiceProviderDto prov, EPAConnectorConfigurationDto npaConf)
   {
     try
     {
-      if (!isConfigured(npaConf.getPkiConnectorConfiguration().getPassiveAuthService(),
-                        "master and defect list",
-                        prov))
+      if (!isConfigured(npaConf.getPkiConnectorConfiguration().getPassiveAuthService(), "master and defect list", prov))
       {
         return IDManagementCodes.INVALID_OPTION_FOR_PROVIDER.createMessage(prov.getEntityID(),
                                                                            "ID.jsp.serviceProvider.nPaPkiConnectorConfiguration.passiveAuthService.title");
@@ -216,17 +208,11 @@ public class PermissionDataHandling implements PermissionDataHandlingMBean
     }
     catch (GovManagementException e)
     {
-      SNMPDelegate.getInstance()
-                  .sendSNMPTrap(OID.MASTERLIST_RENEWAL_FAILED,
-                                SNMPDelegate.MASTERLIST_RENEWAL_FAILED + " " + prov.getEntityID());
       log.error("{}: unable to master and defect list: {}", prov.getEntityID(), e.getMessage(), e);
       return e.getManagementMessage();
     }
     catch (Exception e)
     {
-      SNMPDelegate.getInstance()
-                  .sendSNMPTrap(OID.MASTERLIST_RENEWAL_FAILED,
-                                SNMPDelegate.MASTERLIST_RENEWAL_FAILED + " " + prov.getEntityID());
       log.error("{}: unable to master and defect list: {}", prov.getEntityID(), e.getMessage(), e);
       return GlobalManagementCodes.EC_UNEXPECTED_ERROR.createMessage("unable to master and defect list: "
                                                                      + e.getMessage());
@@ -242,9 +228,7 @@ public class PermissionDataHandling implements PermissionDataHandlingMBean
     {
       return true;
     }
-    log.info("{}: not renewing {} because respective service not configured",
-             provider.getEntityID(),
-             dataType);
+    log.info("{}: not renewing {} because respective service not configured", provider.getEntityID(), dataType);
     return false;
   }
 
@@ -298,8 +282,6 @@ public class PermissionDataHandling implements PermissionDataHandlingMBean
     }
     catch (Exception e)
     {
-      SNMPDelegate.getInstance()
-                  .sendSNMPTrap(OID.BLACKLIST_RENEWAL_FAILED, SNMPDelegate.BLACKLIST_RENEWAL_FAILED);
       log.error("unable to renew any blacklist", e);
     }
   }
@@ -329,8 +311,7 @@ public class PermissionDataHandling implements PermissionDataHandlingMBean
       {
         return IDManagementCodes.DATABASE_ENTRY_EXISTS.createMessage(tp.getRefID());
       }
-      RestrictedIdHandler riHandler = new RestrictedIdHandler(npaConf, facade,
-                                                              hsmServiceHolder.getKeyStore());
+      RestrictedIdHandler riHandler = new RestrictedIdHandler(npaConf, facade, hsmServiceHolder.getKeyStore());
       if (alreadyRenewed != null)
       {
         if (BlackListLock.getINSTANCE().getBlackListUpdateLock().tryLock())
@@ -354,26 +335,19 @@ public class PermissionDataHandling implements PermissionDataHandlingMBean
     }
     catch (GovManagementException e)
     {
-      SNMPDelegate.getInstance()
-                  .sendSNMPTrap(OID.BLACKLIST_RENEWAL_FAILED,
-                                SNMPDelegate.BLACKLIST_RENEWAL_FAILED + " " + prov.getEntityID());
       log.error("{}: unable to renew blacklist: {}", prov.getEntityID(), e.getMessage(), e);
       return e.getManagementMessage();
     }
     catch (Exception e)
     {
-      SNMPDelegate.getInstance()
-                  .sendSNMPTrap(OID.BLACKLIST_RENEWAL_FAILED,
-                                SNMPDelegate.BLACKLIST_RENEWAL_FAILED + " " + prov.getEntityID());
       log.error("{}: unable to renew blacklist: {}", prov.getEntityID(), e.getMessage(), e);
-      return GlobalManagementCodes.EC_UNEXPECTED_ERROR.createMessage("unable to renew blacklist: "
-                                                                     + e.getMessage());
+      return GlobalManagementCodes.EC_UNEXPECTED_ERROR.createMessage("unable to renew blacklist: " + e.getMessage());
     }
   }
 
   /**
-   * Requests a new public sector key if one is needed. This checks if the old one matches the key in the CVC
-   * and only fetches the key if a new one is needed.
+   * Requests a new public sector key if one is needed. This checks if the old one matches the key in the CVC and only
+   * fetches the key if a new one is needed.
    *
    * @param prov
    * @param npaConf
@@ -396,24 +370,17 @@ public class PermissionDataHandling implements PermissionDataHandlingMBean
         return IDManagementCodes.MISSING_TERMINAL_CERTIFICATE.createMessage(npaConf.getCVCRefID());
       }
 
-      RestrictedIdHandler riHandler = new RestrictedIdHandler(npaConf, facade,
-                                                              hsmServiceHolder.getKeyStore());
+      RestrictedIdHandler riHandler = new RestrictedIdHandler(npaConf, facade, hsmServiceHolder.getKeyStore());
       riHandler.requestPublicSectorKeyIfNeeded();
       return GlobalManagementCodes.OK.createMessage();
     }
     catch (GovManagementException e)
     {
-      SNMPDelegate.getInstance()
-                  .sendSNMPTrap(OID.PUBLIC_SECTOR_KEY_REQUEST_FAILED,
-                                SNMPDelegate.PUBLIC_SECTOR_KEY_REQUEST_FAILED + " " + prov.getEntityID());
       log.error("{}: unable to fetch public sector key: {}", prov.getEntityID(), e.getMessage(), e);
       return e.getManagementMessage();
     }
     catch (Exception e)
     {
-      SNMPDelegate.getInstance()
-                  .sendSNMPTrap(OID.PUBLIC_SECTOR_KEY_REQUEST_FAILED,
-                                SNMPDelegate.PUBLIC_SECTOR_KEY_REQUEST_FAILED + " " + prov.getEntityID());
       log.error("{}: unable to fetch public sector key: {}", prov.getEntityID(), e.getMessage(), e);
       return GlobalManagementCodes.EC_UNEXPECTED_ERROR.createMessage("unable to fetch public sector key: "
                                                                      + e.getMessage());
@@ -445,7 +412,7 @@ public class PermissionDataHandling implements PermissionDataHandlingMBean
     }
     catch (Exception e)
     {
-      SNMPDelegate.getInstance().sendSNMPTrap(OID.CERT_RENEWAL_FAILED, SNMPDelegate.CERT_RENEWAL_FAILED);
+      SNMPTrapSender.sendSNMPTrap(SNMPConstants.TrapOID.CVC_TRAP_LAST_RENEWAL_STATUS, 1);
       log.error("unable to renew any CVCs", e);
     }
   }
@@ -513,9 +480,7 @@ public class PermissionDataHandling implements PermissionDataHandlingMBean
     }
     catch (Exception e)
     {
-      SNMPDelegate.getInstance()
-                  .sendSNMPTrap(OID.CERT_RENEWAL_FAILED,
-                                SNMPDelegate.CERT_RENEWAL_FAILED + " " + provider.getEntityID());
+      SNMPTrapSender.sendSNMPTrap(SNMPConstants.TrapOID.CVC_TRAP_LAST_RENEWAL_STATUS, 1);
       log.error("{}: unable to renew CVC", provider.getEntityID(), e);
     }
     finally
@@ -541,18 +506,13 @@ public class PermissionDataHandling implements PermissionDataHandlingMBean
     }
     catch (GovManagementException e)
     {
-      log.error("{}: Problem while triggering a new subsequal cvc request {}",
-                entityID,
-                e.getManagementMessage());
+      log.error("{}: Problem while triggering a new subsequal cvc request {}", entityID, e.getManagementMessage());
       return e.getManagementMessage();
     }
     catch (Exception e)
     {
-      SNMPDelegate.getInstance()
-                  .sendSNMPTrap(OID.CERT_RENEWAL_FAILED, SNMPDelegate.CERT_RENEWAL_FAILED + " " + entityID);
-      log.error("{}: unable to renew CVC", entityID, e);
-      return GlobalManagementCodes.EC_UNEXPECTED_ERROR.createMessage("unable to renew CVC: "
-                                                                     + e.getMessage());
+      SNMPTrapSender.sendSNMPTrap(SNMPConstants.TrapOID.CVC_TRAP_LAST_RENEWAL_STATUS, 1);
+      return GlobalManagementCodes.EC_UNEXPECTED_ERROR.createMessage("unable to renew CVC: " + e.getMessage());
     }
   }
 
@@ -674,8 +634,7 @@ public class PermissionDataHandling implements PermissionDataHandlingMBean
     }
   }
 
-  private void checkReadyForFirstRequestPki(EPAConnectorConfigurationDto npaConf,
-                                            PkiConnectorConfigurationDto pkiConf)
+  private void checkReadyForFirstRequestPki(EPAConnectorConfigurationDto npaConf, PkiConnectorConfigurationDto pkiConf)
     throws GovManagementException
   {
     BerCaPolicy policy = PolicyImplementationFactory.getInstance().getPolicy(pkiConf.getBerCaPolicyId());
@@ -715,8 +674,7 @@ public class PermissionDataHandling implements PermissionDataHandlingMBean
   {
     if (value == null)
     {
-      throw new GovManagementException(GlobalManagementCodes.EC_MISSINGCONFIGVALUE,
-                                       ID_CONNECTOR_CONFIGURATION + name);
+      throw new GovManagementException(GlobalManagementCodes.EC_MISSINGCONFIGVALUE, ID_CONNECTOR_CONFIGURATION + name);
     }
 
   }
@@ -765,10 +723,16 @@ public class PermissionDataHandling implements PermissionDataHandlingMBean
       }
       else
       {
-        connector = new PKIServiceConnector(30, keys.getServerCertificate(), hsmServiceHolder.getKeyStore(),
-                                            null, entityID);
+        connector = new PKIServiceConnector(30, keys.getServerCertificate(), hsmServiceHolder.getKeyStore(), null,
+                                            entityID);
       }
-      connector.getFile(service.getUrl() + "?wsdl");
+      byte[] content = connector.getFile(service.getUrl() + "?wsdl");
+      if (!new String(content).contains("wsdl"))
+      {
+        log.error("{}: {} does not deliver a WSDL", entityID, service.getUrl());
+        throw new GovManagementException(GlobalManagementCodes.EXTERNAL_SERVICE_NOT_REACHABLE, service.getUrl(),
+                                         "no WSDL present");
+      }
     }
     catch (Exception e)
     {
@@ -815,6 +779,38 @@ public class PermissionDataHandling implements PermissionDataHandlingMBean
     {
       log.error("{}: Problem while deleting cvc request: {}", entityID, e.getManagementMessage());
       return e.getManagementMessage();
+    }
+  }
+
+  @Override
+  public boolean pingPAService(String entityID)
+  {
+    try
+    {
+      EPAConnectorConfigurationDto npaConf = getnPaConfigWithCheck(entityID);
+      PkiConnectorConfigurationDto pkiConf = npaConf.getPkiConnectorConfiguration();
+      checkService(pkiConf, pkiConf.getPassiveAuthService(), npaConf.getCVCRefID());
+      return true;
+    }
+    catch (Exception e)
+    {
+      return false;
+    }
+  }
+
+  @Override
+  public boolean pingRIService(String entityID)
+  {
+    try
+    {
+      EPAConnectorConfigurationDto npaConf = getnPaConfigWithCheck(entityID);
+      PkiConnectorConfigurationDto pkiConf = npaConf.getPkiConnectorConfiguration();
+      checkService(pkiConf, pkiConf.getRestrictedIdService(), npaConf.getCVCRefID());
+      return true;
+    }
+    catch (Exception e)
+    {
+      return false;
     }
   }
 }

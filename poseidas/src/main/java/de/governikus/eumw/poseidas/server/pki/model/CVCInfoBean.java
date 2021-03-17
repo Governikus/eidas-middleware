@@ -1,17 +1,16 @@
 /*
- * Copyright (c) 2020 Governikus KG. Licensed under the EUPL, Version 1.2 or as soon they will be approved by
- * the European Commission - subsequent versions of the EUPL (the "Licence"); You may not use this work except
- * in compliance with the Licence. You may obtain a copy of the Licence at:
- * http://joinup.ec.europa.eu/software/page/eupl Unless required by applicable law or agreed to in writing,
- * software distributed under the Licence is distributed on an "AS IS" basis, WITHOUT WARRANTIES OR CONDITIONS
- * OF ANY KIND, either express or implied. See the Licence for the specific language governing permissions and
- * limitations under the Licence.
+ * Copyright (c) 2020 Governikus KG. Licensed under the EUPL, Version 1.2 or as soon they will be approved by the
+ * European Commission - subsequent versions of the EUPL (the "Licence"); You may not use this work except in compliance
+ * with the Licence. You may obtain a copy of the Licence at: http://joinup.ec.europa.eu/software/page/eupl Unless
+ * required by applicable law or agreed to in writing, software distributed under the Licence is distributed on an
+ * "AS IS" basis, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the Licence for the
+ * specific language governing permissions and limitations under the Licence.
  */
 
 package de.governikus.eumw.poseidas.server.pki.model;
 
-import java.io.Serializable;
 import java.text.SimpleDateFormat;
+import java.util.Calendar;
 import java.util.Date;
 import java.util.Locale;
 import java.util.Map;
@@ -19,23 +18,31 @@ import java.util.Map;
 import de.governikus.eumw.poseidas.gov2server.constants.admin.AdminPoseidasConstants;
 import de.governikus.eumw.poseidas.gov2server.constants.admin.ManagementMessage;
 import de.governikus.eumw.poseidas.server.idprovider.config.CoreConfigurationDto;
+import de.governikus.eumw.poseidas.server.idprovider.config.CvcTlsCheck;
 import de.governikus.eumw.poseidas.server.idprovider.config.PoseidasConfigurator;
 import de.governikus.eumw.poseidas.server.idprovider.config.ServiceProviderDto;
 import de.governikus.eumw.poseidas.server.pki.PermissionDataHandlingMBean;
+import de.governikus.eumw.poseidas.server.pki.RequestSignerCertificateService;
+import de.governikus.eumw.poseidas.server.pki.TerminalPermissionAO;
+import lombok.Getter;
 
 
 /**
- * This class represents a single service provider entity. It provides methods for setting and getting entity
- * details as well as CVC operations and renewing the three lists.
+ * This class represents a single service provider entity. It provides methods for setting and getting entity details as
+ * well as CVC operations and renewing the three lists.
  *
  * @author bpr
  */
-public class CVCInfoBean implements Serializable
+public class CVCInfoBean
 {
 
-  private static final long serialVersionUID = 1L;
+  private final PermissionDataHandlingMBean data;
 
-  private PermissionDataHandlingMBean data;
+  private final CvcTlsCheck cvcTlsCheck;
+
+  private final TerminalPermissionAO facade;
+
+  private final RequestSignerCertificateService rscService;
 
   private ServiceProviderDto entry;
 
@@ -49,21 +56,30 @@ public class CVCInfoBean implements Serializable
 
   private int sequenceNumber;
 
-  public CVCInfoBean()
-  {
-    super();
-  }
+  @Getter
+  private ServiceProviderResultModel serviceProviderResultModel;
 
-  public CVCInfoBean(ServiceProviderDto entry, PermissionDataHandlingMBean data)
+  public CVCInfoBean(ServiceProviderDto entry,
+                     PermissionDataHandlingMBean data,
+                     CvcTlsCheck cvcTlsCheck,
+                     TerminalPermissionAO facade,
+                     RequestSignerCertificateService rscService)
   {
-    this();
     this.entry = entry;
     entityID = entry.getEntityID();
     this.data = data;
-    fetchInfo();
+    this.cvcTlsCheck = cvcTlsCheck;
+    this.facade = facade;
+    this.rscService = rscService;
+    fetchInfo(false);
   }
 
   public void fetchInfo()
+  {
+    fetchInfo(true);
+  }
+
+  private void fetchInfo(boolean performCvcTlsCheck)
   {
     if (entry == null)
     {
@@ -71,6 +87,12 @@ public class CVCInfoBean implements Serializable
       entry = config.getServiceProvider().get(entityID);
     }
     info = data.getPermissionDataInfo(entry.getEpaConnectorConfiguration().getCVCRefID(), true);
+
+    if (performCvcTlsCheck)
+    {
+      serviceProviderResultModel = new ServiceProviderResultModel(entityID, cvcTlsCheck.checkCvcProvider(entityID),
+                                                                  facade, data, rscService);
+    }
   }
 
   public void setEntityID(String entityID)
@@ -194,11 +216,17 @@ public class CVCInfoBean implements Serializable
     }
   }
 
-  public String getInvalidOn()
+  public String getValidUntil()
   {
     try
     {
-      return dateToString((Date)info.get(AdminPoseidasConstants.VALUE_PERMISSION_DATA_EXPIRATION_DATE));
+      // Internally this is not the expiration date but the day after the expiration date.
+      // To show the correct expiration data, also knows as valid until, one day must be subtracted.
+      Date invalidOn = (Date)info.get(AdminPoseidasConstants.VALUE_PERMISSION_DATA_EXPIRATION_DATE);
+      Calendar calendar = Calendar.getInstance();
+      calendar.setTime(invalidOn);
+      calendar.add(Calendar.HOUR, -24);
+      return dateToString(calendar.getTime());
     }
     catch (NullPointerException e)
     {
@@ -262,10 +290,7 @@ public class CVCInfoBean implements Serializable
 
   public String initRequest()
   {
-    ManagementMessage result = data.requestFirstTerminalCertificate(entityID,
-                                                                    countryCode,
-                                                                    chrMnemonic,
-                                                                    sequenceNumber);
+    ManagementMessage result = data.requestFirstTerminalCertificate(entityID, countryCode, chrMnemonic, sequenceNumber);
     return result.toString();
   }
 

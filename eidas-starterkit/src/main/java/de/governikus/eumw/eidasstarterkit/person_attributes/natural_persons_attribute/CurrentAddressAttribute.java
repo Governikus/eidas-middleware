@@ -1,11 +1,10 @@
 /*
- * Copyright (c) 2020 Governikus KG. Licensed under the EUPL, Version 1.2 or as soon they will be approved by
- * the European Commission - subsequent versions of the EUPL (the "Licence"); You may not use this work except
- * in compliance with the Licence. You may obtain a copy of the Licence at:
- * http://joinup.ec.europa.eu/software/page/eupl Unless required by applicable law or agreed to in writing,
- * software distributed under the Licence is distributed on an "AS IS" basis, WITHOUT WARRANTIES OR CONDITIONS
- * OF ANY KIND, either express or implied. See the Licence for the specific language governing permissions and
- * limitations under the Licence.
+ * Copyright (c) 2020 Governikus KG. Licensed under the EUPL, Version 1.2 or as soon they will be approved by the
+ * European Commission - subsequent versions of the EUPL (the "Licence"); You may not use this work except in compliance
+ * with the Licence. You may obtain a copy of the Licence at: http://joinup.ec.europa.eu/software/page/eupl Unless
+ * required by applicable law or agreed to in writing, software distributed under the Licence is distributed on an
+ * "AS IS" basis, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the Licence for the
+ * specific language governing permissions and limitations under the Licence.
  */
 
 package de.governikus.eumw.eidasstarterkit.person_attributes.natural_persons_attribute;
@@ -33,23 +32,23 @@ import se.litsec.eidas.opensaml.ext.attributes.impl.CurrentAddressTypeBuilder;
 public class CurrentAddressAttribute extends AbstractEidasAttribute
 {
 
+  private String poBox;
+
   private String locatorDesignator;
-
-  private String thoroughfare;
-
-  private String postName;
-
-  private String postCode;
-
-  private String pOBOX;
 
   private String locatorName;
 
   private String cvaddressArea;
 
-  private String adminunitSecondline;
+  private String thoroughfare;
+
+  private String postName;
 
   private String adminunitFirstline;
+
+  private String adminunitSecondline;
+
+  private String postCode;
 
   @Override
   public EidasPersonAttributes type()
@@ -60,10 +59,11 @@ public class CurrentAddressAttribute extends AbstractEidasAttribute
   @Override
   public String toString()
   {
-    return type().getFriendlyName() + " " + this.locatorDesignator + " " + this.thoroughfare + " , "
-           + this.postCode + " " + this.postName + " " + this.pOBOX + " " + this.locatorName + " "
-           + this.locatorDesignator + " " + this.cvaddressArea + " " + this.adminunitFirstline + " "
-           + this.adminunitSecondline;
+    return type().getFriendlyName() + ": [LocatorDesignator: " + this.locatorDesignator + "] [Thoroughfare: "
+           + this.thoroughfare + "] [PostCode: " + this.postCode + "] [PostName: " + this.postName + "] [PoBox: "
+           + this.poBox + "] [LocatorName: " + this.locatorName + "] [CvaddressArea: " + this.cvaddressArea
+           + "] [AdminunitFirstline: " + this.adminunitFirstline + "] [AdminunitSecondline: "
+           + this.adminunitSecondline + "]";
   }
 
   @Override
@@ -77,7 +77,7 @@ public class CurrentAddressAttribute extends AbstractEidasAttribute
     cat.setCvaddressArea(cvaddressArea);
     cat.setLocatorDesignator(locatorDesignator);
     cat.setLocatorName(locatorName);
-    cat.setPoBox(pOBOX);
+    cat.setPoBox(poBox);
     cat.setPostCode(postCode);
     cat.setPostName(postName);
     cat.setThoroughfare(thoroughfare);
@@ -94,7 +94,7 @@ public class CurrentAddressAttribute extends AbstractEidasAttribute
       cvaddressArea = cat.getCvaddressArea();
       locatorDesignator = cat.getLocatorDesignator();
       locatorName = cat.getLocatorName();
-      pOBOX = cat.getPoBox();
+      poBox = cat.getPoBox();
       postCode = cat.getPostCode();
       postName = cat.getPostName();
       thoroughfare = cat.getThoroughfare();

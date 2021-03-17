@@ -12,7 +12,6 @@ import org.opensaml.saml.saml2.core.impl.ResponseBuilder;
 
 import de.governikus.eumw.eidascommon.ErrorCode;
 import de.governikus.eumw.eidascommon.Utils;
-import se.litsec.eidas.opensaml.common.EidasLoaEnum;
 import se.swedenconnect.opensaml.OpenSAMLInitializer;
 import se.swedenconnect.opensaml.OpenSAMLSecurityDefaultsConfig;
 import se.swedenconnect.opensaml.OpenSAMLSecurityExtensionConfig;

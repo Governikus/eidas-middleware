@@ -31,7 +31,7 @@ public enum ApplicationPropertiesIdentifier
   DATASOURCE_PASSWORD("spring.datasource.password"),
   ADMIN_USERNAME("poseidas.admin.username"),
   ADMIN_PASSWORD("poseidas.admin.hashed.password"),
-  LOGGING_FILE("logging.file"),
+  LOGGING_FILE("logging.file.name"),
   HSM_TYPE("hsm.type"),
   HSM_KEYS_DELETE("hsm.keys.delete"),
   HSM_KEYS_ARCHIVE("hsm.keys.archive"),

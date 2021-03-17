@@ -1,11 +1,10 @@
 /*
- * Copyright (c) 2020 Governikus KG. Licensed under the EUPL, Version 1.2 or as soon they will be approved by
- * the European Commission - subsequent versions of the EUPL (the "Licence"); You may not use this work except
- * in compliance with the Licence. You may obtain a copy of the Licence at:
- * http://joinup.ec.europa.eu/software/page/eupl Unless required by applicable law or agreed to in writing,
- * software distributed under the Licence is distributed on an "AS IS" basis, WITHOUT WARRANTIES OR CONDITIONS
- * OF ANY KIND, either express or implied. See the Licence for the specific language governing permissions and
- * limitations under the Licence.
+ * Copyright (c) 2020 Governikus KG. Licensed under the EUPL, Version 1.2 or as soon they will be approved by the
+ * European Commission - subsequent versions of the EUPL (the "Licence"); You may not use this work except in compliance
+ * with the Licence. You may obtain a copy of the Licence at: http://joinup.ec.europa.eu/software/page/eupl Unless
+ * required by applicable law or agreed to in writing, software distributed under the Licence is distributed on an
+ * "AS IS" basis, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the Licence for the
+ * specific language governing permissions and limitations under the Licence.
  */
 
 package de.governikus.eumw.poseidas.server.pki;
@@ -46,14 +45,16 @@ import de.governikus.eumw.poseidas.cardbase.ArrayUtil;
 import de.governikus.eumw.poseidas.cardbase.AssertUtil;
 import de.governikus.eumw.poseidas.cardbase.asn1.npa.ECCVCertificate;
 import de.governikus.eumw.poseidas.eidmodel.TerminalData;
+import de.governikus.eumw.poseidas.server.monitoring.SNMPConstants;
+import de.governikus.eumw.poseidas.server.monitoring.SNMPTrapSender;
 import de.governikus.eumw.poseidas.server.pki.PendingCertificateRequest.Status;
 import de.governikus.eumw.poseidas.service.ConfigHolderInterface;
 import lombok.extern.slf4j.Slf4j;
 
 
 /**
- * Access to terminal permission data. Use
- * de.bos_bremen.gov2.jca_provider.ocf.asn1.cvc.CertificateRequestGenerator for getting the data!
+ * Access to terminal permission data. Use de.bos_bremen.gov2.jca_provider.ocf.asn1.cvc.CertificateRequestGenerator for
+ * getting the data!
  *
  * @author tt
  */
@@ -185,8 +186,7 @@ public class TerminalPermissionAOBean implements TerminalPermissionAO
   public Map<String, Date> getExpirationDates()
   {
     Map<String, Date> result = new HashMap<>();
-    List<TerminalPermission> tpList = terminalPermissionRepository.findAll(Sort.by(Sort.Direction.ASC,
-                                                                                   "notOnOrAfter"));
+    List<TerminalPermission> tpList = terminalPermissionRepository.findAll(Sort.by(Sort.Direction.ASC, "notOnOrAfter"));
     for ( TerminalPermission permission : tpList )
     {
       if (permission.getNotOnOrAfter() != null)
@@ -216,8 +216,7 @@ public class TerminalPermissionAOBean implements TerminalPermissionAO
       {
         return null;
       }
-      log.error("{}: Found out-dated CVC update lock - will steal it to repair earlier problem",
-                serviceProvider);
+      log.error("{}: Found out-dated CVC update lock - will steal it to repair earlier problem", serviceProvider);
       lock.setLockedAt(now);
       cvcUpdateLockRepository.save(lock);
     }
@@ -991,10 +990,12 @@ public class TerminalPermissionAOBean implements TerminalPermissionAO
   @Transactional
   public void makePendingRscToCurrentRsc(String refID)
   {
+    String logText;
     Optional<TerminalPermission> terminalPermissionOptional = terminalPermissionRepository.findById(refID);
     if (!terminalPermissionOptional.isPresent())
     {
       log.error("{}: Could not set current request signer certificate. RefID does not exist.", refID);
+      SNMPTrapSender.sendSNMPTrap(SNMPConstants.TrapOID.RSC_TRAP_CHANGE_TO_CURRENT_RSC, SNMPConstants.RSC_NO_REFID);
       return;
     }
 
@@ -1004,6 +1005,7 @@ public class TerminalPermissionAOBean implements TerminalPermissionAO
     {
       log.error("{}: Could not change pending request signer certificate to current, because there is no pending one!",
                 refID);
+      SNMPTrapSender.sendSNMPTrap(SNMPConstants.TrapOID.RSC_TRAP_CHANGE_TO_CURRENT_RSC, SNMPConstants.RSC_NO_PENDING);
       return;
     }
 
@@ -1017,6 +1019,7 @@ public class TerminalPermissionAOBean implements TerminalPermissionAO
 
     terminalPermissionRepository.saveAndFlush(terminalPermission);
     log.info("{}: Successfully set current request signer certificate", refID);
+    SNMPTrapSender.sendSNMPTrap(SNMPConstants.TrapOID.RSC_TRAP_CHANGE_TO_CURRENT_RSC, SNMPConstants.RSC_SET_CURRENT);
   }
 
   /**
@@ -1024,8 +1027,7 @@ public class TerminalPermissionAOBean implements TerminalPermissionAO
    */
   @Override
   @Transactional
-  public void setPendingRequestSignerCertificate(String refID,
-                                                 RequestSignerCertificate pendingRequestSignerCertificate)
+  public void setPendingRequestSignerCertificate(String refID, RequestSignerCertificate pendingRequestSignerCertificate)
     throws TerminalPermissionNotFoundException
   {
     Optional<TerminalPermission> terminalPermissionOptional = terminalPermissionRepository.findById(refID);
@@ -1068,7 +1070,7 @@ public class TerminalPermissionAOBean implements TerminalPermissionAO
     }
     if (ArrayUtil.isNullOrEmpty(certByteArray))
     {
-      log.error("No request signer certificate for refId {} found", refID);
+      log.debug("No request signer certificate for refId {} found", refID);
       return null;
     }
     try
@@ -1096,7 +1098,7 @@ public class TerminalPermissionAOBean implements TerminalPermissionAO
     {
       return rsc.getPrivateKey();
     }
-    log.error("No request signer certificate for refID {} found", refID);
+    log.debug("No request signer certificate for refID {} found", refID);
     return null;
   }
 
@@ -1132,8 +1134,7 @@ public class TerminalPermissionAOBean implements TerminalPermissionAO
   }
 
   @Override
-  public void setRequestSignerCertificateHolder(String refID, String holder)
-    throws TerminalPermissionNotFoundException
+  public void setRequestSignerCertificateHolder(String refID, String holder) throws TerminalPermissionNotFoundException
   {
     Optional<TerminalPermission> tp = terminalPermissionRepository.findById(refID);
     if (!tp.isPresent())

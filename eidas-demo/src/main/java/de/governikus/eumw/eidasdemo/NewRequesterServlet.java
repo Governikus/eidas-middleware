@@ -29,13 +29,14 @@ import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.GetMapping;
 
 import de.governikus.eumw.eidascommon.HttpRedirectUtils;
+import de.governikus.eumw.eidasstarterkit.EidasLoaEnum;
 import de.governikus.eumw.eidasstarterkit.EidasNameIdType;
 import de.governikus.eumw.eidasstarterkit.EidasNaturalPersonAttributes;
 import de.governikus.eumw.eidasstarterkit.EidasSaml;
 import de.governikus.eumw.eidasstarterkit.EidasSigner;
+import de.governikus.eumw.eidasstarterkit.TestCaseEnum;
 import de.governikus.eumw.eidasstarterkit.person_attributes.EidasPersonAttributes;
 import lombok.extern.slf4j.Slf4j;
-import se.litsec.eidas.opensaml.common.EidasLoaEnum;
 import se.litsec.eidas.opensaml.ext.SPTypeEnumeration;
 
 
@@ -73,6 +74,12 @@ public class NewRequesterServlet
     byte[] samlRequest;
     byte[] samlRequestPublicSP;
     byte[] samlRequestPrivateSP;
+    byte[] samlTestRequest;
+    byte[] samlTestRequestCancellationByUser;
+    byte[] samlTestRequestWrongPin;
+    byte[] samlTestRequestWrongSignature;
+    byte[] samlTestRequestCardExpired;
+    byte[] samlTestRequestUnknown;
 
     // You may specify a free String of length at most 80 characters called RelayState. This value is not
     // interpreted by the server but returned unchanged with the SAML response. It is for your use only. This
@@ -117,6 +124,55 @@ public class NewRequesterServlet
                                                      SPTypeEnumeration.PRIVATE,
                                                      EidasNameIdType.TRANSIENT,
                                                      EidasLoaEnum.LOA_HIGH);
+      samlTestRequest = EidasSaml.createRequest(ownURL.replace("NewRequesterServlet", "Metadata"),
+                                                ownURL.replace("NewRequesterServlet", "NewReceiverServlet"),
+                                                signer,
+                                                reqAtt,
+                                                null,
+                                                EidasNameIdType.TRANSIENT,
+                                                EidasLoaEnum.LOA_TEST);
+      samlTestRequestCancellationByUser = EidasSaml.createRequest(ownURL.replace("NewRequesterServlet", "Metadata"),
+                                                                  ownURL.replace("NewRequesterServlet",
+                                                                                 "NewReceiverServlet"),
+                                                                  signer,
+                                                                  reqAtt,
+                                                                  null,
+                                                                  EidasNameIdType.TRANSIENT,
+                                                                  EidasLoaEnum.LOA_TEST,
+                                                                  TestCaseEnum.CANCELLATION_BY_USER);
+      samlTestRequestWrongPin = EidasSaml.createRequest(ownURL.replace("NewRequesterServlet", "Metadata"),
+                                                        ownURL.replace("NewRequesterServlet", "NewReceiverServlet"),
+                                                        signer,
+                                                        reqAtt,
+                                                        null,
+                                                        EidasNameIdType.TRANSIENT,
+                                                        EidasLoaEnum.LOA_TEST,
+                                                        TestCaseEnum.WRONG_PIN);
+      samlTestRequestWrongSignature = EidasSaml.createRequest(ownURL.replace("NewRequesterServlet", "Metadata"),
+                                                              ownURL.replace("NewRequesterServlet",
+                                                                             "NewReceiverServlet"),
+                                                              signer,
+                                                              reqAtt,
+                                                              null,
+                                                              EidasNameIdType.TRANSIENT,
+                                                              EidasLoaEnum.LOA_TEST,
+                                                              TestCaseEnum.WRONG_SIGNATURE);
+      samlTestRequestCardExpired = EidasSaml.createRequest(ownURL.replace("NewRequesterServlet", "Metadata"),
+                                                           ownURL.replace("NewRequesterServlet", "NewReceiverServlet"),
+                                                           signer,
+                                                           reqAtt,
+                                                           null,
+                                                           EidasNameIdType.TRANSIENT,
+                                                           EidasLoaEnum.LOA_TEST,
+                                                           TestCaseEnum.CARD_EXPIRED);
+      samlTestRequestUnknown = EidasSaml.createRequest(ownURL.replace("NewRequesterServlet", "Metadata"),
+                                                       ownURL.replace("NewRequesterServlet", "NewReceiverServlet"),
+                                                       signer,
+                                                       reqAtt,
+                                                       null,
+                                                       EidasNameIdType.TRANSIENT,
+                                                       EidasLoaEnum.LOA_TEST,
+                                                       TestCaseEnum.UNKNOWN);
     }
     catch (CertificateEncodingException | InitializationException | MarshallingException | SignatureException
       | TransformerFactoryConfigurationError | TransformerException | IOException e)
@@ -158,14 +214,62 @@ public class NewRequesterServlet
                                                                   helper.demoSignatureKey,
                                                                   "SHA256");
 
+      String queryTestRequest = HttpRedirectUtils.createQueryString(helper.serverSamlReceiverUrl,
+                                                                    samlTestRequest,
+                                                                    true,
+                                                                    relayState,
+                                                                    helper.demoSignatureKey,
+                                                                    "SHA256");
+
+      String queryTestRequestCancellationByUser = HttpRedirectUtils.createQueryString(helper.serverSamlReceiverUrl,
+                                                                                      samlTestRequestCancellationByUser,
+                                                                                      true,
+                                                                                      relayState,
+                                                                                      helper.demoSignatureKey,
+                                                                                      "SHA256");
+
+      String queryTestRequestWrongPin = HttpRedirectUtils.createQueryString(helper.serverSamlReceiverUrl,
+                                                                            samlTestRequestWrongPin,
+                                                                            true,
+                                                                            relayState,
+                                                                            helper.demoSignatureKey,
+                                                                            "SHA256");
+
+      String queryTestRequestWrongSignature = HttpRedirectUtils.createQueryString(helper.serverSamlReceiverUrl,
+                                                                                  samlTestRequestWrongSignature,
+                                                                                  true,
+                                                                                  relayState,
+                                                                                  helper.demoSignatureKey,
+                                                                                  "SHA256");
+
+      String queryTestRequestCardExpired = HttpRedirectUtils.createQueryString(helper.serverSamlReceiverUrl,
+                                                                               samlTestRequestCardExpired,
+                                                                               true,
+                                                                               relayState,
+                                                                               helper.demoSignatureKey,
+                                                                               "SHA256");
+
+      String queryTestRequestUnknown = HttpRedirectUtils.createQueryString(helper.serverSamlReceiverUrl,
+                                                                           samlTestRequestUnknown,
+                                                                           true,
+                                                                           relayState,
+                                                                           helper.demoSignatureKey,
+                                                                           "SHA256");
+
       String html = IOUtils.toString(this.getClass().getResourceAsStream("/NewRequesterServlet.html"),
                                      StandardCharsets.UTF_8);
-      html = html.replace("DEFAULTREQUEST", response.encodeURL(query));
+      html = html.replace("DEFAULTREQUEST", query);
       html = html.replace("CURRENTRELAYSTATE", relayState);
-      html = html.replace("EMPTYRELAYSTATE", response.encodeURL(emptyRelayState));
-      html = html.replace("WITHOUTRELAYSTATE", response.encodeURL(withoutRelayState));
-      html = html.replace("REQUESTPUBLICSP", response.encodeURL(queryPublicSP));
-      html = html.replace("REQUESTPRIVATESP", response.encodeURL(queryPrivateSP));
+      html = html.replace("EMPTYRELAYSTATE", emptyRelayState);
+      html = html.replace("WITHOUTRELAYSTATE", withoutRelayState);
+      html = html.replace("REQUESTPUBLICSP", queryPublicSP);
+      html = html.replace("REQUESTPRIVATESP", queryPrivateSP);
+      html = html.replace("TESTREQUEST", queryTestRequest);
+      html = html.replace("CANCELLATIONBYUSER", queryTestRequestCancellationByUser);
+      html = html.replace("WRONGPIN", queryTestRequestWrongPin);
+      html = html.replace("WRONGSIGNATURE", queryTestRequestWrongSignature);
+      html = html.replace("CARDEXPIRED", queryTestRequestCardExpired);
+      html = html.replace("UNKNOWN", queryTestRequestUnknown);
 
 
       Writer writer = response.getWriter();

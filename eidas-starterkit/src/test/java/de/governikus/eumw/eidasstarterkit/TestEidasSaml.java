@@ -9,9 +9,6 @@
 
 package de.governikus.eumw.eidasstarterkit;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNull;
-
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
@@ -39,6 +36,7 @@ import javax.xml.transform.TransformerException;
 import javax.xml.transform.TransformerFactoryConfigurationError;
 
 import org.bouncycastle.jce.provider.BouncyCastleProvider;
+import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.opensaml.core.config.InitializationException;
@@ -74,7 +72,6 @@ import de.governikus.eumw.eidasstarterkit.person_attributes.natural_persons_attr
 import de.governikus.eumw.eidasstarterkit.person_attributes.natural_persons_attribute.PlaceOfBirthAttribute;
 import net.shibboleth.utilities.java.support.component.ComponentInitializationException;
 import net.shibboleth.utilities.java.support.xml.XMLParserException;
-import se.litsec.eidas.opensaml.common.EidasLoaEnum;
 
 
 class TestEidasSaml
@@ -91,11 +88,21 @@ class TestEidasSaml
   // *.p12 used for tests.
   private static final String TEST_P12 = "/eidassignertest.p12";
 
+  Map<EidasPersonAttributes, Boolean> requestedAttributes = new HashMap<>();
+
   @BeforeEach
   void setUp() throws Exception
   {
     EidasSaml.init();
     Security.addProvider(new BouncyCastleProvider());
+    requestedAttributes.put(EidasNaturalPersonAttributes.BIRTH_NAME, true);
+    requestedAttributes.put(EidasNaturalPersonAttributes.CURRENT_ADDRESS, false);
+    requestedAttributes.put(EidasNaturalPersonAttributes.DATE_OF_BIRTH, true);
+    requestedAttributes.put(EidasNaturalPersonAttributes.FAMILY_NAME, false);
+    requestedAttributes.put(EidasNaturalPersonAttributes.FIRST_NAME, true);
+    requestedAttributes.put(EidasNaturalPersonAttributes.GENDER, true);
+    requestedAttributes.put(EidasNaturalPersonAttributes.PERSON_IDENTIFIER, true);
+    requestedAttributes.put(EidasNaturalPersonAttributes.PLACE_OF_BIRTH, false);
   }
 
   @Test
@@ -107,15 +114,6 @@ class TestEidasSaml
     String issuer = "https://test/";
     String destination = "test destination";
     String providerName = "test providername";
-    Map<EidasPersonAttributes, Boolean> requestedAttributes = new HashMap<>();
-    requestedAttributes.put(EidasNaturalPersonAttributes.BIRTH_NAME, true);
-    requestedAttributes.put(EidasNaturalPersonAttributes.CURRENT_ADDRESS, false);
-    requestedAttributes.put(EidasNaturalPersonAttributes.DATE_OF_BIRTH, true);
-    requestedAttributes.put(EidasNaturalPersonAttributes.FAMILY_NAME, false);
-    requestedAttributes.put(EidasNaturalPersonAttributes.FIRST_NAME, true);
-    requestedAttributes.put(EidasNaturalPersonAttributes.GENDER, true);
-    requestedAttributes.put(EidasNaturalPersonAttributes.PERSON_IDENTIFIER, true);
-    requestedAttributes.put(EidasNaturalPersonAttributes.PLACE_OF_BIRTH, false);
     EidasNameIdType nameIdPolicy = EidasNameIdType.PERSISTENT;
     EidasLoaEnum loa = EidasLoaEnum.LOA_LOW;
     List<X509Certificate> authors = new ArrayList<>();
@@ -141,22 +139,22 @@ class TestEidasSaml
     System.out.println("--->" + resultStr);
     EidasRequest result = EidasSaml.parseRequest(new ByteArrayInputStream(request), authors);
     AuthnRequest createdRequest = result.getAuthnRequest();
-    assertEquals(issuer, result.getIssuer());
-    assertEquals(destination, result.getDestination());
-    assertEquals(providerName, result.getProviderName());
-    assertEquals(destination, result.getDestination());
-    assertEquals(loa, result.getAuthClassRef());
-    assertEquals(authnRequest.isForceAuthn(), createdRequest.isForceAuthn());
-    assertEquals(authnRequest.isPassive(), createdRequest.isPassive());
-    assertEquals(requestedAttributes.size(), result.getRequestedAttributesEntries().size());
-    assertNull(createdRequest.getScoping());
-    assertEquals(authnRequest.getExtensions().getUnknownXMLObjects().size(),
-                 createdRequest.getExtensions().getUnknownXMLObjects().size());
-    assertEquals(authnRequest.getExtensions().getUnknownXMLObjects().get(0).getOrderedChildren().size(),
-                 createdRequest.getExtensions().getUnknownXMLObjects().get(0).getOrderedChildren().size());
+    Assertions.assertEquals(issuer, result.getIssuer());
+    Assertions.assertEquals(destination, result.getDestination());
+    Assertions.assertEquals(providerName, result.getProviderName());
+    Assertions.assertEquals(destination, result.getDestination());
+    Assertions.assertEquals(loa, result.getAuthClassRef());
+    Assertions.assertEquals(authnRequest.isForceAuthn(), createdRequest.isForceAuthn());
+    Assertions.assertEquals(authnRequest.isPassive(), createdRequest.isPassive());
+    Assertions.assertEquals(requestedAttributes.size(), result.getRequestedAttributesEntries().size());
+    Assertions.assertNull(createdRequest.getScoping());
+    Assertions.assertEquals(authnRequest.getExtensions().getUnknownXMLObjects().size(),
+                            createdRequest.getExtensions().getUnknownXMLObjects().size());
+    Assertions.assertEquals(authnRequest.getExtensions().getUnknownXMLObjects().get(0).getOrderedChildren().size(),
+                            createdRequest.getExtensions().getUnknownXMLObjects().get(0).getOrderedChildren().size());
     for ( Map.Entry<EidasPersonAttributes, Boolean> entry : result.getRequestedAttributesEntries() )
     {
-      assertEquals(requestedAttributes.get(entry.getKey()), entry.getValue());
+      Assertions.assertEquals(requestedAttributes.get(entry.getKey()), entry.getValue());
     }
   }
 
@@ -167,15 +165,6 @@ class TestEidasSaml
     String issuer = "https://test/";
     String destination = "test destination";
     String providerName = "test providername";
-    Map<EidasPersonAttributes, Boolean> requestedAttributes = new HashMap<>();
-    requestedAttributes.put(EidasNaturalPersonAttributes.BIRTH_NAME, true);
-    requestedAttributes.put(EidasNaturalPersonAttributes.CURRENT_ADDRESS, false);
-    requestedAttributes.put(EidasNaturalPersonAttributes.DATE_OF_BIRTH, true);
-    requestedAttributes.put(EidasNaturalPersonAttributes.FAMILY_NAME, false);
-    requestedAttributes.put(EidasNaturalPersonAttributes.FIRST_NAME, true);
-    requestedAttributes.put(EidasNaturalPersonAttributes.GENDER, true);
-    requestedAttributes.put(EidasNaturalPersonAttributes.PERSON_IDENTIFIER, true);
-    requestedAttributes.put(EidasNaturalPersonAttributes.PLACE_OF_BIRTH, false);
     X509Certificate cert = Utils.readCert(TestEidasSaml.class.getResourceAsStream("/EidasSignerTest_x509.cer"));
     List<X509Certificate> authors = new ArrayList<>();
     authors.add(cert);
@@ -185,14 +174,14 @@ class TestEidasSaml
 
 
     EidasRequest result = EidasSaml.parseRequest(new ByteArrayInputStream(request), authors);
-    assertEquals(issuer, result.getIssuer());
-    assertEquals(destination, result.getDestination());
-    assertEquals(providerName, result.getProviderName());
-    assertEquals(destination, result.getDestination());
-    assertEquals(requestedAttributes.size(), result.getRequestedAttributesEntries().size());
+    Assertions.assertEquals(issuer, result.getIssuer());
+    Assertions.assertEquals(destination, result.getDestination());
+    Assertions.assertEquals(providerName, result.getProviderName());
+    Assertions.assertEquals(destination, result.getDestination());
+    Assertions.assertEquals(requestedAttributes.size(), result.getRequestedAttributesEntries().size());
     for ( Map.Entry<EidasPersonAttributes, Boolean> entry : result.getRequestedAttributesEntries() )
     {
-      assertEquals(requestedAttributes.get(entry.getKey()), entry.getValue());
+      Assertions.assertEquals(requestedAttributes.get(entry.getKey()), entry.getValue());
     }
   }
 
@@ -203,8 +192,8 @@ class TestEidasSaml
     TransformerException, ErrorCodeException, InitializationException, ComponentInitializationException
   {
     BirthNameAttribute birthName = new BirthNameAttribute("Meyer");
-    CurrentAddressAttribute currentAddress = new CurrentAddressAttribute("Am Fallturm", "33", "Bremen", "28207", "100",
-                                                                         "bla", "bla", "bla", "bla");
+    CurrentAddressAttribute currentAddress = new CurrentAddressAttribute("bla", "bla", "bla", "bla", "Am Fallturm 33",
+                                                                         "Bremen", "D", "HB", "28207");
     DateOfBirthAttribute dao = new DateOfBirthAttribute("1982-02-11");
     FamilyNameAttribute familyName = new FamilyNameAttribute("Muller", "Müller");
     GenderAttribute gender = new GenderAttribute(GenderType.MALE);
@@ -247,13 +236,13 @@ class TestEidasSaml
 
     EidasResponse result = EidasResponse.parse(new ByteArrayInputStream(response), keypair, cert);
 
-    assertEquals(destination, result.getDestination());
-    assertEquals(nameid.getValue(), result.getNameId().getValue());
-    assertEquals(issuer, result.getIssuer());
-    assertEquals(inResponseTo, result.getInResponseTo());
+    Assertions.assertEquals(destination, result.getDestination());
+    Assertions.assertEquals(nameid.getValue(), result.getNameId().getValue());
+    Assertions.assertEquals(issuer, result.getIssuer());
+    Assertions.assertEquals(inResponseTo, result.getInResponseTo());
     for ( int i = 0 ; i < att.size() ; i++ )
     {
-      assertEquals(att.get(i), result.getAttributes().get(i));
+      Assertions.assertEquals(att.get(i), result.getAttributes().get(i));
     }
   }
 
@@ -281,11 +270,11 @@ class TestEidasSaml
 
     EidasResponse result = EidasResponse.parse(new ByteArrayInputStream(response), keypair, cert);
 
-    assertEquals(destination, result.getDestination());
-    assertEquals(StatusCode.AUTHN_FAILED,
-                 result.getOpenSamlResponse().getStatus().getStatusCode().getStatusCode().getValue());
-    assertEquals(issuer, result.getIssuer());
-    assertEquals(inResponseTo, result.getInResponseTo());
+    Assertions.assertEquals(destination, result.getDestination());
+    Assertions.assertEquals(StatusCode.AUTHN_FAILED,
+                            result.getOpenSamlResponse().getStatus().getStatusCode().getStatusCode().getValue());
+    Assertions.assertEquals(issuer, result.getIssuer());
+    Assertions.assertEquals(inResponseTo, result.getInResponseTo());
   }
 
   @Test
@@ -343,31 +332,79 @@ class TestEidasSaml
                                                  true,
                                                  true);
     EidasMetadataService emds = EidasSaml.parseMetaDataService(new ByteArrayInputStream(mds));
-    assertEquals(encCert, emds.getEncCert());
-    assertEquals(entityId, emds.getEntityId());
-    assertEquals(id, emds.getId());
-    assertEquals(middlewareVersion, emds.getMiddlewareVersion());
-    assertEquals(organisation.getName(), emds.getOrganisation().getName());
-    assertEquals(organisation.getDisplayName(), emds.getOrganisation().getDisplayName());
-    assertEquals(organisation.getLangId(), emds.getOrganisation().getLangId());
-    assertEquals(organisation.getUrl(), emds.getOrganisation().getUrl());
-    assertEquals(postEndpoint, emds.getPostEndpoint());
-    assertEquals(redirectEndpoint, emds.getRedirectEndpoint());
-    assertEquals(sigCert, emds.getSigCert());
-    assertEquals(supportContact.getCompany(), emds.getSupportContact().getCompany());
-    assertEquals(supportContact.getEmail(), emds.getSupportContact().getEmail());
-    assertEquals(supportContact.getGivenName(), emds.getSupportContact().getGivenName());
-    assertEquals(supportContact.getSurName(), emds.getSupportContact().getSurName());
-    assertEquals(supportContact.getTel(), emds.getSupportContact().getTel());
-    assertEquals(supportContact.getType(), emds.getSupportContact().getType());
-    assertEquals(technicalcontact.getCompany(), emds.getTechnicalContact().getCompany());
-    assertEquals(technicalcontact.getEmail(), emds.getTechnicalContact().getEmail());
-    assertEquals(technicalcontact.getGivenName(), emds.getTechnicalContact().getGivenName());
-    assertEquals(technicalcontact.getSurName(), emds.getTechnicalContact().getSurName());
-    assertEquals(technicalcontact.getTel(), emds.getTechnicalContact().getTel());
-    assertEquals(technicalcontact.getType(), emds.getTechnicalContact().getType());
-    assertEquals(validUntil, emds.getValidUntil());
-    assertEquals(attributes.size(), emds.getAttributes().size());
+    Assertions.assertEquals(encCert, emds.getEncCert());
+    Assertions.assertEquals(entityId, emds.getEntityId());
+    Assertions.assertEquals(id, emds.getId());
+    Assertions.assertEquals(middlewareVersion, emds.getMiddlewareVersion());
+    Assertions.assertEquals(organisation.getName(), emds.getOrganisation().getName());
+    Assertions.assertEquals(organisation.getDisplayName(), emds.getOrganisation().getDisplayName());
+    Assertions.assertEquals(organisation.getLangId(), emds.getOrganisation().getLangId());
+    Assertions.assertEquals(organisation.getUrl(), emds.getOrganisation().getUrl());
+    Assertions.assertEquals(postEndpoint, emds.getPostEndpoint());
+    Assertions.assertEquals(redirectEndpoint, emds.getRedirectEndpoint());
+    Assertions.assertEquals(sigCert, emds.getSigCert());
+    Assertions.assertEquals(supportContact.getCompany(), emds.getSupportContact().getCompany());
+    Assertions.assertEquals(supportContact.getEmail(), emds.getSupportContact().getEmail());
+    Assertions.assertEquals(supportContact.getGivenName(), emds.getSupportContact().getGivenName());
+    Assertions.assertEquals(supportContact.getSurName(), emds.getSupportContact().getSurName());
+    Assertions.assertEquals(supportContact.getTel(), emds.getSupportContact().getTel());
+    Assertions.assertEquals(supportContact.getType(), emds.getSupportContact().getType());
+    Assertions.assertEquals(technicalcontact.getCompany(), emds.getTechnicalContact().getCompany());
+    Assertions.assertEquals(technicalcontact.getEmail(), emds.getTechnicalContact().getEmail());
+    Assertions.assertEquals(technicalcontact.getGivenName(), emds.getTechnicalContact().getGivenName());
+    Assertions.assertEquals(technicalcontact.getSurName(), emds.getTechnicalContact().getSurName());
+    Assertions.assertEquals(technicalcontact.getTel(), emds.getTechnicalContact().getTel());
+    Assertions.assertEquals(technicalcontact.getType(), emds.getTechnicalContact().getType());
+    Assertions.assertEquals(validUntil, emds.getValidUntil());
+    Assertions.assertEquals(attributes.size(), emds.getAttributes().size());
+  }
+
+  @Test
+  void createTestRequestWithTestCase() throws Exception
+  {
+    String issuer = "issuer";
+    String destination = "test destination";
+    EidasNameIdType nameIdPolicy = EidasNameIdType.PERSISTENT;
+    EidasLoaEnum loa = EidasLoaEnum.LOA_TEST;
+    List<X509Certificate> authors = new ArrayList<>();
+
+    X509Certificate cert = Utils.readCert(TestEidasSaml.class.getResourceAsStream("/EidasSignerTest_x509.cer"));
+    authors.add(cert);
+    PrivateKey pk = Utils.readPKCS12(TestEidasSaml.class.getResourceAsStream(TEST_P12), "123456".toCharArray())
+                         .getKey();
+    EidasSigner signer = new EidasSigner(pk, cert);
+
+    AuthnRequest authnRequest = buildAuthnRequest(requestedAttributes);
+
+    byte[] request = EidasSaml.createRequest(issuer,
+                                             destination,
+                                             signer,
+                                             requestedAttributes,
+                                             null,
+                                             nameIdPolicy,
+                                             loa,
+                                             TestCaseEnum.UNKNOWN);
+    String resultStr = new String(org.bouncycastle.util.encoders.Base64.encode(request), StandardCharsets.UTF_8);
+    System.out.println("--->" + resultStr);
+    EidasRequest result = EidasSaml.parseRequest(new ByteArrayInputStream(request), authors);
+    AuthnRequest createdRequest = result.getAuthnRequest();
+    Assertions.assertEquals(issuer, result.getIssuer());
+    Assertions.assertEquals(destination, result.getDestination());
+    Assertions.assertEquals(Constants.DEFAULT_PROVIDER_NAME, result.getProviderName());
+    Assertions.assertEquals(destination, result.getDestination());
+    Assertions.assertTrue(new String(request).contains(loa.getUri() + "#" + TestCaseEnum.UNKNOWN.getTestCase()));
+    Assertions.assertEquals(authnRequest.isForceAuthn(), createdRequest.isForceAuthn());
+    Assertions.assertEquals(authnRequest.isPassive(), createdRequest.isPassive());
+    Assertions.assertEquals(requestedAttributes.size(), result.getRequestedAttributesEntries().size());
+    Assertions.assertNull(createdRequest.getScoping());
+    Assertions.assertEquals(authnRequest.getExtensions().getUnknownXMLObjects().size(),
+                            createdRequest.getExtensions().getUnknownXMLObjects().size());
+    Assertions.assertEquals(authnRequest.getExtensions().getUnknownXMLObjects().get(0).getOrderedChildren().size(),
+                            createdRequest.getExtensions().getUnknownXMLObjects().get(0).getOrderedChildren().size());
+    for ( Map.Entry<EidasPersonAttributes, Boolean> entry : result.getRequestedAttributesEntries() )
+    {
+      Assertions.assertEquals(requestedAttributes.get(entry.getKey()), entry.getValue());
+    }
   }
 
   private AuthnRequest buildAuthnRequest(Map<EidasPersonAttributes, Boolean> requestedAttributes)

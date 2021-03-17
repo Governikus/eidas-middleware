@@ -102,7 +102,6 @@ import net.shibboleth.utilities.java.support.component.ComponentInitializationEx
 import net.shibboleth.utilities.java.support.xml.BasicParserPool;
 import net.shibboleth.utilities.java.support.xml.XMLParserException;
 import se.litsec.eidas.opensaml.common.EidasConstants;
-import se.litsec.eidas.opensaml.common.EidasLoaEnum;
 import se.litsec.eidas.opensaml.ext.attributes.CurrentAddressType;
 import se.swedenconnect.opensaml.xmlsec.encryption.support.DecryptionUtils;
 
@@ -205,6 +204,8 @@ public class EidasResponse
   @Getter
   private String issueInstant;
 
+  @Getter
+  @Setter
   private EidasLoaEnum loa;
 
   private EidasEncrypter encrypter;
@@ -336,11 +337,23 @@ public class EidasResponse
     {
       checkSignature(trustedAnchorList, assertion);
       setEidasResponseNameIdFromAssertion(eidasResp, assertion);
+      setLevelOfAssuranceFromAssertion(eidasResp, assertion);
       for ( AttributeStatement attStat : assertion.getAttributeStatements() )
       {
         processAttributes(eidasResp, attStat);
       }
     }
+  }
+
+  private static void setLevelOfAssuranceFromAssertion(EidasResponse eidasResp, Assertion assertion)
+  {
+    String loa = assertion.getAuthnStatements()
+                          .get(0)
+                          .getAuthnContext()
+                          .getAuthnContextClassRef()
+                          .getAuthnContextClassRef();
+    EidasLoaEnum loaEnum = EidasLoaEnum.parse(loa);
+    eidasResp.setLoa(loaEnum);
   }
 
   private static void processAttributes(EidasResponse eidasResp, AttributeStatement attStat)
@@ -678,6 +691,7 @@ public class EidasResponse
     subject.setNameID(nameID);
 
     SubjectConfirmation subjectConfirmation = new SubjectConfirmationBuilder().buildObject();
+    subjectConfirmation.setMethod(SubjectConfirmation.METHOD_BEARER);
     SubjectConfirmationData subjectConfirmationData = new SubjectConfirmationDataBuilder().buildObject();
     subjectConfirmationData.setInResponseTo(inResponseTo);
     subjectConfirmationData.setNotBefore(now);

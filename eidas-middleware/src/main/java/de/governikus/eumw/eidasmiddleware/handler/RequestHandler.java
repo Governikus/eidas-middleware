@@ -112,7 +112,7 @@ public class RequestHandler
    * @param samlRequestBase64 The SAMLRequest parameter from the incoming request
    * @param isPost <code>true</code> for HTTP POST, <code>false</code> for HTTP GET
    */
-  String handleSAMLRequest(String samlRequestBase64, boolean isPost) throws ErrorCodeWithResponseException
+  EidasRequest handleSAMLRequest(String samlRequestBase64, boolean isPost) throws ErrorCodeWithResponseException
   {
     return handleSAMLRequest(null, samlRequestBase64, isPost);
   }
@@ -123,9 +123,9 @@ public class RequestHandler
    * @param relayState The relayState parameter from the incoming request
    * @param samlRequestBase64 The SAMLRequest parameter from the incoming request
    * @param isPost <code>true</code> for HTTP POST, <code>false</code> for HTTP GET
-   * @return The stored sessionID that will be requested at the TcToken endpoint
+   * @return The eIDAS request with the stored sessionID for the TcToken endpoint
    */
-  public String handleSAMLRequest(String relayState, String samlRequestBase64, boolean isPost)
+  public EidasRequest handleSAMLRequest(String relayState, String samlRequestBase64, boolean isPost)
     throws ErrorCodeWithResponseException
   {
     EidasRequest eidasReq;
@@ -172,8 +172,7 @@ public class RequestHandler
       {
         throw new ErrorCodeException(ErrorCode.WRONG_DESTINATION, "Given AssertionConsumerServiceURL ist not valid!");
       }
-
-      return eidasReq.getId();
+      return eidasReq;
     }
     catch (ErrorCodeWithResponseException e)
     {

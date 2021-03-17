@@ -35,6 +35,8 @@ import de.governikus.eumw.eidasmiddleware.eid.RequestingServiceProvider;
 import de.governikus.eumw.eidasmiddleware.handler.RequestHandler;
 import de.governikus.eumw.eidasmiddleware.handler.ResponseHandler;
 import de.governikus.eumw.eidasmiddleware.model.ResponseModel;
+import de.governikus.eumw.eidasstarterkit.EidasLoaEnum;
+import de.governikus.eumw.eidasstarterkit.EidasRequest;
 import de.governikus.eumw.poseidas.cardbase.StringUtil;
 import lombok.extern.slf4j.Slf4j;
 
@@ -73,26 +75,10 @@ public class RequestReceiver
                             @RequestParam(required = false, name = "sessionId") String sessionId,
                             @RequestHeader(required = false, name = "User-Agent") String userAgent)
   {
-    String createdSessionId;
     // in case this parameter is present this is a SAML authn request
     if (StringUtil.notNullOrEmpty(samlRequestBase64))
     {
-      try
-      {
-        createdSessionId = requestHandler.handleSAMLRequest(relayState, samlRequestBase64, false);
-      }
-      catch (ErrorCodeWithResponseException e)
-      {
-        Arrays.stream(e.getDetails()).forEach(log::warn);
-        log.debug(e.getMessage(), e);
-        return showSamlErrorPage(e, relayState);
-      }
-      catch (RequestProcessingException e)
-      {
-        log.debug("There was an error while processing the request", e);
-        return showErrorPage(e.getMessage());
-      }
-      return showMiddlewarePage(createdSessionId, userAgent);
+      return handleEIDASRequest(relayState, samlRequestBase64, userAgent, false);
     }
     // in case this parameter is present the user already sent the SAML authn request and is now switching the
     // language
@@ -115,10 +101,22 @@ public class RequestReceiver
                              @RequestParam(HttpRedirectUtils.REQUEST_PARAMNAME) String samlRequestBase64,
                              @RequestHeader(required = false, name = "User-Agent") String userAgent)
   {
+    return handleEIDASRequest(relayState, samlRequestBase64, userAgent, true);
+  }
+
+  private ModelAndView handleEIDASRequest(String relayState, String samlRequestBase64, String userAgent, boolean isPost)
+  {
     try
     {
-      String sessionId = requestHandler.handleSAMLRequest(relayState, samlRequestBase64, true);
-      return showMiddlewarePage(sessionId, userAgent);
+      EidasRequest request = requestHandler.handleSAMLRequest(relayState, samlRequestBase64, isPost);
+      if (EidasLoaEnum.LOA_TEST.equals(request.getAuthClassRef()))
+      {
+        String samlResponse = responseHandler.prepareDummyResponse(request.getId(), request.getTestCase());
+        return createResponseView(relayState,
+                                  samlResponse,
+                                  responseHandler.getConsumerURLForRequestID(request.getId()));
+      }
+      return showMiddlewarePage(request.getId(), userAgent);
     }
     catch (ErrorCodeWithResponseException e)
     {
@@ -126,11 +124,22 @@ public class RequestReceiver
       log.debug(e.getMessage(), e);
       return showSamlErrorPage(e, relayState);
     }
-    catch (Exception e)
+    catch (RequestProcessingException e)
     {
       log.debug("There was an error while processing the request", e);
       return showErrorPage(e.getMessage());
     }
+  }
+
+  private ModelAndView createResponseView(String relayState, String samlResponse, String consumerURLForRequestID)
+  {
+    ModelAndView response = new ModelAndView("response");
+    response.addObject("SAML", samlResponse);
+    response.addObject("consumerURL", consumerURLForRequestID);
+    response.addObject("relayState", relayState);
+    response.addObject("linkToSelf", ContextPaths.EIDAS_CONTEXT_PATH + ContextPaths.RESPONSE_SENDER);
+    response.addObject("responseModel", new ResponseModel());
+    return response;
   }
 
   /**
@@ -189,13 +198,7 @@ public class RequestReceiver
     RequestingServiceProvider reqSP = serviceProviderConfig.getProviderByEntityID(e.getIssuer());
     String samlResponse = responseHandler.prepareSAMLErrorResponse(reqSP, e.getRequestId(), e.getCode(), e.getDetails());
 
-    ModelAndView response = new ModelAndView("response");
-    response.addObject("SAML", samlResponse);
-    response.addObject("consumerURL", reqSP.getAssertionConsumerURL());
-    response.addObject("relayState", relayState);
-    response.addObject("linkToSelf", ContextPaths.EIDAS_CONTEXT_PATH + ContextPaths.RESPONSE_SENDER);
-    response.addObject("responseModel", new ResponseModel());
-    return response;
+    return createResponseView(relayState, samlResponse, reqSP.getAssertionConsumerURL());
   }
 
   private boolean isMobileDevice(String userAgentHeader)

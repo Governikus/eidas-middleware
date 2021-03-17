@@ -1,4 +1,4 @@
-FROM azul/zulu-openjdk-alpine:8u252
+FROM azul/zulu-openjdk-alpine:8u282
 
 MAINTAINER Benny Prange <benny.prange@governikus.de>
 

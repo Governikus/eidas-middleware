@@ -24,6 +24,11 @@ public final class ContextPaths
   public static final String ADMIN_CONTEXT_PATH = "/admin-interface";
 
   /**
+   * The path to the service provider specific details page
+   */
+  public static final String DETAILS = "/details";
+
+  /**
    * The path to the eIDAS Middleware metadata servlet
    */
   public static final String METADATA = "/Metadata";

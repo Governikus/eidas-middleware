@@ -1,11 +1,10 @@
 /*
- * Copyright (c) 2020 Governikus KG. Licensed under the EUPL, Version 1.2 or as soon they will be approved by
- * the European Commission - subsequent versions of the EUPL (the "Licence"); You may not use this work except
- * in compliance with the Licence. You may obtain a copy of the Licence at:
- * http://joinup.ec.europa.eu/software/page/eupl Unless required by applicable law or agreed to in writing,
- * software distributed under the Licence is distributed on an "AS IS" basis, WITHOUT WARRANTIES OR CONDITIONS
- * OF ANY KIND, either express or implied. See the Licence for the specific language governing permissions and
- * limitations under the Licence.
+ * Copyright (c) 2020 Governikus KG. Licensed under the EUPL, Version 1.2 or as soon they will be approved by the
+ * European Commission - subsequent versions of the EUPL (the "Licence"); You may not use this work except in compliance
+ * with the Licence. You may obtain a copy of the Licence at: http://joinup.ec.europa.eu/software/page/eupl Unless
+ * required by applicable law or agreed to in writing, software distributed under the Licence is distributed on an
+ * "AS IS" basis, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the Licence for the
+ * specific language governing permissions and limitations under the Licence.
  */
 
 package de.governikus.eumw.configuration.wizard.web.model.poseidasxml;
@@ -73,7 +72,9 @@ public class PoseidasCoreConfigForm extends AbstractConfigurationLoader
   /**
    * hours to refresh cvc before it expires
    */
-  public static final int HOURS_REFRESH_BEFORE_EXPIRE = 48;
+  public static final int HOURS_REFRESH_BEFORE_EXPIRE_TEST = 240;
+
+  public static final int HOURS_REFRESH_BEFORE_EXPIRE_PRODUCTIVE = 68;
 
   /**
    * this file represents an uploaded preconfigured file that the user might have uploaded or loaded with the
@@ -168,8 +169,7 @@ public class PoseidasCoreConfigForm extends AbstractConfigurationLoader
     log.trace("loading configuration from poseidas xml input-stream");
     try
     {
-      setCoreConfig(XmlHelper.unmarshal(IOUtils.toString(configurationFile.getBytes(),
-                                                         StandardCharsets.UTF_8.name()),
+      setCoreConfig(XmlHelper.unmarshal(IOUtils.toString(configurationFile.getBytes(), StandardCharsets.UTF_8.name()),
                                         PoseidasCoreConfiguration.class));
     }
     catch (IOException e)
@@ -197,8 +197,7 @@ public class PoseidasCoreConfigForm extends AbstractConfigurationLoader
       ServiceProviderForm serviceProvider = new ServiceProviderForm();
       serviceProvider.setServiceProvider(serviceProviderType);
       serviceProvider.setEntityID(serviceProviderType.getEntityID());
-      serviceProvider.setPublicServiceProvider(serviceProviderType.getEntityID()
-                                                                  .equals(publicServiceProviderEntityID));
+      serviceProvider.setPublicServiceProvider(serviceProviderType.getEntityID().equals(publicServiceProviderEntityID));
       PkiConnectorConfigurationType pkiConnectorConfigurationType = serviceProviderType.getEPAConnectorConfiguration()
                                                                                        .getPkiConnectorConfiguration();
       // @formatter:off
@@ -217,12 +216,9 @@ public class PoseidasCoreConfigForm extends AbstractConfigurationLoader
       }
       catch (IllegalArgumentException ex)
       {
-        log.warn("could not parse policy implementation id '{}': {}",
-                 policyImplementationId,
-                 ex.getMessage());
+        log.warn("could not parse policy implementation id '{}': {}", policyImplementationId, ex.getMessage());
       }
-      getSslKeysForm(serviceProviderType,
-                     serviceProviderType.getEntityID()).ifPresent(serviceProvider::setSslKeysForm);
+      getSslKeysForm(serviceProviderType, serviceProviderType.getEntityID()).ifPresent(serviceProvider::setSslKeysForm);
       serviceProviders.add(serviceProvider);
       commonServiceProviderData = serviceProvider;
     }
@@ -242,13 +238,13 @@ public class PoseidasCoreConfigForm extends AbstractConfigurationLoader
   }
 
   /**
-   * tries to create a {@link SslKeysForm} from the given list. We expect the list to hold exactly a single
-   * entry not more. If more entries are found the first entry will be used and the rest will be ignored
+   * tries to create a {@link SslKeysForm} from the given list. We expect the list to hold exactly a single entry not
+   * more. If more entries are found the first entry will be used and the rest will be ignored
    *
    * @param sslKeysTypeList a list of all ssl key configurations
    * @param entityID The entityID of the service provider
-   * @return an empty if no ssl key configurations are present or if the keys could not be read, the first
-   *         entry of the ssl keys configuration else
+   * @return an empty if no ssl key configurations are present or if the keys could not be read, the first entry of the
+   *         ssl keys configuration else
    */
   private Optional<SslKeysForm> getSslKeysForm(List<SslKeysType> sslKeysTypeList, String entityID)
   {
@@ -331,8 +327,7 @@ public class PoseidasCoreConfigForm extends AbstractConfigurationLoader
    * tries to extract the policy implementation id from the configuration
    *
    * @param serviceProviderType the service provider configuration
-   * @return the matching policy implementation id or {@link DvcaProvider#GOV_DVCA} if the value could not be
-   *         resolved
+   * @return the matching policy implementation id or {@link DvcaProvider#GOV_DVCA} if the value could not be resolved
    */
   private DvcaProvider getDvcaProvider(ServiceProviderType serviceProviderType)
   {
@@ -354,20 +349,18 @@ public class PoseidasCoreConfigForm extends AbstractConfigurationLoader
       return DvcaProvider.BUDRU;
     }
 
-    // New Gov DVCA can only be identified using the connection URLs because it uses the same
-    // DvcaProvider as old Gov DVCA
-    if ("https://dvca-r1.governikus-eid.de:8444/gov_dvca/ta-service".equals(pkiConnectorConfiguration.getTerminalAuthService()
-                                                                                                     .getUrl())
-        && "https://dvca-r1.governikus-eid.de:8444/gov_dvca/ri-service".equals(pkiConnectorConfiguration.getRestrictedIdService()
-                                                                                                        .getUrl())
-        && "https://dvca-r1.governikus-eid.de:8444/gov_dvca/pa-service".equals(pkiConnectorConfiguration.getPassiveAuthService()
-                                                                                                        .getUrl())
-        && "https://dvca-r1.governikus-eid.de:8444/gov_dvca/certDesc-service".equals(pkiConnectorConfiguration.getDvcaCertDescriptionService()
-                                                                                                              .getUrl()))
+    if ("https://dev.governikus-eid.de:9444/gov_dvca/ta-service".equals(pkiConnectorConfiguration.getTerminalAuthService()
+                                                                                                 .getUrl())
+        && "https://dev.governikus-eid.de:9444/gov_dvca/ri-service".equals(pkiConnectorConfiguration.getRestrictedIdService()
+                                                                                                    .getUrl())
+        && "https://dev.governikus-eid.de:9444/gov_dvca/pa-service".equals(pkiConnectorConfiguration.getPassiveAuthService()
+                                                                                                    .getUrl())
+        && "https://dev.governikus-eid.de:9444/gov_dvca/certDesc-service".equals(pkiConnectorConfiguration.getDvcaCertDescriptionService()
+                                                                                                          .getUrl()))
     {
-      return DvcaProvider.NEW_GOV_DVCA;
+      return DvcaProvider.GOV_DVCA;
     }
-    return DvcaProvider.GOV_DVCA;
+    return DvcaProvider.NEW_GOV_DVCA;
   }
 
   /**
@@ -431,7 +424,10 @@ public class PoseidasCoreConfigForm extends AbstractConfigurationLoader
 
       EPAConnectorConfigurationType epa = new EPAConnectorConfigurationType();
       epa.setCVCRefID(serviceProvider.getEntityID().trim());
-      epa.setHoursRefreshCVCBeforeExpires(HOURS_REFRESH_BEFORE_EXPIRE);
+
+      epa.setHoursRefreshCVCBeforeExpires(commonServiceProviderData.getDvcaProvider() == DvcaProvider.BUDRU
+        ? HOURS_REFRESH_BEFORE_EXPIRE_PRODUCTIVE : HOURS_REFRESH_BEFORE_EXPIRE_TEST);
+
       epa.setPaosReceiverURL(coreConfig.getServerUrl() + "/paosreceiver");
       epa.setUpdateCVC(true);
 
@@ -450,7 +446,7 @@ public class PoseidasCoreConfigForm extends AbstractConfigurationLoader
 
       pki.getSslKeys().add(createSslKeys(serviceProvider));
 
-      addDvcaServices(serviceProvider.getDvcaProvider().getValue(), pki);
+      addDvcaServices(commonServiceProviderData.getDvcaProvider().getValue(), pki);
 
       epa.setPkiConnectorConfiguration(pki);
 
@@ -472,10 +468,10 @@ public class PoseidasCoreConfigForm extends AbstractConfigurationLoader
 
     if (DvcaProvider.BUDRU.getValue().equals(dvcaProvider))
     {
-      terminal = "https://berca-ps.d-trust.net/ps/dvca-at";
-      restricted = "https://berca-ps.d-trust.net/ps/dvsd_v2";
-      passive = "https://berca-ps.d-trust.net/ps/scs";
-      dvca = "https://berca-ps.d-trust.net/ps/dvca-at-cert-desc";
+      terminal = "https://berca-p1.d-trust.net/ps/dvca-at";
+      restricted = "https://berca-p1.d-trust.net/ps/dvsd_v2";
+      passive = "https://berca-p1.d-trust.net/ps/scs";
+      dvca = "https://berca-p1.d-trust.net/ps/dvca-at-cert-desc";
     }
     else if (DvcaProvider.GOV_DVCA.getValue().equals(dvcaProvider))
     {
@@ -488,10 +484,10 @@ public class PoseidasCoreConfigForm extends AbstractConfigurationLoader
     else
     {
       // New Governikus dvca
-      terminal = "https://dvca-r1.governikus-eid.de:8444/gov_dvca/ta-service";
-      restricted = "https://dvca-r1.governikus-eid.de:8444/gov_dvca/ri-service";
-      passive = "https://dvca-r1.governikus-eid.de:8444/gov_dvca/pa-service";
-      dvca = "https://dvca-r1.governikus-eid.de:8444/gov_dvca/certDesc-service";
+      terminal = "https://dvca-r1.governikus-eid.de/gov_dvca/ta-service";
+      restricted = "https://dvca-r1.governikus-eid.de/gov_dvca/ri-service";
+      passive = "https://dvca-r1.governikus-eid.de/gov_dvca/pa-service";
+      dvca = "https://dvca-r1.governikus-eid.de/gov_dvca/certDesc-service";
     }
 
     PkiServiceType terminalAuthService = new PkiServiceType();
@@ -527,17 +523,10 @@ public class PoseidasCoreConfigForm extends AbstractConfigurationLoader
     if (serviceProvider.getSslKeysForm().getClientKeyForm() != null)
     {
       sslKeys.getClientCertificate()
-             .add(serviceProvider.getSslKeysForm()
-                                 .getClientKeyForm()
-                                 .asCertificate()
-                                 .getCertificate()
-                                 .getEncoded());
+             .add(serviceProvider.getSslKeysForm().getClientKeyForm().asCertificate().getCertificate().getEncoded());
       sslKeys.setClientKey(serviceProvider.getSslKeysForm().getClientKeyForm().getPrivateKey().getEncoded());
     }
-    sslKeys.setServerCertificate(serviceProvider.getSslKeysForm()
-                                                .getServerCertificate()
-                                                .getCertificate()
-                                                .getEncoded());
+    sslKeys.setServerCertificate(serviceProvider.getSslKeysForm().getServerCertificate().getCertificate().getEncoded());
     return sslKeys;
   }
 

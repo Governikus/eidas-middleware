@@ -260,7 +260,7 @@ public class PKIServiceConnector
                                                                                    new String[]{Constants.SSL_PROTO_TLSv1_2},
                                                                                    ENABLED_CIPHER_SUITES,
                                                                                    SSLConnectionSocketFactory.getDefaultHostnameVerifier());
-      client = HttpClients.custom().setSSLSocketFactory(sslSocketFactory).build();
+      client = HttpClients.custom().useSystemProperties().setSSLSocketFactory(sslSocketFactory).build();
     }
     catch (CertificateException | NoSuchAlgorithmException | UnrecoverableKeyException | KeyStoreException
       | KeyManagementException e)

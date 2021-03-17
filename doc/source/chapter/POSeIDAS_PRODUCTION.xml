@@ -29,10 +29,10 @@
                         MIIEiDCCA3CgAwIBAgIDJlN5MA0GCSqGSIb3DQEBCwUAMFQxCzAJBgNVBAYTAkRFMRUwEwYDVQQKEwxELVRydXN0IEdtYkgxLjAsBgNVBAMTJUQtVFJVU1QgTGltaXRlZCBCYXNpYyBFQUMgQ0EgMS0xIDIwMTgwHhcNMTkwNDA0MTAyNDI3WhcNMjMwNDA0MTAyNDI3WjBTMQswCQYDVQQGEwJERTEUMBIGA1UEChMLRUFDIFN5c3RlbWUxHTAbBgNVBAMTFGJlcmNhLXAxLmQtdHJ1c3QubmV0MQ8wDQYDVQQIEwZCZXJsaW4wggEiMA0GCSqGSIb3DQEBAQUAA4IBDwAwggEKAoIBAQCXQ4WEJtKZZUIRmplenLmNVlLg2cJMVZ0xT/FsUrUWk/JXH2C4LAxlsnx/tv9rxKYXZUi2oVhz43jEPiMsXZxVUo4n8mpH6I1vqvxiwR8rgxtsPiTOf+iUeVLYIXp24WLGXV80hWy+WSOL7rFO+TgQHoFv2MU7tzvmdnLeeTUJxfpU1Ac1JYkvq0jcU8LXVoRKfC+v8VMQ8zfmGu1ZnYOGyUyWcSjNRkXjchGMNc4ADDBTFIRBUCthjb9RuVc4HV3Cm6XholZGzxAIG8O3ybmWMdxyav/wcadnLumcgD7r5qE5KH0yIo3RaO6HAN5f/W9Vzr9JjCHGAh1PWogL/SddAgMBAAGjggFiMIIBXjATBgNVHSUEDDAKBggrBgEFBQcDATAdBgNVHQ4EFgQU6ejGLsU+zo1cc+1gRpXM/H/i8HUwFgYDVR0gBA8wDTALBgkqghQAUAeDdAowHwYDVR0jBBgwFoAUswxYrf8CYVl4gE/vvK5G8oYbv2kwDgYDVR0PAQH/BAQDAgWgMIHeBgNVHR8EgdYwgdMwgdCggc2ggcqGgYFsZGFwOi8vZGlyZWN0b3J5LmQtdHJ1c3QubmV0L0NOPUQtVFJVU1QlMjBMaW1pdGVkJTIwQmFzaWMlMjBFQUMlMjBDQSUyMDEtMSUyMDIwMTgsTz1ELVRydXN0JTIwR21iSCxDPURFP2NlcnRpZmljYXRlcmV2b2NhdGlvbmxpc3SGRGh0dHA6Ly9jcmwuZC10cnVzdC5uZXQvY3JsL2QtdHJ1c3RfbGltaXRlZF9iYXNpY19lYWNfY2FfMS0xXzIwMTguY3JsMA0GCSqGSIb3DQEBCwUAA4IBAQCkszC7hGOQIekspM6l5KPDzKMEWmjQjTJ4BnlejcVNQxUZR8KPZa0bB1yeEcVPTcmi6LQQOlHMYvVfo6tZ2SoXQ9Sbo5uh9TaDTcohcmwCBasy5Wrgaq1AqxgKG4Pgd92pHBCm1uMekBVqA8j+HOSk7ig0+fTx2vtttI6rTK2fk5Z9QOqOirh6pBh2sSah1txfjWUVVTM/LZrTmPuyfBRrGOqCb5H/wrEffxgcxoCNcd3kIm11n67GoBDagBrhOl8sL2Dj2hNET+WlrQCZitJmB91fBrucZdIndWfzf0ShWhWZnNKqKUuRuX6vHq4G8/xyK9v3VP5S4JQpO/haodxI
                     </serverCertificate>
                     <clientCertificate>
-                        [BerCA TLS client certificate as Base64]
+                        [BerCA TLS client certificate as PKCS8 (Base64)]
                     </clientCertificate>
                     <clientKey>
-                        [BerCA TLS client key as Base64]
+                        [BerCA TLS client key as PKCS8 (Base64)]
                     </clientKey>
                 </sslKeys>
                 <terminalAuthService sslKeysId="d-trust">
@@ -53,7 +53,7 @@
                 e.g. https://localhost:443/eidas-middleware/paosreceiver
                 - please note you need the port number even if it is the default]
             </PaosReceiverURL>
-            <hoursRefreshCVCBeforeExpires>48</hoursRefreshCVCBeforeExpires>
+            <hoursRefreshCVCBeforeExpires>68</hoursRefreshCVCBeforeExpires>
         </EPAConnectorConfiguration>
     </ServiceProvider>
 </CoreConfiguration>

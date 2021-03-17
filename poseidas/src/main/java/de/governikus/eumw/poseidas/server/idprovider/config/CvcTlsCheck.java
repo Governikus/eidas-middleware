@@ -1,11 +1,10 @@
 /*
- * Copyright (c) 2020 Governikus KG. Licensed under the EUPL, Version 1.2 or as soon they will be approved by
- * the European Commission - subsequent versions of the EUPL (the "Licence"); You may not use this work except
- * in compliance with the Licence. You may obtain a copy of the Licence at:
- * http://joinup.ec.europa.eu/software/page/eupl Unless required by applicable law or agreed to in writing,
- * software distributed under the Licence is distributed on an "AS IS" basis, WITHOUT WARRANTIES OR CONDITIONS
- * OF ANY KIND, either express or implied. See the Licence for the specific language governing permissions and
- * limitations under the Licence.
+ * Copyright (c) 2020 Governikus KG. Licensed under the EUPL, Version 1.2 or as soon they will be approved by the
+ * European Commission - subsequent versions of the EUPL (the "Licence"); You may not use this work except in compliance
+ * with the Licence. You may obtain a copy of the Licence at: http://joinup.ec.europa.eu/software/page/eupl Unless
+ * required by applicable law or agreed to in writing, software distributed under the Licence is distributed on an
+ * "AS IS" basis, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the Licence for the
+ * specific language governing permissions and limitations under the Licence.
  */
 
 package de.governikus.eumw.poseidas.server.idprovider.config;
@@ -57,8 +56,8 @@ public class CvcTlsCheck
   private TerminalPermissionAO facade;
 
   /**
-   * Performs the following checks: - TLS server certificate valid? - CVC valid? - server URL matches the one
-   * in CVC? - TLS server certificate referenced in CVC?
+   * Performs the following checks: - TLS server certificate valid? - CVC valid? - server URL matches the one in CVC? -
+   * TLS server certificate referenced in CVC?
    *
    * @return object holding the results
    */
@@ -73,6 +72,7 @@ public class CvcTlsCheck
     if (certificate.isPresent())
     {
       resultHolder.setServerTlsValid(testTlsValidity(certificate.get()));
+      resultHolder.setServerTlsExpirationDate(certificate.get().getNotAfter());
     }
     else
     {
@@ -82,13 +82,44 @@ public class CvcTlsCheck
     // Check CVCs
     for ( ServiceProviderDto sp : config.getServiceProvider().values() )
     {
-      CvcCheckResults cvcResults = new CvcCheckResults();
-      TerminalPermission tp = facade.getTerminalPermission(sp.getEpaConnectorConfiguration().getCVCRefID());
-      if (tp == null)
-      {
-        resultHolder.getProviderCvcChecks().put(sp.getEntityID(), cvcResults);
-        continue;
-      }
+      resultHolder.getProviderCvcChecks().put(sp.getEntityID(), getCvcResultsForSp(sp, config, certificate));
+    }
+    return resultHolder;
+  }
+
+  /**
+   * Performs the following checks for one service provider: - CVC valid? - server URL matches the one in CVC? - TLS
+   * server certificate referenced in CVC?
+   *
+   * @param entityId the entity id for the service provider
+   * @return object holding the results
+   */
+  public CvcCheckResults checkCvcProvider(String entityId)
+  {
+    CoreConfigurationDto config = PoseidasConfigurator.getInstance().getCurrentConfig();
+    Optional<ServiceProviderDto> serviceProviderDtoOptional = config.getServiceProvider()
+                                                                    .values()
+                                                                    .stream()
+                                                                    .filter(sp -> sp.getEntityID().equals(entityId))
+                                                                    .findFirst();
+    CvcCheckResults cvcResults = new CvcCheckResults();
+    if (serviceProviderDtoOptional.isPresent())
+    {
+      ServiceProviderDto sp = serviceProviderDtoOptional.get();
+      Optional<X509Certificate> certificate = getOwnTlsCertificate(config.getServerUrl());
+      cvcResults = getCvcResultsForSp(sp, config, certificate);
+    }
+    return cvcResults;
+  }
+
+  private CvcCheckResults getCvcResultsForSp(ServiceProviderDto sp,
+                                             CoreConfigurationDto config,
+                                             Optional<X509Certificate> certificate)
+  {
+    CvcCheckResults cvcResults = new CvcCheckResults();
+    TerminalPermission tp = facade.getTerminalPermission(sp.getEpaConnectorConfiguration().getCVCRefID());
+    if (tp != null)
+    {
       try
       {
         TerminalData data = tp.getFullCvc();
@@ -101,9 +132,8 @@ public class CvcTlsCheck
       {
         // happens if no cvc in terminalpermission
       }
-      resultHolder.getProviderCvcChecks().put(sp.getEntityID(), cvcResults);
     }
-    return resultHolder;
+    return cvcResults;
   }
 
   private static boolean testCvcTlsMatch(TerminalData data, Optional<X509Certificate> certificate)
@@ -127,10 +157,7 @@ public class CvcTlsCheck
       return false;
     }
 
-    if (data.getCVCDescription()
-            .getCommunicationCertificateHashes()
-            .stream()
-            .anyMatch(h -> ByteUtil.equals(h, digest)))
+    if (data.getCVCDescription().getCommunicationCertificateHashes().stream().anyMatch(h -> ByteUtil.equals(h, digest)))
     {
       log.info("TLS certificate is referenced in CVC {}", data.getHolderReferenceString());
       return true;
@@ -190,8 +217,7 @@ public class CvcTlsCheck
   }
 
   // get an SSLSocketFactory trusting all certificates
-  private static SSLSocketFactory getSSLSocketFactory()
-    throws NoSuchAlgorithmException, KeyManagementException
+  private static SSLSocketFactory getSSLSocketFactory() throws NoSuchAlgorithmException, KeyManagementException
   {
     TrustManager[] trustAllCerts = {new X509TrustManager()
     {
@@ -227,11 +253,11 @@ public class CvcTlsCheck
     }
     catch (CertificateExpiredException e)
     {
-      log.warn("TLS certificate is expired: ", certificate.getSubjectX500Principal().toString());
+      log.warn("TLS certificate is expired: {}", certificate.getSubjectX500Principal().toString());
     }
     catch (CertificateNotYetValidException e)
     {
-      log.warn("TLS certificate is not yet valid: ", certificate.getSubjectX500Principal().toString());
+      log.warn("TLS certificate is not yet valid: {}", certificate.getSubjectX500Principal().toString());
     }
     return false;
   }
@@ -239,8 +265,7 @@ public class CvcTlsCheck
   private static boolean testCvcExpired(TerminalData data)
   {
     Date currentDate = new Date();
-    boolean result = currentDate.before(data.getExpirationDate())
-                     && currentDate.after(data.getEffectiveDate());
+    boolean result = currentDate.before(data.getExpirationDate()) && currentDate.after(data.getEffectiveDate());
     if (result)
     {
       log.info("CVC {} valid", data.getHolderReferenceString());
@@ -252,6 +277,15 @@ public class CvcTlsCheck
     return result;
   }
 
+  public Date getTLSExpirationDate() throws IOException
+  {
+    Optional<X509Certificate> ownTlsCertificate = getOwnTlsCertificate(PoseidasConfigurator.getInstance()
+                                                                                           .getCurrentConfig()
+                                                                                           .getServerUrl());
+    return ownTlsCertificate.map(X509Certificate::getNotAfter)
+                            .orElseThrow(() -> new IOException("Cannot retrieve own TLS certificate"));
+  }
+
   @Getter
   @NoArgsConstructor
   public class CvcTlsCheckResult
@@ -260,13 +294,16 @@ public class CvcTlsCheck
     @Setter
     boolean serverTlsValid;
 
+    @Setter
+    Date serverTlsExpirationDate;
+
     Map<String, CvcCheckResults> providerCvcChecks = new HashMap<>();
   }
 
   @Getter
   @Setter
   @NoArgsConstructor
-  public class CvcCheckResults
+  public static class CvcCheckResults
   {
 
     boolean cvcPresent;
@@ -276,5 +313,12 @@ public class CvcTlsCheck
     boolean cvcUrlMatch;
 
     boolean cvcTlsMatch;
+
+    @Override
+    public String toString()
+    {
+      return "CvcCheckResults{" + "cvcPresent=" + cvcPresent + ", cvcValidity=" + cvcValidity + ", cvcUrlMatch="
+             + cvcUrlMatch + ", cvcTlsMatch=" + cvcTlsMatch + '}';
+    }
   }
 }

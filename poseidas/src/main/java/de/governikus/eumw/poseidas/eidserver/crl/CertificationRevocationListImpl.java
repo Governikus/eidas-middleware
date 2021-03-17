@@ -1,11 +1,10 @@
 /*
- * Copyright (c) 2020 Governikus KG. Licensed under the EUPL, Version 1.2 or as soon they will be approved by
- * the European Commission - subsequent versions of the EUPL (the "Licence"); You may not use this work except
- * in compliance with the Licence. You may obtain a copy of the Licence at:
- * http://joinup.ec.europa.eu/software/page/eupl Unless required by applicable law or agreed to in writing,
- * software distributed under the Licence is distributed on an "AS IS" basis, WITHOUT WARRANTIES OR CONDITIONS
- * OF ANY KIND, either express or implied. See the Licence for the specific language governing permissions and
- * limitations under the Licence.
+ * Copyright (c) 2020 Governikus KG. Licensed under the EUPL, Version 1.2 or as soon they will be approved by the
+ * European Commission - subsequent versions of the EUPL (the "Licence"); You may not use this work except in compliance
+ * with the Licence. You may obtain a copy of the Licence at: http://joinup.ec.europa.eu/software/page/eupl Unless
+ * required by applicable law or agreed to in writing, software distributed under the Licence is distributed on an
+ * "AS IS" basis, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the Licence for the
+ * specific language governing permissions and limitations under the Licence.
  */
 
 package de.governikus.eumw.poseidas.eidserver.crl;
@@ -29,6 +28,8 @@ import org.bouncycastle.cert.jcajce.JcaX509ExtensionUtils;
 
 import de.governikus.eumw.poseidas.eidserver.crl.exception.CertificateValidationException;
 import de.governikus.eumw.poseidas.server.idprovider.config.PoseidasConfigurator;
+import de.governikus.eumw.poseidas.server.monitoring.SNMPConstants;
+import de.governikus.eumw.poseidas.server.monitoring.SNMPTrapSender;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
@@ -43,8 +44,6 @@ public class CertificationRevocationListImpl implements CertificationRevocationL
   private static CertificationRevocationListImpl crl = null;
 
   private final X509Certificate cscaRootCertificate;
-
-  private final Set<X509Certificate> trustSet;
 
   private final CrlFetcher crlFetcher;
 
@@ -65,13 +64,14 @@ public class CertificationRevocationListImpl implements CertificationRevocationL
                                           X509Certificate cscaRootCertificate,
                                           CrlFetcher crlFetcher)
   {
+    Set<X509Certificate> trustSet;
     if (masterList == null)
     {
-      this.trustSet = new HashSet<>();
+      trustSet = new HashSet<>();
     }
     else
     {
-      this.trustSet = masterList;
+      trustSet = masterList;
     }
 
     if (cscaRootCertificate == null)
@@ -94,7 +94,7 @@ public class CertificationRevocationListImpl implements CertificationRevocationL
 
     if (crlFetcher == null)
     {
-      this.crlFetcher = new HttpCrlFetcher(this.trustSet);
+      this.crlFetcher = new HttpCrlFetcher(trustSet);
     }
     else
     {
@@ -109,8 +109,8 @@ public class CertificationRevocationListImpl implements CertificationRevocationL
    * The CRLs for the CSCA root certificate, which is read from the MasterListTrustAnchor, will be fetched.
    *
    * @param masterList set of trusted certificates to validate the CRL signature
-   * @throws IllegalStateException when the class is already initialized or there was an exception during the
-   *           download of verification of the CRLs
+   * @throws IllegalStateException when the class is already initialized or there was an exception during the download
+   *           of verification of the CRLs
    */
   public static synchronized void initialize(Set<X509Certificate> masterList)
   {
@@ -120,15 +120,15 @@ public class CertificationRevocationListImpl implements CertificationRevocationL
   /**
    * This method must be called before the first {@link #getInstance()} method is called. <br>
    * This should only be called in test classes where different certificates and implementations of
-   * the @{@link CrlFetcher} are needed. In productive code {@link #initialize()} should be called.
+   * the @{@link CrlFetcher} are needed. In productive code {@link #initialize(Set)} should be called.
    *
    * @param masterList trusted certificates to validate the CRL signature
-   * @param certificate certificate to extract the CRL URL, <code>null</code> to use the default certificate
-   *          (masterlist trust anchor)
+   * @param certificate certificate to extract the CRL URL, <code>null</code> to use the default certificate (masterlist
+   *          trust anchor)
    * @param crlFetcher The @{@link CrlFetcher} that should be used to load CRLs, or <code>null</code> when the
    *          default @{@link CrlFetcher} should be used
-   * @throws IllegalStateException when the class is already initialized or there was an exception during the
-   *           download of verification of the CRLs
+   * @throws IllegalStateException when the class is already initialized or there was an exception during the download
+   *           of verification of the CRLs
    */
   static synchronized void initialize(Set<X509Certificate> masterList,
                                       X509Certificate certificate,
@@ -138,16 +138,17 @@ public class CertificationRevocationListImpl implements CertificationRevocationL
     {
       throw new IllegalStateException("This class is already initialized and it can only be initialized once.");
     }
-
     crl = new CertificationRevocationListImpl(masterList, certificate, crlFetcher);
     try
     {
       crl.fetchCrlForRoot();
       isInitialized = true;
+      SNMPTrapSender.sendSNMPTrap(SNMPConstants.TrapOID.CRL_TRAP_LAST_RENEWAL_STATUS, 0);
       log.info("CRL successful initialized");
     }
     catch (CertificateValidationException e)
     {
+      SNMPTrapSender.sendSNMPTrap(SNMPConstants.TrapOID.CRL_TRAP_LAST_RENEWAL_STATUS, 1);
       throw new IllegalStateException("Exception during initial retrieval of CRL", e);
     }
   }
@@ -170,7 +171,7 @@ public class CertificationRevocationListImpl implements CertificationRevocationL
    * Get the singleton object for this class
    *
    * @return The @{@link CertificationRevocationListImpl} singleton instance
-   * @throws IllegalStateException when the instance was not initialized, see {@link #initialize()}
+   * @throws IllegalStateException when the instance was not initialized, see {@link #initialize(Set)}
    */
   public static synchronized CertificationRevocationListImpl getInstance()
   {
@@ -295,12 +296,14 @@ public class CertificationRevocationListImpl implements CertificationRevocationL
       if (x509CRL != null)
       {
         crlCache.set(url, x509CRL);
+        SNMPTrapSender.sendSNMPTrap(SNMPConstants.TrapOID.CRL_TRAP_LAST_RENEWAL_STATUS, 0);
         return true;
       }
     }
     catch (CertificateValidationException e)
     {
       log.error("Cannot request a valid CRL for this URL: {}", url, e);
+      SNMPTrapSender.sendSNMPTrap(SNMPConstants.TrapOID.CRL_TRAP_LAST_RENEWAL_STATUS, 1);
       return false;
     }
     return false;
@@ -316,8 +319,8 @@ public class CertificationRevocationListImpl implements CertificationRevocationL
    * Check if a certificate is on the CRL.
    *
    * @param x509CertificateToCheck The certificate to be checked if it is on a CRL
-   * @return True if the certificate is revoked or the CRL(s) for the certificate cannot be downloaded or
-   *         verified, otherwise false.
+   * @return True if the certificate is revoked or the CRL(s) for the certificate cannot be downloaded or verified,
+   *         otherwise false.
    */
   public boolean isOnCRL(X509Certificate x509CertificateToCheck)
   {
@@ -343,6 +346,25 @@ public class CertificationRevocationListImpl implements CertificationRevocationL
   public static void reset()
   {
     crl = null;
+    isInitialized = false;
   }
 
+  /**
+   * Returns the last successful crl retrieval timestamp
+   *
+   * @return last successful crl retrieval timestamp
+   */
+  public static long latestRetrieval() {
+    CrlCache crlCache = getInstance().getCrlCache();
+    Set<String> availableUrls = crlCache.getAvailableUrls();
+    long latestRetrieval = 0;
+    Long buffer;
+    for (String url : availableUrls) {
+      buffer = crlCache.get(url).getLastUpdate();
+      if (buffer != null && latestRetrieval < buffer) {
+        latestRetrieval = buffer;
+      }
+    }
+    return latestRetrieval;
+  }
 }

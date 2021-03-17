@@ -6,11 +6,13 @@ import java.security.KeyPairGenerator;
 import java.security.Security;
 
 import org.bouncycastle.jce.provider.BouncyCastleProvider;
+import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 
+import de.governikus.eumw.poseidas.server.idprovider.config.PoseidasConfigurator;
 import de.governikus.eumw.poseidas.service.ConfigHolderInterface;
 
 
@@ -40,6 +42,14 @@ class RequestSignerCertificateServiceImplTest
     Security.addProvider(new BouncyCastleProvider());
     Path resourceDirectory = Paths.get("src", "test", "resources");
     System.setProperty("spring.config.additional-location", resourceDirectory.toFile().getAbsolutePath());
+  }
+
+  @AfterAll
+  public static void afterAll()
+  {
+    System.clearProperty("spring.config.additional-location");
+    Security.removeProvider(BouncyCastleProvider.PROVIDER_NAME);
+    PoseidasConfigurator.reset();
   }
 
   @Test

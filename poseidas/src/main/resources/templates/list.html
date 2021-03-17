@@ -14,9 +14,9 @@
 <head>
     <title>POSeIDAS CVC List</title>
     <!--Bootstrap-->
-    <link rel="stylesheet" th:href="@{/admin-interface/webjars/bootstrap/4.5.2/css/bootstrap.css}">
+    <link rel="stylesheet" th:href="@{/admin-interface/webjars/bootstrap/4.6.0/css/bootstrap.css}">
     <script th:src="@{/admin-interface/webjars/jquery/3.5.1/jquery.min.js}"></script>
-    <script th:src="@{/admin-interface/webjars/bootstrap/4.5.2/js/bootstrap.bundle.min.js}"></script>
+    <script th:src="@{/admin-interface/webjars/bootstrap/4.6.0/js/bootstrap.bundle.min.js}"></script>
     <script th:src="@{/admin-interface/js/poseidas.js}"></script>
 </head>
 <body>
@@ -46,7 +46,7 @@
                 <th scope="col">CHR</th>
                 <th scope="col">CAR</th>
                 <th scope="col">Valid from</th>
-                <th scope="col">Invalid on</th>
+                <th scope="col">Valid until</th>
             </tr>
             </thead>
             <tbody>
@@ -57,7 +57,7 @@
                 <td th:text="${entity.getCHR()}"/>
                 <td th:text="${entity.getCAR()}"/>
                 <td th:text="${entity.getValidFrom()}"/>
-                <td th:text="${entity.getInvalidOn()}"/>
+                <td th:text="${entity.getValidUntil()}"/>
             </tr>
             </tbody>
         </table>

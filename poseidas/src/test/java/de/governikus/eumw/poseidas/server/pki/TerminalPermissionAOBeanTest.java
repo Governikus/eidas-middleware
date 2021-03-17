@@ -755,7 +755,6 @@ class TerminalPermissionAOBeanTest
 
     byte[] serviceProviderBytes = SERVICE_PROVIDER.getBytes(StandardCharsets.UTF_8);
     terminalPermissionAOBean.addBlackListEntries(serviceProviderBytes, specificIDList);
-    Mockito.verify(blackListEntryRepository, Mockito.times(3)).flush();
     Assertions.assertEquals(10000, mockedBlackListRepo.size());
     String serviceProviderBytesString = DatatypeConverter.printBase64Binary(serviceProviderBytes);
     for ( BlackListEntry entry : mockedBlackListRepo )

@@ -23,14 +23,21 @@ public interface RequestSignerCertificateService
    * Gets the most recent request signer certificate for the given entityId
    * 
    * @param entityId entityId
-   * @return pending certificate if present, otherwise current certificate if present, otherwise
-   *         <code>null</code>
+   * @return pending certificate if present, otherwise current certificate if present, otherwise <code>null</code>
    */
   X509Certificate getRequestSignerCertificate(String entityId);
 
   /**
-   * Checks which terminals have request signer certificates due to expire and generates new certificates for
-   * these.
+   * Gets the current or pending request signer certificate for the given entityId
+   * 
+   * @param entityId entityId
+   * @param current <code>true</code> for current, <code>false</code> for pending
+   * @return certificate if present, otherwise <code>null</code>
+   */
+  X509Certificate getRequestSignerCertificate(String entityId, boolean current);
+
+  /**
+   * Checks which terminals have request signer certificates due to expire and generates new certificates for these.
    */
   void renewOutdated();
 }

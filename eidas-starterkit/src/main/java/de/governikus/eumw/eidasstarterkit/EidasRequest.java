@@ -79,7 +79,6 @@ import net.shibboleth.utilities.java.support.component.ComponentInitializationEx
 import net.shibboleth.utilities.java.support.xml.BasicParserPool;
 import net.shibboleth.utilities.java.support.xml.XMLParserException;
 import se.litsec.eidas.opensaml.common.EidasConstants;
-import se.litsec.eidas.opensaml.common.EidasLoaEnum;
 import se.litsec.eidas.opensaml.ext.RequestedAttribute;
 import se.litsec.eidas.opensaml.ext.SPType;
 import se.litsec.eidas.opensaml.ext.SPTypeEnumeration;
@@ -134,6 +133,9 @@ public class EidasRequest
   @Setter
   private EidasLoaEnum authClassRef = EidasLoaEnum.LOA_HIGH;
 
+  @Getter
+  private TestCaseEnum testCase;
+
   private EidasSigner signer;
 
   @Getter
@@ -167,6 +169,37 @@ public class EidasRequest
          signer);
   }
 
+  /**
+   * Creates an EidasRequest without an id and a test case. The id is automatically generated.
+   *
+   * @param destination the destination of the eIDAS-Request.
+   * @param sectorType the sector type of the eIDAS-Request.
+   * @param nameIdPolicy the nameIdPolicy of theeIDAS-Request. Can be null. The default value is
+   *          {@link EidasNameIdType#TRANSIENT}.
+   * @param loa the level of assurance of the eIDAS-Request. Can be null. The defaul value is
+   *          {@link EidasLoaEnum#LOA_HIGH}.
+   * @param issuer the issuer of the eIDAS-Request.
+   * @param providerName the provider name of the eIDAS-Request. Can be null.
+   * @param requesterId the requester id of the eIDAS-Request. Can be null.
+   * @param signer the signer to sign the eIDAS-Request. Must not be null.
+   * @param testCase the enum of the test case for the eIDAS-Request. Can be null.
+   * @see EidasRequest#EidasRequest(String, String, SPTypeEnumeration, EidasNameIdType, EidasLoaEnum, String, String,
+   *      String, EidasSigner, TestCaseEnum) to create an eIDAS-Request with an id.
+   */
+  EidasRequest(String destination,
+               SPTypeEnumeration sectorType,
+               EidasNameIdType nameIdPolicy,
+               EidasLoaEnum loa,
+               String issuer,
+               String providerName,
+               String requesterId,
+               EidasSigner signer,
+               TestCaseEnum testCase)
+  {
+    this("_" + Utils.generateUniqueID(), destination, sectorType, nameIdPolicy, loa, issuer, providerName, requesterId,
+         signer, testCase);
+  }
+
   EidasRequest(String id,
                String destination,
                SPTypeEnumeration sectorType,
@@ -176,6 +209,38 @@ public class EidasRequest
                String providerName,
                String requesterId,
                EidasSigner signer)
+  {
+    this(id, destination, sectorType, nameIdPolicy, loa, issuer, providerName, requesterId, signer, null);
+  }
+
+  /**
+   * Creates an EidasRequest with an id and a test case.
+   *
+   * @param id the id of the eIDAS-Request.
+   * @param destination the destination of the eIDAS-Request.
+   * @param sectorType the sector type of the eIDAS-Request.
+   * @param nameIdPolicy the nameIdPolicy of theeIDAS-Request. Can be null. The default value is
+   *          {@link EidasNameIdType#TRANSIENT}.
+   * @param loa the level of assurance of the eIDAS-Request. Can be null. The defaul value is
+   *          {@link EidasLoaEnum#LOA_HIGH}.
+   * @param issuer the issuer of the eIDAS-Request.
+   * @param providerName the provider name of the eIDAS-Request. Can be null.
+   * @param requesterId the requester id of the eIDAS-Request. Can be null.
+   * @param signer the signer to sign the eIDAS-Request. Must not be null.
+   * @param testCase the enum of the test case for the eIDAS-Request. Can be null.
+   * @see EidasRequest#EidasRequest(String, SPTypeEnumeration, EidasNameIdType, EidasLoaEnum, String, String, String,
+   *      EidasSigner, TestCaseEnum) create an eIDAS-Request without an id.
+   */
+  EidasRequest(String id,
+               String destination,
+               SPTypeEnumeration sectorType,
+               EidasNameIdType nameIdPolicy,
+               EidasLoaEnum loa,
+               String issuer,
+               String providerName,
+               String requesterId,
+               EidasSigner signer,
+               TestCaseEnum testCase)
   {
     this.id = id;
     this.destination = destination;
@@ -189,6 +254,7 @@ public class EidasRequest
     issueInstant = DateTime.now();
     this.forceAuthn = true;
     this.isPassive = false;
+    this.testCase = testCase;
   }
 
   byte[] generate(Map<EidasPersonAttributes, Boolean> requestedAttributes) throws CertificateEncodingException,
@@ -229,7 +295,12 @@ public class EidasRequest
     RequestedAuthnContext requestedAuthnContext = new RequestedAuthnContextBuilder().buildObject();
     requestedAuthnContext.setComparison(AuthnContextComparisonTypeEnumeration.MINIMUM);
     AuthnContextClassRef authnContextClassRef = new AuthnContextClassRefBuilder().buildObject();
-    authnContextClassRef.setAuthnContextClassRef(authClassRef.getUri());
+    String loa = authClassRef.getUri();
+    if (testCase != null && loa.startsWith(EidasLoaEnum.LOA_TEST.getUri()))
+    {
+      loa += "#" + testCase.getTestCase();
+    }
+    authnContextClassRef.setAuthnContextClassRef(loa);
     requestedAuthnContext.getAuthnContextClassRefs().add(authnContextClassRef);
     authnRequest.setRequestedAuthnContext(requestedAuthnContext);
 
@@ -392,7 +463,14 @@ public class EidasRequest
     {
       throw new ErrorCodeException(ErrorCode.ILLEGAL_REQUEST_SYNTAX, "No AuthnContextClassRef element.");
     }
-    return EidasLoaEnum.parse(ref.getDOM().getTextContent());
+    String loa = ref.getAuthnContextClassRef();
+    if (loa.startsWith(EidasLoaEnum.LOA_TEST.getUri()))
+    {
+      eidasReq.testCase = loa.contains("#") ? TestCaseEnum.parse(loa.substring(loa.indexOf('#') + 1)) : null;
+      return EidasLoaEnum.LOA_TEST;
+    }
+    // returns null when the loa is unknown
+    return EidasLoaEnum.parse(loa);
   }
 
   private static boolean getIsForceAuthnFromAuthnRequest(EidasRequest eidasReq) throws ErrorCodeException

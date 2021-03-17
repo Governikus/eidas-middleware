@@ -50,8 +50,8 @@ Using the eIDAS Demo Application
 To use the eIDAS Demo Application, start by running the eIDAS Demo Application.
 
 #. Change to the correct directory where the aforementioned configuration is present.
-#. If not present, copy the ``eidas-demo-2.1.0.jar`` file in this directory.
-#. Start the application by executing ``java -jar eidas-demo-2.1.0.jar``.
+#. If not present, copy the ``eidas-demo-2.2.1.jar`` file in this directory.
+#. Start the application by executing ``java -jar eidas-demo-2.2.1.jar``.
 
 Now you must configure your eIDAS Middleware to communicate with the eIDAS Demo Application.
 
@@ -77,6 +77,11 @@ At the top you can see the full eIDAS SAML response with the encrypted SAML asse
 Below that you can see the data from the test eID card.
 If there was an error or the user aborted the authorization procedure, you would see the eIDAS SAML response with the status and unencrypted assertion containing more information why the error occurred.
 
+There is also the possibility to demonstrate the eIDAS Middleware handling various errors.
+Open the URL ``http://your.demo.host:8080/NewRequesterServlet``. The third part of the linklist sends
+``LoA = Test`` with different error provocations. This test works without eID card and AusweisApp2. In this
+demonstration also the CVC check is conducted. The result is shown if the CVC check wasn’t successful. If the CVC
+check was successful the eIDAS Middleware is configured properly.
 
 Using the eIDAS Demo Application in Docker
 ------------------------------------------
@@ -88,7 +93,7 @@ Also bear in mind that you must use the path of the container file system in the
 
 To run the middleware, execute the following command after you have prepared the configuration, certificate and keystores::
 
-    docker run --rm -it -v /path/to/your/config-directory:/opt/eidas-middleware/config -p 8080:8080 governikus/eidas-demo-application:2.1.0
+    docker run --rm -it -v /path/to/your/config-directory:/opt/eidas-middleware/config -p 8080:8080 governikus/eidas-demo-application:2.2.1
 
 Now you can follow the steps above to configure and test the eIDAS Middleware.
 

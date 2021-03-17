@@ -32,7 +32,6 @@ import de.governikus.eumw.eidasstarterkit.person_attributes.natural_persons_attr
 import net.shibboleth.utilities.java.support.component.ComponentInitializationException;
 import net.shibboleth.utilities.java.support.xml.BasicParserPool;
 import net.shibboleth.utilities.java.support.xml.XMLParserException;
-import se.litsec.eidas.opensaml.common.EidasLoaEnum;
 import se.swedenconnect.opensaml.OpenSAMLInitializer;
 import se.swedenconnect.opensaml.OpenSAMLSecurityDefaultsConfig;
 import se.swedenconnect.opensaml.OpenSAMLSecurityExtensionConfig;
@@ -139,9 +138,8 @@ class EidasEncrypterTest
   private List<EidasAttribute> getEidasAttributes()
   {
     BirthNameAttribute birthName = new BirthNameAttribute("Meyer");
-    CurrentAddressAttribute currentAddress = new CurrentAddressAttribute("Am Fallturm", "33", "Bremen",
-                                                                         "28207", "100", "bla", "bla", "bla",
-                                                                         "bla");
+    CurrentAddressAttribute currentAddress = new CurrentAddressAttribute("bla", "bla", "bla", "bla", "Am Fallturm 33",
+                                                                         "Bremen", "D", "HB", "28207");
     DateOfBirthAttribute dao = new DateOfBirthAttribute("1982-02-11");
     FamilyNameAttribute familyName = new FamilyNameAttribute("Müller");
     GivenNameAttribute givenName = new GivenNameAttribute("Björn");

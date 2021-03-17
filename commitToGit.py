@@ -22,7 +22,7 @@ hg_tmp_path = "/tmp/eumw"
 if os.path.exists(git_local_path):
     pretty_print(git_local_path + ' does already exist')
     pretty_print('To delete the directory, type y. Otherwise this script will abort')
-    answer = raw_input("DELETE " + git_local_path + " (y|n)\n")
+    answer = input("DELETE " + git_local_path + " (y|n)\n")
     if answer == 'y':
         shutil.rmtree(git_local_path)
     else:
@@ -34,7 +34,7 @@ call(["git", "clone", github_url, git_local_path])
 if os.path.exists(hg_tmp_path):
     pretty_print(hg_tmp_path + ' does already exist')
     pretty_print('To delete the directory, type y. Otherwise this script will abort')
-    answer = raw_input("DELETE " + hg_tmp_path + " (y|n)\n")
+    answer = input("DELETE " + hg_tmp_path + " (y|n)\n")
     if answer == 'y':
         shutil.rmtree(hg_tmp_path)
     else:
@@ -43,7 +43,7 @@ if os.path.exists(hg_tmp_path):
 
 call(["hg", "clone", "https://hg.govkg.de/Autent/eumw", hg_tmp_path])
 
-tag = raw_input("Specify the hg tag name of the release\n")
+tag = input("Specify the hg tag name of the release\n")
 
 pretty_print("Updating to " + tag + " , all non versioned files will be removed")
 os.chdir(hg_tmp_path)

@@ -14,7 +14,7 @@
 	<parent>
 		<groupId>de.governikus.eumw</groupId>
 		<artifactId>eumw</artifactId>
-		<version>2.1.0</version>
+		<version>2.2.1</version>
 	</parent>
 	<artifactId>poseidas</artifactId>
 
@@ -77,7 +77,7 @@
 
 		<dependency>
 			<groupId>org.snmp4j</groupId>
-			<artifactId>snmp4j</artifactId>
+			<artifactId>snmp4j-agent</artifactId>
 		</dependency>
 
 		<dependency>

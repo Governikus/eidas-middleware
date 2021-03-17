@@ -54,6 +54,8 @@ class CvcTlsCheckTest
 
   private static String tempDirectory;
 
+  private ClientAndServer clientAndServer;
+
   @BeforeAll
   static void setUp() throws IOException
   {
@@ -67,6 +69,10 @@ class CvcTlsCheckTest
     PoseidasConfigurator.reset();
     FileUtils.deleteDirectory(new File(tempDirectory));
     log.trace("Deleted random temp dir: {}", tempDirectory);
+    if (clientAndServer != null)
+    {
+      clientAndServer.stop();
+    }
   }
 
   @AfterAll
@@ -136,7 +142,7 @@ class CvcTlsCheckTest
     // server running with expired cert
     ConfigurationProperties.x509CertificatePath(resourceDirectory + "/localhost_expired.pem");
     ConfigurationProperties.privateKeyPath(resourceDirectory + "/localhost_expired.pkcs8");
-    ClientAndServer.startClientAndServer(8450);
+    clientAndServer = ClientAndServer.startClientAndServer(8450);
     result = check.check();
     assertFalse(CERTIFICATE_VALID, result.isServerTlsValid());
 
@@ -174,5 +180,33 @@ class CvcTlsCheckTest
     assertFalse("CVC valid", results.isCvcValidity());
     assertFalse("server URLs match", results.isCvcUrlMatch());
     assertFalse("TLS cert in CVC", results.isCvcTlsMatch());
+  }
+
+  @Test
+  void testCheckForOneServiceProvider() throws Exception
+  {
+    tempDirectory = JAVA_IO_TMPDIR + "-" + (int)(Math.random() * 1000000);
+    Files.createDirectory(Paths.get(tempDirectory));
+    log.trace("Generated random temp dir: {}", tempDirectory);
+    Path resourceDirectory = Paths.get("src", "test", "resources");
+    File source = new File(resourceDirectory + "/POSeIDAS-cvctls.xml");
+    File dest = new File(tempDirectory + "/POSeIDAS.xml");
+    Files.copy(source.toPath(), dest.toPath(), StandardCopyOption.REPLACE_EXISTING);
+    System.setProperty("spring.config.additional-location", Paths.get(tempDirectory).toString());
+
+    TerminalPermissionAO terminalPermission = mock(TerminalPermissionAO.class);
+    TerminalPermission tpB = mock(TerminalPermission.class);
+    when(terminalPermission.getTerminalPermission("provider_b")).thenReturn(tpB);
+    when(tpB.getFullCvc()).thenReturn(new TerminalData(Hex.parse("7f218201487f4e8201005f290100420e44454553544456314130303030317f494f060a04007f0007020202020386410457dcc1d8e2564196999e929499445cd41d4b98fd4c9cad27c3c8415cf12cddff9a6511410ce0844ad857d227408b509fec6687ab93bdcfc8d6e917baf6eda8d25f201044454553545445524d314130303030317f4c12060904007f00070301020253053c0ff3ffff5f25060106010000045f2406060000060103655e732d060904007f00070301030180203f8185d7c732cdcc2326a005a3d9188de01629cf0da3eacb380feaf54176c5b2732d060904007f0007030103028020144969238b6ae406c90f22f1092bb83cc834020128d70b70fca6ca43bdc1d50f5f37403a9f4294b21c6ed37732853da4a538b1b55f68caf70b9b5f74b144869c1818b42f48d281af0963b5e49faa18c9935bf775d0b3e214fd71615d037efcd6af6522"),
+                                                       Hex.parse("3081a4060a04007f00070301030101a1090c07736563756e6574a3140c126549442d5365727665722054657374626564a418131668747470733A2F2F6C6F63616C686F73743A38343530a5130c114356205465726d73206f66205573616765a746314404205c6fcac6857d69b469b8e8e523b656338bdda1ac43dea739e0510c862901d06d0420f4bcf457aad98b6e53824d0f8afffe588472bb2f472115aee278717fa619a845")));
+    ConfigurationProperties.x509CertificatePath(resourceDirectory + "/localhost_valid.pem");
+    ConfigurationProperties.privateKeyPath(resourceDirectory + "/localhost_valid.pkcs8");
+    clientAndServer = ClientAndServer.startClientAndServer(8450);
+    CvcTlsCheck check = new CvcTlsCheck(terminalPermission);
+    CvcCheckResults results = check.checkCvcProvider("providerB");
+    assertTrue("CVC not present", results.isCvcPresent());
+    assertTrue("CVC invalid", results.isCvcValidity());
+    assertTrue("server URLs do not match", results.isCvcUrlMatch());
+    assertTrue("TLS cert not in CVC", results.isCvcTlsMatch());
   }
 }

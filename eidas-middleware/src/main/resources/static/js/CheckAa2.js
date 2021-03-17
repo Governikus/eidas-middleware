@@ -2,12 +2,22 @@ let intervalId;
 let i = 0;
 
 document.addEventListener("DOMContentLoaded", function (event) {
-    setMetaDataForIOS();
-    prepareSite();
-    getStatus();
+    if (!checkForSafari()) {
+        setMetaDataForIOS();
+        prepareSite();
+        getStatus();
+    }
 });
 
-function prepareSite(){
+function checkForSafari() {
+    let isSafari = false;
+    if (navigator.vendor != null) {
+        isSafari = navigator.vendor === "Apple Computer, Inc." && navigator.userAgent.indexOf("Safari") !== -1
+    }
+    return isSafari;
+}
+
+function prepareSite() {
     document.getElementById('goToAa2')
         .addEventListener('click', checkAaMobile, false);
     //Remove the href attribute from the "continue with AusweisApp2" button, it fires twice.

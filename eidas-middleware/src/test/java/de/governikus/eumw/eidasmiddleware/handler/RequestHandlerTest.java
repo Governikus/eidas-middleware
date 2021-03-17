@@ -48,14 +48,15 @@ import de.governikus.eumw.eidasmiddleware.RequestProcessingException;
 import de.governikus.eumw.eidasmiddleware.ServiceProviderConfig;
 import de.governikus.eumw.eidasmiddleware.SessionStore;
 import de.governikus.eumw.eidasmiddleware.eid.RequestingServiceProvider;
+import de.governikus.eumw.eidasstarterkit.EidasLoaEnum;
 import de.governikus.eumw.eidasstarterkit.EidasNameIdType;
 import de.governikus.eumw.eidasstarterkit.EidasNaturalPersonAttributes;
+import de.governikus.eumw.eidasstarterkit.EidasRequest;
 import de.governikus.eumw.eidasstarterkit.EidasSaml;
 import de.governikus.eumw.eidasstarterkit.EidasSigner;
 import de.governikus.eumw.eidasstarterkit.person_attributes.EidasPersonAttributes;
 import de.governikus.eumw.utils.key.KeyStoreSupporter;
 import lombok.extern.slf4j.Slf4j;
-import se.litsec.eidas.opensaml.common.EidasLoaEnum;
 import se.litsec.eidas.opensaml.ext.SPTypeEnumeration;
 
 
@@ -229,9 +230,10 @@ class RequestHandlerTest
                                        DEFAULT_PASSWORD,
                                        "bos-test-tctoken.saml-sign",
                                        "http://localhost:8080/eIDASDemoApplication/Metadata",
-                                       "http://localhost:8080/eIDASDemoApplication/NewReceiverServlet");
-    String tcTokenURL = requestHandler.handleSAMLRequest(RELAY_STATE, request, false);
-    Assertions.assertNotNull(tcTokenURL);
+                                       "http://localhost:8080/eIDASDemoApplication/NewReceiverServlet",
+                                       EidasLoaEnum.LOA_HIGH);
+    EidasRequest eidasRequest = requestHandler.handleSAMLRequest(RELAY_STATE, request, false);
+    Assertions.assertNotNull(eidasRequest);
   }
 
   /**
@@ -248,9 +250,10 @@ class RequestHandlerTest
                                        DEFAULT_PASSWORD,
                                        "bos-test-tctoken.saml-sign",
                                        "http://localhost:8080/eIDASDemoApplication/Metadata",
-                                       "http://localhost:8080/eIDASDemoApplication/NewReceiverServlet");
-    String tcTokenURL = requestHandler.handleSAMLRequest(request, false);
-    Assertions.assertNotNull(tcTokenURL);
+                                       "http://localhost:8080/eIDASDemoApplication/NewReceiverServlet",
+                                       EidasLoaEnum.LOA_HIGH);
+    EidasRequest eidasRequest = requestHandler.handleSAMLRequest(request, false);
+    Assertions.assertNotNull(eidasRequest);
   }
 
   /**
@@ -268,7 +271,8 @@ class RequestHandlerTest
                                        DEFAULT_PASSWORD,
                                        "bos-test-tctoken.saml-sign",
                                        wrongIssuer,
-                                       "http://localhost:8080/eIDASDemoApplication/NewReceiverServlet");
+                                       "http://localhost:8080/eIDASDemoApplication/NewReceiverServlet",
+                                       EidasLoaEnum.LOA_HIGH);
 
     RequestProcessingException requestProcessingException = Assertions.assertThrows(RequestProcessingException.class,
                                                                                     () -> requestHandler.handleSAMLRequest(RELAY_STATE,
@@ -321,8 +325,8 @@ class RequestHandlerTest
   void testPOST() throws Exception
   {
     RequestHandler requestHandler = new RequestHandler(mockSessionStore, mockConfigHolder, mockServiceProviderConfig);
-    String tcTokenURL = requestHandler.handleSAMLRequest(RELAY_STATE, POST_REQUEST, true);
-    Assertions.assertNotNull(tcTokenURL);
+    EidasRequest eidasRequest = requestHandler.handleSAMLRequest(RELAY_STATE, POST_REQUEST, true);
+    Assertions.assertNotNull(eidasRequest);
   }
 
   /**
@@ -339,7 +343,8 @@ class RequestHandlerTest
                                    String password,
                                    String alias,
                                    String issuerUrl,
-                                   String destinationUrl)
+                                   String destinationUrl,
+                                   EidasLoaEnum loA)
   {
     byte[] samlRequest;
 
@@ -364,7 +369,7 @@ class RequestHandlerTest
                                             reqAtt,
                                             null,
                                             EidasNameIdType.TRANSIENT,
-                                            EidasLoaEnum.LOA_HIGH);
+                                            loA);
     }
     catch (CertificateEncodingException | InitializationException | MarshallingException | SignatureException
       | TransformerFactoryConfigurationError | TransformerException | IOException | UnrecoverableKeyException

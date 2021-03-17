@@ -1,11 +1,10 @@
 /*
- * Copyright (c) 2020 Governikus KG. Licensed under the EUPL, Version 1.2 or as soon they will be approved by
- * the European Commission - subsequent versions of the EUPL (the "Licence"); You may not use this work except
- * in compliance with the Licence. You may obtain a copy of the Licence at:
- * http://joinup.ec.europa.eu/software/page/eupl Unless required by applicable law or agreed to in writing,
- * software distributed under the Licence is distributed on an "AS IS" basis, WITHOUT WARRANTIES OR CONDITIONS
- * OF ANY KIND, either express or implied. See the Licence for the specific language governing permissions and
- * limitations under the Licence.
+ * Copyright (c) 2020 Governikus KG. Licensed under the EUPL, Version 1.2 or as soon they will be approved by the
+ * European Commission - subsequent versions of the EUPL (the "Licence"); You may not use this work except in compliance
+ * with the Licence. You may obtain a copy of the Licence at: http://joinup.ec.europa.eu/software/page/eupl Unless
+ * required by applicable law or agreed to in writing, software distributed under the Licence is distributed on an
+ * "AS IS" basis, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the Licence for the
+ * specific language governing permissions and limitations under the Licence.
  */
 
 package de.governikus.eumw.eidasdemo;
@@ -114,8 +113,8 @@ public class NewReceiverServlet
   }
 
   /**
-   * This method is called when the eIDAS Middleware sent the user's browser to this servlet. The eIDAs
-   * response data is extracted and the browser shows the data
+   * This method is called when the eIDAS Middleware sent the user's browser to this servlet. The eIDAs response data is
+   * extracted and the browser shows the data
    *
    * @param request The incoming HTTP request to extract the SAML and relay state data
    * @return The SamlResult containing the retrieved data or an error message
@@ -149,8 +148,7 @@ public class NewReceiverServlet
    * @return The SAML result containing the retrieved data
    */
   private SamlResult extractDataFromResponse(byte[] samlResponse, String relayState)
-    throws XMLParserException, IOException, UnmarshallingException, ErrorCodeException,
-    ComponentInitializationException
+    throws XMLParserException, IOException, UnmarshallingException, ErrorCodeException, ComponentInitializationException
   {
     String saml = getXMLFromBytes(samlResponse);
     SamlResult samlResult = new SamlResult();
@@ -162,6 +160,7 @@ public class NewReceiverServlet
       EidasResponse resp = EidasResponse.parse(is,
                                                new X509KeyPair[]{helper.demoDecryptionKeyPair},
                                                helper.serverSigCert);
+      samlResult.setLevelOfAssurance(resp.getLoa() == null ? "" : resp.getLoa().getUri());
       StringBuilder attributes = new StringBuilder();
 
       resp.getAttributes().forEach(e -> {
@@ -195,12 +194,15 @@ public class NewReceiverServlet
         }
         else if (StringUtils.isBlank(samlResult.getRelayState()))
         {
-          response.getWriter().write("<emtpy string>");
+          response.getWriter().write("<empty string>");
         }
         else
         {
           response.getWriter().write(samlResult.getRelayState());
         }
+        response.getWriter().write("\n\r");
+        response.getWriter().write("Level Of Assurance: ");
+        response.getWriter().write(samlResult.getLevelOfAssurance());
         response.getWriter().write("\n\r");
         response.getWriter().write("\n\r");
         response.getWriter().write(samlResult.getSamlResponse());

@@ -9,7 +9,7 @@
   -->
 
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <body>
 <p>
     <a href="DEFAULTREQUEST">Go to the eIDAS Middleware with relay state: CURRENTRELAYSTATE</a>
@@ -21,16 +21,55 @@
     <a href="WITHOUTRELAYSTATE"> Go to the eIDAS Middleware without an relay state</a>
 </p>
 <hr>
-<p>The following links include the SPType value in the SAML request. As the SPType must not present both in the request
-    and metadata, disable the SPType value in the metadata of the demo by setting "demo.metadata.sptype=none" in the
-    application.properties of the demo application. Do not forget to update the metadata file in the middleware's
-    configuration and to restart the middleware in case you have changed the SPType configuration for the demo.</p>
+<p>The following links include the SPType value in the SAML request. As the SPType must not present both in
+    the request
+    and metadata, disable the SPType value in the metadata of the demo by setting "demo.metadata.sptype=none"
+    in the
+    application.properties of the demo application. Do not forget to update the metadata file in the
+    middleware's
+    configuration and to restart the middleware in case you have changed the SPType configuration for the
+    demo.</p>
 <p>
     <a href="REQUESTPUBLICSP"> Go to the eIDAS Middleware with a request containing SPType public</a>
 </p>
 <p>
-    <a href="REQUESTPRIVATESP"> Go to the eIDAS Middleware with a request containing SPType private and requesterID
+    <a href="REQUESTPRIVATESP"> Go to the eIDAS Middleware with a request containing SPType private and
+        requesterID
         "providerB"</a>
 </p>
+<p>
+    Requests for the test mode of the eIDAS Middleware
+</p>
+<p>
+    <a href="TESTREQUEST"> Go to the eIDAS Middleware with a request containing Level of Assurance
+        test</a>
+</p>
+
+<p>
+    <a href="CANCELLATIONBYUSER"> Go to the eIDAS Middleware with a test request containing Level
+        of Assurance test#cancellationByUser
+    </a>
+</p>
+<p>
+    <a href="WRONGPIN"> Go to the eIDAS Middleware with a test request containing Level
+        of Assurance test#wrongPin
+    </a>
+</p>
+<p>
+    <a href="WRONGSIGNATURE"> Go to the eIDAS Middleware with a test request containing Level
+        of Assurance test#wrongSignature
+    </a>
+</p>
+<p>
+    <a href="CARDEXPIRED"> Go to the eIDAS Middleware with a test request containing Level
+        of Assurance test#cardExpired
+    </a>
+</p>
+<p>
+    <a href="UNKNOWN"> Go to the eIDAS Middleware with a test request containing Level
+        of Assurance test#unknown
+    </a>
+</p>
+
 </body>
 </html>

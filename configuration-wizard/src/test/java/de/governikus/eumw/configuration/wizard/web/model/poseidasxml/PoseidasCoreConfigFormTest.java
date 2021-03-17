@@ -1,11 +1,10 @@
 /*
- * Copyright (c) 2020 Governikus KG. Licensed under the EUPL, Version 1.2 or as soon they will be approved by
- * the European Commission - subsequent versions of the EUPL (the "Licence"); You may not use this work except
- * in compliance with the Licence. You may obtain a copy of the Licence at:
- * http://joinup.ec.europa.eu/software/page/eupl Unless required by applicable law or agreed to in writing,
- * software distributed under the Licence is distributed on an "AS IS" basis, WITHOUT WARRANTIES OR CONDITIONS
- * OF ANY KIND, either express or implied. See the Licence for the specific language governing permissions and
- * limitations under the Licence.
+ * Copyright (c) 2020 Governikus KG. Licensed under the EUPL, Version 1.2 or as soon they will be approved by the
+ * European Commission - subsequent versions of the EUPL (the "Licence"); You may not use this work except in compliance
+ * with the Licence. You may obtain a copy of the Licence at: http://joinup.ec.europa.eu/software/page/eupl Unless
+ * required by applicable law or agreed to in writing, software distributed under the Licence is distributed on an
+ * "AS IS" basis, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the Licence for the
+ * specific language governing permissions and limitations under the Licence.
  */
 
 package de.governikus.eumw.configuration.wizard.web.model.poseidasxml;
@@ -61,8 +60,8 @@ public class PoseidasCoreConfigFormTest extends AbstractConfigFileTest
 {
 
   /**
-   * will return the fully quallified URL to the poseidas xml based on the given configuration directory in
-   * the test-resources
+   * will return the fully quallified URL to the poseidas xml based on the given configuration directory in the
+   * test-resources
    *
    * @param configDir the configuration directory that holds the test-resources
    * @return the URL to the xml file
@@ -136,17 +135,15 @@ public class PoseidasCoreConfigFormTest extends AbstractConfigFileTest
     EPAConnectorConfigurationType epaConnectorConfiguration2 = serviceProviderType2.getEPAConnectorConfiguration();
     Assertions.assertNotNull(epaConnectorConfiguration1);
     Assertions.assertNotNull(epaConnectorConfiguration2);
-    Assertions.assertEquals(epaConnectorConfiguration1.isUpdateCVC(),
-                            epaConnectorConfiguration2.isUpdateCVC());
+    Assertions.assertEquals(epaConnectorConfiguration1.isUpdateCVC(), epaConnectorConfiguration2.isUpdateCVC());
     final String cvcRefId = "provider_a";
     EQUAL_NULL_CHECK.accept(cvcRefId, epaConnectorConfiguration2.getCVCRefID());
-    EQUAL_NULL_CHECK.accept(epaConnectorConfiguration1.getCVCRefID(),
-                            epaConnectorConfiguration2.getCVCRefID());
+    EQUAL_NULL_CHECK.accept(epaConnectorConfiguration1.getCVCRefID(), epaConnectorConfiguration2.getCVCRefID());
     final String paosReceiverUrl = "https://myhost:8443/eidas-middleware/paosreceiver";
     EQUAL_NULL_CHECK.accept(paosReceiverUrl, epaConnectorConfiguration2.getPaosReceiverURL());
     EQUAL_NULL_CHECK.accept(epaConnectorConfiguration1.getPaosReceiverURL(),
                             epaConnectorConfiguration2.getPaosReceiverURL());
-    final Integer hoursRefreshCvcBeforeExpiration = 48;
+    final Integer hoursRefreshCvcBeforeExpiration = 240;
     Assertions.assertEquals(hoursRefreshCvcBeforeExpiration,
                             epaConnectorConfiguration2.getHoursRefreshCVCBeforeExpires());
     Assertions.assertEquals(epaConnectorConfiguration1.getHoursRefreshCVCBeforeExpires(),
@@ -157,8 +154,8 @@ public class PoseidasCoreConfigFormTest extends AbstractConfigFileTest
   }
 
   /**
-   * will check that the values of the pki connector configurations are equals within the
-   * service-provider-form object and the unmarshalled object
+   * will check that the values of the pki connector configurations are equals within the service-provider-form object
+   * and the unmarshalled object
    *
    * @param pkiConnectorConfiguration1 the unmarshalled object from the xml
    * @param serviceProviderForm service provider form object that is displayed in the html view
@@ -215,8 +212,7 @@ public class PoseidasCoreConfigFormTest extends AbstractConfigFileTest
     Assertions.assertEquals(sslKeys1.getId(), sslKeys2.getId());
 
     Assertions.assertArrayEquals(sslKeys1.getClientKey(), sslKeys2.getClientKey());
-    Assertions.assertArrayEquals(sslKeys2.getClientKey(),
-                                 sslKeysForm.getClientKeyForm().getPrivateKey().getEncoded());
+    Assertions.assertArrayEquals(sslKeys2.getClientKey(), sslKeysForm.getClientKeyForm().getPrivateKey().getEncoded());
 
     Assertions.assertArrayEquals(sslKeys1.getServerCertificate(), sslKeys2.getServerCertificate());
     Assertions.assertArrayEquals(sslKeys2.getServerCertificate(),
@@ -226,8 +222,7 @@ public class PoseidasCoreConfigFormTest extends AbstractConfigFileTest
     Assertions.assertNotNull(sslKeys2.getClientCertificate());
     Assertions.assertEquals(1, sslKeys1.getClientCertificate().size());
     Assertions.assertEquals(1, sslKeys2.getClientCertificate().size());
-    Assertions.assertArrayEquals(sslKeys1.getClientCertificate().get(0),
-                                 sslKeys2.getClientCertificate().get(0));
+    Assertions.assertArrayEquals(sslKeys1.getClientCertificate().get(0), sslKeys2.getClientCertificate().get(0));
     Assertions.assertArrayEquals(sslKeys2.getClientCertificate().get(0),
                                  getCertificateBytes(sslKeysForm.getClientKeyForm().getX509Certificate()));
   }
@@ -248,8 +243,8 @@ public class PoseidasCoreConfigFormTest extends AbstractConfigFileTest
    *
    * @param anchor1 a trust anchor from the poseidas xml
    * @param anchor2 a trust anchor from the poseidas xml
-   * @param certificateForm a trust anchor from the poseidas xml that was translated into a
-   *          {@link CertificateForm} object
+   * @param certificateForm a trust anchor from the poseidas xml that was translated into a {@link CertificateForm}
+   *          object
    */
   private void checkCertificateAnchor(byte[] anchor1, byte[] anchor2, CertificateForm certificateForm)
   {
@@ -286,8 +281,7 @@ public class PoseidasCoreConfigFormTest extends AbstractConfigFileTest
                                                     PoseidasCoreConfigForm poseidasCoreConfigForm)
   {
     TimerConfigurationType timerConfiguration1 = poseidasCoreConfiguration.getTimerConfiguration();
-    TimerConfigurationType timerConfiguration2 = poseidasCoreConfigForm.getCoreConfig()
-                                                                       .getTimerConfiguration();
+    TimerConfigurationType timerConfiguration2 = poseidasCoreConfigForm.getCoreConfig().getTimerConfiguration();
     Assertions.assertNotNull(timerConfiguration1);
     Assertions.assertNotNull(timerConfiguration2);
     final int certRenewalLength = 2;
@@ -312,15 +306,14 @@ public class PoseidasCoreConfigFormTest extends AbstractConfigFileTest
     Assertions.assertEquals(timerConfiguration1.getMasterAndDefectListRenewal().getLength(),
                             timerConfiguration2.getMasterAndDefectListRenewal().getLength());
     final int masterDefectlistRenewalUnit = 11;
-    Assertions.assertEquals(masterDefectlistRenewalUnit,
-                            timerConfiguration2.getMasterAndDefectListRenewal().getUnit());
+    Assertions.assertEquals(masterDefectlistRenewalUnit, timerConfiguration2.getMasterAndDefectListRenewal().getUnit());
     Assertions.assertEquals(timerConfiguration1.getMasterAndDefectListRenewal().getUnit(),
                             timerConfiguration2.getMasterAndDefectListRenewal().getUnit());
   }
 
   /**
-   * Create a simple sPOSeIDAS.xml using the config wizard, assert that the correct values are stored, and
-   * assert that the config wizard can load this saved POSeIDAS.xml correctly
+   * Create a simple sPOSeIDAS.xml using the config wizard, assert that the correct values are stored, and assert that
+   * the config wizard can load this saved POSeIDAS.xml correctly
    */
   @Test
   void testSave() throws CertificateException, IOException
@@ -330,15 +323,13 @@ public class PoseidasCoreConfigFormTest extends AbstractConfigFileTest
                                    "https://dev.governikus-eid.de:9444/gov_dvca/ta-service");
     testSaveAndLoadForSpecificDvca(DvcaProvider.NEW_GOV_DVCA,
                                    DvcaProvider.GOV_DVCA.getValue(),
-                                   "https://dvca-r1.governikus-eid.de:8444/gov_dvca/ta-service");
+                                   "https://dvca-r1.governikus-eid.de/gov_dvca/ta-service");
     testSaveAndLoadForSpecificDvca(DvcaProvider.BUDRU,
                                    DvcaProvider.BUDRU.getValue(),
-                                   "https://berca-ps.d-trust.net/ps/dvca-at");
+                                   "https://berca-p1.d-trust.net/ps/dvca-at");
   }
 
-  private void testSaveAndLoadForSpecificDvca(DvcaProvider dvcaProvider,
-                                              String policyImplementationId,
-                                              String taUrl)
+  private void testSaveAndLoadForSpecificDvca(DvcaProvider dvcaProvider, String policyImplementationId, String taUrl)
     throws CertificateException, IOException
   {
     // Create the core config from scratch with a single service provider and dummy keys and certificates
@@ -347,6 +338,7 @@ public class PoseidasCoreConfigFormTest extends AbstractConfigFileTest
     serviceProviderForm.setPublicServiceProvider(true);
     String entityID = "entityID";
     serviceProviderForm.setEntityID(entityID);
+
     serviceProviderForm.setDvcaProvider(dvcaProvider);
     CertificateForm certificateForm = new CertificateForm(null, "test", readTestCert());
     serviceProviderForm.setBlackListTrustAnchor(certificateForm);
@@ -363,6 +355,7 @@ public class PoseidasCoreConfigFormTest extends AbstractConfigFileTest
                                                   .serverCertificate(certificateForm)
                                                   .build());
     referenceCoreConfigForm.setServiceProviders(Collections.singletonList(serviceProviderForm));
+    referenceCoreConfigForm.setCommonServiceProviderData(serviceProviderForm);
 
     // Save the config to a POSeIDAS.xml and check the DVCA specific contents
     referenceCoreConfigForm.save(getTempDirectory());

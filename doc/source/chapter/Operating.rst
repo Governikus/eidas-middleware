@@ -1,3 +1,5 @@
+.. include:: snmpshortcuts.rst
+
 .. _operating:
 
 Operating the server
@@ -104,14 +106,14 @@ To run the eIDAS Middleware, execute the following command.
 It will mount the named volumes containing the database and configuration in the container
 and the application will be available on port 8443. ::
 
-    docker run --rm -it -v eidas-configuration:/opt/eidas-middleware/configuration -v eidas-database:/opt/eidas-middleware/database -p 8443:8443 --name eidas-middleware-application governikus/eidas-middleware-application:2.1.0
+    docker run --rm -it -v eidas-configuration:/opt/eidas-middleware/configuration -v eidas-database:/opt/eidas-middleware/database -p 8443:8443 --name eidas-middleware-application governikus/eidas-middleware-application:2.2.1
 
 To stop and remove the container, just hit ``CTRL+C``.
 
 To keep the container running longer without being attached to the STDOUT and STDERR, change the command to
 the following::
 
-    docker run -d -v eidas-configuration:/opt/eidas-middleware/configuration -v eidas-database:/opt/eidas-middleware/database -p 8443:8443 --name eidas-middleware-application governikus/eidas-middleware-application:2.1.0
+    docker run -d -v eidas-configuration:/opt/eidas-middleware/configuration -v eidas-database:/opt/eidas-middleware/database -p 8443:8443 --name eidas-middleware-application governikus/eidas-middleware-application:2.2.1
 
 For more information on starting and stopping containers and viewing the logs,
 see the `Docker Docs <https://docs.docker.com/engine/reference/run/>`_.
@@ -175,7 +177,7 @@ Scalability
 The performance of the eIDAS Middleware improves by adding more memory (RAM) and using a faster CPU.
 In case the memory configuration has changed, the server needs to be restarted.
 To start the JVM with more memory, add ``-Xmx`` with the new maximum memory size to the start command,
-e.g. ``java -Xmx8g -jar eidas-middleware-2.1.0.jar`` for 8 GB.
+e.g. ``java -Xmx8g -jar eidas-middleware-2.2.1.jar`` for 8 GB.
 
 
 Request Signer Certificate
@@ -209,13 +211,16 @@ will be implemented in the future.
 
 Monitoring
 --------------------------------------------------
-:term:`SNMP` is enabled by default and preconfigured. You can change the SNMP settings by editing the file
-``/etc/snmp/snmpd.conf``.
+
+SNMP Agent (system)
+^^^^^^^^^^^^^^^^^^^
+
+The virtual machine we provide has a system :term:`SNMP` agent enabled by default and preconfigured.
+With this agent, you can monitor the health status of the server using the SNMP tools of your choice.
+You can change the SNMP settings by editing the file ``/etc/snmp/snmpd.conf``.
 
 The configured user name is ``gov`` with authentication protocol SHA and privacy protocol DES, both
 passwords ``12345678``.
-
-You can monitor the health status of the server and the application using the SNMP tools of your choice.
 
 For example, a snmpwalk on OID 1.3.6.1.2.1.25.4.2.1.4 (HOST-RESOURCES-MIB::hrSWRunPath) will reveal the running
 processes.
@@ -231,8 +236,107 @@ The following example will show the total RAM usage:
 
 ``snmpget -v3 -l authPriv -u gov -a SHA -A 12345678 -x DES -X 12345678 $HOSTNAME 1.3.6.1.4.1.2021.4.6.0``
 
-.. hint::
-    If you want to use Nagios please refer to `Nagios Website <https://www.nagios.com/solutions/snmp-monitoring/>`_
+
+SNMP Agent (application)
+^^^^^^^^^^^^^^^^^^^^^^^^
+
+The middleware application itself also has an internal SNMP agent which can be used to query various data
+directly from the application (see below for what is available).
+Please note this is a different agent than the one for the system. The system agent is only preconfigured
+in the virtual machine, the internal agent is available directly in the middleware application. If you intend
+to use both in parallel, you have to make sure that they run on different ports.
+
+To activate the internal SNMP agent it is necessary to set ``poseidas.snmp.username``, ``poseidas.snmp.authpwd``
+(authentication password) and ``poseidas.snmp.privpwd`` (encryption password) in the application.properties.
+The passwords have a minimum length of 8 characters. The SNMP agent supports ``GET`` and
+``GET NEXT`` requests.
+
+Optional properties are ``poseidas.snmp.authalgo`` (authentication algorithm) with one of these values:
+md5, sha, hmac128sha224, hmac192sha256, hmac256sha384, hmac384sha512 (hmac384sha512 is the default value when not set),
+``poseidas.snmp.privalgo`` (encryption algorithm) with one of these values: des, 3des, aes128, aes192, aes256
+(aes256 is the default value when not set).
+
+There are two different ways to use the SNMP agent to monitor the application. It is devided in ``GET`` and ``TRAP``.
+
+Optional properties for ``GET`` and ``GET NEXT`` requests can be set in the application.properties:
+``poseidas.snmp.agenthost`` with the default value set to localhost and ``poseidas.snmp.agentport`` with the default
+value set to port 161.
+
+For monitoring the ``TRAPs`` it is also necessary to set ``poseidas.snmp.managementhost`` in the
+application.properties.
+
+Optional property for ``TRAP`` is ``poseidas.snmp.managementport`` (port 162 is the default value when not
+set).
+
+All existing SNMP GET values are explained in detail in the MIB located at
+``https://github.com/Governikus/eidas-middleware/blob/2.2.1/poseidas/snmp/EIDASMW-SNMP-MIB.mib``.
+
+Global GET
+''''''''''
+
+.. csv-table::
+    :widths: 75 50 45
+    :delim: ;
+
+    OID; GET (Return value datatype); Description
+    |CRL_GET_LAST_SUCCESSFUL_RETRIEVAL|; lastSuccessfulCRLRetrieval (DateAndTime); The timestamp for the last successful retrieval of a certificate revocation list is returned
+    |CRL_GET_AVAILABLE|; isCRLAvailable (Integer32); 0: A certificate revocation list is present. 1: No certificate revocation list is present
+    |GET_TLS_CERTIFICATE_VALID|; tlsCertificateExpirationDate (DateAndTime); Expiration date of the server certificate
+
+
+Provider specific GET
+'''''''''''''''''''''
+
+Governikus OID = |GOVERNIKUS_OID|
+eIDAS Middleware prefix = |EUMW_PREFIX|
+Get prefix = |GET_PREFIX|
+
+.. csv-table::
+    :widths: 75 45 50
+    :delim: ;
+
+    OID; GET (Return value datatype); Description
+    |PROVIDER_NAME_GET|; serviceProviderName (OCTET STRING); The service provider name used for identifying instances of the columnar objects in the serviceProviderTable
+    |CVC_GET_PRESENT|; cvcPresent (Integer32); CVC present: 0 = not present, 1 = present
+    |CVC_GET_VALID_UNTIL|; cvcExpirationDate (DateAndTime); Date until the cvc is valid
+    |CVC_GET_SUBJECT_URL|; cvcSubjectUrl (OCTET STRING); The cvc certificates subject url
+    |CVC_GET_TLS_CERTIFICATE_LINK_STATUS|; cvcAndTlsLinked (Integer32); TLS server certificate referenced in CVC: 0 = not linked, 1 = linked
+    |BLACKLIST_GET_LIST_AVAILABLE|; blackListAvailable (Integer32); Blacklist availability: 0 = not available, 1 = available
+    |BLACKLIST_GET_LAST_SUCCESSFUL_RETRIEVAL|; lastBlackListRenewal (DateAndTime); Date of last successful blacklist renewal
+    |BLACKLIST_GET_DVCA_AVAILABILITY|; blackListCAAvailable (Integer32); Blacklist PKI availability: 0 = not available, 1 = available
+    |MASTERLIST_GET_LIST_AVAILABLE|; masterListAvailable (Integer32); Masterlist availability: 0 = not available, 1 = available
+    |MASTERLIST_GET_LAST_SUCCESSFUL_RETRIEVAL|; lastMasterListRenewal (DateAndTime); Date of last successful masterlist renewal
+    |MASTERLIST_GET_DVCA_AVAILABILITY|; masterListCAAvailable (Integer32); Masterlist PKI availability: 0 = not available, 1 = available
+    |DEFECTLIST_GET_LIST_AVAILABLE|; defectListAvailable (Integer32); Defectlist availability: 0 = not available, 1 = available
+    |DEFECTLIST_GET_LAST_SUCCESSFUL_RETRIEVAL|; lastDefectListRenewal (DateAndTime); Date of last successful defectlist renewal
+    |DEFECTLIST_GET_DVCA_AVAILABILITY|; defectListCAAvailable (Integer32); Defectlist PKI availability: 0 = not available, 1 = available
+    |RSC_GET_PENDING_AVAILABLE|; rscPendingAvailable (Integer32); Pending RSC availability: 0 = not available, 1 = available
+    |RSC_GET_CURRENT_CERTIFICATE_VALID_UNTIL|; rscCurrentValidUntil (DateAndTime); Last date of validity
+
+TRAP
+''''
+
+The following table will show the OIDs and their meaning.
+
+Governikus OID = |GOVERNIKUS_OID|
+eIDAS Middleware prefix = |EUMW_PREFIX|
+Trap prefix = |TRAP_PREFIX|
+
+.. csv-table::
+    :widths: 70 50 50
+    :delim: ;
+
+    OID; Description; Messages (Datetype)
+    |CVC_TRAP_LAST_RENEWAL_STATUS|; The status of the last renewal of the certificate revocation list; 0 = success, 1 = failed (Integer32)
+    |BLACKLIST_TRAP_LAST_RENEWAL_STATUS| ; The status of the last renewal of the blacklist; 0 = renewed, 1 = no list received, 2 = list signature check failed, 3 = list processing error (Integer32)
+    |BLACKLIST_TRAP_LAST_RENEWAL_PROCESSING_DURATION|; The last renewal processing duration of the blacklist; The duration in milliseconds (long)
+    |MASTERLIST_TRAP_LAST_RENEWAL_STATUS|; The status of the last renewal of the masterlist; 0 = renewed, 1 = no list received, 2 = list signature check failed, 3 = list processing error (Integer32)
+    |MASTERLIST_TRAP_LAST_RENEWAL_PROCESSING_DURATION|; The last renewal processing duration of the blacklist; The duration in milliseconds (long)
+    |DEFECTLIST_TRAP_LAST_RENEWAL_STATUS|; The status of the last renewal of the defectlist; 0 = renewed, 1 = no list received, 2 = list signature check failed, 3 = list processing error (Integer32)
+    |DEFECTLIST_TRAP_LAST_RENEWAL_PROCESSING_DURATION|; The last renewal processing duration of the blacklist; The duration in milliseconds (long)
+    |CRL_TRAP_LAST_RENEWAL_STATUS|; The status of the last renewal of the certificate revocation list; 0 = success, 1 = failed (Integer32)
+    |RSC_TRAP_CHANGE_TO_CURRENT_RSC|; A pending Requestsignercertificate is now current; 0 = success, 1 = failed because there is no pending rsc, 2 = failed because there is no RefID (Integer32)
+    |RSC_TRAP_NEW_PENDING_CERTIFICATE|; A new pending Requestsingercertificate has been generated; Certificate information (OCTET STRING)
 
 
 .. _database_migration:
@@ -265,6 +369,6 @@ Stop the eIDAS Middleware Application and copy the database file to your backup 
 e.g. ``cp /opt/eidas-middleware/database/eidasmw.mv.db /path/to/your/backup-location/eidasmw.mv.db``.
 
 To perform the migration, copy the database migration JAR file to the directory where your
-configuration file is available and execute the command ``java -jar database-migration-2.1.0.jar``.
+configuration file is available and execute the command ``java -jar database-migration-2.2.1.jar``.
 If there are errors in the log output, please send the complete log output and some information on your environment to
 eidas-middleware@governikus.com.

@@ -31,6 +31,8 @@ import de.governikus.eumw.poseidas.server.idprovider.config.CoreConfigurationDto
 import de.governikus.eumw.poseidas.server.idprovider.config.EPAConnectorConfigurationDto;
 import de.governikus.eumw.poseidas.server.idprovider.config.PoseidasConfigurator;
 import de.governikus.eumw.poseidas.server.idprovider.config.ServiceProviderDto;
+import de.governikus.eumw.poseidas.server.monitoring.SNMPConstants;
+import de.governikus.eumw.poseidas.server.monitoring.SNMPTrapSender;
 import de.governikus.eumw.poseidas.service.ConfigHolderInterface;
 import lombok.extern.slf4j.Slf4j;
 
@@ -40,11 +42,11 @@ import lombok.extern.slf4j.Slf4j;
 public class RequestSignerCertificateServiceImpl implements RequestSignerCertificateService
 {
 
-  private static final String EIDAS = "eIDAS";
-
   public static final String OU_REQUEST_SIGNER_CERTIFICATE = ",OU=Request Signer Certificate";
 
   public static final int MAXIMUM_LIFESPAN_IN_MONTHS = 36;
+
+  private static final String EIDAS = "eIDAS";
 
   // See TR-3110 Part-3 A.2.1.1.
   private static final int DOMAIN_PARAMTER_ID_BRAINPOOL_P256R1 = 13;
@@ -62,6 +64,30 @@ public class RequestSignerCertificateServiceImpl implements RequestSignerCertifi
     this.configHolder = configHolder;
     this.facade = facade;
     this.hsmServiceHolder = hsmServiceHolder;
+  }
+
+  static String getRscChrIdAsString(Integer id)
+  {
+    if (id == null)
+    {
+      return null;
+    }
+    return String.format("RSC%02d", id);
+  }
+
+  private static String cvcRefIdFromEntityId(String entityId)
+  {
+    CoreConfigurationDto config = PoseidasConfigurator.getInstance().getCurrentConfig();
+    if (config == null)
+    {
+      return null;
+    }
+    ServiceProviderDto provider = config.getServiceProvider().get(entityId);
+    if (provider == null || provider.getEpaConnectorConfiguration() == null)
+    {
+      return null;
+    }
+    return provider.getEpaConnectorConfiguration().getCVCRefID();
   }
 
   @Override
@@ -120,16 +146,15 @@ public class RequestSignerCertificateServiceImpl implements RequestSignerCertifi
     }
     String alias = buildAlias(cvcRefId, getRscChrIdAsString(nextRscId));
 
-    HSMService hsm = ServiceRegistry.Util.getServiceRegistry()
-                                         .getService(HSMServiceFactory.class)
-                                         .getHSMService();
-    ECParameterSpec ecParameterSpec = SecurityInfos.getDomainParameterMap()
-                                                   .get(DOMAIN_PARAMTER_ID_BRAINPOOL_P256R1);
+    HSMService hsm = ServiceRegistry.Util.getServiceRegistry().getService(HSMServiceFactory.class).getHSMService();
+    ECParameterSpec ecParameterSpec = SecurityInfos.getDomainParameterMap().get(DOMAIN_PARAMTER_ID_BRAINPOOL_P256R1);
     try
     {
       KeyPair keyPair = hsm.generateKeyPair("EC", ecParameterSpec, alias, issuerAlias, true, lifespan);
       saveRscInDB(cvcRefId, lifespan, hsm, keyPair, alias, issuerAlias, nextRscId);
-      log.info("Request signer certificate with alias {} was successfully created.", alias);
+      String infoText = String.format("Request signer certificate with alias %s was successfully created.", alias);
+      log.info(infoText);
+      SNMPTrapSender.sendSNMPTrap(SNMPConstants.TrapOID.RSC_TRAP_NEW_PENDING_CERTIFICATE, infoText);
       return true;
     }
     catch (Exception e)
@@ -244,22 +269,25 @@ public class RequestSignerCertificateServiceImpl implements RequestSignerCertifi
     }
   }
 
-
-
   @Override
   public X509Certificate getRequestSignerCertificate(String entityId)
   {
-    String cvcRefId = cvcRefIdFromEntityId(entityId);
-    X509Certificate pending = getRequestSignerCertificate(cvcRefId, false);
+    X509Certificate pending = getRequestSignerCertificate(entityId, false);
     if (pending == null)
     {
-      return getRequestSignerCertificate(cvcRefId, true);
+      return getRequestSignerCertificate(entityId, true);
     }
     return pending;
   }
 
-  private X509Certificate getRequestSignerCertificate(String cvcRefId, boolean current)
+  @Override
+  public X509Certificate getRequestSignerCertificate(String entityId, boolean current)
   {
+    String cvcRefId = cvcRefIdFromEntityId(entityId);
+    if (cvcRefId == null)
+    {
+      return null;
+    }
     KeyStore keyStore = hsmServiceHolder.getKeyStore();
     if (keyStore == null)
     {
@@ -317,29 +345,5 @@ public class RequestSignerCertificateServiceImpl implements RequestSignerCertifi
         generateNewPendingRequestSignerCertificate(refID, null, MAXIMUM_LIFESPAN_IN_MONTHS);
       }
     }
-  }
-
-  static String getRscChrIdAsString(Integer id)
-  {
-    if (id == null)
-    {
-      return null;
-    }
-    return String.format("RSC%02d", id);
-  }
-
-  private static String cvcRefIdFromEntityId(String entityId)
-  {
-    CoreConfigurationDto config = PoseidasConfigurator.getInstance().getCurrentConfig();
-    if (config == null)
-    {
-      return null;
-    }
-    ServiceProviderDto provider = config.getServiceProvider().get(entityId);
-    if (provider == null || provider.getEpaConnectorConfiguration() == null)
-    {
-      return null;
-    }
-    return provider.getEpaConnectorConfiguration().getCVCRefID();
   }
 }

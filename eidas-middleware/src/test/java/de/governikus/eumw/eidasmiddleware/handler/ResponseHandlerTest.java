@@ -1,13 +1,15 @@
 package de.governikus.eumw.eidasmiddleware.handler;
 
-import static org.mockito.Mockito.any;
-import static org.mockito.Mockito.anyString;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.IOException;
 import java.net.URISyntaxException;
@@ -21,6 +23,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+
+import javax.xml.bind.DatatypeConverter;
 
 import org.bouncycastle.jce.provider.BouncyCastleProvider;
 import org.junit.jupiter.api.Assertions;
@@ -44,11 +48,18 @@ import de.governikus.eumw.eidasmiddleware.ServiceProviderConfig;
 import de.governikus.eumw.eidasmiddleware.SessionStore;
 import de.governikus.eumw.eidasmiddleware.eid.RequestingServiceProvider;
 import de.governikus.eumw.eidasstarterkit.EidasAttribute;
+import de.governikus.eumw.eidasstarterkit.EidasLoaEnum;
 import de.governikus.eumw.eidasstarterkit.EidasNaturalPersonAttributes;
+import de.governikus.eumw.eidasstarterkit.EidasResponse;
+import de.governikus.eumw.eidasstarterkit.TestCaseEnum;
 import de.governikus.eumw.eidasstarterkit.person_attributes.EidasPersonAttributes;
 import de.governikus.eumw.eidasstarterkit.person_attributes.natural_persons_attribute.BirthNameAttribute;
+import de.governikus.eumw.eidasstarterkit.person_attributes.natural_persons_attribute.CurrentAddressAttribute;
+import de.governikus.eumw.eidasstarterkit.person_attributes.natural_persons_attribute.DateOfBirthAttribute;
 import de.governikus.eumw.eidasstarterkit.person_attributes.natural_persons_attribute.FamilyNameAttribute;
 import de.governikus.eumw.eidasstarterkit.person_attributes.natural_persons_attribute.GivenNameAttribute;
+import de.governikus.eumw.eidasstarterkit.person_attributes.natural_persons_attribute.PersonIdentifierAttribute;
+import de.governikus.eumw.eidasstarterkit.person_attributes.natural_persons_attribute.PlaceOfBirthAttribute;
 import de.governikus.eumw.poseidas.ecardcore.model.ResultMinor;
 import de.governikus.eumw.poseidas.eidmodel.data.EIDKeys;
 import de.governikus.eumw.poseidas.eidserver.convenience.EIDInfoResultDeselected;
@@ -57,6 +68,7 @@ import de.governikus.eumw.poseidas.eidserver.convenience.EIDInfoResultPlaceStruc
 import de.governikus.eumw.poseidas.eidserver.convenience.EIDInfoResultString;
 import de.governikus.eumw.poseidas.server.eidservice.EIDInternal;
 import de.governikus.eumw.poseidas.server.eidservice.EIDResultResponse;
+import de.governikus.eumw.poseidas.server.idprovider.config.CvcTlsCheck;
 import de.governikus.eumw.poseidas.server.pki.HSMServiceHolder;
 import de.governikus.eumw.utils.key.KeyStoreSupporter;
 import lombok.extern.slf4j.Slf4j;
@@ -71,7 +83,9 @@ import se.swedenconnect.opensaml.OpenSAMLSecurityExtensionConfig;
 class ResponseHandlerTest
 {
 
-  public static final String DEFAULT_PASSWORD = "123456";
+  private static final String TEST_P12 = "/eidassignertest.p12";
+
+  private static final String DEFAULT_PASSWORD = "123456";
 
   public static final String GIVEN_NAME = "GIVEN_NAME";
 
@@ -80,6 +94,14 @@ class ResponseHandlerTest
   public static final String BIRTHNAME = "Birthname";
 
   private static final String TEST_REF_ID = "LoremImpressi";
+
+  public static final String ENTITY_ID = "entityId";
+
+  private static final String REQUEST_ID = "requestId";
+
+  private static final String EIDAS_SIGNER_TEST_CER = "/EidasSignerTest_x509.cer";
+
+  private static final String RESPONDER = "Responder";
 
   private final KeyStore signatureKeystore;
 
@@ -97,6 +119,18 @@ class ResponseHandlerTest
 
   @Mock
   private EIDInternal mockEidInternal;
+
+  @Mock
+  private CvcTlsCheck mockCvcTlsCheck;
+
+  @Mock
+  CvcTlsCheck.CvcCheckResults mockCvcResults;
+
+  @Mock
+  RequestSession mockRequestSession;
+
+  @Mock
+  RequestingServiceProvider mockRequestingServiceProvider;
 
   private ResponseHandler systemUnderTest;
 
@@ -124,14 +158,13 @@ class ResponseHandlerTest
   void setUp()
   {
     systemUnderTest = spy(new ResponseHandler(mockSessionStore, mockConfigHolder, mockServiceProviderConfig,
-                                              mockHsmServiceHolder, mockEidInternal));
+                                              mockHsmServiceHolder, mockEidInternal, mockCvcTlsCheck));
   }
 
   @Test
   void testGetResultForRefIDNotFound()
   {
-    Assertions.assertThrows(RequestProcessingException.class,
-                            () -> systemUnderTest.getResultForRefID(TEST_REF_ID));
+    Assertions.assertThrows(RequestProcessingException.class, () -> systemUnderTest.getResultForRefID(TEST_REF_ID));
   }
 
   @Test
@@ -312,8 +345,7 @@ class ResponseHandlerTest
   void testGetConsumerURLForRefIDUnkonwnRef() throws SQLException, ErrorCodeException
   {
     when(mockSessionStore.getByEidRef("")).thenThrow(SQLException.class);
-    Assertions.assertThrows(RequestProcessingException.class,
-                            () -> systemUnderTest.getConsumerURLForRefID(""));
+    Assertions.assertThrows(RequestProcessingException.class, () -> systemUnderTest.getConsumerURLForRefID(""));
   }
 
   @Test
@@ -339,8 +371,7 @@ class ResponseHandlerTest
   void testGetRelayStateForRefIDUnkonwnRef() throws SQLException, ErrorCodeException
   {
     when(mockSessionStore.getByEidRef("")).thenThrow(SQLException.class);
-    Assertions.assertThrows(RequestProcessingException.class,
-                            () -> systemUnderTest.getRelayStateForRefID(""));
+    Assertions.assertThrows(RequestProcessingException.class, () -> systemUnderTest.getRelayStateForRefID(""));
   }
 
   @Test
@@ -352,8 +383,7 @@ class ResponseHandlerTest
     when(mockRequestSession.getRelayState()).thenReturn(Optional.of(anyString()));
 
     Assertions.assertDoesNotThrow(() -> systemUnderTest.getRelayStateForRefID(""));
-    Assertions.assertEquals(mockRequestSession.getRelayState().get(),
-                            systemUnderTest.getRelayStateForRefID(""));
+    Assertions.assertEquals(mockRequestSession.getRelayState().get(), systemUnderTest.getRelayStateForRefID(""));
   }
 
   @Test
@@ -600,11 +630,252 @@ class ResponseHandlerTest
     when(requestedAttributes.get(EidasNaturalPersonAttributes.CURRENT_ADDRESS)).thenReturn(true);
     when(samlReqSession.getRequestedAttributes()).thenReturn(requestedAttributes);
 
-    Assertions.assertFalse(systemUnderTest.createPlaceOfResidence(eidResultResponse,
-                                                                  attributes,
-                                                                  samlReqSession));
+    Assertions.assertFalse(systemUnderTest.createPlaceOfResidence(eidResultResponse, attributes, samlReqSession));
   }
 
+  @Test
+  void testCreatePlaceOfResidence()
+  {
+    final String street = "Hochschulring 4";
+    final String city = "Bremen";
+    final String zipCode = "28359";
+    final String state = "HB";
+    final String country = "D";
 
+    EIDResultResponse eidResultResponse = mock(EIDResultResponse.class);
+    List<EidasAttribute> attributes = spy(new ArrayList<>());
+    RequestSession samlReqSession = mock(RequestSession.class);
 
+    // Mock EidResultResponse
+    EIDInfoResultPlaceStructured place = mock(EIDInfoResultPlaceStructured.class);
+    when(place.getStreet()).thenReturn(street);
+    when(place.getCity()).thenReturn(city);
+    when(place.getZipCode()).thenReturn(zipCode);
+    when(place.getState()).thenReturn(state);
+    when(place.getCountry()).thenReturn(country);
+    when(eidResultResponse.getEIDInfo(EIDKeys.PLACE_OF_RESIDENCE)).thenReturn(place);
+
+    Assertions.assertTrue(systemUnderTest.createPlaceOfResidence(eidResultResponse, attributes, samlReqSession));
+    EidasAttribute attr = attributes.get(0);
+    Assertions.assertTrue(attr instanceof CurrentAddressAttribute);
+    CurrentAddressAttribute addrAttr = (CurrentAddressAttribute)attr;
+    Assertions.assertEquals(street, addrAttr.getThoroughfare());
+    Assertions.assertEquals(city, addrAttr.getPostName());
+    Assertions.assertEquals(zipCode, addrAttr.getPostCode());
+    Assertions.assertEquals(state, addrAttr.getAdminunitSecondline());
+    Assertions.assertEquals(country, addrAttr.getAdminunitFirstline());
+  }
+
+  @Test
+  void testPrepareDummyResponseWithoutTestCaseReturnsResponseWithDummyValues() throws Exception
+  {
+    X509Certificate cert = Utils.readCert(RequestHandlerTest.class.getResourceAsStream(EIDAS_SIGNER_TEST_CER));
+    Utils.X509KeyPair keypair = Utils.readPKCS12(RequestHandlerTest.class.getResourceAsStream(TEST_P12),
+                                                 DEFAULT_PASSWORD.toCharArray());
+    prepareMocks(keypair);
+    doReturn(cert).when(mockRequestingServiceProvider).getEncryptionCert();
+    when(mockConfigHolder.getCountryCode()).thenReturn("DE");
+    when(mockCvcResults.isCvcPresent()).thenReturn(true);
+    when(mockCvcResults.isCvcValidity()).thenReturn(true);
+    when(mockCvcResults.isCvcTlsMatch()).thenReturn(true);
+    when(mockCvcResults.isCvcUrlMatch()).thenReturn(true);
+    ResponseHandler responseHandler = new ResponseHandler(mockSessionStore, mockConfigHolder, mockServiceProviderConfig,
+                                                          mockHsmServiceHolder, mockEidInternal, mockCvcTlsCheck);
+    String dummyResponse = responseHandler.prepareDummyResponse(REQUEST_ID, null);
+
+    Assertions.assertNotNull(dummyResponse);
+
+    byte[] samlResponseBytes = DatatypeConverter.parseBase64Binary(dummyResponse);
+    Utils.X509KeyPair[] keyPairs = {keypair};
+    EidasResponse result = EidasResponse.parse(new ByteArrayInputStream(samlResponseBytes), keyPairs, cert);
+
+    Assertions.assertEquals(EidasLoaEnum.LOA_TEST, result.getLoa());
+    Assertions.assertEquals("https://localhost/Metadata", result.getIssuer());
+    Assertions.assertEquals(REQUEST_ID, result.getInResponseTo());
+    Assertions.assertEquals("consumerUrl", result.getDestination());
+    Assertions.assertEquals("DE/DE/123456", result.getNameId().getValue());
+    Assertions.assertEquals(ENTITY_ID, result.getRecipient());
+
+    List<EidasAttribute> attributes = result.getAttributes();
+
+    assertAttributes(attributes);
+  }
+
+  @Test
+  void testRequestWithTestCaseCancellationByUserReturnsErrorResponse() throws Exception
+  {
+    X509Certificate cert = Utils.readCert(RequestHandlerTest.class.getResourceAsStream(EIDAS_SIGNER_TEST_CER));
+    Utils.X509KeyPair keypair = Utils.readPKCS12(RequestHandlerTest.class.getResourceAsStream(TEST_P12),
+                                                 DEFAULT_PASSWORD.toCharArray());
+    prepareMocks(keypair);
+    when(mockCvcResults.isCvcPresent()).thenReturn(true);
+    when(mockCvcResults.isCvcValidity()).thenReturn(true);
+    when(mockCvcResults.isCvcTlsMatch()).thenReturn(true);
+    when(mockCvcResults.isCvcUrlMatch()).thenReturn(true);
+    ResponseHandler responseHandler = new ResponseHandler(mockSessionStore, mockConfigHolder, mockServiceProviderConfig,
+                                                          mockHsmServiceHolder, mockEidInternal, mockCvcTlsCheck);
+    String dummyResponse = responseHandler.prepareDummyResponse(REQUEST_ID, TestCaseEnum.CANCELLATION_BY_USER);
+
+    Assertions.assertNotNull(dummyResponse);
+
+    byte[] samlResponseBytes = DatatypeConverter.parseBase64Binary(dummyResponse);
+    Utils.X509KeyPair[] keyPairs = {keypair};
+    EidasResponse result = EidasResponse.parse(new ByteArrayInputStream(samlResponseBytes), keyPairs, cert);
+
+    Assertions.assertTrue(result.getOpenSamlResponse().getStatus().getStatusCode().getValue().contains(RESPONDER));
+    Assertions.assertTrue(result.getOpenSamlResponse()
+                                .getStatus()
+                                .getStatusCode()
+                                .getStatusCode()
+                                .getValue()
+                                .contains("AuthnFailed"));
+    Assertions.assertEquals("Authentication cancelled by user",
+                            result.getOpenSamlResponse().getStatus().getStatusMessage().getMessage());
+    Assertions.assertNull(result.getLoa());
+  }
+
+  @Test
+  void testRequestWithTestCaseWrongSignatureReturnsErrorResponse() throws Exception
+  {
+    X509Certificate cert = Utils.readCert(RequestHandlerTest.class.getResourceAsStream(EIDAS_SIGNER_TEST_CER));
+    Utils.X509KeyPair keypair = Utils.readPKCS12(RequestHandlerTest.class.getResourceAsStream(TEST_P12),
+                                                 DEFAULT_PASSWORD.toCharArray());
+    prepareMocks(keypair);
+    when(mockCvcResults.isCvcPresent()).thenReturn(true);
+    when(mockCvcResults.isCvcValidity()).thenReturn(true);
+    when(mockCvcResults.isCvcTlsMatch()).thenReturn(true);
+    when(mockCvcResults.isCvcUrlMatch()).thenReturn(true);
+    ResponseHandler responseHandler = new ResponseHandler(mockSessionStore, mockConfigHolder, mockServiceProviderConfig,
+                                                          mockHsmServiceHolder, mockEidInternal, mockCvcTlsCheck);
+    String dummyResponse = responseHandler.prepareDummyResponse(REQUEST_ID, TestCaseEnum.WRONG_SIGNATURE);
+
+    Assertions.assertNotNull(dummyResponse);
+
+    byte[] samlResponseBytes = DatatypeConverter.parseBase64Binary(dummyResponse);
+    Utils.X509KeyPair[] keyPairs = {keypair};
+    EidasResponse result = EidasResponse.parse(new ByteArrayInputStream(samlResponseBytes), keyPairs, cert);
+
+    Assertions.assertTrue(result.getOpenSamlResponse().getStatus().getStatusCode().getValue().contains(RESPONDER));
+    Assertions.assertEquals("An error was reported from eID-Server: http://www.bsi.bund.de/eid/server/2.0/resultminor/getResult#invalidDocument",
+                            result.getOpenSamlResponse().getStatus().getStatusMessage().getMessage());
+    Assertions.assertNull(result.getLoa());
+  }
+
+  @Test
+  void testRequestWithTestCaseUnknownReturnsErrorResponse() throws Exception
+  {
+    X509Certificate cert = Utils.readCert(RequestHandlerTest.class.getResourceAsStream(EIDAS_SIGNER_TEST_CER));
+    Utils.X509KeyPair keypair = Utils.readPKCS12(RequestHandlerTest.class.getResourceAsStream(TEST_P12),
+                                                 DEFAULT_PASSWORD.toCharArray());
+    prepareMocks(keypair);
+    when(mockCvcResults.isCvcPresent()).thenReturn(true);
+    when(mockCvcResults.isCvcValidity()).thenReturn(true);
+    when(mockCvcResults.isCvcTlsMatch()).thenReturn(true);
+    when(mockCvcResults.isCvcUrlMatch()).thenReturn(true);
+    ResponseHandler responseHandler = new ResponseHandler(mockSessionStore, mockConfigHolder, mockServiceProviderConfig,
+                                                          mockHsmServiceHolder, mockEidInternal, mockCvcTlsCheck);
+    String dummyResponse = responseHandler.prepareDummyResponse(REQUEST_ID, TestCaseEnum.UNKNOWN);
+
+    Assertions.assertNotNull(dummyResponse);
+
+    byte[] samlResponseBytes = DatatypeConverter.parseBase64Binary(dummyResponse);
+    Utils.X509KeyPair[] keyPairs = {keypair};
+    EidasResponse result = EidasResponse.parse(new ByteArrayInputStream(samlResponseBytes), keyPairs, cert);
+
+    Assertions.assertTrue(result.getOpenSamlResponse().getStatus().getStatusCode().getValue().contains(RESPONDER));
+    Assertions.assertEquals("An internal error occurred, see log file of the application server. Details: An unknown error occurred",
+                            result.getOpenSamlResponse().getStatus().getStatusMessage().getMessage());
+    Assertions.assertNull(result.getLoa());
+  }
+
+  @Test
+  void testWhenCvcCheckFailedThenReturnErrorResponse() throws Exception
+  {
+    X509Certificate cert = Utils.readCert(RequestHandlerTest.class.getResourceAsStream(EIDAS_SIGNER_TEST_CER));
+    Utils.X509KeyPair keypair = Utils.readPKCS12(RequestHandlerTest.class.getResourceAsStream(TEST_P12),
+                                                 DEFAULT_PASSWORD.toCharArray());
+    prepareMocks(keypair);
+    CvcTlsCheck.CvcCheckResults checkResults = new CvcTlsCheck.CvcCheckResults();
+    checkResults.setCvcPresent(true);
+    checkResults.setCvcValidity(false);
+    checkResults.setCvcUrlMatch(true);
+    checkResults.setCvcTlsMatch(true);
+    when(mockCvcTlsCheck.checkCvcProvider(anyString())).thenReturn(checkResults);
+    ResponseHandler responseHandler = new ResponseHandler(mockSessionStore, mockConfigHolder, mockServiceProviderConfig,
+                                                          mockHsmServiceHolder, mockEidInternal, mockCvcTlsCheck);
+    String dummyResponse = responseHandler.prepareDummyResponse(REQUEST_ID, TestCaseEnum.UNKNOWN);
+
+    Assertions.assertNotNull(dummyResponse);
+
+    byte[] samlResponseBytes = DatatypeConverter.parseBase64Binary(dummyResponse);
+    Utils.X509KeyPair[] keyPairs = {keypair};
+    EidasResponse result = EidasResponse.parse(new ByteArrayInputStream(samlResponseBytes), keyPairs, cert);
+
+    Assertions.assertTrue(result.getOpenSamlResponse().getStatus().getStatusCode().getValue().contains(RESPONDER));
+    Assertions.assertEquals("There is an error in the configuration of the server, attribute with the value 'false' need to be fixed. CvcCheckResults{cvcPresent=true, cvcValidity=false, cvcUrlMatch=true, cvcTlsMatch=true}",
+                            result.getOpenSamlResponse().getStatus().getStatusMessage().getMessage());
+    Assertions.assertNull(result.getLoa());
+  }
+
+  private void assertAttributes(List<EidasAttribute> attributes)
+  {
+    for ( EidasAttribute attribute : attributes )
+    {
+      if (attribute instanceof GivenNameAttribute)
+      {
+        Assertions.assertEquals("Erika", attribute.getValue());
+        continue;
+      }
+      if (attribute instanceof FamilyNameAttribute)
+      {
+        Assertions.assertEquals("Mustermann", attribute.getValue());
+        continue;
+      }
+      if (attribute instanceof BirthNameAttribute)
+      {
+        Assertions.assertEquals("Erika Gabler", attribute.getValue());
+        continue;
+      }
+      if (attribute instanceof DateOfBirthAttribute)
+      {
+        Assertions.assertEquals("1964-08-12", attribute.getValue());
+        continue;
+      }
+      if (attribute instanceof PlaceOfBirthAttribute)
+      {
+        Assertions.assertEquals("Berlin", attribute.getValue());
+        continue;
+      }
+      if (attribute instanceof CurrentAddressAttribute)
+      {
+        Assertions.assertEquals("Heidestraße 17", ((CurrentAddressAttribute)attribute).getThoroughfare());
+        Assertions.assertEquals("Köln", ((CurrentAddressAttribute)attribute).getPostName());
+        Assertions.assertEquals("51147", ((CurrentAddressAttribute)attribute).getPostCode());
+        Assertions.assertEquals("D", ((CurrentAddressAttribute)attribute).getAdminunitFirstline());
+        continue;
+      }
+      if (attribute instanceof PersonIdentifierAttribute)
+      {
+        Assertions.assertEquals("DE/DE/123456", attribute.getValue());
+        continue;
+      }
+      Assertions.fail("Invalid attribute in response");
+    }
+  }
+
+  private void prepareMocks(Utils.X509KeyPair keypair)
+    throws SQLException, ErrorCodeException, IOException, GeneralSecurityException
+  {
+    when(mockSessionStore.getById(anyString())).thenReturn(mockRequestSession);
+    when(mockRequestSession.getReqProviderEntityId()).thenReturn(ENTITY_ID);
+    when(mockServiceProviderConfig.getProviderByEntityID(ENTITY_ID)).thenReturn(mockRequestingServiceProvider);
+    when(mockHsmServiceHolder.getKeyStore()).thenReturn(null);
+    doReturn(keypair).when(mockConfigHolder).getAppSignatureKeyPair();
+    when(mockRequestingServiceProvider.getAssertionConsumerURL()).thenReturn("consumerUrl");
+    when(mockConfigHolder.getServerURLWithContextPath()).thenReturn("https://localhost");
+    when(mockRequestingServiceProvider.getEntityID()).thenReturn(ENTITY_ID);
+    when(mockRequestSession.getReqId()).thenReturn(REQUEST_ID);
+    when(mockConfigHolder.getEntityIDInt()).thenReturn(ENTITY_ID);
+    when(mockCvcTlsCheck.checkCvcProvider(anyString())).thenReturn(mockCvcResults);
+  }
 }

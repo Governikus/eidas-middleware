@@ -119,3 +119,15 @@ Changelog
     - eIDAS Middleware: SAML metadata and responses no longer include line breaks in <SignatureValue> or <CipherValue>.
     - eIDAS Middleware: SAML error responses will always contain one of the allowed top level SAML status codes. Sub
       status codes and status message contain more specific information.
+
+* 2.2.1
+
+    - eIDAS Middleware: Add test mode to get SAML responses without eID interaction.
+    - eIDAS Middleware: Improve SNMP integration.
+    - eIDAS Middleware: The information from the SNMP integration is also shown in the admin interface.
+    - eIDAS Middleware: Add the 'method' attribute to the SubjectConfirmation element in the SAML assertion.
+    - eIDAS Middleware: Use the proxy settings also for the connection check.
+    - eIDAS Middleware: The javascript check to detect if the AusweisApp2 is running is disabled for Safari browsers as
+      they block the javascript requests to the AusweisApp2.
+    - eIDAS Middleware: Fix a bug introduced with 2.1.0 where the country identifier in the address would be placed in
+      ``adminunitSecondLine``

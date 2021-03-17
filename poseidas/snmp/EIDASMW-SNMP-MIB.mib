@@ -1,0 +1,372 @@
+EIDASMW-SNMP-MIB DEFINITIONS ::= BEGIN
+
+--
+-- Top-level infrastructure of the GOV-SNMP project enterprise MIB tree
+--
+
+IMPORTS
+    MODULE-IDENTITY, OBJECT-TYPE, NOTIFICATION-TYPE, Integer32, Counter64,
+    enterprises FROM SNMPv2-SMI
+
+    DateAndTime FROM SNMPv2-TC
+
+    OBJECT-GROUP, NOTIFICATION-GROUP FROM SNMPv2-CONF
+
+    SnmpTagValue FROM SNMP-TARGET-MIB;
+
+bos MODULE-IDENTITY
+    LAST-UPDATED "201306120000Z"
+    ORGANIZATION "www.bos-bremen.de"
+    CONTACT-INFO
+    "postal:   Nils Buengener
+                    Am Fallturm 9
+                    D-28359 Bremen
+
+          email:    nb@bos-bremen.de"
+    DESCRIPTION
+   "Top-level infrastructure of the GOV-SNMP project enterprise MIB tree"
+    REVISION     "201306120000Z"
+    DESCRIPTION
+   "Corrected version, notifs added"
+    ::= { enterprises 28939}
+
+
+--
+--  EIDASMW-SNMP enterprise-specific management objects
+--
+
+eidasmw              OBJECT IDENTIFIER ::= {bos 3}
+get                  OBJECT IDENTIFIER ::= {eidasmw 1}
+global               OBJECT IDENTIFIER ::= {get 1}
+crl                  OBJECT IDENTIFIER ::= {global 5}
+trap                 OBJECT IDENTIFIER ::= {eidasmw 2}
+cvcTrap              OBJECT IDENTIFIER ::= {trap 1}
+blacklistTrap        OBJECT IDENTIFIER ::= {trap 2}
+masterlistTrap       OBJECT IDENTIFIER ::= {trap 3}
+defectlistTrap       OBJECT IDENTIFIER ::= {trap 4}
+crlTrap              OBJECT IDENTIFIER ::= {trap 5}
+rscTrap              OBJECT IDENTIFIER ::= {trap 6}
+trapType             OBJECT IDENTIFIER ::= {trap 10}
+eidasmwGroups        OBJECT IDENTIFIER ::= {eidasmw 10}
+
+
+
+
+
+eidasmwObjectsGroup OBJECT-GROUP
+       OBJECTS {
+               serviceProviderName,
+               cvcPresent,
+               cvcExpirationDate,
+               cvcSubjectUrl,
+               cvcAndTlsLinked,
+               blackListAvailable,
+               lastBlackListRenewal,
+               blackListCAAvailable,
+               masterListAvailable,
+               lastMasterListRenewal,
+               masterListCAAvailable,
+               defectListAvailable,
+               lastDefectListRenewal,
+               defectListCAAvailable,
+               rscPendingAvailable,
+               rscCurrentValidUntil,
+               tlsCertificateExpirationDate,
+               crlAvailable,
+               lastSuccessfulCRLRetrieval
+              }
+       STATUS  current
+       DESCRIPTION
+               "Eidas-middleware monitoring objects."
+      ::= { eidasmwGroups 1 }
+
+eidasmwNotificationsGroup NOTIFICATION-GROUP
+       NOTIFICATIONS {
+        cvcLastRenewalStatus,
+	    blacklistLastRenewalStatus,
+	    blacklistLastRenewalProcessingDuration,
+	    masterlistLastRenewalStatus,
+	    masterlistLastRenewalProcessingDuration,
+	    defectlistLastRenewalStatus,
+        defectlistLastRenewalProcessingDuration,
+        crlLastRenewalStatus,
+        rscChangeToCurrent,
+        rscLastRenewalStatus
+	     }
+       STATUS        current
+       DESCRIPTION
+              "Notifications sent by Eidas-Middleware."
+      ::= { eidasmwGroups 2 }
+
+serviceProviderTable OBJECT-TYPE
+    SYNTAX      SEQUENCE OF ServiceProviderEntry
+    MAX-ACCESS  not-accessible
+    STATUS      current
+    DESCRIPTION "Table of service providers"
+    ::= { get 2 }
+
+serviceProviderEntry OBJECT-TYPE
+    SYNTAX      ServiceProviderEntry
+    MAX-ACCESS  not-accessible
+    STATUS      current
+    DESCRIPTION "An entry (conceptual row) in the serviceProvider table"
+    INDEX   { serviceProviderName }
+    ::= { serviceProviderTable 1 }
+
+ServiceProviderEntry ::=
+    SEQUENCE {
+        serviceProviderName      OCTET STRING,
+        cvcPresent               Integer32,
+        cvcExpirationDate        DateAndTime,
+        cvcSubjectUrl            OCTET STRING,
+        cvcAndTlsLinked          Integer32,
+        blackListAvailable       Integer32,
+        lastBlackListRenewal     DateAndTime,
+        blackListCAAvailable     Integer32,
+        masterListAvailable      Integer32,
+        lastMasterListRenewal    DateAndTime,
+        masterListCAAvailable    Integer32,
+        defectListAvailable      Integer32,
+        lastDefectListRenewal    DateAndTime,
+        defectListCAAvailable    Integer32,
+        rscPendingAvailable      Integer32,
+        rscCurrentValidUntil     DateAndTime
+    }
+
+message                  OBJECT-TYPE
+    SYNTAX      SnmpTagValue
+    MAX-ACCESS  accessible-for-notify
+    STATUS      current
+    DESCRIPTION
+	"Error messages sent by notifications."
+    ::= { trapType 1 }
+
+integer                  OBJECT-TYPE
+    SYNTAX      Integer32
+    MAX-ACCESS  accessible-for-notify
+    STATUS      current
+    DESCRIPTION
+	"Integer sent by notifications."
+    ::= { trapType 2 }
+
+long                  OBJECT-TYPE
+    SYNTAX      Counter64
+    MAX-ACCESS  accessible-for-notify
+    STATUS      current
+    DESCRIPTION
+	"Long integer sent by notifications."
+    ::= { trapType 3 }
+
+serviceProviderName              OBJECT-TYPE
+    SYNTAX      OCTET STRING (SIZE (0..255))
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION    "The service provider name used for identifying instances of the columnar objects in the serviceProviderTable."
+    ::= { serviceProviderEntry 1 }
+
+cvcPresent               OBJECT-TYPE
+    SYNTAX      Integer32
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION    "cvc present: 0 = not present, 1 = present"
+    ::= { serviceProviderEntry 11 }
+
+cvcExpirationDate             OBJECT-TYPE
+    SYNTAX      DateAndTime
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION    "Date until the cvc is valid"
+    ::= { serviceProviderEntry 12 }
+
+cvcSubjectUrl               OBJECT-TYPE
+    SYNTAX      OCTET STRING
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION    "The cvc certificates subject url"
+    ::= { serviceProviderEntry 13 }
+
+cvcAndTlsLinked              OBJECT-TYPE
+    SYNTAX      Integer32
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION    "TLS server certificate referenced in CVC: 0 = not linked, 1 = linked"
+    ::= { serviceProviderEntry 14 }
+
+blackListAvailable               OBJECT-TYPE
+    SYNTAX      Integer32
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION    "Blacklist availability: 0 = not available, 1 = available"
+    ::= { serviceProviderEntry 21 }
+
+lastBlackListRenewal             OBJECT-TYPE
+    SYNTAX      DateAndTime
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION    "Date of last successful blacklist renewal"
+    ::= { serviceProviderEntry 22 }
+
+blackListCAAvailable             OBJECT-TYPE
+    SYNTAX      Integer32
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION	"Blacklist PKI availability: 0 = not available, 1 = available"
+    ::= { serviceProviderEntry 23 }
+
+masterListAvailable              OBJECT-TYPE
+    SYNTAX      Integer32
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION    "Masterlist availability: 0 = not available, 1 = available"
+    ::= { serviceProviderEntry 31 }
+
+lastMasterListRenewal            OBJECT-TYPE
+    SYNTAX      DateAndTime
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION    "Date of last successful masterlist renewal"
+    ::= { serviceProviderEntry 32 }
+
+masterListCAAvailable            OBJECT-TYPE
+    SYNTAX      Integer32
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION	"Masterlist PKI availability: 0 = not available, 1 = available"
+    ::= { serviceProviderEntry 33 }
+
+defectListAvailable              OBJECT-TYPE
+    SYNTAX      Integer32
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION    "Defectlist availability: 0 = not available, 1 = available"
+    ::= { serviceProviderEntry 41 }
+
+lastDefectListRenewal            OBJECT-TYPE
+    SYNTAX      DateAndTime
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION    "Date of last successful defectlist renewal"
+    ::= { serviceProviderEntry 42 }
+
+defectListCAAvailable            OBJECT-TYPE
+    SYNTAX      Integer32
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION	"Defectlist PKI availability: 0 = not available, 1 = available"
+    ::= { serviceProviderEntry 43 }
+
+rscPendingAvailable              OBJECT-TYPE
+    SYNTAX      Integer32
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION	"Pending RSC availability: 0 = not available, 1 = available"
+    ::= { serviceProviderEntry 61 }
+
+rscCurrentValidUntil             OBJECT-TYPE
+    SYNTAX      DateAndTime
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION	"Last date of validity"
+    ::= { serviceProviderEntry 62 }
+
+--
+-- GLOBAL
+--
+tlsCertificateExpirationDate  OBJECT-TYPE
+    SYNTAX      DateAndTime
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+   "Expiration date of the server certificate"
+    ::= {global 11}
+
+crlAvailable OBJECT-TYPE
+    SYNTAX      Integer32
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+   "Certificate revocation list availability: 0 = not available, 1 = available"
+    ::= {crl 1}
+
+lastSuccessfulCRLRetrieval OBJECT-TYPE
+    SYNTAX      DateAndTime
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+   "The timestamp for the last successful retrieval of a certificate revocation list is returned."
+    ::= {crl 2}
+
+--
+--  Notifications
+--
+
+cvcLastRenewalStatus          NOTIFICATION-TYPE
+    OBJECTS      { integer }
+    STATUS      current
+    DESCRIPTION
+   "The status of the last renewal of the cvc. Success = 0, Failure = 1"
+    ::= { cvcTrap 1 }
+
+blacklistLastRenewalStatus NOTIFICATION-TYPE
+    OBJECTS      { integer }
+    STATUS      current
+    DESCRIPTION
+   "The status of the last renewal of the blacklist. List renewed = 0, List not received = 1, List signature check failed = 2, List processing error = 3"
+    ::= { blacklistTrap 1 }
+
+blacklistLastRenewalProcessingDuration NOTIFICATION-TYPE
+    OBJECTS      { long }
+    STATUS      current
+    DESCRIPTION
+   "The duration of the last renewal of the blacklist."
+    ::= { blacklistTrap 2 }
+
+masterlistLastRenewalStatus NOTIFICATION-TYPE
+    OBJECTS      { integer }
+    STATUS      current
+    DESCRIPTION
+   "The status of the last renewal of the masterlist. List renewed = 0, List not received = 1, List signature check failed = 2, List processing error = 3"
+    ::= { masterlistTrap 1 }
+
+masterlistLastRenewalProcessingDuration NOTIFICATION-TYPE
+    OBJECTS      { long }
+    STATUS      current
+    DESCRIPTION
+   "The duration of the last renewal of the masterlist."
+    ::= { masterlistTrap 2 }
+
+defectlistLastRenewalStatus NOTIFICATION-TYPE
+    OBJECTS      { integer }
+    STATUS      current
+    DESCRIPTION
+   "The status of the last renewal of the defectlist. List renewed = 0, List not received = 1, List signature check failed = 2, List processing error = 3"
+    ::= { defectlistTrap 1 }
+
+defectlistLastRenewalProcessingDuration NOTIFICATION-TYPE
+    OBJECTS      { long }
+    STATUS      current
+    DESCRIPTION
+   "The duration of the last renewal of the defectlist."
+    ::= { defectlistTrap 2 }
+
+crlLastRenewalStatus      NOTIFICATION-TYPE
+    OBJECTS      { integer }
+    STATUS      current
+    DESCRIPTION
+   "The status of the last renewal of the certificate revocation list. Success = 0, Failure = 1"
+    ::= { crlTrap 1 }
+
+rscChangeToCurrent      NOTIFICATION-TYPE
+    OBJECTS      { message }
+    STATUS      current
+    DESCRIPTION
+   "Notification that a request signer certificate is switched from pending to current. Rsc switched to current = 0, No rsc pending = 1, No refID = 2"
+    ::= { rscTrap 1 }
+
+rscLastRenewalStatus      NOTIFICATION-TYPE
+    OBJECTS      { integer }
+    STATUS      current
+    DESCRIPTION
+   "The status of the last renewal of the request signer certificate. Success = 0, Failure = 1"
+    ::= { rscTrap 2 }
+END

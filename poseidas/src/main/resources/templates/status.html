@@ -14,19 +14,44 @@
 <head>
     <title>POSeIDAS CVC status</title>
     <!--Bootstrap-->
-    <link rel="stylesheet" th:href="@{/admin-interface/webjars/bootstrap/4.5.2/css/bootstrap.css}">
+    <link rel="stylesheet" th:href="@{/admin-interface/webjars/bootstrap/4.6.0/css/bootstrap.css}">
     <script th:src="@{/admin-interface/webjars/jquery/3.5.1/jquery.min.js}"></script>
-    <script th:src="@{/admin-interface/webjars/bootstrap/4.5.2/js/bootstrap.bundle.min.js}"></script>
+    <script th:src="@{/admin-interface/webjars/bootstrap/4.6.0/js/bootstrap.bundle.min.js}"></script>
     <script th:src="@{/admin-interface/js/poseidas.js}"></script>
 </head>
 <body>
 <div class="content">
     <div th:replace="fragments/header :: header"/>
-    <div class="container mt-4">
-        <div class="row">
+    <div class="container">
+        <div class="row mt-4 mb-4">
             <div class="col-9">
-                <h1>Status of available eID Service Providers</h1>
-                <h2>Status TLS: <span th:text="${result.serverTlsValid} ? '✔' : '❌'"/></h2>
+                <h1>Status of the eIDAS Middleware</h1>
+                <div class="row">
+                    <div class="col-md-auto">
+                        <div class="card">
+                            <div class="card-header">
+                                TLS <small>Server certificate</small>
+                            </div>
+                            <div class="card-body">
+                                Valid: <span th:text="${globalResultModel.isServerTlsValid() ? '✔' : '❌'}"/><br>
+                                Expiration date:<br><span
+                                    th:text="${globalResultModel.isServerTlsValid() ? globalResultModel.getTlsValidUntil() : '-'}"/>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-auto">
+                        <div class="card">
+                            <div class="card-header">
+                                CRL
+                            </div>
+                            <div class="card-body">
+                                Available: <span th:text="${globalResultModel.isCrlAvailable() ? '✔' : '❌'}"/><br>
+                                Last successful retrieval:<br><span
+                                    th:text="${globalResultModel.isCrlAvailable() ? globalResultModel.getLastCrlRenewal() : '-'}"/>
+                            </div>
+                        </div>
+                    </div>
+                </div>
             </div>
             <div class="col-3 text-right">
                 <form action="#" th:action="@{/admin-interface/status}" method=get>
@@ -35,34 +60,82 @@
                 Last check at: <span th:text="${lastCheck}"/>
             </div>
         </div>
-        <table class="table table-striped">
-            <thead>
-            <tr>
-                <th scope="col">Entity Name</th>
-                <th scope="col">CVC is valid</th>
-                <th scope="col">Service Provider URL matches CVC URL</th>
-                <th scope="col">TLS hash found in CVC description</th>
-                <th scope="col">Hint</th>
-            </tr>
-            </thead>
-            <tbody>
-            <tr th:each="entity: ${result.providerCvcChecks}">
-                <td th:text="${entity.key}"/>
-                <td th:class="${entity.value.cvcValidity} ? 'table-success' : 'table-danger'"
-                    th:text="${entity.value.cvcValidity} ? '✔' : '❌'"/>
-                <td th:class="${entity.value.cvcUrlMatch} ? 'table-success' : 'table-danger'"
-                    th:text="${entity.value.cvcUrlMatch} ? '✔' : '❌'"/>
-                <td th:class="${entity.value.cvcTlsMatch} ? 'table-success' : 'table-danger'"
-                    th:text="${entity.value.cvcTlsMatch} ? '✔' : '❌'"/>
-                <td th:if="${entity.value.cvcPresent and not entity.value.cvcTlsMatch}">The TLS certificate has not been
-                    found in the CVC description. Please contact the DVCA support - <a
-                            th:href="${@CVCController.getMailto(entity)}">Send mail</a>
-                </td>
-                <td th:if="${not entity.value.cvcPresent}">No CVC present!</td>
-                <td th:if="${entity.value.cvcPresent and entity.value.cvcTlsMatch}">-</td>
-            </tr>
-            </tbody>
-        </table>
+        <!-- Status of available eID Service Providers -->
+        <div class="row">
+            <div class="col-9">
+                <h1>Status of available eID Service Providers</h1>
+            </div>
+        </div>
+        <div class="row">
+            <div class="col">
+                <th:block th:each="entity: ${serviceProviderResultModelMap}">
+                    <div class="card form-group">
+                        <div class="card-header">
+                            <a href="details.html"
+                               th:href="@{/admin-interface/details/__${entity.key}__}">
+                                <span th:text="${entity.key}">link</span></a>
+                        </div>
+                        <div class="card-body">
+                            <div class="container">
+                                <div class="row">
+                                    <div class="col-2 text-wrap">
+                                        <!-- CVC area -->
+                                        <h6>CVC</h6>
+                                        Present: <span th:text="${entity.value.cvcPresent ? '✔' : '❌'}"/><br>
+                                        Valid until: <br><span
+                                            th:text="${entity.value.cvcPresent ? entity.value.cvcValidUntil : '-'}"/><br>
+                                        Matches TLS: <span
+                                            th:text="${entity.value.cvcPresent ? (entity.value.cvcTLSLinkStatus ? '✔':'❌') : '-'}"/><br>
+                                        Subject URL: <span
+                                            th:text="${entity.value.cvcPresent ? entity.value.cvcSubjectUrl : '-'}"/>
+                                    </div>
+                                    <!-- RSC area -->
+                                    <div class="col">
+                                        <h6>RSC <small
+                                                th:text="${entity.value.rscCurrentValidUntil == null ? '(Not in Use)' : '(In use)'}"></small>
+                                        </h6>
+                                        Valid until:<br><span
+                                            th:text="${entity.value.rscCurrentValidUntil == null ? '-' : entity.value.rscCurrentValidUntil}"/><br>
+                                        Pending available: <span
+                                            th:text="${entity.value.rscPendingPresent ? '✔' : '❌'}"/>
+                                    </div>
+                                    <!-- Blacklist area -->
+                                    <div class="col border-left">
+                                        <h6>Blacklist</h6>
+                                        Available: <span th:text="${entity.value.blackListPresent ? '✔' : '❌'}"/><br>
+                                        Last renewal:<br><span
+                                            th:text="${entity.value.blackListPresent ? entity.value.blackListLastRetrieval : '-'}"/><br>
+                                        CA reachable: <span
+                                            th:text="${entity.value.blackListDVCAAvailability ? '✔' : '❌'}"/>
+                                    </div>
+                                    <!-- Masterlist area -->
+                                    <div class="col border-left">
+                                        <h6>Masterlist</h6>
+                                        Available: <span th:text="${entity.value.masterListPresent ? '✔' : '❌'}"/><br>
+                                        Last renewal:<br><span
+                                            th:text="${entity.value.masterListPresent ? entity.value.masterListLastRetrieval : '-'}"/><br>
+                                        CA reachable: <span
+                                            th:text="${entity.value.masterListDVCAAvailability ? '✔' : '❌'}"/>
+                                    </div>
+                                    <!-- Defectlist area -->
+                                    <div class="col border-left">
+                                        <h6>Defectlist</h6>
+                                        Available: <span th:text="${entity.value.defectListPresent ? '✔' : '❌'}"/><br>
+                                        Last renewal:<br><span
+                                            th:text="${entity.value.defectListPresent ? entity.value.defectListLastRetrieval : '-'}"/><br>
+                                        CA reachable: <span
+                                            th:text="${entity.value.defectListDVCAAvailability ? '✔' : '❌'}"/>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                </th:block>
+            </div>
+        </div>
+
+
     </div>
 </div>
 </div>

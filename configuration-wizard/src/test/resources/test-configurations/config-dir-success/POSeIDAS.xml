@@ -51,7 +51,7 @@
             <PaosReceiverURL>
                 https://myhost:8443/eidas-middleware/paosreceiver
             </PaosReceiverURL>
-            <hoursRefreshCVCBeforeExpires>48</hoursRefreshCVCBeforeExpires>
+            <hoursRefreshCVCBeforeExpires>240</hoursRefreshCVCBeforeExpires>
         </EPAConnectorConfiguration>
     </ServiceProvider>
 </CoreConfiguration>

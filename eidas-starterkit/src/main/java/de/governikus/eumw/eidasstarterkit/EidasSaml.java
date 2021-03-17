@@ -44,7 +44,6 @@ import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
 import net.shibboleth.utilities.java.support.component.ComponentInitializationException;
 import net.shibboleth.utilities.java.support.xml.XMLParserException;
-import se.litsec.eidas.opensaml.common.EidasLoaEnum;
 import se.litsec.eidas.opensaml.ext.SPTypeEnumeration;
 import se.swedenconnect.opensaml.OpenSAMLInitializer;
 import se.swedenconnect.opensaml.OpenSAMLSecurityExtensionConfig;
@@ -137,6 +136,40 @@ public class EidasSaml
   }
 
   /**
+   * Generates an EidasRequest with a test case.
+   *
+   * @param issuer the issuer of the eIDAS-Request.
+   * @param destination the destination of the eIDAS-Request.
+   * @param signer the signer to sign the eIDAS-Request. Must not be null.
+   * @param requestedAttributes the requested attributes for the eIDAS-Request.
+   * @param sectorType the sector type of the eIDAS-Request.
+   * @param nameIdPolicy the nameIdPolicy of theeIDAS-Request. Can be null. The default value is
+   *          {@link EidasNameIdType#TRANSIENT}.
+   * @param loa the level of assurance of the eIDAS-Request. Can be null. The defaul value is
+   *          {@link EidasLoaEnum#LOA_HIGH}.
+   * @param testCase the enum of the test case for the eIDAS-Request. Can be null.
+   * @return the eIDAS-Request as a byte array.
+   * @see EidasSaml#createRequest(String, String, EidasSigner, Map, SPTypeEnumeration, EidasNameIdType, EidasLoaEnum)
+   *      create a request without a test case.
+   **/
+  public static byte[] createRequest(String issuer,
+                                     String destination,
+                                     EidasSigner signer,
+                                     Map<EidasPersonAttributes, Boolean> requestedAttributes,
+                                     SPTypeEnumeration sectorType,
+                                     EidasNameIdType nameIdPolicy,
+                                     EidasLoaEnum loa,
+                                     TestCaseEnum testCase)
+    throws InitializationException, CertificateEncodingException, IOException, MarshallingException, SignatureException,
+    TransformerFactoryConfigurationError, TransformerException
+  {
+    init();
+    EidasRequest eidasRequest = new EidasRequest(destination, sectorType, nameIdPolicy, loa, issuer,
+                                                 Constants.DEFAULT_PROVIDER_NAME, null, signer, testCase);
+    return eidasRequest.generate(requestedAttributes);
+  }
+
+  /**
    * Read a eidas saml request xml and creats a EidasRequest object
    *
    * @param is the eidas saml request
@@ -153,7 +186,6 @@ public class EidasSaml
     init();
     return EidasRequest.parse(is);
   }
-
 
   /**
    * Read a eidas saml request xml and checks the signatures
@@ -417,4 +449,5 @@ public class EidasSaml
       is.reset();// this is imported if u try to parse the stream later
     }
   }
+
 }

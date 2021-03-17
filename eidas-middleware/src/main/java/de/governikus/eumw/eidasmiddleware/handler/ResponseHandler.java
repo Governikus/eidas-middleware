@@ -1,11 +1,10 @@
 /*
- * Copyright (c) 2020 Governikus KG. Licensed under the EUPL, Version 1.2 or as soon they will be approved by
- * the European Commission - subsequent versions of the EUPL (the "Licence"); You may not use this work except
- * in compliance with the Licence. You may obtain a copy of the Licence at:
- * http://joinup.ec.europa.eu/software/page/eupl Unless required by applicable law or agreed to in writing,
- * software distributed under the Licence is distributed on an "AS IS" basis, WITHOUT WARRANTIES OR CONDITIONS
- * OF ANY KIND, either express or implied. See the Licence for the specific language governing permissions and
- * limitations under the Licence.
+ * Copyright (c) 2020 Governikus KG. Licensed under the EUPL, Version 1.2 or as soon they will be approved by the
+ * European Commission - subsequent versions of the EUPL (the "Licence"); You may not use this work except in compliance
+ * with the Licence. You may obtain a copy of the Licence at: http://joinup.ec.europa.eu/software/page/eupl Unless
+ * required by applicable law or agreed to in writing, software distributed under the Licence is distributed on an
+ * "AS IS" basis, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the Licence for the
+ * specific language governing permissions and limitations under the Licence.
  */
 
 package de.governikus.eumw.eidasmiddleware.handler;
@@ -14,10 +13,8 @@ import java.io.IOException;
 import java.security.GeneralSecurityException;
 import java.sql.SQLException;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
-import java.util.Map;
 
 import javax.xml.bind.DatatypeConverter;
 import javax.xml.transform.TransformerException;
@@ -43,12 +40,14 @@ import de.governikus.eumw.eidasmiddleware.WebServiceHelper;
 import de.governikus.eumw.eidasmiddleware.eid.RequestingServiceProvider;
 import de.governikus.eumw.eidasstarterkit.EidasAttribute;
 import de.governikus.eumw.eidasstarterkit.EidasEncrypter;
+import de.governikus.eumw.eidasstarterkit.EidasLoaEnum;
 import de.governikus.eumw.eidasstarterkit.EidasNameId;
 import de.governikus.eumw.eidasstarterkit.EidasNaturalPersonAttributes;
 import de.governikus.eumw.eidasstarterkit.EidasResponse;
 import de.governikus.eumw.eidasstarterkit.EidasSaml;
 import de.governikus.eumw.eidasstarterkit.EidasSigner;
 import de.governikus.eumw.eidasstarterkit.EidasTransientNameId;
+import de.governikus.eumw.eidasstarterkit.TestCaseEnum;
 import de.governikus.eumw.eidasstarterkit.person_attributes.natural_persons_attribute.BirthNameAttribute;
 import de.governikus.eumw.eidasstarterkit.person_attributes.natural_persons_attribute.CurrentAddressAttribute;
 import de.governikus.eumw.eidasstarterkit.person_attributes.natural_persons_attribute.DateOfBirthAttribute;
@@ -69,15 +68,15 @@ import de.governikus.eumw.poseidas.eidserver.convenience.EIDInfoResultRestricted
 import de.governikus.eumw.poseidas.eidserver.convenience.EIDInfoResultString;
 import de.governikus.eumw.poseidas.server.eidservice.EIDInternal;
 import de.governikus.eumw.poseidas.server.eidservice.EIDResultResponse;
+import de.governikus.eumw.poseidas.server.idprovider.config.CvcTlsCheck;
 import de.governikus.eumw.poseidas.server.pki.HSMServiceHolder;
 import lombok.extern.slf4j.Slf4j;
 import net.shibboleth.utilities.java.support.xml.XMLParserException;
-import se.litsec.eidas.opensaml.common.EidasLoaEnum;
 
 
 /**
- * Handle the incoming redirect from the Ausweisapp2. Check for eID errors or gather the received data from
- * the eID card and prepare the SAML response.
+ * Handle the incoming redirect from the Ausweisapp2. Check for eID errors or gather the received data from the eID card
+ * and prepare the SAML response.
  */
 @Slf4j
 @Service
@@ -88,9 +87,13 @@ public class ResponseHandler
 
   private static final String UNKNOWN_REF_ID = "Unknown refID";
 
+  private static final String UNKNOWN_REQUEST_ID = "Unknown requestID";
+
   private static final String NR = "nr";
 
   private static final String STREET = "street";
+
+  private static final String CANNOT_CREATE_SAML_RESPONSE = "Cannot create SAML response";
 
   private final SessionStore sessionStore;
 
@@ -102,17 +105,21 @@ public class ResponseHandler
 
   private final EIDInternal eidInternal;
 
+  private final CvcTlsCheck cvcTlsCheck;
+
   public ResponseHandler(SessionStore sessionStore,
                          ConfigHolder configHolder,
                          ServiceProviderConfig serviceProviderConfig,
                          HSMServiceHolder hsmServiceHolder,
-                         EIDInternal eidInternal)
+                         EIDInternal eidInternal,
+                         CvcTlsCheck cvcTlsCheck)
   {
     this.sessionStore = sessionStore;
     this.configHolder = configHolder;
     this.serviceProviderConfig = serviceProviderConfig;
     this.hsmServiceHolder = hsmServiceHolder;
     this.eidInternal = eidInternal;
+    this.cvcTlsCheck = cvcTlsCheck;
   }
 
   private RequestSession getSAMLReqSession(String refID)
@@ -124,6 +131,19 @@ public class ResponseHandler
     catch (SQLException | ErrorCodeException e)
     {
       log.error("Cannot get request session for refID: {}", refID);
+      return null;
+    }
+  }
+
+  private RequestSession getSAMLReqSessionByRequestId(String requestId)
+  {
+    try
+    {
+      return sessionStore.getById(requestId);
+    }
+    catch (SQLException | ErrorCodeException e)
+    {
+      log.error("Cannot get request session for refID: {}", requestId);
       return null;
     }
   }
@@ -153,10 +173,7 @@ public class ResponseHandler
       }
       catch (RequestProcessingException e)
       {
-        response = prepareSAMLErrorResponse(reqSP,
-                                            samlReqSession.getReqId(),
-                                            ErrorCode.INTERNAL_ERROR,
-                                            e.getMessage());
+        response = prepareSAMLErrorResponse(reqSP, samlReqSession.getReqId(), ErrorCode.INTERNAL_ERROR, e.getMessage());
       }
       return response;
     }
@@ -188,26 +205,23 @@ public class ResponseHandler
   }
 
   public String prepareSAMLErrorResponse(RequestingServiceProvider reqSP,
-                                            String samlReqId,
-                                            ErrorCode errorCode,
-                                            String... msg)
+                                         String samlReqId,
+                                         ErrorCode errorCode,
+                                         String... msg)
   {
     log.warn(prepareLogMessage(reqSP, samlReqId, errorCode.toDescription(msg)));
     try
     {
       EidasSigner signer = getEidasSigner();
-      EidasResponse rsp = new EidasResponse(reqSP.getAssertionConsumerURL(), reqSP.getEntityID(), null,
-                                            samlReqId,
-                                            configHolder.getServerURLWithContextPath()
-                                                       + ContextPaths.METADATA,
+      EidasResponse rsp = new EidasResponse(reqSP.getAssertionConsumerURL(), reqSP.getEntityID(), null, samlReqId,
+                                            configHolder.getServerURLWithContextPath() + ContextPaths.METADATA,
                                             EidasLoaEnum.LOA_HIGH, signer, null);
       byte[] eidasResp = rsp.generateErrorRsp(errorCode, msg);
       return DatatypeConverter.printBase64Binary(eidasResp);
     }
-    catch (IOException | GeneralSecurityException | MarshallingException | SignatureException
-      | TransformerException e)
+    catch (IOException | GeneralSecurityException | MarshallingException | SignatureException | TransformerException e)
     {
-      throw new RequestProcessingException("Cannot create SAML response", e);
+      throw new RequestProcessingException(CANNOT_CREATE_SAML_RESPONSE, e);
     }
   }
 
@@ -226,9 +240,7 @@ public class ResponseHandler
     return signer;
   }
 
-  private String prepareLogMessage(RequestingServiceProvider reqSP,
-                                   String samlRequestId,
-                                   String errorCodeDescription)
+  private String prepareLogMessage(RequestingServiceProvider reqSP, String samlRequestId, String errorCodeDescription)
   {
     StringBuilder result = new StringBuilder();
     result.append("Error in request for SPname: '")
@@ -257,8 +269,8 @@ public class ResponseHandler
     }
 
     EIDInfoResult dateOfBirth = eidResponse.getEIDInfo(EIDKeys.DATE_OF_BIRTH);
-    String dateOfBirthStr = dateOfBirth instanceof EIDInfoResultString
-      ? ((EIDInfoResultString)dateOfBirth).getResult() : null;
+    String dateOfBirthStr = dateOfBirth instanceof EIDInfoResultString ? ((EIDInfoResultString)dateOfBirth).getResult()
+      : null;
     if (dateOfBirthStr != null)
     {
       // NPA will provide only the year if birth month and/or day are unknown
@@ -271,9 +283,7 @@ public class ResponseHandler
       attributes.add(new DateOfBirthAttribute(year + "-" + month + "-" + day));
     }
     else if (samlReqSession.getRequestedAttributes().get(EidasNaturalPersonAttributes.DATE_OF_BIRTH) != null
-             && samlReqSession.getRequestedAttributes()
-                              .get(EidasNaturalPersonAttributes.DATE_OF_BIRTH)
-                              .booleanValue())
+             && samlReqSession.getRequestedAttributes().get(EidasNaturalPersonAttributes.DATE_OF_BIRTH).booleanValue())
     {
       return prepareSAMLErrorResponse(reqSP,
                                       samlReqSession.getReqId(),
@@ -295,9 +305,7 @@ public class ResponseHandler
       attributes.add(new PlaceOfBirthAttribute(((EIDInfoResultPlaceNo)placeOfBirth).getNoPlaceInfo()));
     }
     else if (samlReqSession.getRequestedAttributes().get(EidasNaturalPersonAttributes.PLACE_OF_BIRTH) != null
-             && samlReqSession.getRequestedAttributes()
-                              .get(EidasNaturalPersonAttributes.PLACE_OF_BIRTH)
-                              .booleanValue())
+             && samlReqSession.getRequestedAttributes().get(EidasNaturalPersonAttributes.PLACE_OF_BIRTH).booleanValue())
     {
       return prepareSAMLErrorResponse(reqSP,
                                       samlReqSession.getReqId(),
@@ -318,9 +326,7 @@ public class ResponseHandler
     if (restrID == null)
     {
       if (samlReqSession.getRequestedAttributes().get(EidasNaturalPersonAttributes.PERSON_IDENTIFIER) != null
-          && samlReqSession.getRequestedAttributes()
-                           .get(EidasNaturalPersonAttributes.PERSON_IDENTIFIER)
-                           .booleanValue())
+          && samlReqSession.getRequestedAttributes().get(EidasNaturalPersonAttributes.PERSON_IDENTIFIER).booleanValue())
       {
         return prepareSAMLErrorResponse(reqSP,
                                         samlReqSession.getReqId(),
@@ -349,19 +355,117 @@ public class ResponseHandler
                                                   reqSP.getAssertionConsumerURL(),
                                                   reqSP.getEntityID(),
                                                   nameId,
-                                                  configHolder.getServerURLWithContextPath()
-                                                          + ContextPaths.METADATA,
+                                                  configHolder.getServerURLWithContextPath() + ContextPaths.METADATA,
                                                   EidasLoaEnum.LOA_HIGH,
                                                   samlReqSession.getReqId(),
                                                   encrypter,
                                                   signer);
       return DatatypeConverter.printBase64Binary(eidasResp);
     }
-    catch (IOException | GeneralSecurityException | InitializationException | XMLParserException
-      | EncryptionException | MarshallingException | SignatureException | TransformerException e)
+    catch (IOException | GeneralSecurityException | InitializationException | XMLParserException | EncryptionException
+      | MarshallingException | SignatureException | TransformerException e)
     {
-      throw new RequestProcessingException("Cannot create SAML response", e);
+      throw new RequestProcessingException(CANNOT_CREATE_SAML_RESPONSE, e);
     }
+  }
+
+  /**
+   * Creates a dummy saml response with fixed values.
+   *
+   * @param requestId the id of the request.
+   * @param testCase the test case of the request. Can be null.
+   * @return the test response in case of a test case the response is an error response.
+   */
+  public String prepareDummyResponse(String requestId, TestCaseEnum testCase)
+  {
+    RequestSession samlReqSession = getSAMLReqSessionByRequestId(requestId);
+    if (samlReqSession == null)
+    {
+      throw new RequestProcessingException(UNKNOWN_REQUEST_ID);
+    }
+    RequestingServiceProvider reqSP = serviceProviderConfig.getProviderByEntityID(samlReqSession.getReqProviderEntityId());
+    CvcTlsCheck.CvcCheckResults cvcCheckResults = cvcTlsCheck.checkCvcProvider(samlReqSession.getReqProviderName() == null
+      ? configHolder.getEntityIDInt() : samlReqSession.getReqProviderName());
+    if (cvcCheckFailed(cvcCheckResults))
+    {
+      return prepareSAMLErrorResponse(reqSP,
+                                      samlReqSession.getReqId(),
+                                      ErrorCode.ILLEGAL_CONFIGURATION,
+                                      "with the value 'false' need to be fixed",
+                                      cvcCheckResults.toString());
+    }
+    if (testCase != null)
+    {
+      return handleTestCase(testCase, samlReqSession, reqSP);
+    }
+
+    List<EidasAttribute> dummyAttributes = getDummyAttributes();
+    EidasNameId nameId = new EidasTransientNameId("DE/" + configHolder.getCountryCode() + "/123456");
+    try
+    {
+      EidasSigner signer = getEidasSigner();
+
+      EidasEncrypter encrypter = new EidasEncrypter(true, reqSP.getEncryptionCert());
+      byte[] eidasResp = EidasSaml.createResponse(dummyAttributes,
+                                                  reqSP.getAssertionConsumerURL(),
+                                                  reqSP.getEntityID(),
+                                                  nameId,
+                                                  configHolder.getServerURLWithContextPath() + ContextPaths.METADATA,
+                                                  EidasLoaEnum.LOA_TEST,
+                                                  samlReqSession.getReqId(),
+                                                  encrypter,
+                                                  signer);
+      return DatatypeConverter.printBase64Binary(eidasResp);
+    }
+    catch (IOException | GeneralSecurityException | InitializationException | XMLParserException | EncryptionException
+      | MarshallingException | SignatureException | TransformerException e)
+    {
+      throw new RequestProcessingException(CANNOT_CREATE_SAML_RESPONSE, e);
+    }
+  }
+
+  private boolean cvcCheckFailed(CvcTlsCheck.CvcCheckResults cvcCheckResults)
+  {
+    return !(cvcCheckResults.isCvcPresent() && cvcCheckResults.isCvcTlsMatch() && cvcCheckResults.isCvcUrlMatch()
+             && cvcCheckResults.isCvcValidity());
+  }
+
+  private String handleTestCase(TestCaseEnum testCase, RequestSession samlReqSession, RequestingServiceProvider reqSP)
+  {
+    switch (testCase)
+    {
+      case CANCELLATION_BY_USER:
+      case WRONG_PIN:
+        return prepareSAMLErrorResponse(reqSP,
+                                        samlReqSession.getReqId(),
+                                        TestCaseEnum.CANCELLATION_BY_USER.getErrorCode());
+      case WRONG_SIGNATURE:
+      case CARD_EXPIRED:
+        return prepareSAMLErrorResponse(reqSP,
+                                        samlReqSession.getReqId(),
+                                        TestCaseEnum.CARD_EXPIRED.getErrorCode(),
+                                        "http://www.bsi.bund.de/eid/server/2.0/resultminor/getResult#invalidDocument");
+      case UNKNOWN:
+      default:
+        return prepareSAMLErrorResponse(reqSP,
+                                        samlReqSession.getReqId(),
+                                        TestCaseEnum.UNKNOWN.getErrorCode(),
+                                        "An unknown error occurred");
+    }
+  }
+
+  private List<EidasAttribute> getDummyAttributes()
+  {
+    ArrayList<EidasAttribute> attributes = new ArrayList<>();
+    attributes.add(new FamilyNameAttribute("Mustermann"));
+    attributes.add(new GivenNameAttribute("Erika"));
+    attributes.add(new BirthNameAttribute("Erika Gabler"));
+    attributes.add(new DateOfBirthAttribute("1964-08-12"));
+    attributes.add(new PlaceOfBirthAttribute("Berlin"));
+    attributes.add(new CurrentAddressAttribute(null, null, null, null, "Heidestraße 17", "Köln", "D", null, "51147"));
+    attributes.add(new PersonIdentifierAttribute("DE/" + configHolder.getCountryCode() + "/" + "123456"));
+
+    return attributes;
   }
 
   /**
@@ -377,11 +481,11 @@ public class ResponseHandler
   {
     EIDInfoResult birthName = eIDrespInt.getEIDInfo(EIDKeys.BIRTH_NAME);
     EIDInfoResult familyNames = eIDrespInt.getEIDInfo(EIDKeys.FAMILY_NAMES);
-    String familyNamesStr = familyNames instanceof EIDInfoResultString
-      ? ((EIDInfoResultString)familyNames).getResult() : "";
+    String familyNamesStr = familyNames instanceof EIDInfoResultString ? ((EIDInfoResultString)familyNames).getResult()
+      : "";
     EIDInfoResult givenNames = eIDrespInt.getEIDInfo(EIDKeys.GIVEN_NAMES);
-    String givenNamesStr = givenNames instanceof EIDInfoResultString
-      ? ((EIDInfoResultString)givenNames).getResult() : "";
+    String givenNamesStr = givenNames instanceof EIDInfoResultString ? ((EIDInfoResultString)givenNames).getResult()
+      : "";
 
     // if birth name is requested, build it according to TR03130-3 section 3.2
     if (samlReqSession.getRequestedAttributes().get(EidasNaturalPersonAttributes.BIRTH_NAME) != null)
@@ -390,9 +494,7 @@ public class ResponseHandler
       if (birthName instanceof EIDInfoResultDeselected || birthName instanceof EIDInfoResultNotOnChip)
       {
         // ... but send error if mandatory
-        if (samlReqSession.getRequestedAttributes()
-                          .get(EidasNaturalPersonAttributes.BIRTH_NAME)
-                          .booleanValue())
+        if (samlReqSession.getRequestedAttributes().get(EidasNaturalPersonAttributes.BIRTH_NAME).booleanValue())
         {
           return false;
         }
@@ -400,8 +502,8 @@ public class ResponseHandler
       else
       {
         String constructedBirthName = givenNamesStr + " ";
-        String birthNameStr = birthName instanceof EIDInfoResultString
-          ? ((EIDInfoResultString)birthName).getResult() : "";
+        String birthNameStr = birthName instanceof EIDInfoResultString ? ((EIDInfoResultString)birthName).getResult()
+          : "";
         if (StringUtil.notEmpty(birthNameStr))
         {
           constructedBirthName += birthNameStr;
@@ -421,9 +523,7 @@ public class ResponseHandler
       {
         attributes.add(new FamilyNameAttribute(familyNamesStr));
       }
-      else if (samlReqSession.getRequestedAttributes()
-                             .get(EidasNaturalPersonAttributes.FAMILY_NAME)
-                             .booleanValue())
+      else if (samlReqSession.getRequestedAttributes().get(EidasNaturalPersonAttributes.FAMILY_NAME).booleanValue())
       {
         return false;
       }
@@ -435,9 +535,7 @@ public class ResponseHandler
       {
         attributes.add(new GivenNameAttribute(givenNamesStr));
       }
-      else if (samlReqSession.getRequestedAttributes()
-                             .get(EidasNaturalPersonAttributes.FIRST_NAME)
-                             .booleanValue())
+      else if (samlReqSession.getRequestedAttributes().get(EidasNaturalPersonAttributes.FIRST_NAME).booleanValue())
       {
         return false;
       }
@@ -465,15 +563,8 @@ public class ResponseHandler
       if (placeOfResidence instanceof EIDInfoResultPlaceStructured)
       {
         EIDInfoResultPlaceStructured pt = (EIDInfoResultPlaceStructured)placeOfResidence;
-        Map<String, String> address = createStreetAndNumber(pt);
-        String street = address.get(STREET);
-        String nr = address.get(NR);
-        String zipCode = pt.getZipCode();
-        String city = pt.getCity();
-        String state = pt.getState();
-        String country = pt.getCountry();
-
-        cA = new CurrentAddressAttribute(nr, street, city, zipCode, null, null, null, country, state);
+        cA = new CurrentAddressAttribute(null, null, null, null, pt.getStreet(), pt.getCity(), pt.getCountry(),
+                                         pt.getState(), pt.getZipCode());
       }
       else if (placeOfResidence instanceof EIDInfoResultPlaceNo)
       {
@@ -489,40 +580,6 @@ public class ResponseHandler
       return false;
     }
     return true;
-  }
-
-  /**
-   * Separates the street from the number of an address, if number exists.
-   */
-  private Map<String, String> createStreetAndNumber(EIDInfoResultPlaceStructured pt)
-  {
-    Map<String, String> result = new HashMap<>();
-    if (pt.getStreet() != null)
-    {
-      int idx = -1;
-      String s = pt.getStreet().trim();
-      // try to find the steet nr in the street string
-      for ( int i = 0 ; i < s.length() ; i++ )
-      {
-        if (Character.isDigit(s.charAt(i)))
-        {
-          idx = i;
-          break;
-        }
-      }
-
-      if (idx > 0)
-      {
-        result.put(STREET, s.substring(0, idx).trim());
-        result.put(NR, s.substring(idx).trim());
-      }
-      else
-      {
-        result.put(STREET, s);
-        result.put(NR, "");
-      }
-    }
-    return result;
   }
 
   public String getConsumerURLForRefID(String refID)
@@ -545,4 +602,22 @@ public class ResponseHandler
     }
     return samlReqSession.getRelayState().orElse(null);
   }
+
+  /**
+   * Gets the consumer url from service provider.
+   *
+   * @param requestId the request id from the saml request.
+   * @return consumer url of the service provider.
+   */
+  public String getConsumerURLForRequestID(String requestId)
+  {
+    RequestSession samlReqSession = getSAMLReqSessionByRequestId(requestId);
+    if (samlReqSession == null)
+    {
+      throw new RequestProcessingException(UNKNOWN_REQUEST_ID);
+    }
+    RequestingServiceProvider reqSP = serviceProviderConfig.getProviderByEntityID(samlReqSession.getReqProviderEntityId());
+    return reqSP.getAssertionConsumerURL();
+  }
+
 }

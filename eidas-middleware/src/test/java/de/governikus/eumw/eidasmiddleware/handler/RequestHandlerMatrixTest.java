@@ -9,8 +9,6 @@
 
 package de.governikus.eumw.eidasmiddleware.handler;
 
-import static de.governikus.eumw.eidasmiddleware.handler.ResponseHandlerTest.DEFAULT_PASSWORD;
-
 import java.io.File;
 import java.io.IOException;
 import java.net.URISyntaxException;
@@ -52,8 +50,10 @@ import de.governikus.eumw.eidasmiddleware.ConfigHolder;
 import de.governikus.eumw.eidasmiddleware.ServiceProviderConfig;
 import de.governikus.eumw.eidasmiddleware.SessionStore;
 import de.governikus.eumw.eidasmiddleware.eid.RequestingServiceProvider;
+import de.governikus.eumw.eidasstarterkit.EidasLoaEnum;
 import de.governikus.eumw.eidasstarterkit.EidasNameIdType;
 import de.governikus.eumw.eidasstarterkit.EidasNaturalPersonAttributes;
+import de.governikus.eumw.eidasstarterkit.EidasRequest;
 import de.governikus.eumw.eidasstarterkit.EidasSaml;
 import de.governikus.eumw.eidasstarterkit.EidasSigner;
 import de.governikus.eumw.eidasstarterkit.person_attributes.EidasPersonAttributes;
@@ -63,7 +63,6 @@ import de.governikus.eumw.utils.key.KeyStoreSupporter;
 import lombok.AllArgsConstructor;
 import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
-import se.litsec.eidas.opensaml.common.EidasLoaEnum;
 import se.litsec.eidas.opensaml.ext.SPTypeEnumeration;
 
 
@@ -78,6 +77,8 @@ class RequestHandlerMatrixTest
   private static final String SERVICE_PROVIDER = "providerA";
 
   private static final String UNKNOWN_SERVICE_PROVIDER = "providerB";
+
+  private static final String DEFAULT_PASSWORD = "123456";
 
   @MockBean
   private SessionStore mockSessionStore;
@@ -153,8 +154,8 @@ class RequestHandlerMatrixTest
 
     RequestHandler requestHandler = new RequestHandler(mockSessionStore, mockConfigHolder, mockServiceProviderConfig,
                                                        coreConfigurationDto);
-    String tcTokenURL = requestHandler.handleSAMLRequest("RELAY_STATE", samlRequest, false);
-    Assertions.assertNotNull(tcTokenURL);
+    EidasRequest eIDASRequest = requestHandler.handleSAMLRequest("RELAY_STATE", samlRequest, false);
+    Assertions.assertNotNull(eIDASRequest.getId());
   }
 
   @ParameterizedTest

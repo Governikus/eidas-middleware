@@ -49,9 +49,10 @@ import de.governikus.eumw.poseidas.gov2server.GovManagementException;
 import de.governikus.eumw.poseidas.gov2server.constants.admin.GlobalManagementCodes;
 import de.governikus.eumw.poseidas.gov2server.constants.admin.IDManagementCodes;
 import de.governikus.eumw.poseidas.gov2server.constants.admin.ManagementMessage;
-import de.governikus.eumw.poseidas.server.idprovider.accounting.SNMPDelegate;
 import de.governikus.eumw.poseidas.server.idprovider.config.EPAConnectorConfigurationDto;
 import de.governikus.eumw.poseidas.server.idprovider.config.SslKeysDto;
+import de.governikus.eumw.poseidas.server.monitoring.SNMPConstants;
+import de.governikus.eumw.poseidas.server.monitoring.SNMPTrapSender;
 import de.governikus.eumw.poseidas.server.pki.PendingCertificateRequest.Status;
 import de.governikus.eumw.poseidas.server.pki.caserviceaccess.DvcaCertDescriptionWrapper;
 import de.governikus.eumw.poseidas.server.pki.caserviceaccess.PKIServiceConnector;
@@ -217,6 +218,7 @@ public class CVCRequestHandler extends BerCaRequestHandlerBase
           throw e;
         }
       }
+      SNMPTrapSender.sendSNMPTrap(SNMPConstants.TrapOID.CVC_TRAP_LAST_RENEWAL_STATUS, 0);
 
       // After storing the very first CVC, also request black, master and defect lists and public sector key
       // if needed
@@ -228,8 +230,14 @@ public class CVCRequestHandler extends BerCaRequestHandlerBase
         CertificationRevocationListImpl.initialize(new HashSet<>(masterList.getCertificates()));
       }
     }
+    catch (GovManagementException e)
+    {
+      SNMPTrapSender.sendSNMPTrap(SNMPConstants.TrapOID.CVC_TRAP_LAST_RENEWAL_STATUS, 1);
+      throw e;
+    }
     catch (IOException | SignatureException e)
     {
+      SNMPTrapSender.sendSNMPTrap(SNMPConstants.TrapOID.CVC_TRAP_LAST_RENEWAL_STATUS, 1);
       internalError("cannot create cert request", e);
     }
   }
@@ -288,10 +296,7 @@ public class CVCRequestHandler extends BerCaRequestHandlerBase
           String message = "cannot request a new certificate as long as there is a pending request for same data with status "
                            + requestStatus + " for " + cvcRefId;
           log.error("{}: {}", cvcRefId, message);
-          SNMPDelegate.getInstance()
-                      .sendSNMPTrap(SNMPDelegate.OID.CERT_RENEWAL_FAILED,
-                                    SNMPDelegate.CERT_RENEWAL_FAILED + " " + message);
-
+          SNMPTrapSender.sendSNMPTrap(SNMPConstants.TrapOID.CVC_TRAP_LAST_RENEWAL_STATUS, 1);
           return GlobalManagementCodes.EC_UNEXPECTED_ERROR.createMessage("cannot request a new certificate as long as there is a pending request for same data for "
                                                                          + cvcRefId);
         }
@@ -326,11 +331,7 @@ public class CVCRequestHandler extends BerCaRequestHandlerBase
         }
         catch (GovManagementException e)
         {
-          log.error("{}: cannot download ca certificates, will keep old certificate chain", cvcRefId);
-          SNMPDelegate.getInstance()
-                      .sendSNMPTrap(SNMPDelegate.OID.CERT_RENEWAL_FAILED,
-                                    SNMPDelegate.CERT_RENEWAL_FAILED + " " + "cannot download ca certificates for generting a new CVC for "
-                                                                          + cvcRefId + ", will use old cert chain");
+          log.warn("{}: cannot download ca certificates, will keep old certificate chain", cvcRefId);
         }
 
         if (chain == null) // download failed
@@ -394,23 +395,20 @@ public class CVCRequestHandler extends BerCaRequestHandlerBase
       }
       installNewCertificate(newCert);
       log.debug("{}: successfully finished makeSubsequentRequest", cvcRefId);
+      SNMPTrapSender.sendSNMPTrap(SNMPConstants.TrapOID.CVC_TRAP_LAST_RENEWAL_STATUS, 0);
 
       return null;
     }
     catch (GovManagementException e)
     {
       log.error("{}: cannot renew certificate", cvcRefId, e);
-      SNMPDelegate.getInstance()
-                  .sendSNMPTrap(SNMPDelegate.OID.CERT_RENEWAL_FAILED,
-                                SNMPDelegate.CERT_RENEWAL_FAILED + " " + e.getMessage());
+      SNMPTrapSender.sendSNMPTrap(SNMPConstants.TrapOID.CVC_TRAP_LAST_RENEWAL_STATUS, 1);
       return e.getManagementMessage();
     }
     catch (Exception e)
     {
       log.error("{}: cannot renew certificate", cvcRefId, e);
-      SNMPDelegate.getInstance()
-                  .sendSNMPTrap(SNMPDelegate.OID.CERT_RENEWAL_FAILED,
-                                SNMPDelegate.CERT_RENEWAL_FAILED + " " + e.getMessage());
+      SNMPTrapSender.sendSNMPTrap(SNMPConstants.TrapOID.CVC_TRAP_LAST_RENEWAL_STATUS, 1);
       return GlobalManagementCodes.EC_UNEXPECTED_ERROR.createMessage(e.getMessage());
     }
   }
@@ -480,11 +478,7 @@ public class CVCRequestHandler extends BerCaRequestHandlerBase
     }
     catch (GovManagementException e)
     {
-      log.error("{}: cannot download ca certificates, will keep old certificate chain", cvcRefId);
-      SNMPDelegate.getInstance()
-                  .sendSNMPTrap(SNMPDelegate.OID.CERT_RENEWAL_FAILED,
-                                SNMPDelegate.CERT_RENEWAL_FAILED + " " + "cannot download ca certificates, storing new CVC for  "
-                                                                      + cvcRefId + " anyway");
+      log.warn("{}: cannot download ca certificates, will keep old certificate chain", cvcRefId);
     }
 
     if (policy.isCertDescriptionFetch())
@@ -555,10 +549,6 @@ public class CVCRequestHandler extends BerCaRequestHandlerBase
         catch (GovManagementException e)
         {
           log.error("{}: cannot fetch blacklist", cvcRefId, e);
-          SNMPDelegate.getInstance()
-                      .sendSNMPTrap(SNMPDelegate.OID.BLACKLIST_RENEWAL_FAILED,
-                                    SNMPDelegate.BLACKLIST_RENEWAL_FAILED + " " + "cannot fetch blacklist for "
-                                                                               + cvcRefId);
         }
         finally
         {
@@ -577,10 +567,6 @@ public class CVCRequestHandler extends BerCaRequestHandlerBase
     catch (GovManagementException e)
     {
       log.error("{}: cannot fetch public sector key", cvcRefId, e);
-      SNMPDelegate.getInstance()
-                  .sendSNMPTrap(SNMPDelegate.OID.PUBLIC_SECTOR_KEY_REQUEST_FAILED,
-                                SNMPDelegate.PUBLIC_SECTOR_KEY_REQUEST_FAILED + " " + "cannot fetch public sector key for "
-                                                                                   + cvcRefId);
     }
   }
 

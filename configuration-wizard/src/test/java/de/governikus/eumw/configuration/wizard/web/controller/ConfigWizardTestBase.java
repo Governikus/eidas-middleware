@@ -956,7 +956,7 @@ class ConfigWizardTestBase extends AbstractWebTest
     assertEquals(SERVER_URL + "/eidas-middleware/paosreceiver",
                  StringUtils.deleteWhitespace(epaConnectorConfigurationType.getPaosReceiverURL()),
                  VALIDATE_POSEIDAS_XML_MESSAGE);
-    final Integer hoursToRefresh = 48;
+    final Integer hoursToRefresh = 240;
     assertEquals(hoursToRefresh, // NOPMD
                  epaConnectorConfigurationType.getHoursRefreshCVCBeforeExpires(),
                  VALIDATE_POSEIDAS_XML_MESSAGE);

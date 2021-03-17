@@ -41,4 +41,10 @@ class SamlResult
    */
   private String errorDetails;
 
+  /**
+   * The level of assurance from the assertion
+   */
+
+  private String levelOfAssurance;
+
 }

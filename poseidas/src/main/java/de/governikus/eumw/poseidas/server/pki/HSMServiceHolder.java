@@ -1,11 +1,10 @@
 /*
- * Copyright (c) 2020 Governikus KG. Licensed under the EUPL, Version 1.2 or as soon they will be approved by
- * the European Commission - subsequent versions of the EUPL (the "Licence"); You may not use this work except
- * in compliance with the Licence. You may obtain a copy of the Licence at:
- * http://joinup.ec.europa.eu/software/page/eupl Unless required by applicable law or agreed to in writing,
- * software distributed under the Licence is distributed on an "AS IS" basis, WITHOUT WARRANTIES OR CONDITIONS
- * OF ANY KIND, either express or implied. See the Licence for the specific language governing permissions and
- * limitations under the Licence.
+ * Copyright (c) 2020 Governikus KG. Licensed under the EUPL, Version 1.2 or as soon they will be approved by the
+ * European Commission - subsequent versions of the EUPL (the "Licence"); You may not use this work except in compliance
+ * with the Licence. You may obtain a copy of the Licence at: http://joinup.ec.europa.eu/software/page/eupl Unless
+ * required by applicable law or agreed to in writing, software distributed under the Licence is distributed on an
+ * "AS IS" basis, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the Licence for the
+ * specific language governing permissions and limitations under the Licence.
  */
 
 package de.governikus.eumw.poseidas.server.pki;
@@ -28,8 +27,6 @@ import de.governikus.eumw.poseidas.cardserver.service.hsm.impl.HSMService;
 import de.governikus.eumw.poseidas.cardserver.service.hsm.impl.PKCS11HSMConfiguration;
 import de.governikus.eumw.poseidas.gov2server.constants.admin.GlobalManagementCodes;
 import de.governikus.eumw.poseidas.gov2server.constants.admin.ManagementMessage;
-import de.governikus.eumw.poseidas.server.idprovider.accounting.SNMPDelegate;
-import de.governikus.eumw.poseidas.server.idprovider.accounting.SNMPDelegate.OID;
 import de.governikus.eumw.poseidas.server.idprovider.core.WarmupListener;
 import lombok.extern.slf4j.Slf4j;
 
@@ -172,8 +169,7 @@ public class HSMServiceHolder implements WarmupListener
   }
 
   /**
-   * If service is alive and a positive number given, delete all keys which have expired since the given
-   * number of days.
+   * If service is alive and a positive number given, delete all keys which have expired since the given number of days.
    *
    * @param deleteAfterDays days after which to delete a key
    * @param archive <code>true</code> for archiving old keys in database
@@ -306,9 +302,6 @@ public class HSMServiceHolder implements WarmupListener
       result.add(startHSMService());
       if (!isServiceAvailable(false))
       {
-        SNMPDelegate.getInstance()
-                    .sendSNMPTrap(OID.HSM_NOT_AVAILABLE,
-                                  SNMPDelegate.HSM_NOT_AVAILABLE + " " + "No HSM active");
         result.add(GlobalManagementCodes.EC_UNEXPECTED_ERROR.createMessage("No HSM active"));
       }
     }
