@@ -1,11 +1,10 @@
 /*
- * Copyright (c) 2019 Governikus KG. Licensed under the EUPL, Version 1.2 or as soon they will be approved by
- * the European Commission - subsequent versions of the EUPL (the "Licence"); You may not use this work except
- * in compliance with the Licence. You may obtain a copy of the Licence at:
- * http://joinup.ec.europa.eu/software/page/eupl Unless required by applicable law or agreed to in writing,
- * software distributed under the Licence is distributed on an "AS IS" basis, WITHOUT WARRANTIES OR CONDITIONS
- * OF ANY KIND, either express or implied. See the Licence for the specific language governing permissions and
- * limitations under the Licence.
+ * Copyright (c) 2020 Governikus KG. Licensed under the EUPL, Version 1.2 or as soon they will be approved by the
+ * European Commission - subsequent versions of the EUPL (the "Licence"); You may not use this work except in compliance
+ * with the Licence. You may obtain a copy of the Licence at: http://joinup.ec.europa.eu/software/page/eupl Unless
+ * required by applicable law or agreed to in writing, software distributed under the Licence is distributed on an
+ * "AS IS" basis, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the Licence for the
+ * specific language governing permissions and limitations under the Licence.
  */
 
 package de.governikus.eumw.poseidas.cardbase.crypto.sm;
@@ -26,12 +25,14 @@ import javax.smartcardio.ResponseAPDU;
 import de.governikus.eumw.poseidas.cardbase.ArrayUtil;
 import de.governikus.eumw.poseidas.cardbase.AssertUtil;
 import de.governikus.eumw.poseidas.cardbase.ByteUtil;
+import de.governikus.eumw.poseidas.cardbase.Hex;
 import de.governikus.eumw.poseidas.cardbase.asn1.ASN1;
 import de.governikus.eumw.poseidas.cardbase.asn1.ASN1Constants;
 import de.governikus.eumw.poseidas.cardbase.card.CommandAPDUConstants;
 import de.governikus.eumw.poseidas.cardbase.card.SecureMessaging;
 import de.governikus.eumw.poseidas.cardbase.card.SecureMessagingException;
 import de.governikus.eumw.poseidas.cardbase.crypto.CipherUtil;
+import lombok.extern.slf4j.Slf4j;
 
 
 /**
@@ -41,6 +42,7 @@ import de.governikus.eumw.poseidas.cardbase.crypto.CipherUtil;
  * @author Jens Wothe, jw@bos-bremen.de
  * @author Arne Stahlbock, ast@bos-bremen.de
  */
+@Slf4j
 public class AESSecureMessaging implements SecureMessaging
 {
 
@@ -91,9 +93,8 @@ public class AESSecureMessaging implements SecureMessaging
     byte[] macDOBytes = createMacDO(secureHeaderPaddedBytes, cryptogramDOBytes, neDOBytes);
     byte[] dataFieldBytes = ByteUtil.combine(new byte[][]{cryptogramDOBytes, neDOBytes, macDOBytes});
     int l = getNewLe(neDOBytes, dataFieldBytes);
-    CommandAPDU result = new CommandAPDU(secureHeaderBytes[0], secureHeaderBytes[1], secureHeaderBytes[2],
-                                         secureHeaderBytes[3], dataFieldBytes, l);
-    return result;
+    return new CommandAPDU(secureHeaderBytes[0], secureHeaderBytes[1], secureHeaderBytes[2], secureHeaderBytes[3],
+                           dataFieldBytes, l);
   }
 
   private int getNewLe(byte[] neDOBytes, byte[] dataFieldBytes)
@@ -141,15 +142,11 @@ public class AESSecureMessaging implements SecureMessaging
     AssertUtil.notNull(response, "response");
     this.material.getIvParameterSpec().increaseSSC();
 
-    byte[] responseBytes = response.getBytes();
-    if (responseBytes.length == 2)
-    {
-      return response;
-    }
     byte[] responseData = response.getData();
     if (ArrayUtil.isNullOrEmpty(responseData))
     {
-      return response;
+      log.warn("Error 6419: no data");
+      throw new SecureMessagingException(SecureMessagingException.CODE_SOFTWARE, "response is not encrypted", null);
     }
     ASN1[] childs = getDataChilds(responseData);
     byte[] encDataDOBytes = null;
@@ -205,12 +202,16 @@ public class AESSecureMessaging implements SecureMessaging
       }
       else
       {
-        throw new SecureMessagingException(SecureMessagingException.CODE_SOFTWARE,
-                                           "unrecognized DO at response", null);
+        if (tag >= 0x61 && tag <= 0x76)
+        {
+          log.warn("Error 6419: data object {}", Hex.hexify(child.getEncoded()));
+        }
+        throw new SecureMessagingException(SecureMessagingException.CODE_SOFTWARE, "unrecognized DO at response", null);
       }
     }
     checkMac(macDOBytes, macData);
     byte[] dataBytes = getDataBytes(encDataDOBytes, encTag);
+    byte[] responseBytes = response.getBytes();
     byte[] result = ByteUtil.combine(new byte[][]{
                                                   dataBytes,
                                                   processDOBytes != null ? processDOBytes
@@ -267,8 +268,7 @@ public class AESSecureMessaging implements SecureMessaging
     {
       // invalidate key material so the channel can no longer be used
       this.material = null;
-      throw new SecureMessagingException(SecureMessagingException.CODE_CARD,
-                                         "no checksum received from card", null);
+      throw new SecureMessagingException(SecureMessagingException.CODE_CARD, "no checksum received from card", null);
     }
     else
     {
@@ -369,8 +369,7 @@ public class AESSecureMessaging implements SecureMessaging
       ASN1 result;
       if (command.getINS() % 2 == 0)
       {
-        byte[] paddedCryptogram = ByteUtil.combine(new byte[]{SMConstants.PADDING_INDICATOR_BYTE_ISO},
-                                                   cryptogram);
+        byte[] paddedCryptogram = ByteUtil.combine(new byte[]{SMConstants.PADDING_INDICATOR_BYTE_ISO}, cryptogram);
         result = new ASN1(SMConstants.TAG_BYTE_DO_CRYPTOGRAM, paddedCryptogram);
       }
       else

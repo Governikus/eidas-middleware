@@ -1,11 +1,10 @@
 /*
- * Copyright (c) 2019 Governikus KG. Licensed under the EUPL, Version 1.2 or as soon they will be approved by
- * the European Commission - subsequent versions of the EUPL (the "Licence"); You may not use this work except
- * in compliance with the Licence. You may obtain a copy of the Licence at:
- * http://joinup.ec.europa.eu/software/page/eupl Unless required by applicable law or agreed to in writing,
- * software distributed under the Licence is distributed on an "AS IS" basis, WITHOUT WARRANTIES OR CONDITIONS
- * OF ANY KIND, either express or implied. See the Licence for the specific language governing permissions and
- * limitations under the Licence.
+ * Copyright (c) 2020 Governikus KG. Licensed under the EUPL, Version 1.2 or as soon they will be approved by the
+ * European Commission - subsequent versions of the EUPL (the "Licence"); You may not use this work except in compliance
+ * with the Licence. You may obtain a copy of the Licence at: http://joinup.ec.europa.eu/software/page/eupl Unless
+ * required by applicable law or agreed to in writing, software distributed under the Licence is distributed on an
+ * "AS IS" basis, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the Licence for the
+ * specific language governing permissions and limitations under the Licence.
  */
 
 package de.governikus.eumw.poseidas.cardserver.eac.functions.select;
@@ -38,8 +37,8 @@ import iso.std.iso_iec._24727.tech.schema.TransmitResponse;
  * @see SelectResult
  * @author Jens Wothe, jw@bos-bremen.de
  */
-public class SelectApplication extends AbstractFunctionStep<FileParameter, SelectResult> implements
-  FunctionStep<FileParameter, SelectResult>, TransmitCommandCreator<FileParameter>,
+public class SelectApplication extends AbstractFunctionStep<FileParameter, SelectResult>
+  implements FunctionStep<FileParameter, SelectResult>, TransmitCommandCreator<FileParameter>,
   TransmitResultEvaluator<SelectResult>
 {
 
@@ -113,14 +112,14 @@ public class SelectApplication extends AbstractFunctionStep<FileParameter, Selec
   @Override
   public SelectResult evaluate(TransmitAPDUResult transmitResult, int[] responseIndices)
   {
-    responseIndices = TransmitResultEvaluator.Util.checkArguments(transmitResult,
-                                                                  responseIndices,
-                                                                  getMinimumCount(),
-                                                                  getMaximumCount());
     if (transmitResult.getThrowable() != null)
     {
       return new SelectResult(transmitResult.getThrowable());
     }
+    responseIndices = TransmitResultEvaluator.Util.checkArguments(transmitResult,
+                                                                  responseIndices,
+                                                                  getMinimumCount(),
+                                                                  getMaximumCount());
     byte[] resp = transmitResult.getData().getOutputAPDU().get(responseIndices[0]);
     SelectResult selectResult = new SelectResult(resp[0] == (byte)0x90 && resp[1] == 0x00 ? Boolean.TRUE
       : Boolean.FALSE);
