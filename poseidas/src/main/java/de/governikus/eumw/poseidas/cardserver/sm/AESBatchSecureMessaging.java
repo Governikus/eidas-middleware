@@ -1,11 +1,10 @@
 /*
- * Copyright (c) 2020 Governikus KG. Licensed under the EUPL, Version 1.2 or as soon they will be approved by
- * the European Commission - subsequent versions of the EUPL (the "Licence"); You may not use this work except
- * in compliance with the Licence. You may obtain a copy of the Licence at:
- * http://joinup.ec.europa.eu/software/page/eupl Unless required by applicable law or agreed to in writing,
- * software distributed under the Licence is distributed on an "AS IS" basis, WITHOUT WARRANTIES OR CONDITIONS
- * OF ANY KIND, either express or implied. See the Licence for the specific language governing permissions and
- * limitations under the Licence.
+ * Copyright (c) 2020 Governikus KG. Licensed under the EUPL, Version 1.2 or as soon they will be approved by the
+ * European Commission - subsequent versions of the EUPL (the "Licence"); You may not use this work except in compliance
+ * with the Licence. You may obtain a copy of the Licence at: http://joinup.ec.europa.eu/software/page/eupl Unless
+ * required by applicable law or agreed to in writing, software distributed under the Licence is distributed on an
+ * "AS IS" basis, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the Licence for the
+ * specific language governing permissions and limitations under the Licence.
  */
 
 package de.governikus.eumw.poseidas.cardserver.sm;
@@ -44,30 +43,35 @@ public class AESBatchSecureMessaging extends AESSecureMessaging implements Batch
     // encrypt commands
     List<CommandAPDU> encryptedCommandList = new ArrayList<>();
 
+    BatchAESEncSSCIvParameterSpec paramSpec;
     IvParameterSpec iv = super.material.getIvParameterSpec();
+    if (BatchAESEncSSCIvParameterSpec.class.isInstance(iv))
+    {
+      paramSpec = (BatchAESEncSSCIvParameterSpec)iv;
+    }
+    else
+    {
+      return;
+    }
 
-    CommandAPDU[] commands = cardCommunication.getCommands();
+    CommandAPDU[] commands = cardCommunication.getPlaintextCommands();
     for ( int i = 0 ; i < commands.length ; i++ )
     {
       CommandAPDU command = commands[i];
       try
       {
         encryptedCommandList.add(super.encipherCommand(command));
-        if (BatchAESEncSSCIvParameterSpec.class.isInstance(iv))
+        if (i == 0)
         {
-          BatchAESEncSSCIvParameterSpec paramSpec = (BatchAESEncSSCIvParameterSpec)iv;
-          if (i == 0)
-          {
-            paramSpec.mark();
-          }
-          if (i != commands.length - 1)
-          {
-            paramSpec.increaseSSC();
-          }
-          else
-          {
-            paramSpec.reset();
-          }
+          paramSpec.mark();
+        }
+        if (i != commands.length - 1)
+        {
+          paramSpec.increaseSSC();
+        }
+        else
+        {
+          paramSpec.reset();
         }
       }
       catch (Exception e)
@@ -82,10 +86,8 @@ public class AESBatchSecureMessaging extends AESSecureMessaging implements Batch
     }
     else
     {
-      cardCommunication.setCommands(encryptedCommandList.toArray(new CommandAPDU[0]));
+      cardCommunication.setEncryptedCommands(encryptedCommandList.toArray(new CommandAPDU[0]));
     }
-    cardCommunication.setPhase(CardCommunication.PHASE_POST);
-    cardCommunication.setFinished(true);
   }
 
   /** {@inheritDoc} */
@@ -94,31 +96,39 @@ public class AESBatchSecureMessaging extends AESSecureMessaging implements Batch
   {
     Exception throwable = null;
 
+    AESEncSSCIvParameterSpec paramSpec;
     IvParameterSpec iv = super.material.getIvParameterSpec();
+    if (AESEncSSCIvParameterSpec.class.isInstance(iv))
+    {
+      paramSpec = (AESEncSSCIvParameterSpec)iv;
+    }
+    else
+    {
+      return;
+    }
 
     // decrypt response
-    ResponseAPDU[] encryptedResponses = cardCommunication.getResponses();
+    ResponseAPDU[] encryptedResponses = cardCommunication.getEncryptedResponses();
     List<ResponseAPDU> decryptedResponses = new ArrayList<>();
-    for ( int i = 0 ; i < encryptedResponses.length ; i++ )
+    if (encryptedResponses != null)
     {
-      ResponseAPDU response = encryptedResponses[i];
-      try
+      for ( int i = 0 ; i < encryptedResponses.length ; i++ )
       {
-        ResponseAPDU decryptedResponse = super.decipherResponse(response);
-        decryptedResponses.add(decryptedResponse);
-        if (AESEncSSCIvParameterSpec.class.isInstance(iv))
+        ResponseAPDU response = encryptedResponses[i];
+        try
         {
-          AESEncSSCIvParameterSpec paramSpec = (AESEncSSCIvParameterSpec)iv;
+          ResponseAPDU decryptedResponse = super.decipherResponse(response);
+          decryptedResponses.add(decryptedResponse);
           if (i != encryptedResponses.length - 1)
           {
             paramSpec.increaseSSC();
           }
         }
-      }
-      catch (Exception e)
-      {
-        throwable = e;
-        break;
+        catch (Exception e)
+        {
+          throwable = e;
+          break;
+        }
       }
     }
     if (throwable != null)
@@ -127,9 +137,7 @@ public class AESBatchSecureMessaging extends AESSecureMessaging implements Batch
     }
     else
     {
-      cardCommunication.setResponses(decryptedResponses.toArray(new ResponseAPDU[0]));
+      cardCommunication.setPlaintextResponses(decryptedResponses.toArray(new ResponseAPDU[0]));
     }
-    cardCommunication.setPhase(CardCommunication.PHASE_POST);
-    cardCommunication.setFinished(true);
   }
 }

@@ -14,7 +14,7 @@
 
     <groupId>de.governikus.eumw</groupId>
     <artifactId>eumw</artifactId>
-    <version>2.0.1</version>
+    <version>2.0.3</version>
     <packaging>pom</packaging>
 
     <name>EU Middleware</name>
@@ -37,7 +37,7 @@
     <scm>
         <url>https://hg.govkg.de/Autent/eumw</url>
         <connection>scm:hg:https://hg.govkg.de/Autent/eumw</connection>
-        <tag>eumw-2.0.1</tag>
+        <tag>eumw-2.0.3</tag>
     </scm>
 
     <developers>
@@ -317,7 +317,7 @@
                     <configuration>
                         <keystore>NONE</keystore>
                         <storetype>PKCS11</storetype>
-                        <tsa>http://timestamp.globalsign.com/scripts/timestamp.dll</tsa>
+                        <tsa>${globalsign.tsa}</tsa>
                         <providerClass>sun.security.pkcs11.SunPKCS11</providerClass>
                         <providerArg>${globalsign.config}</providerArg>
                         <alias>${globalsign.alias}</alias>
