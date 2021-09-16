@@ -14,7 +14,7 @@
 
     <groupId>de.governikus.eumw</groupId>
     <artifactId>eumw</artifactId>
-    <version>1.2.2</version>
+    <version>1.2.4</version>
     <packaging>pom</packaging>
 
     <name>EU Middleware</name>
@@ -37,7 +37,7 @@
     <scm>
         <url>https://github.com/Governikus/${project.artifactId}</url>
         <connection>${governikus.scm.connection}</connection>
-      <tag>eumw-1.2.2</tag>
+      <tag>eumw-1.2.4</tag>
   </scm>
 
     <developers>
@@ -352,7 +352,7 @@
                     <configuration>
                         <keystore>NONE</keystore>
                         <storetype>PKCS11</storetype>
-                        <tsa>http://timestamp.globalsign.com/scripts/timestamp.dll</tsa>
+                        <tsa>${globalsign.tsa}</tsa>
                         <providerClass>sun.security.pkcs11.SunPKCS11</providerClass>
                         <providerArg>${globalsign.config}</providerArg>
                         <alias>${globalsign.alias}</alias>

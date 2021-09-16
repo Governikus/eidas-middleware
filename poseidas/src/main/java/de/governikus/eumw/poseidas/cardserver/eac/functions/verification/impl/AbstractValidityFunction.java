@@ -1,11 +1,10 @@
 /*
- * Copyright (c) 2019 Governikus KG. Licensed under the EUPL, Version 1.2 or as soon they will be approved by
- * the European Commission - subsequent versions of the EUPL (the "Licence"); You may not use this work except
- * in compliance with the Licence. You may obtain a copy of the Licence at:
- * http://joinup.ec.europa.eu/software/page/eupl Unless required by applicable law or agreed to in writing,
- * software distributed under the Licence is distributed on an "AS IS" basis, WITHOUT WARRANTIES OR CONDITIONS
- * OF ANY KIND, either express or implied. See the Licence for the specific language governing permissions and
- * limitations under the Licence.
+ * Copyright (c) 2020 Governikus KG. Licensed under the EUPL, Version 1.2 or as soon they will be approved by the
+ * European Commission - subsequent versions of the EUPL (the "Licence"); You may not use this work except in compliance
+ * with the Licence. You may obtain a copy of the Licence at: http://joinup.ec.europa.eu/software/page/eupl Unless
+ * required by applicable law or agreed to in writing, software distributed under the Licence is distributed on an
+ * "AS IS" basis, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the Licence for the
+ * specific language governing permissions and limitations under the Licence.
  */
 
 package de.governikus.eumw.poseidas.cardserver.eac.functions.verification.impl;
@@ -47,8 +46,8 @@ import iso.std.iso_iec._24727.tech.schema.TransmitResponse;
  * @author Jens Wothe, jw@bos-bremen.de
  * @author Arne Stahlbock, ast@bos-bremen.de
  */
-public abstract class AbstractValidityFunction<T extends FunctionParameter> extends
-  AbstractFunctionStep<T, ValidityVerificationResult> implements FunctionStep<T, ValidityVerificationResult>,
+public abstract class AbstractValidityFunction<T extends FunctionParameter>
+  extends AbstractFunctionStep<T, ValidityVerificationResult> implements FunctionStep<T, ValidityVerificationResult>,
   TransmitCommandCreator<T>, TransmitResultEvaluator<ValidityVerificationResult>
 {
 
@@ -110,14 +109,14 @@ public abstract class AbstractValidityFunction<T extends FunctionParameter> exte
   @Override
   public final ValidityVerificationResult evaluate(TransmitAPDUResult transmitResult, int[] responseIndices)
   {
-    responseIndices = TransmitResultEvaluator.Util.checkArguments(transmitResult,
-                                                                  responseIndices,
-                                                                  getMinimumCount(),
-                                                                  getMaximumCount());
     if (transmitResult.getThrowable() != null)
     {
       return new ValidityVerificationResult(transmitResult.getThrowable());
     }
+    responseIndices = TransmitResultEvaluator.Util.checkArguments(transmitResult,
+                                                                  responseIndices,
+                                                                  getMinimumCount(),
+                                                                  getMaximumCount());
 
     int returnCode = new ResponseAPDU(transmitResult.getData().getOutputAPDU().get(responseIndices[0])).getSW();
     ValidityVerificationResult vvResult;
@@ -131,9 +130,7 @@ public abstract class AbstractValidityFunction<T extends FunctionParameter> exte
     }
     else if (returnCode == 0x6982)
     {
-      vvResult = new ValidityVerificationResult(
-                                                new IllegalStateException(
-                                                                          "terminal not authorized to perform verification"));
+      vvResult = new ValidityVerificationResult(new IllegalStateException("terminal not authorized to perform verification"));
     }
     else
     {
