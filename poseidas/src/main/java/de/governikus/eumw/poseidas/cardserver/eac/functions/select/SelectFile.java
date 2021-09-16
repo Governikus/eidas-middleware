@@ -1,11 +1,10 @@
 /*
- * Copyright (c) 2020 Governikus KG. Licensed under the EUPL, Version 1.2 or as soon they will be approved by
- * the European Commission - subsequent versions of the EUPL (the "Licence"); You may not use this work except
- * in compliance with the Licence. You may obtain a copy of the Licence at:
- * http://joinup.ec.europa.eu/software/page/eupl Unless required by applicable law or agreed to in writing,
- * software distributed under the Licence is distributed on an "AS IS" basis, WITHOUT WARRANTIES OR CONDITIONS
- * OF ANY KIND, either express or implied. See the Licence for the specific language governing permissions and
- * limitations under the Licence.
+ * Copyright (c) 2020 Governikus KG. Licensed under the EUPL, Version 1.2 or as soon they will be approved by the
+ * European Commission - subsequent versions of the EUPL (the "Licence"); You may not use this work except in compliance
+ * with the Licence. You may obtain a copy of the Licence at: http://joinup.ec.europa.eu/software/page/eupl Unless
+ * required by applicable law or agreed to in writing, software distributed under the Licence is distributed on an
+ * "AS IS" basis, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the Licence for the
+ * specific language governing permissions and limitations under the Licence.
  */
 
 package de.governikus.eumw.poseidas.cardserver.eac.functions.select;
@@ -93,8 +92,7 @@ public class SelectFile extends AbstractFunctionStep<FileParameter, SelectResult
     CommandAPDU command;
     if (parameter.useFCP())
     {
-      command = new CommandAPDU(ByteUtil.combine(ByteUtil.combine(Hex.parse("00a4020402"),
-                                                                  parameter.getEFID()),
+      command = new CommandAPDU(ByteUtil.combine(ByteUtil.combine(Hex.parse("00a4020402"), parameter.getEFID()),
                                                  new byte[]{0x00}));
     }
     else
@@ -107,11 +105,11 @@ public class SelectFile extends AbstractFunctionStep<FileParameter, SelectResult
   @Override
   public SelectResult evaluate(TransmitAPDUResult transmitResult, int[] responseIndices)
   {
-    responseIndices = TransmitResultEvaluator.Util.checkArguments(transmitResult, responseIndices);
     if (transmitResult.getThrowable() != null)
     {
       return new SelectResult(transmitResult.getThrowable());
     }
+    responseIndices = TransmitResultEvaluator.Util.checkArguments(transmitResult, responseIndices);
     ResponseAPDU resp = new ResponseAPDU(transmitResult.getData().getOutputAPDU().get(responseIndices[0]));
     return new SelectResult(resp.getSW() == 0x9000 ? Boolean.TRUE : Boolean.FALSE, resp.getData());
   }

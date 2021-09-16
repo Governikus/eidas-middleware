@@ -88,7 +88,7 @@ public class TransmitAPDU implements FunctionStep<TransmitAPDUParameter, Transmi
     this.sm.toCard(this.cc);
 
     List<InputAPDUInfoType> resultList = new ArrayList<>();
-    CommandAPDU[] securedCommands = this.cc.getCommands();
+    CommandAPDU[] securedCommands = this.cc.getEncryptedCommands();
     if (!ArrayUtil.isNullOrEmpty(securedCommands))
     {
       for ( int i = 0 ; i < securedCommands.length ; i++ )
@@ -122,29 +122,36 @@ public class TransmitAPDU implements FunctionStep<TransmitAPDUParameter, Transmi
       {
         rList.add(new ResponseAPDU(rBytes));
       }
-      this.cc.setResponses(rList.toArray(new ResponseAPDU[0]));
-      this.cc.setFinished(false);
+      this.cc.setEncryptedResponses(rList.toArray(new ResponseAPDU[0]));
       this.sm.fromCard(this.cc);
 
       List<byte[]> rByteList = new ArrayList<>();
-      for ( ResponseAPDU r : this.cc.getResponses() )
+      ResponseAPDU[] plainResponses = this.cc.getPlaintextResponses();
+      if (!ArrayUtil.isNullOrEmpty(plainResponses))
       {
-        byte[] respBytes = r.getBytes();
-        LOG.debug("Response from card:\n" + Hex.dump(respBytes));
-        rByteList.add(respBytes);
+        for ( ResponseAPDU r : plainResponses )
+        {
+          byte[] respBytes = r.getBytes();
+          LOG.debug("Response from card:\n" + Hex.dump(respBytes));
+          rByteList.add(respBytes);
+        }
       }
 
       TransmitResponse decryptedResult = new TransmitResponse();
       decryptedResult.getOutputAPDU().addAll(rByteList);
       decryptedResult.setResult(result.getResult());
 
+      if (this.cc.getThrowable() != null)
+      {
+        return new TransmitAPDUResult(decryptedResult, this.cc.getThrowable());
+      }
       if (!ResultMajor.OK.toString().equals(result.getResult().getResultMajor()))
       {
         return new TransmitAPDUResult(decryptedResult, new ECardException(result.getResult()));
       }
       else
       {
-        return new TransmitAPDUResult(decryptedResult, this.cc.getThrowable());
+        return new TransmitAPDUResult(decryptedResult);
       }
     }
     finally

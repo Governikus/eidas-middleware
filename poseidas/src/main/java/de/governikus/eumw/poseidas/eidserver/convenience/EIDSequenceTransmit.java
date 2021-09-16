@@ -1,11 +1,10 @@
 /*
- * Copyright (c) 2020 Governikus KG. Licensed under the EUPL, Version 1.2 or as soon they will be approved by
- * the European Commission - subsequent versions of the EUPL (the "Licence"); You may not use this work except
- * in compliance with the Licence. You may obtain a copy of the Licence at:
- * http://joinup.ec.europa.eu/software/page/eupl Unless required by applicable law or agreed to in writing,
- * software distributed under the Licence is distributed on an "AS IS" basis, WITHOUT WARRANTIES OR CONDITIONS
- * OF ANY KIND, either express or implied. See the Licence for the specific language governing permissions and
- * limitations under the Licence.
+ * Copyright (c) 2020 Governikus KG. Licensed under the EUPL, Version 1.2 or as soon they will be approved by the
+ * European Commission - subsequent versions of the EUPL (the "Licence"); You may not use this work except in compliance
+ * with the Licence. You may obtain a copy of the Licence at: http://joinup.ec.europa.eu/software/page/eupl Unless
+ * required by applicable law or agreed to in writing, software distributed under the Licence is distributed on an
+ * "AS IS" basis, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the Licence for the
+ * specific language governing permissions and limitations under the Licence.
  */
 
 package de.governikus.eumw.poseidas.eidserver.convenience;
@@ -62,8 +61,7 @@ import lombok.extern.slf4j.Slf4j;
 
 
 /**
- * Perform the communication with the eID card after the EAC protocol has finished, i.e. read fields and run
- * functions.
+ * Perform the communication with the eID card after the EAC protocol has finished, i.e. read fields and run functions.
  */
 @Slf4j
 public class EIDSequenceTransmit
@@ -134,8 +132,8 @@ public class EIDSequenceTransmit
   private DocumentValidityVerification documentValidityVerification;
 
   /**
-   * Fields allowed to be read selected by the user on client side. Note: it is imperative that the field
-   * "install qualified certificate" is on last position in the list, if present.
+   * Fields allowed to be read selected by the user on client side. Note: it is imperative that the field "install
+   * qualified certificate" is on last position in the list, if present.
    */
   private List<CVCPermission> fields;
 
@@ -317,8 +315,8 @@ public class EIDSequenceTransmit
         // do not read fields with generic attributes here
         else if (field.getFID() != null && new BigInteger(Hex.parse(field.getFID())).intValue() < 0x0117)
         {
-          FileParameter file = new FileParameter(Hex.parse(EIDConstants.EID_APPLICATION_AID),
-                                                 Hex.parse(field.getFID()), true);
+          FileParameter file = new FileParameter(Hex.parse(EIDConstants.EID_APPLICATION_AID), Hex.parse(field.getFID()),
+                                                 true);
           log.debug("{}{}Create select for {}", parent.getLogPrefix(), LOG_DATA, field.getDataFieldName());
           batchList.addAll(selectFile.create(file));
           log.debug("{}{}Create read for this field", parent.getLogPrefix(), LOG_DATA);
@@ -406,8 +404,7 @@ public class EIDSequenceTransmit
                              Hex.parse(EIDConstants.EID_FID_DG01_DOCUMENT_TYPE), true);
   }
 
-  private RestrictedIdentificationParameter getParameterRestrictedIdentification(boolean ri)
-    throws IOException
+  private RestrictedIdentificationParameter getParameterRestrictedIdentification(boolean ri) throws IOException
   {
     ASN1 keyASN = new ASN1(parent.getCVC().getRIKey1());
     SecurityInfos cardSecurity = NPAUtil.fromCardSecurityBytes(parent.getEACFinal().getCardSecurityBytes());
@@ -497,8 +494,7 @@ public class EIDSequenceTransmit
         // This is a a1 tag, but the getTag() functions removes the first bit.
         if (textASN.getTag().intValue() == 0x21)
         {
-          return new EIDInfoResultString(new String(new ASN1(textASN.getValue()).getValue(),
-                                                    StandardCharsets.UTF_8));
+          return new EIDInfoResultString(new String(new ASN1(textASN.getValue()).getValue(), StandardCharsets.UTF_8));
         }
         // This is a a2 tag, but the getTag() functions removes the first bit.
         if (textASN.getTag().intValue() == 0x22)
@@ -517,8 +513,8 @@ public class EIDSequenceTransmit
             }
             catch (DataFormatException e)
             {
-              throw new IOException("Unexpected text format: "
-                                    + new String(textASN.getValue(), StandardCharsets.UTF_8), e);
+              throw new IOException("Unexpected text format: " + new String(textASN.getValue(), StandardCharsets.UTF_8),
+                                    e);
             }
             baos.write(buf, 0, len);
           }
@@ -672,25 +668,16 @@ public class EIDSequenceTransmit
               {
                 setParentPut(EIDKeys.valueOf(field.getDataFieldName()), new EIDInfoResultNotOnChip());
               }
-              log.debug("{}{}Could not read file for {}",
-                        parent.getLogPrefix(),
-                        LOG_DATA,
-                        field.getDataFieldName());
+              log.debug("{}{}Could not read file for {}", parent.getLogPrefix(), LOG_DATA, field.getDataFieldName());
             }
             else if (ArrayUtil.isNullOrEmpty(result.getFileContent()) || result.getFileContent()[0] == 0x00)
             {
-              log.debug("{}{}No result (read) for file {}",
-                        parent.getLogPrefix(),
-                        LOG_DATA,
-                        field.getDataFieldName());
+              log.debug("{}{}No result (read) for file {}", parent.getLogPrefix(), LOG_DATA, field.getDataFieldName());
             }
             else
             {
               EIDInfoResult value = getASN1Value(result, field.getDataFieldName());
-              log.debug("{}{}{} added to eidInfoContainer.",
-                        parent.getLogPrefix(),
-                        LOG_DATA,
-                        field.getDataFieldName());
+              log.debug("{}{}{} added to eidInfoContainer.", parent.getLogPrefix(), LOG_DATA, field.getDataFieldName());
               setParentPut(EIDKeys.valueOf(field.getDataFieldName()), value);
             }
           }
@@ -706,8 +693,7 @@ public class EIDSequenceTransmit
     return getTransmitRequest();
   }
 
-  private void handleBatchCommandAgeVerification(TransmitAPDUResult transmitResult, int index)
-    throws ECardException
+  private void handleBatchCommandAgeVerification(TransmitAPDUResult transmitResult, int index) throws ECardException
   {
     ValidityVerificationResult result = ageVerification.evaluate(transmitResult, new int[]{index});
     checkAgeVerification(result);
@@ -717,8 +703,7 @@ public class EIDSequenceTransmit
     throws ECardException
   {
     log.debug("{}{}Evaluate RI with MCard", parent.getLogPrefix(), LOG_COMMAND);
-    RestrictedIdentificationResult result = restrictedIdentification.evaluate(transmitResult,
-                                                                              new int[]{index});
+    RestrictedIdentificationResult result = restrictedIdentification.evaluate(transmitResult, new int[]{index});
     log.debug("{}{}Result from MCard: {}", parent.getLogPrefix(), LOG_COMMAND, result);
     checkBlockingIdentification(result);
     log.debug("{}{}check BlockingIdentification done", parent.getLogPrefix(), LOG_COMMAND);
@@ -732,19 +717,16 @@ public class EIDSequenceTransmit
   }
 
 
-  private void handleBatchCommandDocumentValidity(TransmitAPDUResult transmitResult, int index)
-    throws ECardException
+  private void handleBatchCommandDocumentValidity(TransmitAPDUResult transmitResult, int index) throws ECardException
   {
-    ValidityVerificationResult result = documentValidityVerification.evaluate(transmitResult,
-                                                                              new int[]{index});
+    ValidityVerificationResult result = documentValidityVerification.evaluate(transmitResult, new int[]{index});
     checkDocumentValidity(result);
   }
 
   private void handleBatchCommandRestrictedIdentification(TransmitAPDUResult transmitResult, int index)
     throws ECardException
   {
-    RestrictedIdentificationResult result = restrictedIdentification.evaluate(transmitResult,
-                                                                              new int[]{index});
+    RestrictedIdentificationResult result = restrictedIdentification.evaluate(transmitResult, new int[]{index});
     checkRestrictedIdentification(result);
   }
 
@@ -783,35 +765,23 @@ public class EIDSequenceTransmit
             {
               setParentPut(EIDKeys.valueOf(field.getDataFieldName()), new EIDInfoResultNotOnChip());
             }
-            log.debug("{}{}Could not read file for {}",
-                      parent.getLogPrefix(),
-                      LOG_DATA,
-                      field.getDataFieldName());
+            log.debug("{}{}Could not read file for {}", parent.getLogPrefix(), LOG_DATA, field.getDataFieldName());
           }
           else if (!ArrayUtil.isNullOrEmpty(result.getFileContent()) && result.getFileContent()[0] != 0x00)
           {
             EIDInfoResult value = getASN1Value(result, field.getDataFieldName());
-            log.debug("{}{}{} added to eidInfoContainer.",
-                      parent.getLogPrefix(),
-                      LOG_DATA,
-                      field.getDataFieldName());
+            log.debug("{}{}{} added to eidInfoContainer.", parent.getLogPrefix(), LOG_DATA, field.getDataFieldName());
             setParentPut(EIDKeys.valueOf(field.getDataFieldName()), value);
           }
           else
           {
-            log.debug("{}{}No result (read) for file {}",
-                      parent.getLogPrefix(),
-                      LOG_DATA,
-                      field.getDataFieldName());
+            log.debug("{}{}No result (read) for file {}", parent.getLogPrefix(), LOG_DATA, field.getDataFieldName());
           }
         }
         else
         {
           setParentPut(EIDKeys.valueOf(field.getDataFieldName()), new EIDInfoResultNotOnChip());
-          log.debug("{}{}Could not select file for {}",
-                    parent.getLogPrefix(),
-                    LOG_DATA,
-                    field.getDataFieldName());
+          log.debug("{}{}Could not select file for {}", parent.getLogPrefix(), LOG_DATA, field.getDataFieldName());
         }
       }
     }
@@ -828,8 +798,7 @@ public class EIDSequenceTransmit
     else
     {
       throw new ECardException(ResultMinor.SAL_MEAC_AGE_VERIFICATION_FAILED_WARNING,
-                               "The age verification process fails: " + result.getThrowable(),
-                               result.getThrowable());
+                               "The age verification process fails: " + result.getThrowable(), result.getThrowable());
     }
   }
 
@@ -888,8 +857,7 @@ public class EIDSequenceTransmit
                                  "Blocking identification verification failed: " + result.getThrowable());
       }
       throw new ECardException(ResultMinor.COMMON_INTERNAL_ERROR,
-                               "Blocking identification verification failed: "
-                                                                  + "Result contains no ID to use");
+                               "Blocking identification verification failed: " + "Result contains no ID to use");
     }
     log.debug("{}{}Leave method", parent.getLogPrefix(), LOG_COMMAND);
   }
@@ -904,8 +872,7 @@ public class EIDSequenceTransmit
     else
     {
       throw new ECardException(ResultMinor.SAL_MEAC_COMMUNITY_VERIFICATION_FAILED_WARNING,
-                               "Community affiliation process fails: " + result.getThrowable(),
-                               result.getThrowable());
+                               "Community affiliation process fails: " + result.getThrowable(), result.getThrowable());
     }
   }
 
