@@ -11,109 +11,225 @@
 package de.governikus.eumw.poseidas.server.pki;
 
 import java.io.ByteArrayInputStream;
+import java.io.IOException;
+import java.io.InputStream;
 import java.security.GeneralSecurityException;
+import java.security.PublicKey;
+import java.security.SignatureException;
+import java.security.cert.Certificate;
 import java.security.cert.X509Certificate;
 import java.util.Base64;
+import java.util.Collection;
+import java.util.HashSet;
+import java.util.Objects;
+import java.util.Optional;
+import java.util.Set;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import javax.security.auth.x500.X500Principal;
+
+import org.bouncycastle.asn1.x509.Extension;
 import org.bouncycastle.cert.X509CertificateHolder;
+import org.bouncycastle.cms.CMSException;
 import org.bouncycastle.cms.CMSSignedData;
 import org.bouncycastle.cms.SignerInformation;
 import org.bouncycastle.cms.SignerInformationStore;
+import org.bouncycastle.cms.SignerInformationVerifier;
 import org.bouncycastle.cms.jcajce.JcaSimpleSignerInfoVerifierBuilder;
 import org.bouncycastle.jce.provider.BouncyCastleProvider;
+import org.bouncycastle.operator.OperatorCreationException;
 import org.bouncycastle.util.Store;
 
-import de.governikus.eumw.eidascommon.Utils;
+import de.governikus.eumw.poseidas.cardserver.CertificateUtil;
+import de.governikus.eumw.utils.key.KeyReader;
+import lombok.Getter;
 
 
 /**
- * wrapper for checking a CMS signature
+ * used to verify the signature of a CMS data block
+ * <p>
+ * Copyright &copy; 2009-2020 Governikus GmbH &amp; Co. KG
+ * </p>
  *
- * @author tautenhahn
+ * @author Pascal Knüppel
+ * @since 02.06.2021
  */
 public class CmsSignatureChecker
 {
 
-  private static final Log LOG = LogFactory.getLog(CmsSignatureChecker.class);
+  /**
+   * the trust anchor that is the base certificate that must be used to verify all other certificates that
+   * have been used for signing within the cms-data lock
+   */
+  private final Set<X509Certificate> trustAnchors = new HashSet<>();
 
-  private final X509Certificate trustAnchor;
+  /** holds the signed content after successful verification */
+  @Getter
+  private Object verifiedContent;
+
+  /** holds the certificate after successful verification */
+  @Getter
+  private Certificate verifierCertificate;
 
   /**
-   * Create new instance with given trust anchor
-   *
-   * @param trustAnchor
+   * Holds the string representation of the OID associated with the encapsulated content info structure
+   * carried in the signed data.
    */
-  CmsSignatureChecker(X509Certificate trustAnchor)
+  @Getter
+  private String signedContentTypeOID;
+
+
+  public CmsSignatureChecker(X509Certificate trustAnchor)
   {
-    this.trustAnchor = trustAnchor;
+    this.trustAnchors.add(Objects.requireNonNull(trustAnchor));
+  }
+
+  public CmsSignatureChecker(Collection<X509Certificate> trustAnchors)
+  {
+    this.trustAnchors.addAll(Objects.requireNonNull(trustAnchors));
   }
 
   /**
-   * Return true if parameter value is signed with key belonging to trusted anchor certificate.
+   * checks the signature of the signed data and checks the validity of the certificates by validating them
+   * against the current trust anchor
    *
-   * @param signedData
+   * @param signedCmsData the signed data to validate. This data itself contains the certificates that must be
+   *          used to validate the signature. The trust anchor is used to check if the certificates are valid
+   * @throws CMSException if the given datablock is not valid CMS data
    */
-  @SuppressWarnings("unchecked")
-  boolean checkEnvelopedSignature(byte[] signedData, String entityID)
+  public void checkEnvelopedSignature(byte[] signedCmsData) throws CMSException, SignatureException
   {
-    try
+    // ByteArrayInputStreams do not need to be closed, so don't worry
+    checkEnvelopedSignature(new ByteArrayInputStream(signedCmsData));
+  }
+
+  /**
+   * checks the signature of the signed data and checks the validity of the certificates by validating them
+   * against the current trust anchor
+   *
+   * @param signedCmsData the signed data to validate. This data itself contains the certificates that must be
+   *          used to validate the signature. The trust anchor is used to check if the certificates are valid
+   * @throws CMSException if the given datablock is not valid CMS data
+   */
+  public void checkEnvelopedSignature(InputStream signedCmsData) throws CMSException, SignatureException
+  {
+    CMSSignedData cmsSignedData = new CMSSignedData(signedCmsData);
+    SignerInformationStore signers = cmsSignedData.getSignerInfos();
+    if (signers.getSigners().isEmpty())
     {
-      CMSSignedData s = new CMSSignedData(signedData);
-      Store<X509CertificateHolder> certstore = s.getCertificates();
-      SignerInformationStore signers = s.getSignerInfos();
-      for ( SignerInformation signer : signers.getSigners() )
+      throw new SignatureException("No signing information present within signed data");
+    }
+    Store<X509CertificateHolder> certificateStorage = cmsSignedData.getCertificates();
+    for ( SignerInformation signer : signers.getSigners() )
+    {
+      @SuppressWarnings("unchecked")
+      X509CertificateHolder holder = (X509CertificateHolder)certificateStorage.getMatches(signer.getSID())
+                                                                              .iterator()
+                                                                              .next();
+      ByteArrayInputStream certInputStream = getInputStreamOfCertificateData(holder);
+      X509Certificate signatureVerificationCertificate = KeyReader.readX509Certificate(certInputStream);
+      validateCertificate(signatureVerificationCertificate);
+
+      PublicKey publicKey = signatureVerificationCertificate.getPublicKey();
+      SignerInformationVerifier signerInformationVerifier = getSignerInformationVerifier(publicKey);
+      boolean isSignatureValid = signer.verify(signerInformationVerifier);
+      if (!isSignatureValid)
       {
-        X509CertificateHolder holder = (X509CertificateHolder)certstore.getMatches(signer.getSID())
-                                                                       .iterator()
-                                                                       .next();
-        X509Certificate cert = (X509Certificate)Utils.readCert(new ByteArrayInputStream(holder.getEncoded()),
-                                                               "X509");
-        if (matches(cert))
-        {
-          return signer.verify(new JcaSimpleSignerInfoVerifierBuilder().setProvider(BouncyCastleProvider.PROVIDER_NAME)
-                                                                       .build(cert.getPublicKey()));
-        }
-        LOG.warn(entityID + ": got untrusted signature certificate:\n"
-                 + Base64.getMimeEncoder().encodeToString(cert.getEncoded()));
+        throw new SignatureException("Signature verification of CMS data failed.");
       }
+      verifierCertificate = signatureVerificationCertificate;
     }
-    catch (RuntimeException e)
-    {
-      throw e;
-    }
-    catch (Exception e)
-    {
-      LOG.error(entityID + ": cannot check signature", e);
-      LOG.info(entityID + ": the data to be checked was:\n"
-               + Base64.getMimeEncoder().encodeToString(signedData));
-    }
-    return false;
+    signedContentTypeOID = cmsSignedData.getSignedContentTypeOID();
+    verifiedContent = cmsSignedData.getSignedContent().getContent();
   }
 
-  private boolean matches(X509Certificate cert)
+  /**
+   * tries to build a signer information verifier with the given public key
+   *
+   * @param publicKey the public key that should be used to verify the CMS signature
+   * @return the signer information verifier
+   */
+  private SignerInformationVerifier getSignerInformationVerifier(PublicKey publicKey)
+    throws SignatureException
   {
-    if (trustAnchor == null)
-    {
-      return false;
-    }
-    if (cert.equals(trustAnchor))
-    {
-      return true;
-    }
-    if (!cert.getIssuerX500Principal().equals(trustAnchor.getSubjectX500Principal()))
-    {
-      return false;
-    }
     try
     {
-      cert.verify(trustAnchor.getPublicKey());
-      return true;
+      return new JcaSimpleSignerInfoVerifierBuilder().setProvider(BouncyCastleProvider.PROVIDER_NAME)
+                                                     .build(publicKey);
+    }
+    catch (OperatorCreationException e)
+    {
+      final String b64EncodedKey = Base64.getEncoder().encodeToString(publicKey.getEncoded());
+      throw new SignatureException(String.format("Failed to build signer information verifier with given public "
+                                                 + "key: %s",
+                                                 b64EncodedKey),
+                                   e);
+    }
+  }
+
+  /**
+   * tries to get a byte-stream from the given certificate
+   *
+   * @param holder the certificate data
+   * @return the input stream
+   */
+  private ByteArrayInputStream getInputStreamOfCertificateData(X509CertificateHolder holder)
+    throws SignatureException
+  {
+    byte[] certificateData;
+    try
+    {
+      certificateData = holder.getEncoded();
+    }
+    catch (IOException e)
+    {
+      throw new SignatureException("Cannot get bytes of signature certificate", e);
+    }
+    return new ByteArrayInputStream(certificateData);
+  }
+
+  /**
+   * checks if the given certificate was issued by the {@link #trustAnchors} certificate
+   */
+  private void validateCertificate(X509Certificate verificationCertificate) throws SignatureException
+  {
+    final boolean isTrustAnchorItself = trustAnchors.contains(verificationCertificate);
+    if (isTrustAnchorItself)
+    {
+      return;
+    }
+    Optional<X509Certificate> trustAnchor;
+    // Try to find the issuer with the Authority Key Identifier
+    trustAnchor = trustAnchors.stream()
+                              .filter(CertificateUtil.findIssuerByAuthorityKeyIdentifier(verificationCertificate.getExtensionValue(Extension.authorityKeyIdentifier.getId())))
+                              .findAny();
+    // If this did not find an issuer, try to find it using the Issuer DN
+    if (!trustAnchor.isPresent())
+    {
+      X500Principal verificationCertIssuer = verificationCertificate.getIssuerX500Principal();
+      trustAnchor = trustAnchors.stream()
+                                .filter(cert -> cert.getSubjectX500Principal().equals(verificationCertIssuer))
+                                .findAny();
+    }
+    // If there is still no trustAnchor, we must abort
+    if (!trustAnchor.isPresent())
+    {
+      throw new SignatureException(String.format("Certificate for subject '%s' is not issued by any of the "
+                                                 + "trustanchors but by issuer '%s'",
+                                                 verificationCertificate.getSubjectDN().toString(),
+                                                 verificationCertificate.getIssuerDN().toString()));
+    }
+
+    try
+    {
+      verificationCertificate.verify(trustAnchor.get().getPublicKey());
     }
     catch (GeneralSecurityException e)
     {
-      return false;
+      throw new SignatureException(String.format("Certificate for subject '%s' was not signed by "
+                                                 + "trustanchor '%s'",
+                                                 verificationCertificate.getSubjectDN().toString(),
+                                                 trustAnchor.get().getSubjectDN().toString()),
+                                   e);
     }
   }
 }

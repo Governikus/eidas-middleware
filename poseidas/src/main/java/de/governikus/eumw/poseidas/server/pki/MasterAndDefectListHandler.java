@@ -15,8 +15,11 @@ import java.net.URISyntaxException;
 import java.net.URL;
 import java.security.GeneralSecurityException;
 import java.security.KeyStore;
+import java.security.SignatureException;
 import java.util.Arrays;
 import java.util.Base64;
+
+import org.bouncycastle.cms.CMSException;
 
 import de.governikus.eumw.poseidas.config.schema.PkiServiceType;
 import de.governikus.eumw.poseidas.gov2server.GovManagementException;
@@ -167,12 +170,17 @@ public class MasterAndDefectListHandler extends BerCaRequestHandlerBase
     if (!isLocalZip(masterList))
     {
       CmsSignatureChecker checker = new CmsSignatureChecker(pkiConfig.getMasterListTrustAnchor());
-      if (!checker.checkEnvelopedSignature(masterList, cvcRefId))
+      try
+      {
+        checker.checkEnvelopedSignature(masterList);
+      }
+      catch (SignatureException | CMSException e)
       {
         SNMPDelegate.getInstance()
                     .sendSNMPTrap(OID.MASTERLIST_SIGNATURE_WRONG,
                                   SNMPDelegate.MASTERLIST_SIGNATURE_WRONG + " "
                                                                   + "signature check for master list failed");
+        log.debug("Signature check on master list not successful", e);
         return null;
       }
     }
@@ -186,12 +194,17 @@ public class MasterAndDefectListHandler extends BerCaRequestHandlerBase
     if (!isLocalZip(defectList))
     {
       CmsSignatureChecker checker = new CmsSignatureChecker(pkiConfig.getDefectListTrustAnchor());
-      if (!checker.checkEnvelopedSignature(defectList, cvcRefId))
+      try
+      {
+        checker.checkEnvelopedSignature(defectList);
+      }
+      catch (SignatureException | CMSException e)
       {
         SNMPDelegate.getInstance()
                     .sendSNMPTrap(OID.DEFECTLIST_SIGNATURE_WRONG,
                                   SNMPDelegate.DEFECTLIST_SIGNATURE_WRONG + " "
                                                                   + "signature check for defect list failed");
+        log.debug("Signature check on defect list not successful", e);
         return null;
       }
     }

@@ -19,11 +19,14 @@ import java.security.GeneralSecurityException;
 import java.security.KeyStore;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
+import java.security.SignatureException;
 import java.security.cert.X509Certificate;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+
+import org.bouncycastle.cms.CMSException;
 
 import de.governikus.eumw.poseidas.cardbase.asn1.OID;
 import de.governikus.eumw.poseidas.cardbase.asn1.npa.ECCVCertificate;
@@ -611,7 +614,16 @@ public class RestrictedIdHandler extends BerCaRequestHandlerBase
    */
   private boolean checkBlacklistsSignature(byte[] blacklist, X509Certificate trustAnchor)
   {
-    return new CmsSignatureChecker(trustAnchor).checkEnvelopedSignature(blacklist, cvcRefId);
+    try
+    {
+      new CmsSignatureChecker(trustAnchor).checkEnvelopedSignature(blacklist);
+      return true;
+    }
+    catch (SignatureException | CMSException e)
+    {
+      log.debug("Signature check on blacklist not successful", e);
+      return false;
+    }
   }
 
 }

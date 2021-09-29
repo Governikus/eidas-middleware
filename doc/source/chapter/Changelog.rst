@@ -83,3 +83,16 @@ Changelog
 
 * 1.2.1
     - eIDAS Middleware: Fix SAML encryption with EC certificates.
+
+* 1.2.2
+
+    - eIDAS Middleware: Fix a bug where the newest generation of German eID cards were not accepted.
+
+* 1.2.4
+
+    - eIDAS Middleware: Security Patch
+
+* 1.2.5
+
+    - eIDAS Middleware: Change certificate chain building algorithm.
+    - eIDAS Middleware: Update xmlsec and bouncycastle.
