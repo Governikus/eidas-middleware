@@ -131,3 +131,13 @@ Changelog
       they block the javascript requests to the AusweisApp2.
     - eIDAS Middleware: Fix a bug introduced with 2.1.0 where the country identifier in the address would be placed in
       ``adminunitSecondLine``
+
+* 2.2.2
+
+    - eIDAS Middleware: Security Patch
+
+* 2.2.3
+
+    - eIDAS Middleware: Change certificate chain building algorithm.
+    - eIDAS Middleware: Update xmlsec.
+    - eIDAS Middleware: Improve stability in trust anchor management.

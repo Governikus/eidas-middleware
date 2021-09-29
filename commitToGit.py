@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 
 import os.path
 import shutil
@@ -30,6 +30,23 @@ if os.path.exists(git_local_path):
         sys.exit()
 
 call(["git", "clone", github_url, git_local_path])
+os.chdir(git_local_path)
+
+pretty_print('Select the github branch for the github commit')
+github_branch = input("github branch:\n")
+
+pretty_print('Specify if a new branch needs to be created for the github commit')
+github_new_branch = input("Will the commit be made on a new branch? (y/n):\n")
+
+if github_new_branch == 'y':
+    pretty_print('Specify the github tag that should be used to create the new branch on')
+    github_tag_for_new_branch = input("The github tag the new branch should be created on:\n")
+    call(["git", "checkout", github_tag_for_new_branch])
+    call(["git", "checkout", "-b", github_branch])
+else:
+    call(["git", "checkout", github_branch])
+
+os.chdir("/tmp")
 
 if os.path.exists(hg_tmp_path):
     pretty_print(hg_tmp_path + ' does already exist')

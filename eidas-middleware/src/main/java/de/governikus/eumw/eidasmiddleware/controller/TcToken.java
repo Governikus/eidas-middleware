@@ -179,13 +179,13 @@ public class TcToken
             break;
 
           default:
-            log.warn("UNKNOWN Authrequest Attribute");
+            log.warn("UNKNOWN Authrequest Attribute: '{}'", key);
             break;
         }
       }
       else
       {
-        log.warn("UNKNOWN Authrequest Attribute");
+        log.warn("UNKNOWN Authrequest Attribute: '{}'", entry.getKey());
       }
     }
 

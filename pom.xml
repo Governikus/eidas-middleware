@@ -9,12 +9,13 @@
   ~ limitations under the Licence.
   -->
 
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
 
     <groupId>de.governikus.eumw</groupId>
     <artifactId>eumw</artifactId>
-    <version>2.2.2</version>
+    <version>2.2.3</version>
     <packaging>pom</packaging>
 
     <name>EU Middleware</name>
@@ -37,7 +38,7 @@
     <scm>
         <url>https://hg.govkg.de/Autent/eumw</url>
         <connection>scm:hg:https://hg.govkg.de/Autent/eumw</connection>
-        <tag>eumw-2.2.2</tag>
+        <tag>eumw-2.2.3</tag>
     </scm>
 
     <developers>
@@ -80,44 +81,45 @@
         <!-- crypto -->
         <!-- 1.68 available but is incompatible with opensaml-security-ext-1.0.7 -->
         <version.bouncycastle>1.66</version.bouncycastle>
-        <version.eidas-opensaml3>1.4.3</version.eidas-opensaml3>
+        <version.eidas-opensaml3>1.4.4</version.eidas-opensaml3>
         <!-- 8.x.x available but not for Java 8 -->
-        <version.javasupport>7.5.1</version.javasupport>
+        <version.javasupport>7.5.2</version.javasupport>
         <!-- 2.0.0 exists but is for OpenSAML 4 only -->
         <version.opensaml-security-ext>1.0.7</version.opensaml-security-ext>
         <version.opensaml>3.4.6</version.opensaml>
-        <version.xmlsec>2.2.1</version.xmlsec>
+        <version.xmlsec>2.2.3</version.xmlsec>
 
-        <version.cxf>3.4.2</version.cxf>
-        <version.springboot>2.3.8.RELEASE</version.springboot>
+        <version.cxf>3.4.4</version.cxf>
+        <version.springboot>2.5.4</version.springboot>
         <!-- 3.0.12.RELEASE available but kills some of our tests (config-wizard) -->
         <version.thymeleaf>3.0.11.RELEASE</version.thymeleaf>
         <version.thymeleaf-layout-dialect>2.5.2</version.thymeleaf-layout-dialect>
 
-        <version.asm>9.1</version.asm>
+        <version.asm>9.2</version.asm>
         <version.commons.codec>1.15</version.commons.codec>
+        <!--        Moved to org.apache.commons » commons-collections4-->
         <version.commons.collections>3.2.2</version.commons.collections>
         <version.commons.fileupload>1.4</version.commons.fileupload>
-        <version.commons.io>2.8.0</version.commons.io>
-        <version.commons.lang3>3.11</version.commons.lang3>
-        <version.guava>30.1-jre</version.guava>
+        <version.commons.io>2.11.0</version.commons.io>
+        <version.commons.lang3>3.12.0</version.commons.lang3>
+        <version.guava>30.1.1-jre</version.guava>
         <version.h2>1.4.200</version.h2>
-        <version.istack-commons-runtime>4.0.0</version.istack-commons-runtime>
-        <version.jackson>2.12.1</version.jackson>
+        <version.istack-commons-runtime>4.0.1</version.istack-commons-runtime>
+        <version.jackson>2.12.5</version.jackson>
         <version.jaxb2-basics>1.11.1</version.jaxb2-basics>
         <version.joda-time>2.10.10</version.joda-time>
         <version.json-schema-validator>2.2.14</version.json-schema-validator>
         <version.jsr305>3.0.2</version.jsr305>
-        <version.groovy>3.0.7</version.groovy>
+        <version.groovy>3.0.9</version.groovy>
         <!-- 3.x.x available but not executable with Java 8 -->
         <version.snmp4j>2.7.4</version.snmp4j>
 
         <!-- IDE helper -->
-        <version.lombok>1.18.18</version.lombok>
+        <version.lombok>1.18.20</version.lombok>
 
         <!-- logging dependencies -->
-        <version.log4j2>2.14.0</version.log4j2>
-        <version.slf4j>1.7.30</version.slf4j>
+        <version.log4j2>2.14.1</version.log4j2>
+        <version.slf4j>1.7.32</version.slf4j>
 
         <!-- test dependencies -->
         <!-- 2.39.0 available for htmlunit but any higher than 2.31 causes test failures. Therefore Httpclient had to me managed separately -->
@@ -128,12 +130,12 @@
         <version.opentest4j>1.2.0</version.opentest4j>
 
         <!-- version for dependency check, can be overwritten by Jenkins -->
-        <version.dependency-check-maven>6.0.1</version.dependency-check-maven>
+        <version.dependency-check-maven>6.3.1</version.dependency-check-maven>
 
         <!-- version for bootstrap -->
         <!-- ATTENTION you need to change the templates on updating these versions -->
-        <version.bootstrap>4.6.0</version.bootstrap>
-        <version.jquery>3.5.1</version.jquery>
+        <version.bootstrap>5.1.0</version.bootstrap>
+        <version.jquery>3.6.0</version.jquery>
     </properties>
 
     <build>
@@ -315,7 +317,9 @@
                     <artifactId>license-maven-plugin</artifactId>
                     <version>2.0.0</version>
                     <configuration>
-                        <licenseMergesUrl>https://hg.govkg.de/Infrastruktur/maven/LicenseWhitelist/raw-file/default/license-merges</licenseMergesUrl>
+                        <licenseMergesUrl>
+                            https://hg.govkg.de/Infrastruktur/maven/LicenseWhitelist/raw-file/default/license-merges
+                        </licenseMergesUrl>
                         <excludedGroups>de\.governikus\.eumw</excludedGroups>
                     </configuration>
                 </plugin>
@@ -326,7 +330,7 @@
                     <configuration>
                         <keystore>NONE</keystore>
                         <storetype>PKCS11</storetype>
-                        <tsa>http://rfc3161timestamp.globalsign.com/advanced</tsa>
+                        <tsa>${globalsign.tsa}</tsa>
                         <providerClass>sun.security.pkcs11.SunPKCS11</providerClass>
                         <providerArg>${globalsign.config}</providerArg>
                         <alias>${globalsign.alias}</alias>
@@ -362,13 +366,14 @@
                                     <version>[3.3,)</version>
                                 </requireMavenVersion>
 
-                                <dependencyConvergence />
+                                <dependencyConvergence/>
 
                                 <requirePluginVersions>
                                     <message>Best Practice is to
                                         always
                                         define plugin
-                                        versions!</message>
+                                        versions!
+                                    </message>
                                     <banSnapshots>true</banSnapshots>
                                 </requirePluginVersions>
 
@@ -379,7 +384,8 @@
 
                                 <reactorModuleConvergence>
                                     <message>The reactor is not
-                                        valid</message>
+                                        valid
+                                    </message>
                                 </reactorModuleConvergence>
 
                                 <banDistributionManagement>

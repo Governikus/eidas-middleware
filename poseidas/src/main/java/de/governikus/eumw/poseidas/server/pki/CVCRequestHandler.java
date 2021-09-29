@@ -1009,9 +1009,9 @@ public class CVCRequestHandler extends BerCaRequestHandlerBase
     }
     else
     {
-      log.error("{}: It looks like there is more than one DVCA certificate in the GetCACertificates output, use the newest one: {}",
-                cvcRefId,
-                notSigningCVCs);
+      log.info("{}: It looks like there is more than one DVCA certificate in the GetCACertificates output, use the newest one: {}",
+               cvcRefId,
+               notSigningCVCs);
       Date issued = new Date(0);
       String recentCHR = null;
       for ( String chr : notSigningCVCs )

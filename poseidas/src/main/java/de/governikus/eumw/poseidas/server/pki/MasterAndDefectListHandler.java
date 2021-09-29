@@ -1,10 +1,11 @@
 /*
- * Copyright (c) 2020 Governikus KG. Licensed under the EUPL, Version 1.2 or as soon they will be approved by the
- * European Commission - subsequent versions of the EUPL (the "Licence"); You may not use this work except in compliance
- * with the Licence. You may obtain a copy of the Licence at: http://joinup.ec.europa.eu/software/page/eupl Unless
- * required by applicable law or agreed to in writing, software distributed under the Licence is distributed on an
- * "AS IS" basis, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the Licence for the
- * specific language governing permissions and limitations under the Licence.
+ * Copyright (c) 2020 Governikus KG. Licensed under the EUPL, Version 1.2 or as soon they will be approved by
+ * the European Commission - subsequent versions of the EUPL (the "Licence"); You may not use this work except
+ * in compliance with the Licence. You may obtain a copy of the Licence at:
+ * http://joinup.ec.europa.eu/software/page/eupl Unless required by applicable law or agreed to in writing,
+ * software distributed under the Licence is distributed on an "AS IS" basis, WITHOUT WARRANTIES OR CONDITIONS
+ * OF ANY KIND, either express or implied. See the Licence for the specific language governing permissions and
+ * limitations under the Licence.
  */
 
 package de.governikus.eumw.poseidas.server.pki;
@@ -14,9 +15,13 @@ import java.net.URISyntaxException;
 import java.net.URL;
 import java.security.GeneralSecurityException;
 import java.security.KeyStore;
+import java.security.SignatureException;
 import java.util.Arrays;
 import java.util.Base64;
 
+import org.bouncycastle.cms.CMSException;
+
+import de.governikus.eumw.poseidas.cardbase.ArrayUtil;
 import de.governikus.eumw.poseidas.config.schema.PkiServiceType;
 import de.governikus.eumw.poseidas.eidserver.model.signeddata.MasterList;
 import de.governikus.eumw.poseidas.gov2server.GovManagementException;
@@ -47,7 +52,9 @@ public class MasterAndDefectListHandler extends BerCaRequestHandlerBase
    *
    * @param facade must be obtained by client
    */
-  MasterAndDefectListHandler(EPAConnectorConfigurationDto nPaConf, TerminalPermissionAO facade, KeyStore hsmKeyStore)
+  MasterAndDefectListHandler(EPAConnectorConfigurationDto nPaConf,
+                             TerminalPermissionAO facade,
+                             KeyStore hsmKeyStore)
     throws GovManagementException
   {
     super(nPaConf, facade, hsmKeyStore);
@@ -185,26 +192,54 @@ public class MasterAndDefectListHandler extends BerCaRequestHandlerBase
     }
   }
 
-  private byte[] getMasterList(PassiveAuthServiceWrapper wrapper) throws MalformedURLException
+  byte[] getMasterList(PassiveAuthServiceWrapper wrapper) throws MalformedURLException
   {
     byte[] masterList = wrapper.getMasterList();
     if (masterList == null)
     {
-      SNMPTrapSender.sendSNMPTrap(TrapOID.MASTERLIST_TRAP_LAST_RENEWAL_STATUS, SNMPConstants.LIST_NOT_RECEIVED);
+      SNMPTrapSender.sendSNMPTrap(TrapOID.MASTERLIST_TRAP_LAST_RENEWAL_STATUS,
+                                  SNMPConstants.LIST_NOT_RECEIVED);
       return null;
     }
     else if (!isLocalZip(masterList))
     {
-      CmsSignatureChecker checker = new CmsSignatureChecker(pkiConfig.getMasterListTrustAnchor());
-      if (!checker.checkEnvelopedSignature(masterList, cvcRefId))
+      byte[] masterListFromTerminalPermission = facade.getTerminalPermission(cvcRefId).getMasterList();
+      if (ArrayUtil.isNullOrEmpty(masterListFromTerminalPermission)
+          || !checkWithMasterListAsTrustAnchorSuccessful(masterList, masterListFromTerminalPermission))
       {
-        SNMPTrapSender.sendSNMPTrap(TrapOID.MASTERLIST_TRAP_LAST_RENEWAL_STATUS, SNMPConstants.LIST_SIGNATURE_CHECK_FAILED);
-        return null;
+        try
+        {
+          CmsSignatureChecker checker = new CmsSignatureChecker(pkiConfig.getMasterListTrustAnchor());
+          checker.checkEnvelopedSignature(masterList);
+        }
+        catch (SignatureException | CMSException e)
+        {
+          SNMPTrapSender.sendSNMPTrap(TrapOID.MASTERLIST_TRAP_LAST_RENEWAL_STATUS,
+                                      SNMPConstants.LIST_SIGNATURE_CHECK_FAILED);
+          log.debug("Signature check on master list with trust anchor from configuration not successful", e);
+          return null;
+        }
       }
       SNMPTrapSender.sendSNMPTrap(TrapOID.MASTERLIST_TRAP_LAST_RENEWAL_STATUS, SNMPConstants.LIST_RENEWED);
     }
     log.debug("Successfully received master list");
     return masterList;
+  }
+
+  private boolean checkWithMasterListAsTrustAnchorSuccessful(byte[] masterList,
+                                                             byte[] masterListFromTerminalPermission)
+  {
+    try
+    {
+      CmsSignatureChecker checker = new CmsSignatureChecker(new MasterList(masterListFromTerminalPermission).getCertificates());
+      checker.checkEnvelopedSignature(masterList);
+      return true;
+    }
+    catch (SignatureException | CMSException e)
+    {
+      log.debug("Signature check on master list with master list as trust anchor not successful", e);
+      return false;
+    }
   }
 
   private byte[] getDefectList(PassiveAuthServiceWrapper wrapper, MasterList ml) throws MalformedURLException
@@ -213,15 +248,22 @@ public class MasterAndDefectListHandler extends BerCaRequestHandlerBase
     byte[] defectList = wrapper.getDefectList();
     if (defectList == null)
     {
-      SNMPTrapSender.sendSNMPTrap(TrapOID.DEFECTLIST_TRAP_LAST_RENEWAL_STATUS, SNMPConstants.LIST_NOT_RECEIVED);
+      SNMPTrapSender.sendSNMPTrap(TrapOID.DEFECTLIST_TRAP_LAST_RENEWAL_STATUS,
+                                  SNMPConstants.LIST_NOT_RECEIVED);
       return null;
     }
     else if (!isLocalZip(defectList))
     {
-      CmsSignatureChecker checker = new CmsSignatureChecker(ml);
-      if (!checker.checkEnvelopedSignature(defectList, cvcRefId))
+      CmsSignatureChecker checker = new CmsSignatureChecker(ml.getCertificates());
+      try
       {
-        SNMPTrapSender.sendSNMPTrap(TrapOID.DEFECTLIST_TRAP_LAST_RENEWAL_STATUS, SNMPConstants.LIST_SIGNATURE_CHECK_FAILED);
+        checker.checkEnvelopedSignature(defectList);
+      }
+      catch (SignatureException | CMSException e)
+      {
+        SNMPTrapSender.sendSNMPTrap(TrapOID.DEFECTLIST_TRAP_LAST_RENEWAL_STATUS,
+                                    SNMPConstants.LIST_SIGNATURE_CHECK_FAILED);
+        log.debug("Signature check on defect list not successful", e);
         return null;
       }
       SNMPTrapSender.sendSNMPTrap(TrapOID.DEFECTLIST_TRAP_LAST_RENEWAL_STATUS, SNMPConstants.LIST_RENEWED);

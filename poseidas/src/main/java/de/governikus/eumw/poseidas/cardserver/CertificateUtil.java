@@ -6,13 +6,20 @@ import java.security.PrivateKey;
 import java.security.PublicKey;
 import java.security.cert.Certificate;
 import java.security.cert.CertificateException;
+import java.security.cert.X509Certificate;
 import java.security.interfaces.ECPrivateKey;
 import java.security.spec.AlgorithmParameterSpec;
 import java.security.spec.ECParameterSpec;
 import java.util.Calendar;
 import java.util.Date;
+import java.util.function.Predicate;
 
+import org.bouncycastle.asn1.ASN1OctetString;
+import org.bouncycastle.asn1.ASN1Primitive;
+import org.bouncycastle.asn1.ASN1Sequence;
+import org.bouncycastle.asn1.ASN1TaggedObject;
 import org.bouncycastle.asn1.x500.X500Name;
+import org.bouncycastle.asn1.x509.Extension;
 import org.bouncycastle.cert.jcajce.JcaX509CertificateConverter;
 import org.bouncycastle.cert.jcajce.JcaX509v3CertificateBuilder;
 import org.bouncycastle.jce.provider.BouncyCastleProvider;
@@ -150,5 +157,33 @@ public final class CertificateUtil
       }
     }
     return algo;
+  }
+
+  /**
+   * This predicate takes a certificate <code>A</code> from the lambda function and the value of the X.509
+   * extension <code>Authority Key Identifier</code> of certificate <code>B</code>. It then checks, if the
+   * <code>Authority Key Identifier</code> of certificate <code>B</code> is equal to the
+   * <code>Subject Key Identifier</code> of certificate <code>A</code>.
+   */
+  public static Predicate<X509Certificate> findIssuerByAuthorityKeyIdentifier(byte[] authorityKeyIdentifier)
+  {
+    return certificate -> {
+      try
+      {
+        ASN1OctetString asn1OctetString = (ASN1OctetString)ASN1Primitive.fromByteArray(authorityKeyIdentifier);
+        ASN1Sequence asn1Sequence = (ASN1Sequence)ASN1Primitive.fromByteArray(asn1OctetString.getOctets());
+        ASN1OctetString reference = (ASN1OctetString)((ASN1TaggedObject)asn1Sequence.getObjectAt(0)).getObject();
+
+        ASN1OctetString outerOctetString = (ASN1OctetString)ASN1Primitive.fromByteArray(certificate.getExtensionValue(Extension.subjectKeyIdentifier.getId()));
+        ASN1OctetString actual = (ASN1OctetString)ASN1Primitive.fromByteArray(outerOctetString.getOctets());
+
+        return reference.equals(actual);
+      }
+      catch (Exception e)
+      {
+        log.debug("Cannot compare the authority key identifier and subject key identifier", e);
+        return false;
+      }
+    };
   }
 }
