@@ -119,3 +119,12 @@ Changelog
     - eIDAS Middleware: SAML metadata and responses no longer include line breaks in <SignatureValue> or <CipherValue>.
     - eIDAS Middleware: SAML error responses will always contain one of the allowed top level SAML status codes. Sub
       status codes and status message contain more specific information.
+
+* 2.1.2
+
+    - eIDAS Middleware: Security Patch
+
+* 2.1.3
+
+    - eIDAS Middleware: Change certificate chain building algorithm.
+    - eIDAS Middleware: Update xmlsec.

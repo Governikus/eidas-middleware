@@ -24,16 +24,16 @@ import java.security.cert.X509Certificate;
 import java.util.Optional;
 import java.util.Set;
 
+import org.bouncycastle.asn1.x509.Extension;
 import org.bouncycastle.jce.provider.BouncyCastleProvider;
 
+import de.governikus.eumw.poseidas.cardserver.CertificateUtil;
 import de.governikus.eumw.poseidas.eidserver.crl.exception.CertificateValidationException;
-import lombok.extern.slf4j.Slf4j;
 
 
 /**
  * This class is a Simple implementation of CRL fetcher, which validates downloaded CRLs using HTTP downloads.
  */
-@Slf4j
 public class HttpCrlFetcher implements CrlFetcher
 {
 
@@ -67,8 +67,7 @@ public class HttpCrlFetcher implements CrlFetcher
       {
         X509CRL crl = httpDownload(url);
         Optional<X509Certificate> signer = trustAnchors.stream()
-                                                       .filter(s -> s.getSubjectX500Principal()
-                                                                     .equals(crl.getIssuerX500Principal()))
+                                                       .filter(CertificateUtil.findIssuerByAuthorityKeyIdentifier(crl.getExtensionValue(Extension.authorityKeyIdentifier.getId())))
                                                        .findAny();
         if (signer.isPresent())
         {
