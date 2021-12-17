@@ -19,7 +19,6 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
 import de.governikus.eumw.eidascommon.Utils;
-import de.governikus.eumw.poseidas.paosservlet.server.HttpPaosServlet;
 
 
 public class PaosHandlerFactory
@@ -39,12 +38,8 @@ public class PaosHandlerFactory
    * @throws PaosHandlerException if the talked PAOS is wrong
    * @throws IOException on any IO errors
    */
-  public static AbstractPaosHandler newInstance(HttpServletRequest request) throws PaosHandlerException,
-    IOException
+  public static AbstractPaosHandler newInstance(HttpServletRequest request) throws PaosHandlerException, IOException
   {
-    LOG.debug(HttpPaosServlet.getRequestInformation(request));
-    LOG.debug(HttpPaosServlet.getRequestParameterInformation(request));
-
     byte[] requestBody = readRequestbody(request);
     try
     {
@@ -53,8 +48,7 @@ public class PaosHandlerFactory
     catch (IllegalArgumentException e)
     {
       LOG.warn("PAOS Conversation stopped: Can not create new instance for request", e);
-      throw new PaosHandlerException("PAOS Conversation stopped: Can not create new instance for request ",
-                                     400);
+      throw new PaosHandlerException("PAOS Conversation stopped: Can not create new instance for request ", 400);
     }
   }
 

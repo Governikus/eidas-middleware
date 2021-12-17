@@ -50,8 +50,8 @@ Using the eIDAS Demo Application
 To use the eIDAS Demo Application, start by running the eIDAS Demo Application.
 
 #. Change to the correct directory where the aforementioned configuration is present.
-#. If not present, copy the ``eidas-demo-2.2.3.jar`` file in this directory.
-#. Start the application by executing ``java -jar eidas-demo-2.2.3.jar``.
+#. If not present, copy the ``eidas-demo-2.2.5.jar`` file in this directory.
+#. Start the application by executing ``java -jar eidas-demo-2.2.5.jar``.
 
 Now you must configure your eIDAS Middleware to communicate with the eIDAS Demo Application.
 
@@ -93,7 +93,7 @@ Also bear in mind that you must use the path of the container file system in the
 
 To run the middleware, execute the following command after you have prepared the configuration, certificate and keystores::
 
-    docker run --rm -it -v /path/to/your/config-directory:/opt/eidas-middleware/config -p 8080:8080 governikus/eidas-demo-application:2.2.3
+    docker run --rm -it -v /path/to/your/config-directory:/opt/eidas-middleware/config -p 8080:8080 governikus/eidas-demo-application:2.2.5
 
 Now you can follow the steps above to configure and test the eIDAS Middleware.
 

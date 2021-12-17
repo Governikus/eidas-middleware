@@ -14,7 +14,7 @@
     <parent>
         <groupId>de.governikus.eumw</groupId>
         <artifactId>eumw</artifactId>
-        <version>2.2.3</version>
+        <version>2.2.5</version>
     </parent>
     <artifactId>dvca-connection-configurator</artifactId>
     <name>dvca-connection-configurator</name>

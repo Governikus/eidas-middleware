@@ -9,13 +9,12 @@
   ~ limitations under the Licence.
   -->
 
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
 
     <groupId>de.governikus.eumw</groupId>
     <artifactId>eumw</artifactId>
-    <version>2.2.3</version>
+    <version>2.2.5</version>
     <packaging>pom</packaging>
 
     <name>EU Middleware</name>
@@ -38,7 +37,7 @@
     <scm>
         <url>https://hg.govkg.de/Autent/eumw</url>
         <connection>scm:hg:https://hg.govkg.de/Autent/eumw</connection>
-        <tag>eumw-2.2.3</tag>
+        <tag>eumw-2.2.5</tag>
     </scm>
 
     <developers>
@@ -87,12 +86,11 @@
         <!-- 2.0.0 exists but is for OpenSAML 4 only -->
         <version.opensaml-security-ext>1.0.7</version.opensaml-security-ext>
         <version.opensaml>3.4.6</version.opensaml>
-        <version.xmlsec>2.2.3</version.xmlsec>
+        <version.xmlsec>2.3.0</version.xmlsec>
 
-        <version.cxf>3.4.4</version.cxf>
-        <version.springboot>2.5.4</version.springboot>
-        <!-- 3.0.12.RELEASE available but kills some of our tests (config-wizard) -->
-        <version.thymeleaf>3.0.11.RELEASE</version.thymeleaf>
+        <version.cxf>3.4.5</version.cxf>
+        <version.springboot>2.6.1</version.springboot>
+        <version.thymeleaf>3.0.14.RELEASE</version.thymeleaf>
         <version.thymeleaf-layout-dialect>2.5.2</version.thymeleaf-layout-dialect>
 
         <version.asm>9.2</version.asm>
@@ -102,12 +100,12 @@
         <version.commons.fileupload>1.4</version.commons.fileupload>
         <version.commons.io>2.11.0</version.commons.io>
         <version.commons.lang3>3.12.0</version.commons.lang3>
-        <version.guava>30.1.1-jre</version.guava>
+        <version.guava>31.0.1-jre</version.guava>
         <version.h2>1.4.200</version.h2>
         <version.istack-commons-runtime>4.0.1</version.istack-commons-runtime>
-        <version.jackson>2.12.5</version.jackson>
+        <version.jackson>2.13.0</version.jackson>
         <version.jaxb2-basics>1.11.1</version.jaxb2-basics>
-        <version.joda-time>2.10.10</version.joda-time>
+        <version.joda-time>2.10.13</version.joda-time>
         <version.json-schema-validator>2.2.14</version.json-schema-validator>
         <version.jsr305>3.0.2</version.jsr305>
         <version.groovy>3.0.9</version.groovy>
@@ -115,10 +113,10 @@
         <version.snmp4j>2.7.4</version.snmp4j>
 
         <!-- IDE helper -->
-        <version.lombok>1.18.20</version.lombok>
+        <version.lombok>1.18.22</version.lombok>
 
         <!-- logging dependencies -->
-        <version.log4j2>2.14.1</version.log4j2>
+        <version.log4j2>2.16.0</version.log4j2>
         <version.slf4j>1.7.32</version.slf4j>
 
         <!-- test dependencies -->
@@ -130,11 +128,11 @@
         <version.opentest4j>1.2.0</version.opentest4j>
 
         <!-- version for dependency check, can be overwritten by Jenkins -->
-        <version.dependency-check-maven>6.3.1</version.dependency-check-maven>
+        <version.dependency-check-maven>6.5.0</version.dependency-check-maven>
 
         <!-- version for bootstrap -->
         <!-- ATTENTION you need to change the templates on updating these versions -->
-        <version.bootstrap>5.1.0</version.bootstrap>
+        <version.bootstrap>5.1.3</version.bootstrap>
         <version.jquery>3.6.0</version.jquery>
     </properties>
 
@@ -366,7 +364,7 @@
                                     <version>[3.3,)</version>
                                 </requireMavenVersion>
 
-                                <dependencyConvergence/>
+                                <dependencyConvergence />
 
                                 <requirePluginVersions>
                                     <message>Best Practice is to

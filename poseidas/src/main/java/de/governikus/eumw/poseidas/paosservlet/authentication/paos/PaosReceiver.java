@@ -13,17 +13,17 @@ package de.governikus.eumw.poseidas.paosservlet.authentication.paos;
 import java.io.IOException;
 
 import javax.servlet.annotation.WebServlet;
+import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
-import de.governikus.eumw.eidascommon.ContextPaths;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
+import de.governikus.eumw.eidascommon.ContextPaths;
 import de.governikus.eumw.poseidas.paosservlet.paos.handler.AbstractPaosHandler;
 import de.governikus.eumw.poseidas.paosservlet.paos.handler.PaosHandlerException;
 import de.governikus.eumw.poseidas.paosservlet.paos.handler.PaosHandlerFactory;
-import de.governikus.eumw.poseidas.paosservlet.server.HttpPaosServlet;
 
 
 /**
@@ -32,7 +32,7 @@ import de.governikus.eumw.poseidas.paosservlet.server.HttpPaosServlet;
  * @author <a href="mail:obe@bos-bremen.de">Ole Behrens</a>
  */
 @WebServlet(ContextPaths.EIDAS_CONTEXT_PATH + ContextPaths.PAOS_SERVLET)
-public class PaosReceiver extends HttpPaosServlet
+public class PaosReceiver extends HttpServlet
 {
 
   private static final long serialVersionUID = 3323320851L;

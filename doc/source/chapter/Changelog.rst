@@ -141,3 +141,7 @@ Changelog
     - eIDAS Middleware: Change certificate chain building algorithm.
     - eIDAS Middleware: Update xmlsec.
     - eIDAS Middleware: Improve stability in trust anchor management.
+
+* 2.2.5
+
+    - eIDAS Middleware: Fix Log4j security issue.

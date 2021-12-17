@@ -112,7 +112,7 @@
     </div>
 </div>
 <!-- -------------------------------------------------------------------------------------------------------------- -->
-<div data-th-fragment="staticDropDownRow(idBase, fieldName, description, message, staticEnum)"
+<div data-th-fragment="staticDropDownRow(idBase, fieldName, description, message, enumList)"
      class="table-row">
     <label data-th-for="${#strings.isEmpty(idBase) ? '' : idBase + '-'} + ${fieldName}"
            class="table-cell description" data-th-text="${description}"></label>
@@ -126,7 +126,7 @@
            class="field-description-message"></p>
 		<select  data-th-id="${#strings.isEmpty(idBase) ? '' : idBase + '-'} + ${fieldName}"
                data-th-field="*{__${fieldName}__}">
-			<option th:each="state : ${staticEnum.values()}"
+			<option th:each="state : ${enumList}"
 				th:value="${state}" th:text="${state}"></option>
 		</select>
     </div>
