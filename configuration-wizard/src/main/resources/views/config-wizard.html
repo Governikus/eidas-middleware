@@ -22,13 +22,13 @@
 	<div data-th-replace="fragments/layout.html :: header()"></div>
 
 	<form data-th-action="@{/}" method="post" enctype="multipart/form-data"
-		data-th-with="basePathConfigPage=${T(de.governikus.eumw.configuration.wizard.web.utils.WizardPage).BASE_PATH_VIEW},
-                    uploadConfigPage=${T(de.governikus.eumw.configuration.wizard.web.utils.WizardPage).UPLOAD_CONFIG_PROPERTIES_VIEW},
-                    appPropertiesPage=${T(de.governikus.eumw.configuration.wizard.web.utils.WizardPage).APPLICATION_PROPERTIES_VIEW},
-                    poseidasCorePage=${T(de.governikus.eumw.configuration.wizard.web.utils.WizardPage).POSEIDAS_CORE_VIEW},
-                    contactInfoPage=${T(de.governikus.eumw.configuration.wizard.web.utils.WizardPage).EIDAS_PROPERTIES_VIEW},,
-                    saveLocationPage=${T(de.governikus.eumw.configuration.wizard.web.utils.WizardPage).SAVE_LOCATION_VIEW},
-                    numberOfPages=${T(de.governikus.eumw.configuration.wizard.web.utils.WizardPage).values().length},
+		data-th-with="basePathConfigPage=${BASE_PATH_VIEW},
+                    uploadConfigPage=${UPLOAD_CONFIG_PROPERTIES_VIEW},
+                    appPropertiesPage=${APPLICATION_PROPERTIES_VIEW},
+                    poseidasCorePage=${POSEIDAS_CORE_VIEW},
+                    contactInfoPage=${EIDAS_PROPERTIES_VIEW},
+                    saveLocationPage=${SAVE_LOCATION_VIEW},
+                    numberOfPages=${NUMBER_OF_PAGES}
                     ">
 
 		<p id="configurationLoaded"
@@ -246,7 +246,7 @@
                                               fieldName     = hsmType,
                                               description   = #{hsm.type},
                                               message       = #{hsm.type.desc},
-                                              staticEnum	= ${T(de.governikus.eumw.configuration.wizard.identifier.HSMTypeIdentifier)})"></div>
+                                              enumList	= ${HSM_TYPE_IDENTIFIER})"></div>
 				<div
 					data-th-replace="fragments/view-components.html :: textInputRow(
                                               idBase        = applicationProperties,
