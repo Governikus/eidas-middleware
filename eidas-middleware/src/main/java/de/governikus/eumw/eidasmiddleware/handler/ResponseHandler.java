@@ -143,6 +143,7 @@ public class ResponseHandler
       }
       catch (RequestProcessingException e)
       {
+        log.debug(e.getMessage(), e);
         response = prepareSAMLErrorResponse(reqSP, samlReqSession, ErrorCode.INTERNAL_ERROR, e.getMessage());
       }
       return response;

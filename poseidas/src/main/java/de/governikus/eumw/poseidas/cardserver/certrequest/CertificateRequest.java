@@ -278,7 +278,7 @@ public class CertificateRequest extends AbstractASN1Encoder
 
   /** {@inheritDoc} */
   @Override
-  public boolean isSequence()
+  public synchronized boolean isSequence()
   {
     return true;
   }

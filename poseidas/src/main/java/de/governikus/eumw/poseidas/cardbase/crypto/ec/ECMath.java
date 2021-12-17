@@ -238,8 +238,8 @@ public final class ECMath
 
     BigInteger n = pubKey.getParams().getOrder();
 
-    if (n.compareTo(r) != 1 || n.compareTo(s) != 1 || r.compareTo(BigInteger.valueOf(0)) != 1
-        || s.compareTo(BigInteger.valueOf(0)) != 1)
+    if (n.compareTo(r) < 1 || n.compareTo(s) < 1 || r.compareTo(BigInteger.valueOf(0)) < 1
+        || s.compareTo(BigInteger.valueOf(0)) < 1)
     {
       return false;
     }

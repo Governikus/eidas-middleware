@@ -426,8 +426,9 @@ public class PKIServiceConnector
       }
       catch (InterruptedException e)
       {
-        // just continue waiting;
-        LOG.error("handle me", e);
+        LOG.error("Thread was interrupted while waiting for the SSL context lock", e);
+        // Reinterrupt the current thread to make sure we are not ignoring the interrupt signal
+        Thread.currentThread().interrupt();
       }
       now = System.currentTimeMillis();
     }

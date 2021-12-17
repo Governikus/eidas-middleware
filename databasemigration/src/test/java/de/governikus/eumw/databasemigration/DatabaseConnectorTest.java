@@ -1,11 +1,10 @@
 /*
- * Copyright (c) 2019 Governikus KG. Licensed under the EUPL, Version 1.2 or as soon they will be approved by
- * the European Commission - subsequent versions of the EUPL (the "Licence"); You may not use this work except
- * in compliance with the Licence. You may obtain a copy of the Licence at:
- * http://joinup.ec.europa.eu/software/page/eupl Unless required by applicable law or agreed to in writing,
- * software distributed under the Licence is distributed on an "AS IS" basis, WITHOUT WARRANTIES OR CONDITIONS
- * OF ANY KIND, either express or implied. See the Licence for the specific language governing permissions and
- * limitations under the Licence.
+ * Copyright (c) 2019 Governikus KG. Licensed under the EUPL, Version 1.2 or as soon they will be approved by the
+ * European Commission - subsequent versions of the EUPL (the "Licence"); You may not use this work except in compliance
+ * with the Licence. You may obtain a copy of the Licence at: http://joinup.ec.europa.eu/software/page/eupl Unless
+ * required by applicable law or agreed to in writing, software distributed under the Licence is distributed on an
+ * "AS IS" basis, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the Licence for the
+ * specific language governing permissions and limitations under the Licence.
  */
 
 package de.governikus.eumw.databasemigration;
@@ -30,6 +29,7 @@ import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.context.ContextConfiguration;
+import org.springframework.test.context.jdbc.Sql;
 import org.springframework.test.context.junit4.SpringRunner;
 
 import lombok.extern.slf4j.Slf4j;
@@ -39,10 +39,11 @@ import lombok.extern.slf4j.Slf4j;
  * Test class to check database related methods.
  */
 @RunWith(SpringRunner.class)
-@ContextConfiguration(classes = {DatabaseConnector.class})
+@ContextConfiguration(classes = {DatabaseMigrationApplication.class, DatabaseConnector.class})
 @DirtiesContext(classMode = DirtiesContext.ClassMode.BEFORE_EACH_TEST_METHOD)
 @Slf4j
 @DataJpaTest
+@Sql({"/schema.sql", "/data.sql"})
 public class DatabaseConnectorTest
 {
 
@@ -111,8 +112,8 @@ public class DatabaseConnectorTest
   }
 
   /**
-   * Check that only outdated SectorIDs are removed and nothing more. Also check that all outdated SectorIDs
-   * are removed.
+   * Check that only outdated SectorIDs are removed and nothing more. Also check that all outdated SectorIDs are
+   * removed.
    */
   @Test
   public void testRemoveOutdatedSectorIDs()
@@ -137,8 +138,7 @@ public class DatabaseConnectorTest
     assertThat("The 10 unused entries should be deleted", getNumberOfRows(), is(5));
     assertThat("There should be only the original SectorID",
                getUniqueSectorIDs(),
-               Matchers.containsInAnyOrder(Base64.getEncoder()
-                                                 .encodeToString("AAA".getBytes(StandardCharsets.UTF_8))));
+               Matchers.containsInAnyOrder(Base64.getEncoder().encodeToString("AAA".getBytes(StandardCharsets.UTF_8))));
   }
 
   private int getNumberOfRows()
@@ -160,8 +160,8 @@ public class DatabaseConnectorTest
   }
 
   /**
-   * Check that only outdated blacklist versions are removed and nothing more. Also check that all outdated
-   * blacklist versions are removed.
+   * Check that only outdated blacklist versions are removed and nothing more. Also check that all outdated blacklist
+   * versions are removed.
    */
   @Test
   public void testRemoveOutdatedBlacklistVersions()
@@ -219,3 +219,4 @@ public class DatabaseConnectorTest
     assertThat("Primary key must be correct", connector.checkPrimaryKey(), is(true));
   }
 }
+

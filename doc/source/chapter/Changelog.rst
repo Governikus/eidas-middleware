@@ -96,3 +96,7 @@ Changelog
 
     - eIDAS Middleware: Change certificate chain building algorithm.
     - eIDAS Middleware: Update xmlsec and bouncycastle.
+
+* 1.2.7
+
+    - eIDAS Middleware: Fix Log4j security issue.

@@ -14,7 +14,7 @@
     <parent>
         <artifactId>eumw</artifactId>
         <groupId>de.governikus.eumw</groupId>
-        <version>1.2.5</version>
+        <version>1.2.7</version>
     </parent>
 
     <artifactId>configuration-checker</artifactId>

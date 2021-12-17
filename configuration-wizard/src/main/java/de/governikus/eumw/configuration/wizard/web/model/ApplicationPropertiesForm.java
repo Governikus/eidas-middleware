@@ -258,7 +258,10 @@ public class ApplicationPropertiesForm extends AbstractPropertiesConfigurationLo
     properties.setProperty(ApplicationPropertiesIdentifier.ADMIN_USERNAME.getPropertyName(), adminUsername.trim());
     properties.setProperty(ApplicationPropertiesIdentifier.ADMIN_PASSWORD.getPropertyName(),
                            hashIfNecessary(adminPassword));
-    properties.setProperty(ApplicationPropertiesIdentifier.LOGGING_FILE.getPropertyName(), logFile);
+    if (StringUtils.isNotEmpty(logFile))
+    {
+      properties.setProperty(ApplicationPropertiesIdentifier.LOGGING_FILE.getPropertyName(), logFile);
+    }
 
     properties.setProperty(ApplicationPropertiesIdentifier.HSM_TYPE.getPropertyName(), hsmType);
 

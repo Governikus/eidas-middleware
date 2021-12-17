@@ -24,6 +24,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.SessionAttributes;
+import org.springframework.web.bind.support.SessionStatus;
 import org.springframework.web.servlet.ModelAndView;
 
 import de.governikus.eumw.configuration.wizard.exceptions.ApplicationPropertiesSaveException;
@@ -200,7 +201,8 @@ public class ConfigurationWizardController
   @PostMapping(params = {"action=save"})
   public ModelAndView saveConfigurationButton(@Valid @ModelAttribute("coreConfiguration") ConfigurationForm configurationForm,
                                               BindingResult bindingResult,
-                                              @ModelAttribute("currentPage") WizardPage currentPage)
+                                              @ModelAttribute("currentPage") WizardPage currentPage,
+                                              SessionStatus sessionStatus)
   {
     FormValidator.validateView(currentPage, configurationForm, bindingResult);
     if (bindingResult.hasErrors())
@@ -225,6 +227,8 @@ public class ConfigurationWizardController
       log.error(ex.getMessage(), ex);
       modelAndView.addObject("saving_failed", ExceptionHelper.getRootMessage(ex));
     }
+    // Final page, finish the session so that the attributes can be removed by spring and JVM
+    sessionStatus.setComplete();
     modelAndView.addObject("save_location", configurationForm.getSaveLocation());
     return modelAndView;
   }

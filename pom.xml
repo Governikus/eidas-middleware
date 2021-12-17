@@ -14,7 +14,7 @@
 
     <groupId>de.governikus.eumw</groupId>
     <artifactId>eumw</artifactId>
-    <version>1.2.5</version>
+    <version>1.2.7</version>
     <packaging>pom</packaging>
 
     <name>EU Middleware</name>
@@ -37,7 +37,7 @@
     <scm>
         <url>https://github.com/Governikus/${project.artifactId}</url>
         <connection>${governikus.scm.connection}</connection>
-      <tag>eumw-1.2.5</tag>
+      <tag>eumw-1.2.7</tag>
   </scm>
 
     <developers>
@@ -114,25 +114,26 @@
         <version.bouncycastle>1.66</version.bouncycastle>
         <version.javasupport>7.3.0</version.javasupport>
         <version.opensaml>3.3.1-GOV6</version.opensaml>
-        <version.xmlsec>2.1.7</version.xmlsec>
+        <version.cryptacular>1.1.4</version.cryptacular>
+        <version.xmlsec>2.3.0</version.xmlsec>
 
-        <version.cxf>3.3.1</version.cxf>
-        <version.spring>5.1.10.RELEASE</version.spring>
-        <version.springboot>2.1.8.RELEASE</version.springboot>
-        <version.thymeleaf>3.0.11.RELEASE</version.thymeleaf>
+        <version.cxf>3.4.5</version.cxf>
+        <version.spring>5.3.13</version.spring>
+        <version.springboot>2.6.1</version.springboot>
+        <version.thymeleaf>3.0.14.RELEASE</version.thymeleaf>
         <version.thymeleaf-layout-dialect>2.4.1</version.thymeleaf-layout-dialect>
 
-        <version.asm>5.2</version.asm>
+        <version.asm>9.2</version.asm>
         <version.blaze>3.2.0</version.blaze>
-        <version.commons.codec>1.12</version.commons.codec>
+        <version.commons.codec>1.15</version.commons.codec>
         <version.commons.collections>3.2.2</version.commons.collections>
         <version.commons.fileupload>1.4</version.commons.fileupload>
-        <version.commons.io>2.6</version.commons.io>
-        <version.commons.lang3>3.9</version.commons.lang3>
-        <version.guava>27.1-jre</version.guava>
+        <version.commons.io>2.11.0</version.commons.io>
+        <version.commons.lang3>3.12.0</version.commons.lang3>
+        <version.guava>31.0.1-jre</version.guava>
         <version.h2>1.4.199</version.h2>
-        <version.istack-commons-runtime>3.0.8</version.istack-commons-runtime>
-        <version.jackson>2.9.10</version.jackson>
+        <version.istack-commons-runtime>3.0.12</version.istack-commons-runtime>
+        <version.jackson>2.13.0</version.jackson>
         <version.jaxb2-basics>1.11.1</version.jaxb2-basics>
         <version.jsr305>3.0.2</version.jsr305>
         <version.snmp4j>2.6.3</version.snmp4j>
@@ -141,15 +142,18 @@
         <version.lombok>1.18.6</version.lombok>
 
         <!-- logging dependencies -->
-        <version.log4j2>2.11.2</version.log4j2>
+        <version.log4j2>2.16.0</version.log4j2>
         <version.slf4j>1.7.26</version.slf4j>
 
         <!-- test dependencies -->
-        <version.htmlunit>2.30</version.htmlunit>
-        <version.junit.jupiter>5.2.0</version.junit.jupiter>
-        <version.junit.platform>1.2.0</version.junit.platform>
-        <version.junit.vintage>5.2.0</version.junit.vintage>
+        <version.htmlunit>2.31</version.htmlunit>
+        <version.junit.jupiter>5.8.1</version.junit.jupiter>
+        <version.junit.platform>1.8.2</version.junit.platform>
+        <version.junit.vintage>5.8.1</version.junit.vintage>
         <version.opentest4j>1.1.0</version.opentest4j>
+
+        <!-- version for dependency check, can be overwritten by Jenkins -->
+        <version.dependency-check-maven>6.5.0</version.dependency-check-maven>
     </properties>
 
     <build>
@@ -236,12 +240,10 @@
                         </additionalOptions>
                     </configuration>
                 </plugin>
-                <!-- TODO maven surefire plugin 2.20 has a memory leak so
-                    we will downgrade surefire here until this is fixed with the next release -->
                 <plugin>
                     <groupId>org.apache.maven.plugins</groupId>
                     <artifactId>maven-surefire-plugin</artifactId>
-                    <version>2.19.1</version>
+                    <version>2.22.2</version>
                     <configuration>
                         <!-- alphabetical on even hours, reverse alphabetical
                             on odd hours -->
@@ -260,23 +262,6 @@
                             <exclude>**/*PerformanceTest.*</exclude>
                         </excludes>
                     </configuration>
-                    <dependencies>
-                        <dependency>
-                            <groupId>org.junit.platform</groupId>
-                            <artifactId>junit-platform-surefire-provider</artifactId>
-                            <version>1.1.0</version>
-                        </dependency>
-                        <dependency>
-                            <groupId>org.junit.jupiter</groupId>
-                            <artifactId>junit-jupiter-engine</artifactId>
-                            <version>${version.junit.jupiter}</version>
-                        </dependency>
-                        <dependency>
-                            <groupId>org.junit.vintage</groupId>
-                            <artifactId>junit-vintage-engine</artifactId>
-                            <version>${version.junit.vintage}</version>
-                        </dependency>
-                    </dependencies>
                 </plugin>
                 <plugin>
                     <groupId>org.apache.maven.plugins</groupId>
@@ -367,6 +352,12 @@
                     <groupId>io.fabric8</groupId>
                     <artifactId>docker-maven-plugin</artifactId>
                     <version>0.31.0</version>
+                </plugin>
+                <plugin>
+                    <groupId>org.owasp</groupId>
+                    <artifactId>dependency-check-maven</artifactId>
+                    <!-- the version will be set by Jenkins -->
+                    <version>${version.dependency-check-maven}</version>
                 </plugin>
             </plugins>
         </pluginManagement>
@@ -625,57 +616,6 @@
             </dependency>
 
             <dependency>
-                <groupId>org.springframework</groupId>
-                <artifactId>spring-core</artifactId>
-                <version>${version.spring}</version>
-            </dependency>
-            <dependency>
-                <groupId>org.springframework</groupId>
-                <artifactId>spring-tx</artifactId>
-                <version>${version.spring}</version>
-            </dependency>
-            <dependency>
-                <groupId>org.springframework</groupId>
-                <artifactId>spring-aop</artifactId>
-                <version>${version.spring}</version>
-            </dependency>
-            <dependency>
-                <groupId>org.springframework</groupId>
-                <artifactId>spring-beans</artifactId>
-                <version>${version.spring}</version>
-            </dependency>
-            <dependency>
-                <groupId>org.springframework</groupId>
-                <artifactId>spring-context</artifactId>
-                <version>${version.spring}</version>
-            </dependency>
-            <dependency>
-                <groupId>org.springframework</groupId>
-                <artifactId>spring-expression</artifactId>
-                <version>${version.spring}</version>
-            </dependency>
-            <dependency>
-                <groupId>org.springframework</groupId>
-                <artifactId>spring-jdbc</artifactId>
-                <version>${version.spring}</version>
-            </dependency>
-            <dependency>
-                <groupId>org.springframework</groupId>
-                <artifactId>spring-orm</artifactId>
-                <version>${version.spring}</version>
-            </dependency>
-            <dependency>
-                <groupId>org.springframework</groupId>
-                <artifactId>spring-web</artifactId>
-                <version>${version.spring}</version>
-            </dependency>
-            <dependency>
-                <groupId>org.springframework</groupId>
-                <artifactId>spring-webmvc</artifactId>
-                <version>${version.spring}</version>
-            </dependency>
-
-            <dependency>
                 <groupId>org.slf4j</groupId>
                 <artifactId>jcl-over-slf4j</artifactId>
                 <version>${version.slf4j}</version>
@@ -696,6 +636,12 @@
                 <artifactId>java-support</artifactId>
                 <version>${version.javasupport}</version>
             </dependency>
+            <dependency>
+                <groupId>org.cryptacular</groupId>
+                <artifactId>cryptacular</artifactId>
+                <version>${version.cryptacular}</version>
+            </dependency>
+
 
             <dependency>
                 <groupId>org.bouncycastle</groupId>
@@ -965,6 +911,54 @@
                     </plugin>
                 </plugins>
             </build>
+        </profile>
+        <profile>
+            <id>dependency-check</id>
+            <activation>
+                <!-- activate automatically when built on Jenkins build server -->
+                <property>
+                    <name>env.JENKINS_URL</name>
+                </property>
+            </activation>
+            <build>
+                <plugins>
+                    <plugin>
+                        <groupId>org.owasp</groupId>
+                        <artifactId>dependency-check-maven</artifactId>
+                        <configuration>
+                            <skipProvidedScope>true</skipProvidedScope>
+                            <skipTestScope>true</skipTestScope>
+                            <skipRuntimeScope>false</skipRuntimeScope>
+                            <format>ALL</format>
+                            <outputDirectory>${project.build.directory}</outputDirectory>
+                            <failOnError>false</failOnError>
+                        </configuration>
+                        <executions>
+                            <execution>
+                                <goals>
+                                    <goal>check</goal>
+                                </goals>
+                                <phase>verify</phase>
+                            </execution>
+                        </executions>
+                    </plugin>
+                </plugins>
+            </build>
+            <reporting>
+                <plugins>
+                    <plugin>
+                        <groupId>org.owasp</groupId>
+                        <artifactId>dependency-check-maven</artifactId>
+                        <reportSets>
+                            <reportSet>
+                                <reports>
+                                    <report>aggregate</report>
+                                </reports>
+                            </reportSet>
+                        </reportSets>
+                    </plugin>
+                </plugins>
+            </reporting>
         </profile>
     </profiles>
 

@@ -51,7 +51,10 @@ public final class Util
     {
       docBuilder.set(Utils.getDocumentBuilder());
     }
-    return docBuilder.get().parse(documentStream);
+    Document result = docBuilder.get().parse(documentStream);
+    // Remove the ThreadLocal variable to prevent memory leaks
+    docBuilder.remove();
+    return result;
   }
 
   public static Object unmarshalFirstSoapBodyElement(InputStream inputStream)

@@ -120,8 +120,8 @@ public final class EIDSessionCallbackHandler implements ECardIDCallback
         LOG.warn(session.getLogPrefix() + "result minor from eCardAPI: "
                  + container.getResult().getResultMinor());
         LOG.warn(session.getLogPrefix() + "result message from eCardAPI: "
-                 + container.getResult().getResultMessage() == null ? "null"
-                   : container.getResult().getResultMessage().getValue());
+                 + (container.getResult().getResultMessage() == null ? "null"
+                   : container.getResult().getResultMessage().getValue()));
         session.setResult(createResult(Constants.EID_MAJOR_ERROR,
                                        Constants.EID_MINOR_COMMON_INTERNALERROR,
                                        container.getResult().getResultMessage() == null ? null

@@ -1,11 +1,10 @@
 /*
- * Copyright (c) 2019 Governikus KG. Licensed under the EUPL, Version 1.2 or as soon they will be approved by
- * the European Commission - subsequent versions of the EUPL (the "Licence"); You may not use this work except
- * in compliance with the Licence. You may obtain a copy of the Licence at:
- * http://joinup.ec.europa.eu/software/page/eupl Unless required by applicable law or agreed to in writing,
- * software distributed under the Licence is distributed on an "AS IS" basis, WITHOUT WARRANTIES OR CONDITIONS
- * OF ANY KIND, either express or implied. See the Licence for the specific language governing permissions and
- * limitations under the Licence.
+ * Copyright (c) 2019 Governikus KG. Licensed under the EUPL, Version 1.2 or as soon they will be approved by the
+ * European Commission - subsequent versions of the EUPL (the "Licence"); You may not use this work except in compliance
+ * with the Licence. You may obtain a copy of the Licence at: http://joinup.ec.europa.eu/software/page/eupl Unless
+ * required by applicable law or agreed to in writing, software distributed under the Licence is distributed on an
+ * "AS IS" basis, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the Licence for the
+ * specific language governing permissions and limitations under the Licence.
  */
 
 package de.governikus.eumw.configuration.wizard.web.controller;
@@ -60,7 +59,7 @@ import lombok.extern.slf4j.Slf4j;
 @ExtendWith(SpringExtension.class)
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 @DisplayName("test the complete user journey")
-public class CompleteUserJourneyTest extends ConfigWizardTestBase // NOPMD
+class CompleteUserJourneyTest extends ConfigWizardTestBase // NOPMD
 {
 
   /**
@@ -70,12 +69,12 @@ public class CompleteUserJourneyTest extends ConfigWizardTestBase // NOPMD
   ExposedReloadableResourceBundleMessageSource messageSource;
 
   /**
-   * Test the complete user journey without a previous configuration. Afterwards the configuration is loaded
-   * and new metadata is uploaded to check that the old metadata is deleted.
+   * Test the complete user journey without a previous configuration. Afterwards the configuration is loaded and new
+   * metadata is uploaded to check that the old metadata is deleted.
    */
   @Test
-  public void testCompleteUserJourney() throws IOException, CertificateException, UnrecoverableKeyException,
-    KeyStoreException, NoSuchAlgorithmException
+  void testCompleteUserJourney()
+    throws IOException, CertificateException, UnrecoverableKeyException, KeyStoreException, NoSuchAlgorithmException
   {
     HtmlPage startPage = getWebClient().getPage(getRequestUrl("/"));
 
@@ -104,8 +103,8 @@ public class CompleteUserJourneyTest extends ConfigWizardTestBase // NOPMD
    * Test the complete user journey with hsm configuration and without a previous configuration.
    */
   @Test
-  public void testCompleteUserJourneyWithHSM() throws IOException, CertificateException,
-    UnrecoverableKeyException, KeyStoreException, NoSuchAlgorithmException
+  void testCompleteUserJourneyWithHSM()
+    throws IOException, CertificateException, UnrecoverableKeyException, KeyStoreException, NoSuchAlgorithmException
   {
 
     HtmlPage startPage = getWebClient().getPage(getRequestUrl("/"));
@@ -129,18 +128,17 @@ public class CompleteUserJourneyTest extends ConfigWizardTestBase // NOPMD
   }
 
   /**
-   * Test that SERVER_URL is added to eidasmiddleware.properties when loading a previous configuration without
-   * this property key.
+   * Test that SERVER_URL is added to eidasmiddleware.properties when loading a previous configuration without this
+   * property key.
    */
   @Test
-  public void testConfigWithoutServerURL() throws IOException, JAXBException, CertificateException,
+  void testConfigWithoutServerURL() throws IOException, JAXBException, CertificateException,
     UnrecoverableKeyException, KeyStoreException, NoSuchAlgorithmException
   {
     createConfig();
 
     // Remove SERVER_URL from eidasmiddleware.properties
-    List<String> properties = FileUtils.readLines(Paths.get(getTempDirectory(), "eidasmiddleware.properties")
-                                                       .toFile(),
+    List<String> properties = FileUtils.readLines(Paths.get(getTempDirectory(), "eidasmiddleware.properties").toFile(),
                                                   StandardCharsets.UTF_8);
     properties = properties.stream()
                            .filter(property -> !property.startsWith("SERVER_URL"))
@@ -193,9 +191,7 @@ public class CompleteUserJourneyTest extends ConfigWizardTestBase // NOPMD
   {
     // check that there is only one metadata file
     Path path = Paths.get(getTempDirectory(), "serviceprovider-metadata");
-    assertEquals(path.toFile().listFiles().length,
-                 1,
-                 "There must be exactly one service provider metadata file");
+    assertEquals(path.toFile().listFiles().length, 1, "There must be exactly one service provider metadata file");
 
     // Clear cookies to start from the first page
     getWebClient().getCookieManager().clearCookies();
@@ -226,9 +222,7 @@ public class CompleteUserJourneyTest extends ConfigWizardTestBase // NOPMD
     WebAssert.assertTextPresent(currentPage, "Save location");
     click(currentPage, Button.SAVE);
 
-    assertEquals(path.toFile().listFiles().length,
-                 1,
-                 "There must be exactly one service provider metadata file");
+    assertEquals(path.toFile().listFiles().length, 1, "There must be exactly one service provider metadata file");
     assertEquals(new String(Files.readAllBytes(path.resolveSibling("newMetadata.xml"))),
                  newMetadataContent,
                  "New content expected");
@@ -527,8 +521,7 @@ public class CompleteUserJourneyTest extends ConfigWizardTestBase // NOPMD
   private Properties loadProperties(final String fileName) throws IOException, FileNotFoundException
   {
     Properties eidasProperties = new Properties();
-    try (FileInputStream eidasInputStream = new FileInputStream(Paths.get(getTempDirectory(), fileName)
-                                                                     .toString()))
+    try (FileInputStream eidasInputStream = new FileInputStream(Paths.get(getTempDirectory(), fileName).toString()))
     {
       eidasProperties.load(eidasInputStream);
     }
@@ -552,7 +545,7 @@ public class CompleteUserJourneyTest extends ConfigWizardTestBase // NOPMD
    * this test will fail to upload a certificate
    */
   @Test
-  public void failToUploadCertificate() throws IOException
+  void failToUploadCertificate() throws IOException
   {
     final String certName = "certificate-certificateName";
     final String certFile = "certificate-certificateFile";
@@ -562,9 +555,7 @@ public class CompleteUserJourneyTest extends ConfigWizardTestBase // NOPMD
 
     // upload nothing
     HtmlPage nothingUploadedPage = uploadCertificate(uploadCertificatePage, BLANK, BLANK);
-    assertValidationMessagePresent(nothingUploadedPage,
-                                   certName + errorSuffix,
-                                   getMessage(KEY_VALIDATE_UPLOAD_NAME));
+    assertValidationMessagePresent(nothingUploadedPage, certName + errorSuffix, getMessage(KEY_VALIDATE_UPLOAD_NAME));
     assertValidationMessagePresent(nothingUploadedPage,
                                    certFile + errorSuffix,
                                    getMessage("wizard.status.validation.upload.file")
@@ -572,16 +563,14 @@ public class CompleteUserJourneyTest extends ConfigWizardTestBase // NOPMD
 
     // upload certificate without name
     HtmlPage nameMissingPage = uploadCertificate(uploadCertificatePage, BLANK, "/test-files/test.cer");
-    assertValidationMessagePresent(nameMissingPage,
-                                   certName + errorSuffix,
-                                   getMessage(KEY_VALIDATE_UPLOAD_NAME));
+    assertValidationMessagePresent(nameMissingPage, certName + errorSuffix, getMessage(KEY_VALIDATE_UPLOAD_NAME));
   }
 
   /**
    * this test will fail to upload a keystore
    */
   @Test
-  public void failToUploadKeystore() throws IOException
+  void failToUploadKeystore() throws IOException
   {
     final String keystoreNameErrorFieldId = "keystore-keystoreName-error";
     final String keystoreAliasErrorFieldId = "keystore-alias-error";
@@ -592,23 +581,15 @@ public class CompleteUserJourneyTest extends ConfigWizardTestBase // NOPMD
 
     // upload nothing
     HtmlPage fileMissing = uploadKeystore(uploadKeystorePage, BLANK, BLANK, BLANK, BLANK, BLANK);
-    assertValidationMessagePresent(fileMissing,
-                                   keystoreNameErrorFieldId,
-                                   getMessage(KEY_VALIDATE_UPLOAD_NAME));
-    assertValidationMessagePresent(fileMissing,
-                                   keystoreAliasErrorFieldId,
-                                   getMessage(KEY_VALIDATE_UPLOAD_ALIAS));
+    assertValidationMessagePresent(fileMissing, keystoreNameErrorFieldId, getMessage(KEY_VALIDATE_UPLOAD_NAME));
+    assertValidationMessagePresent(fileMissing, keystoreAliasErrorFieldId, getMessage(KEY_VALIDATE_UPLOAD_ALIAS));
     assertValidationMessagePresent(fileMissing,
                                    keystoreFileErrorFieldId,
                                    getMessage("wizard.status.validation.upload.file"));
 
     // upload without name
     HtmlPage blankEntries = uploadKeystore(uploadKeystorePage, BLANK, BLANK, BLANK, BLANK, keystorePath);
-    assertValidationMessagePresent(blankEntries,
-                                   keystoreNameErrorFieldId,
-                                   getMessage(KEY_VALIDATE_UPLOAD_NAME));
-    assertValidationMessagePresent(blankEntries,
-                                   keystoreAliasErrorFieldId,
-                                   getMessage(KEY_VALIDATE_UPLOAD_ALIAS));
+    assertValidationMessagePresent(blankEntries, keystoreNameErrorFieldId, getMessage(KEY_VALIDATE_UPLOAD_NAME));
+    assertValidationMessagePresent(blankEntries, keystoreAliasErrorFieldId, getMessage(KEY_VALIDATE_UPLOAD_ALIAS));
   }
 }
