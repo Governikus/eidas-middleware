@@ -14,7 +14,7 @@
 
     <groupId>de.governikus.eumw</groupId>
     <artifactId>eumw</artifactId>
-    <version>1.2.7</version>
+    <version>1.2.8</version>
     <packaging>pom</packaging>
 
     <name>EU Middleware</name>
@@ -37,7 +37,7 @@
     <scm>
         <url>https://github.com/Governikus/${project.artifactId}</url>
         <connection>${governikus.scm.connection}</connection>
-      <tag>eumw-1.2.7</tag>
+      <tag>eumw-1.2.8</tag>
   </scm>
 
     <developers>
@@ -111,6 +111,9 @@
         <maven.compiler.target>1.8</maven.compiler.target>
 
         <!-- crypto -->
+        <!-- 1.67-1.70 is available, but the other versions of middleware must use 1.66 and in
+        order not to increase complexity unnecessarily BouncyCastle should only be upgraded if security
+        vulnerabilities affect this version -->
         <version.bouncycastle>1.66</version.bouncycastle>
         <version.javasupport>7.3.0</version.javasupport>
         <version.opensaml>3.3.1-GOV6</version.opensaml>
@@ -118,9 +121,9 @@
         <version.xmlsec>2.3.0</version.xmlsec>
 
         <version.cxf>3.4.5</version.cxf>
-        <version.spring>5.3.13</version.spring>
-        <version.springboot>2.6.1</version.springboot>
-        <version.thymeleaf>3.0.14.RELEASE</version.thymeleaf>
+        <version.spring>5.3.15</version.spring>
+        <version.springboot>2.6.3</version.springboot>
+        <version.thymeleaf>3.0.15.RELEASE</version.thymeleaf>
         <version.thymeleaf-layout-dialect>2.4.1</version.thymeleaf-layout-dialect>
 
         <version.asm>9.2</version.asm>
@@ -133,27 +136,27 @@
         <version.guava>31.0.1-jre</version.guava>
         <version.h2>1.4.199</version.h2>
         <version.istack-commons-runtime>3.0.12</version.istack-commons-runtime>
-        <version.jackson>2.13.0</version.jackson>
+        <version.jackson>2.13.1</version.jackson>
         <version.jaxb2-basics>1.11.1</version.jaxb2-basics>
         <version.jsr305>3.0.2</version.jsr305>
         <version.snmp4j>2.6.3</version.snmp4j>
 
         <!-- IDE helper -->
-        <version.lombok>1.18.6</version.lombok>
+        <version.lombok>1.18.22</version.lombok>
 
         <!-- logging dependencies -->
-        <version.log4j2>2.16.0</version.log4j2>
-        <version.slf4j>1.7.26</version.slf4j>
+        <version.log4j2>2.17.1</version.log4j2>
+        <version.slf4j>1.7.35</version.slf4j>
 
         <!-- test dependencies -->
         <version.htmlunit>2.31</version.htmlunit>
-        <version.junit.jupiter>5.8.1</version.junit.jupiter>
+        <version.junit.jupiter>5.8.2</version.junit.jupiter>
         <version.junit.platform>1.8.2</version.junit.platform>
-        <version.junit.vintage>5.8.1</version.junit.vintage>
-        <version.opentest4j>1.1.0</version.opentest4j>
+        <version.junit.vintage>5.8.2</version.junit.vintage>
+        <version.opentest4j>1.1.1</version.opentest4j>
 
         <!-- version for dependency check, can be overwritten by Jenkins -->
-        <version.dependency-check-maven>6.5.0</version.dependency-check-maven>
+        <version.dependency-check-maven>6.5.3</version.dependency-check-maven>
     </properties>
 
     <build>
