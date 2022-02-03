@@ -14,7 +14,7 @@
 
     <groupId>de.governikus.eumw</groupId>
     <artifactId>eumw</artifactId>
-    <version>2.2.5</version>
+    <version>2.2.6</version>
     <packaging>pom</packaging>
 
     <name>EU Middleware</name>
@@ -37,7 +37,7 @@
     <scm>
         <url>https://hg.govkg.de/Autent/eumw</url>
         <connection>scm:hg:https://hg.govkg.de/Autent/eumw</connection>
-        <tag>eumw-2.2.5</tag>
+        <tag>eumw-2.2.6</tag>
     </scm>
 
     <developers>
@@ -89,9 +89,9 @@
         <version.xmlsec>2.3.0</version.xmlsec>
 
         <version.cxf>3.4.5</version.cxf>
-        <version.springboot>2.6.1</version.springboot>
-        <version.thymeleaf>3.0.14.RELEASE</version.thymeleaf>
-        <version.thymeleaf-layout-dialect>2.5.2</version.thymeleaf-layout-dialect>
+        <version.springboot>2.6.3</version.springboot>
+        <version.thymeleaf>3.0.15.RELEASE</version.thymeleaf>
+        <version.thymeleaf-layout-dialect>2.5.3</version.thymeleaf-layout-dialect>
 
         <version.asm>9.2</version.asm>
         <version.commons.codec>1.15</version.commons.codec>
@@ -103,7 +103,7 @@
         <version.guava>31.0.1-jre</version.guava>
         <version.h2>1.4.200</version.h2>
         <version.istack-commons-runtime>4.0.1</version.istack-commons-runtime>
-        <version.jackson>2.13.0</version.jackson>
+        <version.jackson>2.13.1</version.jackson>
         <version.jaxb2-basics>1.11.1</version.jaxb2-basics>
         <version.joda-time>2.10.13</version.joda-time>
         <version.json-schema-validator>2.2.14</version.json-schema-validator>
@@ -116,19 +116,20 @@
         <version.lombok>1.18.22</version.lombok>
 
         <!-- logging dependencies -->
-        <version.log4j2>2.16.0</version.log4j2>
-        <version.slf4j>1.7.32</version.slf4j>
+        <version.log4j2>2.17.1</version.log4j2>
+        <version.slf4j>1.7.35</version.slf4j>
 
         <!-- test dependencies -->
         <!-- 2.39.0 available for htmlunit but any higher than 2.31 causes test failures. Therefore Httpclient had to me managed separately -->
         <version.htmlunit>2.31</version.htmlunit>
         <version.httpclient>4.5.13</version.httpclient>
-        <version.junit-bom>5.7.1</version.junit-bom>
+        <version.junit-bom>5.8.2</version.junit-bom>
+        <!-- Mockserver version 5.11.2 is available but has dependencies conflicts -->
         <version.mockserver>5.11.1</version.mockserver>
         <version.opentest4j>1.2.0</version.opentest4j>
 
         <!-- version for dependency check, can be overwritten by Jenkins -->
-        <version.dependency-check-maven>6.5.0</version.dependency-check-maven>
+        <version.dependency-check-maven>6.5.3</version.dependency-check-maven>
 
         <!-- version for bootstrap -->
         <!-- ATTENTION you need to change the templates on updating these versions -->

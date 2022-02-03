@@ -106,14 +106,14 @@ To run the eIDAS Middleware, execute the following command.
 It will mount the named volumes containing the database and configuration in the container
 and the application will be available on port 8443. ::
 
-    docker run --rm -it -v eidas-configuration:/opt/eidas-middleware/configuration -v eidas-database:/opt/eidas-middleware/database -p 8443:8443 --name eidas-middleware-application governikus/eidas-middleware-application:2.2.5
+    docker run --rm -it -v eidas-configuration:/opt/eidas-middleware/configuration -v eidas-database:/opt/eidas-middleware/database -p 8443:8443 --name eidas-middleware-application governikus/eidas-middleware-application:2.2.6
 
 To stop and remove the container, just hit ``CTRL+C``.
 
 To keep the container running longer without being attached to the STDOUT and STDERR, change the command to
 the following::
 
-    docker run -d -v eidas-configuration:/opt/eidas-middleware/configuration -v eidas-database:/opt/eidas-middleware/database -p 8443:8443 --name eidas-middleware-application governikus/eidas-middleware-application:2.2.5
+    docker run -d -v eidas-configuration:/opt/eidas-middleware/configuration -v eidas-database:/opt/eidas-middleware/database -p 8443:8443 --name eidas-middleware-application governikus/eidas-middleware-application:2.2.6
 
 For more information on starting and stopping containers and viewing the logs,
 see the `Docker Docs <https://docs.docker.com/engine/reference/run/>`_.
@@ -177,7 +177,7 @@ Scalability
 The performance of the eIDAS Middleware improves by adding more memory (RAM) and using a faster CPU.
 In case the memory configuration has changed, the server needs to be restarted.
 To start the JVM with more memory, add ``-Xmx`` with the new maximum memory size to the start command,
-e.g. ``java -Xmx8g -jar eidas-middleware-2.2.5.jar`` for 8 GB.
+e.g. ``java -Xmx8g -jar eidas-middleware-2.2.6.jar`` for 8 GB.
 
 
 Request Signer Certificate
@@ -269,7 +269,7 @@ Optional property for ``TRAP`` is ``poseidas.snmp.managementport`` (port 162 is 
 set).
 
 All existing SNMP GET values are explained in detail in the MIB located at
-``https://github.com/Governikus/eidas-middleware/blob/2.2.5/poseidas/snmp/EIDASMW-SNMP-MIB.mib``.
+``https://github.com/Governikus/eidas-middleware/blob/2.2.6/poseidas/snmp/EIDASMW-SNMP-MIB.mib``.
 
 Global GET
 ''''''''''
@@ -369,6 +369,6 @@ Stop the eIDAS Middleware Application and copy the database file to your backup 
 e.g. ``cp /opt/eidas-middleware/database/eidasmw.mv.db /path/to/your/backup-location/eidasmw.mv.db``.
 
 To perform the migration, copy the database migration JAR file to the directory where your
-configuration file is available and execute the command ``java -jar database-migration-2.2.5.jar``.
+configuration file is available and execute the command ``java -jar database-migration-2.2.6.jar``.
 If there are errors in the log output, please send the complete log output and some information on your environment to
 eidas-middleware@governikus.com.
