@@ -14,7 +14,7 @@
 	<parent>
 		<artifactId>eumw</artifactId>
 		<groupId>de.governikus.eumw</groupId>
-		<version>1.2.8</version>
+		<version>1.2.9</version>
 	</parent>
 	<artifactId>database-migration</artifactId>
 

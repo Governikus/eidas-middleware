@@ -14,7 +14,7 @@
 
     <groupId>de.governikus.eumw</groupId>
     <artifactId>eumw</artifactId>
-    <version>1.2.8</version>
+    <version>1.2.9</version>
     <packaging>pom</packaging>
 
     <name>EU Middleware</name>
@@ -37,7 +37,7 @@
     <scm>
         <url>https://github.com/Governikus/${project.artifactId}</url>
         <connection>${governikus.scm.connection}</connection>
-      <tag>eumw-1.2.8</tag>
+        <tag>eumw-1.2.9</tag>
   </scm>
 
     <developers>
@@ -118,11 +118,11 @@
         <version.javasupport>7.3.0</version.javasupport>
         <version.opensaml>3.3.1-GOV6</version.opensaml>
         <version.cryptacular>1.1.4</version.cryptacular>
-        <version.xmlsec>2.3.0</version.xmlsec>
+        <version.xmlsec>2.3.1</version.xmlsec>
 
-        <version.cxf>3.4.5</version.cxf>
-        <version.spring>5.3.15</version.spring>
-        <version.springboot>2.6.3</version.springboot>
+        <version.cxf>3.4.7</version.cxf>
+        <version.spring>5.3.20</version.spring>
+        <version.springboot>2.6.7</version.springboot>
         <version.thymeleaf>3.0.15.RELEASE</version.thymeleaf>
         <version.thymeleaf-layout-dialect>2.4.1</version.thymeleaf-layout-dialect>
 
@@ -136,17 +136,17 @@
         <version.guava>31.0.1-jre</version.guava>
         <version.h2>1.4.199</version.h2>
         <version.istack-commons-runtime>3.0.12</version.istack-commons-runtime>
-        <version.jackson>2.13.1</version.jackson>
+        <version.jackson>2.13.2</version.jackson>
         <version.jaxb2-basics>1.11.1</version.jaxb2-basics>
         <version.jsr305>3.0.2</version.jsr305>
         <version.snmp4j>2.6.3</version.snmp4j>
 
         <!-- IDE helper -->
-        <version.lombok>1.18.22</version.lombok>
+        <version.lombok>1.18.24</version.lombok>
 
         <!-- logging dependencies -->
-        <version.log4j2>2.17.1</version.log4j2>
-        <version.slf4j>1.7.35</version.slf4j>
+        <version.log4j2>2.17.2</version.log4j2>
+        <version.slf4j>1.7.36</version.slf4j>
 
         <!-- test dependencies -->
         <version.htmlunit>2.31</version.htmlunit>
@@ -459,6 +459,17 @@
                 <groupId>org.apache.logging.log4j</groupId>
                 <artifactId>log4j-bom</artifactId>
                 <version>${version.log4j2}</version>
+                <type>pom</type>
+                <scope>import</scope>
+            </dependency>
+
+            <!-- Import spring-framework-bom to manage newer spring version. Could be removed when a version of
+            spring-boot is released with the same spring-framework version. This dependency must be declared before
+             spring-boot-dependencies-->
+            <dependency>
+                <groupId>org.springframework</groupId>
+                <artifactId>spring-framework-bom</artifactId>
+                <version>${version.spring}</version>
                 <type>pom</type>
                 <scope>import</scope>
             </dependency>
