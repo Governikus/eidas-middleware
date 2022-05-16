@@ -14,7 +14,7 @@
 
     <groupId>de.governikus.eumw</groupId>
     <artifactId>eumw</artifactId>
-    <version>2.2.6</version>
+    <version>2.2.7</version>
     <packaging>pom</packaging>
 
     <name>EU Middleware</name>
@@ -37,7 +37,7 @@
     <scm>
         <url>https://hg.govkg.de/Autent/eumw</url>
         <connection>scm:hg:https://hg.govkg.de/Autent/eumw</connection>
-        <tag>eumw-2.2.6</tag>
+        <tag>eumw-2.2.7</tag>
     </scm>
 
     <developers>
@@ -80,16 +80,17 @@
         <!-- crypto -->
         <!-- 1.68 available but is incompatible with opensaml-security-ext-1.0.7 -->
         <version.bouncycastle>1.66</version.bouncycastle>
-        <version.eidas-opensaml3>1.4.4</version.eidas-opensaml3>
+        <version.eidas-opensaml3>1.4.5</version.eidas-opensaml3>
         <!-- 8.x.x available but not for Java 8 -->
         <version.javasupport>7.5.2</version.javasupport>
         <!-- 2.0.0 exists but is for OpenSAML 4 only -->
         <version.opensaml-security-ext>1.0.7</version.opensaml-security-ext>
         <version.opensaml>3.4.6</version.opensaml>
-        <version.xmlsec>2.3.0</version.xmlsec>
+        <version.xmlsec>2.3.1</version.xmlsec>
 
-        <version.cxf>3.4.5</version.cxf>
-        <version.springboot>2.6.3</version.springboot>
+        <version.cxf>3.4.7</version.cxf>
+        <version.spring>5.3.20</version.spring>
+        <version.springboot>2.6.7</version.springboot>
         <version.thymeleaf>3.0.15.RELEASE</version.thymeleaf>
         <version.thymeleaf-layout-dialect>2.5.3</version.thymeleaf-layout-dialect>
 
@@ -103,21 +104,21 @@
         <version.guava>31.0.1-jre</version.guava>
         <version.h2>1.4.200</version.h2>
         <version.istack-commons-runtime>4.0.1</version.istack-commons-runtime>
-        <version.jackson>2.13.1</version.jackson>
+        <version.jackson>2.13.2</version.jackson>
         <version.jaxb2-basics>1.11.1</version.jaxb2-basics>
-        <version.joda-time>2.10.13</version.joda-time>
+        <version.joda-time>2.10.14</version.joda-time>
         <version.json-schema-validator>2.2.14</version.json-schema-validator>
         <version.jsr305>3.0.2</version.jsr305>
-        <version.groovy>3.0.9</version.groovy>
+        <version.groovy>3.0.10</version.groovy>
         <!-- 3.x.x available but not executable with Java 8 -->
         <version.snmp4j>2.7.4</version.snmp4j>
 
         <!-- IDE helper -->
-        <version.lombok>1.18.22</version.lombok>
+        <version.lombok>1.18.24</version.lombok>
 
         <!-- logging dependencies -->
-        <version.log4j2>2.17.1</version.log4j2>
-        <version.slf4j>1.7.35</version.slf4j>
+        <version.log4j2>2.17.2</version.log4j2>
+        <version.slf4j>1.7.36</version.slf4j>
 
         <!-- test dependencies -->
         <!-- 2.39.0 available for htmlunit but any higher than 2.31 causes test failures. Therefore Httpclient had to me managed separately -->
@@ -532,6 +533,17 @@
                 <groupId>org.apache.logging.log4j</groupId>
                 <artifactId>log4j-bom</artifactId>
                 <version>${version.log4j2}</version>
+                <type>pom</type>
+                <scope>import</scope>
+            </dependency>
+
+            <!-- Import spring-framework-bom to manage newer spring version. Could be removed when a version of
+            spring-boot is released with the same spring-framework version. This dependency must be declared before
+            spring-boot-dependencies-->
+            <dependency>
+                <groupId>org.springframework</groupId>
+                <artifactId>spring-framework-bom</artifactId>
+                <version>${version.spring}</version>
                 <type>pom</type>
                 <scope>import</scope>
             </dependency>

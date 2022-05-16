@@ -149,3 +149,7 @@ Changelog
 * 2.2.6
 
     - eIDAS Middleware: Update log4j to version 2.17.1.
+
+* 2.2.7
+
+    - - eIDAS Middleware: Security Patch.

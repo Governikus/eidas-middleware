@@ -48,7 +48,7 @@ public class AusweisappRedirect
     {
       stringBuilder.append("en/");
     }
-    stringBuilder.append("download/windows-und-mac/");
+    stringBuilder.append("download/");
     return new ModelAndView("redirect:" + stringBuilder.toString());
   }
 }

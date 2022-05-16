@@ -72,7 +72,7 @@ In case you are using your own environment, copy the JAR file to a folder of you
 
 You can start the application with the following command::
 
-    java -jar configuration-wizard-2.2.6.jar
+    java -jar configuration-wizard-2.2.7.jar
 
 In addition you can define the config folder with adding the parameter ``DconfigDirectory`` and its value to the
 command. This way the configuration wizard will be available at ``http://localhost:8080/config-wizard.``
@@ -102,7 +102,7 @@ to run the wizard again whenever you need it.
 To run the configuration wizard, execute the following command.
 It will mount the named volume in the container so that the configuration wizard can store the configuration in the volume. ::
 
-    docker run --rm -it -v eidas-configuration:/opt/eidas-middleware/configuration -p 8080:8080 --name eidas-configuration-wizard governikus/eidas-configuration-wizard:2.2.6
+    docker run --rm -it -v eidas-configuration:/opt/eidas-middleware/configuration -p 8080:8080 --name eidas-configuration-wizard governikus/eidas-configuration-wizard:2.2.7
 
 Running this command the configuration wizard will be available on http://localhost:8080/config-wizard.
 
@@ -116,7 +116,7 @@ with the alias ``localhost`` and the password ``123456`` for the keystore and th
 You can also use PKCS12 keystores,
 in this case you must change the value of ``SERVER_SSL_KEY_STORE_TYPE`` to ``PKCS12``. ::
 
-    docker run --rm -it -v eidas-configuration:/opt/eidas-middleware/configuration -v /home/user/keystore.jks:/opt/eidas-middleware/keystore.jks -p 443:8080 -e SERVER_SSL_KEY_STORE=file:/opt/eidas-middleware/keystore.jks -e SERVER_SSL_KEY_STORE_TYPE=JKS -e SERVER_SSL_KEY_STORE_PASSWORD=123456 -e SERVER_SSL_KEY_ALIAS=localhost -e SERVER_SSL_KEY_PASSWORD=123456 --name eidas-configuration-wizard governikus/eidas-configuration-wizard:2.2.6
+    docker run --rm -it -v eidas-configuration:/opt/eidas-middleware/configuration -v /home/user/keystore.jks:/opt/eidas-middleware/keystore.jks -p 443:8080 -e SERVER_SSL_KEY_STORE=file:/opt/eidas-middleware/keystore.jks -e SERVER_SSL_KEY_STORE_TYPE=JKS -e SERVER_SSL_KEY_STORE_PASSWORD=123456 -e SERVER_SSL_KEY_ALIAS=localhost -e SERVER_SSL_KEY_PASSWORD=123456 --name eidas-configuration-wizard governikus/eidas-configuration-wizard:2.2.7
 
 Because the application is now bound to the host in port 443,
 the configuration wizard is available at https://localhost/config-wizard.
