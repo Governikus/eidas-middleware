@@ -17,6 +17,7 @@ import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.web.servlet.ServletComponentScan;
 import org.springframework.context.annotation.ComponentScan;
+import org.springframework.scheduling.annotation.EnableScheduling;
 import org.springframework.transaction.annotation.EnableTransactionManagement;
 
 import de.governikus.eumw.eidascommon.Utils;
@@ -26,6 +27,7 @@ import de.governikus.eumw.eidascommon.Utils;
 @ComponentScan(basePackages = {"de.governikus.eumw"})
 @ServletComponentScan(basePackages = { "de.governikus.eumw.poseidas.paosservlet.authentication.paos", "de.governikus.eumw.eidasmiddleware" })
 @EnableTransactionManagement
+@EnableScheduling
 public class EIDASMiddlewareApplication
 {
 
@@ -33,7 +35,7 @@ public class EIDASMiddlewareApplication
   {
     // do not remove bouncy without consideration, it will impact ECDH
     Security.addProvider(new BouncyCastleProvider());
-    System.setProperty("jdk.tls.namedGroups", "secp521r1,secp384r1,secp256r1,secp224r1");
+    System.setProperty("jdk.tls.namedGroups", "secp521r1,secp384r1,secp256r1");
     Security.setProperty("jdk.tls.disabledAlgorithms",
                          "SSLv3, RC4, MD5, SHA1, DSA, DH keySize < " + Utils.MIN_KEY_SIZE_RSA_TLS
                                                        + ", ECDH keySize < " + Utils.MIN_KEY_SIZE_EC_TLS

@@ -1,18 +1,16 @@
 /*
- * Copyright (c) 2019 Governikus KG. Licensed under the EUPL, Version 1.2 or as soon they will be approved by
- * the European Commission - subsequent versions of the EUPL (the "Licence"); You may not use this work except
- * in compliance with the Licence. You may obtain a copy of the Licence at:
- * http://joinup.ec.europa.eu/software/page/eupl Unless required by applicable law or agreed to in writing,
- * software distributed under the Licence is distributed on an "AS IS" basis, WITHOUT WARRANTIES OR CONDITIONS
- * OF ANY KIND, either express or implied. See the Licence for the specific language governing permissions and
- * limitations under the Licence.
+ * Copyright (c) 2020 Governikus KG. Licensed under the EUPL, Version 1.2 or as soon they will be approved by the
+ * European Commission - subsequent versions of the EUPL (the "Licence"); You may not use this work except in compliance
+ * with the Licence. You may obtain a copy of the Licence at: http://joinup.ec.europa.eu/software/page/eupl Unless
+ * required by applicable law or agreed to in writing, software distributed under the Licence is distributed on an
+ * "AS IS" basis, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the Licence for the
+ * specific language governing permissions and limitations under the Licence.
  */
 
 package de.governikus.eumw.eidasmiddleware.handler;
 
 import java.io.IOException;
 import java.security.GeneralSecurityException;
-import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -22,6 +20,7 @@ import java.util.Map;
 import javax.xml.bind.DatatypeConverter;
 import javax.xml.transform.TransformerException;
 
+import de.governikus.eumw.eidasstarterkit.EidasLoA;
 import org.apache.commons.codec.binary.Hex;
 import org.opensaml.core.config.InitializationException;
 import org.opensaml.core.xml.io.MarshallingException;
@@ -33,17 +32,15 @@ import org.springframework.stereotype.Service;
 import de.governikus.eumw.eidascommon.Constants;
 import de.governikus.eumw.eidascommon.ContextPaths;
 import de.governikus.eumw.eidascommon.ErrorCode;
-import de.governikus.eumw.eidascommon.ErrorCodeException;
 import de.governikus.eumw.eidasmiddleware.ConfigHolder;
 import de.governikus.eumw.eidasmiddleware.RequestProcessingException;
-import de.governikus.eumw.eidasmiddleware.RequestSession;
 import de.governikus.eumw.eidasmiddleware.ServiceProviderConfig;
-import de.governikus.eumw.eidasmiddleware.SessionStore;
 import de.governikus.eumw.eidasmiddleware.WebServiceHelper;
 import de.governikus.eumw.eidasmiddleware.eid.RequestingServiceProvider;
+import de.governikus.eumw.eidasmiddleware.entities.RequestSession;
+import de.governikus.eumw.eidasmiddleware.repositories.RequestSessionRepository;
 import de.governikus.eumw.eidasstarterkit.EidasAttribute;
 import de.governikus.eumw.eidasstarterkit.EidasEncrypter;
-import de.governikus.eumw.eidasstarterkit.EidasLoA;
 import de.governikus.eumw.eidasstarterkit.EidasNameId;
 import de.governikus.eumw.eidasstarterkit.EidasNaturalPersonAttributes;
 import de.governikus.eumw.eidasstarterkit.EidasResponse;
@@ -68,6 +65,7 @@ import de.governikus.eumw.poseidas.eidserver.convenience.EIDInfoResultString;
 import de.governikus.eumw.poseidas.server.eidservice.EIDInternal;
 import de.governikus.eumw.poseidas.server.eidservice.EIDResultResponse;
 import de.governikus.eumw.poseidas.server.pki.HSMServiceHolder;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import net.shibboleth.utilities.java.support.component.ComponentInitializationException;
 import net.shibboleth.utilities.java.support.xml.XMLParserException;
@@ -79,6 +77,7 @@ import net.shibboleth.utilities.java.support.xml.XMLParserException;
  */
 @Slf4j
 @Service
+@RequiredArgsConstructor
 public class ResponseHandler
 {
 
@@ -86,7 +85,7 @@ public class ResponseHandler
 
   private static final String STREET = "street";
 
-  private final SessionStore sessionStore;
+  private final RequestSessionRepository requestSessionRepository;
 
   private final ConfigHolder configHolder;
 
@@ -94,28 +93,13 @@ public class ResponseHandler
 
   private final HSMServiceHolder hsmServiceHolder;
 
-  public ResponseHandler(SessionStore sessionStore,
-                         ConfigHolder configHolder,
-                         ServiceProviderConfig serviceProviderConfig,
-                         HSMServiceHolder hsmServiceHolder)
-  {
-    this.sessionStore = sessionStore;
-    this.configHolder = configHolder;
-    this.serviceProviderConfig = serviceProviderConfig;
-    this.hsmServiceHolder = hsmServiceHolder;
-  }
 
   private RequestSession getSAMLReqSession(String refID)
   {
-    try
-    {
-      return sessionStore.getByEidRef(refID);
-    }
-    catch (SQLException | ErrorCodeException e)
-    {
+    return requestSessionRepository.findByEidRef(refID).orElseGet(() -> {
       log.error("Cannot get request session for refID: {}", refID);
       return null;
-    }
+    });
   }
 
   /**
@@ -181,7 +165,7 @@ public class ResponseHandler
                                           ErrorCode errorCode,
                                           String... msg)
   {
-    log.warn(requestInfo(reqSP, samlReqSession.getRelayState().orElse(null)));
+    log.warn(requestInfo(reqSP, samlReqSession.getRelayState()));
     log.warn(errorCode.toDescription(msg));
     try
     {
@@ -335,7 +319,7 @@ public class ResponseHandler
       ? ((EIDInfoResultString)givenNames).getResult() : "";
 
     // if birth name is requested, build it according to TR03130-3
-    if (samlReqSession.getRequestedAttributes().get(EidasNaturalPersonAttributes.BIRTH_NAME) != null)
+    if (samlReqSession.getRequestedAttributes().get(EidasNaturalPersonAttributes.BIRTH_NAME.getValue()) != null)
     {
       String constructedBirthName = "";
       constructedBirthName += givenNamesStr + " ";
@@ -441,6 +425,6 @@ public class ResponseHandler
     {
       throw new RequestProcessingException("Unknown refID");
     }
-    return samlReqSession.getRelayState().orElse(null);
+    return samlReqSession.getRelayState();
   }
 }

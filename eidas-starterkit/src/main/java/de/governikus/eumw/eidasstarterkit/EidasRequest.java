@@ -369,8 +369,11 @@ public class EidasRequest
     {
       throw new ErrorCodeException(ErrorCode.ILLEGAL_REQUEST_SYNTAX, "No AuthnContextClassRef element.");
     }
-    String namiIdformat = eidasReq.request.getNameIDPolicy().getFormat();
-    eidasReq.nameIdPolicy = EidasNameIdType.getValueOf(namiIdformat);
+    if (eidasReq.request.getNameIDPolicy() != null)
+    {
+      String namiIdformat = eidasReq.request.getNameIDPolicy().getFormat();
+      eidasReq.nameIdPolicy = EidasNameIdType.getValueOf(namiIdformat);
+    }
 
     eidasReq.issueInstant = Constants.format(eidasReq.request.getIssueInstant().toDate());
     eidasReq.issuer = eidasReq.request.getIssuer().getDOM().getTextContent();

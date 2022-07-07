@@ -107,4 +107,8 @@ Changelog
 
 * 1.2.9
 
-    - eIDAS Middleware: Security Patch.
+    - eIDAS Middleware: Update third party libraries for security fixes.
+
+* 1.2.10
+
+    - eIDAS Middleware: Security patch.

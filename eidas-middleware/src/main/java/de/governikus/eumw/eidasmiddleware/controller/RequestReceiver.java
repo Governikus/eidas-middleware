@@ -1,11 +1,10 @@
 /*
- * Copyright (c) 2019 Governikus KG. Licensed under the EUPL, Version 1.2 or as soon they will be approved by
- * the European Commission - subsequent versions of the EUPL (the "Licence"); You may not use this work except
- * in compliance with the Licence. You may obtain a copy of the Licence at:
- * http://joinup.ec.europa.eu/software/page/eupl Unless required by applicable law or agreed to in writing,
- * software distributed under the Licence is distributed on an "AS IS" basis, WITHOUT WARRANTIES OR CONDITIONS
- * OF ANY KIND, either express or implied. See the Licence for the specific language governing permissions and
- * limitations under the Licence.
+ * Copyright (c) 2020 Governikus KG. Licensed under the EUPL, Version 1.2 or as soon they will be approved by the
+ * European Commission - subsequent versions of the EUPL (the "Licence"); You may not use this work except in compliance
+ * with the Licence. You may obtain a copy of the Licence at: http://joinup.ec.europa.eu/software/page/eupl Unless
+ * required by applicable law or agreed to in writing, software distributed under the Licence is distributed on an
+ * "AS IS" basis, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the Licence for the
+ * specific language governing permissions and limitations under the Licence.
  */
 
 package de.governikus.eumw.eidasmiddleware.controller;
@@ -49,8 +48,8 @@ public class RequestReceiver
   }
 
   /**
-   * This endpoint accepts incoming SAML requests using the SAML redirect binding protocol. The endpoint can
-   * also be used to switch the language.
+   * This endpoint accepts incoming SAML requests using the SAML redirect binding protocol. The endpoint can also be
+   * used to switch the language.
    */
   @GetMapping
   public ModelAndView doGet(@RequestParam(required = false, name = HttpRedirectUtils.RELAYSTATE_PARAMNAME) String relayState,
@@ -58,10 +57,10 @@ public class RequestReceiver
                             @RequestParam(required = false, name = "sessionId") String sessionId,
                             @RequestHeader(required = false, name = "User-Agent") String userAgent)
   {
-    String createdSessionId;
     // in case this parameter is present this is a SAML authn request
     if (StringUtil.notNullOrEmpty(samlRequestBase64))
     {
+      String createdSessionId;
       try
       {
         createdSessionId = requestHandler.handleSAMLRequest(relayState, samlRequestBase64, false);
@@ -71,7 +70,8 @@ public class RequestReceiver
         log.debug("There was an error while processing the request", e);
         return showErrorPage(e.getMessage());
       }
-      return showMiddlewarePage(createdSessionId, userAgent);
+      return new ModelAndView("redirect:" + ContextPaths.EIDAS_CONTEXT_PATH + ContextPaths.REQUEST_RECEIVER
+                              + "?sessionId=" + createdSessionId);
     }
     // in case this parameter is present the user already sent the SAML authn request and is now switching the
     // language
@@ -97,7 +97,8 @@ public class RequestReceiver
     try
     {
       String sessionId = requestHandler.handleSAMLRequest(relayState, samlRequestBase64, true);
-      return showMiddlewarePage(sessionId, userAgent);
+      return new ModelAndView("redirect:" + ContextPaths.EIDAS_CONTEXT_PATH + ContextPaths.REQUEST_RECEIVER
+                              + "?sessionId=" + sessionId);
     }
     catch (RequestProcessingException e)
     {
@@ -145,8 +146,7 @@ public class RequestReceiver
       ModelAndView modelAndView = new ModelAndView("middleware");
       modelAndView.addObject("ausweisapp", ausweisappLink);
 
-      String linkToSelf = ContextPaths.EIDAS_CONTEXT_PATH + ContextPaths.REQUEST_RECEIVER + "?sessionId="
-                          + sessionId;
+      String linkToSelf = ContextPaths.EIDAS_CONTEXT_PATH + ContextPaths.REQUEST_RECEIVER + "?sessionId=" + sessionId;
       modelAndView.addObject("linkToSelf", linkToSelf);
       return modelAndView;
     }

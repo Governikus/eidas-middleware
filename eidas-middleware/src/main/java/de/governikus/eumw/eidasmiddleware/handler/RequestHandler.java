@@ -1,11 +1,10 @@
 /*
- * Copyright (c) 2019 Governikus KG. Licensed under the EUPL, Version 1.2 or as soon they will be approved by
- * the European Commission - subsequent versions of the EUPL (the "Licence"); You may not use this work except
- * in compliance with the Licence. You may obtain a copy of the Licence at:
- * http://joinup.ec.europa.eu/software/page/eupl Unless required by applicable law or agreed to in writing,
- * software distributed under the Licence is distributed on an "AS IS" basis, WITHOUT WARRANTIES OR CONDITIONS
- * OF ANY KIND, either express or implied. See the Licence for the specific language governing permissions and
- * limitations under the Licence.
+ * Copyright (c) 2020 Governikus KG. Licensed under the EUPL, Version 1.2 or as soon they will be approved by the
+ * European Commission - subsequent versions of the EUPL (the "Licence"); You may not use this work except in compliance
+ * with the Licence. You may obtain a copy of the Licence at: http://joinup.ec.europa.eu/software/page/eupl Unless
+ * required by applicable law or agreed to in writing, software distributed under the Licence is distributed on an
+ * "AS IS" basis, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the Licence for the
+ * specific language governing permissions and limitations under the Licence.
  */
 
 package de.governikus.eumw.eidasmiddleware.handler;
@@ -15,21 +14,24 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
 import java.security.cert.X509Certificate;
-import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 import java.util.zip.DataFormatException;
 
 import javax.xml.bind.DatatypeConverter;
 
-import de.governikus.eumw.eidasmiddleware.ConfigHolder;
-import de.governikus.eumw.eidasmiddleware.RequestProcessingException;
-import de.governikus.eumw.eidasmiddleware.RequestSession;
-import de.governikus.eumw.eidasmiddleware.ServiceProviderConfig;
-import de.governikus.eumw.eidasmiddleware.SessionStore;
+import org.apache.commons.lang.StringUtils;
+import org.joda.time.DateTime;
 import org.opensaml.core.config.InitializationException;
+import org.opensaml.core.xml.config.XMLObjectProviderRegistrySupport;
+import org.opensaml.core.xml.io.Unmarshaller;
+import org.opensaml.core.xml.io.UnmarshallerFactory;
 import org.opensaml.core.xml.io.UnmarshallingException;
+import org.opensaml.saml.saml2.core.AuthnRequest;
 import org.springframework.stereotype.Component;
+import org.w3c.dom.Document;
+import org.w3c.dom.Element;
 import org.xml.sax.SAXException;
 
 import de.governikus.eumw.eidascommon.ContextPaths;
@@ -37,12 +39,18 @@ import de.governikus.eumw.eidascommon.ErrorCode;
 import de.governikus.eumw.eidascommon.ErrorCodeException;
 import de.governikus.eumw.eidascommon.HttpRedirectUtils;
 import de.governikus.eumw.eidascommon.Utils;
+import de.governikus.eumw.eidasmiddleware.ConfigHolder;
+import de.governikus.eumw.eidasmiddleware.RequestProcessingException;
+import de.governikus.eumw.eidasmiddleware.ServiceProviderConfig;
 import de.governikus.eumw.eidasmiddleware.eid.RequestingServiceProvider;
+import de.governikus.eumw.eidasmiddleware.entities.RequestSession;
+import de.governikus.eumw.eidasmiddleware.repositories.RequestSessionRepository;
 import de.governikus.eumw.eidasstarterkit.EidasRequest;
 import de.governikus.eumw.eidasstarterkit.EidasRequestSectorType;
 import de.governikus.eumw.eidasstarterkit.EidasSaml;
 import lombok.extern.slf4j.Slf4j;
 import net.shibboleth.utilities.java.support.component.ComponentInitializationException;
+import net.shibboleth.utilities.java.support.xml.BasicParserPool;
 import net.shibboleth.utilities.java.support.xml.XMLParserException;
 
 
@@ -59,7 +67,7 @@ public class RequestHandler
   /**
    * store the incoming requests
    */
-  private final SessionStore store;
+  private final RequestSessionRepository requestSessionRepository;
 
   /**
    * access the config for the different service providers
@@ -74,11 +82,11 @@ public class RequestHandler
   /**
    * Default constructor with DI
    */
-  public RequestHandler(SessionStore store,
+  public RequestHandler(RequestSessionRepository requestSessionRepository,
                         ConfigHolder configHolder,
                         ServiceProviderConfig serviceProviderConfig)
   {
-    this.store = store;
+    this.requestSessionRepository = requestSessionRepository;
     this.configHolder = configHolder;
     this.serviceProviderConfig = serviceProviderConfig;
   }
@@ -109,8 +117,7 @@ public class RequestHandler
     {
       if (samlRequestBase64 == null)
       {
-        throw new ErrorCodeException(ErrorCode.ILLEGAL_REQUEST_SYNTAX,
-                                     "Query Parameter 'SAMLRequest' is missing");
+        throw new ErrorCodeException(ErrorCode.ILLEGAL_REQUEST_SYNTAX, "Query Parameter 'SAMLRequest' is missing");
       }
 
       byte[] samlRequest = getSAMLRequestBytes(isPost, samlRequestBase64);
@@ -138,7 +145,7 @@ public class RequestHandler
         eidasReq.setSectorType(metadataSectorType);
       }
 
-      store.insert(new RequestSession(relayState, eidasReq));
+      requestSessionRepository.save(new RequestSession(relayState, eidasReq));
 
       // Check that the consumer URL is equal with the connector's metadata
       if (!Utils.isNullOrEmpty(eidasReq.getAuthnRequest().getAssertionConsumerServiceURL())
@@ -146,8 +153,7 @@ public class RequestHandler
                                    .getAssertionConsumerURL()
                                    .equals(eidasReq.getAuthnRequest().getAssertionConsumerServiceURL()))
       {
-        throw new ErrorCodeException(ErrorCode.WRONG_DESTINATION,
-                                     "Given AssertionConsumerServiceURL ist not valid!");
+        throw new ErrorCodeException(ErrorCode.WRONG_DESTINATION, "Given AssertionConsumerServiceURL ist not valid!");
       }
 
       return eidasReq.getId();
@@ -163,25 +169,59 @@ public class RequestHandler
    *
    * @return the parsed {@link EidasRequest}
    */
-  private EidasRequest parseSAMLRequest(byte[] samlRequest)
-    throws IOException, SAXException, ErrorCodeException, UnmarshallingException, InitializationException,
-    XMLParserException, ComponentInitializationException
+  private EidasRequest parseSAMLRequest(byte[] samlRequest) throws IOException, SAXException, ErrorCodeException,
+    UnmarshallingException, InitializationException, XMLParserException, ComponentInitializationException
   {
     try (InputStream is = new ByteArrayInputStream(samlRequest))
     {
       EidasSaml.validateXMLRequest(is, true);
-      EidasRequest request = EidasSaml.parseRequest(is);
+      AuthnRequest authnRequest = getAuthnRequest(is);
+      is.reset();
 
-      RequestingServiceProvider requestingServiceProvider = serviceProviderConfig.getProviderByEntityID(request.getIssuer());
+      // Check that the AuthnRequest is not older than one minute
+      if (authnRequest.getIssueInstant() == null
+          || authnRequest.getIssueInstant().isBefore(DateTime.now().minusMinutes(1)))
+      {
+        throw new ErrorCodeException(ErrorCode.OUTDATED_REQUEST);
+      }
+
+      // Check that there is no RequestSession for this AuthnRequest
+      String authnRequestID = authnRequest.getID();
+      if (StringUtils.isBlank(authnRequestID))
+      {
+        throw new ErrorCodeException(ErrorCode.MISSING_REQUEST_ID);
+      }
+      if (requestSessionRepository.findById(authnRequestID).isPresent())
+      {
+        throw new ErrorCodeException(ErrorCode.DUPLICATE_REQUEST_ID, authnRequestID);
+      }
+
+      // Check the AuthnRequest signature
+      String issuer = Objects.requireNonNull(authnRequest.getIssuer().getDOM()).getTextContent();
+      RequestingServiceProvider requestingServiceProvider = serviceProviderConfig.getProviderByEntityID(issuer);
       if (requestingServiceProvider == null)
       {
-        throw new ErrorCodeException(ErrorCode.UNKNOWN_PROVIDER, request.getIssuer());
+        throw new ErrorCodeException(ErrorCode.UNKNOWN_PROVIDER, authnRequest.getIssuer().getValue());
       }
       List<X509Certificate> authors = new ArrayList<>();
       authors.add(requestingServiceProvider.getSignatureCert());
+      EidasRequest request = EidasSaml.parseRequest(is);
       EidasSaml.verifyRequest(request, authors);
       return request;
     }
+  }
+
+  private AuthnRequest getAuthnRequest(InputStream is)
+    throws InitializationException, ComponentInitializationException, XMLParserException, UnmarshallingException
+  {
+    EidasSaml.init();
+    BasicParserPool ppMgr = Utils.getBasicParserPool();
+    Document inCommonMDDoc = ppMgr.parse(is);
+
+    Element metadataRoot = inCommonMDDoc.getDocumentElement();
+    UnmarshallerFactory unmarshallerFactory = XMLObjectProviderRegistrySupport.getUnmarshallerFactory();
+    Unmarshaller unmarshaller = unmarshallerFactory.getUnmarshaller(metadataRoot);
+    return (AuthnRequest)unmarshaller.unmarshall(metadataRoot);
   }
 
   /**
@@ -204,8 +244,7 @@ public class RequestHandler
     if (samlRequest == null)
     {
       log.warn("cannot parse base64 encoded SAML request: {}", samlRequestBase64);
-      throw new ErrorCodeException(ErrorCode.ILLEGAL_REQUEST_SYNTAX,
-                                   "cannot parse base64 encoded SAML request");
+      throw new ErrorCodeException(ErrorCode.ILLEGAL_REQUEST_SYNTAX, "cannot parse base64 encoded SAML request");
     }
     return samlRequest;
   }
