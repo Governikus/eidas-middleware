@@ -23,13 +23,13 @@ import org.springframework.web.bind.annotation.RequestParam;
 
 import de.governikus.eumw.eidascommon.Constants;
 import de.governikus.eumw.eidascommon.ContextPaths;
+import de.governikus.eumw.eidascommon.ErrorCodeException;
 import de.governikus.eumw.eidascommon.Utils;
 import de.governikus.eumw.eidasmiddleware.ConfigHolder;
-import de.governikus.eumw.eidasmiddleware.RequestSession;
-import de.governikus.eumw.eidasmiddleware.SessionStore;
 import de.governikus.eumw.eidasmiddleware.WebServiceHelper;
+import de.governikus.eumw.eidasmiddleware.entities.RequestSession;
+import de.governikus.eumw.eidasmiddleware.repositories.RequestSessionRepository;
 import de.governikus.eumw.eidasstarterkit.EidasNaturalPersonAttributes;
-import de.governikus.eumw.eidasstarterkit.person_attributes.EidasPersonAttributes;
 import de.governikus.eumw.poseidas.eidmodel.data.EIDKeys;
 import de.governikus.eumw.poseidas.server.eidservice.EIDInternal;
 import de.governikus.eumw.poseidas.server.eidservice.EIDRequestInput;
@@ -37,27 +37,23 @@ import de.governikus.eumw.poseidas.server.eidservice.EIDRequestResponse;
 import de.governikus.eumw.poseidas.server.idprovider.config.CoreConfigurationDto;
 import de.governikus.eumw.poseidas.server.idprovider.config.PoseidasConfigurator;
 import de.governikus.eumw.poseidas.server.idprovider.config.ServiceProviderDto;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 
 @Slf4j
 @Controller
 @RequestMapping(ContextPaths.EIDAS_CONTEXT_PATH + ContextPaths.TC_TOKEN)
+@RequiredArgsConstructor
 public class TcToken
 {
 
-  private final SessionStore store;
+  private final RequestSessionRepository requestSessionRepository;
 
   private final ConfigHolder configHolder;
 
   private final EIDInternal eidInternal;
 
-  public TcToken(SessionStore store, ConfigHolder configHolder, EIDInternal eidInternal)
-  {
-    this.store = store;
-    this.configHolder = configHolder;
-    this.eidInternal = eidInternal;
-  }
 
   /**
    * Show an HTML page containing the errorMessage <br>
@@ -96,7 +92,7 @@ public class TcToken
     RequestSession samlReqSession = null;
     try
     {
-      samlReqSession = store.getById(sessionID);
+      samlReqSession = requestSessionRepository.getById(sessionID);
     }
     catch (Exception e)
     {
@@ -141,51 +137,53 @@ public class TcToken
     EIDRequestInput intRequest = new EIDRequestInput(true);
     intRequest.setConfig(config);
 
-    for ( Entry<EidasPersonAttributes, Boolean> entry : reqParser.getRequestedAttributes().entrySet() )
+    for ( Entry<String, Boolean> entry : reqParser.getRequestedAttributes().entrySet() )
     {
-      if (entry.getKey() instanceof EidasNaturalPersonAttributes)
+      EidasNaturalPersonAttributes eidasNaturalPersonAttribute = null;
+      try
       {
-        EidasNaturalPersonAttributes key = (EidasNaturalPersonAttributes)entry.getKey();
-        switch (key)
-        {
-          case FIRST_NAME:
-            intRequest.addRequiredFields(EIDKeys.GIVEN_NAMES);
-            break;
-
-          case FAMILY_NAME:
-            intRequest.addRequiredFields(EIDKeys.FAMILY_NAMES);
-            break;
-
-          case BIRTH_NAME:
-            intRequest.addRequiredFields(EIDKeys.BIRTH_NAME);
-            intRequest.addRequiredFields(EIDKeys.FAMILY_NAMES);
-            intRequest.addRequiredFields(EIDKeys.GIVEN_NAMES);
-            break;
-
-          case DATE_OF_BIRTH:
-            intRequest.addRequiredFields(EIDKeys.DATE_OF_BIRTH);
-            break;
-
-          case PLACE_OF_BIRTH:
-            intRequest.addRequiredFields(EIDKeys.PLACE_OF_BIRTH);
-            break;
-
-          case CURRENT_ADDRESS:
-            intRequest.addOptionalFields(EIDKeys.PLACE_OF_RESIDENCE);
-            break;
-
-          case PERSON_IDENTIFIER:
-            intRequest.addRequiredFields(EIDKeys.RESTRICTED_ID);
-            break;
-
-          default:
-            log.warn("UNKNOWN Authrequest Attribute: '{}'", key);
-            break;
-        }
+        eidasNaturalPersonAttribute = EidasNaturalPersonAttributes.getValueOf(entry.getKey());
       }
-      else
+      catch (ErrorCodeException e)
       {
-        log.warn("UNKNOWN Authrequest Attribute: '{}'", entry.getKey());
+        log.warn("UNKNOWN Authrequest Attribute: '{}'", eidasNaturalPersonAttribute);
+        continue;
+      }
+      switch (eidasNaturalPersonAttribute)
+      {
+        case FIRST_NAME:
+          intRequest.addRequiredFields(EIDKeys.GIVEN_NAMES);
+          break;
+
+        case FAMILY_NAME:
+          intRequest.addRequiredFields(EIDKeys.FAMILY_NAMES);
+          break;
+
+        case BIRTH_NAME:
+          intRequest.addRequiredFields(EIDKeys.BIRTH_NAME);
+          intRequest.addRequiredFields(EIDKeys.FAMILY_NAMES);
+          intRequest.addRequiredFields(EIDKeys.GIVEN_NAMES);
+          break;
+
+        case DATE_OF_BIRTH:
+          intRequest.addRequiredFields(EIDKeys.DATE_OF_BIRTH);
+          break;
+
+        case PLACE_OF_BIRTH:
+          intRequest.addRequiredFields(EIDKeys.PLACE_OF_BIRTH);
+          break;
+
+        case CURRENT_ADDRESS:
+          intRequest.addOptionalFields(EIDKeys.PLACE_OF_RESIDENCE);
+          break;
+
+        case PERSON_IDENTIFIER:
+          intRequest.addRequiredFields(EIDKeys.RESTRICTED_ID);
+          break;
+
+        default:
+          log.warn("UNKNOWN Authrequest Attribute: '{}'", eidasNaturalPersonAttribute);
+          break;
       }
     }
 
@@ -201,14 +199,8 @@ public class TcToken
 
     String refID = URLEncoder.encode(eidResult.getRequestId(), "UTF-8");
 
-    try
-    {
-      store.update(reqParser.getReqId(), refID);
-    }
-    catch (Exception e)
-    {
-      log.error("CAN NOT UPDATE DB for entry " + reqParser.getReqId(), e);
-    }
+    reqParser.setEidRef(refID);
+    requestSessionRepository.save(reqParser);
 
     if (!eidResult.getResultMajor().equals(Constants.EID_MAJOR_OK))
     {

@@ -42,10 +42,11 @@ Changelog
 
 * 1.0.7
 
-    **Security Advisory**
+  **Security Advisory**
 
-    There were two security issues reported to the German POSC and Governikus. This release fixes these issues.
-    It is strongly recommended to immediately update to this release as the XXE attack allows an unauthenticated remote attacker to read ASCII files from the file system which can be read by the Middleware Java process.
+  There were two security issues reported to the German POSC and Governikus. This release fixes these issues.
+  It is strongly recommended to immediately update to this release as the XXE attack allows an unauthenticated
+  remote attacker to read ASCII files from the file system which can be read by the Middleware Java process.
 
     - eIDAS Middleware: **Security Fix** Endpoints that parse XML content like ``/RequestReceiver`` or ``/paosreceiver`` were vulnerable to XXE attacks. These endpoints are no longer vulnerable against XXE attacks.
     - eIDAS Middleware: **Security Fix** The ``/TcToken`` endpoint was vulnerable against XXS attacks as requests parameters were inserted in the HTML response. All endpoints that display HTML content no longer insert user input into the HTML content.
@@ -64,6 +65,10 @@ Changelog
     - eIDAS Middleware: Add whitelist for allowed document signer types which can be extended using the configuration.
     - eIDAS Middleware: The validity of the metadata is now configurable, the default value is 30 days.
 
+* 1.1.1
+
+    - eIDAS Middleware: Fix a bug where the newest generation of German eID cards were not accepted.
+
 * 1.2.0
 
     - eIDAS Middleware: Fix handling of empty or absent RelayState.
@@ -75,17 +80,41 @@ Changelog
   Note: The carriage returns inside the SAML response, e.g. in signatures and cipher texts, are not removed.
   These are created by OpenSAML / xmlsec following W3C XML signature and encryption specifications.
 
-
   Known Issue:
   The SUN PKCS11 security provider that is shipped with JAVA 8 does not support RSA-PSS signatures.
-  In order to use a HSM module and stay in line with the eIDAS cryptographic requirements,
-  the use of EC cryptography for the SAML signature is mandatory.
-  This issue will be resolved when the eIDAS Middleware supports JAVA 11 as this version
-  comes with a newer SUN PKCS11 security provider.
+  In order to use a HSM module and stay in line with the eIDAS cryptographic requirements, the use
+  of EC cryptography for the SAML signature is mandatory.
+  This issue will be resolved when the eIDAS Middleware supports JAVA 11 as this version comes with
+  a newer SUN PKCS11 security provider.
 
 * 1.2.1
 
     - eIDAS Middleware: Fix SAML encryption with EC certificates.
+
+* 1.2.2
+
+    - eIDAS Middleware: Fix a bug where the newest generation of German eID cards were not accepted.
+
+* 1.2.4
+
+    - eIDAS Middleware: Security Patch
+
+* 1.2.5
+
+    - eIDAS Middleware: Change certificate chain building algorithm.
+    - eIDAS Middleware: Update xmlsec and bouncycastle.
+
+* 1.2.7
+
+    - eIDAS Middleware: Fix Log4j security issue.
+
+* 1.2.8
+
+    - eIDAS Middleware: Update log4j to version 2.17.1.
+
+* 1.2.9
+
+    - eIDAS Middleware: Update third party libraries for security fixes.
 
 * 2.0.0
 
@@ -104,7 +133,7 @@ Changelog
   Note: The new test CA is introduced to slowly replace the old one. Do not change CA settings on your own.
   The process of phasing out the old and migrating to the new will be initiated and guided by Governikus.
 
-* 2.0.1, 1.2.2 and 1.1.1
+* 2.0.1
 
     - eIDAS Middleware: Fix a bug where the newest generation of German eID cards were not accepted.
 
@@ -152,4 +181,9 @@ Changelog
 
 * 2.2.7
 
-    - - eIDAS Middleware: Security Patch.
+    - eIDAS Middleware: Update eidas-opensaml to fix a bug with the CurrentAddress
+      and update other third party libraries for security fixes.
+
+* 2.2.8
+
+    - eIDAS Middleware: Security patch.

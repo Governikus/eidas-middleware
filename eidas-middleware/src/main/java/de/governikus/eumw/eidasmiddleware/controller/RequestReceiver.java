@@ -1,11 +1,10 @@
 /*
- * Copyright (c) 2020 Governikus KG. Licensed under the EUPL, Version 1.2 or as soon they will be approved by
- * the European Commission - subsequent versions of the EUPL (the "Licence"); You may not use this work except
- * in compliance with the Licence. You may obtain a copy of the Licence at:
- * http://joinup.ec.europa.eu/software/page/eupl Unless required by applicable law or agreed to in writing,
- * software distributed under the Licence is distributed on an "AS IS" basis, WITHOUT WARRANTIES OR CONDITIONS
- * OF ANY KIND, either express or implied. See the Licence for the specific language governing permissions and
- * limitations under the Licence.
+ * Copyright (c) 2020 Governikus KG. Licensed under the EUPL, Version 1.2 or as soon they will be approved by the
+ * European Commission - subsequent versions of the EUPL (the "Licence"); You may not use this work except in compliance
+ * with the Licence. You may obtain a copy of the Licence at: http://joinup.ec.europa.eu/software/page/eupl Unless
+ * required by applicable law or agreed to in writing, software distributed under the Licence is distributed on an
+ * "AS IS" basis, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the Licence for the
+ * specific language governing permissions and limitations under the Licence.
  */
 
 package de.governikus.eumw.eidasmiddleware.controller;
@@ -66,8 +65,8 @@ public class RequestReceiver
   }
 
   /**
-   * This endpoint accepts incoming SAML requests using the SAML redirect binding protocol. The endpoint can
-   * also be used to switch the language.
+   * This endpoint accepts incoming SAML requests using the SAML redirect binding protocol. The endpoint can also be
+   * used to switch the language.
    */
   @GetMapping
   public ModelAndView doGet(@RequestParam(required = false, name = HttpRedirectUtils.RELAYSTATE_PARAMNAME) String relayState,
@@ -116,7 +115,8 @@ public class RequestReceiver
                                   samlResponse,
                                   responseHandler.getConsumerURLForRequestID(request.getId()));
       }
-      return showMiddlewarePage(request.getId(), userAgent);
+      return new ModelAndView("redirect:" + ContextPaths.EIDAS_CONTEXT_PATH + ContextPaths.REQUEST_RECEIVER
+                              + "?sessionId=" + request.getId());
     }
     catch (ErrorCodeWithResponseException e)
     {
@@ -182,8 +182,7 @@ public class RequestReceiver
       ModelAndView modelAndView = new ModelAndView("middleware");
       modelAndView.addObject("ausweisapp", ausweisappLink);
 
-      String linkToSelf = ContextPaths.EIDAS_CONTEXT_PATH + ContextPaths.REQUEST_RECEIVER + "?sessionId="
-                          + sessionId;
+      String linkToSelf = ContextPaths.EIDAS_CONTEXT_PATH + ContextPaths.REQUEST_RECEIVER + "?sessionId=" + sessionId;
       modelAndView.addObject("linkToSelf", linkToSelf);
       return modelAndView;
     }
@@ -196,7 +195,10 @@ public class RequestReceiver
   private ModelAndView showSamlErrorPage(ErrorCodeWithResponseException e, String relayState)
   {
     RequestingServiceProvider reqSP = serviceProviderConfig.getProviderByEntityID(e.getIssuer());
-    String samlResponse = responseHandler.prepareSAMLErrorResponse(reqSP, e.getRequestId(), e.getCode(), e.getDetails());
+    String samlResponse = responseHandler.prepareSAMLErrorResponse(reqSP,
+                                                                   e.getRequestId(),
+                                                                   e.getCode(),
+                                                                   e.getDetails());
 
     return createResponseView(relayState, samlResponse, reqSP.getAssertionConsumerURL());
   }

@@ -11,7 +11,6 @@ package de.governikus.eumw.eidasmiddleware.handler;
 
 import java.io.IOException;
 import java.security.GeneralSecurityException;
-import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
@@ -30,14 +29,13 @@ import org.springframework.stereotype.Service;
 import de.governikus.eumw.eidascommon.Constants;
 import de.governikus.eumw.eidascommon.ContextPaths;
 import de.governikus.eumw.eidascommon.ErrorCode;
-import de.governikus.eumw.eidascommon.ErrorCodeException;
 import de.governikus.eumw.eidasmiddleware.ConfigHolder;
 import de.governikus.eumw.eidasmiddleware.RequestProcessingException;
-import de.governikus.eumw.eidasmiddleware.RequestSession;
 import de.governikus.eumw.eidasmiddleware.ServiceProviderConfig;
-import de.governikus.eumw.eidasmiddleware.SessionStore;
 import de.governikus.eumw.eidasmiddleware.WebServiceHelper;
 import de.governikus.eumw.eidasmiddleware.eid.RequestingServiceProvider;
+import de.governikus.eumw.eidasmiddleware.entities.RequestSession;
+import de.governikus.eumw.eidasmiddleware.repositories.RequestSessionRepository;
 import de.governikus.eumw.eidasstarterkit.EidasAttribute;
 import de.governikus.eumw.eidasstarterkit.EidasEncrypter;
 import de.governikus.eumw.eidasstarterkit.EidasLoaEnum;
@@ -70,6 +68,7 @@ import de.governikus.eumw.poseidas.server.eidservice.EIDInternal;
 import de.governikus.eumw.poseidas.server.eidservice.EIDResultResponse;
 import de.governikus.eumw.poseidas.server.idprovider.config.CvcTlsCheck;
 import de.governikus.eumw.poseidas.server.pki.HSMServiceHolder;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import net.shibboleth.utilities.java.support.xml.XMLParserException;
 
@@ -80,6 +79,7 @@ import net.shibboleth.utilities.java.support.xml.XMLParserException;
  */
 @Slf4j
 @Service
+@RequiredArgsConstructor
 public class ResponseHandler
 {
 
@@ -95,7 +95,7 @@ public class ResponseHandler
 
   private static final String CANNOT_CREATE_SAML_RESPONSE = "Cannot create SAML response";
 
-  private final SessionStore sessionStore;
+  private final RequestSessionRepository requestSessionRepository;
 
   private final ConfigHolder configHolder;
 
@@ -107,45 +107,20 @@ public class ResponseHandler
 
   private final CvcTlsCheck cvcTlsCheck;
 
-  public ResponseHandler(SessionStore sessionStore,
-                         ConfigHolder configHolder,
-                         ServiceProviderConfig serviceProviderConfig,
-                         HSMServiceHolder hsmServiceHolder,
-                         EIDInternal eidInternal,
-                         CvcTlsCheck cvcTlsCheck)
-  {
-    this.sessionStore = sessionStore;
-    this.configHolder = configHolder;
-    this.serviceProviderConfig = serviceProviderConfig;
-    this.hsmServiceHolder = hsmServiceHolder;
-    this.eidInternal = eidInternal;
-    this.cvcTlsCheck = cvcTlsCheck;
-  }
-
   private RequestSession getSAMLReqSession(String refID)
   {
-    try
-    {
-      return sessionStore.getByEidRef(refID);
-    }
-    catch (SQLException | ErrorCodeException e)
-    {
+    return requestSessionRepository.findByEidRef(refID).orElseGet(() -> {
       log.error("Cannot get request session for refID: {}", refID);
       return null;
-    }
+    });
   }
 
   private RequestSession getSAMLReqSessionByRequestId(String requestId)
   {
-    try
-    {
-      return sessionStore.getById(requestId);
-    }
-    catch (SQLException | ErrorCodeException e)
-    {
+    return requestSessionRepository.findById(requestId).orElseGet(() -> {
       log.error("Cannot get request session for refID: {}", requestId);
       return null;
-    }
+    });
   }
 
   /**
@@ -282,8 +257,8 @@ public class ResponseHandler
       String day = dateString.substring(6, 8);
       attributes.add(new DateOfBirthAttribute(year + "-" + month + "-" + day));
     }
-    else if (samlReqSession.getRequestedAttributes().get(EidasNaturalPersonAttributes.DATE_OF_BIRTH) != null
-             && samlReqSession.getRequestedAttributes().get(EidasNaturalPersonAttributes.DATE_OF_BIRTH).booleanValue())
+    else if (samlReqSession.getRequestedAttributes().get(EidasNaturalPersonAttributes.DATE_OF_BIRTH.getName()) != null
+             && samlReqSession.getRequestedAttributes().get(EidasNaturalPersonAttributes.DATE_OF_BIRTH.getName()))
     {
       return prepareSAMLErrorResponse(reqSP,
                                       samlReqSession.getReqId(),
@@ -304,8 +279,8 @@ public class ResponseHandler
     {
       attributes.add(new PlaceOfBirthAttribute(((EIDInfoResultPlaceNo)placeOfBirth).getNoPlaceInfo()));
     }
-    else if (samlReqSession.getRequestedAttributes().get(EidasNaturalPersonAttributes.PLACE_OF_BIRTH) != null
-             && samlReqSession.getRequestedAttributes().get(EidasNaturalPersonAttributes.PLACE_OF_BIRTH).booleanValue())
+    else if (samlReqSession.getRequestedAttributes().get(EidasNaturalPersonAttributes.PLACE_OF_BIRTH.getName()) != null
+             && samlReqSession.getRequestedAttributes().get(EidasNaturalPersonAttributes.PLACE_OF_BIRTH.getName()))
     {
       return prepareSAMLErrorResponse(reqSP,
                                       samlReqSession.getReqId(),
@@ -325,8 +300,8 @@ public class ResponseHandler
     EIDInfoResultRestrictedID restrID = (EIDInfoResultRestrictedID)eidResponse.getEIDInfo(EIDKeys.RESTRICTED_ID);
     if (restrID == null)
     {
-      if (samlReqSession.getRequestedAttributes().get(EidasNaturalPersonAttributes.PERSON_IDENTIFIER) != null
-          && samlReqSession.getRequestedAttributes().get(EidasNaturalPersonAttributes.PERSON_IDENTIFIER).booleanValue())
+      if (samlReqSession.getRequestedAttributes().get(EidasNaturalPersonAttributes.PERSON_IDENTIFIER.getName()) != null
+          && samlReqSession.getRequestedAttributes().get(EidasNaturalPersonAttributes.PERSON_IDENTIFIER.getName()))
       {
         return prepareSAMLErrorResponse(reqSP,
                                         samlReqSession.getReqId(),
@@ -488,13 +463,13 @@ public class ResponseHandler
       : "";
 
     // if birth name is requested, build it according to TR03130-3 section 3.2
-    if (samlReqSession.getRequestedAttributes().get(EidasNaturalPersonAttributes.BIRTH_NAME) != null)
+    if (samlReqSession.getRequestedAttributes().get(EidasNaturalPersonAttributes.BIRTH_NAME.getName()) != null)
     {
       // deselected or not on chip, do not add attribute...
       if (birthName instanceof EIDInfoResultDeselected || birthName instanceof EIDInfoResultNotOnChip)
       {
         // ... but send error if mandatory
-        if (samlReqSession.getRequestedAttributes().get(EidasNaturalPersonAttributes.BIRTH_NAME).booleanValue())
+        if (samlReqSession.getRequestedAttributes().get(EidasNaturalPersonAttributes.BIRTH_NAME.getName()))
         {
           return false;
         }
@@ -516,26 +491,26 @@ public class ResponseHandler
       }
     }
 
-    if (samlReqSession.getRequestedAttributes().get(EidasNaturalPersonAttributes.FAMILY_NAME) != null)
+    if (samlReqSession.getRequestedAttributes().get(EidasNaturalPersonAttributes.FAMILY_NAME.getName()) != null)
 
     {
       if (familyNames instanceof EIDInfoResultString)
       {
         attributes.add(new FamilyNameAttribute(familyNamesStr));
       }
-      else if (samlReqSession.getRequestedAttributes().get(EidasNaturalPersonAttributes.FAMILY_NAME).booleanValue())
+      else if (samlReqSession.getRequestedAttributes().get(EidasNaturalPersonAttributes.FAMILY_NAME.getName()))
       {
         return false;
       }
     }
 
-    if (samlReqSession.getRequestedAttributes().get(EidasNaturalPersonAttributes.FIRST_NAME) != null)
+    if (samlReqSession.getRequestedAttributes().get(EidasNaturalPersonAttributes.FIRST_NAME.getName()) != null)
     {
       if (givenNames instanceof EIDInfoResultString)
       {
         attributes.add(new GivenNameAttribute(givenNamesStr));
       }
-      else if (samlReqSession.getRequestedAttributes().get(EidasNaturalPersonAttributes.FIRST_NAME).booleanValue())
+      else if (samlReqSession.getRequestedAttributes().get(EidasNaturalPersonAttributes.FIRST_NAME.getName()))
       {
         return false;
       }
@@ -572,10 +547,8 @@ public class ResponseHandler
       }
       attributes.add(cA);
     }
-    else if (samlReqSession.getRequestedAttributes().get(EidasNaturalPersonAttributes.CURRENT_ADDRESS) != null
-             && samlReqSession.getRequestedAttributes()
-                              .get(EidasNaturalPersonAttributes.CURRENT_ADDRESS)
-                              .booleanValue())
+    else if (samlReqSession.getRequestedAttributes().get(EidasNaturalPersonAttributes.CURRENT_ADDRESS.getName()) != null
+             && samlReqSession.getRequestedAttributes().get(EidasNaturalPersonAttributes.CURRENT_ADDRESS.getName()))
     {
       return false;
     }
@@ -600,7 +573,7 @@ public class ResponseHandler
     {
       throw new RequestProcessingException(UNKNOWN_REF_ID);
     }
-    return samlReqSession.getRelayState().orElse(null);
+    return samlReqSession.getRelayState();
   }
 
   /**

@@ -21,6 +21,8 @@ import java.util.zip.DataFormatException;
 
 import javax.xml.bind.DatatypeConverter;
 
+import org.apache.commons.lang3.StringUtils;
+import org.joda.time.DateTime;
 import org.opensaml.core.config.InitializationException;
 import org.opensaml.core.xml.config.XMLObjectProviderRegistrySupport;
 import org.opensaml.core.xml.io.Unmarshaller;
@@ -41,10 +43,10 @@ import de.governikus.eumw.eidascommon.HttpRedirectUtils;
 import de.governikus.eumw.eidascommon.Utils;
 import de.governikus.eumw.eidasmiddleware.ConfigHolder;
 import de.governikus.eumw.eidasmiddleware.RequestProcessingException;
-import de.governikus.eumw.eidasmiddleware.RequestSession;
 import de.governikus.eumw.eidasmiddleware.ServiceProviderConfig;
-import de.governikus.eumw.eidasmiddleware.SessionStore;
 import de.governikus.eumw.eidasmiddleware.eid.RequestingServiceProvider;
+import de.governikus.eumw.eidasmiddleware.entities.RequestSession;
+import de.governikus.eumw.eidasmiddleware.repositories.RequestSessionRepository;
 import de.governikus.eumw.eidasstarterkit.EidasRequest;
 import de.governikus.eumw.eidasstarterkit.EidasSaml;
 import de.governikus.eumw.poseidas.server.idprovider.config.CoreConfigurationDto;
@@ -69,7 +71,7 @@ public class RequestHandler
   /**
    * store the incoming requests
    */
-  private final SessionStore store;
+  private final RequestSessionRepository requestSessionRepository;
 
   /**
    * access the config for the different service providers
@@ -87,20 +89,22 @@ public class RequestHandler
    * Default constructor with DI
    */
   @Autowired
-  public RequestHandler(SessionStore store, ConfigHolder configHolder, ServiceProviderConfig serviceProviderConfig)
+  public RequestHandler(RequestSessionRepository requestSessionRepository,
+                        ConfigHolder configHolder,
+                        ServiceProviderConfig serviceProviderConfig)
   {
-    this.store = store;
+    this.requestSessionRepository = requestSessionRepository;
     this.configHolder = configHolder;
     this.serviceProviderConfig = serviceProviderConfig;
     this.coreConfigurationDto = PoseidasConfigurator.getInstance().getCurrentConfig();
   }
 
-  RequestHandler(SessionStore store,
+  RequestHandler(RequestSessionRepository requestSessionRepository,
                  ConfigHolder configHolder,
                  ServiceProviderConfig serviceProviderConfig,
                  CoreConfigurationDto coreConfigurationDto)
   {
-    this.store = store;
+    this.requestSessionRepository = requestSessionRepository;
     this.configHolder = configHolder;
     this.serviceProviderConfig = serviceProviderConfig;
     this.coreConfigurationDto = coreConfigurationDto;
@@ -162,7 +166,7 @@ public class RequestHandler
         eidasReq.setSectorType(metadataSectorType);
       }
 
-      store.insert(new RequestSession(relayState, eidasReq, getReqProviderName(eidasReq)));
+      requestSessionRepository.save(new RequestSession(relayState, eidasReq, getReqProviderName(eidasReq)));
 
       // Check that the consumer URL is equal with the connector's metadata
       if (!Utils.isNullOrEmpty(eidasReq.getAuthnRequest().getAssertionConsumerServiceURL())
@@ -236,8 +240,29 @@ public class RequestHandler
     try (InputStream is = new ByteArrayInputStream(samlRequest))
     {
       EidasSaml.validateXMLRequest(is, true);
-      String issuer = getIssuer(is);
+      AuthnRequest authnRequest = getAuthnRequest(is);
       is.reset();
+
+      // Check that the AuthnRequest is not older than one minute
+      if (authnRequest.getIssueInstant() == null
+          || authnRequest.getIssueInstant().isBefore(DateTime.now().minusMinutes(1)))
+      {
+        throw new ErrorCodeException(ErrorCode.OUTDATED_REQUEST);
+      }
+
+      // Check that there is no RequestSession for this AuthnRequest
+      String authnRequestID = authnRequest.getID();
+      if (StringUtils.isBlank(authnRequestID))
+      {
+        throw new ErrorCodeException(ErrorCode.MISSING_REQUEST_ID);
+      }
+      if (requestSessionRepository.findById(authnRequestID).isPresent())
+      {
+        throw new ErrorCodeException(ErrorCode.DUPLICATE_REQUEST_ID, authnRequestID);
+      }
+
+      // Check the AuthnRequest signature
+      String issuer = Objects.requireNonNull(authnRequest.getIssuer().getDOM()).getTextContent();
       RequestingServiceProvider requestingServiceProvider = serviceProviderConfig.getProviderByEntityID(issuer);
       if (requestingServiceProvider == null)
       {
@@ -249,8 +274,8 @@ public class RequestHandler
     }
   }
 
-  public String getIssuer(InputStream is)
-    throws ComponentInitializationException, XMLParserException, UnmarshallingException, InitializationException
+  private AuthnRequest getAuthnRequest(InputStream is)
+    throws InitializationException, ComponentInitializationException, XMLParserException, UnmarshallingException
   {
     EidasSaml.init();
     BasicParserPool ppMgr = Utils.getBasicParserPool();
@@ -259,9 +284,7 @@ public class RequestHandler
     Element metadataRoot = inCommonMDDoc.getDocumentElement();
     UnmarshallerFactory unmarshallerFactory = XMLObjectProviderRegistrySupport.getUnmarshallerFactory();
     Unmarshaller unmarshaller = unmarshallerFactory.getUnmarshaller(metadataRoot);
-    AuthnRequest authnRequest = (AuthnRequest)unmarshaller.unmarshall(metadataRoot);
-    return Objects.requireNonNull(authnRequest.getIssuer().getDOM()).getTextContent();
-
+    return (AuthnRequest)unmarshaller.unmarshall(metadataRoot);
   }
 
   /**

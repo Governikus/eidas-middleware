@@ -236,6 +236,11 @@ public class EIDSequence extends ECardConvenienceSequenceAdapter
   private boolean startPAOSReceived;
 
   /**
+   * Indicates next expected EAC message in protocol.
+   */
+  private NextExpected nextExpected = NextExpected.EAC1;
+
+  /**
    * Indicates if all data is read from card
    */
   private boolean finished;
@@ -727,6 +732,16 @@ public class EIDSequence extends ECardConvenienceSequenceAdapter
 
   private Object handleAuthenticationProtocolData(EAC1OutputTypeWrapper eac1OutputType) throws ECardException
   {
+    // not expected EAC1 now
+    if (NextExpected.EAC1 != nextExpected)
+    {
+      String resultMessage = "EAC1OutputType received when not expected";
+      LOG.info(logPrefix + LOG_PRE_AUTH + "EAC1OutputType received when not expected");
+      eidInfoContainer.setStatus(EIDStatus.FAILED);
+      return handleError(ResultMinor.SAL_SECURITY_CONDITION_NOT_SATISFIED, resultMessage);
+    }
+    nextExpected = NextExpected.EAC2;
+
     // Create Server and get stored EAC1Input
     eacServer = new EACServer();
 
@@ -795,6 +810,16 @@ public class EIDSequence extends ECardConvenienceSequenceAdapter
 
   private Object handleAuthenticationProtocolData(EAC2OutputTypeWrapper eac2OutputType) throws ECardException
   {
+    // not expected EAC2 now
+    if (NextExpected.EAC2 != nextExpected)
+    {
+      String resultMessage = "EAC2OutputType received when not expected";
+      LOG.info(logPrefix + LOG_PRE_AUTH + "EAC2OutputType received when not expected");
+      eidInfoContainer.setStatus(EIDStatus.FAILED);
+      return handleError(ResultMinor.SAL_SECURITY_CONDITION_NOT_SATISFIED, resultMessage);
+    }
+    nextExpected = NextExpected.TRANSMIT;
+
     byte[] efCardSecurity = eac2OutputType.getEFCardSecurity();
     if (efCardSecurity == null)
     {
@@ -883,6 +908,15 @@ public class EIDSequence extends ECardConvenienceSequenceAdapter
 
   private Object handleTransmit(TransmitResponse response) throws ECardException
   {
+    // not expected TRANSMIT now
+    if (NextExpected.TRANSMIT != nextExpected)
+    {
+      String resultMessage = "TransmitResponse received when not expected";
+      LOG.info(logPrefix + LOG_PRE_AUTH + "TransmitResponse received when not expected");
+      eidInfoContainer.setStatus(EIDStatus.FAILED);
+      return handleError(ResultMinor.SAL_SECURITY_CONDITION_NOT_SATISFIED, resultMessage);
+    }
+
     returnObject = transmitProcess.handle(response);
     if (returnObject == null)
     {
@@ -1097,5 +1131,10 @@ public class EIDSequence extends ECardConvenienceSequenceAdapter
       super();
       this.chat = chat;
     }
+  }
+
+  private enum NextExpected
+  {
+    EAC1, EAC2, TRANSMIT;
   }
 }

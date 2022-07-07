@@ -37,8 +37,6 @@ class RequestReceiverTest
 
   private static final String EID_CLIENT_URL = "http://127.0.0.1:24727/eID-Client?tcTokenURL=";
 
-  private static final String EID_CLIENT_MOBIL_URL = "eid://127.0.0.1:24727/eID-Client?tcTokenURL=";
-
   private static final String SAML_RESPONSE = "samlResponse";
 
   private static final String CONSUMER_URL = "consumerUrl";
@@ -61,19 +59,11 @@ class RequestReceiverTest
   void testDoGetShouldReturnLandingPage() throws Exception
   {
     prepareMocks(false);
-    Mockito.when(requestHandler.getTcTokenURL(REQUEST_ID)).thenReturn(TC_TOKEN_URL + REQUEST_ID);
     RequestReceiver requestReceiver = new RequestReceiver(requestHandler, responseHandler, serviceProviderConfig);
     ModelAndView landingPage = requestReceiver.doGet(RELAY_STATE, SAML_REQUEST_BASE_64_MOCK, null, null);
 
-    Assertions.assertEquals("middleware", landingPage.getViewName());
-    ModelMap modelMap = landingPage.getModelMap();
-    Assertions.assertEquals(2, modelMap.size());
-    Assertions.assertEquals(EID_CLIENT_URL
-                            + URLEncoder.encode(TC_TOKEN_URL + REQUEST_ID, StandardCharsets.UTF_8.name()),
-                            modelMap.getAttribute("ausweisapp"));
-    Assertions.assertEquals(ContextPaths.EIDAS_CONTEXT_PATH + ContextPaths.REQUEST_RECEIVER + "?sessionId="
-                            + REQUEST_ID,
-                            modelMap.getAttribute("linkToSelf"));
+    Assertions.assertEquals("redirect:/eidas-middleware/RequestReceiver?sessionId=requestId",
+                            landingPage.getViewName());
   }
 
   @Test
@@ -180,19 +170,11 @@ class RequestReceiverTest
   void testDoPostShouldReturnLandingPage() throws Exception
   {
     prepareMocks(true);
-    Mockito.when(requestHandler.getTcTokenURL(REQUEST_ID)).thenReturn(TC_TOKEN_URL + REQUEST_ID);
     RequestReceiver requestReceiver = new RequestReceiver(requestHandler, responseHandler, serviceProviderConfig);
     ModelAndView landingPage = requestReceiver.doPost(RELAY_STATE, SAML_REQUEST_BASE_64_MOCK, "iPhone");
 
-    Assertions.assertEquals("middleware", landingPage.getViewName());
-    ModelMap modelMap = landingPage.getModelMap();
-    Assertions.assertEquals(2, modelMap.size());
-    Assertions.assertEquals(EID_CLIENT_MOBIL_URL
-                            + URLEncoder.encode(TC_TOKEN_URL + REQUEST_ID, StandardCharsets.UTF_8.name()),
-                            modelMap.getAttribute("ausweisapp"));
-    Assertions.assertEquals(ContextPaths.EIDAS_CONTEXT_PATH + ContextPaths.REQUEST_RECEIVER + "?sessionId="
-                            + REQUEST_ID,
-                            modelMap.getAttribute("linkToSelf"));
+    Assertions.assertEquals("redirect:/eidas-middleware/RequestReceiver?sessionId=requestId",
+                            landingPage.getViewName());
   }
 
   private void prepareMocks(boolean isPost) throws ErrorCodeWithResponseException

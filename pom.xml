@@ -14,7 +14,7 @@
 
     <groupId>de.governikus.eumw</groupId>
     <artifactId>eumw</artifactId>
-    <version>2.2.7</version>
+    <version>2.2.8</version>
     <packaging>pom</packaging>
 
     <name>EU Middleware</name>
@@ -37,7 +37,7 @@
     <scm>
         <url>https://hg.govkg.de/Autent/eumw</url>
         <connection>scm:hg:https://hg.govkg.de/Autent/eumw</connection>
-        <tag>eumw-2.2.7</tag>
+        <tag>eumw-2.2.8</tag>
     </scm>
 
     <developers>
@@ -84,32 +84,32 @@
         <!-- 8.x.x available but not for Java 8 -->
         <version.javasupport>7.5.2</version.javasupport>
         <!-- 2.0.0 exists but is for OpenSAML 4 only -->
-        <version.opensaml-security-ext>1.0.7</version.opensaml-security-ext>
+        <version.opensaml-security-ext>1.0.8</version.opensaml-security-ext>
         <version.opensaml>3.4.6</version.opensaml>
         <version.xmlsec>2.3.1</version.xmlsec>
 
         <version.cxf>3.4.7</version.cxf>
-        <version.spring>5.3.20</version.spring>
-        <version.springboot>2.6.7</version.springboot>
+        <version.springboot>2.6.9</version.springboot>
         <version.thymeleaf>3.0.15.RELEASE</version.thymeleaf>
         <version.thymeleaf-layout-dialect>2.5.3</version.thymeleaf-layout-dialect>
 
-        <version.asm>9.2</version.asm>
+        <version.asm>9.3</version.asm>
         <version.commons.codec>1.15</version.commons.codec>
         <!--        Moved to org.apache.commons » commons-collections4-->
         <version.commons.collections>3.2.2</version.commons.collections>
         <version.commons.fileupload>1.4</version.commons.fileupload>
         <version.commons.io>2.11.0</version.commons.io>
         <version.commons.lang3>3.12.0</version.commons.lang3>
-        <version.guava>31.0.1-jre</version.guava>
+        <version.guava>31.1-jre</version.guava>
         <version.h2>1.4.200</version.h2>
+        <!-- There is a newer version available but it is not compatible with Java 8 -->
         <version.istack-commons-runtime>4.0.1</version.istack-commons-runtime>
-        <version.jackson>2.13.2</version.jackson>
+        <version.jackson>2.13.3</version.jackson>
         <version.jaxb2-basics>1.11.1</version.jaxb2-basics>
         <version.joda-time>2.10.14</version.joda-time>
         <version.json-schema-validator>2.2.14</version.json-schema-validator>
         <version.jsr305>3.0.2</version.jsr305>
-        <version.groovy>3.0.10</version.groovy>
+        <version.groovy>3.0.11</version.groovy>
         <!-- 3.x.x available but not executable with Java 8 -->
         <version.snmp4j>2.7.4</version.snmp4j>
 
@@ -533,17 +533,6 @@
                 <groupId>org.apache.logging.log4j</groupId>
                 <artifactId>log4j-bom</artifactId>
                 <version>${version.log4j2}</version>
-                <type>pom</type>
-                <scope>import</scope>
-            </dependency>
-
-            <!-- Import spring-framework-bom to manage newer spring version. Could be removed when a version of
-            spring-boot is released with the same spring-framework version. This dependency must be declared before
-            spring-boot-dependencies-->
-            <dependency>
-                <groupId>org.springframework</groupId>
-                <artifactId>spring-framework-bom</artifactId>
-                <version>${version.spring}</version>
                 <type>pom</type>
                 <scope>import</scope>
             </dependency>

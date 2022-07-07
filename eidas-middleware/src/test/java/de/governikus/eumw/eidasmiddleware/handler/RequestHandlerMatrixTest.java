@@ -48,8 +48,8 @@ import de.governikus.eumw.eidascommon.ErrorCodeWithResponseException;
 import de.governikus.eumw.eidascommon.HttpRedirectUtils;
 import de.governikus.eumw.eidasmiddleware.ConfigHolder;
 import de.governikus.eumw.eidasmiddleware.ServiceProviderConfig;
-import de.governikus.eumw.eidasmiddleware.SessionStore;
 import de.governikus.eumw.eidasmiddleware.eid.RequestingServiceProvider;
+import de.governikus.eumw.eidasmiddleware.repositories.RequestSessionRepository;
 import de.governikus.eumw.eidasstarterkit.EidasLoaEnum;
 import de.governikus.eumw.eidasstarterkit.EidasNameIdType;
 import de.governikus.eumw.eidasstarterkit.EidasNaturalPersonAttributes;
@@ -81,7 +81,7 @@ class RequestHandlerMatrixTest
   private static final String DEFAULT_PASSWORD = "123456";
 
   @MockBean
-  private SessionStore mockSessionStore;
+  private RequestSessionRepository requestSessionRepository;
 
   @MockBean
   private ServiceProviderConfig mockServiceProviderConfig;
@@ -152,7 +152,7 @@ class RequestHandlerMatrixTest
                                            testPrerequisites.requesterId,
                                            testPrerequisites.spTypeRequest);
 
-    RequestHandler requestHandler = new RequestHandler(mockSessionStore, mockConfigHolder, mockServiceProviderConfig,
+    RequestHandler requestHandler = new RequestHandler(requestSessionRepository, mockConfigHolder, mockServiceProviderConfig,
                                                        coreConfigurationDto);
     EidasRequest eIDASRequest = requestHandler.handleSAMLRequest("RELAY_STATE", samlRequest, false);
     Assertions.assertNotNull(eIDASRequest.getId());
@@ -169,7 +169,7 @@ class RequestHandlerMatrixTest
                                            testPrerequisites.requesterId,
                                            testPrerequisites.spTypeRequest);
 
-    RequestHandler requestHandler = new RequestHandler(mockSessionStore, mockConfigHolder, mockServiceProviderConfig,
+    RequestHandler requestHandler = new RequestHandler(requestSessionRepository, mockConfigHolder, mockServiceProviderConfig,
                                                        coreConfigurationDto);
     Assertions.assertThrows(ErrorCodeWithResponseException.class,
                             () -> requestHandler.handleSAMLRequest("RELAY_STATE", samlRequest, false));

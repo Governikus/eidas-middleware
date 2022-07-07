@@ -43,16 +43,15 @@ import de.governikus.eumw.eidascommon.ErrorCodeException;
 import de.governikus.eumw.eidascommon.Utils;
 import de.governikus.eumw.eidasmiddleware.ConfigHolder;
 import de.governikus.eumw.eidasmiddleware.RequestProcessingException;
-import de.governikus.eumw.eidasmiddleware.RequestSession;
 import de.governikus.eumw.eidasmiddleware.ServiceProviderConfig;
-import de.governikus.eumw.eidasmiddleware.SessionStore;
 import de.governikus.eumw.eidasmiddleware.eid.RequestingServiceProvider;
+import de.governikus.eumw.eidasmiddleware.entities.RequestSession;
+import de.governikus.eumw.eidasmiddleware.repositories.RequestSessionRepository;
 import de.governikus.eumw.eidasstarterkit.EidasAttribute;
 import de.governikus.eumw.eidasstarterkit.EidasLoaEnum;
 import de.governikus.eumw.eidasstarterkit.EidasNaturalPersonAttributes;
 import de.governikus.eumw.eidasstarterkit.EidasResponse;
 import de.governikus.eumw.eidasstarterkit.TestCaseEnum;
-import de.governikus.eumw.eidasstarterkit.person_attributes.EidasPersonAttributes;
 import de.governikus.eumw.eidasstarterkit.person_attributes.natural_persons_attribute.BirthNameAttribute;
 import de.governikus.eumw.eidasstarterkit.person_attributes.natural_persons_attribute.CurrentAddressAttribute;
 import de.governikus.eumw.eidasstarterkit.person_attributes.natural_persons_attribute.DateOfBirthAttribute;
@@ -106,7 +105,7 @@ class ResponseHandlerTest
   private final KeyStore signatureKeystore;
 
   @Mock
-  private SessionStore mockSessionStore;
+  private RequestSessionRepository requestSessionRepository;
 
   @Mock
   private ServiceProviderConfig mockServiceProviderConfig;
@@ -157,7 +156,7 @@ class ResponseHandlerTest
   @BeforeEach
   void setUp()
   {
-    systemUnderTest = spy(new ResponseHandler(mockSessionStore, mockConfigHolder, mockServiceProviderConfig,
+    systemUnderTest = spy(new ResponseHandler(requestSessionRepository, mockConfigHolder, mockServiceProviderConfig,
                                               mockHsmServiceHolder, mockEidInternal, mockCvcTlsCheck));
   }
 
@@ -170,7 +169,7 @@ class ResponseHandlerTest
   @Test
   void testGetResultForRefIDNotFoundSqlException() throws SQLException, ErrorCodeException
   {
-    when(mockSessionStore.getByEidRef("")).thenThrow(SQLException.class);
+    when(requestSessionRepository.findByEidRef("")).thenReturn(Optional.empty());
     Assertions.assertThrows(RequestProcessingException.class, () -> systemUnderTest.getResultForRefID(""));
   }
 
@@ -181,7 +180,7 @@ class ResponseHandlerTest
   {
     // Mock Session Store
     RequestSession mockRequestSession = mock(RequestSession.class);
-    when(mockSessionStore.getByEidRef(anyString())).thenReturn(mockRequestSession);
+    when(requestSessionRepository.findByEidRef(anyString())).thenReturn(Optional.of(mockRequestSession));
 
     // Mock EID Response
     EIDResultResponse mockEidResultResponse = mock(EIDResultResponse.class);
@@ -225,7 +224,7 @@ class ResponseHandlerTest
   {
     // Mock Session Store
     RequestSession mockRequestSession = mock(RequestSession.class);
-    when(mockSessionStore.getByEidRef(anyString())).thenReturn(mockRequestSession);
+    when(requestSessionRepository.findByEidRef(anyString())).thenReturn(Optional.of(mockRequestSession));
 
     // Mock EID Response
     EIDResultResponse mockEidResultResponse = mock(EIDResultResponse.class);
@@ -261,7 +260,7 @@ class ResponseHandlerTest
   {
     // Mock Session Store
     RequestSession mockRequestSession = mock(RequestSession.class);
-    when(mockSessionStore.getByEidRef(anyString())).thenReturn(mockRequestSession);
+    when(requestSessionRepository.findByEidRef(anyString())).thenReturn(Optional.of(mockRequestSession));
 
     // Mock EID Response
     EIDResultResponse mockEidResultResponse = mock(EIDResultResponse.class);
@@ -299,7 +298,7 @@ class ResponseHandlerTest
   {
     // Mock Session Store
     RequestSession mockRequestSession = mock(RequestSession.class);
-    when(mockSessionStore.getByEidRef(anyString())).thenReturn(mockRequestSession);
+    when(requestSessionRepository.findByEidRef(anyString())).thenReturn(Optional.of(mockRequestSession));
 
     // Mock EID Response
     EIDResultResponse mockEidResultResponse = mock(EIDResultResponse.class);
@@ -344,7 +343,7 @@ class ResponseHandlerTest
   @Test
   void testGetConsumerURLForRefIDUnkonwnRef() throws SQLException, ErrorCodeException
   {
-    when(mockSessionStore.getByEidRef("")).thenThrow(SQLException.class);
+    when(requestSessionRepository.findByEidRef("")).thenReturn(Optional.empty());
     Assertions.assertThrows(RequestProcessingException.class, () -> systemUnderTest.getConsumerURLForRefID(""));
   }
 
@@ -353,7 +352,7 @@ class ResponseHandlerTest
   {
     // Mock request session
     RequestSession mockRequestSession = mock(RequestSession.class);
-    when(mockSessionStore.getByEidRef(anyString())).thenReturn(mockRequestSession);
+    when(requestSessionRepository.findByEidRef(anyString())).thenReturn(Optional.of(mockRequestSession));
 
     // Mock ServiceProvider
     RequestingServiceProvider mockRequestingServiceProvider = mock(RequestingServiceProvider.class);
@@ -370,7 +369,7 @@ class ResponseHandlerTest
   @Test
   void testGetRelayStateForRefIDUnkonwnRef() throws SQLException, ErrorCodeException
   {
-    when(mockSessionStore.getByEidRef("")).thenThrow(SQLException.class);
+    when(requestSessionRepository.findByEidRef("")).thenReturn(Optional.empty());
     Assertions.assertThrows(RequestProcessingException.class, () -> systemUnderTest.getRelayStateForRefID(""));
   }
 
@@ -379,11 +378,11 @@ class ResponseHandlerTest
   {
     // Mock request session
     RequestSession mockRequestSession = mock(RequestSession.class);
-    when(mockSessionStore.getByEidRef(anyString())).thenReturn(mockRequestSession);
-    when(mockRequestSession.getRelayState()).thenReturn(Optional.of(anyString()));
+    when(requestSessionRepository.findByEidRef(anyString())).thenReturn(Optional.of(mockRequestSession));
+    when(mockRequestSession.getRelayState()).thenReturn(anyString());
 
     Assertions.assertDoesNotThrow(() -> systemUnderTest.getRelayStateForRefID(""));
-    Assertions.assertEquals(mockRequestSession.getRelayState().get(), systemUnderTest.getRelayStateForRefID(""));
+    Assertions.assertEquals(mockRequestSession.getRelayState(), systemUnderTest.getRelayStateForRefID(""));
   }
 
   @Test
@@ -391,8 +390,7 @@ class ResponseHandlerTest
   {
     // Mock request session
     RequestSession mockRequestSession = mock(RequestSession.class);
-    when(mockSessionStore.getByEidRef(anyString())).thenReturn(mockRequestSession);
-    when(mockRequestSession.getRelayState()).thenReturn(Optional.empty());
+    when(requestSessionRepository.findByEidRef(anyString())).thenReturn(Optional.of(mockRequestSession));
 
     Assertions.assertDoesNotThrow(() -> systemUnderTest.getRelayStateForRefID(""));
     Assertions.assertEquals(null, systemUnderTest.getRelayStateForRefID(""));
@@ -412,8 +410,8 @@ class ResponseHandlerTest
     when(eidResultResponse.getEIDInfo(EIDKeys.BIRTH_NAME)).thenReturn(birthName);
 
     // Mock SamlRequestSession
-    Map<EidasPersonAttributes, Boolean> requestedAtributes = mock(Map.class);
-    when(requestedAtributes.get(EidasNaturalPersonAttributes.BIRTH_NAME)).thenReturn(true);
+    Map<String, Boolean> requestedAtributes = mock(Map.class);
+    when(requestedAtributes.get(EidasNaturalPersonAttributes.BIRTH_NAME.getName())).thenReturn(true);
     when(samlReqSession.getRequestedAttributes()).thenReturn(requestedAtributes);
 
     Assertions.assertFalse(systemUnderTest.createAllNames(eidResultResponse, attributes, samlReqSession));
@@ -447,9 +445,9 @@ class ResponseHandlerTest
 
 
     // Mock SamlRequestSession
-    Map<EidasPersonAttributes, Boolean> requestedAttributes = mock(Map.class);
-    when(requestedAttributes.get(EidasNaturalPersonAttributes.BIRTH_NAME)).thenReturn(true); // Requested
-                                                                                             // Birthname
+    Map<String, Boolean> requestedAttributes = mock(Map.class);
+    // Requested Birthname
+    when(requestedAttributes.get(EidasNaturalPersonAttributes.BIRTH_NAME.getName())).thenReturn(true);
     when(samlReqSession.getRequestedAttributes()).thenReturn(requestedAttributes);
 
 
@@ -484,9 +482,9 @@ class ResponseHandlerTest
 
 
     // Mock SamlRequestSession
-    Map<EidasPersonAttributes, Boolean> requestedAtributes = mock(Map.class);
-    when(requestedAtributes.get(EidasNaturalPersonAttributes.BIRTH_NAME)).thenReturn(true); // Requested
-                                                                                            // Birthname
+    Map<String, Boolean> requestedAtributes = mock(Map.class);
+    // Requested Birthname
+    when(requestedAtributes.get(EidasNaturalPersonAttributes.BIRTH_NAME.getName())).thenReturn(true);
     when(samlReqSession.getRequestedAttributes()).thenReturn(requestedAtributes);
 
 
@@ -515,10 +513,10 @@ class ResponseHandlerTest
     when(eidResultResponse.getEIDInfo(EIDKeys.GIVEN_NAMES)).thenReturn(givenNames);
 
     // Mock SamlRequestSession
-    Map<EidasPersonAttributes, Boolean> requestedAtributes = mock(Map.class);
+    Map<String, Boolean> requestedAtributes = mock(Map.class);
     when(requestedAtributes.get(any())).thenReturn(null);
-    when(requestedAtributes.get(EidasNaturalPersonAttributes.FAMILY_NAME)).thenReturn(true); // Requested
-                                                                                             // Familyname
+    // Requested Familyname
+    when(requestedAtributes.get(EidasNaturalPersonAttributes.FAMILY_NAME.getName())).thenReturn(true);
     when(samlReqSession.getRequestedAttributes()).thenReturn(requestedAtributes);
 
     Assertions.assertTrue(systemUnderTest.createAllNames(eidResultResponse, attributes, samlReqSession));
@@ -544,10 +542,10 @@ class ResponseHandlerTest
     when(eidResultResponse.getEIDInfo(EIDKeys.GIVEN_NAMES)).thenReturn(givenNames);
 
     // Mock SamlRequestSession
-    Map<EidasPersonAttributes, Boolean> requestedAtributes = mock(Map.class);
+    Map<String, Boolean> requestedAtributes = mock(Map.class);
     when(requestedAtributes.get(any())).thenReturn(null);
-    when(requestedAtributes.get(EidasNaturalPersonAttributes.FAMILY_NAME)).thenReturn(true); // Requested
-                                                                                             // Familyname
+    // Requested Familyname
+    when(requestedAtributes.get(EidasNaturalPersonAttributes.FAMILY_NAME.getName())).thenReturn(true);
     when(samlReqSession.getRequestedAttributes()).thenReturn(requestedAtributes);
 
     Assertions.assertFalse(systemUnderTest.createAllNames(eidResultResponse, attributes, samlReqSession));
@@ -575,10 +573,10 @@ class ResponseHandlerTest
     when(eidResultResponse.getEIDInfo(EIDKeys.GIVEN_NAMES)).thenReturn(givenNames);
 
     // Mock SamlRequestSession
-    Map<EidasPersonAttributes, Boolean> requestedAtributes = mock(Map.class);
+    Map<String, Boolean> requestedAtributes = mock(Map.class);
     when(requestedAtributes.get(any())).thenReturn(null);
-    when(requestedAtributes.get(EidasNaturalPersonAttributes.FIRST_NAME)).thenReturn(true); // Requested
-                                                                                            // Firstname
+    // Requested Firstname
+    when(requestedAtributes.get(EidasNaturalPersonAttributes.FIRST_NAME.getName())).thenReturn(true);
     when(samlReqSession.getRequestedAttributes()).thenReturn(requestedAtributes);
 
     Assertions.assertTrue(systemUnderTest.createAllNames(eidResultResponse, attributes, samlReqSession));
@@ -603,10 +601,10 @@ class ResponseHandlerTest
     when(eidResultResponse.getEIDInfo(EIDKeys.GIVEN_NAMES)).thenReturn(givenNames);
 
     // Mock SamlRequestSession
-    Map<EidasPersonAttributes, Boolean> requestedAttributes = mock(Map.class);
+    Map<String, Boolean> requestedAttributes = mock(Map.class);
     when(requestedAttributes.get(any())).thenReturn(null);
-    when(requestedAttributes.get(EidasNaturalPersonAttributes.FIRST_NAME)).thenReturn(true); // Requested
-                                                                                             // Firstname
+    // Requested Firstname
+    when(requestedAttributes.get(EidasNaturalPersonAttributes.FIRST_NAME.getName())).thenReturn(true);
     when(samlReqSession.getRequestedAttributes()).thenReturn(requestedAttributes);
 
     Assertions.assertFalse(systemUnderTest.createAllNames(eidResultResponse, attributes, samlReqSession));
@@ -626,8 +624,8 @@ class ResponseHandlerTest
     when(eidResultResponse.getEIDInfo(any())).thenReturn(null);
 
     // Mock SamlRequestSession
-    Map<EidasPersonAttributes, Boolean> requestedAttributes = mock(Map.class);
-    when(requestedAttributes.get(EidasNaturalPersonAttributes.CURRENT_ADDRESS)).thenReturn(true);
+    Map<String, Boolean> requestedAttributes = mock(Map.class);
+    when(requestedAttributes.get(EidasNaturalPersonAttributes.CURRENT_ADDRESS.getName())).thenReturn(true);
     when(samlReqSession.getRequestedAttributes()).thenReturn(requestedAttributes);
 
     Assertions.assertFalse(systemUnderTest.createPlaceOfResidence(eidResultResponse, attributes, samlReqSession));
@@ -679,8 +677,9 @@ class ResponseHandlerTest
     when(mockCvcResults.isCvcValidity()).thenReturn(true);
     when(mockCvcResults.isCvcTlsMatch()).thenReturn(true);
     when(mockCvcResults.isCvcUrlMatch()).thenReturn(true);
-    ResponseHandler responseHandler = new ResponseHandler(mockSessionStore, mockConfigHolder, mockServiceProviderConfig,
-                                                          mockHsmServiceHolder, mockEidInternal, mockCvcTlsCheck);
+    ResponseHandler responseHandler = new ResponseHandler(requestSessionRepository, mockConfigHolder,
+                                                          mockServiceProviderConfig, mockHsmServiceHolder,
+                                                          mockEidInternal, mockCvcTlsCheck);
     String dummyResponse = responseHandler.prepareDummyResponse(REQUEST_ID, null);
 
     Assertions.assertNotNull(dummyResponse);
@@ -712,8 +711,9 @@ class ResponseHandlerTest
     when(mockCvcResults.isCvcValidity()).thenReturn(true);
     when(mockCvcResults.isCvcTlsMatch()).thenReturn(true);
     when(mockCvcResults.isCvcUrlMatch()).thenReturn(true);
-    ResponseHandler responseHandler = new ResponseHandler(mockSessionStore, mockConfigHolder, mockServiceProviderConfig,
-                                                          mockHsmServiceHolder, mockEidInternal, mockCvcTlsCheck);
+    ResponseHandler responseHandler = new ResponseHandler(requestSessionRepository, mockConfigHolder,
+                                                          mockServiceProviderConfig, mockHsmServiceHolder,
+                                                          mockEidInternal, mockCvcTlsCheck);
     String dummyResponse = responseHandler.prepareDummyResponse(REQUEST_ID, TestCaseEnum.CANCELLATION_BY_USER);
 
     Assertions.assertNotNull(dummyResponse);
@@ -745,8 +745,9 @@ class ResponseHandlerTest
     when(mockCvcResults.isCvcValidity()).thenReturn(true);
     when(mockCvcResults.isCvcTlsMatch()).thenReturn(true);
     when(mockCvcResults.isCvcUrlMatch()).thenReturn(true);
-    ResponseHandler responseHandler = new ResponseHandler(mockSessionStore, mockConfigHolder, mockServiceProviderConfig,
-                                                          mockHsmServiceHolder, mockEidInternal, mockCvcTlsCheck);
+    ResponseHandler responseHandler = new ResponseHandler(requestSessionRepository, mockConfigHolder,
+                                                          mockServiceProviderConfig, mockHsmServiceHolder,
+                                                          mockEidInternal, mockCvcTlsCheck);
     String dummyResponse = responseHandler.prepareDummyResponse(REQUEST_ID, TestCaseEnum.WRONG_SIGNATURE);
 
     Assertions.assertNotNull(dummyResponse);
@@ -772,8 +773,9 @@ class ResponseHandlerTest
     when(mockCvcResults.isCvcValidity()).thenReturn(true);
     when(mockCvcResults.isCvcTlsMatch()).thenReturn(true);
     when(mockCvcResults.isCvcUrlMatch()).thenReturn(true);
-    ResponseHandler responseHandler = new ResponseHandler(mockSessionStore, mockConfigHolder, mockServiceProviderConfig,
-                                                          mockHsmServiceHolder, mockEidInternal, mockCvcTlsCheck);
+    ResponseHandler responseHandler = new ResponseHandler(requestSessionRepository, mockConfigHolder,
+                                                          mockServiceProviderConfig, mockHsmServiceHolder,
+                                                          mockEidInternal, mockCvcTlsCheck);
     String dummyResponse = responseHandler.prepareDummyResponse(REQUEST_ID, TestCaseEnum.UNKNOWN);
 
     Assertions.assertNotNull(dummyResponse);
@@ -801,8 +803,9 @@ class ResponseHandlerTest
     checkResults.setCvcUrlMatch(true);
     checkResults.setCvcTlsMatch(true);
     when(mockCvcTlsCheck.checkCvcProvider(anyString())).thenReturn(checkResults);
-    ResponseHandler responseHandler = new ResponseHandler(mockSessionStore, mockConfigHolder, mockServiceProviderConfig,
-                                                          mockHsmServiceHolder, mockEidInternal, mockCvcTlsCheck);
+    ResponseHandler responseHandler = new ResponseHandler(requestSessionRepository, mockConfigHolder,
+                                                          mockServiceProviderConfig, mockHsmServiceHolder,
+                                                          mockEidInternal, mockCvcTlsCheck);
     String dummyResponse = responseHandler.prepareDummyResponse(REQUEST_ID, TestCaseEnum.UNKNOWN);
 
     Assertions.assertNotNull(dummyResponse);
@@ -866,7 +869,7 @@ class ResponseHandlerTest
   private void prepareMocks(Utils.X509KeyPair keypair)
     throws SQLException, ErrorCodeException, IOException, GeneralSecurityException
   {
-    when(mockSessionStore.getById(anyString())).thenReturn(mockRequestSession);
+    when(requestSessionRepository.findById(anyString())).thenReturn(Optional.of(mockRequestSession));
     when(mockRequestSession.getReqProviderEntityId()).thenReturn(ENTITY_ID);
     when(mockServiceProviderConfig.getProviderByEntityID(ENTITY_ID)).thenReturn(mockRequestingServiceProvider);
     when(mockHsmServiceHolder.getKeyStore()).thenReturn(null);
