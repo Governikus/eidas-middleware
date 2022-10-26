@@ -58,8 +58,8 @@ For information on running Docker containers, see the `Docker Docs <https://docs
 
 We provide two different Docker images:
 
-#. governikus/eidas-configuration-wizard (`Docker Hub <https://hub.docker.com/r/governikus/eidas-configuration-wizard>`_)
-#. governikus/eidas-middleware-application (`Docker Hub <https://hub.docker.com/r/governikus/eidas-middleware-application>`_)
+#. governikus/eidas-configuration-wizard (`Docker Hub <https://hub.docker.com/r/governikus/eidas-configuration-wizard>`__)
+#. governikus/eidas-middleware-application (`Docker Hub <https://hub.docker.com/r/governikus/eidas-middleware-application>`__)
 
 Two volumes are necessary to run the middleware and the configuration wizard:
 

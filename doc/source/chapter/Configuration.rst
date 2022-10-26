@@ -74,7 +74,7 @@ You can start the application with the following command::
 
     java -jar configuration-wizard-2.2.8.jar
 
-In addition you can define the config folder with adding the parameter ``DconfigDirectory`` and its value to the
+In addition you can define the config folder with adding the parameter ``-DconfigDirectory`` and its value to the
 command. This way the configuration wizard will be available at ``http://localhost:8080/config-wizard.``
 
 To know how to use the config wizard see :ref:`how-to-config-wizard`.
