@@ -366,6 +366,10 @@
                                     <version>[3.3,)</version>
                                 </requireMavenVersion>
 
+                                <requireJavaVersion>
+                                    <version>[1.8,9)</version>
+                                </requireJavaVersion>
+
                                 <dependencyConvergence />
 
                                 <requirePluginVersions>
