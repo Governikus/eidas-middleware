@@ -12,7 +12,7 @@ We are using maven to build and test the software.
 
 To build the software, execute the following command:
 ```
-maven clean install
+mvn clean install
 ```
 You can find the compiled JARs in the `target/` directory of each module.
 
