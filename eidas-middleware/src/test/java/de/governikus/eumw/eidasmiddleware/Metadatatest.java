@@ -13,8 +13,8 @@ package de.governikus.eumw.eidasmiddleware;
 import java.io.ByteArrayInputStream;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
+import java.time.Instant;
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.List;
 
 import org.junit.Assert;
@@ -60,7 +60,7 @@ public class Metadatatest
     EidasSigner signer = new EidasSigner(true, keyPair.getKey(), keyPair.getCert());
     byte[] res = EidasSaml.createMetaDataNode("_dsfsdfs5454sfdsdfsdfsfd",
                                               "https://eubuild.tf.bos-test.de:8443/EidasSAMLDemo",
-                                              new Date(),
+                                              Instant.now(),
                                               keyPair.getCert(),
                                               keyPair2.getCert(),
                                               org,

@@ -71,7 +71,6 @@ public class InfoMapBuilder
     }
 
     Map<String, Object> result = new HashMap<>();
-    result.put(AdminPoseidasConstants.VALUE_PENDING_REQUEST_SIGNER_CERTIFICATE_AVAILABLE, false);
     result.put(AdminPoseidasConstants.VALUE_PERMISSION_DATA_ERROR_MESSAGE, new HashSet<ManagementMessage>());
     result.put(AdminPoseidasConstants.VALUE_IS_PUBLIC_CLIENT, facade.isPublicClient(cvcRefID));
 
@@ -123,17 +122,7 @@ public class InfoMapBuilder
         throw new IllegalArgumentException("unable to parse given cvc", e);
       }
     }
-    if (facade.getPendingRscChrId(cvcRefID) != null)
-    {
-      result.put(AdminPoseidasConstants.VALUE_REQUEST_SIGNER_CERTIFICATE_ID,
-                 facade.getPendingRscChrId(cvcRefID));
-      result.put(AdminPoseidasConstants.VALUE_PENDING_REQUEST_SIGNER_CERTIFICATE_AVAILABLE, true);
-    }
-    else if (facade.getCurrentRscChrId(cvcRefID) != null)
-    {
-      result.put(AdminPoseidasConstants.VALUE_REQUEST_SIGNER_CERTIFICATE_ID,
-                 facade.getCurrentRscChrId(cvcRefID));
-    }
+
 
     @SuppressWarnings("unchecked")
     Collection<ManagementMessage> errorMessages = (Collection<ManagementMessage>)result.get(AdminPoseidasConstants.VALUE_PERMISSION_DATA_ERROR_MESSAGE);

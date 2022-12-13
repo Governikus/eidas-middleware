@@ -160,7 +160,7 @@ public final class PKCS11HSMService implements HSMService
                                                             ? RequestSignerCertificateServiceImpl.OU_REQUEST_SIGNER_CERTIFICATE
                                                             : ""),
                                                           lifespan,
-                                                          provider.getName());
+                                                          provider);
       keyStore.setKeyEntry(alias, kp.getPrivate(), null, new Certificate[]{cert});
     }
     catch (KeyStoreException e)
@@ -260,18 +260,17 @@ public final class PKCS11HSMService implements HSMService
     {
       return "SHA512withECDSA";
     }
-    // sun provider does not support PSS at the moment, but we prepare for it nonetheless
     else if (oid.equals(OIDConstants.OID_TA_RSA_PSS_SHA_1))
     {
-      return "SHA1withRSA/PSS";
+      return "SHA1withRSASSA-PSS";
     }
     else if (oid.equals(OIDConstants.OID_TA_RSA_PSS_SHA_256))
     {
-      return "SHA256withRSA/PSS";
+      return "SHA256withRSASSA-PSS";
     }
     else if (oid.equals(OIDConstants.OID_TA_RSA_PSS_SHA_512))
     {
-      return "SHA512withRSA/PSS";
+      return "SHA512withRSASSA-PSS";
     }
     else if (oid.equals(OIDConstants.OID_TA_RSA_V1_5_SHA_1))
     {
@@ -361,7 +360,8 @@ public final class PKCS11HSMService implements HSMService
     }
     this.config = (PKCS11HSMConfiguration)config;
 
-    provider = new sun.security.pkcs11.SunPKCS11(this.config.getConfigFileName());
+    Provider p = Security.getProvider("SunPKCS11");
+    provider = p.configure(this.config.getConfigFileName());
     Security.addProvider(provider);
     try
     {

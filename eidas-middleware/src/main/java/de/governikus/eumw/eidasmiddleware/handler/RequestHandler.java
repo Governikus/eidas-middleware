@@ -14,6 +14,8 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
 import java.security.cert.X509Certificate;
+import java.time.Instant;
+import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
@@ -22,14 +24,12 @@ import java.util.zip.DataFormatException;
 import javax.xml.bind.DatatypeConverter;
 
 import org.apache.commons.lang3.StringUtils;
-import org.joda.time.DateTime;
 import org.opensaml.core.config.InitializationException;
 import org.opensaml.core.xml.config.XMLObjectProviderRegistrySupport;
 import org.opensaml.core.xml.io.Unmarshaller;
 import org.opensaml.core.xml.io.UnmarshallerFactory;
 import org.opensaml.core.xml.io.UnmarshallingException;
 import org.opensaml.saml.saml2.core.AuthnRequest;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
@@ -41,16 +41,16 @@ import de.governikus.eumw.eidascommon.ErrorCodeException;
 import de.governikus.eumw.eidascommon.ErrorCodeWithResponseException;
 import de.governikus.eumw.eidascommon.HttpRedirectUtils;
 import de.governikus.eumw.eidascommon.Utils;
-import de.governikus.eumw.eidasmiddleware.ConfigHolder;
 import de.governikus.eumw.eidasmiddleware.RequestProcessingException;
-import de.governikus.eumw.eidasmiddleware.ServiceProviderConfig;
 import de.governikus.eumw.eidasmiddleware.eid.RequestingServiceProvider;
 import de.governikus.eumw.eidasmiddleware.entities.RequestSession;
 import de.governikus.eumw.eidasmiddleware.repositories.RequestSessionRepository;
 import de.governikus.eumw.eidasstarterkit.EidasRequest;
 import de.governikus.eumw.eidasstarterkit.EidasSaml;
-import de.governikus.eumw.poseidas.server.idprovider.config.CoreConfigurationDto;
-import de.governikus.eumw.poseidas.server.idprovider.config.PoseidasConfigurator;
+import de.governikus.eumw.poseidas.server.idprovider.config.ConfigurationException;
+import de.governikus.eumw.poseidas.server.idprovider.config.ConfigurationService;
+import lombok.AccessLevel;
+import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import net.shibboleth.utilities.java.support.component.ComponentInitializationException;
 import net.shibboleth.utilities.java.support.xml.BasicParserPool;
@@ -63,6 +63,7 @@ import se.litsec.eidas.opensaml.ext.SPTypeEnumeration;
  */
 @Slf4j
 @Component
+@AllArgsConstructor(access = AccessLevel.PACKAGE)
 public class RequestHandler
 {
 
@@ -74,41 +75,10 @@ public class RequestHandler
   private final RequestSessionRepository requestSessionRepository;
 
   /**
-   * access the config for the different service providers
-   */
-  private final ServiceProviderConfig serviceProviderConfig;
-
-  /**
    * access the config of the middleware
    */
-  private final ConfigHolder configHolder;
+  private final ConfigurationService configurationService;
 
-  private final CoreConfigurationDto coreConfigurationDto;
-
-  /**
-   * Default constructor with DI
-   */
-  @Autowired
-  public RequestHandler(RequestSessionRepository requestSessionRepository,
-                        ConfigHolder configHolder,
-                        ServiceProviderConfig serviceProviderConfig)
-  {
-    this.requestSessionRepository = requestSessionRepository;
-    this.configHolder = configHolder;
-    this.serviceProviderConfig = serviceProviderConfig;
-    this.coreConfigurationDto = PoseidasConfigurator.getInstance().getCurrentConfig();
-  }
-
-  RequestHandler(RequestSessionRepository requestSessionRepository,
-                 ConfigHolder configHolder,
-                 ServiceProviderConfig serviceProviderConfig,
-                 CoreConfigurationDto coreConfigurationDto)
-  {
-    this.requestSessionRepository = requestSessionRepository;
-    this.configHolder = configHolder;
-    this.serviceProviderConfig = serviceProviderConfig;
-    this.coreConfigurationDto = coreConfigurationDto;
-  }
 
   /**
    * Handles the SAML request.
@@ -147,8 +117,8 @@ public class RequestHandler
       // Validate and parse the SAML request
       eidasReq = parseSAMLRequest(samlRequest);
 
-      SPTypeEnumeration metadataSectorType = serviceProviderConfig.getProviderByEntityID(eidasReq.getIssuer())
-                                                                  .getSectorType();
+      SPTypeEnumeration metadataSectorType = configurationService.getProviderByEntityID(eidasReq.getIssuer())
+                                                                 .getSectorType();
       SPTypeEnumeration requestSectorType = eidasReq.getSectorType();
       if (metadataSectorType == null && requestSectorType == null)
       {
@@ -170,9 +140,9 @@ public class RequestHandler
 
       // Check that the consumer URL is equal with the connector's metadata
       if (!Utils.isNullOrEmpty(eidasReq.getAuthnRequest().getAssertionConsumerServiceURL())
-          && !serviceProviderConfig.getProviderByEntityID(eidasReq.getIssuer())
-                                   .getAssertionConsumerURL()
-                                   .equals(eidasReq.getAuthnRequest().getAssertionConsumerServiceURL()))
+          && !configurationService.getProviderByEntityID(eidasReq.getIssuer())
+                                  .getAssertionConsumerURL()
+                                  .equals(eidasReq.getAuthnRequest().getAssertionConsumerServiceURL()))
       {
         throw new ErrorCodeException(ErrorCode.WRONG_DESTINATION, "Given AssertionConsumerServiceURL ist not valid!");
       }
@@ -218,7 +188,15 @@ public class RequestHandler
         throw new ErrorCodeWithResponseException(ErrorCode.ILLEGAL_REQUEST_SYNTAX, eidasRequest.getIssuer(),
                                                  eidasRequest.getId(), "RequesterID is missing in SAML request");
       }
-      if (!coreConfigurationDto.getServiceProvider().containsKey(reqProviderName))
+      final String finalReqProviderName = reqProviderName;
+      if (configurationService.getConfiguration()
+                              .orElseThrow(() -> new ConfigurationException("No eumw configuration present"))
+                              .getEidConfiguration()
+                              .getServiceProvider()
+                              .stream()
+                              .filter(serviceProviderType -> serviceProviderType.getName().equals(finalReqProviderName))
+                              .findFirst()
+                              .isEmpty())
       {
         // No service provider available with the given name
         log.debug("Received SAML request with unknown RequesterID: {}", reqProviderName);
@@ -245,7 +223,7 @@ public class RequestHandler
 
       // Check that the AuthnRequest is not older than one minute
       if (authnRequest.getIssueInstant() == null
-          || authnRequest.getIssueInstant().isBefore(DateTime.now().minusMinutes(1)))
+          || authnRequest.getIssueInstant().isBefore(Instant.now().minus(1, ChronoUnit.MINUTES)))
       {
         throw new ErrorCodeException(ErrorCode.OUTDATED_REQUEST);
       }
@@ -263,7 +241,7 @@ public class RequestHandler
 
       // Check the AuthnRequest signature
       String issuer = Objects.requireNonNull(authnRequest.getIssuer().getDOM()).getTextContent();
-      RequestingServiceProvider requestingServiceProvider = serviceProviderConfig.getProviderByEntityID(issuer);
+      RequestingServiceProvider requestingServiceProvider = configurationService.getProviderByEntityID(issuer);
       if (requestingServiceProvider == null)
       {
         throw new ErrorCodeException(ErrorCode.UNKNOWN_PROVIDER, issuer);
@@ -317,6 +295,6 @@ public class RequestHandler
    */
   public String getTcTokenURL(String sessionId)
   {
-    return configHolder.getServerURLWithContextPath() + ContextPaths.TC_TOKEN + "?sessionID=" + sessionId;
+    return configurationService.getServerURLWithEidasContextPath() + ContextPaths.TC_TOKEN + "?sessionID=" + sessionId;
   }
 }

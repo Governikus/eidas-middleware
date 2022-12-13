@@ -1,0 +1,45 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app: eidas-middleware
+  name: eidas-middleware
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: eidas-middleware
+  strategy:
+    rollingUpdate:
+      maxSurge: 0
+      maxUnavailable: 1
+    type: RollingUpdate
+  template:
+    metadata:
+      labels:
+        app: eidas-middleware
+        date: "{{ now | unixEpoch }}"
+    spec:
+      containers:
+        - image: {{ .Values.eidas_middleware.image }}:{{ .Values.eidas_middleware.tag }}
+          imagePullPolicy: Always
+          name: eidas-middleware
+          ports:
+            - name: tls
+              containerPort: {{ .Values.eidas_middleware.port.server }}
+              protocol: TCP
+            - name: admin
+              containerPort: {{ .Values.eidas_middleware.port.admin_interface }}
+              protocol: TCP
+          volumeMounts:
+            - name: eidas-middleware-config
+              mountPath: /opt/eidas-middleware/configuration
+            - name: eidas-middleware-db
+              mountPath: /opt/eidas-middleware/database
+      volumes:
+        - name: eidas-middleware-config
+          configMap:
+            name: eidas-middleware-config-map
+        - name: eidas-middleware-db
+          persistentVolumeClaim:
+            claimName: {{ .Values.eidas_middleware.volume}}

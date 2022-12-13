@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html th:replace="~{base-template/main :: main(~{::title}, ~{::section})}"
+      xmlns:th="http://www.thymeleaf.org">
+<title>eID service provider - eIDAS Middleware configuration and administration</title>
+<section>
+    <h1>eID service provider configuration</h1>
+    <hr class="text-primary" style="height: 4px"/>
+    <form method="post" action="" th:object="${serviceProviderConfigModel}"
+          enctype="multipart/form-data">
+        <div th:replace="~{fragments/form :: inputRow_text('Name', 'name', 'The name for this service provider')}"/>
+        <div th:replace="~{fragments/form :: inputRow_bool('Active', 'enabled')}"/>
+        <div class=" form-group row m-1">
+            <label class="col-sm-3 col-form-label text-left" for="DVCA-configuration">DVCA configuration</label>
+            <div class="col-sm-9">
+                <select class="form-select" id="DVCA-configuration"
+                        th:classappend="${#fields.hasErrors('dvcaConfigurationName') ? 'border-danger' : ''}"
+                        th:field="*{dvcaConfigurationName}">
+                    <option th:each="dvca : ${dvcaValues}"
+                            th:text="${dvca}"
+                            th:value="${dvca}"></option>
+                </select>
+                <p class="m-0 text-danger" th:errors="*{dvcaConfigurationName}"/>
+                <p class="text-secondary">The DVCA configuration to use</p>
+            </div>
+        </div>
+        <div th:if="${@environment.getProperty('hsm.type') != 'PKCS11'}">
+            <div th:replace="~{fragments/configOptions :: keypairs('DVCA client authentication key pair', 'clientKeyPairName', 'Key pair for TLS client authentication with referenced DVCA')}"/>
+        </div>
+        <input type="hidden"
+               th:name="${_csrf.parameterName}"
+               th:value="${_csrf.token}"/>
+        <div th:replace="fragments/form :: submitAndAbort('/admin-interface/serviceProvider')"></div>
+    </form>
+</section>
+</html>

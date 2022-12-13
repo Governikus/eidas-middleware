@@ -9,14 +9,10 @@
 
 package de.governikus.eumw.poseidas.server.timer;
 
-import java.util.Calendar;
-
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
-import de.governikus.eumw.poseidas.config.schema.TimerConfigurationType;
-import de.governikus.eumw.poseidas.config.schema.TimerType;
-import de.governikus.eumw.poseidas.server.idprovider.config.PoseidasConfigurator;
+import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 
@@ -27,6 +23,7 @@ import lombok.extern.slf4j.Slf4j;
  */
 @Configuration
 @Slf4j
+@AllArgsConstructor
 public class TimerValues
 {
 
@@ -36,31 +33,6 @@ public class TimerValues
 
   static final long HOUR = MINUTE * 60;
 
-  /**
-   * Use this wrapper for the static access to the configuration in order to simplify the mocking of the timer
-   * configuration in tests
-   *
-   * @return The timer configuration from the POSeIDAS.xml
-   */
-  @Bean
-  TimerConfigurationType getTimerConfiguration()
-  {
-    return PoseidasConfigurator.getInstance().getCurrentConfig().getTimerConfiguration();
-  }
-
-  private static long getUnitOfTime(int unitFromXML)
-  {
-    if (unitFromXML == Calendar.MINUTE)
-    {
-      return MINUTE;
-    }
-    if (unitFromXML == Calendar.HOUR_OF_DAY)
-    {
-      return HOUR;
-    }
-    throw new IllegalArgumentException("Unsupported unit of time: " + unitFromXML);
-  }
-
   @Bean
   public String getFullBlacklistRate()
   {
@@ -68,98 +40,6 @@ public class TimerValues
 
     // Set default value for once a month
     String rate = String.valueOf(30 * 24 * HOUR);
-    logRateForTimer(timerName, rate);
-    return rate;
-  }
-
-  @Bean
-  public String getDeltaBlacklistRate(TimerConfigurationType timerConfiguration)
-  {
-    String timerName = "Delta blacklist renewal";
-
-    // Check for configuration value
-    if (timerConfiguration != null && timerConfiguration.getBlacklistRenewal() != null)
-    {
-      TimerType blacklistRenewal = timerConfiguration.getBlacklistRenewal();
-      if (blacklistRenewal.getUnit() != 0 && blacklistRenewal.getLength() != 0)
-      {
-        String rate = String.valueOf(getUnitOfTime(blacklistRenewal.getUnit()) * blacklistRenewal.getLength());
-        logRateForTimer(timerName, rate);
-        return rate;
-      }
-    }
-
-    // Set default value for every 2 hours
-    String rate = String.valueOf(2 * HOUR);
-    logRateForTimer(timerName, rate);
-    return rate;
-  }
-
-  @Bean
-  public String getCVCRate(TimerConfigurationType timerConfiguration)
-  {
-    String timerName = "CVC renewal check";
-
-    // Check for configuration value
-    if (timerConfiguration != null && timerConfiguration.getCertRenewal() != null)
-    {
-      TimerType certRenewal = timerConfiguration.getCertRenewal();
-      if (certRenewal.getLength() != 0 && certRenewal.getUnit() != 0)
-      {
-        String rate = String.valueOf(getUnitOfTime(certRenewal.getUnit()) * certRenewal.getLength());
-        logRateForTimer(timerName, rate);
-        return rate;
-      }
-    }
-
-    // Set default value to every hour
-    String rate = String.valueOf(HOUR);
-    logRateForTimer(timerName, rate);
-    return rate;
-  }
-
-  @Bean
-  public String getMasterDefectRate(TimerConfigurationType timerConfiguration)
-  {
-    String timerName = "Master and defect list renewal";
-
-    // Check for configuration value
-    if (timerConfiguration != null && timerConfiguration.getMasterAndDefectListRenewal() != null)
-    {
-      TimerType renewal = timerConfiguration.getMasterAndDefectListRenewal();
-      if (renewal.getLength() != 0 && renewal.getUnit() != 0)
-      {
-        String rate = String.valueOf(getUnitOfTime(renewal.getUnit()) * renewal.getLength());
-        logRateForTimer(timerName, rate);
-        return rate;
-      }
-    }
-
-    // Set default value to every 2 hours
-    String rate = String.valueOf(2 * HOUR);
-    logRateForTimer(timerName, rate);
-    return rate;
-  }
-
-  @Bean
-  public String getCrlRate(TimerConfigurationType timerConfiguration)
-  {
-    String timerName = "CRL renewal";
-
-    // Check for configuration value
-    if (timerConfiguration != null && timerConfiguration.getCrlRenewal() != null)
-    {
-      TimerType crlRenewal = timerConfiguration.getCrlRenewal();
-      if (crlRenewal.getLength() != 0 && crlRenewal.getUnit() != 0)
-      {
-        String rate = String.valueOf(getUnitOfTime(crlRenewal.getUnit()) * crlRenewal.getLength());
-        logRateForTimer(timerName, rate);
-        return rate;
-      }
-    }
-
-    // Set default value to every 2 hours
-    String rate = String.valueOf(2 * HOUR);
     logRateForTimer(timerName, rate);
     return rate;
   }
@@ -186,7 +66,7 @@ public class TimerValues
     return rate;
   }
 
-  private void logRateForTimer(String timerName, String rate)
+  protected void logRateForTimer(String timerName, String rate)
   {
     log.info(" The timer '{}' will be executed every {}", timerName, getHumanReadableRate(rate));
   }

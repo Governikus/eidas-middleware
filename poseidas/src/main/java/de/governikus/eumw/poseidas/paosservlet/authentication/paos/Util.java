@@ -19,6 +19,9 @@ import javax.xml.XMLConstants;
 import javax.xml.bind.JAXBContext;
 import javax.xml.bind.JAXBException;
 import javax.xml.bind.Unmarshaller;
+import javax.xml.catalog.CatalogFeatures;
+import javax.xml.catalog.CatalogManager;
+import javax.xml.catalog.CatalogResolver;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.ParserConfigurationException;
 import javax.xml.soap.MessageFactory;
@@ -31,8 +34,6 @@ import org.w3c.dom.Document;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 import org.xml.sax.SAXException;
-
-import com.sun.org.apache.xerces.internal.util.XMLCatalogResolver;
 
 import de.governikus.eumw.eidascommon.Utils;
 
@@ -83,7 +84,11 @@ public final class Util
         String catalogUrlString = Util.class.getResource("/ecard115/ecard115catalog.xml").toString();
 
         URL schemaUrl = Util.class.getResource("/ecard115/ISO24727-Protocols.xsd");
-        sf.setResourceResolver(new XMLCatalogResolver(new String[]{catalogUrlString}));
+        CatalogFeatures catalogFeatures = CatalogFeatures.builder()
+                                                         .with(CatalogFeatures.Feature.FILES, catalogUrlString)
+                                                         .build();
+        CatalogResolver catalogResolver = CatalogManager.catalogResolver(catalogFeatures);
+        sf.setResourceResolver(catalogResolver);
         try
         {
           um.setSchema(sf.newSchema(schemaUrl));

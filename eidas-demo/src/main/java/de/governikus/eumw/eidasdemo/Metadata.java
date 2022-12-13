@@ -13,9 +13,9 @@ package de.governikus.eumw.eidasdemo;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.security.cert.CertificateEncodingException;
+import java.time.Instant;
+import java.time.temporal.ChronoUnit;
 import java.util.Arrays;
-import java.util.Calendar;
-import java.util.Date;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -99,10 +99,8 @@ public class Metadata
     }
   }
 
-  private static Date validForOneYear()
+  private static Instant validForOneYear()
   {
-    Calendar cal = Calendar.getInstance();
-    cal.add(Calendar.YEAR, 1);
-    return cal.getTime();
+    return Instant.now().plus(365, ChronoUnit.DAYS);
   }
 }

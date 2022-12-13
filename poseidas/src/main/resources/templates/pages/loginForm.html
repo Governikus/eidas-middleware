@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html th:replace="~{base-template/main :: main(~{::title}, ~{::section})}"
+      xmlns:th="http://www.thymeleaf.org">
+
+<title>Login - eIDAS Middleware configuration and administration</title>
+
+<section>
+
+
+    <div align="center" class="container">
+
+        <div class="my-5 shadow bg-transparent w-100">
+            <form method="post" th:action="@{/admin-interface/login}">
+                <table class="table">
+                    <tr>
+                        <td class="text-center" colspan="2"><img align="logo" class="w-25"
+                                                                 src="/images/Logo-Governikus-600px.png">
+                        </td>
+
+                    </tr>
+                    <tr th:if="${param.error != null || param.logout != null}">
+                        <td class="text-center" colspan="2">
+                            <div class="alert alert-danger w-100" th:if="${param.error}">
+                                Wrong password!
+                            </div>
+                            <div class="alert alert-success w-100" th:if="${param.logout}">
+                                Logged out successfully
+                            </div>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td class="col-form-label"><label for="password">Password: </label></td>
+                        <td><input class="form-control" id="password" name="password" type="password"/></td>
+                    </tr>
+                    <tr>
+                        <td colspan="2">
+                            <div align="center">
+                                <button class="btn btn-primary w-100 form-control" type="submit">Login</button>
+                            </div>
+                        </td>
+                    </tr>
+                </table>
+            </form>
+        </div>
+    </div>
+</section>
+</html>

@@ -14,7 +14,9 @@ import java.util.HashSet;
 import java.util.Set;
 
 import de.governikus.eumw.poseidas.eidmodel.data.EIDKeys;
-import de.governikus.eumw.poseidas.server.idprovider.config.CoreConfigurationDto;
+import lombok.Getter;
+import lombok.RequiredArgsConstructor;
+import lombok.Setter;
 
 
 /**
@@ -23,6 +25,9 @@ import de.governikus.eumw.poseidas.server.idprovider.config.CoreConfigurationDto
  *
  * @author Hauke Mehrtens
  */
+@Getter
+@Setter
+@RequiredArgsConstructor
 public class EIDRequestInput
 {
 
@@ -38,20 +43,9 @@ public class EIDRequestInput
 
   private final boolean sessionIdMayDiffer;
 
-  private CoreConfigurationDto config;
-
   private final Set<EIDKeys> requiredFields = new HashSet<>();
 
   private final Set<EIDKeys> optionalFields = new HashSet<>();
-
-  /**
-   * @param saml true if this is from SAML
-   * @param sessionIdMayDiffer true if the {@link #sessionId} and {@link #requestId} are allowed to differ
-   */
-  public EIDRequestInput(boolean sessionIdMayDiffer)
-  {
-    this.sessionIdMayDiffer = sessionIdMayDiffer;
-  }
 
   public void addRequiredFields(EIDKeys key)
   {
@@ -61,92 +55,5 @@ public class EIDRequestInput
   public void addOptionalFields(EIDKeys key)
   {
     optionalFields.add(key);
-  }
-
-  public void setRequestedCommunityIDPattern(String requestedCommunityIDPattern)
-  {
-    this.requestedCommunityIDPattern = requestedCommunityIDPattern;
-  }
-
-  public void setRequestedMinAge(int requestedMinAge)
-  {
-    this.requestedMinAge = requestedMinAge;
-  }
-
-  public String getRequestedCommunityIDPattern()
-  {
-    return requestedCommunityIDPattern;
-  }
-
-  public int getRequestedMinAge()
-  {
-    return requestedMinAge;
-  }
-
-  public String getTransactionInfo()
-  {
-    return transactionInfo;
-  }
-
-  public Set<EIDKeys> getRequiredFields()
-  {
-    return requiredFields;
-  }
-
-  public Set<EIDKeys> getOptionalFields()
-  {
-    return optionalFields;
-  }
-
-  public void setTransactionInfo(String transactionInfo)
-  {
-    this.transactionInfo = transactionInfo;
-  }
-
-  /**
-   * This is the ID used by the service provider or SAML to access this session.
-   */
-  public String getRequestId()
-  {
-    return requestId;
-  }
-
-  /**
-   * This is the ID used by the service provider or SAML to access this session.
-   */
-  public void setRequestId(String requestId)
-  {
-    this.requestId = requestId;
-  }
-
-  /**
-   * This is the ID used by the eID Client to talk to the PAOS servlet.
-   */
-  public String getSessionId()
-  {
-    return sessionId;
-  }
-
-  /**
-   * This is the ID used by the eID Client to talk to the PAOS servlet.
-   */
-  public void setSessionId(String sessionId)
-  {
-    this.sessionId = sessionId;
-  }
-
-  public CoreConfigurationDto getConfig()
-  {
-    return config;
-  }
-
-  public void setConfig(CoreConfigurationDto config)
-  {
-    this.config = config;
-  }
-
-  public boolean isSessionIdMayDiffer()
-  {
-    return sessionIdMayDiffer;
   }
 }

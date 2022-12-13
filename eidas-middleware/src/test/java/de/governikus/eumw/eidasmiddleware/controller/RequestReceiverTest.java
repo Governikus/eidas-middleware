@@ -17,12 +17,12 @@ import de.governikus.eumw.eidascommon.ContextPaths;
 import de.governikus.eumw.eidascommon.ErrorCode;
 import de.governikus.eumw.eidascommon.ErrorCodeWithResponseException;
 import de.governikus.eumw.eidasmiddleware.RequestProcessingException;
-import de.governikus.eumw.eidasmiddleware.ServiceProviderConfig;
 import de.governikus.eumw.eidasmiddleware.eid.RequestingServiceProvider;
 import de.governikus.eumw.eidasmiddleware.handler.RequestHandler;
 import de.governikus.eumw.eidasmiddleware.handler.ResponseHandler;
 import de.governikus.eumw.eidasstarterkit.EidasLoaEnum;
 import de.governikus.eumw.eidasstarterkit.EidasRequest;
+import de.governikus.eumw.poseidas.server.idprovider.config.ConfigurationService;
 
 
 @ExtendWith(MockitoExtension.class)
@@ -37,6 +37,8 @@ class RequestReceiverTest
 
   private static final String EID_CLIENT_URL = "http://127.0.0.1:24727/eID-Client?tcTokenURL=";
 
+  private static final String EID_CLIENT_MOBIL_URL = "eid://127.0.0.1:24727/eID-Client?tcTokenURL=";
+
   private static final String SAML_RESPONSE = "samlResponse";
 
   private static final String CONSUMER_URL = "consumerUrl";
@@ -50,7 +52,7 @@ class RequestReceiverTest
   private ResponseHandler responseHandler;
 
   @Mock
-  private ServiceProviderConfig serviceProviderConfig;
+  private ConfigurationService configurationService;
 
   @Mock
   private EidasRequest eIDASRequest;
@@ -59,18 +61,26 @@ class RequestReceiverTest
   void testDoGetShouldReturnLandingPage() throws Exception
   {
     prepareMocks(false);
-    RequestReceiver requestReceiver = new RequestReceiver(requestHandler, responseHandler, serviceProviderConfig);
+    Mockito.when(requestHandler.getTcTokenURL(REQUEST_ID)).thenReturn(TC_TOKEN_URL + REQUEST_ID);
+    RequestReceiver requestReceiver = new RequestReceiver(requestHandler, responseHandler, configurationService);
     ModelAndView landingPage = requestReceiver.doGet(RELAY_STATE, SAML_REQUEST_BASE_64_MOCK, null, null);
 
-    Assertions.assertEquals("redirect:/eidas-middleware/RequestReceiver?sessionId=requestId",
-                            landingPage.getViewName());
+    Assertions.assertEquals("middleware", landingPage.getViewName());
+    ModelMap modelMap = landingPage.getModelMap();
+    Assertions.assertEquals(2, modelMap.size());
+    Assertions.assertEquals(EID_CLIENT_URL
+                            + URLEncoder.encode(TC_TOKEN_URL + REQUEST_ID, StandardCharsets.UTF_8.name()),
+                            modelMap.getAttribute("ausweisapp"));
+    Assertions.assertEquals(ContextPaths.EIDAS_CONTEXT_PATH + ContextPaths.REQUEST_RECEIVER + "?sessionId="
+                            + REQUEST_ID,
+                            modelMap.getAttribute("linkToSelf"));
   }
 
   @Test
   void testDoGetWithSessionIdShouldReturnLandingPage() throws Exception
   {
     Mockito.when(requestHandler.getTcTokenURL(REQUEST_ID)).thenReturn(TC_TOKEN_URL + REQUEST_ID);
-    RequestReceiver requestReceiver = new RequestReceiver(requestHandler, responseHandler, serviceProviderConfig);
+    RequestReceiver requestReceiver = new RequestReceiver(requestHandler, responseHandler, configurationService);
     ModelAndView landingPage = requestReceiver.doGet(null, null, REQUEST_ID, null);
 
     Mockito.verify(requestHandler, Mockito.never())
@@ -95,7 +105,7 @@ class RequestReceiverTest
     Mockito.when(eIDASRequest.getAuthClassRef()).thenReturn(EidasLoaEnum.LOA_TEST);
     Mockito.when(responseHandler.prepareDummyResponse(REQUEST_ID, null)).thenReturn(SAML_RESPONSE);
     Mockito.when(responseHandler.getConsumerURLForRequestID(REQUEST_ID)).thenReturn(CONSUMER_URL);
-    RequestReceiver requestReceiver = new RequestReceiver(requestHandler, responseHandler, serviceProviderConfig);
+    RequestReceiver requestReceiver = new RequestReceiver(requestHandler, responseHandler, configurationService);
     ModelAndView responsePage = requestReceiver.doGet(RELAY_STATE, SAML_REQUEST_BASE_64_MOCK, null, null);
 
     Assertions.assertEquals("response", responsePage.getViewName());
@@ -112,7 +122,7 @@ class RequestReceiverTest
   @Test
   void testDoGetShouldReturnErrorPageWhenSamlRequestAndSessionIdNotPresent() throws Exception
   {
-    RequestReceiver requestReceiver = new RequestReceiver(requestHandler, responseHandler, serviceProviderConfig);
+    RequestReceiver requestReceiver = new RequestReceiver(requestHandler, responseHandler, configurationService);
     ModelAndView errorPage = requestReceiver.doGet(null, null, null, null);
     Mockito.verify(requestHandler, Mockito.never())
            .handleSAMLRequest(Mockito.anyString(), Mockito.anyString(), Mockito.anyBoolean());
@@ -129,14 +139,14 @@ class RequestReceiverTest
            .thenThrow(new ErrorCodeWithResponseException(ErrorCode.SIGNATURE_CHECK_FAILED, "issuer", REQUEST_ID,
                                                          "error Message"));
     RequestingServiceProvider requestingServiceProvider = Mockito.mock(RequestingServiceProvider.class);
-    Mockito.when(serviceProviderConfig.getProviderByEntityID("issuer")).thenReturn(requestingServiceProvider);
+    Mockito.when(configurationService.getProviderByEntityID("issuer")).thenReturn(requestingServiceProvider);
     Mockito.when(requestingServiceProvider.getAssertionConsumerURL()).thenReturn("consumerUrl");
     Mockito.when(responseHandler.prepareSAMLErrorResponse(requestingServiceProvider,
                                                           REQUEST_ID,
                                                           ErrorCode.SIGNATURE_CHECK_FAILED,
                                                           "error Message"))
            .thenReturn(SAML_RESPONSE);
-    RequestReceiver requestReceiver = new RequestReceiver(requestHandler, responseHandler, serviceProviderConfig);
+    RequestReceiver requestReceiver = new RequestReceiver(requestHandler, responseHandler, configurationService);
     ModelAndView errorPageWithResponse = requestReceiver.doGet(RELAY_STATE, SAML_REQUEST_BASE_64_MOCK, null, null);
 
     Assertions.assertEquals("response", errorPageWithResponse.getViewName());
@@ -156,7 +166,7 @@ class RequestReceiverTest
     String errorMessage = "Request Processig Exception";
     Mockito.when(requestHandler.handleSAMLRequest(Mockito.anyString(), Mockito.anyString(), Mockito.anyBoolean()))
            .thenThrow(new RequestProcessingException(errorMessage));
-    RequestReceiver requestReceiver = new RequestReceiver(requestHandler, responseHandler, serviceProviderConfig);
+    RequestReceiver requestReceiver = new RequestReceiver(requestHandler, responseHandler, configurationService);
     ModelAndView errorPage = requestReceiver.doGet(RELAY_STATE, SAML_REQUEST_BASE_64_MOCK, null, null);
 
     Assertions.assertEquals("error", errorPage.getViewName());
@@ -170,11 +180,19 @@ class RequestReceiverTest
   void testDoPostShouldReturnLandingPage() throws Exception
   {
     prepareMocks(true);
-    RequestReceiver requestReceiver = new RequestReceiver(requestHandler, responseHandler, serviceProviderConfig);
+    Mockito.when(requestHandler.getTcTokenURL(REQUEST_ID)).thenReturn(TC_TOKEN_URL + REQUEST_ID);
+    RequestReceiver requestReceiver = new RequestReceiver(requestHandler, responseHandler, configurationService);
     ModelAndView landingPage = requestReceiver.doPost(RELAY_STATE, SAML_REQUEST_BASE_64_MOCK, "iPhone");
 
-    Assertions.assertEquals("redirect:/eidas-middleware/RequestReceiver?sessionId=requestId",
-                            landingPage.getViewName());
+    Assertions.assertEquals("middleware", landingPage.getViewName());
+    ModelMap modelMap = landingPage.getModelMap();
+    Assertions.assertEquals(2, modelMap.size());
+    Assertions.assertEquals(EID_CLIENT_MOBIL_URL
+                            + URLEncoder.encode(TC_TOKEN_URL + REQUEST_ID, StandardCharsets.UTF_8.name()),
+                            modelMap.getAttribute("ausweisapp"));
+    Assertions.assertEquals(ContextPaths.EIDAS_CONTEXT_PATH + ContextPaths.REQUEST_RECEIVER + "?sessionId="
+                            + REQUEST_ID,
+                            modelMap.getAttribute("linkToSelf"));
   }
 
   private void prepareMocks(boolean isPost) throws ErrorCodeWithResponseException

@@ -10,19 +10,19 @@
 
 package de.governikus.eumw.eidascommon;
 
+import lombok.AccessLevel;
+import lombok.NoArgsConstructor;
+
+
 /**
  * Constants needed for communication between eID-Server and several kinds of client. <br>
  * In case you use one of the standard clients, you will not need this class.
  *
  * @author TT
  */
+@NoArgsConstructor(access = AccessLevel.PRIVATE)
 public final class Constants
 {
-
-  private Constants()
-  {
-    super();
-  }
 
   /**
    * Name of the HTML request parameter or HTML header holding the ID of the respective SAML request.

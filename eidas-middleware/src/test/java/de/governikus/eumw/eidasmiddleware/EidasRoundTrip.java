@@ -17,7 +17,6 @@ import java.security.KeyException;
 import java.security.KeyStoreException;
 import java.security.NoSuchAlgorithmException;
 import java.security.NoSuchProviderException;
-import java.security.Security;
 import java.security.UnrecoverableKeyException;
 import java.security.cert.CertificateEncodingException;
 import java.security.cert.CertificateException;
@@ -29,7 +28,6 @@ import java.util.Map;
 import javax.xml.transform.TransformerException;
 import javax.xml.transform.TransformerFactoryConfigurationError;
 
-import org.bouncycastle.jce.provider.BouncyCastleProvider;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
@@ -97,7 +95,6 @@ public class EidasRoundTrip
   @Test
   public void test() throws SAXException
   {
-    Security.addProvider(new BouncyCastleProvider());
     String destination = "http://eu-middleware/receiver";
     String issuer = "http://testSP";
     EidasSigner signer = new EidasSigner(true, keyPair.getKey(), keyPair.getCert());

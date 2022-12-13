@@ -29,11 +29,10 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 
-import org.bouncycastle.jce.provider.BouncyCastleProvider;
-
 import de.governikus.eumw.poseidas.cardbase.AssertUtil;
 import de.governikus.eumw.poseidas.cardbase.asn1.OID;
 import de.governikus.eumw.poseidas.cardserver.SignatureUtil;
+import de.governikus.eumw.utils.key.SecurityProvider;
 
 
 /**
@@ -92,7 +91,7 @@ public class BOSHSMSimulatorService implements HSMService
                                          + ") already existing, replacing not permitted");
     }
 
-    KeyPairGenerator kpg = KeyPairGenerator.getInstance(algorithm, BouncyCastleProvider.PROVIDER_NAME);
+    KeyPairGenerator kpg = KeyPairGenerator.getInstance(algorithm, SecurityProvider.BOUNCY_CASTLE_PROVIDER);
     kpg.initialize(spec);
     KeyPair kp = kpg.generateKeyPair();
 
@@ -104,8 +103,8 @@ public class BOSHSMSimulatorService implements HSMService
 
   /** {@inheritDoc} */
   @Override
-  public byte[] sign(String alias, OID sigAlgOID, byte[] data) throws NoSuchAlgorithmException,
-    NoSuchProviderException, InvalidKeyException, SignatureException, InvalidKeySpecException
+  public byte[] sign(String alias, OID sigAlgOID, byte[] data)
+    throws NoSuchAlgorithmException, InvalidKeyException, SignatureException, InvalidKeySpecException
   {
     AssertUtil.notNullOrEmpty(alias, "alias of key");
     AssertUtil.notNull(sigAlgOID, "OID for signature algorithm");
@@ -121,7 +120,7 @@ public class BOSHSMSimulatorService implements HSMService
   }
 
   public static PrivateKey buildPrivateKey(byte[] keyBytes)
-    throws NoSuchAlgorithmException, NoSuchProviderException, InvalidKeySpecException
+    throws NoSuchAlgorithmException, InvalidKeySpecException
   {
     AssertUtil.notNullOrEmpty(keyBytes, "bytes of received key");
 
@@ -129,11 +128,12 @@ public class BOSHSMSimulatorService implements HSMService
     PrivateKey privSignKey = null;
     try
     {
-      privSignKey = KeyFactory.getInstance("EC", BouncyCastleProvider.PROVIDER_NAME).generatePrivate(keySpec);
+      privSignKey = KeyFactory.getInstance("EC", SecurityProvider.BOUNCY_CASTLE_PROVIDER)
+                              .generatePrivate(keySpec);
     }
     catch (InvalidKeySpecException e)
     {
-      privSignKey = KeyFactory.getInstance("RSA", BouncyCastleProvider.PROVIDER_NAME)
+      privSignKey = KeyFactory.getInstance("RSA", SecurityProvider.BOUNCY_CASTLE_PROVIDER)
                               .generatePrivate(keySpec);
     }
     return privSignKey;

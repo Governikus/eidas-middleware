@@ -1,11 +1,10 @@
 /*
- * Copyright (c) 2020 Governikus KG. Licensed under the EUPL, Version 1.2 or as soon they will be approved by
- * the European Commission - subsequent versions of the EUPL (the "Licence"); You may not use this work except
- * in compliance with the Licence. You may obtain a copy of the Licence at:
- * http://joinup.ec.europa.eu/software/page/eupl Unless required by applicable law or agreed to in writing,
- * software distributed under the Licence is distributed on an "AS IS" basis, WITHOUT WARRANTIES OR CONDITIONS
- * OF ANY KIND, either express or implied. See the Licence for the specific language governing permissions and
- * limitations under the Licence.
+ * Copyright (c) 2020 Governikus KG. Licensed under the EUPL, Version 1.2 or as soon they will be approved by the
+ * European Commission - subsequent versions of the EUPL (the "Licence"); You may not use this work except in compliance
+ * with the Licence. You may obtain a copy of the Licence at: http://joinup.ec.europa.eu/software/page/eupl Unless
+ * required by applicable law or agreed to in writing, software distributed under the Licence is distributed on an
+ * "AS IS" basis, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the Licence for the
+ * specific language governing permissions and limitations under the Licence.
  */
 
 package de.governikus.eumw.poseidas;
@@ -36,8 +35,8 @@ public class POSeIDASSecurityConfig
   PasswordFileAuthenticationProvider authenticationProvider;
 
   /**
-   * This security configuration limits the access to the web admin. Static resources and the login page can
-   * be accessed without authentication, everything else must be authenticated.
+   * This security configuration limits the access to the web admin. Static resources and the login page can be accessed
+   * without authentication, everything else must be authenticated.
    */
   @Configuration
   @Order(1)
@@ -48,23 +47,22 @@ public class POSeIDASSecurityConfig
     protected void configure(HttpSecurity http) throws Exception
     {
       http.antMatcher(ContextPaths.ADMIN_CONTEXT_PATH + "/**");
-      http.authorizeRequests(authorize -> authorize.mvcMatchers(ContextPaths.ADMIN_CONTEXT_PATH
-                                                                + "/webjars/**",
+      http.authorizeRequests(authorize -> authorize.mvcMatchers(ContextPaths.ADMIN_CONTEXT_PATH + "/webjars/**",
                                                                 ContextPaths.ADMIN_CONTEXT_PATH + "/css/**",
                                                                 ContextPaths.ADMIN_CONTEXT_PATH + "/images/**",
-                                                                ContextPaths.ADMIN_CONTEXT_PATH + "/js/**")
+                                                                ContextPaths.ADMIN_CONTEXT_PATH + "/js/**",
+                                                                ContextPaths.ADMIN_CONTEXT_PATH + "/setNewPassword")
                                                    .permitAll()
                                                    .mvcMatchers(ContextPaths.ADMIN_CONTEXT_PATH + "/**")
                                                    .authenticated());
       http.formLogin()
           .loginPage(ContextPaths.ADMIN_CONTEXT_PATH + "/login")
-          .defaultSuccessUrl(ContextPaths.ADMIN_CONTEXT_PATH + "/list")
+          .defaultSuccessUrl(ContextPaths.ADMIN_CONTEXT_PATH + "/dashboard")
           .permitAll()
           .and()
           .logout()
           .logoutRequestMatcher(new AntPathRequestMatcher(ContextPaths.ADMIN_CONTEXT_PATH + "/logout",
                                                           HttpMethod.GET.name()))
-          .logoutSuccessUrl(ContextPaths.ADMIN_CONTEXT_PATH + "/login?success")
           .permitAll()
           .and()
           .headers()

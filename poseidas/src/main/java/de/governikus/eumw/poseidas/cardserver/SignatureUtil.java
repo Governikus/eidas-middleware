@@ -11,13 +11,11 @@
 package de.governikus.eumw.poseidas.cardserver;
 
 import java.security.NoSuchAlgorithmException;
-import java.security.NoSuchProviderException;
 import java.security.Signature;
-
-import org.bouncycastle.jce.provider.BouncyCastleProvider;
 
 import de.governikus.eumw.poseidas.cardbase.asn1.OID;
 import de.governikus.eumw.poseidas.cardbase.constants.OIDConstants;
+import de.governikus.eumw.utils.key.SecurityProvider;
 
 
 public class SignatureUtil
@@ -34,12 +32,9 @@ public class SignatureUtil
    * @param oid OID, <code>null</code> not permitted
    * @return Signature instance
    * @throws IllegalArgumentException if OID <code>null</code> or unknown
-   * @throws NoSuchProviderException if provider not supported (Bouncy Castle used and must be previously
-   *           registered)
    * @throws NoSuchAlgorithmException if algorithm not supported
    */
-  public static Signature createSignature(OID oid)
-    throws NoSuchAlgorithmException, NoSuchProviderException
+  public static Signature createSignature(OID oid) throws NoSuchAlgorithmException
   {
     Signature sig = null;
     if (oid == null)
@@ -48,47 +43,47 @@ public class SignatureUtil
     }
     if (oid.equals(OIDConstants.OID_TA_ECDSA_SHA_1))
     {
-      sig = Signature.getInstance("SHA1withCVC-ECDSA", BouncyCastleProvider.PROVIDER_NAME);
+      sig = Signature.getInstance("SHA1withCVC-ECDSA", SecurityProvider.BOUNCY_CASTLE_PROVIDER);
     }
     else if (oid.equals(OIDConstants.OID_TA_ECDSA_SHA_224))
     {
-      sig = Signature.getInstance("SHA224withCVC-ECDSA", BouncyCastleProvider.PROVIDER_NAME);
+      sig = Signature.getInstance("SHA224withCVC-ECDSA", SecurityProvider.BOUNCY_CASTLE_PROVIDER);
     }
     else if (oid.equals(OIDConstants.OID_TA_ECDSA_SHA_256))
     {
-      sig = Signature.getInstance("SHA256withCVC-ECDSA", BouncyCastleProvider.PROVIDER_NAME);
+      sig = Signature.getInstance("SHA256withCVC-ECDSA", SecurityProvider.BOUNCY_CASTLE_PROVIDER);
     }
     else if (oid.equals(OIDConstants.OID_TA_ECDSA_SHA_384))
     {
-      sig = Signature.getInstance("SHA384withCVC-ECDSA", BouncyCastleProvider.PROVIDER_NAME);
+      sig = Signature.getInstance("SHA384withCVC-ECDSA", SecurityProvider.BOUNCY_CASTLE_PROVIDER);
     }
     else if (oid.equals(OIDConstants.OID_TA_ECDSA_SHA_512))
     {
-      sig = Signature.getInstance("SHA512withCVC-ECDSA", BouncyCastleProvider.PROVIDER_NAME);
+      sig = Signature.getInstance("SHA512withCVC-ECDSA", SecurityProvider.BOUNCY_CASTLE_PROVIDER);
     }
     else if (oid.equals(OIDConstants.OID_TA_RSA_PSS_SHA_1))
     {
-      sig = Signature.getInstance("SHA1withRSA/PSS", BouncyCastleProvider.PROVIDER_NAME);
+      sig = Signature.getInstance("SHA1withRSA/PSS", SecurityProvider.BOUNCY_CASTLE_PROVIDER);
     }
     else if (oid.equals(OIDConstants.OID_TA_RSA_PSS_SHA_256))
     {
-      sig = Signature.getInstance("SHA256withRSA/PSS", BouncyCastleProvider.PROVIDER_NAME);
+      sig = Signature.getInstance("SHA256withRSA/PSS", SecurityProvider.BOUNCY_CASTLE_PROVIDER);
     }
     else if (oid.equals(OIDConstants.OID_TA_RSA_PSS_SHA_512))
     {
-      sig = Signature.getInstance("SHA512withRSA/PSS", BouncyCastleProvider.PROVIDER_NAME);
+      sig = Signature.getInstance("SHA512withRSA/PSS", SecurityProvider.BOUNCY_CASTLE_PROVIDER);
     }
     else if (oid.equals(OIDConstants.OID_TA_RSA_V1_5_SHA_1))
     {
-      sig = Signature.getInstance("SHA1withRSA", BouncyCastleProvider.PROVIDER_NAME);
+      sig = Signature.getInstance("SHA1withRSA", SecurityProvider.BOUNCY_CASTLE_PROVIDER);
     }
     else if (oid.equals(OIDConstants.OID_TA_RSA_V1_5_SHA_256))
     {
-      sig = Signature.getInstance("SHA256withRSA", BouncyCastleProvider.PROVIDER_NAME);
+      sig = Signature.getInstance("SHA256withRSA", SecurityProvider.BOUNCY_CASTLE_PROVIDER);
     }
     else if (oid.equals(OIDConstants.OID_TA_RSA_V1_5_SHA_512))
     {
-      sig = Signature.getInstance("SHA512withRSA", BouncyCastleProvider.PROVIDER_NAME);
+      sig = Signature.getInstance("SHA512withRSA", SecurityProvider.BOUNCY_CASTLE_PROVIDER);
     }
     else
     {

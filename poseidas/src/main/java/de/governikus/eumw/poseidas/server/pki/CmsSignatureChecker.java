@@ -35,13 +35,13 @@ import org.bouncycastle.cms.SignerInformation;
 import org.bouncycastle.cms.SignerInformationStore;
 import org.bouncycastle.cms.SignerInformationVerifier;
 import org.bouncycastle.cms.jcajce.JcaSimpleSignerInfoVerifierBuilder;
-import org.bouncycastle.jce.provider.BouncyCastleProvider;
 import org.bouncycastle.operator.OperatorCreationException;
 import org.bouncycastle.util.Store;
 
 import de.governikus.eumw.poseidas.cardserver.CertificateUtil;
 import de.governikus.eumw.poseidas.eidserver.crl.CertificationRevocationListImpl;
 import de.governikus.eumw.utils.key.KeyReader;
+import de.governikus.eumw.utils.key.SecurityProvider;
 import lombok.Getter;
 
 
@@ -176,7 +176,7 @@ public class CmsSignatureChecker
   {
     try
     {
-      return new JcaSimpleSignerInfoVerifierBuilder().setProvider(BouncyCastleProvider.PROVIDER_NAME)
+      return new JcaSimpleSignerInfoVerifierBuilder().setProvider(SecurityProvider.BOUNCY_CASTLE_PROVIDER)
                                                      .build(publicKey);
     }
     catch (OperatorCreationException e)

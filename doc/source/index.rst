@@ -14,6 +14,3 @@ Contents
     chapter/DemoApplication
     chapter/Changelog
     chapter/glossary
-
-
-

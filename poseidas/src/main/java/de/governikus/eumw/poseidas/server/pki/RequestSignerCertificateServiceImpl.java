@@ -4,7 +4,6 @@ import java.security.KeyPair;
 import java.security.KeyStore;
 import java.security.KeyStoreException;
 import java.security.NoSuchAlgorithmException;
-import java.security.NoSuchProviderException;
 import java.security.PrivateKey;
 import java.security.cert.CertificateEncodingException;
 import java.security.cert.CertificateException;
@@ -15,30 +14,31 @@ import java.security.spec.ECParameterSpec;
 import java.security.spec.InvalidKeySpecException;
 import java.util.Calendar;
 import java.util.GregorianCalendar;
+import java.util.Optional;
 
-import org.bouncycastle.jce.provider.BouncyCastleProvider;
 import org.springframework.stereotype.Service;
 
 import com.google.common.base.Strings;
 
+import de.governikus.eumw.config.EidasMiddlewareConfig;
+import de.governikus.eumw.config.ServiceProviderType;
 import de.governikus.eumw.poseidas.cardbase.asn1.npa.SecurityInfos;
 import de.governikus.eumw.poseidas.cardserver.CertificateUtil;
 import de.governikus.eumw.poseidas.cardserver.service.ServiceRegistry;
 import de.governikus.eumw.poseidas.cardserver.service.hsm.HSMServiceFactory;
 import de.governikus.eumw.poseidas.cardserver.service.hsm.impl.BOSHSMSimulatorService;
 import de.governikus.eumw.poseidas.cardserver.service.hsm.impl.HSMService;
-import de.governikus.eumw.poseidas.server.idprovider.config.CoreConfigurationDto;
-import de.governikus.eumw.poseidas.server.idprovider.config.EPAConnectorConfigurationDto;
-import de.governikus.eumw.poseidas.server.idprovider.config.PoseidasConfigurator;
-import de.governikus.eumw.poseidas.server.idprovider.config.ServiceProviderDto;
+import de.governikus.eumw.poseidas.server.idprovider.config.ConfigurationService;
 import de.governikus.eumw.poseidas.server.monitoring.SNMPConstants;
 import de.governikus.eumw.poseidas.server.monitoring.SNMPTrapSender;
-import de.governikus.eumw.poseidas.service.ConfigHolderInterface;
+import lombok.RequiredArgsConstructor;
+import de.governikus.eumw.utils.key.SecurityProvider;
 import lombok.extern.slf4j.Slf4j;
 
 
 @Slf4j
 @Service
+@RequiredArgsConstructor
 public class RequestSignerCertificateServiceImpl implements RequestSignerCertificateService
 {
 
@@ -51,20 +51,11 @@ public class RequestSignerCertificateServiceImpl implements RequestSignerCertifi
   // See TR-3110 Part-3 A.2.1.1.
   private static final int DOMAIN_PARAMTER_ID_BRAINPOOL_P256R1 = 13;
 
-  private final ConfigHolderInterface configHolder;
+  private final ConfigurationService configurationService;
 
   private final TerminalPermissionAO facade;
 
   private final HSMServiceHolder hsmServiceHolder;
-
-  public RequestSignerCertificateServiceImpl(ConfigHolderInterface configHolder,
-                                             TerminalPermissionAO facade,
-                                             HSMServiceHolder hsmServiceHolder)
-  {
-    this.configHolder = configHolder;
-    this.facade = facade;
-    this.hsmServiceHolder = hsmServiceHolder;
-  }
 
   static String getRscChrIdAsString(Integer id)
   {
@@ -75,19 +66,22 @@ public class RequestSignerCertificateServiceImpl implements RequestSignerCertifi
     return String.format("RSC%02d", id);
   }
 
-  private static String cvcRefIdFromEntityId(String entityId)
+  private String cvcRefIdFromEntityId(String entityId)
   {
-    CoreConfigurationDto config = PoseidasConfigurator.getInstance().getCurrentConfig();
-    if (config == null)
+    Optional<EidasMiddlewareConfig> config = configurationService.getConfiguration();
+    if (config.isEmpty())
     {
+      log.debug("Cannot get cvcRefId. No configuration present");
       return null;
     }
-    ServiceProviderDto provider = config.getServiceProvider().get(entityId);
-    if (provider == null || provider.getEpaConnectorConfiguration() == null)
-    {
-      return null;
-    }
-    return provider.getEpaConnectorConfiguration().getCVCRefID();
+    return config.get()
+                 .getEidConfiguration()
+                 .getServiceProvider()
+                 .stream()
+                 .filter(sp -> sp.getName().equals(entityId))
+                 .findFirst()
+                 .orElse(new ServiceProviderType())
+                 .getCVCRefID();
   }
 
   @Override
@@ -168,9 +162,16 @@ public class RequestSignerCertificateServiceImpl implements RequestSignerCertifi
   {
     if (Strings.isNullOrEmpty(facade.getRequestSignerCertificateHolder(cvcRefId)))
     {
-      if (configHolder.getEntityIDInt().equals(entityId))
+      var optionalEidasConfiguration = configurationService.getConfiguration()
+                                                           .map(EidasMiddlewareConfig::getEidasConfiguration);
+      if (optionalEidasConfiguration.isEmpty())
       {
-        String countryCode = configHolder.getCountryCode();
+        log.debug("Cannot set RSC Holder without a configuration");
+        return false;
+      }
+      else if (entityId.equals(optionalEidasConfiguration.get().getPublicServiceProviderName()))
+      {
+        String countryCode = optionalEidasConfiguration.get().getCountryCode();
         String newHolder = countryCode + EIDAS + countryCode;
         try
         {
@@ -227,7 +228,7 @@ public class RequestSignerCertificateServiceImpl implements RequestSignerCertifi
           signer = BOSHSMSimulatorService.buildPrivateKey(issuerKey);
           fullIssuerAlias = "CN=" + issuerAlias;
         }
-        catch (NoSuchAlgorithmException | NoSuchProviderException | InvalidKeySpecException e)
+        catch (NoSuchAlgorithmException | InvalidKeySpecException e)
         {
           // self sign instead
         }
@@ -238,7 +239,7 @@ public class RequestSignerCertificateServiceImpl implements RequestSignerCertifi
                                                                                               + OU_REQUEST_SIGNER_CERTIFICATE,
                                                                                       fullIssuerAlias + OU_REQUEST_SIGNER_CERTIFICATE,
                                                                                       lifespan,
-                                                                                      BouncyCastleProvider.PROVIDER_NAME);
+                                                                                      SecurityProvider.BOUNCY_CASTLE_PROVIDER);
       if (certificate == null)
       {
         log.error("Certificate is null.");
@@ -318,19 +319,19 @@ public class RequestSignerCertificateServiceImpl implements RequestSignerCertifi
   @Override
   public void renewOutdated()
   {
-    CoreConfigurationDto config = PoseidasConfigurator.getInstance().getCurrentConfig();
-    if (config == null)
+    Optional<EidasMiddlewareConfig> config = configurationService.getConfiguration();
+    if (config.isEmpty())
     {
+      log.debug("No eidas middleware configuration present");
       return;
     }
-    for ( ServiceProviderDto provider : config.getServiceProvider().values() )
+    for ( ServiceProviderType provider : config.get().getEidConfiguration().getServiceProvider() )
     {
-      EPAConnectorConfigurationDto nPaConf = provider.getEpaConnectorConfiguration();
-      if (nPaConf == null || !nPaConf.isUpdateCVC())
+      if (!provider.isEnabled())
       {
         continue;
       }
-      String refID = provider.getEpaConnectorConfiguration().getCVCRefID();
+      String refID = provider.getCVCRefID();
       X509Certificate current = getRequestSignerCertificate(refID, true);
       // do not renew if there is no current
       if (current == null)
@@ -341,7 +342,7 @@ public class RequestSignerCertificateServiceImpl implements RequestSignerCertifi
       refreshDate.add(Calendar.DAY_OF_MONTH, 56);
       if (refreshDate.getTime().after(current.getNotAfter()))
       {
-        log.info("Trying to renew request signer certificate for {}", provider.getEntityID());
+        log.info("Trying to renew request signer certificate for {}", provider.getName());
         generateNewPendingRequestSignerCertificate(refID, null, MAXIMUM_LIFESPAN_IN_MONTHS);
       }
     }

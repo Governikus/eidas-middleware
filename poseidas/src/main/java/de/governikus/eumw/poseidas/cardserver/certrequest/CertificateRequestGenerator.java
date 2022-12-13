@@ -11,19 +11,15 @@
 package de.governikus.eumw.poseidas.cardserver.certrequest;
 
 import java.io.ByteArrayInputStream;
-import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.security.InvalidKeyException;
 import java.security.KeyPair;
 import java.security.NoSuchAlgorithmException;
-import java.security.NoSuchProviderException;
 import java.security.Signature;
 import java.security.SignatureException;
 import java.security.interfaces.ECPublicKey;
 import java.util.Arrays;
-
-import org.bouncycastle.jce.provider.BouncyCastleProvider;
 
 import de.governikus.eumw.poseidas.cardbase.AssertUtil;
 import de.governikus.eumw.poseidas.cardbase.asn1.ASN1;
@@ -37,6 +33,7 @@ import de.governikus.eumw.poseidas.cardbase.crypto.ec.ECUtil;
 import de.governikus.eumw.poseidas.cardserver.SignatureUtil;
 import de.governikus.eumw.poseidas.cardserver.certrequest.CVCKeyPairBuilder.KeyDisposition;
 import de.governikus.eumw.poseidas.cardserver.service.hsm.impl.LocalCertAndKeyProvider;
+import de.governikus.eumw.utils.key.SecurityProvider;
 
 
 /**
@@ -699,14 +696,12 @@ public class CertificateRequestGenerator
    *
    * @param cr certificate request
    * @throws IOException
-   * @throws FileNotFoundException
    * @throws NoSuchAlgorithmException
-   * @throws NoSuchProviderException
    * @throws InvalidKeyException
    * @throws SignatureException
    */
-  private static void checkSignature(CertificateRequest cr) throws IOException, NoSuchAlgorithmException,
-    NoSuchProviderException, InvalidKeyException, SignatureException
+  private static void checkSignature(CertificateRequest cr)
+    throws IOException, NoSuchAlgorithmException, InvalidKeyException, SignatureException
   {
     ASN1 sig = cr.getRequestPart(CertificateRequestPath.SIGNATURE);
     ASN1 body = cr.getRequestPart(CertificateRequestPath.CV_CERTIFICATE_BODY);
@@ -720,7 +715,7 @@ public class CertificateRequestGenerator
     }
     catch (Exception e)
     {
-      s = Signature.getInstance("SHA256withCVC-ECDSA", BouncyCastleProvider.PROVIDER_NAME);
+      s = Signature.getInstance("SHA256withCVC-ECDSA", SecurityProvider.BOUNCY_CASTLE_PROVIDER);
     }
     s.initVerify(pk);
     s.update(body.getEncoded());

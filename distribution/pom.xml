@@ -15,11 +15,11 @@
     <parent>
         <groupId>de.governikus.eumw</groupId>
         <artifactId>eumw</artifactId>
-        <version>2.2.8</version>
+        <version>3.0.0</version>
     </parent>
 
     <artifactId>distribution</artifactId>
-    <version>2.2.8</version>
+    <version>3.0.0</version>
     <packaging>pom</packaging>
 
     <dependencies>
@@ -30,14 +30,6 @@
         <dependency>
             <groupId>de.governikus.eumw</groupId>
             <artifactId>eidas-demo</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>de.governikus.eumw</groupId>
-            <artifactId>configuration-wizard</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>de.governikus.eumw</groupId>
-            <artifactId>password-generator</artifactId>
         </dependency>
     </dependencies>
 

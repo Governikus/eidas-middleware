@@ -1,0 +1,33 @@
+details summary {
+    cursor: pointer;
+}
+
+details summary > * {
+    display: inline;
+}
+
+.gov_blue .fa {
+    color: #0069A3 !important;
+}
+
+.btn-primary {
+    background-color: #0069A3 !important;
+    border-color: #0069A3 !important;
+    color:#fff
+}
+.btn-primary:hover{
+    background-color: #394054 !important;
+    border-color: #394054 !important;
+    color:#fff
+}
+.btn-primary:active{
+    background-color: #BDCDE3 !important;
+    border-color: #BDCDE3 !important;
+    color:#fff
+}
+.btn-primary:visited{
+    background-color: #0069A3 !important;
+    border-color: #0069A3 !important;
+    color:#fff
+}
+

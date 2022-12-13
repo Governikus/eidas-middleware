@@ -1,0 +1,124 @@
+<!-- Submit Buttons-->
+<div th:fragment="submit()" style="float: right" class="btn-group w-25 mb-4">
+    <button class="btn btn-primary rounded-1" id="save" name="save" type="submit">Save <i
+            class="fa fa-save"></i></button>
+</div>
+
+<div th:fragment="submitText(text)" style="float: right" class="btn-group w-100 mb-4">
+    <button class="btn btn-primary rounded-1" id="submit" name="submit" type="submit"><span th:text="${text}"></span>
+    </button>
+</div>
+
+<div th:fragment="submitTextUploadIcon(text)" style="float: right" class="btn-group w-100">
+    <button class="btn btn-primary rounded-1" id="save" name="save" type="submit"><span th:text="${text}"></span> <i
+            class="fa fa-upload"></i></button>
+</div>
+
+<div th:fragment="submitTextPasteIcon(text)" style="float: right" class="btn-group w-100">
+    <button class="btn btn-primary rounded-1" id="save" name="save" type="submit"><span th:text="${text}"></span> <i
+            class="fa fa-paste"></i></button>
+</div>
+
+<div th:fragment="submitAndAbort(abortLink)" style="float: right" class="mb-4">
+    <a class="btn btn-secondary rounded-1" id="abort" th:href="${abortLink}">
+        Abort
+    </a>
+    <button class="btn btn-primary rounded-1" id="save" name="save" type="submit">Save <i class="fa fa-save"></i>
+    </button>
+</div>
+
+<div th:fragment="abort(abortLink)" style="float: right" class="mb-4">
+    <a class="btn btn-secondary rounded-1" id="abort" th:href="${abortLink}">
+        Abort
+    </a>
+</div>
+
+<div th:fragment="deleteAndAbort(entityName, abortLink)" style="float: right" class="mb-4">
+    <a class="btn btn-secondary rounded-1" id="abort" th:href="${abortLink}">
+        Abort
+    </a>
+    <button class="btn btn-danger rounded-1" id="delete" name="save" type="submit">Delete <span
+            th:text="${entityName}"></span> <i class="fa fa-trash"></i></button>
+</div>
+
+<!-- FORM FIELDS -->
+<div th:fragment="inputRow_text(id, obj, hint)">
+    <div class="form-group row m-1">
+        <label class="col-sm-3 col-form-label text-left" th:for="${id}" th:text="${id}"></label>
+        <div class="col-sm-9">
+            <input class="form-control "
+                   th:classappend="${#fields.hasErrors(obj) ? 'border-danger' : ''}"
+                   th:field="*{__${obj}__}" th:id="${id.replace(' ','-')}"
+                   type="text"/>
+            <p class="m-0 text-danger" th:errors="*{__${obj}__}"/>
+            <p class="text-secondary" th:text="${hint}"/>
+        </div>
+    </div>
+</div>
+
+<div th:fragment="inputRow_password(id, obj, hint)">
+    <div class="form-group row m-1">
+        <label class="col-sm-3 col-form-label text-left" th:for="${id}" th:text="${id}"></label>
+        <div class="col-sm-9">
+            <input class="form-control "
+                   th:classappend="${#fields.hasErrors(obj) ? 'border-danger' : ''}"
+                   th:field="*{__${obj}__}" th:id="${id.replace(' ','-')}"
+                   type="password"/>
+            <p class="m-0 text-danger" th:errors="*{__${obj}__}"/>
+            <p class="text-secondary" th:text="${hint}"/>
+        </div>
+    </div>
+</div>
+
+<div th:fragment="inputRow_bool(id, obj)">
+    <div class=" form-group row m-1">
+        <label class="col-sm-3 col-form-label text-left" th:for="${id.replace(' ','-')}" th:text="${id}"></label>
+        <div class="col-sm-9">
+            <input class="form-check-input" th:field="*{__${obj}__}" th:id="${id.replace(' ','-')}"
+                   type="checkbox"/>
+            <p class="m-0 text-danger" th:errors="*{__${obj}__}"/>
+        </div>
+    </div>
+</div>
+
+<div th:fragment="inputRow_number(id, obj, min)">
+    <div class=" form-group row m-1">
+        <label class="col-sm-3 col-form-label text-left" th:for="${id.replace(' ','-')}" th:text="${id}"></label>
+        <div class="col-sm-9">
+            <input class="form-control"
+                   th:classappend="${#fields.hasErrors(obj) ? 'border-danger' : ''}"
+                   th:field="*{__${obj}__}"
+                   th:id="${id.replace(' ','-')}"
+                   type="number"/>
+            <p class="m-0 text-danger" th:errors="*{__${obj}__}"/>
+        </div>
+    </div>
+</div>
+
+<div th:fragment="inputRow_number_decimals(id, obj, min)">
+    <div class=" form-group row m-1">
+        <label class="col-sm-3 col-form-label text-left" th:for="${id.replace(' ','-')}" th:text="${id}"></label>
+        <div class="col-sm-9">
+            <input class="form-control form-check"
+                   th:classappend="${#fields.hasErrors(obj) ? 'border-danger' : ''}"
+                   th:field="*{__${obj}__}"
+                   th:id="${id.replace(' ','-')}"
+                   type="text" pattern="^[0-9]{1,2}((,|.)[0-9]{1,2}){0,1}$"/>
+            <p class="m-0 text-danger" th:errors="*{__${obj}__}"/>
+        </div>
+    </div>
+</div>
+
+<div th:fragment="inputRow_upload(id, obj, fieldname, text)" class=" form-group row m-1">
+    <label class="form-label col-3" th:for="${id.replace(' ','-')}">
+        <span th:text="${text}"/>
+        <span class="fa fa-check" th:if="${obj != null && obj != ''}"/>
+    </label>
+    <div class="col-9">
+        <input class="form-control"
+               th:id="${id.replace(' ','-')}"
+               th:name="${fieldname}"
+               type="file"/>
+    </div>
+</div>
+

@@ -14,7 +14,6 @@ import java.io.IOException;
 import java.net.URI;
 import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
-import java.security.NoSuchProviderException;
 import java.security.SignatureException;
 import java.security.cert.CRLException;
 import java.security.cert.CertificateException;
@@ -25,10 +24,10 @@ import java.util.Optional;
 import java.util.Set;
 
 import org.bouncycastle.asn1.x509.Extension;
-import org.bouncycastle.jce.provider.BouncyCastleProvider;
 
 import de.governikus.eumw.poseidas.cardserver.CertificateUtil;
 import de.governikus.eumw.poseidas.eidserver.crl.exception.CertificateValidationException;
+import de.governikus.eumw.utils.key.SecurityProvider;
 
 
 /**
@@ -71,7 +70,7 @@ public class HttpCrlFetcher implements CrlFetcher
                                                        .findAny();
         if (signer.isPresent())
         {
-          crl.verify(signer.get().getPublicKey(), BouncyCastleProvider.PROVIDER_NAME);
+          crl.verify(signer.get().getPublicKey(), SecurityProvider.BOUNCY_CASTLE_PROVIDER);
           return crl;
         }
         else
@@ -80,8 +79,7 @@ public class HttpCrlFetcher implements CrlFetcher
         }
       }
     }
-    catch (CRLException | InvalidKeyException | NoSuchAlgorithmException | NoSuchProviderException
-      | SignatureException e)
+    catch (CRLException | InvalidKeyException | NoSuchAlgorithmException | SignatureException e)
     {
       throw new CertificateValidationException("Could not verify CRL", e);
     }
@@ -92,10 +90,10 @@ public class HttpCrlFetcher implements CrlFetcher
   {
     try
     {
-      CertificateFactory cf = CertificateFactory.getInstance("x509", BouncyCastleProvider.PROVIDER_NAME);
+      CertificateFactory cf = CertificateFactory.getInstance("x509", SecurityProvider.BOUNCY_CASTLE_PROVIDER);
       return (X509CRL)cf.generateCRL(URI.create(url).toURL().openStream());
     }
-    catch (IOException | CRLException | CertificateException | NoSuchProviderException e)
+    catch (IOException | CRLException | CertificateException e)
     {
       throw new CertificateValidationException(String.format("Failed to download CRL '%s' (%s)",
                                                              url,

@@ -1,0 +1,36 @@
+<div th:fragment="certificates(name, field, desc)">
+    <div class=" form-group row m-1">
+        <label class="col-sm-3 col-form-label text-left" th:for="${name.replace(' ','-')}" th:text="${name}"></label>
+        <div class="col-sm-9">
+            <select class="form-select" th:id="${field}"
+                    th:classappend="${#fields.hasErrors(field) ? 'border-danger' : ''}"
+                    th:field="*{__${field}__}">
+                <option value=""> </option>
+                <option th:each="cert : ${#certificates}"
+                        th:text="${cert.name}"
+                        th:value="${cert.name}"></option>
+            </select>
+            <p class="m-0 text-danger" th:errors="*{__${field}__}"/>
+            <p class="text-secondary" th:text="${desc}"/>
+        </div>
+    </div>
+</div>
+
+<div th:fragment="keypairs(name, field, desc)">
+    <div class=" form-group row m-1">
+        <label class="col-sm-3 col-form-label text-left" th:for="${name.replace(' ','-')}" th:text="${name}"></label>
+        <div class="col-sm-9">
+            <select class="form-select" th:id="${field}"
+                    th:classappend="${#fields.hasErrors(field) ? 'border-danger' : ''}"
+                    th:field="*{__${field}__}">
+                <option value=""> </option>
+                <option th:each="keypair : ${#keypairs}"
+                        th:text="${keypair.name}"
+                        th:value="${keypair.name}"></option>
+            </select>
+            <p class="m-0 text-danger" th:errors="*{__${field}__}"/>
+            <p class="text-secondary" th:text="${desc}"/>
+        </div>
+    </div>
+</div>
+

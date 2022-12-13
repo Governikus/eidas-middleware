@@ -1,0 +1,8 @@
+FROM governikus/eidas-middleware-application:${project.version}
+
+USER root
+RUN apk update && apk add opensc openssl
+COPY --from=vegardit/softhsm2-pkcs11-proxy:latest /usr/local/lib/libpkcs11-proxy* /usr/local/lib/
+COPY --from=vegardit/softhsm2-pkcs11-proxy:latest /opt/test.tls.psk /opt/test.tls.psk
+USER eidas-middleware
+

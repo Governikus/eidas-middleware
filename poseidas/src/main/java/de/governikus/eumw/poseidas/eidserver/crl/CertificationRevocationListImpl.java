@@ -10,11 +10,13 @@
 package de.governikus.eumw.poseidas.eidserver.crl;
 
 import java.io.IOException;
+import java.security.cert.CertificateException;
 import java.security.cert.X509CRL;
 import java.security.cert.X509Certificate;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Optional;
 import java.util.Set;
 
 import org.bouncycastle.asn1.DERIA5String;
@@ -26,10 +28,16 @@ import org.bouncycastle.asn1.x509.GeneralName;
 import org.bouncycastle.asn1.x509.GeneralNames;
 import org.bouncycastle.cert.jcajce.JcaX509ExtensionUtils;
 
+import de.governikus.eumw.config.EidasMiddlewareConfig;
+import de.governikus.eumw.config.ServiceProviderType;
+import de.governikus.eumw.poseidas.cardbase.ArrayUtil;
 import de.governikus.eumw.poseidas.eidserver.crl.exception.CertificateValidationException;
-import de.governikus.eumw.poseidas.server.idprovider.config.PoseidasConfigurator;
+import de.governikus.eumw.poseidas.eidserver.model.signeddata.MasterList;
+import de.governikus.eumw.poseidas.server.idprovider.config.ConfigurationService;
 import de.governikus.eumw.poseidas.server.monitoring.SNMPConstants;
 import de.governikus.eumw.poseidas.server.monitoring.SNMPTrapSender;
+import de.governikus.eumw.poseidas.server.pki.TerminalPermission;
+import de.governikus.eumw.poseidas.server.pki.TerminalPermissionAO;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
@@ -59,10 +67,13 @@ public class CertificationRevocationListImpl implements CertificationRevocationL
    * @param masterList set of trusted certificates to validate the CRL signature
    * @param cscaRootCertificate to extract the CRL URL
    * @param crlFetcher Used to download the CRL
+   * @param configurationService the service to load the eumw configuration from the database
    */
   private CertificationRevocationListImpl(Set<X509Certificate> masterList,
                                           X509Certificate cscaRootCertificate,
-                                          CrlFetcher crlFetcher)
+                                          CrlFetcher crlFetcher,
+                                          ConfigurationService configurationService)
+    throws CertificateException
   {
     Set<X509Certificate> trustSet;
     if (masterList == null)
@@ -76,16 +87,19 @@ public class CertificationRevocationListImpl implements CertificationRevocationL
 
     if (cscaRootCertificate == null)
     {
-      this.cscaRootCertificate = PoseidasConfigurator.getInstance()
-                                                     .getCurrentConfig()
-                                                     .getServiceProvider()
-                                                     .entrySet()
-                                                     .iterator()
-                                                     .next()
-                                                     .getValue()
-                                                     .getEpaConnectorConfiguration()
-                                                     .getPkiConnectorConfiguration()
-                                                     .getMasterListTrustAnchor();
+      Optional<EidasMiddlewareConfig> configuration = configurationService.getConfiguration();
+      if (configuration.isEmpty())
+      {
+        throw new IllegalStateException("Exception during initial retrieval of CRL. No eidas middleware configuration present");
+      }
+      String masterListTrustAnchorCertificateName = configuration.get()
+                                                                 .getEidConfiguration()
+                                                                 .getDvcaConfiguration()
+                                                                 .stream()
+                                                                 .findFirst()
+                                                                 .orElseThrow(() -> new IllegalStateException("Exception during initial retrieval of CRL. No dvca configuration present"))
+                                                                 .getMasterListTrustAnchorCertificateName();
+      this.cscaRootCertificate = configurationService.getCertificate(masterListTrustAnchorCertificateName);
     }
     else
     {
@@ -105,16 +119,56 @@ public class CertificationRevocationListImpl implements CertificationRevocationL
   }
 
   /**
+   * Try to initialize CRL if not already done.
+   * 
+   * @param configurationService configuration
+   * @param facade terminal permission data
+   */
+  public static synchronized void tryInitialize(ConfigurationService configurationService, TerminalPermissionAO facade)
+  {
+    if (isInitialized)
+    {
+      log.trace("CRL already initialized.");
+      return;
+    }
+
+    Optional<EidasMiddlewareConfig> configuration = configurationService.getConfiguration();
+    if (configuration.isEmpty())
+    {
+      log.warn("No eidas middleware configuration present. Can not initialize CRL");
+      return;
+    }
+
+    Optional<TerminalPermission> terminalPermission = configuration.map(EidasMiddlewareConfig::getEidConfiguration)
+                                                                   .map(EidasMiddlewareConfig.EidConfiguration::getServiceProvider)
+                                                                   .stream()
+                                                                   .flatMap(List::stream)
+                                                                   .filter(ServiceProviderType::isEnabled)
+                                                                   .map(sp -> facade.getTerminalPermission(sp.getCVCRefID()))
+                                                                   .filter(tp -> tp != null
+                                                                                 && !ArrayUtil.isNullOrEmpty(tp.getMasterList()))
+                                                                   .findAny();
+    if (terminalPermission.isEmpty())
+    {
+      log.warn("No terminal permission with master list found. Can not initialize CRL");
+      return;
+    }
+    MasterList ml = new MasterList(terminalPermission.get().getMasterList());
+    initialize(new HashSet<>(ml.getCertificates()), configurationService);
+  }
+
+  /**
    * This method must be called before {@link #getInstance()} is called. <br>
    * The CRLs for the CSCA root certificate, which is read from the MasterListTrustAnchor, will be fetched.
    *
    * @param masterList set of trusted certificates to validate the CRL signature
+   * @param configurationService the service to load the eumw configuration from the database
    * @throws IllegalStateException when the class is already initialized or there was an exception during the download
    *           of verification of the CRLs
    */
-  public static synchronized void initialize(Set<X509Certificate> masterList)
+  public static synchronized void initialize(Set<X509Certificate> masterList, ConfigurationService configurationService)
   {
-    initialize(masterList, null, null);
+    initialize(masterList, null, null, configurationService);
   }
 
   /**
@@ -127,20 +181,22 @@ public class CertificationRevocationListImpl implements CertificationRevocationL
    *          trust anchor)
    * @param crlFetcher The @{@link CrlFetcher} that should be used to load CRLs, or <code>null</code> when the
    *          default @{@link CrlFetcher} should be used
+   * @param configurationService the service to load the eumw configuration from the database
    * @throws IllegalStateException when the class is already initialized or there was an exception during the download
    *           of verification of the CRLs
    */
   static synchronized void initialize(Set<X509Certificate> masterList,
                                       X509Certificate certificate,
-                                      CrlFetcher crlFetcher)
+                                      CrlFetcher crlFetcher,
+                                      ConfigurationService configurationService)
   {
-    if (crl != null)
+    if (isInitialized)
     {
       throw new IllegalStateException("This class is already initialized and it can only be initialized once.");
     }
-    crl = new CertificationRevocationListImpl(masterList, certificate, crlFetcher);
     try
     {
+      crl = new CertificationRevocationListImpl(masterList, certificate, crlFetcher, configurationService);
       crl.fetchCrlForRoot();
       isInitialized = true;
       SNMPTrapSender.sendSNMPTrap(SNMPConstants.TrapOID.CRL_TRAP_LAST_RENEWAL_STATUS, 0);
@@ -150,6 +206,12 @@ public class CertificationRevocationListImpl implements CertificationRevocationL
     {
       SNMPTrapSender.sendSNMPTrap(SNMPConstants.TrapOID.CRL_TRAP_LAST_RENEWAL_STATUS, 1);
       throw new IllegalStateException("Exception during initial retrieval of CRL", e);
+    }
+    catch (CertificateException e)
+    {
+      SNMPTrapSender.sendSNMPTrap(SNMPConstants.TrapOID.CRL_TRAP_LAST_RENEWAL_STATUS, 1);
+      throw new IllegalStateException("Exception during initial retrieval of CRL. Illegal trusted anchor certificate",
+                                      e);
     }
   }
 
@@ -354,14 +416,17 @@ public class CertificationRevocationListImpl implements CertificationRevocationL
    *
    * @return last successful crl retrieval timestamp
    */
-  public static long latestRetrieval() {
+  public static long latestRetrieval()
+  {
     CrlCache crlCache = getInstance().getCrlCache();
     Set<String> availableUrls = crlCache.getAvailableUrls();
     long latestRetrieval = 0;
     Long buffer;
-    for (String url : availableUrls) {
+    for ( String url : availableUrls )
+    {
       buffer = crlCache.get(url).getLastUpdate();
-      if (buffer != null && latestRetrieval < buffer) {
+      if (buffer != null && latestRetrieval < buffer)
+      {
         latestRetrieval = buffer;
       }
     }

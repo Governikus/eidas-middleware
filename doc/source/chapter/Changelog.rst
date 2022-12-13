@@ -80,13 +80,6 @@ Changelog
   Note: The carriage returns inside the SAML response, e.g. in signatures and cipher texts, are not removed.
   These are created by OpenSAML / xmlsec following W3C XML signature and encryption specifications.
 
-  Known Issue:
-  The SUN PKCS11 security provider that is shipped with JAVA 8 does not support RSA-PSS signatures.
-  In order to use a HSM module and stay in line with the eIDAS cryptographic requirements, the use
-  of EC cryptography for the SAML signature is mandatory.
-  This issue will be resolved when the eIDAS Middleware supports JAVA 11 as this version comes with
-  a newer SUN PKCS11 security provider.
-
 * 1.2.1
 
     - eIDAS Middleware: Fix SAML encryption with EC certificates.
@@ -115,13 +108,18 @@ Changelog
 * 1.2.9
 
     - eIDAS Middleware: Update third party libraries for security fixes.
+	
+* 1.2.10
+
+    - eIDAS Middleware: Security Patch
 
 * 2.0.0
 
     - eIDAS Middleware: Support version 1.2 of the eIDAS specifications.
     - eIDAS Middleware: Add a CRL check to Passive Authentication.
-    - eIDAS Middleware: There is no longer a dedicated defect list trust anchor. Trust is instead established using the master list.
-    - Configuration Wizard: Remove option to configure defect list trust anchor.
+    - eIDAS Middleware: There is no longer a dedicated Defect List trust anchor.
+      Trust is instead established using the Master List.
+    - Configuration Wizard: Remove option to configure Defect List trust anchor.
     - eIDAS Middleware: Perform some certificate checks on startup.
     - eIDAS Middleware: Option to have unsigned metadata, including download button in admin interface.
     - eIDAS Middleware: Overhaul admin interface.
@@ -184,6 +182,24 @@ Changelog
     - eIDAS Middleware: Update eidas-opensaml to fix a bug with the CurrentAddress
       and update other third party libraries for security fixes.
 
+  Known Issue for all versions before 3.0.0:
+  The SUN PKCS11 security provider that is shipped with Java 8 does not support RSA-PSS signatures.
+  In order to use an HSM and stay in line with the eIDAS cryptographic requirements,
+  the use of EC cryptography for the SAML signature is mandatory.
+
 * 2.2.8
 
-    - eIDAS Middleware: Security patch.
+    - eIDAS Middleware: Security Patch
+
+* 3.0.0
+
+    - All components: Now supporting Java 11. Support for Java 8 is discontinued.
+    - eIDAS Middleware: With Java 11, the PKCS11 provider now supports RSA-PSS signatures.
+    - eIDAS Middleware: Remove support of cryptographic algorithms not following eIDAS requirements
+      which had been kept for the Java 8 SUN PKCS11 provider.
+    - eIDAS Middleware: Remove support of older DVCA service versions, thus removing the need of different policies.
+    - eIDAS Middleware: Restructure configuration.
+    - eIDAS Middleware: Extend admin interface to be a configuration interface as well.
+    - Configuration Migration: Add new component to facilitate migration from 2.x.
+    - Remove configuration-wizard and password-generator. The functionality of these two artifacts is now
+      implemented in the eIDAS Middleware.

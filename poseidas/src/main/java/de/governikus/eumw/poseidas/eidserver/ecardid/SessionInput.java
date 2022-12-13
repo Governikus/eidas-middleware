@@ -90,20 +90,6 @@ public interface SessionInput extends Serializable
   public abstract String getSessionID();
 
   /**
-   * HTTPS address for refresh mechanism
-   *
-   * @return address as string
-   */
-  public abstract String getRefreshAddress();
-
-  /**
-   * Address for the client to connect to the eID-Server
-   *
-   * @return address as string
-   */
-  public abstract String getServerAddress();
-
-  /**
    * Return the blacklist access object - will work even if black list is big
    */
   public abstract BlackListConnector getBlackListConnector();

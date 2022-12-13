@@ -12,7 +12,6 @@ package de.governikus.eumw.poseidas.eidserver.model.signeddata;
 
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
-import java.security.NoSuchProviderException;
 import java.security.cert.CertificateException;
 import java.security.cert.CertificateFactory;
 import java.security.cert.X509Certificate;
@@ -27,7 +26,8 @@ import org.bouncycastle.asn1.ASN1OctetString;
 import org.bouncycastle.asn1.ASN1Primitive;
 import org.bouncycastle.asn1.ASN1Sequence;
 import org.bouncycastle.asn1.ASN1Set;
-import org.bouncycastle.jce.provider.BouncyCastleProvider;
+
+import de.governikus.eumw.utils.key.SecurityProvider;
 
 
 /**
@@ -153,15 +153,11 @@ public class MasterList extends AbstractASN1List
       String x509 = "X.509";
       try
       {
-        certFactory = CertificateFactory.getInstance(x509, BouncyCastleProvider.PROVIDER_NAME);
+        certFactory = CertificateFactory.getInstance(x509, SecurityProvider.BOUNCY_CASTLE_PROVIDER);
       }
       catch (CertificateException e)
       {
         throw new IOException("Can not get certificate factory for : " + x509, e);
-      }
-      catch (NoSuchProviderException e)
-      {
-        throw new IOException("Missing " + BouncyCastleProvider.PROVIDER_NAME, e);
       }
     }
   }

@@ -15,15 +15,15 @@ Glossary
     TLS
         Transport Layer Security.
 
-    Keystore
+    Key Store
         A place where keys and certificates are stored. Most often this is a file. Typical formats are
-        :term:`PKCS#12` and :term:`Java Keystore`
+        :term:`PKCS#12` and :term:`Java Key Store`
 
     PKCS#12
-        Format for keystores. See `Wikipedia about PKCS12 <https://en.wikipedia.org/wiki/PKCS_12>`_
+        Format for key stores. See `Wikipedia about PKCS12 <https://en.wikipedia.org/wiki/PKCS_12>`_
 
-    Java Keystore
-        Java Keystore. See `Wikipedia about JKS <https://en.wikipedia.org/wiki/Keystore>`_
+    Java Key Store
+        Java Key Store. See `Wikipedia about JKS <https://en.wikipedia.org/wiki/Keystore>`_
 
     SNMP
         Simple Network Management Protocol (SNMP) is an Internet-standard protocol for collecting and
@@ -33,7 +33,7 @@ Glossary
     eIDAS Middleware
         The middleware as described in the eIDAS Technical Specification. See `collaborative platform created by
         the European Commission
-        <https://ec.europa.eu/cefdigital/wiki/display/CEFDIGITAL2018/eIDAS+Profile>`_
+        <https://ec.europa.eu/digital-building-blocks/wikis/display/DIGITAL/eIDAS+eID+Profile>`_
 
     Open Virtualization Format
         Open format for exchanging virtual machines.

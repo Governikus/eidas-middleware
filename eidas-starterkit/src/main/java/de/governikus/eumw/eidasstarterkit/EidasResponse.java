@@ -16,10 +16,11 @@ import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
 import java.security.cert.CertificateEncodingException;
 import java.security.cert.X509Certificate;
+import java.time.Instant;
+import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
-import java.util.Date;
 import java.util.EnumMap;
 import java.util.LinkedList;
 import java.util.List;
@@ -33,7 +34,6 @@ import javax.xml.transform.TransformerFactoryConfigurationError;
 import javax.xml.transform.dom.DOMSource;
 import javax.xml.transform.stream.StreamResult;
 
-import org.joda.time.DateTime;
 import org.opensaml.core.xml.Namespace;
 import org.opensaml.core.xml.XMLObject;
 import org.opensaml.core.xml.config.XMLObjectProviderRegistrySupport;
@@ -240,7 +240,7 @@ public class EidasResponse
     this.inResponseTo = inResponseTo;
     this.issuer = issuer;
     this.loa = loa;
-    issueInstant = Constants.format(new Date());
+    issueInstant = Instant.now().toString();
     this.encrypter = encrypter;
     this.signer = signer;
     attributes = new ArrayList<>();
@@ -263,7 +263,7 @@ public class EidasResponse
     this.inResponseTo = inResponseTo;
     this.issuer = issuer;
     this.loa = loa;
-    issueInstant = Constants.format(new Date());
+    issueInstant = Instant.now().toString();
     this.encrypter = encrypter;
     this.signer = signer;
     this.attributes = att;
@@ -285,7 +285,7 @@ public class EidasResponse
     eidasResp.id = resp.getID();
     eidasResp.destination = resp.getDestination();
     eidasResp.inResponseTo = resp.getInResponseTo();
-    eidasResp.issueInstant = Constants.format(resp.getIssueInstant().toDate());
+    eidasResp.issueInstant = resp.getIssueInstant().toString();
     eidasResp.issuer = resp.getIssuer().getDOM().getTextContent();
     eidasResp.openSamlResponse = resp;
 
@@ -351,7 +351,7 @@ public class EidasResponse
                           .get(0)
                           .getAuthnContext()
                           .getAuthnContextClassRef()
-                          .getAuthnContextClassRef();
+                          .getURI();
     EidasLoaEnum loaEnum = EidasLoaEnum.parse(loa);
     eidasResp.setLoa(loaEnum);
   }
@@ -543,7 +543,7 @@ public class EidasResponse
     Response response = new ResponseBuilder().buildObject();
     response.setDestination(destination);
     response.setInResponseTo(inResponseTo);
-    response.setIssueInstant(DateTime.now());
+    response.setIssueInstant(Instant.now());
     response.setID(id);
 
     setSamlIssuer(response);
@@ -573,7 +573,7 @@ public class EidasResponse
     {
       throw new XMLParserException("Document does not contains a NameID value");
     }
-    DateTime now = DateTime.now();
+    Instant now = Instant.now();
 
     Assertion assertion = new AssertionBuilder().buildObject();
     assertion.getNamespaceManager()
@@ -649,11 +649,11 @@ public class EidasResponse
     StatusMessage statusMessage = new StatusMessageBuilder().buildObject();
     if (msg == null)
     {
-      statusMessage.setMessage(code.toDescription());
+      statusMessage.setValue(code.toDescription());
     }
     else
     {
-      statusMessage.setMessage(code.toDescription(msg));
+      statusMessage.setValue(code.toDescription(msg));
     }
     status.setStatusMessage(statusMessage);
     response.setStatus(status);
@@ -682,7 +682,7 @@ public class EidasResponse
     assertion.setIssuer(issuerSaml);
   }
 
-  private void setSamlSubject(Assertion assertion, DateTime now)
+  private void setSamlSubject(Assertion assertion, Instant now)
   {
     Subject subject = new SubjectBuilder().buildObject();
     NameID nameID = new NameIDBuilder().buildObject();
@@ -695,7 +695,7 @@ public class EidasResponse
     SubjectConfirmationData subjectConfirmationData = new SubjectConfirmationDataBuilder().buildObject();
     subjectConfirmationData.setInResponseTo(inResponseTo);
     subjectConfirmationData.setNotBefore(now);
-    subjectConfirmationData.setNotOnOrAfter(now.plusMinutes(10));
+    subjectConfirmationData.setNotOnOrAfter(now.plus(10, ChronoUnit.MINUTES));
     subjectConfirmationData.setRecipient(destination);
 
     subjectConfirmation.setSubjectConfirmationData(subjectConfirmationData);
@@ -704,20 +704,20 @@ public class EidasResponse
     assertion.setSubject(subject);
   }
 
-  private void setSamlConditions(Assertion assertion, DateTime now)
+  private void setSamlConditions(Assertion assertion, Instant now)
   {
     Conditions conditions = new ConditionsBuilder().buildObject();
     AudienceRestriction audienceRestriction = new AudienceRestrictionBuilder().buildObject();
     Audience audience = new AudienceBuilder().buildObject();
-    audience.setAudienceURI(recipient);
+    audience.setURI(recipient);
     audienceRestriction.getAudiences().add(audience);
     conditions.getAudienceRestrictions().add(audienceRestriction);
     conditions.setNotBefore(now);
-    conditions.setNotOnOrAfter(now.plusMinutes(10));
+    conditions.setNotOnOrAfter(now.plus(10, ChronoUnit.MINUTES));
     assertion.setConditions(conditions);
   }
 
-  private void setSamlAuthnStatement(Assertion assertion, DateTime now)
+  private void setSamlAuthnStatement(Assertion assertion, Instant now)
   {
     AuthnStatement authnStatement = new AuthnStatementBuilder().buildObject();
     authnStatement.setAuthnInstant(now);
@@ -725,7 +725,7 @@ public class EidasResponse
     AuthnContext authnContext = new AuthnContextBuilder().buildObject();
 
     AuthnContextClassRef authnContextClassRef = new AuthnContextClassRefBuilder().buildObject();
-    authnContextClassRef.setAuthnContextClassRef(loa.getUri());
+    authnContextClassRef.setURI(loa.getUri());
     authnContext.setAuthnContextClassRef(authnContextClassRef);
     authnStatement.setAuthnContext(authnContext);
     assertion.getAuthnStatements().add(authnStatement);

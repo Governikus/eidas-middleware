@@ -55,7 +55,6 @@ import de.governikus.eumw.poseidas.eidserver.ecardid.SessionInput;
 import de.governikus.eumw.poseidas.eidserver.model.signeddata.DefectKnown.DefectType;
 import de.governikus.eumw.poseidas.eidserver.model.signeddata.DefectList;
 import de.governikus.eumw.poseidas.eidserver.model.signeddata.MasterList;
-import de.governikus.eumw.poseidas.server.idprovider.config.PoseidasConfigurator;
 import iso.std.iso_iec._24727.tech.schema.ConnectionHandleType;
 import iso.std.iso_iec._24727.tech.schema.DIDAuthenticate;
 import iso.std.iso_iec._24727.tech.schema.DIDAuthenticateResponse;
@@ -372,10 +371,7 @@ public class EIDSequence extends ECardConvenienceSequenceAdapter
     List<X509Certificate> masterList = getMasterList(sessionInput);
     LOG.debug(logPrefix + LOG_PRE_INIT + " MasterList received from manager containing (" + masterList.size()
               + ") Certificates");
-    signedDataChecker = new EACSignedDataChecker(masterList, logPrefix,
-                                                 PoseidasConfigurator.getInstance()
-                                                                     .getCurrentConfig()
-                                                                     .getAllowedDocumentTypes());
+    signedDataChecker = new EACSignedDataChecker(masterList, logPrefix);
     if (sessionInput.getDefectList() != null)
     {
       defectList = new DefectList(sessionInput.getDefectList());

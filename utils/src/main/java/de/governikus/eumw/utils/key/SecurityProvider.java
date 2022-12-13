@@ -14,23 +14,18 @@ import java.security.Provider;
 
 import org.bouncycastle.jce.provider.BouncyCastleProvider;
 
+import lombok.experimental.UtilityClass;
+
 
 /**
  * this class will provide some security providers
  */
+@UtilityClass
 public final class SecurityProvider
 {
 
   /**
    * the bouncy castle provider that is needed for PKCS12 keystores
    */
-  static final Provider BOUNCY_CASTLE_PROVIDER = new BouncyCastleProvider();
-
-  /**
-   * utility class constructor
-   */
-  private SecurityProvider()
-  {
-    super();
-  }
+  public static final Provider BOUNCY_CASTLE_PROVIDER = new BouncyCastleProvider();
 }

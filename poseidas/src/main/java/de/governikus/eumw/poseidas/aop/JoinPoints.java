@@ -19,7 +19,7 @@ import org.springframework.stereotype.Component;
 public class JoinPoints
 {
 
-  @Pointcut("execution( public void de.governikus.eumw.poseidas.server.timer.ApplicationTimer.*(..))")
+  @Pointcut("execution( public void de.governikus.eumw.poseidas.server.timer.ApplicationTimer.*(..)) || execution( * de.governikus.eumw.poseidas.server.timer.*.run(..))")
   public void applicationTimerLogging()
   {
     // nothing here

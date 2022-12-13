@@ -49,9 +49,9 @@ import org.apache.http.conn.ssl.SSLConnectionSocketFactory;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClients;
 import org.apache.tomcat.util.net.Constants;
-import org.bouncycastle.jce.provider.BouncyCastleProvider;
 
 import de.governikus.eumw.eidascommon.Utils;
+import de.governikus.eumw.utils.key.SecurityProvider;
 
 
 /**
@@ -161,7 +161,7 @@ public class PKIServiceConnector
     }
 
     // Must use bouncy as SUN Provider changes alias to lower case
-    KeyStore clientKeyStore = KeyStore.getInstance("pkcs12", BouncyCastleProvider.PROVIDER_NAME);
+    KeyStore clientKeyStore = KeyStore.getInstance("pkcs12", SecurityProvider.BOUNCY_CASTLE_PROVIDER);
     try
     {
       clientKeyStore.load(null);

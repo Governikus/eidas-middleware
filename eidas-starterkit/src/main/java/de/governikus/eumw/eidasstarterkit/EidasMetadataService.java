@@ -17,9 +17,9 @@ import java.nio.charset.StandardCharsets;
 import java.security.cert.CertificateEncodingException;
 import java.security.cert.CertificateException;
 import java.security.cert.X509Certificate;
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Base64;
-import java.util.Date;
 import java.util.List;
 
 import javax.xml.transform.OutputKeys;
@@ -31,7 +31,6 @@ import javax.xml.transform.stream.StreamResult;
 
 import org.apache.xml.security.algorithms.MessageDigestAlgorithm;
 import org.apache.xml.security.signature.XMLSignature;
-import org.joda.time.DateTime;
 import org.opensaml.core.xml.Namespace;
 import org.opensaml.core.xml.XMLObject;
 import org.opensaml.core.xml.config.XMLObjectProviderRegistrySupport;
@@ -117,6 +116,8 @@ import net.shibboleth.utilities.java.support.xml.BasicParserPool;
 import net.shibboleth.utilities.java.support.xml.XMLConstants;
 import net.shibboleth.utilities.java.support.xml.XMLParserException;
 import se.litsec.eidas.opensaml.common.EidasConstants;
+import se.litsec.eidas.opensaml.ext.NodeCountry;
+import se.litsec.eidas.opensaml.ext.impl.NodeCountryBuilder;
 
 
 /**
@@ -137,7 +138,7 @@ class EidasMetadataService
 
   private String entityId;
 
-  private Date validUntil;
+  private Instant validUntil;
 
   private X509Certificate sigCert;
 
@@ -161,13 +162,15 @@ class EidasMetadataService
 
   private boolean requesterIdFlag;
 
+  private String nodeCountry;
+
   @Getter(AccessLevel.NONE)
   @Setter(AccessLevel.NONE)
   private List<EidasNameIdType> supportedNameIdTypes = new ArrayList<>();
 
   EidasMetadataService(String id,
                        String entityId,
-                       Date validUntil,
+                       Instant validUntil,
                        X509Certificate sigCert,
                        X509Certificate encCert,
                        EidasOrganisation organisation,
@@ -179,7 +182,8 @@ class EidasMetadataService
                        List<EidasNameIdType> supportedNameIdTypes,
                        String middlewareVersion,
                        boolean doSign,
-                       boolean requesterIdFlag)
+                       boolean requesterIdFlag,
+                       String nodeCountry)
   {
     super();
     this.id = id;
@@ -212,6 +216,7 @@ class EidasMetadataService
     this.middlewareVersion = middlewareVersion;
     this.doSign = doSign;
     this.requesterIdFlag = requesterIdFlag;
+    this.nodeCountry = nodeCountry;
   }
 
   byte[] generate(EidasSigner signer) throws CertificateEncodingException, IOException, MarshallingException,
@@ -233,13 +238,32 @@ class EidasMetadataService
     entityDescriptor.getNamespaceManager()
                     .registerNamespaceDeclaration(new Namespace(SignatureConstants.XMLSIG_NS,
                                                                 SignatureConstants.XMLSIG_PREFIX));
+    entityDescriptor.getNamespaceManager()
+                    .registerNamespaceDeclaration(new Namespace(EidasConstants.EIDAS_NS,
+                                                                EidasConstants.EIDAS_PREFIX));
     entityDescriptor.setID(id);
     entityDescriptor.setEntityID(entityId);
-    entityDescriptor.setValidUntil(new DateTime(validUntil.getTime()));
+    entityDescriptor.setValidUntil(validUntil);
 
     IDPSSODescriptor idpDescriptor = new IDPSSODescriptorBuilder().buildObject();
     idpDescriptor.setWantAuthnRequestsSigned(true);
     idpDescriptor.addSupportedProtocol(SAMLConstants.SAML20P_NS);
+
+    if (nodeCountry != null)
+    {
+      NodeCountry nc = new NodeCountryBuilder().buildObject();
+      nc.setNodeCountry(nodeCountry);
+      if (idpDescriptor.getExtensions() == null)
+      {
+        Extensions ex = new ExtensionsBuilder().buildObject();
+        ex.getUnknownXMLObjects().add(nc);
+        idpDescriptor.setExtensions(ex);
+      }
+      else
+      {
+        idpDescriptor.getExtensions().getUnknownXMLObjects().add(nc);
+      }
+    }
 
     KeyDescriptor kd = new KeyDescriptorBuilder().buildObject();
     kd.setUse(UsageType.SIGNING);
@@ -279,7 +303,7 @@ class EidasMetadataService
     for ( EidasNameIdType nameIDType : this.supportedNameIdTypes )
     {
       NameIDFormat nif = new NameIDFormatBuilder().buildObject();
-      nif.setFormat(nameIDType.getValue());
+      nif.setURI(nameIDType.getValue());
       idpDescriptor.getNameIDFormats().add(nif);
     }
 
@@ -303,45 +327,45 @@ class EidasMetadataService
     on.setXMLLang(organisation.getLangId());
     organization.getOrganizationNames().add(on);
     OrganizationURL ourl = new OrganizationURLBuilder().buildObject();
-    ourl.setValue(organisation.getUrl());
+    ourl.setURI(organisation.getUrl());
     ourl.setXMLLang(organisation.getLangId());
     organization.getURLs().add(ourl);
     entityDescriptor.setOrganization(organization);
 
     ContactPerson cp = new ContactPersonBuilder().buildObject();
     Company comp = new CompanyBuilder().buildObject();
-    comp.setName(technicalContact.getCompany());
+    comp.setValue(technicalContact.getCompany());
     cp.setCompany(comp);
     GivenName gn = new GivenNameBuilder().buildObject();
-    gn.setName(technicalContact.getGivenName());
+    gn.setValue(technicalContact.getGivenName());
     cp.setGivenName(gn);
     SurName sn = new SurNameBuilder().buildObject();
-    sn.setName(technicalContact.getSurName());
+    sn.setValue(technicalContact.getSurName());
     cp.setSurName(sn);
     EmailAddress email = new EmailAddressBuilder().buildObject();
-    email.setAddress(technicalContact.getEmail());
+    email.setURI(technicalContact.getEmail());
     cp.getEmailAddresses().add(email);
     TelephoneNumber tel = new TelephoneNumberBuilder().buildObject();
-    tel.setNumber(technicalContact.getTel());
+    tel.setValue(technicalContact.getTel());
     cp.getTelephoneNumbers().add(tel);
     cp.setType(ContactPersonTypeEnumeration.TECHNICAL);
     entityDescriptor.getContactPersons().add(cp);
 
     cp = new ContactPersonBuilder().buildObject();
     comp = new CompanyBuilder().buildObject();
-    comp.setName(supportContact.getCompany());
+    comp.setValue(supportContact.getCompany());
     cp.setCompany(comp);
     gn = new GivenNameBuilder().buildObject();
-    gn.setName(supportContact.getGivenName());
+    gn.setValue(supportContact.getGivenName());
     cp.setGivenName(gn);
     sn = new SurNameBuilder().buildObject();
-    sn.setName(supportContact.getSurName());
+    sn.setValue(supportContact.getSurName());
     cp.setSurName(sn);
     email = new EmailAddressBuilder().buildObject();
-    email.setAddress(supportContact.getEmail());
+    email.setURI(supportContact.getEmail());
     cp.getEmailAddresses().add(email);
     tel = new TelephoneNumberBuilder().buildObject();
-    tel.setNumber(supportContact.getTel());
+    tel.setValue(supportContact.getTel());
     cp.getTelephoneNumbers().add(tel);
     cp.setType(ContactPersonTypeEnumeration.SUPPORT);
     entityDescriptor.getContactPersons().add(cp);
@@ -398,8 +422,7 @@ class EidasMetadataService
     ext.getUnknownXMLObjects().add(sm);
 
     sm = new SigningMethodBuilder().buildObject();
-    sm.setAlgorithm(EidasSigner.DIGEST_NONSPEC.equals(signer.getSigDigestAlg())
-      ? XMLSignature.ALGO_ID_SIGNATURE_RSA_SHA256 : XMLSignature.ALGO_ID_SIGNATURE_RSA_SHA256_MGF1);
+    sm.setAlgorithm(XMLSignature.ALGO_ID_SIGNATURE_RSA_SHA256_MGF1);
     sm.setMinKeySize(3072);
     sm.setMaxKeySize(4096);
     ext.getUnknownXMLObjects().add(sm);
@@ -453,7 +476,7 @@ class EidasMetadataService
     eidasMetadataService.setOrganisation(unmarshalOrganisation(metaData.getOrganization()));
     eidasMetadataService.setId(metaData.getID());
     eidasMetadataService.setEntityId(metaData.getEntityID());
-    eidasMetadataService.setValidUntil(metaData.getValidUntil().toDate());
+    eidasMetadataService.setValidUntil(metaData.getValidUntil());
     Extensions extensions = metaData.getExtensions();
     eidasMetadataService.setMiddlewareVersion(getMiddlewareVersionFromExtension(extensions));
     IDPSSODescriptor idpssoDescriptor = metaData.getIDPSSODescriptor(SAMLConstants.SAML20P_NS);
@@ -489,6 +512,17 @@ class EidasMetadataService
       else if (k.getUse() == UsageType.SIGNING)
       {
         eidasMetadataService.sigCert = getFirstCertFromKeyDescriptor(k);
+      }
+    }
+    if (idpssoDescriptor.getExtensions() != null)
+    {
+      for ( XMLObject xml : idpssoDescriptor.getExtensions().getUnknownXMLObjects() )
+      {
+        if (xml instanceof NodeCountry)
+        {
+          eidasMetadataService.nodeCountry = ((NodeCountry)xml).getNodeCountry();
+          break;
+        }
       }
     }
     return eidasMetadataService;

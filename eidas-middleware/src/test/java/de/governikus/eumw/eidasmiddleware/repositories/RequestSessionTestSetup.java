@@ -52,7 +52,7 @@ public class RequestSessionTestSetup
     JpaVendorAdapter vendorAdapter = new HibernateJpaVendorAdapter();
     em.setJpaVendorAdapter(vendorAdapter);
 
-    Properties databaseProperties = new Properties();
+    var databaseProperties = new Properties();
     databaseProperties.setProperty("hibernate.hbm2ddl.auto", "update");
     databaseProperties.setProperty("hibernate.dialect", "org.hibernate.dialect.H2Dialect");
     em.setJpaProperties(databaseProperties);

@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html th:replace="~{base-template/main :: main(~{::title}, ~{::section})}"
+      xmlns:th="http://www.thymeleaf.org">
+
+<title>Import/export - eIDAS Middleware configuration and administration</title>
+
+<section>
+    <h1>Import/export configuration</h1>
+    <hr class="text-primary" style="height: 4px"/>
+
+    <div class="card shadow p-1 mb-4">
+        <div class="card-header bg-light">
+            <h5>Import</h5>
+            <small>Import a configuration</small>
+        </div>
+        <div class="card-body">
+            <form method="post" class="input-group"
+                  action="/admin-interface/importExportConfiguration/uploadConfiguration"
+                  enctype="multipart/form-data">
+                <input type="hidden"
+                       th:name="${_csrf.parameterName}"
+                       th:value="${_csrf.token}"/>
+                <div class="row w-100 d-flex align-items-center">
+                    <div class="col-10">
+                        <div th:replace="~{fragments/form :: inputRow_upload('configuration-upload', null, 'configurationFile', 'Configuration file')}"/>
+                    </div>
+                    <div class="col-2">
+                        <div th:replace="fragments/form :: submitTextUploadIcon('Import')"/>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+
+
+    <div class="card shadow p-1 mb-4">
+        <div class="card-header bg-light">
+            <h5>Export</h5>
+            <small>Export active configuration</small>
+        </div>
+        <div class="card-body row text-center">
+            <div class="col">
+                <a th:href="${'/admin-interface/importExportConfiguration/downloadWithPrivateKeys'}"
+                   class="btn btn-primary w-100">Export full configuration <b>with</b> private keys and passwords
+                    <i class="fa fa-download"></i></a>
+            </div>
+            <div class="col">
+                <a th:href="${'/admin-interface/importExportConfiguration/downloadWithoutPrivateKeys'}"
+                   class="btn btn-primary w-100">Export configuration <b>without</b> private keys and passwords
+                    <i class="fa fa-download"></i></a>
+            </div>
+        </div>
+    </div>
+</section>
+
+</html>

@@ -9,13 +9,9 @@
 
 package de.governikus.eumw.poseidas.server.timer;
 
-import java.util.Calendar;
-
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 
-import de.governikus.eumw.poseidas.config.schema.TimerConfigurationType;
-import de.governikus.eumw.poseidas.config.schema.TimerType;
 
 
 /**
@@ -24,100 +20,6 @@ import de.governikus.eumw.poseidas.config.schema.TimerType;
 class TimerValuesTest
 {
 
-  @Test
-  void testGetDeltaBlacklistRate()
-  {
-    TimerValues timerValues = new TimerValues();
-    String deltaBlacklistRate = timerValues.getDeltaBlacklistRate(null);
-    final String defaultRate = String.valueOf(2 * TimerValues.HOUR);
-    Assertions.assertEquals(defaultRate, deltaBlacklistRate);
-
-    TimerConfigurationType timerConfiguration = new TimerConfigurationType();
-    deltaBlacklistRate = timerValues.getDeltaBlacklistRate(timerConfiguration);
-    Assertions.assertEquals(defaultRate, deltaBlacklistRate);
-
-    TimerType blackListTimer = new TimerType();
-    blackListTimer.setUnit(Calendar.MINUTE);
-    blackListTimer.setLength(30);
-    timerConfiguration.setBlacklistRenewal(blackListTimer);
-    deltaBlacklistRate = timerValues.getDeltaBlacklistRate(timerConfiguration);
-    Assertions.assertEquals(String.valueOf(30 * 60 * 1000), deltaBlacklistRate);
-  }
-
-  @Test
-  void testGetCVCRate()
-  {
-    TimerValues timerValues = new TimerValues();
-    String cvcRate = timerValues.getCVCRate(null);
-    final String defaultRate = String.valueOf(TimerValues.HOUR);
-    Assertions.assertEquals(defaultRate, cvcRate);
-
-    TimerConfigurationType timerConfiguration = new TimerConfigurationType();
-    cvcRate = timerValues.getCVCRate(timerConfiguration);
-    Assertions.assertEquals(defaultRate, cvcRate);
-
-    TimerType cvcTimer = new TimerType();
-    cvcTimer.setUnit(Calendar.HOUR_OF_DAY);
-    cvcTimer.setLength(10);
-    timerConfiguration.setCertRenewal(cvcTimer);
-    cvcRate = timerValues.getCVCRate(timerConfiguration);
-    Assertions.assertEquals(String.valueOf(10 * 60 * 60 * 1000), cvcRate);
-  }
-
-  @Test
-  void testGetMasterDefectRate()
-  {
-    TimerValues timerValues = new TimerValues();
-    String timerRate = timerValues.getMasterDefectRate(null);
-    final String defaultRate = String.valueOf(2 * TimerValues.HOUR);
-    Assertions.assertEquals(defaultRate, timerRate);
-
-    TimerConfigurationType timerConfiguration = new TimerConfigurationType();
-    timerRate = timerValues.getMasterDefectRate(timerConfiguration);
-    Assertions.assertEquals(defaultRate, timerRate);
-
-    TimerType timerType = new TimerType();
-    timerType.setUnit(Calendar.HOUR_OF_DAY);
-    timerType.setLength(1);
-    timerConfiguration.setMasterAndDefectListRenewal(timerType);
-    timerRate = timerValues.getMasterDefectRate(timerConfiguration);
-    Assertions.assertEquals(String.valueOf(60 * 60 * 1000), timerRate);
-  }
-
-  @Test
-  void testGetCrlRate()
-  {
-    TimerValues timerValues = new TimerValues();
-    String crlRate = timerValues.getCrlRate(null);
-    final String defaultRate = String.valueOf(2 * TimerValues.HOUR);
-    Assertions.assertEquals(defaultRate, crlRate);
-
-    TimerConfigurationType timerConfiguration = new TimerConfigurationType();
-    crlRate = timerValues.getCrlRate(timerConfiguration);
-    Assertions.assertEquals(defaultRate, crlRate);
-
-    TimerType crlTimer = new TimerType();
-    crlTimer.setUnit(Calendar.MINUTE);
-    crlTimer.setLength(30);
-    timerConfiguration.setCrlRenewal(crlTimer);
-    crlRate = timerValues.getCrlRate(timerConfiguration);
-    Assertions.assertEquals(String.valueOf(30 * 60 * 1000), crlRate);
-  }
-
-  @Test
-  void testInvalidTimerUnit()
-  {
-    TimerValues timerValues = new TimerValues();
-    TimerConfigurationType timerConfigurationType = new TimerConfigurationType();
-    TimerType timerType = new TimerType();
-    timerType.setUnit(Calendar.MILLISECOND);
-    timerType.setLength(10);
-    timerConfigurationType.setCrlRenewal(timerType);
-
-    IllegalArgumentException illegalArgumentException = Assertions.assertThrows(IllegalArgumentException.class,
-                                                                                () -> timerValues.getCrlRate(timerConfigurationType));
-    Assertions.assertEquals("Unsupported unit of time: " + Calendar.MILLISECOND, illegalArgumentException.getMessage());
-  }
 
   @Test
   void testGetHumanReadableTime()

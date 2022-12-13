@@ -39,7 +39,8 @@ public class EIDASMiddlewareApplication
     System.setProperty("jdk.tls.namedGroups", "secp521r1,secp384r1,secp256r1");
     System.setProperty("jdk.tls.ephemeralDHKeySize", "2048");
     Security.setProperty("jdk.tls.disabledAlgorithms",
-                         "SSLv3, RC4, MD5, DSA, DH keySize < " + Utils.MIN_KEY_SIZE_RSA_TLS + ", ECDH keySize < "
+                         "SSLv3, TLSv1, TLSv1.1, RC4, DES, MD5, DSA, rsa_pkcs1_sha1, ecdsa_sha1, DH keySize < "
+                                                       + Utils.MIN_KEY_SIZE_RSA_TLS + ", ECDH keySize < "
                                                        + Utils.MIN_KEY_SIZE_EC_TLS + ", EC keySize < "
                                                        + Utils.MIN_KEY_SIZE_EC_TLS + ", RSA keySize < "
                                                        + Utils.MIN_KEY_SIZE_RSA_TLS);

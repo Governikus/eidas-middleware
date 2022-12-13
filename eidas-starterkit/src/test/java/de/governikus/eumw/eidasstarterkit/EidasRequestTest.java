@@ -13,12 +13,10 @@ package de.governikus.eumw.eidasstarterkit;
 import java.io.ByteArrayInputStream;
 import java.nio.file.Files;
 import java.nio.file.Paths;
-import java.security.Security;
 import java.security.cert.X509Certificate;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.bouncycastle.jce.provider.BouncyCastleProvider;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -37,7 +35,6 @@ class EidasRequestTest
   void setUp() throws Exception
   {
     EidasSaml.init();
-    Security.addProvider(new BouncyCastleProvider());
     authors = new ArrayList<>();
     X509Certificate cert = Utils.readCert(TestEidasSaml.class.getResourceAsStream("/EidasSignerTest_x509.cer"));
     authors.add(cert);

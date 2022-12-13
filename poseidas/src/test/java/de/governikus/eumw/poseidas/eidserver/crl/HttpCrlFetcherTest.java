@@ -10,20 +10,19 @@
 
 package de.governikus.eumw.poseidas.eidserver.crl;
 
-import java.security.Security;
 import java.security.cert.CertificateFactory;
 import java.security.cert.X509CRL;
 import java.security.cert.X509Certificate;
 import java.util.HashSet;
 import java.util.Set;
 
-import org.bouncycastle.jce.provider.BouncyCastleProvider;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
 import de.governikus.eumw.poseidas.eidserver.crl.exception.CertificateValidationException;
+import de.governikus.eumw.utils.key.SecurityProvider;
 
 
 @DisplayName("The HttpCrlFetcher")
@@ -39,8 +38,7 @@ class HttpCrlFetcherTest
   @BeforeEach
   void setUp() throws Exception
   {
-    Security.addProvider(new BouncyCastleProvider());
-    cf = CertificateFactory.getInstance("X509", BouncyCastleProvider.PROVIDER_NAME);
+    cf = CertificateFactory.getInstance("X509", SecurityProvider.BOUNCY_CASTLE_PROVIDER);
     certificate = (X509Certificate)cf.generateCertificate(CertificationRevocationListImplTest.class.getResourceAsStream("/DE_TEST_CSCA_2018_12.cer"));
   }
 
@@ -90,20 +88,6 @@ class HttpCrlFetcherTest
                                                                                             () -> crlFetcher.download(HTTP_TEST_URL));
 
     Assertions.assertEquals("Could not verify CRL", certificateValidationException.getMessage());
-  }
-
-  @Test
-  void throwsCertValidationExceptionBouncyCastleIsNotPresent() throws Exception
-  {
-    Security.removeProvider(BouncyCastleProvider.PROVIDER_NAME);
-    Set<X509Certificate> trustedSet = new HashSet<>();
-    trustedSet.add(certificate);
-    HttpCrlFetcher crlFetcher = new HttpCrlFetcher(trustedSet);
-    CertificateValidationException certificateValidationException = Assertions.assertThrows(CertificateValidationException.class,
-                                                                                            () -> crlFetcher.httpDownload("mock-address"));
-    Assertions.assertTrue(certificateValidationException.toString()
-                                                        .contains("Failed to download CRL 'mock-address'"));
-
   }
 
   /**

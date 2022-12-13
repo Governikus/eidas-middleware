@@ -11,6 +11,9 @@
 package de.governikus.eumw.poseidas.server.eidservice;
 
 import de.governikus.eumw.poseidas.ecardcore.utilities.ECardCoreUtil;
+import lombok.AccessLevel;
+import lombok.AllArgsConstructor;
+import lombok.Getter;
 import oasis.names.tc.dss._1_0.core.schema.Result;
 
 
@@ -21,14 +24,14 @@ import oasis.names.tc.dss._1_0.core.schema.Result;
  *
  * @author Hauke Mehrtens
  */
+@AllArgsConstructor(access = AccessLevel.PACKAGE)
+@Getter
 public class EIDRequestResponse
 {
 
   private final String sessionId;
 
   private final String requestId;
-
-  private final String eCardServerAddress;
 
   private final String resultMajor;
 
@@ -38,34 +41,6 @@ public class EIDRequestResponse
 
   private final String logPrefix;
 
-
-  EIDRequestResponse(String sessionId,
-                            String requestId,
-                            String resultMajor,
-                            String resultMinor,
-                            String resultMessage,
-                            String eCardServerAddress,
-                            String logPrefix)
-  {
-    this.sessionId = sessionId;
-    this.requestId = requestId;
-    this.resultMajor = resultMajor;
-    this.resultMinor = resultMinor;
-    this.resultMessage = resultMessage;
-    this.eCardServerAddress = eCardServerAddress;
-    this.logPrefix = logPrefix;
-  }
-
-  public String getSessionId()
-  {
-    return sessionId;
-  }
-
-  public String getRequestId()
-  {
-    return requestId;
-  }
-
   public Result getResult()
   {
     Result result = new Result();
@@ -73,30 +48,5 @@ public class EIDRequestResponse
     result.setResultMinor(resultMinor);
     result.setResultMessage(ECardCoreUtil.generateInternationalStringType(resultMessage));
     return result;
-  }
-
-  public String getResultMajor()
-  {
-    return resultMajor;
-  }
-
-  public String getResultMinor()
-  {
-    return resultMinor;
-  }
-
-  public String getResultMessage()
-  {
-    return resultMessage;
-  }
-
-  public String getECardServerAddress()
-  {
-    return eCardServerAddress;
-  }
-
-  public String getLogPrefix()
-  {
-    return logPrefix;
   }
 }

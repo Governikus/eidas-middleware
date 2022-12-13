@@ -10,47 +10,57 @@
   -->
 
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
-	<modelVersion>4.0.0</modelVersion>
-	<parent>
-		<groupId>de.governikus.eumw</groupId>
-		<artifactId>eumw</artifactId>
-		<version>2.2.8</version>
-	</parent>
-	<artifactId>eidas-common</artifactId>
+    <modelVersion>4.0.0</modelVersion>
+    <parent>
+        <groupId>de.governikus.eumw</groupId>
+        <artifactId>eumw</artifactId>
+        <version>3.0.0</version>
+    </parent>
+    <artifactId>eidas-common</artifactId>
 
-	<name>${project.artifactId}</name>
-	<description>Common sources for all eIDAS modules</description>
+    <name>${project.artifactId}</name>
+    <description>Common sources for all eIDAS modules</description>
 
-	<dependencies>
-		<dependency>
-			<groupId>javax.servlet</groupId>
-			<artifactId>javax.servlet-api</artifactId>
-		</dependency>
+    <dependencies>
+        <dependency>
+            <groupId>de.governikus.eumw</groupId>
+            <artifactId>utils</artifactId>
+        </dependency>
 
-		<dependency>
-			<groupId>org.projectlombok</groupId>
-			<artifactId>lombok</artifactId>
-		</dependency>
+        <dependency>
+            <groupId>javax.servlet</groupId>
+            <artifactId>javax.servlet-api</artifactId>
+        </dependency>
 
-		<dependency>
-			<groupId>org.slf4j</groupId>
-			<artifactId>slf4j-api</artifactId>
-		</dependency>
+        <dependency>
+            <groupId>jakarta.xml.bind</groupId>
+            <artifactId>jakarta.xml.bind-api</artifactId>
+        </dependency>
 
-		<dependency>
-			<groupId>net.shibboleth.utilities</groupId>
-			<artifactId>java-support</artifactId>
-		</dependency>
+        <dependency>
+            <groupId>org.opensaml</groupId>
+            <artifactId>opensaml-xmlsec-api</artifactId>
+        </dependency>
 
-		<!-- only for tests -->
-		<dependency>
-			<groupId>org.slf4j</groupId>
-			<artifactId>slf4j-simple</artifactId>
-		</dependency>
+        <dependency>
+            <groupId>org.slf4j</groupId>
+            <artifactId>slf4j-api</artifactId>
+        </dependency>
 
-		<dependency>
-			<groupId>junit</groupId>
-			<artifactId>junit</artifactId>
-		</dependency>
-	</dependencies>
+        <dependency>
+            <groupId>net.shibboleth.utilities</groupId>
+            <artifactId>java-support</artifactId>
+        </dependency>
+
+        <!-- only for tests -->
+        <dependency>
+            <groupId>org.slf4j</groupId>
+            <artifactId>slf4j-simple</artifactId>
+        </dependency>
+
+        <dependency>
+            <groupId>junit</groupId>
+            <artifactId>junit</artifactId>
+        </dependency>
+    </dependencies>
 </project>

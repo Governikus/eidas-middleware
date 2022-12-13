@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html th:replace="~{base-template/main :: main(~{::title}, ~{::section})}"
+      xmlns:th="http://www.thymeleaf.org">
+<title>Delete eID service provider - eIDAS Middleware configuration and administration</title>
+<section>
+    <h1>eID service provider</h1>
+    <hr class="text-primary" style="height: 4px"/>
+    <div class="card col shadow p-1 mb-4">
+        <div class="card-body">
+            <h5 class="card-title">
+                Delete eID service provider <span th:text="${name}"></span>
+            </h5>
+            <p>Do you really want to delete the eID service provider <b th:text="${name}"/>?</p>
+            <br/>
+            <form method="post" th:action="${'/admin-interface/serviceProvider/remove/' + name }">
+                <input type="hidden"
+                       th:name="${_csrf.parameterName}"
+                       th:value="${_csrf.token}"/>
+                <div th:replace="~{fragments/form :: deleteAndAbort('eID service provider', '/admin-interface/serviceProvider')}"/>
+            </form>
+        </div>
+    </div>
+</section>
+</html>

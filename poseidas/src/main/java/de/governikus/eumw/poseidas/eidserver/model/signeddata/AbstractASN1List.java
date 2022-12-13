@@ -11,7 +11,6 @@
 package de.governikus.eumw.poseidas.eidserver.model.signeddata;
 
 import java.io.IOException;
-import java.security.Security;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -24,7 +23,6 @@ import org.bouncycastle.asn1.ASN1Primitive;
 import org.bouncycastle.asn1.ASN1Sequence;
 import org.bouncycastle.asn1.ASN1SequenceParser;
 import org.bouncycastle.asn1.ASN1TaggedObject;
-import org.bouncycastle.jce.provider.BouncyCastleProvider;
 
 
 /**
@@ -47,14 +45,6 @@ public abstract class AbstractASN1List // ocard asn1
   private final String identifier;
 
   private boolean catalogued;
-
-  static
-  {
-    if (Security.getProvider(BouncyCastleProvider.PROVIDER_NAME) == null)
-    {
-      Security.insertProviderAt(new BouncyCastleProvider(), 0);
-    }
-  }
 
   AbstractASN1List(byte[] bytes, String listType)
   {

@@ -1,11 +1,10 @@
 /*
- * Copyright (c) 2020 Governikus KG. Licensed under the EUPL, Version 1.2 or as soon they will be approved by
- * the European Commission - subsequent versions of the EUPL (the "Licence"); You may not use this work except
- * in compliance with the Licence. You may obtain a copy of the Licence at:
- * http://joinup.ec.europa.eu/software/page/eupl Unless required by applicable law or agreed to in writing,
- * software distributed under the Licence is distributed on an "AS IS" basis, WITHOUT WARRANTIES OR CONDITIONS
- * OF ANY KIND, either express or implied. See the Licence for the specific language governing permissions and
- * limitations under the Licence.
+ * Copyright (c) 2020 Governikus KG. Licensed under the EUPL, Version 1.2 or as soon they will be approved by the
+ * European Commission - subsequent versions of the EUPL (the "Licence"); You may not use this work except in compliance
+ * with the Licence. You may obtain a copy of the Licence at: http://joinup.ec.europa.eu/software/page/eupl Unless
+ * required by applicable law or agreed to in writing, software distributed under the Licence is distributed on an
+ * "AS IS" basis, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the Licence for the
+ * specific language governing permissions and limitations under the Licence.
  */
 
 package de.governikus.eumw.poseidas.server.pki;
@@ -41,21 +40,12 @@ class PoseidasCertificateRequestGenerator
   private static final Log LOG = LogFactory.getLog(PoseidasCertificateRequestGenerator.class);
 
   private final TerminalPermissionAO facade;
-
-  private ECCVCertificate rootCVC;
-
-  private ECCVCertificate oldCVC;
-
-  private byte[] oldPrivKey;
-
-  private CertificateDescription description;
-
-  private AdditionalData addData;
-
-  private final BerCaPolicy policy;
-
   private final String entityID;
-
+  private ECCVCertificate rootCVC;
+  private ECCVCertificate oldCVC;
+  private byte[] oldPrivKey;
+  private CertificateDescription description;
+  private AdditionalData addData;
   @Setter
   private byte[] rscPrivateKey;
 
@@ -67,27 +57,20 @@ class PoseidasCertificateRequestGenerator
    *
    * @param entityID
    */
-  PoseidasCertificateRequestGenerator(String entityID, BerCaPolicy policy, TerminalPermissionAO facade)
+  PoseidasCertificateRequestGenerator(String entityID, TerminalPermissionAO facade)
   {
     this.entityID = entityID;
-    this.policy = policy;
     this.facade = facade;
   }
 
   private String createChr(String countryCode, String chrMnemonic, int sequenceNumber)
   {
-    int effectiveSequenceNumber = policy.getDefaultInitialSequenceNumber();
-    if (policy.isInitialSequenceNumberChoosable())
-    {
-      effectiveSequenceNumber = Math.max(effectiveSequenceNumber, sequenceNumber);
-    }
-    return countryCode + chrMnemonic + String.format("%05d", Integer.valueOf(effectiveSequenceNumber));
+    return countryCode + chrMnemonic + String.format("%05d", Math.max(1, sequenceNumber));
   }
 
   /**
-   * Set the necessary data for a first request in case that you have received a CVCDescription corrected by
-   * the issuer. In this case, you should skip the call of
-   * {@link #setIssuerForFirstRequest(String, String, byte[])} and
+   * Set the necessary data for a first request in case that you have received a CVCDescription corrected by the issuer.
+   * In this case, you should skip the call of {@link #setIssuerForFirstRequest(String, String, byte[])} and
    * {@link #setDataForFirstRequest(String, boolean, boolean, String, String, String, int)}
    *
    * @param encodedRootCvc
@@ -142,8 +125,8 @@ class PoseidasCertificateRequestGenerator
 
 
   /**
-   * Create certificate request. As a side effect, the private key created in the process is stored within the
-   * HSM if HSM connection is available.
+   * Create certificate request. As a side effect, the private key created in the process is stored within the HSM if
+   * HSM connection is available.
    *
    * @return request and, if no HSM is available, private key
    * @throws IllegalArgumentException
@@ -156,9 +139,7 @@ class PoseidasCertificateRequestGenerator
     boolean keyAlreadyThere = false;
     try
     {
-      HSMService hsm = ServiceRegistry.Util.getServiceRegistry()
-                                           .getService(HSMServiceFactory.class)
-                                           .getHSMService();
+      HSMService hsm = ServiceRegistry.Util.getServiceRegistry().getService(HSMServiceFactory.class).getHSMService();
       keyAlreadyThere = hsm.containsKey(newCHR) || (facade != null && facade.changeKeyLockExists(newCHR));
     }
     catch (HSMException e)

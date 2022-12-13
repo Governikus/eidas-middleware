@@ -1,0 +1,20 @@
+<html lang="de" style="height: 100vh; overflow-y: scroll; overflow-x: hidden;" xmlns:sec="http://www.thymeleaf.org/thymeleaf-extras-springsecurity4" xmlns:th="http://www.thymeleaf.org">
+<body>
+
+<div th:fragment="msg">
+    <div th:if="${msg != null}" class="alert alert-info" role="alert" style="z-index: 1000">
+        <b>Info:</b> <span id="alertMSG" th:utext="${msg}"></span>
+    </div>
+    <div th:if="${error != null}" class="alert alert-danger" role="alert" style="z-index: 1000">
+        <b>Error:</b> <span id="alertERROR" th:utext="${error}"></span>
+    </div>
+    <div sec:authorize="hasAuthority('hasPasswordInApplicationProperties')" class="alert alert-warning" role="alert" style="z-index: 1000">
+        <span id="alertPASSWORD">Password is still located in application.properties. Please remove 'poseidas.admin.hashed.password' from the application.properties.</span>
+    </div>
+    <div sec:authorize="hasAuthority('hasUserInApplicationProperties')" class="alert alert-warning" role="alert" style="z-index: 1000">
+        <span id="alertUSER">Username is still located in application.properties. Please remove 'poseidas.admin.username' from the application.properties.</span>
+    </div>
+</div>
+
+</body>
+</html>

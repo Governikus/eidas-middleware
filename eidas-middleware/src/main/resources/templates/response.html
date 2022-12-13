@@ -19,27 +19,11 @@
     <!-- Viewport Meta Tag -->
     <meta content="width=device-width, initial-scale=1" name="viewport">
     <!-- Bootstrap -->
-    <link rel="stylesheet" th:href="@{/eidas-middleware/css/bootstrap.css}" type="text/css">
+    <link href="/webjars/bootstrap/css/bootstrap.min.css" rel="stylesheet"/>
     <!-- Main Style -->
     <link rel="stylesheet" th:href="@{/eidas-middleware/css/main.css}" type="text/css">
-    <!-- custom Style -->
-    <link rel="stylesheet" th:href="@{/eidas-middleware/css/custom.css}" type="text/css">
-    <!-- Slicknav CSS -->
-    <link rel="stylesheet" th:href="@{/eidas-middleware/css/slicknav.css}" type="text/css">
     <!-- Responsive Style -->
     <link rel="stylesheet" th:href="@{/eidas-middleware/css/responsive.css}" type="text/css">
-    <!--Fonts-->
-    <link media="screen" rel="stylesheet" th:href="@{/eidas-middleware/css/font-awesome.css}">
-    <link media="screen" rel="stylesheet" th:href="@{/eidas-middleware/css/simple-line-icons.css}">
-    <!-- Extras -->
-    <link rel="stylesheet" th:href="@{/eidas-middleware/css/owl.css}" type="text/css">
-    <link rel="stylesheet" th:href="@{/eidas-middleware/css/owl_002.css}" type="text/css">
-    <link rel="stylesheet" th:href="@{/eidas-middleware/css/animate.css}" type="text/css">
-    <link rel="stylesheet" th:href="@{/eidas-middleware/css/normalize.css}" type="text/css">
-    <!-- Color CSS Styles  -->
-    <link media="screen" rel="stylesheet" th:href="@{/eidas-middleware/css/mblue.css}" type="text/css">
-    <!-- HTML5 Shim and Respond.js IE8 support of HTML5 elements and media queries -->
-
     <!-- Include redirect -->
     <script th:src="@{/eidas-middleware/js/redirect.js}"></script>
 </head>
@@ -48,7 +32,7 @@
 <!-- Page Header End -->
 <section class="split section" style="margin-top: -32px;">
     <!-- Container Starts -->
-    <div class="container">
+    <div class="container px-4">
         <div><h5 th:text="#{content.title}">Use your identity card for European applications as well</h5>
         </div>
         <div th:text="#{content.language}">Choose your language</div>
@@ -111,9 +95,7 @@
     <!-- Container End -->
 </section>
 <footer>
-    <div align="center" th:text="#{footer.footer}">eIDAS Middleware provided by Governikus KG on behalf of
-        BSI
-    </div>
+    <div class="text-center" th:text="#{footer.footer}"></div>
 </footer>
 </body>
 </html>

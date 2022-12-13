@@ -1,11 +1,10 @@
 /*
- * Copyright (c) 2020 Governikus KG. Licensed under the EUPL, Version 1.2 or as soon they will be approved by
- * the European Commission - subsequent versions of the EUPL (the "Licence"); You may not use this work except
- * in compliance with the Licence. You may obtain a copy of the Licence at:
- * http://joinup.ec.europa.eu/software/page/eupl Unless required by applicable law or agreed to in writing,
- * software distributed under the Licence is distributed on an "AS IS" basis, WITHOUT WARRANTIES OR CONDITIONS
- * OF ANY KIND, either express or implied. See the Licence for the specific language governing permissions and
- * limitations under the Licence.
+ * Copyright (c) 2020 Governikus KG. Licensed under the EUPL, Version 1.2 or as soon they will be approved by the
+ * European Commission - subsequent versions of the EUPL (the "Licence"); You may not use this work except in compliance
+ * with the Licence. You may obtain a copy of the Licence at: http://joinup.ec.europa.eu/software/page/eupl Unless
+ * required by applicable law or agreed to in writing, software distributed under the Licence is distributed on an
+ * "AS IS" basis, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the Licence for the
+ * specific language governing permissions and limitations under the Licence.
  */
 
 package de.governikus.eumw.poseidas.gov2server.constants.admin;
@@ -20,17 +19,17 @@ import lombok.NoArgsConstructor;
 
 
 /**
- * Definition of all constants needed to access the MBean layer of the identity manger. Do not define these
- * constants elsewhere. Do not use String literals instead of these constants. <br>
+ * Definition of all constants needed to access the MBean layer of the identity manger. Do not define these constants
+ * elsewhere. Do not use String literals instead of these constants. <br>
  *
  * @author hme
  */
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
 public final class AdminPoseidasConstants
 {
+
   /**
-   * Boolean if the client is public
-   * Type: Boolean
+   * Boolean if the client is public Type: Boolean
    */
   public static final String VALUE_IS_PUBLIC_CLIENT = "isPublicClient";
 
@@ -186,18 +185,6 @@ public final class AdminPoseidasConstants
    * Type: java.util.Date
    */
   public static final String VALUE_PERMISSION_DATA_BLACK_LIST_DATE = "blackListStoreDate";
-
-  /**
-   * Returns the id of the request signer certificate<br>
-   * Type: String
-   */
-  public static final String VALUE_REQUEST_SIGNER_CERTIFICATE_ID = "rscId";
-
-  /**
-   * Returns a boolean if a pending request signer certificate is available or not<br>
-   * Type: boolean
-   */
-  public static final String VALUE_PENDING_REQUEST_SIGNER_CERTIFICATE_AVAILABLE = "isPendingRscAvailable";
 
   private static ObjectName getObjectName(String domain, String key, String value)
   {

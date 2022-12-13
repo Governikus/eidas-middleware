@@ -1,0 +1,174 @@
+<?xml version="1.0" encoding="utf-8"?>
+<xs:schema attributeFormDefault="unqualified"
+           elementFormDefault="qualified"
+           xmlns:xs="http://www.w3.org/2001/XMLSchema"
+           xmlns:tns="http://www.governikus.de/2021/03/eumw-config"
+           targetNamespace="http://www.governikus.de/2021/03/eumw-config">
+    <xs:element name="EidasMiddlewareConfig">
+        <xs:complexType>
+            <xs:sequence>
+                <xs:element name="ServerUrl" type="xs:anyURI"/>
+                <xs:element name="EidasConfiguration">
+                    <xs:complexType>
+                        <xs:sequence>
+                            <xs:element name="ConnectorMetadata" type="tns:ConnectorMetadataType" maxOccurs="unbounded"/>
+                            <xs:element name="DoSign" type="xs:boolean"/>
+                            <xs:element name="MetadataValidity" type="xs:int"/>
+                            <xs:element name="CountryCode" type="xs:string"/>
+                            <xs:element name="ContactPerson" type="tns:ContactType" minOccurs="0"/>
+                            <xs:element name="Organization" type="tns:OrganizationType" minOccurs="0"/>
+                        </xs:sequence>
+                        <xs:attribute name="PublicServiceProviderName" type="xs:string"/>
+                        <xs:attribute name="DecryptionKeyPairName" type="xs:string"/>
+                        <xs:attribute name="SignatureKeyPairName" type="xs:string"/>
+                        <xs:attribute name="MetadataSignatureVerificationCertificateName" type="xs:string"/>
+                    </xs:complexType>
+                </xs:element>
+                <xs:element name="EidConfiguration">
+                    <xs:complexType>
+                        <xs:sequence>
+                            <xs:element name="DvcaConfiguration" type="tns:DvcaConfigurationType"
+                                        maxOccurs="unbounded"/>
+                            <xs:element name="TimerConfiguration" type="tns:TimerConfigurationType"/>
+                            <xs:element name="ServiceProvider" type="tns:ServiceProviderType" minOccurs="0"
+                                        maxOccurs="unbounded"/>
+                            <xs:element name="AllowedEidMeans" type="xs:string" minOccurs="0"/>
+                        </xs:sequence>
+                    </xs:complexType>
+                </xs:element>
+                <xs:element name="KeyData">
+                    <xs:complexType>
+                        <xs:sequence>
+                            <xs:element name="Certificate" type="tns:CertificateType" minOccurs="0"
+                                        maxOccurs="unbounded"/>
+                            <xs:element name="KeyStore" type="tns:KeyStoreType" minOccurs="0" maxOccurs="unbounded"/>
+                            <xs:element name="KeyPair" type="tns:KeyPairType" minOccurs="0" maxOccurs="unbounded"/>
+                        </xs:sequence>
+                    </xs:complexType>
+                </xs:element>
+            </xs:sequence>
+        </xs:complexType>
+    </xs:element>
+
+    <!-- Keydata -->
+    <xs:complexType name="CertificateType">
+        <xs:sequence>
+            <xs:element name="Name" type="xs:string"/>
+            <xs:element name="Certificate" type="xs:base64Binary"/>
+            <xs:element name="Keystore" type="xs:string" minOccurs="0"/>
+            <xs:element name="Alias" type="xs:string" minOccurs="0"/>
+        </xs:sequence>
+    </xs:complexType>
+
+    <xs:complexType name="KeyStoreType">
+        <xs:sequence>
+            <xs:element name="Name" type="xs:string"/>
+            <xs:element name="KeyStore" type="xs:base64Binary"/>
+            <xs:element name="Type" type="tns:KeyStoreTypeType"/>
+            <xs:element name="Password" type="xs:string"/>
+        </xs:sequence>
+    </xs:complexType>
+
+    <xs:simpleType name="KeyStoreTypeType">
+        <xs:restriction base="xs:string">
+            <xs:enumeration value="PKCS12"/>
+            <xs:enumeration value="JKS"/>
+        </xs:restriction>
+    </xs:simpleType>
+
+    <xs:complexType name="KeyPairType">
+        <xs:sequence>
+            <xs:element name="Name" type="xs:string"/>
+            <xs:element name="Alias" type="xs:string"/>
+            <xs:element name="Password" type="xs:string" minOccurs="0"/>
+        </xs:sequence>
+        <xs:attribute name="KeyStoreName" type="xs:string"/>
+    </xs:complexType>
+
+    <!-- Connector metadata -->
+    <xs:complexType name="ConnectorMetadataType">
+        <xs:simpleContent>
+            <xs:extension base="xs:base64Binary">
+                <xs:attribute name="entityID" type="xs:string"/>
+            </xs:extension>
+        </xs:simpleContent>
+    </xs:complexType>
+
+    <!-- Metadata information Contact -->
+    <xs:complexType name="ContactType">
+        <xs:sequence>
+            <xs:element name="Company" type="xs:string"/>
+            <xs:element name="Givenname" type="xs:string"/>
+            <xs:element name="Surname" type="xs:string"/>
+            <xs:element name="Email" type="xs:string"/>
+            <xs:element name="Telephone" type="xs:string"/>
+        </xs:sequence>
+    </xs:complexType>
+
+    <!-- Metadata information Organization -->
+    <xs:complexType name="OrganizationType">
+        <xs:sequence>
+            <xs:element name="Displayname" type="xs:string"/>
+            <xs:element name="Name" type="xs:string"/>
+            <xs:element name="Language" type="xs:string"/>
+            <xs:element name="Url" type="xs:anyURI"/>
+        </xs:sequence>
+    </xs:complexType>
+
+    <!-- DVCA configuration -->
+    <xs:complexType name="DvcaConfigurationType">
+        <xs:sequence>
+            <xs:element name="Name" type="xs:string"/>
+            <xs:element name="TerminalAuthServiceUrl" type="xs:anyURI"/>
+            <xs:element name="RestrictedIdServiceUrl" type="xs:anyURI"/>
+            <xs:element name="PassiveAuthServiceUrl" type="xs:anyURI"/>
+            <xs:element name="DvcaCertificateDescriptionServiceUrl" type="xs:anyURI" minOccurs="0"/>
+        </xs:sequence>
+        <xs:attribute name="ServerSSLCertificateName" type="xs:string"/>
+        <xs:attribute name="BlackListTrustAnchorCertificateName" type="xs:string"/>
+        <xs:attribute name="MasterListTrustAnchorCertificateName" type="xs:string"/>
+    </xs:complexType>
+
+    <!-- Timer configuration -->
+    <xs:complexType name="TimerConfigurationType">
+        <xs:sequence>
+            <xs:element name="CertRenewal" type="tns:TimerTypeCertRenewal"/>
+            <xs:element name="BlacklistRenewal" type="tns:TimerType"/>
+            <xs:element name="MasterAndDefectListRenewal" type="tns:TimerType"/>
+            <xs:element name="CrlRenewal" type="tns:TimerType"/>
+        </xs:sequence>
+    </xs:complexType>
+
+    <xs:complexType name="TimerTypeCertRenewal">
+        <xs:complexContent>
+            <xs:extension base="tns:TimerType">
+                <xs:sequence>
+                    <xs:element name="HoursRefreshCVCBeforeExpires" type="xs:int"/>
+                </xs:sequence>
+            </xs:extension>
+        </xs:complexContent>
+    </xs:complexType>
+
+    <xs:complexType name="TimerType">
+        <xs:attribute name="Length" type="xs:int"/>
+        <xs:attribute name="Unit" type="tns:TimerUnit"/>
+    </xs:complexType>
+
+    <xs:simpleType name="TimerUnit">
+        <xs:restriction base="xs:string">
+            <xs:enumeration value="Minutes"/>
+            <xs:enumeration value="Hours"/>
+        </xs:restriction>
+    </xs:simpleType>
+
+    <!-- Service provider -->
+    <xs:complexType name="ServiceProviderType">
+        <xs:sequence>
+            <xs:element name="Name" type="xs:string"/>
+            <xs:element name="Enabled" type="xs:boolean"/>
+            <xs:element name="CVCRefID" type="xs:string"/>
+        </xs:sequence>
+        <xs:attribute name="DvcaConfigurationName" type="xs:string"/>
+        <xs:attribute name="ClientKeyPairName" type="xs:string"/>
+    </xs:complexType>
+</xs:schema>

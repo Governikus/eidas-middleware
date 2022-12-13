@@ -12,10 +12,13 @@ package de.governikus.eumw.poseidas.server.pki;
 
 import java.security.KeyStore;
 
+import org.apache.commons.lang3.StringUtils;
+
+import de.governikus.eumw.config.DvcaConfigurationType;
+import de.governikus.eumw.config.ServiceProviderType;
 import de.governikus.eumw.poseidas.gov2server.GovManagementException;
 import de.governikus.eumw.poseidas.gov2server.constants.admin.IDManagementCodes;
-import de.governikus.eumw.poseidas.server.idprovider.config.EPAConnectorConfigurationDto;
-import de.governikus.eumw.poseidas.server.idprovider.config.PkiConnectorConfigurationDto;
+import de.governikus.eumw.poseidas.server.idprovider.config.ConfigurationService;
 
 
 /**
@@ -44,31 +47,35 @@ class BerCaRequestHandlerBase
   /**
    * configuration of the BerCa connection
    */
-  protected final PkiConnectorConfigurationDto pkiConfig;
+  protected final DvcaConfigurationType dvcaConfiguration;
 
   /**
    * configuration of the BerCa connection
    */
-  protected final EPAConnectorConfigurationDto nPaConf;
+  protected final ServiceProviderType serviceProvider;
+
+  protected final ConfigurationService configurationService;
 
   /**
    * Create new instance for current configuration
    *
    * @param facade must be obtained by client
    */
-  protected BerCaRequestHandlerBase(EPAConnectorConfigurationDto nPaConf,
+  protected BerCaRequestHandlerBase(ServiceProviderType serviceProvider,
                                     TerminalPermissionAO facade,
-                                    KeyStore hsmKeyStore)
+                                    KeyStore hsmKeyStore,
+                                    ConfigurationService configurationService)
     throws GovManagementException
   {
     this.hsmKeyStore = hsmKeyStore;
     this.facade = facade;
-    this.nPaConf = nPaConf;
-    if (nPaConf == null)
+    this.serviceProvider = serviceProvider;
+    this.configurationService = configurationService;
+    if (StringUtils.isBlank(serviceProvider.getDvcaConfigurationName()))
     {
       throw new GovManagementException(IDManagementCodes.INVALID_INPUT_DATA.createMessage("this is not configurated for nPA"));
     }
-    pkiConfig = nPaConf.getPkiConnectorConfiguration();
-    this.cvcRefId = nPaConf.getCVCRefID();
+    dvcaConfiguration = configurationService.getDvcaConfiguration(serviceProvider);
+    this.cvcRefId = serviceProvider.getCVCRefID();
   }
 }

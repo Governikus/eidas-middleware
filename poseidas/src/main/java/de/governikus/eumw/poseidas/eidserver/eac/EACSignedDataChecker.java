@@ -1,11 +1,10 @@
 /*
- * Copyright (c) 2020 Governikus KG. Licensed under the EUPL, Version 1.2 or as soon they will be approved by
- * the European Commission - subsequent versions of the EUPL (the "Licence"); You may not use this work except
- * in compliance with the Licence. You may obtain a copy of the Licence at:
- * http://joinup.ec.europa.eu/software/page/eupl Unless required by applicable law or agreed to in writing,
- * software distributed under the Licence is distributed on an "AS IS" basis, WITHOUT WARRANTIES OR CONDITIONS
- * OF ANY KIND, either express or implied. See the Licence for the specific language governing permissions and
- * limitations under the Licence.
+ * Copyright (c) 2020 Governikus KG. Licensed under the EUPL, Version 1.2 or as soon they will be approved by the
+ * European Commission - subsequent versions of the EUPL (the "Licence"); You may not use this work except in compliance
+ * with the Licence. You may obtain a copy of the Licence at: http://joinup.ec.europa.eu/software/page/eupl Unless
+ * required by applicable law or agreed to in writing, software distributed under the Licence is distributed on an
+ * "AS IS" basis, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the Licence for the
+ * specific language governing permissions and limitations under the Licence.
  */
 
 package de.governikus.eumw.poseidas.eidserver.eac;
@@ -14,22 +13,27 @@ import java.io.IOException;
 import java.security.SignatureException;
 import java.security.cert.Certificate;
 import java.security.cert.X509Certificate;
+import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Optional;
 import java.util.Set;
 
 import org.bouncycastle.cms.CMSException;
 
+import de.governikus.eumw.config.EidasMiddlewareConfig;
+import de.governikus.eumw.poseidas.SpringApplicationContextHelper;
 import de.governikus.eumw.poseidas.cardbase.asn1.ASN1;
 import de.governikus.eumw.poseidas.cardserver.eac.crypto.SignedDataChecker;
 import de.governikus.eumw.poseidas.eidserver.crl.CertificationRevocationListImpl;
+import de.governikus.eumw.poseidas.server.idprovider.config.ConfigurationService;
 import de.governikus.eumw.poseidas.server.pki.CmsSignatureChecker;
 import lombok.extern.slf4j.Slf4j;
 
 
 /**
- * Modified code from the mCard. Checks a reply from the EID process and verifies if the certificate used to
- * sign the travel document is a trustworthy one from the master list.
+ * Modified code from the mCard. Checks a reply from the EID process and verifies if the certificate used to sign the
+ * travel document is a trustworthy one from the master list.
  *
  * @author Ole Behrens
  */
@@ -46,16 +50,15 @@ public class EACSignedDataChecker extends EACSignedDataParser implements SignedD
    *
    * @param masterList the master list of all trusted certificates
    * @param logPrefix
-   * @param allowedDocumentTypes
    */
-  public EACSignedDataChecker(List<X509Certificate> masterList,
-                              String logPrefix,
-                              Set<String> allowedDocumentTypes)
+  public EACSignedDataChecker(List<X509Certificate> masterList, String logPrefix)
   {
     super(logPrefix);
     cmsSignatureChecker = new CmsSignatureChecker(masterList);
-    this.allowedDocumentTypes = new HashSet<>(allowedDocumentTypes);
+    this.allowedDocumentTypes = getAllowedDocuments();
   }
+
+
 
   /** {@inheritDoc} */
   @Override
@@ -110,5 +113,20 @@ public class EACSignedDataChecker extends EACSignedDataParser implements SignedD
       return false;
     }
     return true;
+  }
+
+  private Set<String> getAllowedDocuments()
+  {
+    ConfigurationService configurationService = SpringApplicationContextHelper.getConfigurationService();
+    Optional<String> optionalEidMeans = configurationService.getConfiguration()
+                                                            .map(EidasMiddlewareConfig::getEidConfiguration)
+                                                            .map(EidasMiddlewareConfig.EidConfiguration::getAllowedEidMeans);
+    HashSet<String> allowedDocuments = new HashSet<>(Set.of("A", "ID", "UB"));
+    if (optionalEidMeans.isPresent() && !optionalEidMeans.get().isBlank())
+    {
+      Arrays.stream(optionalEidMeans.get().split(",")).map(String::trim).forEach(allowedDocuments::add);
+    }
+    // Default value if not configured or blank
+    return allowedDocuments;
   }
 }

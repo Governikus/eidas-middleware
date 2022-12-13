@@ -23,31 +23,33 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 
 import javax.annotation.PostConstruct;
 
-import org.springframework.beans.factory.annotation.Autowired;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Component;
 
+import de.governikus.eumw.config.DvcaConfigurationType;
+import de.governikus.eumw.config.EidasMiddlewareConfig;
+import de.governikus.eumw.config.ServiceProviderType;
+import de.governikus.eumw.config.TimerConfigurationType;
+import de.governikus.eumw.config.TimerTypeCertRenewal;
 import de.governikus.eumw.poseidas.cardbase.asn1.npa.ECCVCertificate;
-import de.governikus.eumw.poseidas.config.schema.PkiServiceType;
 import de.governikus.eumw.poseidas.gov2server.GovManagementException;
 import de.governikus.eumw.poseidas.gov2server.constants.admin.AdminPoseidasConstants;
 import de.governikus.eumw.poseidas.gov2server.constants.admin.GlobalManagementCodes;
 import de.governikus.eumw.poseidas.gov2server.constants.admin.IDManagementCodes;
 import de.governikus.eumw.poseidas.gov2server.constants.admin.ManagementMessage;
 import de.governikus.eumw.poseidas.server.eidservice.EIDInternal;
-import de.governikus.eumw.poseidas.server.idprovider.config.CoreConfigurationDto;
-import de.governikus.eumw.poseidas.server.idprovider.config.EPAConnectorConfigurationDto;
-import de.governikus.eumw.poseidas.server.idprovider.config.PkiConnectorConfigurationDto;
-import de.governikus.eumw.poseidas.server.idprovider.config.PoseidasConfigurator;
-import de.governikus.eumw.poseidas.server.idprovider.config.ServiceProviderDto;
-import de.governikus.eumw.poseidas.server.idprovider.config.SslKeysDto;
+import de.governikus.eumw.poseidas.server.idprovider.config.ConfigurationService;
+import de.governikus.eumw.poseidas.server.idprovider.config.KeyPair;
 import de.governikus.eumw.poseidas.server.monitoring.SNMPConstants;
 import de.governikus.eumw.poseidas.server.monitoring.SNMPTrapSender;
 import de.governikus.eumw.poseidas.server.pki.caserviceaccess.PKIServiceConnector;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 
@@ -56,6 +58,7 @@ import lombok.extern.slf4j.Slf4j;
  */
 @Component("PermissionDataHandling")
 @Scope("singleton")
+@RequiredArgsConstructor
 @Slf4j
 public class PermissionDataHandling implements PermissionDataHandlingMBean
 {
@@ -64,68 +67,49 @@ public class PermissionDataHandling implements PermissionDataHandlingMBean
 
   private static final String ID_CONNECTOR_CONFIGURATION = "ID.jsp.serviceProvider.nPaPkiConnectorConfiguration.";
 
-  @Autowired
-  protected HSMServiceHolder hsmServiceHolder;
+  protected final HSMServiceHolder hsmServiceHolder;
 
-  @Autowired
-  private TerminalPermissionAO facade;
+  private final TerminalPermissionAO facade;
 
-  @Autowired
-  private EIDInternal eidInternal;
+  private final EIDInternal eidInternal;
 
-  private CVCRequestHandler getCvcRequestHandler(EPAConnectorConfigurationDto nPaConf) throws GovManagementException
+  private final ConfigurationService configurationService;
+
+  private CVCRequestHandler getCvcRequestHandler(ServiceProviderType serviceProvider) throws GovManagementException
   {
-    return new CVCRequestHandler(nPaConf, facade, hsmServiceHolder.getKeyStore());
+    return new CVCRequestHandler(serviceProvider, facade, hsmServiceHolder.getKeyStore(), configurationService);
   }
 
-  private EPAConnectorConfigurationDto getnPaConfig(String entityID) throws GovManagementException
+  private ServiceProviderType getServiceProvider(String entityID) throws GovManagementException
   {
-    CoreConfigurationDto config = PoseidasConfigurator.getInstance().getCurrentConfig();
-    if (config == null)
-    {
-      throw new GovManagementException(GlobalManagementCodes.EC_INVALIDCONFIGURATIONDATA.createMessage());
-    }
-    ServiceProviderDto prov = config.getServiceProvider().get(entityID);
-    if (prov == null)
-    {
-      throw new GovManagementException(IDManagementCodes.SERVICE_PROVIDER_NOT_SAVED.createMessage());
-    }
-    EPAConnectorConfigurationDto npaConf = prov.getEpaConnectorConfiguration();
-    if (npaConf == null)
-    {
-      throw new GovManagementException(IDManagementCodes.SERVICE_PROVIDER_NOT_SAVED.createMessage());
-    }
-    return npaConf;
+    return configurationService.getConfiguration()
+                               .orElseThrow(() -> new GovManagementException(GlobalManagementCodes.EC_INVALIDCONFIGURATIONDATA.createMessage()))
+                               .getEidConfiguration()
+                               .getServiceProvider()
+                               .stream()
+                               .filter(sp -> sp.getName().equals(entityID))
+                               .findFirst()
+                               .orElseThrow(() -> new GovManagementException(IDManagementCodes.SERVICE_PROVIDER_NOT_SAVED.createMessage()));
   }
 
-  private EPAConnectorConfigurationDto getnPaConfigWithCheck(String entityID) throws GovManagementException
+  private DvcaConfigurationType getDvcaConfigWithCheck(String entityID) throws GovManagementException
   {
-    CoreConfigurationDto config = PoseidasConfigurator.getInstance().getCurrentConfig();
-    if (config == null)
-    {
-      throw new GovManagementException(GlobalManagementCodes.EC_INVALIDCONFIGURATIONDATA.createMessage());
-    }
-    ServiceProviderDto prov = config.getServiceProvider().get(entityID);
-    return getnPaConfigWithCheck(prov);
+    ServiceProviderType prov = getServiceProvider(entityID);
+    return getDvcaConfigWithCheck(prov);
   }
 
-  private EPAConnectorConfigurationDto getnPaConfigWithCheck(ServiceProviderDto prov) throws GovManagementException
+  private DvcaConfigurationType getDvcaConfigWithCheck(ServiceProviderType prov) throws GovManagementException
   {
     if (prov == null)
     {
       throw new GovManagementException(IDManagementCodes.SERVICE_PROVIDER_NOT_SAVED.createMessage());
     }
-    EPAConnectorConfigurationDto npaConf = prov.getEpaConnectorConfiguration();
-    if (npaConf == null)
+    if (!prov.isEnabled())
     {
-      throw new GovManagementException(IDManagementCodes.SERVICE_PROVIDER_NOT_SAVED.createMessage());
+      throw new GovManagementException(IDManagementCodes.INVALID_INPUT_DATA.createMessage("service provider is not enabled "
+                                                                                          + prov.getCVCRefID()));
     }
-    if (!npaConf.isUpdateCVC())
-    {
-      throw new GovManagementException(IDManagementCodes.INVALID_INPUT_DATA.createMessage("service provider flag updateCVC is set to false "
-                                                                                          + npaConf.getCVCRefID()));
-    }
-    return npaConf;
+    return configurationService.getDvcaConfiguration(prov);
   }
 
   @Override
@@ -138,16 +122,16 @@ public class PermissionDataHandling implements PermissionDataHandlingMBean
   @Override
   public ManagementMessage renewMasterAndDefectList(String entityID)
   {
-    CoreConfigurationDto config = PoseidasConfigurator.getInstance().getCurrentConfig();
-    if (config == null)
+    Optional<EidasMiddlewareConfig> config = configurationService.getConfiguration();
+    if (config.isEmpty())
     {
       return GlobalManagementCodes.EC_INVALIDCONFIGURATIONDATA.createMessage();
     }
     try
     {
-      ServiceProviderDto provider = config.getServiceProvider().get(entityID);
-      EPAConnectorConfigurationDto nPaConf = getnPaConfigWithCheck(provider);
-      return renewMasterAndDefectList(provider, nPaConf);
+      ServiceProviderType serviceProvider = getServiceProvider(entityID);
+      DvcaConfigurationType dvcaConfiguration = configurationService.getDvcaConfiguration(serviceProvider);
+      return renewMasterAndDefectList(serviceProvider, dvcaConfiguration);
     }
     catch (GovManagementException e)
     {
@@ -160,25 +144,13 @@ public class PermissionDataHandling implements PermissionDataHandlingMBean
   {
     try
     {
-      CoreConfigurationDto config = PoseidasConfigurator.getInstance().getCurrentConfig();
-      if (config == null)
-      {
-        return;
-      }
-      for ( ServiceProviderDto provider : config.getServiceProvider().values() )
-      {
-        EPAConnectorConfigurationDto npaConf = provider.getEpaConnectorConfiguration();
-        if (npaConf != null && npaConf.isUpdateCVC())
-        {
-          renewMasterAndDefectList(provider, npaConf);
-        }
-        else if (npaConf != null)
-        {
-          log.debug("{}: skip renew of master and defect list for this provider, updateCVC is set to false, CVCRefID: {}",
-                    provider.getEntityID(),
-                    npaConf.getCVCRefID());
-        }
-      }
+      configurationService.getConfiguration()
+                          .map(EidasMiddlewareConfig::getEidConfiguration)
+                          .map(EidasMiddlewareConfig.EidConfiguration::getServiceProvider)
+                          .stream()
+                          .flatMap(List::stream)
+                          .filter(ServiceProviderType::isEnabled)
+                          .forEach(sp -> renewMasterAndDefectList(sp, configurationService.getDvcaConfiguration(sp)));
     }
     catch (Exception e)
     {
@@ -186,49 +158,53 @@ public class PermissionDataHandling implements PermissionDataHandlingMBean
     }
   }
 
-  private ManagementMessage renewMasterAndDefectList(ServiceProviderDto prov, EPAConnectorConfigurationDto npaConf)
+  private ManagementMessage renewMasterAndDefectList(ServiceProviderType prov, DvcaConfigurationType dvcaConfiguration)
   {
-    try
+
+    String provName = prov.getName();
+    if (isConfigured(dvcaConfiguration.getPassiveAuthServiceUrl(), "master and defect list", prov.getName()))
     {
-      if (!isConfigured(npaConf.getPkiConnectorConfiguration().getPassiveAuthService(), "master and defect list", prov))
+      try
       {
-        return IDManagementCodes.INVALID_OPTION_FOR_PROVIDER.createMessage(prov.getEntityID(),
-                                                                           "ID.jsp.serviceProvider.nPaPkiConnectorConfiguration.passiveAuthService.title");
+        TerminalPermission tp = facade.getTerminalPermission(prov.getCVCRefID());
+        if (tp == null || tp.getCvc() == null)
+        {
+          log.debug(NO_TERMINAL_PERMISSION_ENTRY_AVAILABLE, provName);
+          return IDManagementCodes.MISSING_TERMINAL_CERTIFICATE.createMessage(prov.getCVCRefID());
+        }
+        MasterAndDefectListHandler handler = new MasterAndDefectListHandler(prov, facade,
+                                                                            hsmServiceHolder.getKeyStore(),
+                                                                            configurationService);
+        handler.updateLists();
+        return GlobalManagementCodes.OK.createMessage();
       }
-      TerminalPermission tp = facade.getTerminalPermission(npaConf.getCVCRefID());
-      if (tp == null || tp.getCvc() == null)
+      catch (GovManagementException e)
       {
-        log.error(NO_TERMINAL_PERMISSION_ENTRY_AVAILABLE, prov.getEntityID());
-        return IDManagementCodes.MISSING_TERMINAL_CERTIFICATE.createMessage(npaConf.getCVCRefID());
+        log.error("{}: unable to master and defect list: {}", provName, e.getMessage(), e);
+        return e.getManagementMessage();
       }
-      MasterAndDefectListHandler handler = new MasterAndDefectListHandler(npaConf, facade,
-                                                                          hsmServiceHolder.getKeyStore());
-      handler.updateLists();
-      return GlobalManagementCodes.OK.createMessage();
+      catch (Exception e)
+      {
+        log.error("{}: unable to master and defect list: {}", provName, e.getMessage(), e);
+        return GlobalManagementCodes.EC_UNEXPECTED_ERROR.createMessage("unable to master and defect list: "
+                                                                       + e.getMessage());
+      }
     }
-    catch (GovManagementException e)
-    {
-      log.error("{}: unable to master and defect list: {}", prov.getEntityID(), e.getMessage(), e);
-      return e.getManagementMessage();
-    }
-    catch (Exception e)
-    {
-      log.error("{}: unable to master and defect list: {}", prov.getEntityID(), e.getMessage(), e);
-      return GlobalManagementCodes.EC_UNEXPECTED_ERROR.createMessage("unable to master and defect list: "
-                                                                     + e.getMessage());
-    }
+
+    return IDManagementCodes.INVALID_OPTION_FOR_PROVIDER.createMessage(provName,
+                                                                       "ID.jsp.serviceProvider.nPaPkiConnectorConfiguration.passiveAuthService.title");
   }
 
   /**
    * return true if the given service is configured at least with an URL, log an info if not
    */
-  private boolean isConfigured(PkiServiceType service, String dataType, ServiceProviderDto provider)
+  private boolean isConfigured(String dvcaUrl, String dataType, String providerName)
   {
-    if (service != null && service.getUrl() != null && !service.getUrl().trim().isEmpty())
+    if (StringUtils.isNotBlank(dvcaUrl))
     {
       return true;
     }
-    log.info("{}: not renewing {} because respective service not configured", provider.getEntityID(), dataType);
+    log.info("{}: not renewing {} because respective service not configured", providerName, dataType);
     return false;
   }
 
@@ -236,17 +212,17 @@ public class PermissionDataHandling implements PermissionDataHandlingMBean
   @Override
   public ManagementMessage renewBlackList(String entityID)
   {
-    CoreConfigurationDto config = PoseidasConfigurator.getInstance().getCurrentConfig();
-    if (config == null)
+    Optional<EidasMiddlewareConfig> config = configurationService.getConfiguration();
+    if (config.isEmpty())
     {
       return GlobalManagementCodes.EC_INVALIDCONFIGURATIONDATA.createMessage();
     }
     try
     {
-      ServiceProviderDto provider = config.getServiceProvider().get(entityID);
-      EPAConnectorConfigurationDto npaConf = getnPaConfigWithCheck(provider);
-      ManagementMessage result = renewBlackList(provider, npaConf, false, new HashSet<>(), false);
-      requestPublicSectorKeyIfNeeded(provider, npaConf);
+      ServiceProviderType provider = getServiceProvider(entityID);
+      DvcaConfigurationType dvcaConfiguration = configurationService.getDvcaConfiguration(provider);
+      ManagementMessage result = renewBlackList(provider, dvcaConfiguration, false, new HashSet<>(), false);
+      requestPublicSectorKeyIfNeeded(provider, dvcaConfiguration);
       return result;
     }
     catch (GovManagementException e)
@@ -260,24 +236,24 @@ public class PermissionDataHandling implements PermissionDataHandlingMBean
   {
     try
     {
-      CoreConfigurationDto config = PoseidasConfigurator.getInstance().getCurrentConfig();
-      if (config == null)
+      Optional<EidasMiddlewareConfig> config = configurationService.getConfiguration();
+      if (config.isEmpty())
       {
         return;
       }
       Set<ByteBuffer> alreadyRenewed = new HashSet<>();
-      for ( ServiceProviderDto provider : config.getServiceProvider().values() )
+      for ( ServiceProviderType provider : config.get().getEidConfiguration().getServiceProvider() )
       {
-        EPAConnectorConfigurationDto npaConf = provider.getEpaConnectorConfiguration();
-        if (npaConf != null && !npaConf.isUpdateCVC())
+        if (!provider.isEnabled())
         {
           log.debug("{}: skip renew of black list for this provider, updateCVC is set to false, CVCRefID: {}",
-                    provider.getEntityID(),
-                    npaConf.getCVCRefID());
+                    provider.getName(),
+                    provider.getCVCRefID());
           continue;
         }
-        renewBlackList(provider, npaConf, true, alreadyRenewed, delta);
-        requestPublicSectorKeyIfNeeded(provider, npaConf);
+        DvcaConfigurationType dvcaConfiguration = configurationService.getDvcaConfiguration(provider);
+        renewBlackList(provider, dvcaConfiguration, true, alreadyRenewed, delta);
+        requestPublicSectorKeyIfNeeded(provider, dvcaConfiguration);
       }
     }
     catch (Exception e)
@@ -286,24 +262,25 @@ public class PermissionDataHandling implements PermissionDataHandlingMBean
     }
   }
 
-  private ManagementMessage renewBlackList(ServiceProviderDto prov,
-                                           EPAConnectorConfigurationDto npaConf,
+  private ManagementMessage renewBlackList(ServiceProviderType prov,
+                                           DvcaConfigurationType dvcaConfiguration,
                                            boolean all,
                                            Set<ByteBuffer> alreadyRenewed,
                                            boolean delta)
   {
+    String providerName = prov.getName();
     try
     {
-      if (!isConfigured(npaConf.getPkiConnectorConfiguration().getRestrictedIdService(), "black list", prov))
+      if (!isConfigured(dvcaConfiguration.getRestrictedIdServiceUrl(), "black list", providerName))
       {
-        return IDManagementCodes.INVALID_OPTION_FOR_PROVIDER.createMessage(prov.getEntityID(),
+        return IDManagementCodes.INVALID_OPTION_FOR_PROVIDER.createMessage(providerName,
                                                                            "ID.jsp.serviceProvider.nPaPkiConnectorConfiguration.restrictedIdService.title");
       }
-      TerminalPermission tp = facade.getTerminalPermission(npaConf.getCVCRefID());
+      TerminalPermission tp = facade.getTerminalPermission(prov.getCVCRefID());
       if (tp == null || tp.getCvc() == null)
       {
-        log.error(NO_TERMINAL_PERMISSION_ENTRY_AVAILABLE, prov.getEntityID());
-        return IDManagementCodes.MISSING_TERMINAL_CERTIFICATE.createMessage(npaConf.getCVCRefID());
+        log.debug(NO_TERMINAL_PERMISSION_ENTRY_AVAILABLE, providerName);
+        return IDManagementCodes.MISSING_TERMINAL_CERTIFICATE.createMessage(prov.getCVCRefID());
       }
       // When we already renewed the blacklist for this sector skip it now.
       if (alreadyRenewed != null && tp.getSectorID() != null
@@ -311,7 +288,8 @@ public class PermissionDataHandling implements PermissionDataHandlingMBean
       {
         return IDManagementCodes.DATABASE_ENTRY_EXISTS.createMessage(tp.getRefID());
       }
-      RestrictedIdHandler riHandler = new RestrictedIdHandler(npaConf, facade, hsmServiceHolder.getKeyStore());
+      RestrictedIdHandler riHandler = new RestrictedIdHandler(prov, facade, hsmServiceHolder.getKeyStore(),
+                                                              configurationService);
       if (alreadyRenewed != null)
       {
         if (BlackListLock.getINSTANCE().getBlackListUpdateLock().tryLock())
@@ -335,53 +313,47 @@ public class PermissionDataHandling implements PermissionDataHandlingMBean
     }
     catch (GovManagementException e)
     {
-      log.error("{}: unable to renew blacklist: {}", prov.getEntityID(), e.getMessage(), e);
+      log.error("{}: unable to renew blacklist: {}", providerName, e.getMessage(), e);
       return e.getManagementMessage();
     }
     catch (Exception e)
     {
-      log.error("{}: unable to renew blacklist: {}", prov.getEntityID(), e.getMessage(), e);
+      log.error("{}: unable to renew blacklist: {}", providerName, e.getMessage(), e);
       return GlobalManagementCodes.EC_UNEXPECTED_ERROR.createMessage("unable to renew blacklist: " + e.getMessage());
     }
   }
 
-  /**
-   * Requests a new public sector key if one is needed. This checks if the old one matches the key in the CVC and only
-   * fetches the key if a new one is needed.
-   *
-   * @param prov
-   * @param npaConf
-   * @return
-   */
-  private ManagementMessage requestPublicSectorKeyIfNeeded(ServiceProviderDto prov,
-                                                           EPAConnectorConfigurationDto npaConf)
+  private ManagementMessage requestPublicSectorKeyIfNeeded(ServiceProviderType prov,
+                                                           DvcaConfigurationType dvcaConfiguration)
   {
+    String providerName = prov.getName();
     try
     {
-      if (!isConfigured(npaConf.getPkiConnectorConfiguration().getRestrictedIdService(), "black list", prov))
+      if (!isConfigured(dvcaConfiguration.getRestrictedIdServiceUrl(), "black list", providerName))
       {
-        return IDManagementCodes.INVALID_OPTION_FOR_PROVIDER.createMessage(prov.getEntityID(),
+        return IDManagementCodes.INVALID_OPTION_FOR_PROVIDER.createMessage(providerName,
                                                                            "ID.jsp.serviceProvider.nPaPkiConnectorConfiguration.restrictedIdService.title");
       }
-      TerminalPermission tp = facade.getTerminalPermission(npaConf.getCVCRefID());
+      TerminalPermission tp = facade.getTerminalPermission(prov.getCVCRefID());
       if (tp == null || tp.getCvc() == null)
       {
-        log.error(NO_TERMINAL_PERMISSION_ENTRY_AVAILABLE, prov.getEntityID());
-        return IDManagementCodes.MISSING_TERMINAL_CERTIFICATE.createMessage(npaConf.getCVCRefID());
+        log.debug(NO_TERMINAL_PERMISSION_ENTRY_AVAILABLE, providerName);
+        return IDManagementCodes.MISSING_TERMINAL_CERTIFICATE.createMessage(prov.getCVCRefID());
       }
 
-      RestrictedIdHandler riHandler = new RestrictedIdHandler(npaConf, facade, hsmServiceHolder.getKeyStore());
+      RestrictedIdHandler riHandler = new RestrictedIdHandler(prov, facade, hsmServiceHolder.getKeyStore(),
+                                                              configurationService);
       riHandler.requestPublicSectorKeyIfNeeded();
       return GlobalManagementCodes.OK.createMessage();
     }
     catch (GovManagementException e)
     {
-      log.error("{}: unable to fetch public sector key: {}", prov.getEntityID(), e.getMessage(), e);
+      log.error("{}: unable to fetch public sector key: {}", providerName, e.getMessage(), e);
       return e.getManagementMessage();
     }
     catch (Exception e)
     {
-      log.error("{}: unable to fetch public sector key: {}", prov.getEntityID(), e.getMessage(), e);
+      log.error("{}: unable to fetch public sector key: {}", providerName, e.getMessage(), e);
       return GlobalManagementCodes.EC_UNEXPECTED_ERROR.createMessage("unable to fetch public sector key: "
                                                                      + e.getMessage());
     }
@@ -392,8 +364,8 @@ public class PermissionDataHandling implements PermissionDataHandlingMBean
   {
     try
     {
-      CoreConfigurationDto config = PoseidasConfigurator.getInstance().getCurrentConfig();
-      if (config == null)
+      Optional<EidasMiddlewareConfig> config = configurationService.getConfiguration();
+      if (config.isEmpty())
       {
         return;
       }
@@ -405,10 +377,10 @@ public class PermissionDataHandling implements PermissionDataHandlingMBean
       }
       List<String> lockedServiceProviders = new ArrayList<>();
 
-      for ( ServiceProviderDto provider : config.getServiceProvider().values() )
-      {
-        renewCvcForProvider(provider, expirationDateMap, lockedServiceProviders);
-      }
+      config.get()
+            .getEidConfiguration()
+            .getServiceProvider()
+            .forEach(sp -> renewCvcForProvider(sp, expirationDateMap, lockedServiceProviders));
     }
     catch (Exception e)
     {
@@ -417,71 +389,71 @@ public class PermissionDataHandling implements PermissionDataHandlingMBean
     }
   }
 
-  private void renewCvcForProvider(ServiceProviderDto provider,
+  private void renewCvcForProvider(ServiceProviderType provider,
                                    Map<String, Date> expirationDateMap,
                                    List<String> lockedServiceProviders)
   {
     CVCUpdateLock lock = null;
+    String serviceProviderName = provider.getName();
     try
     {
-      String serviceProvider = provider.getEntityID();
-      EPAConnectorConfigurationDto nPaConf = provider.getEpaConnectorConfiguration();
-      if (nPaConf == null)
-      {
-        return;
-      }
-      if (!nPaConf.isUpdateCVC())
+      if (!provider.isEnabled())
       {
         log.debug("{}: skip check for renew of cvc for this provider, updateCVC is set to false, CVCRefID: {}",
-                  serviceProvider,
-                  nPaConf.getCVCRefID());
+                  serviceProviderName,
+                  provider.getCVCRefID());
         return;
       }
-      if (!expirationDateMap.containsKey(nPaConf.getCVCRefID()))
+      if (!expirationDateMap.containsKey(provider.getCVCRefID()))
       {
         return;
       }
-      if (!isConfigured(nPaConf.getPkiConnectorConfiguration().getTerminalAuthService(),
-                        "terminal certificate",
-                        provider))
+      DvcaConfigurationType dvcaConfiguration = configurationService.getDvcaConfiguration(provider);
+      if (!isConfigured(dvcaConfiguration.getTerminalAuthServiceUrl(), "terminal certificate", serviceProviderName))
       {
-        log.info("{}: is not configurated for certificate renewal", serviceProvider);
+        log.info("{}: is not configurated for certificate renewal", serviceProviderName);
         return;
       }
 
       Calendar refreshDate = new GregorianCalendar();
-      refreshDate.add(Calendar.HOUR, nPaConf.getHoursRefreshCVCBeforeExpires());
-      Date expirationDate = expirationDateMap.get(nPaConf.getCVCRefID());
+      int hoursRefreshCVCBeforeExpires = configurationService.getConfiguration()
+                                                             .map(EidasMiddlewareConfig::getEidConfiguration)
+                                                             .map(EidasMiddlewareConfig.EidConfiguration::getTimerConfiguration)
+                                                             .map(TimerConfigurationType::getCertRenewal)
+                                                             .map(TimerTypeCertRenewal::getHoursRefreshCVCBeforeExpires)
+                                                             .orElse(20);
+      refreshDate.add(Calendar.HOUR, hoursRefreshCVCBeforeExpires);
+      Date expirationDate = expirationDateMap.get(provider.getCVCRefID());
       if (refreshDate.getTime().before(expirationDate))
       {
         return;
       }
-      TerminalPermission tp = getTerminalPermissionForRenewal(nPaConf.getCVCRefID());
+      TerminalPermission tp = getTerminalPermissionForRenewal(provider.getCVCRefID());
       if (containsExpiredCVC(tp))
       {
-        log.error("{}: Can not renew CVC because old CVC is already expired", serviceProvider);
+        log.error("{}: Can not renew CVC because old CVC is already expired", serviceProviderName);
         return;
       }
 
-      if (lockedServiceProviders.contains(serviceProvider))
+      if (lockedServiceProviders.contains(serviceProviderName))
       {
         return;
       }
 
-      lock = facade.obtainCVCUpdateLock(serviceProvider);
+      lock = facade.obtainCVCUpdateLock(serviceProviderName);
       if (lock == null)
       {
-        log.debug("{}: Some other server is renewing CVC right now - skipping", serviceProvider);
-        lockedServiceProviders.add(serviceProvider);
+        log.debug("{}: Some other server is renewing CVC right now - skipping", serviceProviderName);
+        lockedServiceProviders.add(serviceProviderName);
         return;
       }
 
-      getCvcRequestHandler(nPaConf).makeSubsequentRequest(tp);
+      getCvcRequestHandler(provider).makeSubsequentRequest(tp);
     }
     catch (Exception e)
     {
       SNMPTrapSender.sendSNMPTrap(SNMPConstants.TrapOID.CVC_TRAP_LAST_RENEWAL_STATUS, 1);
-      log.error("{}: unable to renew CVC", provider.getEntityID(), e);
+      log.error("{}: unable to renew CVC", serviceProviderName, e);
     }
     finally
     {
@@ -498,10 +470,10 @@ public class PermissionDataHandling implements PermissionDataHandlingMBean
     try
     {
       assertHsmAlive();
-      EPAConnectorConfigurationDto npaConf = getnPaConfigWithCheck(entityID);
+      ServiceProviderType serviceProvider = getServiceProvider(entityID);
 
-      TerminalPermission tp = getTerminalPermissionForRenewal(npaConf.getCVCRefID());
-      ManagementMessage message = getCvcRequestHandler(npaConf).makeSubsequentRequest(tp, true);
+      TerminalPermission tp = getTerminalPermissionForRenewal(serviceProvider.getCVCRefID());
+      ManagementMessage message = getCvcRequestHandler(serviceProvider).makeSubsequentRequest(tp, true);
       return message == null ? GlobalManagementCodes.OK.createMessage() : message;
     }
     catch (GovManagementException e)
@@ -584,8 +556,8 @@ public class PermissionDataHandling implements PermissionDataHandlingMBean
     try
     {
       assertHsmAlive();
-      EPAConnectorConfigurationDto epaConf = getnPaConfig(entityID);
-      if (epaConf.getCVCRefID() == null || epaConf.getCVCRefID().trim().isEmpty())
+      ServiceProviderType epaConf = getServiceProvider(entityID);
+      if (StringUtils.isBlank(epaConf.getCVCRefID()))
       {
         return GlobalManagementCodes.EC_UNEXPECTED_ERROR.createMessage("Please save the configuration.");
       }
@@ -619,13 +591,9 @@ public class PermissionDataHandling implements PermissionDataHandlingMBean
   {
     try
     {
-      EPAConnectorConfigurationDto npaConf = getnPaConfigWithCheck(entityID);
-      PkiConnectorConfigurationDto pkiConf = npaConf.getPkiConnectorConfiguration();
-      if (pkiConf == null)
-      {
-        return IDManagementCodes.MISSING_OPTION_FOR_PROVIDER.createMessage("PKI connection", entityID);
-      }
-      checkReadyForFirstRequestPki(npaConf, pkiConf);
+      ServiceProviderType serviceProvider = getServiceProvider(entityID);
+      DvcaConfigurationType dvcaConfiguration = getDvcaConfigWithCheck(serviceProvider);
+      checkReadyForFirstRequestPki(dvcaConfiguration, serviceProvider);
       return GlobalManagementCodes.OK.createMessage();
     }
     catch (GovManagementException e)
@@ -634,40 +602,26 @@ public class PermissionDataHandling implements PermissionDataHandlingMBean
     }
   }
 
-  private void checkReadyForFirstRequestPki(EPAConnectorConfigurationDto npaConf, PkiConnectorConfigurationDto pkiConf)
+  private void checkReadyForFirstRequestPki(DvcaConfigurationType dvcaConfigurationType,
+                                            ServiceProviderType serviceProvider)
     throws GovManagementException
   {
-    BerCaPolicy policy = PolicyImplementationFactory.getInstance().getPolicy(pkiConf.getBerCaPolicyId());
-    checkValuePresent(pkiConf.getBlackListTrustAnchor(), "blackListTrustAnchor");
-    checkValuePresent(pkiConf.getMasterListTrustAnchor(), "masterListTrustAnchor");
-    checkUrl(pkiConf.getTerminalAuthService().getUrl(), "terminalAuthService.title");
-    checkUrl(pkiConf.getRestrictedIdService().getUrl(), "restrictedIdService.title");
-    checkService(pkiConf, pkiConf.getTerminalAuthService(), npaConf.getCVCRefID());
-    checkService(pkiConf, pkiConf.getRestrictedIdService(), npaConf.getCVCRefID());
 
-    // d-trust does not have a passive auth service.
-    if (policy.hasPassiveAuthService())
-    {
-      checkUrl(pkiConf.getPassiveAuthService().getUrl(), "passiveAuthService.title");
-      checkService(pkiConf, pkiConf.getPassiveAuthService(), npaConf.getCVCRefID());
-    }
-    else
-    {
-      TerminalPermission tp = facade.getTerminalPermission(npaConf.getCVCRefID());
-      if (tp == null || tp.getMasterList() == null || tp.getDefectList() == null)
-      {
-        throw new GovManagementException(IDManagementCodes.MISSING_INPUT_VALUE.createMessage("master and defetct list"));
-      }
-    }
-    if (policy.isInitialRequestAsynchron())
-    {
-      checkUrl(pkiConf.getAutentURL(), "autentURL");
-    }
-    if (policy.isCertDescriptionFetch())
-    {
-      checkUrl(pkiConf.getDvcaCertDescriptionService().getUrl(), "dvcaCertDescriptionService.title");
-      checkService(pkiConf, pkiConf.getDvcaCertDescriptionService(), npaConf.getCVCRefID());
-    }
+    checkValuePresent(configurationService.getCertificate(dvcaConfigurationType.getBlackListTrustAnchorCertificateName()),
+                      "blackListTrustAnchor");
+    checkValuePresent(configurationService.getCertificate(dvcaConfigurationType.getMasterListTrustAnchorCertificateName()),
+                      "masterListTrustAnchor");
+    checkUrl(dvcaConfigurationType.getTerminalAuthServiceUrl(), "terminalAuthService.title");
+    checkUrl(dvcaConfigurationType.getRestrictedIdServiceUrl(), "restrictedIdService.title");
+    checkService(dvcaConfigurationType, serviceProvider, dvcaConfigurationType.getTerminalAuthServiceUrl());
+    checkService(dvcaConfigurationType, serviceProvider, dvcaConfigurationType.getRestrictedIdServiceUrl());
+    checkUrl(dvcaConfigurationType.getPassiveAuthServiceUrl(), "passiveAuthService.title");
+    checkService(dvcaConfigurationType, serviceProvider, dvcaConfigurationType.getPassiveAuthServiceUrl());
+    checkUrl(dvcaConfigurationType.getDvcaCertificateDescriptionServiceUrl(), "dvcaCertDescriptionService.title");
+    checkService(dvcaConfigurationType,
+                 serviceProvider,
+                 dvcaConfigurationType.getDvcaCertificateDescriptionServiceUrl());
+
   }
 
   private void checkValuePresent(X509Certificate value, String name) throws GovManagementException
@@ -697,48 +651,47 @@ public class PermissionDataHandling implements PermissionDataHandlingMBean
     }
   }
 
-  private void checkService(PkiConnectorConfigurationDto pkiConf, PkiServiceType service, String entityID)
+  private void checkService(DvcaConfigurationType dvcaConfiguration, ServiceProviderType serviceProvider, String pkiUrl)
     throws GovManagementException
   {
-    String sslKeysId = service.getSslKeysId();
+    X509Certificate dvcaServerCertificate = configurationService.getCertificate(dvcaConfiguration.getServerSSLCertificateName());
+    KeyPair clientKeyPair = serviceProvider.getClientKeyPairName() == null ? null
+      : configurationService.getKeyPair(serviceProvider.getClientKeyPairName());
     String filedNameSslKeysId = "ID.jsp.serviceProvider.nPaPkiConnectorConfiguration.autentService.sslKeyID";
-    if (sslKeysId == null)
-    {
-      throw new GovManagementException(GlobalManagementCodes.EC_MISSINGCONFIGVALUE, filedNameSslKeysId);
-    }
-    SslKeysDto keys = pkiConf.getSslKeys().get(sslKeysId);
-    if (keys == null)
+
+    if (dvcaServerCertificate == null || clientKeyPair == null && hsmServiceHolder.getKeyStore() == null)
     {
       throw new GovManagementException(GlobalManagementCodes.EC_INVALIDCONFIGVALUE, filedNameSslKeysId);
     }
+    String serviceProviderName = serviceProvider.getName();
     try
     {
       PKIServiceConnector.getContextLock();
-      log.debug("{}: obtained lock on SSL context for connection check", entityID);
+      log.debug("{}: obtained lock on SSL context for connection check", serviceProviderName);
       PKIServiceConnector connector;
       if (hsmServiceHolder.getKeyStore() == null)
       {
-        connector = new PKIServiceConnector(30, keys.getServerCertificate(), keys.getClientKey(),
-                                            keys.getClientCertificateChain(), entityID);
+        List<X509Certificate> clientCertificate = List.of(clientKeyPair.getCertificate());
+        connector = new PKIServiceConnector(30, dvcaServerCertificate, clientKeyPair.getKey(), clientCertificate,
+                                            serviceProviderName);
       }
       else
       {
-        connector = new PKIServiceConnector(30, keys.getServerCertificate(), hsmServiceHolder.getKeyStore(), null,
-                                            entityID);
+        connector = new PKIServiceConnector(30, dvcaServerCertificate, hsmServiceHolder.getKeyStore(), null,
+                                            serviceProviderName);
       }
-      byte[] content = connector.getFile(service.getUrl() + "?wsdl");
+      byte[] content = connector.getFile(pkiUrl + "?wsdl");
       if (!new String(content).contains("wsdl"))
       {
-        log.error("{}: {} does not deliver a WSDL", entityID, service.getUrl());
-        throw new GovManagementException(GlobalManagementCodes.EXTERNAL_SERVICE_NOT_REACHABLE, service.getUrl(),
+        log.error("{}: {} does not deliver a WSDL", serviceProviderName, pkiUrl);
+        throw new GovManagementException(GlobalManagementCodes.EXTERNAL_SERVICE_NOT_REACHABLE, pkiUrl,
                                          "no WSDL present");
       }
     }
     catch (Exception e)
     {
-      log.error("{}: no connection to {}", entityID, service.getUrl(), e);
-      throw new GovManagementException(GlobalManagementCodes.EXTERNAL_SERVICE_NOT_REACHABLE, service.getUrl(),
-                                       e.getMessage());
+      log.error("{}: no connection to {}", serviceProviderName, pkiUrl, e);
+      throw new GovManagementException(GlobalManagementCodes.EXTERNAL_SERVICE_NOT_REACHABLE, pkiUrl, e.getMessage());
 
     }
     finally
@@ -772,8 +725,8 @@ public class PermissionDataHandling implements PermissionDataHandlingMBean
   {
     try
     {
-      EPAConnectorConfigurationDto nPaConf = getnPaConfigWithCheck(entityID);
-      return getCvcRequestHandler(nPaConf).deletePendingRequest();
+      ServiceProviderType serviceProvider = getServiceProvider(entityID);
+      return getCvcRequestHandler(serviceProvider).deletePendingRequest();
     }
     catch (GovManagementException e)
     {
@@ -787,9 +740,9 @@ public class PermissionDataHandling implements PermissionDataHandlingMBean
   {
     try
     {
-      EPAConnectorConfigurationDto npaConf = getnPaConfigWithCheck(entityID);
-      PkiConnectorConfigurationDto pkiConf = npaConf.getPkiConnectorConfiguration();
-      checkService(pkiConf, pkiConf.getPassiveAuthService(), npaConf.getCVCRefID());
+      DvcaConfigurationType dvcaConfiguration = getDvcaConfigWithCheck(entityID);
+      ServiceProviderType serviceProvider = getServiceProvider(entityID);
+      checkService(dvcaConfiguration, serviceProvider, dvcaConfiguration.getPassiveAuthServiceUrl());
       return true;
     }
     catch (Exception e)
@@ -803,9 +756,9 @@ public class PermissionDataHandling implements PermissionDataHandlingMBean
   {
     try
     {
-      EPAConnectorConfigurationDto npaConf = getnPaConfigWithCheck(entityID);
-      PkiConnectorConfigurationDto pkiConf = npaConf.getPkiConnectorConfiguration();
-      checkService(pkiConf, pkiConf.getRestrictedIdService(), npaConf.getCVCRefID());
+      DvcaConfigurationType dvcaConfiguration = getDvcaConfigWithCheck(entityID);
+      ServiceProviderType serviceProvider = getServiceProvider(entityID);
+      checkService(dvcaConfiguration, serviceProvider, dvcaConfiguration.getRestrictedIdServiceUrl());
       return true;
     }
     catch (Exception e)

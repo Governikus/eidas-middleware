@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+<html th:replace="~{base-template/main :: main(~{::title}, ~{::section})}"
+      xmlns:th="http://www.thymeleaf.org">
+
+<title>Key management - eIDAS Middleware configuration and administration</title>
+
+<section>
+
+    <h1>Key management</h1>
+    <hr class="text-primary" style="height: 4px"/>
+
+    <input type="text" id="jumpToTab" hidden th:if="${jumpToTab != null}" th:value="${jumpToTab}"/>
+    <ul class="nav nav-tabs  js-enable" style="height: 0px !important;"
+        id="pills-tab"
+        role="tablist">
+        <li class="nav-item btn-lg text-center" role="presentation" style="padding-bottom: 0;">
+            <button class="nav-link active" id="pills-keyStores-tab" data-bs-toggle="pill"
+                    data-bs-target="#pills-keyStores"
+                    type="button" role="tab"
+                    aria-controls="pills-keyStores" aria-selected="true">Key stores <span class="fa fa-toolbox"></span>
+            </button>
+        </li>
+        <li class="nav-item btn-lg text-center " role="presentation" style="padding-bottom: 0;">
+            <button class="nav-link" id="pills-certificates-tab" data-bs-toggle="pill"
+                    data-bs-target="#pills-certificates"
+                    type="button" role="tab"
+                    aria-controls="pills-certificates" aria-selected="false">Certificates <span
+                    class="fa fa-certificate"></span>
+            </button>
+        </li>
+        <li class="nav-item btn-lg text-center" role="presentation" style="padding-bottom: 0;">
+            <button class="nav-link" id="pills-keyPairs-tab" data-bs-toggle="pill" data-bs-target="#pills-keyPairs"
+                    type="button" role="tab"
+                    aria-controls="pills-keyPairs" aria-selected="false">Key pairs <span class="fa fa-key"></span>
+            </button>
+        </li>
+    </ul>
+    <div class="tab-content" id="pills-tabContent">
+        <div class="tab-pane fade show active mb-2" id="pills-keyStores" role="tabpanel"
+             aria-labelledby="pills-keyStores-tab">
+            <div class="card js-remove-border">
+                <div class="card-body">
+                    <h5 class="card-title">Key stores</h5>
+                    <h6 class="card-subtitle mb-2 text-muted">Upload and manage key stores</h6>
+
+                    <div class="row">
+                        <div class="col">
+                            <h4 th:if="${keystoreInfoList.isEmpty()}">There are currently no uploaded key stores!</h4>
+
+                            <div th:each="keystoreInfo : ${keystoreInfoList}">
+
+                                <div class="card col shadow p-1 mb-4">
+                                    <h5 class="card-header bg-light">
+                                        <span th:text="${keystoreInfo.name  + ' (' + keystoreInfo.keyStoreType + ')'}"></span>
+                                    </h5>
+                                    <div class="card-body">
+                                        <div class="row">
+                                            <div class="col col-auto">
+                                                <h6>Certificate entries</h6>
+                                                <ul>
+                                                    <li th:each="alias : ${keystoreInfo.possibleCertificateAlias}">
+                                                        <span th:text="${alias}"></span>
+                                                    </li>
+                                                </ul>
+                                            </div>
+
+                                            <div class="col col-auto">
+                                                <h6>Key pair entries</h6>
+                                                <ul>
+                                                    <li th:each=" alias : ${keystoreInfo.possibleKeyPairAlias}">
+                                                        <span th:text="${alias}"></span>
+                                                    </li>
+                                                </ul>
+                                            </div>
+
+                                        </div>
+
+
+                                        <hr/>
+                                        <div style="float: right">
+                                            <a class="btn btn-primary"
+                                               th:href="${'/admin-interface/keymanagement/createCertificateOrKeyFromKeystore/' + keystoreInfo.name}">Extract
+                                                entry <i class="fa fa-paste"></i></a>
+                                            <a class="btn btn-danger"
+                                               th:href="${'/admin-interface/keymanagement/deleteKeyStore/' + keystoreInfo.name}">Delete
+                                                <span class="fa fa-trash"/></a>
+                                        </div>
+
+                                    </div>
+                                </div>
+
+
+                            </div>
+
+                        </div>
+                        <div class="col">
+
+
+                            <div class="card shadow">
+                                <div class="card-body">
+                                    <h5 class="card-title">Upload</h5>
+                                    <h6 class="card-subtitle mb-2 text-muted">Upload key store</h6>
+
+                                    <form id="KeyStoreUpload" method="post" class="input-group"
+                                          action="/admin-interface/keymanagement/uploadKeystore"
+                                          th:object="${keystoreUploadModel}"
+                                          enctype="multipart/form-data">
+                                        <input type="hidden"
+                                               th:name="${_csrf.parameterName}"
+                                               th:value="${_csrf.token}"/>
+                                        <div class="col w-100">
+                                            <div class=" row m-1">
+                                                <p th:errors="${keystoreUploadModel}" class="alert alert-danger"></p>
+                                            </div>
+                                            <div th:replace="~{fragments/form :: inputRow_text('Key store name', 'name', 'Name to identify the key store')}"/>
+                                            <div th:replace="~{fragments/form :: inputRow_password('Key store password', 'password', 'Password to unlock key store')}"/>
+
+                                            <div class=" form-group row m-1">
+                                                <label class="col-sm-3 col-form-label text-left">Key store type</label>
+                                                <div class="col-sm-9">
+                                                    <select class="form-select"
+                                                            th:classappend="${#fields.hasErrors('keyStoreType') ? 'border-danger' : ''}"
+                                                            th:field="*{keyStoreType}">
+                                                        <option th:each="ty : ${T(de.governikus.eumw.config.KeyStoreTypeType).values()}"
+                                                                th:text="${ty}"
+                                                                th:value="${ty}"></option>
+                                                    </select>
+                                                    <p class="m-0 text-danger" th:errors="*{keyStoreType}"/>
+                                                    <p class="text-secondary">Select key store type</p>
+                                                </div>
+                                            </div>
+
+
+                                            <div th:replace="~{fragments/form :: inputRow_upload('keystore-upload', null, 'keystoreFile', 'Key store file')}"/>
+                                            <hr/>
+                                            <div th:replace="fragments/form :: submitTextUploadIcon('Upload')"/>
+                                        </div>
+                                    </form>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+
+        <!--        CETIFICATES-->
+        <div class="tab-pane fade show active js-remove-class mb-2" id="pills-certificates" role="tabpanel"
+             aria-labelledby="pills-certificates-tab">
+            <div class="card js-remove-border ">
+                <div class="card-body">
+                    <h5 class="card-title">Certificates</h5>
+                    <h6 class="card-subtitle mb-2 text-muted">Upload and manage certificates</h6>
+                    <div class="row">
+                        <div class="col">
+
+                            <div th:each="certificateInfoHolder : ${certificates}">
+                                <div th:replace="~{fragments/keydata :: certificate(${certificateInfoHolder.name}, ${certificateInfoHolder.subject}, ${certificateInfoHolder.issuer}, ${certificateInfoHolder.serialnumber}, ${certificateInfoHolder.validUntil}, ${certificateInfoHolder.valid}, ${certificateInfoHolder.keystore}, ${certificateInfoHolder.alias}, true)}"/>
+                            </div>
+
+
+                        </div>
+                        <div class="col">
+                            <div class="card shadow">
+                                <div class="card-body">
+                                    <h5 class="card-title">Upload</h5>
+
+                                    <form id="CertificateUpload" method="post" class="input-group"
+                                          action="/admin-interface/keymanagement/uploadCertificate"
+                                          th:object="${certificateUploadModel}"
+                                          enctype="multipart/form-data">
+                                        <input type="hidden"
+                                               th:name="${_csrf.parameterName}"
+                                               th:value="${_csrf.token}"/>
+                                        <div class="col w-100">
+                                            <div class=" row m-1">
+                                                <p th:errors="${certificateUploadModel}" class="alert alert-danger"></p>
+                                            </div>
+
+                                            <div th:replace="~{fragments/form :: inputRow_text('Certificate name', 'name', 'Name to identify the certificate')}"/>
+                                            <div th:replace="~{fragments/form :: inputRow_upload('certificate-upload', null, 'certificateFile', 'Certificate file')}"/>
+                                            <hr/>
+                                            <div th:replace="fragments/form :: submitTextUploadIcon('Upload')"/>
+
+
+                                        </div>
+                                    </form>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+
+
+        <!--        KEYPAIRS-->
+        <div class="tab-pane fade show active js-remove-class mb-2" id="pills-keyPairs" role="tabpanel"
+             aria-labelledby="pills-keyPairs-tab">
+            <div class="card js-remove-border ">
+                <div class="card-body">
+                    <h5 class="card-title">Key pairs</h5>
+                    <h6 class="card-subtitle mb-2 text-muted">Manage key pairs</h6>
+                    <div th:each="certificateInfoHolder : ${keypairs}">
+                        <div th:replace="~{fragments/keydata :: keypair(${certificateInfoHolder.name}, ${certificateInfoHolder.subject}, ${certificateInfoHolder.issuer}, ${certificateInfoHolder.serialnumber}, ${certificateInfoHolder.validUntil},  ${certificateInfoHolder.valid}, ${certificateInfoHolder.keystore}, ${certificateInfoHolder.alias}, true)}"/>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+    <script src="/js/js-save-tabs.js">
+    </script>
+
+</section>
+
+</html>

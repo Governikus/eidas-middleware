@@ -128,9 +128,11 @@ public final class SNMPTrapSender
     {
       case "md5":
         authAlgo = AuthMD5.ID;
+        SecurityProtocols.getInstance().addAuthenticationProtocol(new AuthMD5());
         break;
       case "sha":
         authAlgo = AuthSHA.ID;
+        SecurityProtocols.getInstance().addAuthenticationProtocol(new AuthSHA());
         break;
       case "hmac128sha224":
         authAlgo = AuthHMAC128SHA224.ID;
@@ -164,6 +166,7 @@ public final class SNMPTrapSender
         break;
       case "3des":
         privAlgo = Priv3DES.ID;
+        SecurityProtocols.getInstance().addPrivacyProtocol(new Priv3DES());
         break;
       case "aes128":
         privAlgo = PrivAES128.ID;

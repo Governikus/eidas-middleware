@@ -13,13 +13,11 @@ package de.governikus.eumw.eidasstarterkit;
 import java.io.ByteArrayInputStream;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
-import java.security.Security;
 import java.security.cert.X509Certificate;
+import java.time.Instant;
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.List;
 
-import org.bouncycastle.jce.provider.BouncyCastleProvider;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -55,7 +53,6 @@ class EidasMetadataServiceTest
   void setUp() throws Exception
   {
     EidasSaml.init();
-    Security.addProvider(new BouncyCastleProvider());
     keyPair = Utils.readPKCS12(EidasMetadataServiceTest.class.getResourceAsStream("/eidassignertest.p12"),
                                "123456".toCharArray());
   }
@@ -176,9 +173,9 @@ class EidasMetadataServiceTest
     supportedNameIdTypes.add(EidasNameIdType.PERSISTENT);
     supportedNameIdTypes.add(EidasNameIdType.TRANSIENT);
     supportedNameIdTypes.add(EidasNameIdType.UNSPECIFIED);
-    return new EidasMetadataService("id", "entityID", new Date(), keyPair.getCert(), keyPair.getCert(),
+    return new EidasMetadataService("id", "entityID", Instant.now(), keyPair.getCert(), keyPair.getCert(),
                                     organisation, contactPerson, contactPerson, "https://post-endpoint.com",
                                     "https://redirect-endpoint.com", attributes, supportedNameIdTypes, "2.0",
-                                    signed, true);
+                                    signed, true, null);
   }
 }

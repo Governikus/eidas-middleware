@@ -29,9 +29,7 @@ import org.springframework.stereotype.Service;
 import de.governikus.eumw.eidascommon.Constants;
 import de.governikus.eumw.eidascommon.ContextPaths;
 import de.governikus.eumw.eidascommon.ErrorCode;
-import de.governikus.eumw.eidasmiddleware.ConfigHolder;
 import de.governikus.eumw.eidasmiddleware.RequestProcessingException;
-import de.governikus.eumw.eidasmiddleware.ServiceProviderConfig;
 import de.governikus.eumw.eidasmiddleware.WebServiceHelper;
 import de.governikus.eumw.eidasmiddleware.eid.RequestingServiceProvider;
 import de.governikus.eumw.eidasmiddleware.entities.RequestSession;
@@ -66,6 +64,7 @@ import de.governikus.eumw.poseidas.eidserver.convenience.EIDInfoResultRestricted
 import de.governikus.eumw.poseidas.eidserver.convenience.EIDInfoResultString;
 import de.governikus.eumw.poseidas.server.eidservice.EIDInternal;
 import de.governikus.eumw.poseidas.server.eidservice.EIDResultResponse;
+import de.governikus.eumw.poseidas.server.idprovider.config.ConfigurationService;
 import de.governikus.eumw.poseidas.server.idprovider.config.CvcTlsCheck;
 import de.governikus.eumw.poseidas.server.pki.HSMServiceHolder;
 import lombok.RequiredArgsConstructor;
@@ -97,9 +96,7 @@ public class ResponseHandler
 
   private final RequestSessionRepository requestSessionRepository;
 
-  private final ConfigHolder configHolder;
-
-  private final ServiceProviderConfig serviceProviderConfig;
+  private final ConfigurationService configurationService;
 
   private final HSMServiceHolder hsmServiceHolder;
 
@@ -136,7 +133,7 @@ public class ResponseHandler
     {
       throw new RequestProcessingException(UNKNOWN_REF_ID);
     }
-    RequestingServiceProvider reqSP = serviceProviderConfig.getProviderByEntityID(samlReqSession.getReqProviderEntityId());
+    RequestingServiceProvider reqSP = configurationService.getProviderByEntityID(samlReqSession.getReqProviderEntityId());
 
     EIDResultResponse eidResponse = eidInternal.getResult(refID, 0);
     if (WebServiceHelper.checkResult(eidResponse.getResult(), Constants.EID_MAJOR_OK, null))
@@ -189,7 +186,7 @@ public class ResponseHandler
     {
       EidasSigner signer = getEidasSigner();
       EidasResponse rsp = new EidasResponse(reqSP.getAssertionConsumerURL(), reqSP.getEntityID(), null, samlReqId,
-                                            configHolder.getServerURLWithContextPath() + ContextPaths.METADATA,
+                                            configurationService.getServerURLWithEidasContextPath() + ContextPaths.METADATA,
                                             EidasLoaEnum.LOA_HIGH, signer, null);
       byte[] eidasResp = rsp.generateErrorRsp(errorCode, msg);
       return DatatypeConverter.printBase64Binary(eidasResp);
@@ -205,8 +202,16 @@ public class ResponseHandler
     EidasSigner signer;
     if (hsmServiceHolder.getKeyStore() == null)
     {
-      signer = new EidasSigner(true, configHolder.getAppSignatureKeyPair().getKey(),
-                               configHolder.getAppSignatureKeyPair().getCert());
+      var optionalConfiguration = configurationService.getConfiguration();
+      if (optionalConfiguration.isEmpty())
+      {
+        log.debug("Cannot prepare key pair for signature creation without configuration");
+        throw new RequestProcessingException(CANNOT_CREATE_SAML_RESPONSE);
+      }
+      var signatureKeyPair = configurationService.getKeyPair(optionalConfiguration.get()
+                                                                                  .getEidasConfiguration()
+                                                                                  .getSignatureKeyPairName());
+      signer = new EidasSigner(true, signatureKeyPair.getKey(), signatureKeyPair.getCertificate());
     }
     else
     {
@@ -312,7 +317,11 @@ public class ResponseHandler
     }
     else
     {
-      PersonIdentifierAttribute pi = new PersonIdentifierAttribute("DE/" + configHolder.getCountryCode() + "/"
+      var countryCode = configurationService.getConfiguration()
+                                            .orElseThrow(() -> new RequestProcessingException(CANNOT_CREATE_SAML_RESPONSE))
+                                            .getEidasConfiguration()
+                                            .getCountryCode();
+      PersonIdentifierAttribute pi = new PersonIdentifierAttribute("DE/" + countryCode + "/"
                                                                    + Hex.encodeHexString(restrID.getID1())
                                                                         .toUpperCase(Locale.GERMANY));
       attributes.add(pi);
@@ -330,7 +339,8 @@ public class ResponseHandler
                                                   reqSP.getAssertionConsumerURL(),
                                                   reqSP.getEntityID(),
                                                   nameId,
-                                                  configHolder.getServerURLWithContextPath() + ContextPaths.METADATA,
+                                                  configurationService.getServerURLWithEidasContextPath()
+                                                          + ContextPaths.METADATA,
                                                   EidasLoaEnum.LOA_HIGH,
                                                   samlReqSession.getReqId(),
                                                   encrypter,
@@ -358,9 +368,13 @@ public class ResponseHandler
     {
       throw new RequestProcessingException(UNKNOWN_REQUEST_ID);
     }
-    RequestingServiceProvider reqSP = serviceProviderConfig.getProviderByEntityID(samlReqSession.getReqProviderEntityId());
+    RequestingServiceProvider reqSP = configurationService.getProviderByEntityID(samlReqSession.getReqProviderEntityId());
+    String publicServiceProviderName = configurationService.getConfiguration()
+                                                           .orElseThrow(() -> new RequestProcessingException(CANNOT_CREATE_SAML_RESPONSE))
+                                                           .getEidasConfiguration()
+                                                           .getPublicServiceProviderName();
     CvcTlsCheck.CvcCheckResults cvcCheckResults = cvcTlsCheck.checkCvcProvider(samlReqSession.getReqProviderName() == null
-      ? configHolder.getEntityIDInt() : samlReqSession.getReqProviderName());
+      ? publicServiceProviderName : samlReqSession.getReqProviderName());
     if (cvcCheckFailed(cvcCheckResults))
     {
       return prepareSAMLErrorResponse(reqSP,
@@ -374,8 +388,12 @@ public class ResponseHandler
       return handleTestCase(testCase, samlReqSession, reqSP);
     }
 
-    List<EidasAttribute> dummyAttributes = getDummyAttributes();
-    EidasNameId nameId = new EidasTransientNameId("DE/" + configHolder.getCountryCode() + "/123456");
+    var countryCode = configurationService.getConfiguration()
+                                          .orElseThrow(() -> new RequestProcessingException(CANNOT_CREATE_SAML_RESPONSE))
+                                          .getEidasConfiguration()
+                                          .getCountryCode();
+    EidasNameId nameId = new EidasTransientNameId("DE/" + countryCode + "/123456");
+    List<EidasAttribute> dummyAttributes = getDummyAttributes(countryCode);
     try
     {
       EidasSigner signer = getEidasSigner();
@@ -385,7 +403,8 @@ public class ResponseHandler
                                                   reqSP.getAssertionConsumerURL(),
                                                   reqSP.getEntityID(),
                                                   nameId,
-                                                  configHolder.getServerURLWithContextPath() + ContextPaths.METADATA,
+                                                  configurationService.getServerURLWithEidasContextPath()
+                                                          + ContextPaths.METADATA,
                                                   EidasLoaEnum.LOA_TEST,
                                                   samlReqSession.getReqId(),
                                                   encrypter,
@@ -429,7 +448,7 @@ public class ResponseHandler
     }
   }
 
-  private List<EidasAttribute> getDummyAttributes()
+  private List<EidasAttribute> getDummyAttributes(String countryCode)
   {
     ArrayList<EidasAttribute> attributes = new ArrayList<>();
     attributes.add(new FamilyNameAttribute("Mustermann"));
@@ -438,7 +457,7 @@ public class ResponseHandler
     attributes.add(new DateOfBirthAttribute("1964-08-12"));
     attributes.add(new PlaceOfBirthAttribute("Berlin"));
     attributes.add(new CurrentAddressAttribute(null, null, null, null, "Heidestraße 17", "Köln", "D", null, "51147"));
-    attributes.add(new PersonIdentifierAttribute("DE/" + configHolder.getCountryCode() + "/" + "123456"));
+    attributes.add(new PersonIdentifierAttribute("DE/" + countryCode + "/" + "123456"));
 
     return attributes;
   }
@@ -562,7 +581,7 @@ public class ResponseHandler
     {
       throw new RequestProcessingException(UNKNOWN_REF_ID);
     }
-    RequestingServiceProvider reqSP = serviceProviderConfig.getProviderByEntityID(samlReqSession.getReqProviderEntityId());
+    RequestingServiceProvider reqSP = configurationService.getProviderByEntityID(samlReqSession.getReqProviderEntityId());
     return reqSP.getAssertionConsumerURL();
   }
 
@@ -589,7 +608,7 @@ public class ResponseHandler
     {
       throw new RequestProcessingException(UNKNOWN_REQUEST_ID);
     }
-    RequestingServiceProvider reqSP = serviceProviderConfig.getProviderByEntityID(samlReqSession.getReqProviderEntityId());
+    RequestingServiceProvider reqSP = configurationService.getProviderByEntityID(samlReqSession.getReqProviderEntityId());
     return reqSP.getAssertionConsumerURL();
   }
 

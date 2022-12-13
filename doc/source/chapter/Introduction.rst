@@ -5,7 +5,7 @@ Introduction to the German eID System
 
 The eIDAS Middleware performs the server side of the authentication procedure with the German eID.
 It is an eIDAS Service providing cross-border authentication.
-In contrast to the eIDAS Proxy Service which is operated by the Sending MS, the eIDAS Middleware
+In contrast to an eIDAS Proxy Service which is operated by the Sending MS, the eIDAS Middleware
 is provided by the Sending MS and every Receiving MS operates its own eIDAS Middleware instance.
 
 The eIDAS Middleware consists of two parts:
@@ -17,21 +17,21 @@ In terms of the eIDAS environment, the service provider receives the authorizati
 However, in terms of the German eID system the service provider is the SAML adapter of the middleware, because this is the instance to which the eID server sends the data from the eID card.
 
 The German eID scheme fulfills all requirements of the eIDAS Level of Assurance **high**.
-One of the major security by design features is strong and mutual authentication between the relying party and the user.
-Using authorization certificates there is a strong cryptographic binding between the service provider and the user.
-It is highly recommended to read the `German eID Whitepaper <https://www.bsi.bund.de/SharedDocs/Downloads/EN/BSI/EIDAS/German_eID_Whitepaper_final.pdf?__blob=publicationFile&v=6>`_ in order to understand the German eID scheme.
+One of the major security-by-design feature is strong and mutual authentication between the relying party and the user.
+For example, using authorization certificates is a strong cryptographic binding between the service provider and the user.
+It is highly recommended to read the `German eID Whitepaper <https://www.bsi.bund.de/SharedDocs/Downloads/EN/BSI/EIDAS/German_eID_Whitepaper_v1-4.pdf?__blob=publicationFile&v=2>`_ in order to understand the German eID scheme.
 For additional information see the page about the `eIDAS Notification of the German eID <https://www.bsi.bund.de/EN/Topics/ElectrIDDocuments/German-eID/eIDAS-notification/eIDAS_notification_node.html>`_  and the `eID Infrastructure <https://www.bsi.bund.de/EN/Topics/ElectrIDDocuments/German-eID/eID-Infrastructure/eID-Infrastructure_node.html>`_.
 
 The following brief description facilitates the understanding and configuration of the eIDAS Middleware.
 
-A single eIDAS Middleware supports a multiple :term:`eID Service Providers<eID Service Provider>` and multiple eIDAS connectors.
+A single eIDAS Middleware supports multiple :term:`eID Service Providers<eID Service Provider>` and multiple eIDAS connectors.
 An :term:`eID Service Provider` needs an :term:`Authorization Certificate` to access data on the eID Card.
 The Authorization Certificate is issued to the :term:`eID Service Provider` by the :term:`Authorization CA`, also called :term:`BerCA`.
 The eIDAS Middleware technically receives the :term:`Authorization Certificate` via SOAP requests
 to the :term:`Authorization CA`.
 These requests are secured by TLS client authentication and signed with a so-called :term:`Request Signer Certificate`
 or the currently valid :term:`Authorization Certificate`.
-Therefore, the public certificates of the :term:`Authorization CA` and your eIDAS Middleware must be exchanged before the eIDAS Middleware can request the first Authorization Certificate.
+Therefore, the public certificates of the :term:`Authorization CA` and your eIDAS Middleware must be exchanged before the eIDAS Middleware requests the first Authorization Certificate.
 If you decide to use a :term:`Request Signer Certificate` (which is highly recommended as it will become mandatory
 at some point), this certificate must be given to the :term:`Authorization CA` as well.
 For more information on how to get in contact with the :term:`Authorization CA`, see the document `Three Steps to integrate the German eIDAS Middleware on the German Country Page <https://ec.europa.eu/cefdigital/wiki/display/EIDIMPL/Germany#Germany-GermaneIDAS-Middleware>`_.
@@ -44,24 +44,21 @@ Introduction to Docker
 ======================
 In addition to running the middleware in the provided virtual machine or
 running the stand-alone Spring Boot application on your own server,
-we provide a Docker image to run the middleware in a Docker container.
+we provide a Docker Image to run the middleware in a Docker container.
 
 In order to keep the container as stateless as possible,
-we use volumes to store the configuration and the h2 database outside of the container.
+we use volumes to store the configuration and the H2 database outside of the container.
 
 Please note that it is not possible to run multiple middleware containers
 using the same configuration or database volume.
 
-It is recommended to use the configuration wizard to configure the middleware application.
-
 For information on running Docker containers, see the `Docker Docs <https://docs.docker.com/engine/reference/run/>`_.
 
-We provide two different Docker images:
+We provide the Docker Image:
 
-#. governikus/eidas-configuration-wizard (`Docker Hub <https://hub.docker.com/r/governikus/eidas-configuration-wizard>`_)
 #. governikus/eidas-middleware-application (`Docker Hub <https://hub.docker.com/r/governikus/eidas-middleware-application>`_)
 
-Two volumes are necessary to run the middleware and the configuration wizard:
+Two volumes are necessary to run the middleware:
 
 #. eidas-configuration
 #. eidas-database
@@ -71,8 +68,8 @@ You can create these named volumes with the following command::
     docker volume create eidas-configuration
     docker volume create eidas-database
 
-To reduce the hassle of executing long command in the terminal,
-we also provide Docker Compose files in addition to the Docker images.
+To reduce the hassle of executing long commands in the terminal,
+we also provide Docker Compose files in addition to the Docker Images.
 This way the configuration for running the containers can be stored in configuration files.
 For more information on Docker Compose, see the `Docker Compose Docs <https://docs.docker.com/compose/overview/>`_.
 

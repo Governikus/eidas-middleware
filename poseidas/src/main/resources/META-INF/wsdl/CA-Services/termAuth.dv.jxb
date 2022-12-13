@@ -3,7 +3,7 @@
                xmlns:jaxb="http://java.sun.com/xml/ns/jaxb"
                xmlns:xs="http://www.w3.org/2001/XMLSchema"
                xmlns:xjc="http://java.sun.com/xml/ns/jaxb/xjc">     
-  <jaxb:bindings schemaLocation="TermAuth/DV_TermAuth/BasicTypes_DV_TerminalAuth.xsd">
+  <jaxb:bindings schemaLocation="TermAuth/BasicTypes_DV_TerminalAuth.xsd">
   <jaxb:bindings node="/xs:schema">
    <jaxb:schemaBindings>
       <jaxb:package name="uri.eacbt._1.termAuth.dv"/>

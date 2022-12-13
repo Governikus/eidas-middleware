@@ -19,6 +19,9 @@ import de.governikus.eumw.poseidas.eidmodel.TerminalData;
 import de.governikus.eumw.poseidas.eidmodel.data.EIDKeys;
 import de.governikus.eumw.poseidas.eidserver.ecardid.BlackListConnector;
 import de.governikus.eumw.poseidas.eidserver.ecardid.SessionInput;
+import lombok.AccessLevel;
+import lombok.Getter;
+import lombok.RequiredArgsConstructor;
 
 
 /**
@@ -29,137 +32,42 @@ import de.governikus.eumw.poseidas.eidserver.ecardid.SessionInput;
  *
  * @author tt
  */
+@RequiredArgsConstructor(access = AccessLevel.PRIVATE)
+@Getter
 public class SessionInputImpl implements SessionInput
 {
 
   private static final long serialVersionUID = 1L;
 
-  // Start of getters: these are to be called by the convenience layer
+  private final transient BlackListConnector blackListConnector;
 
-  /**
-   * Return the required age if age verification should be performed
-   *
-   * @return null if not
-   */
-  @Override
-  public Integer getRequiredAge()
-  {
-    return requiredAge;
-  }
+  private Integer requiredAge;
 
-  /**
-   * Return the required community ID if place verification should be performed
-   *
-   * @return null if not
-   */
-  @Override
-  public String getRequiredCommunity()
-  {
-    return requiredCommunity;
-  }
+  private boolean verifyDocumentValidity;
 
-  /**
-   * Return true if document validity should be verified.
-   */
-  @Override
-  public boolean isVerifyDocumentValidity()
-  {
-    return verifyDocumentValidity;
-  }
+  private boolean performRestrictedIdentification;
 
-  /**
-   * Return true if restrictedID should be returned.
-   */
-  @Override
-  public boolean isPerformRestrictedIdentification()
-  {
-    return performRestrictedIdentification;
-  }
+  private String requiredCommunity;
 
-  /**
-   * Return the set of all fields which are required by the server. Use this information to create the
-   * RequiredCHAT. Furthermore, this information should be used together with {@link #getOptionalFields()} to
-   * build the DataSetToBeRead. <br>
-   * WARNING: by request of ET this field contains also the keys for verification and requestedID which by
-   * statement of JW must not included into any chat object!
-   */
-  @Override
-  public Set<EIDKeys> getRequiredFields()
-  {
-    return requiredFields;
-  }
+  private final Set<EIDKeys> requiredFields = new HashSet<>();
 
-  /**
-   * Return the set of all fields which are requested but not required by the server. Use this information to
-   * create the OptionalCHAT. Furthermore, this information should be used together with
-   * {@link #getRequiredFields()} to build the DataSetToBeRead. <br>
-   * WARNING: by request of ET this field contains also the keys for verification and requestedID which by
-   * statement of JW must not included into any chat object!
-   */
-  @Override
-  public Set<EIDKeys> getOptionalFields()
-  {
-    return optionalFields;
-  }
+  private final Set<EIDKeys> optionalFields = new HashSet<>();
 
-  /**
-   * Return a unique session ID. The eCardAPI does not define any restrictions for this value but might
-   * require some. (length, format ...)
-   */
-  @Override
-  public String getSessionID()
-  {
-    return sessionID;
-  }
+  private final List<TerminalData> cvcChain;
 
-  /**
-   * return access object for black list
-   */
-  @Override
-  public BlackListConnector getBlackListConnector()
-  {
-    return blackListConnector;
-  }
+  private final TerminalData terminalCertificate;
 
-  /** {@inheritDoc} */
-  @Override
-  public String getTransactionInfo()
-  {
-    return this.transactionInfo;
-  }
+  private final String sessionID;
 
-  // End of getters
+  private final byte[] masterList;
 
-  // start of setters: to be used by the server application (and tests)
+  private final byte[] defectList;
 
-  /**
-   * Create new instance giving the CVC, pre-shared key and sessionID
-   */
-  private SessionInputImpl(TerminalData cvc,
-                           List<TerminalData> cvcChain,
-                           String sessionID,
-                           BlackListConnector blackListConnector,
-                           String refreshAddress,
-                           String serverAddress,
-                           byte[] masterList,
-                           List<X509Certificate> masterListCerts,
-                           byte[] defectedList,
-                           String transactionInfo,
-                           String logPrefix)
-  {
-    super();
-    this.cvc = cvc;
-    this.cvcChain = cvcChain;
-    this.sessionID = sessionID;
-    this.blackListConnector = blackListConnector;
-    this.refreshAddress = refreshAddress;
-    this.serverAddress = serverAddress;
-    this.masterList = masterList;
-    this.masterListCerts = masterListCerts;
-    this.defectedList = defectedList;
-    this.transactionInfo = transactionInfo;
-    this.logPrefix = logPrefix;
-  }
+  private final List<X509Certificate> masterListCerts;
+
+  private final String transactionInfo;
+
+  private final String logPrefix;
 
   /**
    * Create new instance giving the CVC, pre-shared key and sessionID
@@ -168,15 +76,12 @@ public class SessionInputImpl implements SessionInput
                    List<TerminalData> cvcChain,
                    String sessionID,
                    BlackListConnector blackListConnector,
-                   String refreshAddress,
-                   String serverAddress,
                    byte[] masterList,
-                   byte[] defectedList,
+                   byte[] defectList,
                    String transactionInfo,
                    String logPrefix)
   {
-    this(cvc, cvcChain, sessionID, blackListConnector, refreshAddress, serverAddress, masterList, null,
-         defectedList, transactionInfo, logPrefix);
+    this(blackListConnector, cvcChain, cvc, sessionID, masterList, defectList, null, transactionInfo, logPrefix);
   }
 
   /**
@@ -186,15 +91,12 @@ public class SessionInputImpl implements SessionInput
                    List<TerminalData> cvcChain,
                    String sessionID,
                    BlackListConnector blackListConnector,
-                   String refreshAddress,
-                   String serverAddress,
                    List<X509Certificate> masterListCerts,
-                   byte[] defectedList,
+                   byte[] defectList,
                    String transactionInfo,
                    String logPrefix)
   {
-    this(cvc, cvcChain, sessionID, blackListConnector, refreshAddress, serverAddress, null, masterListCerts,
-         defectedList, transactionInfo, logPrefix);
+    this(blackListConnector, cvcChain, cvc, sessionID, null, defectList, masterListCerts, transactionInfo, logPrefix);
   }
 
   /**
@@ -253,42 +155,6 @@ public class SessionInputImpl implements SessionInput
     addField(requiredFields, key);
   }
 
-  // end of setters
-
-  private final transient BlackListConnector blackListConnector;
-
-  private Integer requiredAge;
-
-  private boolean verifyDocumentValidity;
-
-  private boolean performRestrictedIdentification;
-
-  private String requiredCommunity;
-
-  private final Set<EIDKeys> requiredFields = new HashSet<>();
-
-  private final Set<EIDKeys> optionalFields = new HashSet<>();
-
-  private final List<TerminalData> cvcChain;
-
-  private final TerminalData cvc;
-
-  private final String sessionID;
-
-  private final String refreshAddress;
-
-  private final String serverAddress;
-
-  private final byte[] masterList;
-
-  private final byte[] defectedList;
-
-  private final List<X509Certificate> masterListCerts;
-
-  private String transactionInfo = null;
-
-  private final String logPrefix;
-
   private void addField(Set<EIDKeys> keyset, EIDKeys key)
   {
     if (key == EIDKeys.AGE_VERIFICATION || key == EIDKeys.MUNICIPALITY_ID_VERIFICATION)
@@ -308,53 +174,5 @@ public class SessionInputImpl implements SessionInput
     {
       keyset.add(key);
     }
-  }
-
-  @Override
-  public List<TerminalData> getCvcChain()
-  {
-    return cvcChain;
-  }
-
-  @Override
-  public TerminalData getTerminalCertificate()
-  {
-    return cvc;
-  }
-
-  @Override
-  public String getRefreshAddress()
-  {
-    return refreshAddress;
-  }
-
-  @Override
-  public String getServerAddress()
-  {
-    return serverAddress;
-  }
-
-  @Override
-  public byte[] getMasterList()
-  {
-    return masterList;
-  }
-
-  @Override
-  public byte[] getDefectList()
-  {
-    return defectedList;
-  }
-
-  @Override
-  public List<X509Certificate> getMasterListCerts()
-  {
-    return masterListCerts;
-  }
-
-  @Override
-  public String getLogPrefix()
-  {
-    return logPrefix;
   }
 }

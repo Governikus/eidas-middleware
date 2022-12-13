@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html th:replace="~{base-template/main :: main(~{::title}, ~{::section})}"
+      xmlns:th="http://www.thymeleaf.org">
+
+<title>DVCA configuration - eIDAS Middleware configuration and administration</title>
+
+<section>
+
+
+    <h1>DVCA configuration</h1>
+    <hr class="text-primary" style="height: 4px"/>
+
+    <div class="row">
+        <form method="post" action="" th:object="${dvcaConfigModel}" enctype="multipart/form-data">
+
+            <input
+                    type="hidden"
+                    th:name="${_csrf.parameterName}"
+                    th:value="${_csrf.token}"/>
+
+            <div th:replace="~{fragments/form :: inputRow_text('Name', 'name', 'Name to identify the DVCA configuration')}"/>
+
+            <h4>Trust anchors and certificates</h4>
+
+            <div th:replace="~{fragments/configOptions :: certificates('DVCA server certificate', 'serverSSLCertificateName', 'DVCA TLS certificate')}"/>
+            <div th:replace="~{fragments/configOptions :: certificates('Black List trust anchor', 'blackListTrustAnchorCertificateName', 'Black List trust anchor certificate')}"/>
+            <div th:replace="~{fragments/configOptions :: certificates('Master List trust anchor', 'masterListTrustAnchorCertificateName', 'Master List trust anchor certificate')}"/>
+
+            <h4>Webservice configuration</h4>
+            <div th:replace="~{fragments/form :: inputRow_text('Terminal Authentication service URL', 'terminalAuthServiceUrl', 'Terminal Authentication endpoint at the DVCA')}"/>
+            <div th:replace="~{fragments/form :: inputRow_text('Restricted Identification service URL', 'restrictedIdServiceUrl', 'Restricted Identification endpoint at the DVCA')}"/>
+            <div th:replace="~{fragments/form :: inputRow_text('Passive Authentication service URL', 'passiveAuthServiceUrl', 'Passive Authentication endpoint at the DVCA')}"/>
+            <div th:replace="~{fragments/form :: inputRow_text('CVC description service URL', 'dvcaCertificateDescrptionServiceUrl', 'CVC description endpoint at the DVCA')}"/>
+
+            <input type="hidden" th:field="*{newconfig}">
+
+            <hr/>
+            <div style="float: right">
+                <div th:replace="fragments/form :: submitAndAbort('/admin-interface/dvcaConfiguration')"></div>
+            </div>
+        </form>
+    </div>
+
+
+</section>
+
+</html>

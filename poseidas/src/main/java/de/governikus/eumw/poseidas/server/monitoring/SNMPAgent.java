@@ -34,13 +34,14 @@ import org.snmp4j.smi.VariableBinding;
 import org.springframework.context.annotation.DependsOn;
 import org.springframework.stereotype.Component;
 
+import de.governikus.eumw.config.EidasMiddlewareConfig;
+import de.governikus.eumw.config.ServiceProviderType;
 import de.governikus.eumw.poseidas.cardbase.asn1.npa.CertificateDescription;
 import de.governikus.eumw.poseidas.eidmodel.TerminalData;
 import de.governikus.eumw.poseidas.eidserver.crl.CertificationRevocationListImpl;
-import de.governikus.eumw.poseidas.server.idprovider.config.CoreConfigurationDto;
+import de.governikus.eumw.poseidas.server.idprovider.config.ConfigurationException;
+import de.governikus.eumw.poseidas.server.idprovider.config.ConfigurationService;
 import de.governikus.eumw.poseidas.server.idprovider.config.CvcTlsCheck;
-import de.governikus.eumw.poseidas.server.idprovider.config.PoseidasConfigurator;
-import de.governikus.eumw.poseidas.server.idprovider.config.ServiceProviderDto;
 import de.governikus.eumw.poseidas.server.pki.PermissionDataHandlingMBean;
 import de.governikus.eumw.poseidas.server.pki.RequestSignerCertificateService;
 import de.governikus.eumw.poseidas.server.pki.TerminalPermission;
@@ -67,6 +68,8 @@ public final class SNMPAgent implements CommandResponder
   private final PermissionDataHandlingMBean permissionDataHandling;
 
   private final RequestSignerCertificateService rscService;
+
+  private final ConfigurationService configurationService;
 
   private static VariableBinding getDateAndTime(String oid, Date date)
   {
@@ -206,7 +209,7 @@ public final class SNMPAgent implements CommandResponder
           return getDateAndTime(oid, new Date(latestRetrieval));
         }
       case GET_TLS_CERTIFICATE_VALID:
-        return getDateAndTime(oid, new CvcTlsCheck(facade).getTLSExpirationDate());
+        return getDateAndTime(oid, new CvcTlsCheck(facade, configurationService).getTLSExpirationDate());
       default:
         log.warn("No matching case for this OID: {}", oidConstant.getValue());
         throw new IllegalArgumentException("No matching case for this OID: " + oidConstant.getValue());
@@ -223,25 +226,27 @@ public final class SNMPAgent implements CommandResponder
       String stringId = matcher.group(2);
       Integer id = Integer.valueOf(stringId);
 
-      CoreConfigurationDto config = PoseidasConfigurator.getInstance().getCurrentConfig();
-      List<ServiceProviderDto> spList = new ArrayList<>(config.getServiceProvider().values());
+      EidasMiddlewareConfig configuration = configurationService.getConfiguration()
+                                                                .orElseThrow(() -> new ConfigurationException("No eidas middleware configuration present"));
+
+      List<ServiceProviderType> spList = new ArrayList<>(configuration.getEidConfiguration().getServiceProvider());
       if (spList.size() <= id)
       {
         throw new IllegalArgumentException("Invalid SP index: " + id);
       }
-      ServiceProviderDto sp = spList.get(id);
-      TerminalPermission tp = facade.getTerminalPermission(sp.getEpaConnectorConfiguration().getCVCRefID());
+      ServiceProviderType sp = spList.get(id);
+      TerminalPermission tp = facade.getTerminalPermission(sp.getCVCRefID());
       switch (type)
       {
         case SNMPConstants.PROVIDER_NAME:
-          return new VariableBinding(new OID(oid), new OctetString(sp.getEntityID()));
+          return new VariableBinding(new OID(oid), new OctetString(sp.getName()));
         case SNMPConstants.BLACKLIST_LIST_AVAILABLE:
           return new VariableBinding(new OID(oid), new Integer32(tp.getBlackListVersion() == null ? 0 : 1));
         case SNMPConstants.BLACKLIST_LAST_SUCCESSFUL_RETRIEVAL:
           return getDateAndTime(oid, tp.getBlackListStoreDate());
         case SNMPConstants.BLACKLIST_DVCA_AVAILABILITY:
           return new VariableBinding(new OID(oid),
-                                     new Integer32(permissionDataHandling.pingRIService(sp.getEntityID()) ? 1 : 0));
+                                     new Integer32(permissionDataHandling.pingRIService(sp.getName()) ? 1 : 0));
         case SNMPConstants.MASTERLIST_LIST_AVAILABLE:
           return new VariableBinding(new OID(oid), new Integer32(tp.getMasterList() == null ? 0 : 1));
         case SNMPConstants.MASTERLIST_LAST_SUCCESSFUL_RETRIEVAL:
@@ -253,13 +258,13 @@ public final class SNMPAgent implements CommandResponder
         case SNMPConstants.MASTERLIST_DVCA_AVAILABILITY:
         case SNMPConstants.DEFECTLIST_DVCA_AVAILABILITY:
           return new VariableBinding(new OID(oid),
-                                     new Integer32(permissionDataHandling.pingPAService(sp.getEntityID()) ? 1 : 0));
+                                     new Integer32(permissionDataHandling.pingPAService(sp.getName()) ? 1 : 0));
         case SNMPConstants.RSC_PENDING_AVAILABLE:
           return new VariableBinding(new OID(oid),
-                                     new Integer32(rscService.getRequestSignerCertificate(sp.getEntityID(),
+                                     new Integer32(rscService.getRequestSignerCertificate(sp.getName(),
                                                                                           false) == null ? 0 : 1));
         case SNMPConstants.RSC_CURRENT_CERTIFICATE_VALID_UNTIL:
-          return getDateAndTime(oid, rscService.getRequestSignerCertificate(sp.getEntityID(), true).getNotAfter());
+          return getDateAndTime(oid, rscService.getRequestSignerCertificate(sp.getName(), true).getNotAfter());
         case SNMPConstants.CVC_PRESENT:
           return new VariableBinding(new OID(oid), new Integer32(tp.getCvc() == null ? 0 : 1));
         case SNMPConstants.CVC_SUBJECT_URL:
@@ -269,7 +274,8 @@ public final class SNMPAgent implements CommandResponder
           return getDateAndTime(oid, new TerminalData(tp.getCvc()).getExpirationDate());
         case SNMPConstants.CVC_TLS_CERTIFICATE_LINK_STATUS:
           return new VariableBinding(new OID(oid),
-                                     new Integer32(new CvcTlsCheck(facade).checkCvcProvider(sp.getEntityID())
+                                     new Integer32(new CvcTlsCheck(facade,
+                                                                   configurationService).checkCvcProvider(sp.getName())
                                                                           .isCvcTlsMatch() ? 1 : 0));
         default:
       }
@@ -277,7 +283,7 @@ public final class SNMPAgent implements CommandResponder
     throw new IllegalArgumentException("Invalid OID: " + oid);
   }
 
-  private static String nextOID(String oidStr)
+  private String nextOID(String oidStr)
   {
     // if we are in the table, go to next row if there is one
     if (oidStr.startsWith(SNMPConstants.PROVIDER_SPECIFIC_PREFIX))
@@ -286,7 +292,9 @@ public final class SNMPAgent implements CommandResponder
       if (matcher.find())
       {
         Integer id = Integer.valueOf(matcher.group(2));
-        if (id + 1 < PoseidasConfigurator.getInstance().getCurrentConfig().getServiceProvider().size())
+        EidasMiddlewareConfig configuration = configurationService.getConfiguration()
+                                                                  .orElseThrow(() -> new ConfigurationException("No eidas middleware configuration present"));
+        if (id + 1 < configuration.getEidConfiguration().getServiceProvider().size())
         {
           return oidStr.substring(0, oidStr.lastIndexOf('.') + 1) + (id + 1);
         }

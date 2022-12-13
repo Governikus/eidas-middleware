@@ -1,1 +1,0 @@
-fully setup configuration that should not have any problems and must fill all values within the configuration wizard

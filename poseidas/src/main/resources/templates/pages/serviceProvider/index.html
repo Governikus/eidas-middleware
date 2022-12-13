@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html th:replace="~{base-template/main :: main(~{::title}, ~{::section})}"
+      xmlns:th="http://www.thymeleaf.org">
+<title>eID service provider configuration - eIDAS Middleware configuration and administration</title>
+<section>
+    <h1>eID service provider configuration</h1>
+    <hr class="text-primary" style="height: 4px"/>
+    <div class="card">
+        <div class="card-body">
+            <h2 class="card-title mb-4">Manage eID service provider<a style="text-decoration: none; float: right"
+                                                                      th:href="*{'/admin-interface/serviceProvider/create'}">
+                <button class="btn btn-primary">New eID service provider <i class="fa fa-plus"></i></button>
+            </a></h2>
+            <div class="card shadow p-1 mb-4" th:each="serviceprovider : ${serviceProviderViewModel}">
+                <h4 class="card-header bg-light">
+                    <span th:text="*{serviceprovider.name}"/>
+                    <a th:href="@{/admin-interface/details/__${serviceprovider.name}__}" class="float-end">
+                        <button class="btn btn-primary">Details</button>
+                    </a>
+                </h4>
+
+                <div class="card-body" th:object="${serviceprovider}">
+                    <div class="row">
+                        <div class="col-2">
+                            <p>Active: </p>
+                        </div>
+                        <div class="col-10" th:classappend="${serviceprovider.enabled ? 'fa fa-check' : 'fa fa-times'}">
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-2">
+                            <p>DVCA configuration: </p>
+                        </div>
+                        <div class="col-10" th:text="*{dvcaConfigurationName}">
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-2">
+                            <p>Client key pair: </p>
+                        </div>
+                        <div class="col-10">
+                            <div th:if="${serviceprovider.clientKeyPair != null}">
+                                <div
+                                        th:replace="~{fragments/keydata :: keypair(${serviceprovider.clientKeyPair.name}, ${serviceprovider.clientKeyPair.subject}, ${serviceprovider.clientKeyPair.issuer}, ${serviceprovider.clientKeyPair.serialnumber}, ${serviceprovider.clientKeyPair.validUntil}, ${serviceprovider.clientKeyPair.valid}, ${serviceprovider.clientKeyPair.keystore}, ${serviceprovider.clientKeyPair.alias}, false)}"/>
+                            </div>
+                            <p th:if="${serviceprovider.clientKeyPair == null}">Key pair is not stored in the config</p>
+                            <p th:if="${@environment.getProperty('hsm.type') == 'PKCS11'}">Key pair is stored in HSM</p>
+                        </div>
+                    </div>
+                    <hr/>
+                    <div style="float: right">
+                        <a class="btn btn-secondary"
+                           th:href="${'/admin-interface/serviceProvider/edit/' + serviceprovider.name}">Edit <span
+                                class="fa fa-pencil-alt"></span></a>
+                        <a class="btn btn-danger"
+                           th:href="${'/admin-interface/serviceProvider/remove/' + serviceprovider.name}">Delete
+                            <span class="fa fa-trash"></span></a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+</html>

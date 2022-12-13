@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html th:replace="~{base-template/main :: main(~{::title}, ~{::section})}"
+      xmlns:th="http://www.thymeleaf.org">
+
+<title>Timer configuration - eIDAS Middleware configuration and administration</title>
+
+<section>
+
+
+    <h1>Timer configuration</h1>
+    <hr class="text-primary" style="height: 4px"/>
+
+    <form method="post" class="" action="" th:object="${timerConfigModel}" enctype="multipart/form-data">
+        <input type="hidden"
+               th:name="${_csrf.parameterName}"
+               th:value="${_csrf.token}"/>
+        <div th:replace="~{this :: inputRow_timer('CVC renewal', 'CVC (Card Verifiable Certificate) renewal', 'cvcRenewalLength', '0', 'cvcRenewalUnit', 'true', 'hoursRefreshCvcBeforeExpiration')}"/>
+        <div th:replace="~{this :: inputRow_timer('Black list renewal', 'Black List renewal', 'blackListRenewalLength', '0', 'blackListRenewalUnit', 'false', '')}"/>
+        <div th:replace="~{this :: inputRow_timer('Master and defect list renewal', 'Master and Defect List renewal', 'masterDefectListRenewalLength', '0', 'masterDefectListRenewalUnit', 'false', '')}"/>
+        <div th:replace="~{this :: inputRow_timer('CRL renewal', 'CRL (Certificate Revocation List) renewal', 'crlRenewalLength', '0', 'crlRenewalUnit', 'false', '')}"/>
+        <div th:replace="fragments/form :: submit()"></div>
+    </form>
+
+
+</section>
+<div th:remove="all">
+    <div th:fragment="inputRow_timer(id, text, obj, min, objUnit, isCVC, hoursRefreshCvcBeforeExpiration)">
+        <div class="shadow p-1  mb-4 rounded card">
+            <div class="card-header bg-light">
+                <b th:text="${text}"/>
+            </div>
+            <div class="card-body">
+                <div th:if="${isCVC}">
+                    <p style="display: inline">
+                        Renew CVC when the validity is less than
+                    </p>
+                    <div class="col-sm-1" style="display: inline-block">
+                        <input class="form-control"
+                               th:classappend="${#fields.hasErrors(hoursRefreshCvcBeforeExpiration) ? 'border-danger' : ''}"
+                               th:field="*{__${hoursRefreshCvcBeforeExpiration}__}"
+                               type="number" min="1" pattern="[0-9]+"/>
+                        <p class="m-0 text-danger" th:errors="*{__${hoursRefreshCvcBeforeExpiration}__}"/>
+                    </div>
+                    <p style="display: inline"> hours.</p>
+                </div>
+                <label th:unless="${isCVC}">Execute this operation every </label>
+                <label th:if="${isCVC}">Perform check every </label>
+                <div class="row ">
+                    <div class="col-3">
+                        <input class="form-control"
+                               th:classappend="${#fields.hasErrors(obj) ? 'border-danger' : ''}"
+                               th:field="*{__${obj}__}"
+                               th:id="${id.replace(' ','-')}"
+                               type="number" min="1" pattern="[0-9]+"/>
+                        <p class="m-0 text-danger" th:errors="*{__${obj}__}"/>
+                    </div>
+                    <div class="col">
+                        <select class="form-select" th:id="${objUnit}"
+                                th:classappend="${#fields.hasErrors(objUnit) ? 'border-danger' : ''}"
+                                th:field="*{__${objUnit}__}">
+                            <option th:each="unit :  ${T(de.governikus.eumw.config.TimerUnit).values()}"
+                                    th:text="${#strings.toLowerCase(unit)}"
+                                    th:value="${unit}"></option>
+                        </select>
+                        <p class="m-0 text-danger" th:errors="*{__${objUnit}__}"/>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+</div>
+
+</html>

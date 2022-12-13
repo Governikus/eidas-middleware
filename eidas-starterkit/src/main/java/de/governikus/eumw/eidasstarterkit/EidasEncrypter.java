@@ -42,8 +42,7 @@ public class EidasEncrypter
   Encrypter encrypter;
 
   /**
-   * Create a XMLCipher Object. The KeyEncryptionParameters algorithm will be
-   * http://www.w3.org/2001/04/xmlenc#rsa-oaep-mgf1p
+   * Create a XMLCipher Object.
    *
    * @param includeCert if true the certificate will be a part of the xml
    * @param cert contains the public key for encryption

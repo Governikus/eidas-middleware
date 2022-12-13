@@ -12,9 +12,6 @@ package de.governikus.eumw.poseidas.server.eidservice;
 
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
-import java.io.UnsupportedEncodingException;
-import java.net.URLEncoder;
-import java.security.NoSuchProviderException;
 import java.security.cert.CertificateException;
 import java.security.cert.CertificateFactory;
 import java.security.cert.X509Certificate;
@@ -25,13 +22,12 @@ import java.util.zip.ZipInputStream;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.bouncycastle.jce.provider.BouncyCastleProvider;
 import org.springframework.stereotype.Component;
 
+import de.governikus.eumw.config.ServiceProviderType;
 import de.governikus.eumw.eidascommon.Constants;
 import de.governikus.eumw.eidascommon.ErrorCode;
 import de.governikus.eumw.eidascommon.ErrorCodeException;
-import de.governikus.eumw.eidascommon.HttpRedirectUtils;
 import de.governikus.eumw.eidascommon.Utils;
 import de.governikus.eumw.poseidas.eidmodel.TerminalData;
 import de.governikus.eumw.poseidas.eidmodel.data.EIDKeys;
@@ -39,13 +35,11 @@ import de.governikus.eumw.poseidas.eidserver.convenience.EIDSequence.Authorizati
 import de.governikus.eumw.poseidas.eidserver.ecardid.ECardIDServerFactory;
 import de.governikus.eumw.poseidas.eidserver.ecardid.ECardIDServerI;
 import de.governikus.eumw.poseidas.eidserver.ecardid.SessionInput;
-import de.governikus.eumw.poseidas.server.idprovider.config.CoreConfigurationDto;
-import de.governikus.eumw.poseidas.server.idprovider.config.EPAConnectorConfigurationDto;
-import de.governikus.eumw.poseidas.server.idprovider.config.PoseidasConfigurator;
-import de.governikus.eumw.poseidas.server.idprovider.config.ServiceProviderDto;
 import de.governikus.eumw.poseidas.server.idprovider.core.AuthenticationSessionManager;
+import de.governikus.eumw.poseidas.server.idprovider.exceptions.InvalidConfigurationException;
 import de.governikus.eumw.poseidas.server.pki.TerminalPermission;
 import de.governikus.eumw.poseidas.server.pki.TerminalPermissionAO;
+import de.governikus.eumw.utils.key.SecurityProvider;
 import oasis.names.tc.dss._1_0.core.schema.Result;
 
 
@@ -107,20 +101,16 @@ public class EIDInternal
    * @param client identifies the provider by used SSL client certificate
    * @return {@link EIDRequestResponse} contains session id and pre-shared key
    */
-  public EIDRequestResponse useID(EIDRequestInput request, ServiceProviderDto client)
+  public EIDRequestResponse useID(EIDRequestInput request, ServiceProviderType client)
+    throws InvalidConfigurationException
   {
     if (client != null)
     {
-      LOG.debug("identified client " + client.getEntityID());
+      LOG.debug("identified client " + client.getName());
     }
     else
     {
       LOG.error("called useID() without client");
-    }
-    CoreConfigurationDto cconf = request.getConfig();
-    if (cconf == null)
-    {
-      cconf = PoseidasConfigurator.getInstance().getCurrentConfig();
     }
     String requestId = request.getRequestId();
     if (requestId == null || requestId.trim().isEmpty())
@@ -141,29 +131,16 @@ public class EIDInternal
     {
       return errorResponse;
     }
-    EPAConnectorConfigurationDto config = client.getEpaConnectorConfiguration();
-    EIDSession mySession = new EIDSession(sessionId, requestId, client.getEntityID());
+    EIDSession mySession = new EIDSession(sessionId, requestId, client.getName());
     EIDRequestResponse response = new EIDRequestResponse(sessionId, requestId, Constants.EID_MAJOR_OK, null,
-                                                         null, config.getPaosReceiverURL(),
+                                                         null,
                                                          mySession.getLogPrefix());
 
     try
     {
-      StringBuilder idProviderUrl = new StringBuilder(cconf.getServerUrl());
-      idProviderUrl.append("/gov_autent/async");
-      if (mySession.getRequestId() != null)
-      {
-        idProviderUrl.append('?');
-        idProviderUrl.append(HttpRedirectUtils.REFERENCE_PARAMNAME);
-        idProviderUrl.append('=');
-        idProviderUrl.append(URLEncoder.encode(mySession.getRequestId(), Utils.ENCODING));
-      }
-
       SessionInput input = startEcardApiRequest(mySession,
                                                 request,
-                                                config.getCVCRefID(),
-                                                idProviderUrl.toString(),
-                                                config.getPaosReceiverURL());
+                                                client.getCVCRefID());
       ECardIDServerFactory.getInstance().getCurrentServer();
       mySession.setSessionInput(input);
 
@@ -188,20 +165,13 @@ public class EIDInternal
           break;
       }
       return new EIDRequestResponse(sessionId, requestId, Constants.EID_MAJOR_ERROR, minorCode,
-                                    e.getMessage(), null, mySession.getLogPrefix());
+                                    e.getMessage(), mySession.getLogPrefix());
     }
     catch (IllegalArgumentException e)
     {
       LOG.info(mySession.getLogPrefix() + "an internal error occurred while processing a request", e);
       return new EIDRequestResponse(sessionId, requestId, Constants.EID_MAJOR_ERROR,
-                                    Constants.EID_MINOR_COMMON_INTERNALERROR, e.getMessage(), null,
-                                    mySession.getLogPrefix());
-    }
-    catch (UnsupportedEncodingException e)
-    {
-      LOG.info(mySession.getLogPrefix() + "an unsupported encoding was used", e);
-      return new EIDRequestResponse(sessionId, requestId, Constants.EID_MAJOR_ERROR,
-                                    Constants.EID_MINOR_COMMON_INTERNALERROR, e.getMessage(), null,
+                                    Constants.EID_MINOR_COMMON_INTERNALERROR, e.getMessage(),
                                     mySession.getLogPrefix());
     }
     return response;
@@ -210,13 +180,13 @@ public class EIDInternal
   private EIDRequestResponse checkRequestError(EIDRequestInput request,
                                                String sessionId,
                                                String requestId,
-                                               ServiceProviderDto client)
+                                               ServiceProviderType client)
   {
     if (client == null)
     {
       return new EIDRequestResponse(sessionId, requestId, Constants.EID_MAJOR_ERROR,
                                     Constants.EID_MINOR_COMMON_INTERNALERROR,
-                                    "client is unknown in the configuration", null,
+                                    "client is unknown in the configuration",
                                     "<unknown>: " + requestId + COLON_AND_SPACE);
     }
     else if (sessionId == null || sessionId.length() < 16 || sessionId.length() > 10240)
@@ -225,8 +195,7 @@ public class EIDInternal
                                     Constants.EID_MINOR_USEID_MISSING_ARGUMENT,
                                     "The session Id it too short with " + ((sessionId == null) ? 0
                                       : sessionId.length()) + " bytes",
-                                    null,
-                                    client.getEntityID() + COLON_AND_SPACE + requestId + COLON_AND_SPACE);
+                                    client.getName() + COLON_AND_SPACE + requestId + COLON_AND_SPACE);
     }
     else if (requestId == null || requestId.length() < 16 || requestId.length() > 10240)
     {
@@ -234,22 +203,21 @@ public class EIDInternal
                                     Constants.EID_MINOR_USEID_MISSING_ARGUMENT,
                                     "The Request ID it too short with " + ((requestId == null) ? 0
                                       : requestId.length()) + " bytes",
-                                    null,
-                                    client.getEntityID() + COLON_AND_SPACE + requestId + COLON_AND_SPACE);
+                                    client.getName() + COLON_AND_SPACE + requestId + COLON_AND_SPACE);
     }
     else if (ageVerificationRequestIncomplete(request))
     {
       return new EIDRequestResponse(sessionId, requestId, Constants.EID_MAJOR_ERROR,
                                     Constants.EID_MINOR_USEID_MISSING_ARGUMENT,
-                                    "must specify required age to perform age verification", null,
-                                    client.getEntityID() + COLON_AND_SPACE + requestId + COLON_AND_SPACE);
+                                    "must specify required age to perform age verification",
+                                    client.getName() + COLON_AND_SPACE + requestId + COLON_AND_SPACE);
     }
     else if (placeVerificationRequestIncomplete(request))
     {
       return new EIDRequestResponse(sessionId, requestId, Constants.EID_MAJOR_ERROR,
                                     Constants.EID_MINOR_USEID_MISSING_ARGUMENT,
-                                    "must specify communityId to check against", null,
-                                    client.getEntityID() + COLON_AND_SPACE + requestId + COLON_AND_SPACE);
+                                    "must specify communityId to check against",
+                                    client.getName() + COLON_AND_SPACE + requestId + COLON_AND_SPACE);
     }
     return null;
   }
@@ -266,9 +234,7 @@ public class EIDInternal
 
   private SessionInput startEcardApiRequest(EIDSession session,
                                             EIDRequestInput request,
-                                            String refId,
-                                            String refreshAddress,
-                                            String serverAddress)
+                                            String refId)
     throws ErrorCodeException
   {
     SessionInputImpl input;
@@ -296,17 +262,15 @@ public class EIDInternal
                                                                         session.getLogPrefix());
       input = new SessionInputImpl(cvc, tp.getCvcChain(), session.getSessionId(),
 
-                                   new BlackListConnectorImpl(cvcFacade, tp.getSectorID()), refreshAddress,
-                                   serverAddress, masterListCerts, defectListData,
-                                   request.getTransactionInfo(), session.getLogPrefix());
+                                   new BlackListConnectorImpl(cvcFacade, tp.getSectorID()), masterListCerts,
+                                   defectListData, request.getTransactionInfo(), session.getLogPrefix());
     }
     else
     {
       input = new SessionInputImpl(cvc, tp.getCvcChain(), session.getSessionId(),
 
-                                   new BlackListConnectorImpl(cvcFacade, tp.getSectorID()), refreshAddress,
-                                   serverAddress, masterListData, defectListData,
-                                   request.getTransactionInfo(), session.getLogPrefix());
+                                   new BlackListConnectorImpl(cvcFacade, tp.getSectorID()), masterListData,
+                                   defectListData, request.getTransactionInfo(), session.getLogPrefix());
     }
     translateSelector(request, input, cvc.getAuthorizations());
 
@@ -323,30 +287,12 @@ public class EIDInternal
     CertificateFactory certFactory = null;
     try
     {
-      certFactory = CertificateFactory.getInstance("X509", BouncyCastleProvider.PROVIDER_NAME);
-    }
-    catch (NoSuchProviderException e)
-    {
-      // nothing
+      certFactory = CertificateFactory.getInstance("X509", SecurityProvider.BOUNCY_CASTLE_PROVIDER);
     }
     catch (CertificateException e)
     {
       // without certificate factory the is little we can do
       return Collections.emptyList();
-    }
-
-    // bouncy not available
-    if (certFactory == null)
-    {
-      try
-      {
-        certFactory = CertificateFactory.getInstance("X509");
-      }
-      catch (CertificateException e)
-      {
-        // without certificate factory the is little we can do
-        return Collections.emptyList();
-      }
     }
 
     List<X509Certificate> result = new ArrayList<>();

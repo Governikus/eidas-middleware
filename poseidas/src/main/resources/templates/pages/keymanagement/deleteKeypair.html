@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html th:replace="~{base-template/main :: main(~{::title}, ~{::section})}"
+      xmlns:th="http://www.thymeleaf.org">
+
+<title>Key management - eIDAS Middleware configuration and administration</title>
+
+<section>
+
+    <h1>Keymanagement</h1>
+    <hr class="text-primary" style="height: 4px"/>
+
+    <div class="card col shadow p-1 mb-4">
+        <div class="card-body">
+            <h5 class="card-title">
+                Delete key pair <span th:text="${name}"></span>
+            </h5>
+            <p>Do you really want to delete the key pair <b th:text="${name}"/>?</p>
+            <br/>
+            <form method="post" th:action="${'/admin-interface/keymanagement/deleteKeypair/' + name}">
+                <input type="hidden"
+                       th:name="${_csrf.parameterName}"
+                       th:value="${_csrf.token}"/>
+                <div th:replace="~{fragments/form :: deleteAndAbort('key pair', '/admin-interface/keymanagement')}"/>
+            </form>
+        </div>
+    </div>
+
+
+</section>
+
+</html>

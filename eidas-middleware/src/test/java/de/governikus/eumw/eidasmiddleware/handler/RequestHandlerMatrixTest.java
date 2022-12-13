@@ -16,26 +16,21 @@ import java.security.KeyStore;
 import java.security.KeyStoreException;
 import java.security.NoSuchAlgorithmException;
 import java.security.PrivateKey;
-import java.security.Security;
 import java.security.UnrecoverableKeyException;
 import java.security.cert.CertificateEncodingException;
 import java.security.cert.X509Certificate;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
+import java.util.Optional;
 
 import javax.xml.transform.TransformerException;
 import javax.xml.transform.TransformerFactoryConfigurationError;
 
-import org.bouncycastle.jce.provider.BouncyCastleProvider;
 import org.junit.jupiter.api.Assertions;
-import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.MethodSource;
-import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.opensaml.core.config.InitializationException;
@@ -44,10 +39,10 @@ import org.opensaml.xmlsec.signature.support.SignatureException;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 
+import de.governikus.eumw.config.EidasMiddlewareConfig;
+import de.governikus.eumw.config.ServiceProviderType;
 import de.governikus.eumw.eidascommon.ErrorCodeWithResponseException;
 import de.governikus.eumw.eidascommon.HttpRedirectUtils;
-import de.governikus.eumw.eidasmiddleware.ConfigHolder;
-import de.governikus.eumw.eidasmiddleware.ServiceProviderConfig;
 import de.governikus.eumw.eidasmiddleware.eid.RequestingServiceProvider;
 import de.governikus.eumw.eidasmiddleware.repositories.RequestSessionRepository;
 import de.governikus.eumw.eidasstarterkit.EidasLoaEnum;
@@ -57,8 +52,7 @@ import de.governikus.eumw.eidasstarterkit.EidasRequest;
 import de.governikus.eumw.eidasstarterkit.EidasSaml;
 import de.governikus.eumw.eidasstarterkit.EidasSigner;
 import de.governikus.eumw.eidasstarterkit.person_attributes.EidasPersonAttributes;
-import de.governikus.eumw.poseidas.server.idprovider.config.CoreConfigurationDto;
-import de.governikus.eumw.poseidas.server.idprovider.config.ServiceProviderDto;
+import de.governikus.eumw.poseidas.server.idprovider.config.ConfigurationService;
 import de.governikus.eumw.utils.key.KeyStoreSupporter;
 import lombok.AllArgsConstructor;
 import lombok.ToString;
@@ -84,27 +78,8 @@ class RequestHandlerMatrixTest
   private RequestSessionRepository requestSessionRepository;
 
   @MockBean
-  private ServiceProviderConfig mockServiceProviderConfig;
+  private ConfigurationService mockConfigurationService;
 
-  @MockBean
-  private ConfigHolder mockConfigHolder;
-
-  @Mock(lenient = true)
-  private CoreConfigurationDto coreConfigurationDto;
-
-  @BeforeAll
-  public static void setUp()
-  {
-    Security.addProvider(new BouncyCastleProvider());
-  }
-
-  @BeforeEach
-  public void prepareCoreConfigurationMock()
-  {
-    Map<String, ServiceProviderDto> serviceProviders = new HashMap<>();
-    serviceProviders.put("providerA", new ServiceProviderDto("providerA"));
-    Mockito.when(coreConfigurationDto.getServiceProvider()).thenReturn(serviceProviders);
-  }
 
   public static List<TestPrerequisites> testValidRequest()
   {
@@ -147,13 +122,13 @@ class RequestHandlerMatrixTest
   {
     log.info("TestPrerequisites for this test run: {}", testPrerequisites);
     prepareServiceProviderMock(testPrerequisites.spTypeMetadata);
+    prepareConfig();
 
     String samlRequest = createSAMLRequest(testPrerequisites.providerName,
                                            testPrerequisites.requesterId,
                                            testPrerequisites.spTypeRequest);
 
-    RequestHandler requestHandler = new RequestHandler(requestSessionRepository, mockConfigHolder, mockServiceProviderConfig,
-                                                       coreConfigurationDto);
+    RequestHandler requestHandler = new RequestHandler(requestSessionRepository, mockConfigurationService);
     EidasRequest eIDASRequest = requestHandler.handleSAMLRequest("RELAY_STATE", samlRequest, false);
     Assertions.assertNotNull(eIDASRequest.getId());
   }
@@ -164,15 +139,27 @@ class RequestHandlerMatrixTest
   {
     log.info("TestPrerequisites for this test run: {}", testPrerequisites);
     prepareServiceProviderMock(testPrerequisites.spTypeMetadata);
+    prepareConfig();
 
     String samlRequest = createSAMLRequest(testPrerequisites.providerName,
                                            testPrerequisites.requesterId,
                                            testPrerequisites.spTypeRequest);
 
-    RequestHandler requestHandler = new RequestHandler(requestSessionRepository, mockConfigHolder, mockServiceProviderConfig,
-                                                       coreConfigurationDto);
+    RequestHandler requestHandler = new RequestHandler(requestSessionRepository, mockConfigurationService);
     Assertions.assertThrows(ErrorCodeWithResponseException.class,
                             () -> requestHandler.handleSAMLRequest("RELAY_STATE", samlRequest, false));
+  }
+
+  private void prepareConfig()
+  {
+    EidasMiddlewareConfig config = new EidasMiddlewareConfig();
+    EidasMiddlewareConfig.EidConfiguration eidConfiguration = new EidasMiddlewareConfig.EidConfiguration();
+    eidConfiguration.getServiceProvider()
+                    .add(new ServiceProviderType(PROVIDER_NAME, true, "CVCRefID", "DVCAConf", "ClientKey"));
+    eidConfiguration.getServiceProvider()
+                    .add(new ServiceProviderType(SERVICE_PROVIDER, true, "CVCRefID", "DVCAConf", "ClientKey"));
+    config.setEidConfiguration(eidConfiguration);
+    Mockito.when(mockConfigurationService.getConfiguration()).thenReturn(Optional.of(config));
   }
 
   private void prepareServiceProviderMock(SPTypeEnumeration spTypeMetadata) throws URISyntaxException
@@ -186,7 +173,7 @@ class RequestHandlerMatrixTest
                                                                           "bos-test-tctoken.saml-sign")
                                                           .get());
     sp.setSectorType(spTypeMetadata);
-    Mockito.when(mockServiceProviderConfig.getProviderByEntityID("http://localhost:8080/eIDASDemoApplication/Metadata"))
+    Mockito.when(mockConfigurationService.getProviderByEntityID("http://localhost:8080/eIDASDemoApplication/Metadata"))
            .thenReturn(sp);
   }
 

@@ -14,14 +14,12 @@ import java.security.InvalidAlgorithmParameterException;
 import java.security.KeyPair;
 import java.security.KeyPairGenerator;
 import java.security.NoSuchAlgorithmException;
-import java.security.NoSuchProviderException;
 import java.security.PrivateKey;
 import java.security.PublicKey;
 import java.security.interfaces.ECPrivateKey;
 import java.security.interfaces.ECPublicKey;
 import java.security.spec.AlgorithmParameterSpec;
 
-import org.bouncycastle.jce.provider.BouncyCastleProvider;
 import org.bouncycastle.jce.provider.JCEECPrivateKey;
 import org.bouncycastle.jce.provider.JCEECPublicKey;
 import org.bouncycastle.math.ec.ECPoint;
@@ -29,6 +27,7 @@ import org.bouncycastle.math.ec.ECPoint;
 import de.governikus.eumw.poseidas.cardbase.AssertUtil;
 import de.governikus.eumw.poseidas.cardbase.ByteUtil;
 import de.governikus.eumw.poseidas.cardbase.crypto.key.KeyHandler;
+import de.governikus.eumw.utils.key.SecurityProvider;
 
 
 /**
@@ -59,12 +58,12 @@ public class KeyHandlerEC extends de.governikus.eumw.poseidas.cardbase.crypto.ke
   /** {@inheritDoc} */
   @Override
   public KeyPair generateKeyPair(AlgorithmParameterSpec spec)
-    throws NoSuchAlgorithmException, NoSuchProviderException, InvalidAlgorithmParameterException
+    throws NoSuchAlgorithmException, InvalidAlgorithmParameterException
   {
     AssertUtil.notNull(spec, "spec");
     if (this.kpg == null)
     {
-      this.kpg = KeyPairGenerator.getInstance("EC", BouncyCastleProvider.PROVIDER_NAME);
+      this.kpg = KeyPairGenerator.getInstance("EC", SecurityProvider.BOUNCY_CASTLE_PROVIDER);
     }
     this.kpg.initialize(spec);
     return this.kpg.genKeyPair();

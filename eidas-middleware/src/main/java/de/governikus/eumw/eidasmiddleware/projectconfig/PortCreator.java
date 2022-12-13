@@ -1,11 +1,10 @@
 /*
- * Copyright (c) 2020 Governikus KG. Licensed under the EUPL, Version 1.2 or as soon they will be approved by
- * the European Commission - subsequent versions of the EUPL (the "Licence"); You may not use this work except
- * in compliance with the Licence. You may obtain a copy of the Licence at:
- * http://joinup.ec.europa.eu/software/page/eupl Unless required by applicable law or agreed to in writing,
- * software distributed under the Licence is distributed on an "AS IS" basis, WITHOUT WARRANTIES OR CONDITIONS
- * OF ANY KIND, either express or implied. See the Licence for the specific language governing permissions and
- * limitations under the Licence.
+ * Copyright (c) 2020 Governikus KG. Licensed under the EUPL, Version 1.2 or as soon they will be approved by the
+ * European Commission - subsequent versions of the EUPL (the "Licence"); You may not use this work except in compliance
+ * with the Licence. You may obtain a copy of the Licence at: http://joinup.ec.europa.eu/software/page/eupl Unless
+ * required by applicable law or agreed to in writing, software distributed under the Licence is distributed on an
+ * "AS IS" basis, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the Licence for the
+ * specific language governing permissions and limitations under the Licence.
  */
 
 package de.governikus.eumw.eidasmiddleware.projectconfig;
@@ -14,15 +13,20 @@ import java.io.File;
 import java.io.IOException;
 
 import org.apache.catalina.connector.Connector;
+import org.apache.coyote.http11.AbstractHttp11Protocol;
 import org.apache.coyote.http11.Http11NioProtocol;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.web.embedded.tomcat.TomcatServletWebServerFactory;
+import org.springframework.boot.web.server.WebServerFactoryCustomizer;
 import org.springframework.boot.web.servlet.server.ServletWebServerFactory;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.io.ClassPathResource;
 
+import lombok.extern.slf4j.Slf4j;
 
+
+@Slf4j
 @Configuration
 public class PortCreator
 {
@@ -71,8 +75,8 @@ public class PortCreator
   private int maxHeaderSize;
 
   /**
-   * reads the valid ssl ciphers from the application.properties file or sets the follwing ciphers as default
-   * if none have been entered
+   * reads the valid ssl ciphers from the application.properties file or sets the following ciphers as default if none
+   * have been entered
    */
   @Value("${server.ssl.ciphers:}")
   private String serverSslCiphers;
@@ -89,6 +93,14 @@ public class PortCreator
   @Value("${server.ssl.enabled:true}")
   private boolean serverSslEnabled;
 
+  /**
+   * Honor the cipher order on the eIDAS port.
+   */
+  @Bean
+  public WebServerFactoryCustomizer<TomcatServletWebServerFactory> servletContainerCustomizer()
+  {
+    return factory -> factory.addConnectorCustomizers(c -> ((AbstractHttp11Protocol<?>)c.getProtocolHandler()).setSSLHonorCipherOrder(true));
+  }
 
   /**
    * creates a tomcat connector with TLS enabled for the admin interface
@@ -100,8 +112,8 @@ public class PortCreator
 
     if (adminInterfacePort == eidasInterfacePort || adminInterfacePort == 0)
     {
-      // Return the default tomcat configuration without the second port
-      return tomcat;
+      log.error("\"server.adminInterfacePort\" must be set in application.properties and can not be same as \"server.port\"!");
+      throw new IllegalStateException("\"server.adminInterfacePort\" must be set in application.properties and can not be same as \"server.port\"!");
     }
 
     if (serverSslEnabled)
@@ -153,6 +165,7 @@ public class PortCreator
     protocol.setKeyPass(keystorePassword);
     protocol.setSslEnabledProtocols(serverSslProtocols);
     protocol.setCiphers(serverSslCiphers);
+    protocol.setSSLHonorCipherOrder(true);
     protocol.setMaxHttpHeaderSize(maxHeaderSize);
   }
 

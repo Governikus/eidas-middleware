@@ -1,20 +1,17 @@
 package de.governikus.eumw.poseidas.server.monitoring;
 
-import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.security.Security;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.util.GregorianCalendar;
 import java.util.HashSet;
+import java.util.Optional;
 import java.util.TimeZone;
 
-import org.bouncycastle.jce.provider.BouncyCastleProvider;
-import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.mockito.Mockito;
 import org.snmp4j.CommunityTarget;
 import org.snmp4j.PDU;
 import org.snmp4j.ScopedPDU;
@@ -25,8 +22,8 @@ import org.snmp4j.agent.mo.snmp.DateAndTime;
 import org.snmp4j.event.ResponseEvent;
 import org.snmp4j.mp.MPv3;
 import org.snmp4j.mp.SnmpConstants;
-import org.snmp4j.security.AuthMD5;
-import org.snmp4j.security.PrivDES;
+import org.snmp4j.security.AuthHMAC384SHA512;
+import org.snmp4j.security.PrivAES256;
 import org.snmp4j.security.SecurityLevel;
 import org.snmp4j.security.SecurityModels;
 import org.snmp4j.security.SecurityProtocols;
@@ -41,41 +38,40 @@ import org.snmp4j.transport.DefaultUdpTransportMapping;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.DynamicPropertyRegistry;
 import org.springframework.test.context.DynamicPropertySource;
 import org.springframework.util.SocketUtils;
 
-import de.governikus.eumw.poseidas.config.schema.TimerConfigurationType;
+import de.governikus.eumw.config.EidasMiddlewareConfig;
+import de.governikus.eumw.config.ServiceProviderType;
+import de.governikus.eumw.poseidas.config.OverviewController;
 import de.governikus.eumw.poseidas.eidserver.crl.CertificationRevocationListImpl;
 import de.governikus.eumw.poseidas.eidserver.model.signeddata.MasterList;
-import de.governikus.eumw.poseidas.server.idprovider.config.PoseidasConfigurator;
+import de.governikus.eumw.poseidas.server.idprovider.config.ConfigurationService;
+import de.governikus.eumw.poseidas.server.idprovider.config.ConfigurationTestHelper;
 import de.governikus.eumw.poseidas.server.pki.TerminalPermission;
 import de.governikus.eumw.poseidas.server.pki.TerminalPermissionAO;
-import de.governikus.eumw.poseidas.server.pki.controller.CVCController;
-import de.governikus.eumw.poseidas.server.pki.controller.OverviewController;
-import de.governikus.eumw.poseidas.service.ConfigHolderInterface;
 import de.governikus.eumw.poseidas.service.MetadataService;
 
-
+@ActiveProfiles("db") // Use application-db.properties
 @SpringBootTest
 class SNMPAgentTest
 {
 
-  // These mocked beans are neccessary to start the application context
-  @MockBean
-  private ConfigHolderInterface configHolderInterface;
+  private static final String DVCA_CONF = "dvcaConf";
 
+  private static final String CLIENT_KEY = "clientKey";
+
+  // These mocked beans are necessary to start the application context
   @MockBean
   private MetadataService metadataService;
-
-  @MockBean
-  private CVCController cvcController;
 
   @MockBean
   private OverviewController overviewController;
 
   @MockBean
-  private TimerConfigurationType timerConfiguration;
+  private ConfigurationService configurationService;
 
   @Autowired
   private TerminalPermissionAO facade;
@@ -96,10 +92,6 @@ class SNMPAgentTest
   @BeforeAll
   static void init()
   {
-    Security.addProvider(new BouncyCastleProvider());
-    PoseidasConfigurator.reset();
-    Path resourceDirectory = Paths.get("src", "test", "resources", "snmp");
-    System.setProperty("spring.config.additional-location", resourceDirectory.toFile().getAbsolutePath() + "/");
     TimeZone.setDefault(TimeZone.getTimeZone("GMT"));
   }
 
@@ -113,8 +105,8 @@ class SNMPAgentTest
     SecurityModels.getInstance().addSecurityModel(usm);
     transport.listen();
     snmp.getUSM()
-        .addUser(new UsmUser(new OctetString("test"), AuthMD5.ID, new OctetString("authpwdtest"), PrivDES.ID,
-                             new OctetString("privpwdtest")));
+        .addUser(new UsmUser(new OctetString("test"), AuthHMAC384SHA512.ID, new OctetString("authpwdtest"),
+                             PrivAES256.ID, new OctetString("privpwdtest")));
     userTarget = new UserTarget();
     userTarget.setAddress(targetAddress);
     userTarget.setRetries(2);
@@ -122,14 +114,7 @@ class SNMPAgentTest
     userTarget.setSecurityLevel(SecurityLevel.AUTH_PRIV);
     userTarget.setSecurityName(new OctetString("test"));
     userTarget.setVersion(SnmpConstants.version3);
-  }
-
-  @AfterAll
-  public static void afterAll()
-  {
-    System.clearProperty("spring.config.additional-location");
-    Security.removeProvider(BouncyCastleProvider.PROVIDER_NAME);
-    PoseidasConfigurator.reset();
+    Mockito.when(configurationService.getConfiguration()).thenReturn(Optional.of(prepareConfiguration()));
   }
 
   @Test
@@ -332,7 +317,6 @@ class SNMPAgentTest
     PDU pdu = new ScopedPDU();
     pdu.add(new VariableBinding(new OID(SNMPConstants.GetOID.RSC_GET_PENDING_AVAILABLE.getValue() + ".2")));
     pdu.setType(PDU.GET);
-
     ResponseEvent responseEvent = snmp.send(pdu, userTarget);
     Assertions.assertEquals("1", responseEvent.getResponse().get(0).getVariable().toString());
   }
@@ -352,7 +336,6 @@ class SNMPAgentTest
   @Test
   void testWhenRSCAvailableThenReturnValidUntilDate() throws Exception
   {
-    TimeZone.setDefault(TimeZone.getTimeZone("GMT"));
     LocalDateTime expectedLocalDateTime = LocalDateTime.parse("2024-02-05T09:25:25");
     PDU pdu = new ScopedPDU();
     pdu.add(new VariableBinding(new OID(SNMPConstants.GetOID.RSC_GET_CURRENT_CERTIFICATE_VALID_UNTIL.getValue()
@@ -399,7 +382,7 @@ class SNMPAgentTest
     CertificationRevocationListImpl.reset();
     TerminalPermission terminalPermission = facade.getTerminalPermission("A");
     MasterList ml = new MasterList(terminalPermission.getMasterList());
-    CertificationRevocationListImpl.initialize(new HashSet<>(ml.getCertificates()));
+    CertificationRevocationListImpl.initialize(new HashSet<>(ml.getCertificates()), configurationService);
     PDU pdu = new ScopedPDU();
     pdu.add(new VariableBinding(new OID(SNMPConstants.GetOID.CRL_GET_AVAILABLE.getValue())));
     pdu.setType(PDU.GET);
@@ -415,7 +398,7 @@ class SNMPAgentTest
   {
     TerminalPermission terminalPermission = facade.getTerminalPermission("A");
     MasterList ml = new MasterList(terminalPermission.getMasterList());
-    CertificationRevocationListImpl.initialize(new HashSet<>(ml.getCertificates()));
+    CertificationRevocationListImpl.initialize(new HashSet<>(ml.getCertificates()), configurationService);
     PDU pdu = new ScopedPDU();
     pdu.add(new VariableBinding(new OID(SNMPConstants.GetOID.CRL_GET_LAST_SUCCESSFUL_RETRIEVAL.getValue())));
     pdu.setType(PDU.GET);
@@ -480,7 +463,6 @@ class SNMPAgentTest
   @Test
   void testWhenCVCPresentThenReturnValidUntilDate() throws Exception
   {
-    TimeZone.setDefault(TimeZone.getTimeZone("GMT"));
     LocalDateTime expectedLocalDateTime = LocalDateTime.parse("2034-03-17T00:00:00.000");
     PDU pdu = new ScopedPDU();
     pdu.add(new VariableBinding(new OID(SNMPConstants.GetOID.CVC_GET_VALID_UNTIL.getValue() + ".1")));
@@ -628,5 +610,41 @@ class SNMPAgentTest
     TimeZone timeZone = actualDate.getTimeZone();
     ZoneId zoneId1 = timeZone.toZoneId();
     return LocalDateTime.ofInstant(actualDate.toInstant(), zoneId1);
+  }
+
+  private EidasMiddlewareConfig prepareConfiguration() throws Exception
+  {
+    EidasMiddlewareConfig configuration = ConfigurationTestHelper.createValidConfiguration();
+    ServiceProviderType sp = configuration.getEidConfiguration().getServiceProvider().get(0);
+    sp.setName("DefaultProvider");
+    sp.setCVCRefID("F");
+    configuration.getEidConfiguration()
+                 .getServiceProvider()
+                 .add(new ServiceProviderType("TestbedA", true, "A", DVCA_CONF, CLIENT_KEY));
+    configuration.getEidConfiguration()
+                 .getServiceProvider()
+                 .add(new ServiceProviderType("TestbedB", true, "B", DVCA_CONF, CLIENT_KEY));
+    configuration.getEidConfiguration()
+                 .getServiceProvider()
+                 .add(new ServiceProviderType("TestbedC", true, "C", DVCA_CONF, CLIENT_KEY));
+    configuration.getEidConfiguration()
+                 .getServiceProvider()
+                 .add(new ServiceProviderType("TestbedD", true, "D", DVCA_CONF, CLIENT_KEY));
+    configuration.getEidConfiguration()
+                 .getServiceProvider()
+                 .add(new ServiceProviderType("TestbedERSA", true, "ERSA", DVCA_CONF, CLIENT_KEY));
+    configuration.getEidConfiguration()
+                 .getServiceProvider()
+                 .add(new ServiceProviderType("TestbedEDSA", true, "EDSA", DVCA_CONF, CLIENT_KEY));
+    configuration.getEidConfiguration()
+                 .getServiceProvider()
+                 .add(new ServiceProviderType("TestbedECDSA", true, "ECDSA", DVCA_CONF, CLIENT_KEY));
+    configuration.getEidConfiguration()
+                 .getServiceProvider()
+                 .add(new ServiceProviderType("TestbedF", true, "F", DVCA_CONF, CLIENT_KEY));
+    configuration.getEidConfiguration()
+                 .getServiceProvider()
+                 .add(new ServiceProviderType("TestbedG", true, "G", DVCA_CONF, CLIENT_KEY));
+    return configuration;
   }
 }

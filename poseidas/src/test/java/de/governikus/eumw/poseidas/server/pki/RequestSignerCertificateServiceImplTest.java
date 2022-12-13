@@ -1,19 +1,18 @@
 package de.governikus.eumw.poseidas.server.pki;
 
-import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.security.KeyPairGenerator;
-import java.security.Security;
+import java.util.Optional;
 
-import org.bouncycastle.jce.provider.BouncyCastleProvider;
-import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 
-import de.governikus.eumw.poseidas.server.idprovider.config.PoseidasConfigurator;
-import de.governikus.eumw.poseidas.service.ConfigHolderInterface;
+import de.governikus.eumw.config.EidasMiddlewareConfig;
+import de.governikus.eumw.poseidas.server.idprovider.config.ConfigurationService;
+import de.governikus.eumw.poseidas.server.idprovider.config.ConfigurationTestHelper;
+import de.governikus.eumw.utils.key.SecurityProvider;
+import lombok.SneakyThrows;
 
 
 class RequestSignerCertificateServiceImplTest
@@ -23,59 +22,31 @@ class RequestSignerCertificateServiceImplTest
 
   private static final String DEFAULT_CVCREFID = "provider_a";
 
-  private ConfigHolderInterface configHolder;
+  private ConfigurationService configurationService;
 
   private TerminalPermissionAO facade;
-
-  private HSMServiceHolder hsmServiceHolder;
 
   private RequestSignerCertificateService requestSignerCertificateService;
 
   @BeforeEach
   public void setUp()
   {
-    configHolder = Mockito.mock(ConfigHolderInterface.class);
+    configurationService = Mockito.mock(ConfigurationService.class);
     facade = Mockito.mock(TerminalPermissionAO.class);
-    hsmServiceHolder = Mockito.mock(HSMServiceHolder.class);
-    requestSignerCertificateService = new RequestSignerCertificateServiceImpl(configHolder, facade,
+    HSMServiceHolder hsmServiceHolder = Mockito.mock(HSMServiceHolder.class);
+    requestSignerCertificateService = new RequestSignerCertificateServiceImpl(configurationService, facade,
                                                                               hsmServiceHolder);
-    Security.addProvider(new BouncyCastleProvider());
-    Path resourceDirectory = Paths.get("src", "test", "resources");
-    System.setProperty("spring.config.additional-location", resourceDirectory.toFile().getAbsolutePath());
-  }
 
-  @AfterAll
-  public static void afterAll()
-  {
-    System.clearProperty("spring.config.additional-location");
-    Security.removeProvider(BouncyCastleProvider.PROVIDER_NAME);
-    PoseidasConfigurator.reset();
-  }
-
-  @Test
-  void testGenerateRSCFailure()
-  {
-    Security.removeProvider(BouncyCastleProvider.PROVIDER_NAME);
-    Mockito.when(configHolder.getCountryCode()).thenReturn("DE");
-    Mockito.when(configHolder.getEntityIDInt()).thenReturn(DEFAULT_PROVIDER);
-    Mockito.when(facade.getCurrentRscChrId(Mockito.anyString())).thenReturn(null);
-    boolean result = requestSignerCertificateService.generateNewPendingRequestSignerCertificate(DEFAULT_PROVIDER,
-                                                                                                null,
-                                                                                                36);
-    Assertions.assertFalse(result);
   }
 
   @Test
   void testGenerateRSCSuccessPublic()
   {
-    Mockito.when(configHolder.getCountryCode()).thenReturn("DE");
-    Mockito.when(configHolder.getEntityIDInt()).thenReturn("other");
-    Mockito.when(configHolder.getEntityIDInt()).thenReturn(DEFAULT_PROVIDER);
+    Mockito.when(configurationService.getConfiguration()).thenReturn(Optional.of(prepareConfiguration()));
     Mockito.when(facade.getCurrentRscChrId(Mockito.anyString())).thenReturn(null);
     boolean result = requestSignerCertificateService.generateNewPendingRequestSignerCertificate(DEFAULT_PROVIDER,
                                                                                                 null,
                                                                                                 36);
-
     Assertions.assertTrue(result);
   }
 
@@ -83,12 +54,13 @@ class RequestSignerCertificateServiceImplTest
   @Test
   void testGenerateRSCSuccessPrivate()
   {
-    Mockito.when(configHolder.getCountryCode()).thenReturn("DE");
-    Mockito.when(configHolder.getEntityIDInt()).thenReturn("other");
+    var config = prepareConfiguration();
+    config.getEidasConfiguration().setPublicServiceProviderName("other");
+    Mockito.when(configurationService.getConfiguration()).thenReturn(Optional.of(config));
     Mockito.when(facade.getCurrentRscChrId(Mockito.anyString())).thenReturn(null);
     Mockito.when(facade.getRequestSignerCertificateHolder(DEFAULT_CVCREFID)).thenReturn("rscChr");
     boolean result = requestSignerCertificateService.generateNewPendingRequestSignerCertificate(DEFAULT_PROVIDER,
-                                                                                                Mockito.anyString(),
+                                                                                                "rscChr",
                                                                                                 36);
     Assertions.assertTrue(result);
   }
@@ -96,10 +68,9 @@ class RequestSignerCertificateServiceImplTest
   @Test
   void testGenerateRSCSuccessNonNullChrId() throws Exception
   {
-    Mockito.when(configHolder.getCountryCode()).thenReturn("DE");
-    Mockito.when(configHolder.getEntityIDInt()).thenReturn(DEFAULT_PROVIDER);
+    Mockito.when(configurationService.getConfiguration()).thenReturn(Optional.of(prepareConfiguration()));
     Mockito.when(facade.getCurrentRscChrId(Mockito.anyString())).thenReturn(1);
-    KeyPairGenerator kpg = KeyPairGenerator.getInstance("EC", BouncyCastleProvider.PROVIDER_NAME);
+    KeyPairGenerator kpg = KeyPairGenerator.getInstance("EC", SecurityProvider.BOUNCY_CASTLE_PROVIDER);
     kpg.initialize(256);
     Mockito.when(facade.getRequestSignerKey(DEFAULT_CVCREFID, true))
            .thenReturn(kpg.generateKeyPair().getPrivate().getEncoded());
@@ -112,8 +83,9 @@ class RequestSignerCertificateServiceImplTest
   @Test
   void testGenerateRSCPrivateNoRscChr()
   {
-    Mockito.when(configHolder.getCountryCode()).thenReturn("DE");
-    Mockito.when(configHolder.getEntityIDInt()).thenReturn("other");
+    var config = prepareConfiguration();
+    config.getEidasConfiguration().setPublicServiceProviderName("other");
+    Mockito.when(configurationService.getConfiguration()).thenReturn(Optional.of(config));
     boolean result = requestSignerCertificateService.generateNewPendingRequestSignerCertificate(DEFAULT_PROVIDER,
                                                                                                 null,
                                                                                                 36);
@@ -123,11 +95,19 @@ class RequestSignerCertificateServiceImplTest
   @Test
   void testGenerateRSCWithLifespanToLong()
   {
-    Mockito.when(configHolder.getCountryCode()).thenReturn("DE");
-    Mockito.when(configHolder.getEntityIDInt()).thenReturn(DEFAULT_PROVIDER);
+    Mockito.when(configurationService.getConfiguration()).thenReturn(Optional.of(prepareConfiguration()));
     boolean result = requestSignerCertificateService.generateNewPendingRequestSignerCertificate(DEFAULT_PROVIDER,
                                                                                                 null,
                                                                                                 37);
     Assertions.assertFalse(result);
+  }
+
+  @SneakyThrows
+  EidasMiddlewareConfig prepareConfiguration()
+  {
+    var configuration = ConfigurationTestHelper.createValidConfiguration();
+    configuration.getEidasConfiguration().setCountryCode("DE");
+    configuration.getEidasConfiguration().setPublicServiceProviderName(DEFAULT_PROVIDER);
+    return configuration;
   }
 }

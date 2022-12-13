@@ -1,0 +1,14 @@
+eidas_middleware:
+  hostname:
+    eumw: autent-eumw-3-x-node-1-x.govkg.de
+    admin_interface: autent-eumw-admin-3-x-node-1-x.govkg.de
+  port:
+    server: 8443
+    admin_interface: 8449
+  image: dev-docker.governikus.de/governikus/eidas-middleware-application
+  tag: latest
+  hashed_password: $2a$10$EIwUSRpSu/eQzbtOw2dhvOJ2N6PIbTCGMhp9kc1sxEI2AAhKi0LxK
+  volume: eidas-middleware-db
+  database: eidas-middleware-db
+  datapase_pw: fallturm
+  database_user: h2

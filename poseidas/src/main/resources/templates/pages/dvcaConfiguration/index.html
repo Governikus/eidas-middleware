@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html th:replace="~{base-template/main :: main(~{::title}, ~{::section})}"
+      xmlns:th="http://www.thymeleaf.org">
+
+<title>DVCA configuration - eIDAS Middleware configuration and administration</title>
+
+<section>
+
+
+    <h1>DVCA configuration</h1>
+    <hr class="text-primary" style="height: 4px"/>
+
+    <div class="card">
+        <div class="card-body">
+            <h2 class="card-title mb-4">Manage DVCA configurations <a style="text-decoration: none; float: right"
+                                                                      th:href="*{'/admin-interface/dvcaConfiguration/create'}">
+                <button class="btn btn-primary">New DVCA configuration <span class="fa fa-plus"></span></button>
+            </a></h2>
+
+            <div class="card shadow p-1 mb-4" th:each="config : ${dvcaConfigurations}">
+                <h4 class="card-header bg-light" th:text="*{config.name}"></h4>
+                <div class="card-body" th:object="${config}">
+
+                    <h5>Trust anchors and certificates</h5>
+
+                    <div class="row">
+                        <div class="col-3">
+                            <p>DVCA server certificate: </p>
+                        </div>
+                        <div class="col-9"
+                             th:if="${certificateInfoHolderMap[config.serverSSLCertificateName] != null}">
+                            <div th:replace="~{this :: certInfo(${certificateInfoHolderMap[config.serverSSLCertificateName]})}"/>
+                        </div>
+                        <div class="col-9"
+                             th:if="${certificateInfoHolderMap[config.serverSSLCertificateName] == null}">
+                            <p>DVCA server certificate is not stored in the config.</p></div>
+                    </div>
+                    <div class="row">
+                        <div class="col-3">
+                            <p>Black List trust anchor: </p>
+                        </div>
+                        <div class="col-9"
+                             th:if="${certificateInfoHolderMap[config.blackListTrustAnchorCertificateName] != null}">
+                            <div th:replace="~{this :: certInfo(${certificateInfoHolderMap[config.blackListTrustAnchorCertificateName]})}"/>
+                        </div>
+                        <div class="col-9"
+                             th:if="${certificateInfoHolderMap[config.blackListTrustAnchorCertificateName] == null}">
+                            <p>Black List trust anchor is not stored in the config.</p></div>
+                    </div>
+                    <div class="row">
+                        <div class="col-3">
+                            <p>Master List trust anchor: </p>
+                            <p class="text-secondary">This certificate may expire as long as the master list is
+                                regularly updated. This way path building remains intact.</p>
+                        </div>
+                        <div class="col-9"
+                             th:if="${certificateInfoHolderMap[config.masterListTrustAnchorCertificateName] != null}">
+                            <div th:replace="~{this :: certInfo(${certificateInfoHolderMap[config.masterListTrustAnchorCertificateName]})}"/>
+                        </div>
+                        <div class="col-9"
+                             th:if="${certificateInfoHolderMap[config.masterListTrustAnchorCertificateName] == null}">
+                            <p>Master List trust anchor is not stored in the config.</p>
+                        </div>
+                    </div>
+
+
+                    <h5>Webservice configuration</h5>
+                    <div class="row">
+                        <div class="col-3">
+                            <p>Terminal Authentication service URL: </p>
+                        </div>
+                        <div class="col-9" th:text="*{terminalAuthServiceUrl}">
+
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-3">
+                            <p>Restricted Identification service URL: </p>
+                        </div>
+                        <div class="col-9" th:text="*{restrictedIdServiceUrl}">
+
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-3">
+                            <p>Passive Authentication service URL: </p>
+                        </div>
+                        <div class="col-9" th:text="*{passiveAuthServiceUrl}">
+
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-3">
+                            <p>CVC Description service URL: </p>
+                        </div>
+                        <div class="col-9" th:text="*{dvcaCertificateDescriptionServiceUrl}">
+                        </div>
+                    </div>
+                    <hr/>
+                    <div style="float: right">
+                        <a class="btn btn-secondary" th:href="*{'/admin-interface/dvcaConfiguration/edit/' + name}">Edit
+                            <span class="fa fa-pencil-alt"></span></a>
+                        <a class="btn btn-danger" th:href="*{'/admin-interface/dvcaConfiguration/remove/' + name}">Delete
+                            <span class="fa fa-trash"></span></a>
+                    </div>
+
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+
+</section>
+<div th:fragment="certInfo(certificateInfoHolder)">
+    <div th:replace="~{fragments/keydata :: certificate(${certificateInfoHolder.name}, ${certificateInfoHolder.subject}, ${certificateInfoHolder.issuer}, ${certificateInfoHolder.serialnumber}, ${certificateInfoHolder.validUntil}, ${certificateInfoHolder.valid}, ${certificateInfoHolder.keystore}, ${certificateInfoHolder.alias}, false)}"/>
+</div>
+
+</html>

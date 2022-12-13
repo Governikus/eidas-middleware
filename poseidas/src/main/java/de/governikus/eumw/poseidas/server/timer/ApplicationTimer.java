@@ -9,31 +9,44 @@
 
 package de.governikus.eumw.poseidas.server.timer;
 
+import static de.governikus.eumw.poseidas.server.timer.TimerValues.HOUR;
+import static de.governikus.eumw.poseidas.server.timer.TimerValues.MINUTE;
+
 import org.springframework.scheduling.annotation.Scheduled;
+import org.springframework.scheduling.annotation.SchedulingConfigurer;
+import org.springframework.scheduling.config.ScheduledTaskRegistrar;
 import org.springframework.stereotype.Component;
 
-import de.governikus.eumw.poseidas.eidserver.crl.CertificationRevocationListImpl;
+import de.governikus.eumw.config.TimerUnit;
 import de.governikus.eumw.poseidas.server.pki.PermissionDataHandling;
 import de.governikus.eumw.poseidas.server.pki.RequestSignerCertificateService;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
 
 /**
- * This class activates the timer for various tasks <br>
- * The value for the timer rate are set via SpEL Bean Injection, the beans are generated in @{@link TimerValues}.
+ * This class handles the application timers. The timers for CVC renewal, delta Black List, global lists and CRL renewal
+ * can be configured dynamically in the eumw configuration. The timers for renew full Black List and renew RSC are
+ * static.
  */
+
 @Component
-public class ApplicationTimer
+@Slf4j
+@RequiredArgsConstructor
+public class ApplicationTimer implements SchedulingConfigurer
 {
 
   private final PermissionDataHandling permissionDataHandling;
 
   private final RequestSignerCertificateService rscService;
 
-  public ApplicationTimer(PermissionDataHandling permissionDataHandling, RequestSignerCertificateService rscService)
-  {
-    this.permissionDataHandling = permissionDataHandling;
-    this.rscService = rscService;
-  }
+  private final CvcRenewalTimer cvcRenewalTimer;
+
+  private final BlackListTimer blackListTimer;
+
+  private final GlobalListTimer globalListTimer;
+
+  private final CrlRenewalTimer crlRenewalTimer;
 
   @Scheduled(fixedRateString = "#{@getFullBlacklistRate}", initialDelay = 30 * TimerValues.SECOND)
   public void renewFullBlackList()
@@ -41,33 +54,31 @@ public class ApplicationTimer
     permissionDataHandling.renewBlackList(false);
   }
 
-  @Scheduled(fixedRateString = "#{@getDeltaBlacklistRate}", initialDelay = 2 * TimerValues.HOUR)
-  public void renewDeltaBlackList()
-  {
-    permissionDataHandling.renewBlackList(true);
-  }
-
-  @Scheduled(fixedRateString = "#{@getCVCRate}", initialDelay = 5 * TimerValues.SECOND)
-  public void checkForCVCRenewal()
-  {
-    permissionDataHandling.renewOutdatedCVCs();
-  }
-
-  @Scheduled(fixedRateString = "#{@getMasterDefectRate}", initialDelayString = "#{@getMasterDefectRate}")
-  public void renewMasterDefectList()
-  {
-    permissionDataHandling.renewMasterAndDefectList();
-  }
-
-  @Scheduled(fixedRateString = "#{@getCrlRate}", initialDelay = 2 * TimerValues.HOUR)
-  public void renewCRL()
-  {
-    CertificationRevocationListImpl.getInstance().renewCrls();
-  }
-
-  @Scheduled(fixedRateString = "#{@getRSCRate}", initialDelay = 2 * TimerValues.MINUTE)
+  @Scheduled(fixedRateString = "#{@getRSCRate}", initialDelay = 2 * MINUTE)
   public void renewRequestSigners()
   {
     rscService.renewOutdated();
+  }
+
+  @Override
+  public void configureTasks(ScheduledTaskRegistrar taskRegistrar)
+  {
+    taskRegistrar.addTriggerTask(cvcRenewalTimer, cvcRenewalTimer.getCvcRenewalTrigger());
+    taskRegistrar.addTriggerTask(blackListTimer, blackListTimer.getBlackListTrigger());
+    taskRegistrar.addTriggerTask(globalListTimer, globalListTimer.getGlobalListTrigger());
+    taskRegistrar.addTriggerTask(crlRenewalTimer, crlRenewalTimer.getCrlTrigger());
+  }
+
+  static long getUnitOfTime(TimerUnit unitFromXML)
+  {
+    if (unitFromXML == TimerUnit.MINUTES)
+    {
+      return MINUTE;
+    }
+    if (unitFromXML == TimerUnit.HOURS)
+    {
+      return HOUR;
+    }
+    throw new IllegalArgumentException("Unsupported unit of time: " + unitFromXML);
   }
 }

@@ -10,27 +10,27 @@
 
 package de.governikus.eumw.poseidas.eidserver.crl;
 
-import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.security.Principal;
-import java.security.Security;
 import java.security.cert.CertificateFactory;
 import java.security.cert.X509CRL;
 import java.security.cert.X509Certificate;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-import org.bouncycastle.jce.provider.BouncyCastleProvider;
-import org.junit.Assert;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import org.mockito.Mockito;
 
 import de.governikus.eumw.poseidas.eidserver.crl.exception.CertificateValidationException;
+import de.governikus.eumw.poseidas.server.idprovider.config.ConfigurationService;
+import de.governikus.eumw.poseidas.server.idprovider.config.ConfigurationTestHelper;
+import de.governikus.eumw.utils.key.SecurityProvider;
 
 
 @DisplayName("The CertificationRevocationListImpl")
@@ -43,14 +43,16 @@ class CertificationRevocationListImplTest
 
   private static Set<X509Certificate> masterList;
 
+  private static ConfigurationService configurationService;
+
   @BeforeAll
   public static void setUp() throws Exception
   {
-    Security.addProvider(new BouncyCastleProvider());
-    cf = CertificateFactory.getInstance("X509", BouncyCastleProvider.PROVIDER_NAME);
+    cf = CertificateFactory.getInstance("X509", SecurityProvider.BOUNCY_CASTLE_PROVIDER);
     testCertificate = (X509Certificate)cf.generateCertificate(CertificationRevocationListImplTest.class.getResourceAsStream("/DE_TEST_CSCA_2018_12.cer"));
     masterList = new HashSet<>();
     masterList.add(testCertificate);
+    configurationService = Mockito.mock(ConfigurationService.class);
   }
 
   @AfterEach
@@ -63,7 +65,10 @@ class CertificationRevocationListImplTest
   @DisplayName("has CRL in cache when CRL validation was successful")
   void crlInCacheWhenValidationSuccessful() throws Exception
   {
-    CertificationRevocationListImpl.initialize(masterList, testCertificate, getCrlFetcher(testCertificate));
+    CertificationRevocationListImpl.initialize(masterList,
+                                               testCertificate,
+                                               getCrlFetcher(testCertificate),
+                                               configurationService);
     CertificationRevocationListImpl certificationRevocationListImpl = CertificationRevocationListImpl.getInstance();
     List<String> urls = CertificationRevocationListImpl.getCrlDistributionPoints(testCertificate);
     Assertions.assertEquals(1, urls.size());
@@ -87,9 +92,10 @@ class CertificationRevocationListImplTest
     IllegalStateException illegalStateException = Assertions.assertThrows(IllegalStateException.class,
                                                                           () -> CertificationRevocationListImpl.initialize(masterList,
                                                                                                                            certificate,
-                                                                                                                           fetcher));
+                                                                                                                           fetcher,
+                                                                                                                           configurationService));
 
-    Assert.assertEquals("Exception during initial retrieval of CRL", illegalStateException.getMessage());
+    Assertions.assertEquals("Exception during initial retrieval of CRL", illegalStateException.getMessage());
     Throwable certificateValidationException = illegalStateException.getCause();
     Assertions.assertTrue(certificateValidationException instanceof CertificateValidationException);
     Assertions.assertEquals("Could not verify CRL", certificateValidationException.getMessage());
@@ -120,9 +126,12 @@ class CertificationRevocationListImplTest
   {
     Set<X509Certificate> masterList = new HashSet<>();
     masterList.add(testCertificate);
-    CertificationRevocationListImpl.initialize(masterList, testCertificate, getCrlFetcher(testCertificate));
+    CertificationRevocationListImpl.initialize(masterList,
+                                               testCertificate,
+                                               getCrlFetcher(testCertificate),
+                                               configurationService);
     CertificationRevocationListImpl certificationRevocationList = CertificationRevocationListImpl.getInstance();
-    Assert.assertFalse(certificationRevocationList.isOnCRL(testCertificate));
+    Assertions.assertFalse(certificationRevocationList.isOnCRL(testCertificate));
   }
 
   @Test
@@ -135,18 +144,21 @@ class CertificationRevocationListImplTest
     X509Certificate iaCertificate = (X509Certificate)cf.generateCertificate(CertificationRevocationListImplTest.class.getResourceAsStream("/ia.crt"));
     Set<X509Certificate> masterList = new HashSet<>();
     masterList.add(caCertificate);
-    CertificationRevocationListImpl.initialize(masterList, caCertificate, getCrlFetcher(caCertificate));
+    CertificationRevocationListImpl.initialize(masterList,
+                                               caCertificate,
+                                               getCrlFetcher(caCertificate),
+                                               configurationService);
     CertificationRevocationListImpl certificationRevocationList = CertificationRevocationListImpl.getInstance();
-    Assert.assertTrue(certificationRevocationList.isOnCRL(iaCertificate));
+    Assertions.assertTrue(certificationRevocationList.isOnCRL(iaCertificate));
   }
 
   @Test
   @DisplayName("is initialized when certificate is null and crlFetcher is mocked")
-  void whenGetInstanceCalledThenReturnInstanceCertificationListImpl()
+  void whenGetInstanceCalledThenReturnInstanceCertificationListImpl() throws Exception
   {
-    Path resourceDirectory = Paths.get("src", "test", "resources");
-    System.setProperty("spring.config.additional-location", resourceDirectory.toFile().getAbsolutePath());
-    CertificationRevocationListImpl.initialize(masterList, null, getCrlFetcher(testCertificate));
+    Mockito.when(configurationService.getConfiguration())
+           .thenReturn(Optional.of(ConfigurationTestHelper.createValidConfiguration()));
+    CertificationRevocationListImpl.initialize(masterList, null, getCrlFetcher(testCertificate), configurationService);
     CertificationRevocationListImpl instance = CertificationRevocationListImpl.getInstance();
 
     Assertions.assertNotNull(instance);
@@ -166,19 +178,25 @@ class CertificationRevocationListImplTest
   @DisplayName("throws an IllegalStateException when initialize is called more than once")
   void throwsIllegalStateExceptionWhenInitializeIsCalledTwice()
   {
-    CertificationRevocationListImpl.initialize(masterList, testCertificate, getCrlFetcher(testCertificate));
+    CertificationRevocationListImpl.initialize(masterList,
+                                               testCertificate,
+                                               getCrlFetcher(testCertificate),
+                                               configurationService);
     CertificationRevocationListImpl instance = CertificationRevocationListImpl.getInstance();
 
     Assertions.assertNotNull(instance);
     Assertions.assertThrows(IllegalStateException.class,
-                            () -> CertificationRevocationListImpl.initialize(masterList));
+                            () -> CertificationRevocationListImpl.initialize(masterList, configurationService));
   }
 
   @Test
   @DisplayName("cache contains a new CrlDAO after calling renew Crls")
   void crlCacheContainsNewCrlDAOAfterRenewal()
   {
-    CertificationRevocationListImpl.initialize(masterList, testCertificate, getCrlFetcher(testCertificate));
+    CertificationRevocationListImpl.initialize(masterList,
+                                               testCertificate,
+                                               getCrlFetcher(testCertificate),
+                                               configurationService);
     CertificationRevocationListImpl instance = CertificationRevocationListImpl.getInstance();
     CrlCache crlCache = instance.getCrlCache();
     Set<String> availableUrls = crlCache.getAvailableUrls();
@@ -201,7 +219,10 @@ class CertificationRevocationListImplTest
   @DisplayName("returns null when no CRL is cached and no CRL can be downloaded")
   void returnsNoCRLWhenUrlNoCachedAndDownloadCRLAvailable()
   {
-    CertificationRevocationListImpl.initialize(masterList, testCertificate, getCrlFetcher(testCertificate));
+    CertificationRevocationListImpl.initialize(masterList,
+                                               testCertificate,
+                                               getCrlFetcher(testCertificate),
+                                               configurationService);
     CertificationRevocationListImpl instance = CertificationRevocationListImpl.getInstance();
     X509CRL x509CRL = instance.getX509CRL("mock-address");
 
@@ -226,7 +247,8 @@ class CertificationRevocationListImplTest
       {
         try
         {
-          CertificateFactory cf = CertificateFactory.getInstance("X509", BouncyCastleProvider.PROVIDER_NAME);
+          CertificateFactory cf = CertificateFactory.getInstance("X509",
+                                                                 SecurityProvider.BOUNCY_CASTLE_PROVIDER);
           if ("http://example.com/root.crl".equalsIgnoreCase(url))
           {
             return (X509CRL)cf.generateCRL(CertificationRevocationListImplTest.class.getResourceAsStream("/root.crl"));

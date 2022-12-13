@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html th:replace="~{base-template/main :: main(~{::title}, ~{::section})}"
+      xmlns:th="http://www.thymeleaf.org">
+
+<title>eID means - eIDAS Middleware configuration and administration</title>
+
+<section>
+
+    <h1>eID means configuration</h1>
+    <hr class="text-primary" style="height: 4px"/>
+
+    <form method="post" class="" action="" th:object="${eidConfigModel}" enctype="multipart/form-data">
+        <input
+                type="hidden"
+                th:name="${_csrf.parameterName}"
+                th:value="${_csrf.token}"/>
+
+        <div th:replace="~{fragments/form :: inputRow_text('Allowed eID means', 'allowedEidMeans', 'Allowed eID means comma separated. This value may only be changed if required by the German Federal Government. The following means are always allowed: A,ID,UB.')}"/>
+        <div th:replace="fragments/form :: submit()"></div>
+    </form>
+
+
+</section>
+
+</html>

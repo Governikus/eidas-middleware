@@ -1,0 +1,86 @@
+<div th:fragment="certificate(name, subject, issuer, serialnumber, validUntil, valid, keystore, alias, showButton)">
+    <div class="shadow p-1  mb-4 rounded card"
+         th:classappend="${valid ? '' : 'border border-danger'}">
+        <div class="card-header bg-light">
+            <b th:text="${name}"/>
+        </div>
+        <div class="card-body">
+            <div class="row">
+                <div class="col-3">Subject:</div>
+                <div class="col" th:text="${subject}"/>
+            </div>
+            <div class="row">
+                <div class="col-3">Issuer:</div>
+                <div class="col" th:text="${issuer}"/>
+            </div>
+            <div class="row">
+                <div class="col-3">Serial number:</div>
+                <div class="col" th:text="${serialnumber}"/>
+            </div>
+            <div class="row" th:classappend="${valid ? '' : 'text-danger'}">
+                <div class="col-3">Valid until:</div>
+                <div class="col" th:text="${validUntil}"/>
+            </div>
+            <div class="row" th:if="${keystore != null}">
+                <div class="col-3">Keystore:</div>
+                <div class="col" th:text="${keystore}"/>
+            </div>
+            <div class="row" th:if="${keystore != null && alias != null}">
+                <div class="col-3">Alias:</div>
+                <div class="col" th:text="${alias}"/>
+            </div>
+            <div th:if="${showButton}">
+                <hr/>
+                <div style="float: right">
+                    <a class="btn btn-danger"
+                       th:href="${'/admin-interface/keymanagement/deleteCertificate/' + name}">Delete
+                        <span class="fa fa-trash"/></a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+<div th:fragment="keypair(name, subject, issuer, serialnumber, validUntil, valid, keystore, alias, showButton)">
+    <div class="shadow p-1  mb-4 rounded card"
+         th:classappend="${valid ? '' : 'border border-danger'}">
+        <div class="card-header bg-light">
+            <b th:text="${name}"/>
+        </div>
+        <div class="card-body">
+            <div class="row">
+                <div class="col-3">Subject:</div>
+                <div class="col" th:text="${subject}"/>
+            </div>
+            <div class="row">
+                <div class="col-3">Issuer:</div>
+                <div class="col" th:text="${issuer}"/>
+            </div>
+            <div class="row">
+                <div class="col-3">Serial number:</div>
+                <div class="col" th:text="${serialnumber}"/>
+            </div>
+            <div class="row" th:classappend="${valid ? '' : 'text-danger'}">
+                <div class="col-3">Valid until:</div>
+                <div class="col" th:text="${validUntil}"/>
+            </div>
+            <div class="row">
+                <div class="col-3">Keystore:</div>
+                <div class="col" th:text="${keystore}"/>
+            </div>
+            <div class="row">
+                <div class="col-3">Alias:</div>
+                <div class="col" th:text="${alias}"/>
+            </div>
+            <div th:if="${showButton}">
+                <hr/>
+                <div style="float: right">
+                    <a class="btn btn-danger"
+                       th:href="${'/admin-interface/keymanagement/deleteKeypair/' + name}">Delete
+                        <span class="fa fa-trash"/></a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

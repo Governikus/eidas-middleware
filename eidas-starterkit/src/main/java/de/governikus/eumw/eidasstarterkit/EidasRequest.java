@@ -15,6 +15,7 @@ import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
 import java.security.cert.CertificateEncodingException;
 import java.security.cert.X509Certificate;
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -29,7 +30,6 @@ import javax.xml.transform.TransformerFactoryConfigurationError;
 import javax.xml.transform.dom.DOMSource;
 import javax.xml.transform.stream.StreamResult;
 
-import org.joda.time.DateTime;
 import org.opensaml.core.xml.Namespace;
 import org.opensaml.core.xml.XMLObject;
 import org.opensaml.core.xml.config.XMLObjectProviderRegistrySupport;
@@ -104,7 +104,7 @@ public class EidasRequest
   @Getter
   private String issuer;
 
-  private DateTime issueInstant;
+  private Instant issueInstant;
 
   @Getter
   @Setter
@@ -251,7 +251,7 @@ public class EidasRequest
     this.sectorType = sectorType;
     this.nameIdPolicy = nameIdPolicy;
     this.authClassRef = loa;
-    issueInstant = DateTime.now();
+    issueInstant = Instant.now();
     this.forceAuthn = true;
     this.isPassive = false;
     this.testCase = testCase;
@@ -300,7 +300,7 @@ public class EidasRequest
     {
       loa += "#" + testCase.getTestCase();
     }
-    authnContextClassRef.setAuthnContextClassRef(loa);
+    authnContextClassRef.setURI(loa);
     requestedAuthnContext.getAuthnContextClassRefs().add(authnContextClassRef);
     authnRequest.setRequestedAuthnContext(requestedAuthnContext);
 
@@ -346,11 +346,6 @@ public class EidasRequest
       trans.transform(new DOMSource(all), new StreamResult(bout));
       return bout.toByteArray();
     }
-  }
-
-  public String getIssueInstantAsString()
-  {
-    return Constants.format(issueInstant.toDate());
   }
 
   public Set<Entry<EidasPersonAttributes, Boolean>> getRequestedAttributesEntries()
@@ -463,7 +458,7 @@ public class EidasRequest
     {
       throw new ErrorCodeException(ErrorCode.ILLEGAL_REQUEST_SYNTAX, "No AuthnContextClassRef element.");
     }
-    String loa = ref.getAuthnContextClassRef();
+    String loa = ref.getURI();
     if (loa.startsWith(EidasLoaEnum.LOA_TEST.getUri()))
     {
       eidasReq.testCase = loa.contains("#") ? TestCaseEnum.parse(loa.substring(loa.indexOf('#') + 1)) : null;

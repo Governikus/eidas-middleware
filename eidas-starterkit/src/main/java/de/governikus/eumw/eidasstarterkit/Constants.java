@@ -10,11 +10,6 @@
 
 package de.governikus.eumw.eidasstarterkit;
 
-import java.text.ParseException;
-import java.text.SimpleDateFormat;
-import java.util.Date;
-import java.util.TimeZone;
-
 import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
 
@@ -24,21 +19,4 @@ public class Constants
 {
 
   public static final String DEFAULT_PROVIDER_NAME = "DefaultProvider";
-
-  static String format(Date date)
-  {
-    return getSamlDateFormat().format(date);
-  }
-
-  public static Date parse(String value) throws ParseException
-  {
-    return getSamlDateFormat().parse(value);
-  }
-
-  private static SimpleDateFormat getSamlDateFormat()
-  {
-    SimpleDateFormat samlDateFormat = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'");
-    samlDateFormat.setTimeZone(TimeZone.getTimeZone("UTC"));
-    return samlDateFormat;
-  }
 }

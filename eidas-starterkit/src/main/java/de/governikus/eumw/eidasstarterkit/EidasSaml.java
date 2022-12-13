@@ -15,11 +15,10 @@ import java.io.InputStream;
 import java.security.cert.CertificateEncodingException;
 import java.security.cert.CertificateException;
 import java.security.cert.X509Certificate;
-import java.util.Date;
+import java.time.Instant;
 import java.util.List;
 import java.util.Map;
 
-import javax.naming.ConfigurationException;
 import javax.xml.transform.TransformerException;
 import javax.xml.transform.TransformerFactoryConfigurationError;
 import javax.xml.transform.stream.StreamSource;
@@ -33,7 +32,6 @@ import org.opensaml.core.xml.io.MarshallingException;
 import org.opensaml.core.xml.io.UnmarshallingException;
 import org.opensaml.xmlsec.encryption.support.EncryptionException;
 import org.opensaml.xmlsec.signature.support.SignatureException;
-import org.w3c.dom.DOMException;
 import org.xml.sax.SAXException;
 
 import de.governikus.eumw.eidascommon.ErrorCodeException;
@@ -149,8 +147,8 @@ public class EidasSaml
    *          {@link EidasLoaEnum#LOA_HIGH}.
    * @param testCase the enum of the test case for the eIDAS-Request. Can be null.
    * @return the eIDAS-Request as a byte array.
-   * @see EidasSaml#createRequest(String, String, EidasSigner, Map, SPTypeEnumeration, EidasNameIdType, EidasLoaEnum)
-   *      create a request without a test case.
+   * @see EidasSaml#createRequest(String, String, EidasSigner, Map, SPTypeEnumeration, EidasNameIdType,
+   *      EidasLoaEnum) create a request without a test case.
    **/
   public static byte[] createRequest(String issuer,
                                      String destination,
@@ -160,8 +158,8 @@ public class EidasSaml
                                      EidasNameIdType nameIdPolicy,
                                      EidasLoaEnum loa,
                                      TestCaseEnum testCase)
-    throws InitializationException, CertificateEncodingException, IOException, MarshallingException, SignatureException,
-    TransformerFactoryConfigurationError, TransformerException
+    throws InitializationException, CertificateEncodingException, IOException, MarshallingException,
+    SignatureException, TransformerFactoryConfigurationError, TransformerException
   {
     init();
     EidasRequest eidasRequest = new EidasRequest(destination, sectorType, nameIdPolicy, loa, issuer,
@@ -300,6 +298,7 @@ public class EidasSaml
    * @param middlewareVersion
    * @param doSign
    * @param requesterIdFlag
+   * @param nodeCountry
    * @return
    * @throws InitializationException
    * @throws CertificateEncodingException
@@ -314,7 +313,7 @@ public class EidasSaml
    */
   public static byte[] createMetaDataService(String id,
                                              String entityId,
-                                             Date validUntil,
+                                             Instant validUntil,
                                              X509Certificate sigCert,
                                              X509Certificate encCert,
                                              EidasOrganisation organisation,
@@ -327,7 +326,8 @@ public class EidasSaml
                                              EidasSigner signer,
                                              String middlewareVersion,
                                              boolean doSign,
-                                             boolean requesterIdFlag)
+                                             boolean requesterIdFlag,
+                                             String nodeCountry)
     throws CertificateEncodingException, IOException, MarshallingException, SignatureException,
     TransformerFactoryConfigurationError, TransformerException, InitializationException
   {
@@ -336,7 +336,7 @@ public class EidasSaml
                                                          organisation, technicalcontact, supportContact,
                                                          postEndpoint, redirectEndpoint, attributes,
                                                          supportedNameIdTypes, middlewareVersion, doSign,
-                                                         requesterIdFlag);
+                                                         requesterIdFlag, nodeCountry);
     return meta.generate(signer);
   }
 
@@ -378,7 +378,7 @@ public class EidasSaml
    */
   public static byte[] createMetaDataNode(String id,
                                           String entityId,
-                                          Date validUntil,
+                                          Instant validUntil,
                                           X509Certificate sigCert,
                                           X509Certificate encCert,
                                           EidasOrganisation organisation,
@@ -399,15 +399,15 @@ public class EidasSaml
   }
 
   /**
-   * @param is
+   * Parse metadata of another node, not accepting invalid signatures.
+   * 
+   * @param is stream containing metadata
+   * @param signer verification certificate (optional)
    * @return
-   * @throws ConfigurationException
    * @throws CertificateException
    * @throws XMLParserException
    * @throws UnmarshallingException
-   * @throws IOException
    * @throws ErrorCodeException
-   * @throws DOMException
    * @throws InitializationException
    * @throws ComponentInitializationException
    */
@@ -416,7 +416,32 @@ public class EidasSaml
     InitializationException, ComponentInitializationException
   {
     init();
-    return EidasMetadataNode.parse(is, signer);
+    return EidasMetadataNode.parse(is, signer, false);
+  }
+
+  /**
+   * Parse metadata of another node.
+   * 
+   * @param is stream containing metadata
+   * @param signer verification certificate (optional)
+   * @param continueOnInvalidSig <code>true</code> for allowing to continue on failed signature validation,
+   *          <code>false</code> otherwise
+   * @return
+   * @throws CertificateException
+   * @throws XMLParserException
+   * @throws UnmarshallingException
+   * @throws ErrorCodeException
+   * @throws InitializationException
+   * @throws ComponentInitializationException
+   */
+  public static EidasMetadataNode parseMetaDataNode(InputStream is,
+                                                    X509Certificate signer,
+                                                    boolean continueOnInvalidSig)
+    throws CertificateException, XMLParserException, UnmarshallingException, ErrorCodeException,
+    InitializationException, ComponentInitializationException
+  {
+    init();
+    return EidasMetadataNode.parse(is, signer, continueOnInvalidSig);
   }
 
   /**

@@ -12,7 +12,6 @@ package de.governikus.eumw.poseidas.server.pki;
 import java.io.ByteArrayInputStream;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
-import java.security.NoSuchProviderException;
 import java.security.cert.CertificateException;
 import java.security.cert.CertificateFactory;
 import java.security.cert.X509Certificate;
@@ -27,28 +26,32 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.ForkJoinPool;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.locks.ReentrantLock;
 import java.util.stream.Collectors;
 
 import javax.xml.bind.DatatypeConverter;
 
-import org.bouncycastle.jce.provider.BouncyCastleProvider;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Repository;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.google.common.collect.Lists;
 
+import de.governikus.eumw.config.EidasMiddlewareConfig;
 import de.governikus.eumw.poseidas.cardbase.ArrayUtil;
 import de.governikus.eumw.poseidas.cardbase.AssertUtil;
 import de.governikus.eumw.poseidas.cardbase.asn1.npa.ECCVCertificate;
 import de.governikus.eumw.poseidas.eidmodel.TerminalData;
+import de.governikus.eumw.poseidas.server.idprovider.config.ConfigurationService;
 import de.governikus.eumw.poseidas.server.monitoring.SNMPConstants;
 import de.governikus.eumw.poseidas.server.monitoring.SNMPTrapSender;
 import de.governikus.eumw.poseidas.server.pki.PendingCertificateRequest.Status;
-import de.governikus.eumw.poseidas.service.ConfigHolderInterface;
+import de.governikus.eumw.utils.key.SecurityProvider;
+import lombok.RequiredArgsConstructor;
+import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 
 
@@ -61,6 +64,7 @@ import lombok.extern.slf4j.Slf4j;
 @Repository
 @Transactional
 @Slf4j
+@RequiredArgsConstructor
 public class TerminalPermissionAOBean implements TerminalPermissionAO
 {
 
@@ -90,29 +94,7 @@ public class TerminalPermissionAOBean implements TerminalPermissionAO
 
   private final KeyArchiveRepository keyArchiveRepository;
 
-  private final ConfigHolderInterface configHolder;
-
-  @Autowired
-  public TerminalPermissionAOBean(TerminalPermissionRepository terminalPermissionRepository,
-                                  RequestSignerCertificateRepository requestSignerCertificateRepository,
-                                  CertInChainRepository certInChainRepository,
-                                  CVCUpdateLockRepository cvcUpdateLockRepository,
-                                  BlackListEntryRepository blackListEntryRepository,
-                                  PendingCertificateRequestRepository pendingCertificateRequestRepository,
-                                  ChangeKeyLockRepository changeKeyLockRepository,
-                                  KeyArchiveRepository keyArchiveRepository,
-                                  ConfigHolderInterface configHolder)
-  {
-    this.terminalPermissionRepository = terminalPermissionRepository;
-    this.requestSignerCertificateRepository = requestSignerCertificateRepository;
-    this.certInChainRepository = certInChainRepository;
-    this.cvcUpdateLockRepository = cvcUpdateLockRepository;
-    this.blackListEntryRepository = blackListEntryRepository;
-    this.pendingCertificateRequestRepository = pendingCertificateRequestRepository;
-    this.changeKeyLockRepository = changeKeyLockRepository;
-    this.keyArchiveRepository = keyArchiveRepository;
-    this.configHolder = configHolder;
-  }
+  private final ConfigurationService configurationService;
 
   /**
    * {@inheritDoc}
@@ -432,6 +414,7 @@ public class TerminalPermissionAOBean implements TerminalPermissionAO
     addBlackListEntries(sectorIDBase64, blackListEntries, uniqueSpecificIds);
   }
 
+  @SneakyThrows
   private void addBlackListEntries(String sectorIDBase64,
                                    List<String> blackListEntries,
                                    Set<String> inpUniqueSpecificIds)
@@ -448,9 +431,27 @@ public class TerminalPermissionAOBean implements TerminalPermissionAO
 
     long startTime = System.currentTimeMillis();
     blacklistStoreCounter = 0;
-    uniqueSpecificIds.parallelStream()
-                     .map(s -> new BlackListEntry(new BlackListEntryPK(sectorIDBase64, s)))
-                     .forEach(this::saveAndFlushIfNeeded);
+
+    // Limit the number of threads that are used in parallelStream to three. As the timers use one of these threads,
+    // actually only two threads are used for blacklist insertions. More than two threads do not substantially increase
+    // the performance, but increase massively the size of the h2 db.
+    ForkJoinPool forkJoinPool = new ForkJoinPool(3);
+    try
+    {
+      forkJoinPool.submit(() -> uniqueSpecificIds.parallelStream()
+                                                 .map(s -> new BlackListEntry(new BlackListEntryPK(sectorIDBase64, s)))
+                                                 .forEach(this::saveAndFlushIfNeeded))
+                  .get();
+    }
+    catch (InterruptedException | ExecutionException e)
+    {
+      log.debug("Exception during blacklist saving", e);
+      throw e;
+    }
+    finally
+    {
+      forkJoinPool.shutdown();
+    }
     blackListEntryRepository.flush();
 
     log.info("Took {} ms for saving {} entries into the database",
@@ -1076,16 +1077,12 @@ public class TerminalPermissionAOBean implements TerminalPermissionAO
     try
     {
       CertificateFactory certificateFactory = CertificateFactory.getInstance("X509",
-                                                                             BouncyCastleProvider.PROVIDER_NAME);
+                                                                             SecurityProvider.BOUNCY_CASTLE_PROVIDER);
       return (X509Certificate)certificateFactory.generateCertificate(new ByteArrayInputStream(certByteArray));
     }
     catch (CertificateException e)
     {
       log.error("Can not create certificate factory", e);
-    }
-    catch (NoSuchProviderException e)
-    {
-      log.error("No Bouncycastle provider found", e);
     }
     return null;
   }
@@ -1130,7 +1127,10 @@ public class TerminalPermissionAOBean implements TerminalPermissionAO
   @Override
   public boolean isPublicClient(String entityId)
   {
-    return configHolder.getEntityIDInt().equals(entityId);
+    var optionalPublicServiceProviderName = configurationService.getConfiguration()
+                                                                .map(EidasMiddlewareConfig::getEidasConfiguration)
+                                                                .map(EidasMiddlewareConfig.EidasConfiguration::getPublicServiceProviderName);
+    return optionalPublicServiceProviderName.isPresent() && entityId.equals(optionalPublicServiceProviderName.get());
   }
 
   @Override

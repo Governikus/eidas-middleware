@@ -30,9 +30,7 @@ public class EidasSigner
 
   private static final String SAML_SIGNING = "samlsigning";
 
-  private static final String DIGEST_DEFAULT = "SHA256-PSS";
-
-  static final String DIGEST_NONSPEC = "SHA256";
+  private static final String DIGEST_DEFAULT = "SHA256";
 
   /**
    * signature key
@@ -91,6 +89,6 @@ public class EidasSigner
     throws UnrecoverableKeyException, KeyStoreException, NoSuchAlgorithmException
   {
     this(true, (PrivateKey)keyStore.getKey(SAML_SIGNING, null),
-         (X509Certificate)keyStore.getCertificate(SAML_SIGNING), DIGEST_NONSPEC);
+         (X509Certificate)keyStore.getCertificate(SAML_SIGNING));
   }
 }

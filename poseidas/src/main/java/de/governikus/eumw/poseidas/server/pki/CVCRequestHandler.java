@@ -17,6 +17,7 @@ import java.security.GeneralSecurityException;
 import java.security.KeyStore;
 import java.security.SignatureException;
 import java.security.cert.CertificateException;
+import java.security.cert.X509Certificate;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Base64;
@@ -31,6 +32,7 @@ import java.util.Set;
 import javax.xml.bind.DatatypeConverter;
 import javax.xml.ws.WebServiceException;
 
+import de.governikus.eumw.config.ServiceProviderType;
 import de.governikus.eumw.eidascommon.Utils;
 import de.governikus.eumw.poseidas.cardbase.Hex;
 import de.governikus.eumw.poseidas.cardbase.asn1.ASN1;
@@ -41,23 +43,20 @@ import de.governikus.eumw.poseidas.cardbase.asn1.npa.ECPublicKeyPath;
 import de.governikus.eumw.poseidas.cardserver.certrequest.CertificateRequest;
 import de.governikus.eumw.poseidas.cardserver.certrequest.CertificateRequestGenerator.CertificateRequestResponse;
 import de.governikus.eumw.poseidas.cardserver.certrequest.CertificateRequestPath;
-import de.governikus.eumw.poseidas.config.schema.PkiServiceType;
 import de.governikus.eumw.poseidas.eidmodel.TerminalData;
 import de.governikus.eumw.poseidas.eidserver.crl.CertificationRevocationListImpl;
-import de.governikus.eumw.poseidas.eidserver.model.signeddata.MasterList;
 import de.governikus.eumw.poseidas.gov2server.GovManagementException;
 import de.governikus.eumw.poseidas.gov2server.constants.admin.GlobalManagementCodes;
 import de.governikus.eumw.poseidas.gov2server.constants.admin.IDManagementCodes;
 import de.governikus.eumw.poseidas.gov2server.constants.admin.ManagementMessage;
-import de.governikus.eumw.poseidas.server.idprovider.config.EPAConnectorConfigurationDto;
-import de.governikus.eumw.poseidas.server.idprovider.config.SslKeysDto;
+import de.governikus.eumw.poseidas.server.idprovider.config.ConfigurationService;
+import de.governikus.eumw.poseidas.server.idprovider.config.KeyPair;
 import de.governikus.eumw.poseidas.server.monitoring.SNMPConstants;
 import de.governikus.eumw.poseidas.server.monitoring.SNMPTrapSender;
 import de.governikus.eumw.poseidas.server.pki.PendingCertificateRequest.Status;
-import de.governikus.eumw.poseidas.server.pki.caserviceaccess.DvcaCertDescriptionWrapper;
+import de.governikus.eumw.poseidas.server.pki.caserviceaccess.DvcaCertDescriptionService;
 import de.governikus.eumw.poseidas.server.pki.caserviceaccess.PKIServiceConnector;
-import de.governikus.eumw.poseidas.server.pki.caserviceaccess.ServiceWrapperFactory;
-import de.governikus.eumw.poseidas.server.pki.caserviceaccess.TermAuthServiceWrapper;
+import de.governikus.eumw.poseidas.server.pki.caserviceaccess.TermAuthService;
 import lombok.extern.slf4j.Slf4j;
 
 
@@ -94,7 +93,21 @@ public class CVCRequestHandler extends BerCaRequestHandlerBase
 
   private byte[] collectedRequestData;
 
-  private final BerCaPolicy policy;
+  /**
+   * Create new Object which can be used for one service provider only as long as configuration is not changed.
+   *
+   * @param epaConfig The connection configuration for the terminal
+   * @param facade The terminal configuration
+   * @param hsmKeyStore HSM keystore
+   */
+  CVCRequestHandler(ServiceProviderType epaConfig,
+                    TerminalPermissionAO facade,
+                    KeyStore hsmKeyStore,
+                    ConfigurationService configurationService)
+    throws GovManagementException
+  {
+    super(epaConfig, facade, hsmKeyStore, configurationService);
+  }
 
   private static void addKnowRootCert(String base64)
   {
@@ -109,18 +122,246 @@ public class CVCRequestHandler extends BerCaRequestHandlerBase
     }
   }
 
-  /**
-   * Create new Object which can be used for one service provider only as long as configuration is not changed.
-   *
-   * @param epaConfig The connection configuration for the terminal
-   * @param facade The terminal configuration
-   * @param hsmKeyStore HSM keystore
-   */
-  CVCRequestHandler(EPAConnectorConfigurationDto epaConfig, TerminalPermissionAO facade, KeyStore hsmKeyStore)
-    throws GovManagementException
+  private static void checkCVC(byte[] newCvcBytes,
+                               byte[] oldCvcBytes,
+                               byte[][] chain,
+                               ASN1 publicKey,
+                               ASN1 holderReference,
+                               Date actualDate,
+                               String cvcRefId)
+    throws CertificateException, GovManagementException
   {
-    super(epaConfig, facade, hsmKeyStore);
-    policy = PolicyImplementationFactory.getInstance().getPolicy(pkiConfig.getBerCaPolicyId());
+    try
+    {
+      TerminalData newCVC = new TerminalData(newCvcBytes);
+
+      if (oldCvcBytes != null && oldCvcBytes.length > 1)
+      {
+        TerminalData oldCVC = new TerminalData(oldCvcBytes);
+
+        // check if the new and old cvc are identical
+        if (Arrays.equals(newCvcBytes, oldCvcBytes))
+        {
+          String detail = String.format("new cvc '%s' is identical with existing cvc '%s'", newCVC, oldCVC);
+          throw new CertificateException(detail);
+        }
+
+        // check the holder reference
+        if (holderReference == null)
+        {
+          // only if there is no holder reference from request data, check holder reference from old CVC
+          byte[] newBasicHolderReference = getBasicHolderReference(newCVC);
+          byte[] oldBasicHolderReference = getBasicHolderReference(oldCVC);
+          if (!Arrays.equals(oldBasicHolderReference, newBasicHolderReference))
+          {
+            String detail = String.format("holder reference of new cvc '%s' does not match holder reference of existing cvc '%s'",
+                                          newCVC,
+                                          oldCVC);
+            throw new CertificateException(detail);
+          }
+        }
+        else
+        {
+          byte[] newBasicHolderReference = getBasicHolderReference(newCVC);
+          byte[] requestedBasicHolderReference = getBasicHolderReference(holderReference);
+          if (!Arrays.equals(requestedBasicHolderReference, newBasicHolderReference))
+          {
+            String detail = String.format("holder reference of new cvc '%s' does not match holder reference of certificate request",
+                                          newCVC);
+            throw new CertificateException(detail);
+          }
+        }
+      }
+
+      try
+      {
+        // check if chain is present
+        if (chain == null)
+        {
+          log.warn("{}: no chain present to check new cvc: {}",
+                   cvcRefId,
+                   new String(newCVC.getCAReference(), StandardCharsets.UTF_8));
+          String detail = String.format("no chain present to check new cvc '%s'", newCVC);
+          throw new CertificateException(detail);
+        }
+
+        // check, if the CA reference of the new cvc is present in the chain
+        boolean foundInChain = false;
+        for ( byte[] cacert : chain )
+        {
+          TerminalData parsedCaCVC = new TerminalData(cacert);
+          if (Arrays.equals(parsedCaCVC.getHolderReference(), newCVC.getCAReference()))
+          {
+            foundInChain = true;
+            break;
+          }
+        }
+        if (!foundInChain)
+        {
+          String detail = "ca reference of new cvc not found in chain: " + newCVC;
+          throw new CertificateException(detail);
+        }
+
+        // check the dates
+        if (newCVC.getEffectiveDate().after(actualDate))
+        {
+          String detail = String.format("effective date of new cvc '%s' is after actual date", newCVC);
+          throw new CertificateException(detail);
+        }
+        if (newCVC.getExpirationDate().before(actualDate))
+        {
+          String detail = String.format("expiration date of new cvc '%s' is before actual date", newCVC);
+          throw new CertificateException(detail);
+        }
+
+        // check the public key. it must be equal to the public key of the request
+        ASN1 newCVCPublicKey = newCVC.getPublicKey();
+        ASN1 newCVCPublicPoint = newCVCPublicKey.getChildElementByPath(ECPublicKeyPath.PUBLIC_POINT_Y);
+        ASN1 requestPublicPoint = publicKey.getChildElementByPath(ECPublicKeyPath.PUBLIC_POINT_Y);
+        if (!requestPublicPoint.equals(newCVCPublicPoint))
+        {
+          String detail = String.format("public key of new cvc '%s' does not match public key of pending request",
+                                        newCVC);
+          throw new CertificateException(detail);
+        }
+
+        // check the signatures
+        List<TerminalData> formattedCVCList = formatCVCList(newCVC, Arrays.asList(chain), cvcRefId);
+        try
+        {
+          if (!newCVC.verify(formattedCVCList))
+          {
+            String detail = String.format("mathematical signature check of new cvc '%s' failed", newCVC);
+            throw new CertificateException(detail);
+          }
+        }
+        catch (IOException e)
+        {
+          String detail = String.format("mathematical signature check of new cvc '%s' failed", newCVC);
+          throw new CertificateException(detail, e);
+        }
+      }
+      catch (IOException e)
+      {
+        throw new GovManagementException(GlobalManagementCodes.EC_UNEXPECTED_ERROR, "IOException: " + e.getMessage());
+      }
+    }
+    catch (IOException e)
+    {
+      throw new IllegalArgumentException("unable to parse given cvc", e);
+    }
+  }
+
+  /**
+   * @param newCVC
+   * @return
+   */
+  private static byte[] getBasicHolderReference(TerminalData newCVC)
+  {
+    byte[] newHolderReference = new byte[newCVC.getHolderReference().length - 5];
+    System.arraycopy(newCVC.getHolderReference(), 0, newHolderReference, 0, newHolderReference.length);
+    return newHolderReference;
+  }
+
+  /**
+   * @param holderReference
+   * @return
+   */
+  private static byte[] getBasicHolderReference(ASN1 holderReference)
+  {
+    byte[] hrBytes = holderReference.getValue();
+    byte[] newHolderReference = new byte[hrBytes.length - 5];
+    System.arraycopy(hrBytes, 0, newHolderReference, 0, newHolderReference.length);
+    return newHolderReference;
+  }
+
+  /**
+   * Creates a sorted list from the given list
+   *
+   * @param terminalCertificate the terminal certificate to build the chain for
+   * @param cvcChain the unsorted chain certificates
+   * @param cvcRefId
+   * @throws IllegalArgumentException if something illegal with the input
+   * @return List with the chain certificates without the terminal and the root certificate
+   */
+  private static List<TerminalData> formatCVCList(TerminalData terminalCertificate,
+                                                  List<byte[]> cvcChain,
+                                                  String cvcRefId)
+  {
+    if (log.isDebugEnabled())
+    {
+      log.debug("{}: Parse session input CVC list with size: {}", cvcRefId, cvcChain.size());
+    }
+    List<TerminalData> formattedChain = new ArrayList<>();
+
+    // Check the terminal CVC and add it to the list as first element
+    if (terminalCertificate.isSelfSigned())
+    {
+      // FIXME: throw appropriate Exception
+      throw new IllegalArgumentException("First CVC in list is self signed and not the terminal CVC");
+    }
+    TerminalData check = terminalCertificate;
+    while (true)
+    {
+      if (log.isDebugEnabled())
+      {
+        log.debug("{}: Check CVC: {}/{}",
+                  cvcRefId,
+                  check.getHolderReferenceString(),
+                  new String(check.getCAReference(), StandardCharsets.UTF_8));
+      }
+      TerminalData holderCVC = getReference(check, cvcChain);
+      if (holderCVC == null)
+      {
+        break;
+      }
+      if (holderCVC.isSelfSigned())
+      {
+        formattedChain.add(holderCVC);
+        break;
+      }
+      formattedChain.add(holderCVC);
+      check = holderCVC;
+
+    }
+    if (log.isDebugEnabled())
+    {
+      log.debug("{}: Parsed session input and set new list with size: {}", cvcRefId, formattedChain.size());
+    }
+    return formattedChain;
+  }
+
+  private static TerminalData getReference(TerminalData toFind, List<byte[]> cvcChain)
+  {
+    for ( byte[] cvcBytes : cvcChain )
+    {
+      try
+      {
+        TerminalData cvc = new TerminalData(cvcBytes);
+        if (Arrays.equals(cvc.getHolderReference(), toFind.getCAReference()))
+        {
+          return cvc;
+        }
+      }
+      catch (IOException e)
+      {
+        throw new IllegalArgumentException("unable to parse given cvc", e);
+      }
+    }
+    return null;
+  }
+
+  private static boolean canBeGivenToRequestGenerator(byte[] data)
+  {
+    try
+    {
+      ECCVCertificate cert = new ECCVCertificate(data);
+      return cert.getChildElementByPath(ECCVCPath.PUBLIC_KEY_PRIME_MODULUS) != null;
+    }
+    catch (IOException e)
+    {
+      return false;
+    }
   }
 
   /**
@@ -143,7 +384,7 @@ public class CVCRequestHandler extends BerCaRequestHandlerBase
         facade.create(cvcRefId);
         tp = facade.getTerminalPermission(cvcRefId);
       }
-      PoseidasCertificateRequestGenerator generator = new PoseidasCertificateRequestGenerator(cvcRefId, policy, facade);
+      PoseidasCertificateRequestGenerator generator = new PoseidasCertificateRequestGenerator(cvcRefId, facade);
       generator.setDataForFirstRequest(selectRootCert(encodedCvcs),
                                        cvcDescription,
                                        countryCode,
@@ -224,11 +465,7 @@ public class CVCRequestHandler extends BerCaRequestHandlerBase
       // if needed
       requestBlackListAndPublicSectorKey(tp);
       requestMasterAndDefectList();
-      if (!CertificationRevocationListImpl.isInitialized())
-      {
-        MasterList masterList = new MasterList(facade.getTerminalPermission(cvcRefId).getMasterList());
-        CertificationRevocationListImpl.initialize(new HashSet<>(masterList.getCertificates()));
-      }
+      CertificationRevocationListImpl.tryInitialize(configurationService, facade);
     }
     catch (GovManagementException e)
     {
@@ -416,7 +653,7 @@ public class CVCRequestHandler extends BerCaRequestHandlerBase
   private CertificateRequestResponse createRequest(TerminalPermission tp, byte[][] chain, boolean firstTry)
     throws IOException, SignatureException
   {
-    PoseidasCertificateRequestGenerator generator = new PoseidasCertificateRequestGenerator(cvcRefId, policy, facade);
+    PoseidasCertificateRequestGenerator generator = new PoseidasCertificateRequestGenerator(cvcRefId, facade);
     generator.prepareSubsequentRequest(selectRootCert(chain),
                                        tp.getCvc(),
                                        tp.getCvcPrivateKey(),
@@ -481,10 +718,8 @@ public class CVCRequestHandler extends BerCaRequestHandlerBase
       log.warn("{}: cannot download ca certificates, will keep old certificate chain", cvcRefId);
     }
 
-    if (policy.isCertDescriptionFetch())
-    {
-      certDescription = getCertDescriptionIfNeeded(cert);
-    }
+    certDescription = getCertDescriptionIfNeeded(cert);
+
 
     TerminalPermission tp = facade.getTerminalPermission(cvcRefId);
 
@@ -530,13 +765,14 @@ public class CVCRequestHandler extends BerCaRequestHandlerBase
 
   private void requestMasterAndDefectList() throws GovManagementException
   {
-    MasterAndDefectListHandler mslHandler = new MasterAndDefectListHandler(nPaConf, facade, hsmKeyStore);
+    MasterAndDefectListHandler mslHandler = new MasterAndDefectListHandler(serviceProvider, facade, hsmKeyStore,
+                                                                           configurationService);
     mslHandler.updateLists();
   }
 
   private void requestBlackListAndPublicSectorKey(TerminalPermission tp) throws GovManagementException
   {
-    RestrictedIdHandler riHandler = new RestrictedIdHandler(nPaConf, facade, hsmKeyStore);
+    RestrictedIdHandler riHandler = new RestrictedIdHandler(serviceProvider, facade, hsmKeyStore, configurationService);
 
     if (tp.getSectorID() == null)
     {
@@ -568,228 +804,6 @@ public class CVCRequestHandler extends BerCaRequestHandlerBase
     {
       log.error("{}: cannot fetch public sector key", cvcRefId, e);
     }
-  }
-
-  private static void checkCVC(byte[] newCvcBytes,
-                               byte[] oldCvcBytes,
-                               byte[][] chain,
-                               ASN1 publicKey,
-                               ASN1 holderReference,
-                               Date actualDate,
-                               String cvcRefId)
-    throws CertificateException, GovManagementException
-  {
-    try
-    {
-      TerminalData newCVC = new TerminalData(newCvcBytes);
-
-      if ((oldCvcBytes != null) && (oldCvcBytes.length > 1))
-      {
-        TerminalData oldCVC = new TerminalData(oldCvcBytes);
-
-        // check if the new and old cvc are identical
-        if (Arrays.equals(newCvcBytes, oldCvcBytes))
-        {
-          String detail = String.format("new cvc '%s' is identical with existing cvc '%s'", newCVC, oldCVC);
-          throw new CertificateException(detail);
-        }
-
-        // check the holder reference
-        if (holderReference == null)
-        {
-          // only if there is no holder reference from request data, check holder reference from old CVC
-          byte[] newBasicHolderReference = getBasicHolderReference(newCVC);
-          byte[] oldBasicHolderReference = getBasicHolderReference(oldCVC);
-          if (!Arrays.equals(oldBasicHolderReference, newBasicHolderReference))
-          {
-            String detail = String.format("holder reference of new cvc '%s' does not match holder reference of existing cvc '%s'",
-                                          newCVC,
-                                          oldCVC);
-            throw new CertificateException(detail);
-          }
-        }
-        else
-        {
-          byte[] newBasicHolderReference = getBasicHolderReference(newCVC);
-          byte[] requestedBasicHolderReference = getBasicHolderReference(holderReference);
-          if (!Arrays.equals(requestedBasicHolderReference, newBasicHolderReference))
-          {
-            String detail = String.format("holder reference of new cvc '%s' does not match holder reference of certificate request",
-                                          newCVC);
-            throw new CertificateException(detail);
-          }
-        }
-      }
-
-      try
-      {
-        // check if chain is present
-        if (chain == null)
-        {
-          log.warn("{}: no chain present to check new cvc: {}",
-                   cvcRefId,
-                   new String(newCVC.getCAReference(), StandardCharsets.UTF_8));
-          String detail = String.format("no chain present to check new cvc '%s'", newCVC);
-          throw new CertificateException(detail);
-        }
-
-        // check, if the CA reference of the new cvc is present in the chain
-        boolean foundInChain = false;
-        for ( byte[] cacert : chain )
-        {
-          TerminalData parsedCaCVC = new TerminalData(cacert);
-          if (Arrays.equals(parsedCaCVC.getHolderReference(), newCVC.getCAReference()))
-          {
-            foundInChain = true;
-            break;
-          }
-        }
-        if (!foundInChain)
-        {
-          String detail = "ca reference of new cvc not found in chain: " + newCVC;
-          throw new CertificateException(detail);
-        }
-
-        // check the dates
-        if (newCVC.getEffectiveDate().after(actualDate))
-        {
-          String detail = String.format("effective date of new cvc '%s' is after actual date", newCVC);
-          throw new CertificateException(detail);
-        }
-        if (newCVC.getExpirationDate().before(actualDate))
-        {
-          String detail = String.format("expiration date of new cvc '%s' is before actual date", newCVC);
-          throw new CertificateException(detail);
-        }
-
-        // check the public key. it must be equal to the public key of the request
-        ASN1 newCVCPublicKey = newCVC.getPublicKey();
-        ASN1 newCVCPublicPoint = newCVCPublicKey.getChildElementByPath(ECPublicKeyPath.PUBLIC_POINT_Y);
-        ASN1 requestPublicPoint = publicKey.getChildElementByPath(ECPublicKeyPath.PUBLIC_POINT_Y);
-        if (!requestPublicPoint.equals(newCVCPublicPoint))
-        {
-          String detail = String.format("public key of new cvc '%s' does not match public key of pending request",
-                                        newCVC);
-          throw new CertificateException(detail);
-        }
-
-        // check the signatures
-        List<TerminalData> formattedCVCList = formatCVCList(newCVC, Arrays.asList(chain), cvcRefId);
-        try
-        {
-          if (!newCVC.verify(formattedCVCList))
-          {
-            String detail = String.format("mathematical signature check of new cvc '%s' failed", newCVC);
-            throw new CertificateException(detail);
-          }
-        }
-        catch (IOException e)
-        {
-          String detail = String.format("mathematical signature check of new cvc '%s' failed", newCVC);
-          throw new CertificateException(detail, e);
-        }
-      }
-      catch (IOException e)
-      {
-        throw new GovManagementException(GlobalManagementCodes.EC_UNEXPECTED_ERROR, "IOException: " + e.getMessage());
-      }
-    }
-    catch (IOException e)
-    {
-      throw new IllegalArgumentException("unable to parse given cvc", e);
-    }
-  }
-
-  /**
-   * @param newCVC
-   * @return
-   */
-  private static byte[] getBasicHolderReference(TerminalData newCVC)
-  {
-    byte[] newHolderReference = new byte[newCVC.getHolderReference().length - 5];
-    System.arraycopy(newCVC.getHolderReference(), 0, newHolderReference, 0, newHolderReference.length);
-    return newHolderReference;
-  }
-
-  /**
-   * @param holderReference
-   * @return
-   */
-  private static byte[] getBasicHolderReference(ASN1 holderReference)
-  {
-    byte[] hrBytes = holderReference.getValue();
-    byte[] newHolderReference = new byte[hrBytes.length - 5];
-    System.arraycopy(hrBytes, 0, newHolderReference, 0, newHolderReference.length);
-    return newHolderReference;
-  }
-
-  /**
-   * Creates a sorted list from the given list
-   *
-   * @param terminalCertificate the terminal certificate to build the chain for
-   * @param cvcChain the unsorted chain certificates
-   * @param cvcRefId
-   * @throws IllegalArgumentException if something illegal with the input
-   * @return List with the chain certificates without the terminal and the root certificate
-   */
-  private static List<TerminalData> formatCVCList(TerminalData terminalCertificate,
-                                                  List<byte[]> cvcChain,
-                                                  String cvcRefId)
-  {
-    log.debug("{}: Parse session input CVC list with size: {}", cvcRefId, cvcChain.size());
-    List<TerminalData> formattedChain = new ArrayList<>();
-
-    // Check the terminal CVC and add it to the list as first element
-    if (terminalCertificate.isSelfSigned())
-    {
-      // FIXME: throw appropriate Exception
-      throw new IllegalArgumentException("First CVC in list is self signed and not the terminal CVC");
-    }
-    TerminalData check = terminalCertificate;
-    while (true)
-    {
-      log.debug("{}: Check CVC: {}/{}",
-                cvcRefId,
-                check.getHolderReferenceString(),
-                new String(check.getCAReference(), StandardCharsets.UTF_8));
-      TerminalData holderCVC = getReference(check, cvcChain);
-      if (holderCVC != null)
-      {
-        if (holderCVC.isSelfSigned())
-        {
-          formattedChain.add(holderCVC);
-          break;
-        }
-        formattedChain.add(holderCVC);
-        check = holderCVC;
-      }
-      else
-      {
-        break;
-      }
-    }
-    log.debug("{}: Parsed session input and set new list with size: {}", cvcRefId, formattedChain.size());
-    return formattedChain;
-  }
-
-  private static TerminalData getReference(TerminalData toFind, List<byte[]> cvcChain)
-  {
-    for ( byte[] cvcBytes : cvcChain )
-    {
-      try
-      {
-        TerminalData cvc = new TerminalData(cvcBytes);
-        if (Arrays.equals(cvc.getHolderReference(), toFind.getCAReference()))
-        {
-          return cvc;
-        }
-      }
-      catch (IOException e)
-      {
-        throw new IllegalArgumentException("unable to parse given cvc", e);
-      }
-    }
-    return null;
   }
 
   /**
@@ -839,8 +853,8 @@ public class CVCRequestHandler extends BerCaRequestHandlerBase
     try
     {
       PKIServiceConnector.getContextLock();
-      TermAuthServiceWrapper wrapper = createWrapper();
-      obtainedCert = wrapper.requestCertificate(certReq, null, null);
+      TermAuthService service = createService();
+      obtainedCert = service.requestCertificate(certReq, null, null);
     }
     finally
     {
@@ -862,7 +876,7 @@ public class CVCRequestHandler extends BerCaRequestHandlerBase
     try
     {
       PKIServiceConnector.getContextLock();
-      DvcaCertDescriptionWrapper wrapper = createCertDescriptionWrapper();
+      DvcaCertDescriptionService wrapper = createCertDescriptionService();
       obtainedCert = wrapper.getCertificateDescription(certificateDescriptionHash);
     }
     finally
@@ -872,29 +886,28 @@ public class CVCRequestHandler extends BerCaRequestHandlerBase
     return obtainedCert;
   }
 
-  private TermAuthServiceWrapper createWrapper() throws GovManagementException
+  private TermAuthService createService() throws GovManagementException
   {
-    PkiServiceType serviceData = pkiConfig.getTerminalAuthService();
-    String serviceUrl = serviceData.getUrl();
-    SslKeysDto keys = pkiConfig.getSslKeys().get(serviceData.getSslKeysId());
-    String wsdlVersion = policy.getWsdlVersionTerminalAuth();
+    String serviceUrl = dvcaConfiguration.getTerminalAuthServiceUrl();
+    X509Certificate dvcaCertificate = configurationService.getCertificate(dvcaConfiguration.getServerSSLCertificateName());
 
     try
     {
       PKIServiceConnector connector;
       if (hsmKeyStore == null)
       {
-        connector = new PKIServiceConnector(600, keys.getServerCertificate(), keys.getClientKey(),
-                                            keys.getClientCertificateChain(), cvcRefId);
+        KeyPair clientKeyPair = configurationService.getKeyPair(serviceProvider.getClientKeyPairName());
+        List<X509Certificate> clientCertificate = List.of(clientKeyPair.getCertificate());
+        connector = new PKIServiceConnector(600, dvcaCertificate, clientKeyPair.getKey(), clientCertificate, cvcRefId);
 
       }
       else
       {
-        connector = new PKIServiceConnector(600, keys.getServerCertificate(), hsmKeyStore, null, cvcRefId);
+        connector = new PKIServiceConnector(600, dvcaCertificate, hsmKeyStore, null, cvcRefId);
       }
-      return ServiceWrapperFactory.createTermAuthServiceWrapper(connector, serviceUrl, wsdlVersion);
+      return new TermAuthService(connector, serviceUrl);
     }
-    catch (GeneralSecurityException e)
+    catch (GeneralSecurityException | NullPointerException e)
     {
       log.error("{}: problem with crypto data", cvcRefId, e);
       throw new GovManagementException(GlobalManagementCodes.EC_UNEXPECTED_ERROR, e.getMessage());
@@ -906,27 +919,26 @@ public class CVCRequestHandler extends BerCaRequestHandlerBase
     }
   }
 
-  private DvcaCertDescriptionWrapper createCertDescriptionWrapper() throws GovManagementException
+  private DvcaCertDescriptionService createCertDescriptionService() throws GovManagementException
   {
-    PkiServiceType serviceData = pkiConfig.getDvcaCertDescriptionService();
-    String serviceUrl = serviceData.getUrl();
-    SslKeysDto keys = pkiConfig.getSslKeys().get(serviceData.getSslKeysId());
-
+    String serviceUrl = dvcaConfiguration.getDvcaCertificateDescriptionServiceUrl();
+    X509Certificate dvcaCertificate = configurationService.getCertificate(dvcaConfiguration.getServerSSLCertificateName());
     try
     {
       PKIServiceConnector connector;
       if (hsmKeyStore == null)
       {
-        connector = new PKIServiceConnector(600, keys.getServerCertificate(), keys.getClientKey(),
-                                            keys.getClientCertificateChain(), cvcRefId);
+        KeyPair clientKeyPair = configurationService.getKeyPair(serviceProvider.getClientKeyPairName());
+        List<X509Certificate> clientCertificate = List.of(clientKeyPair.getCertificate());
+        connector = new PKIServiceConnector(600, dvcaCertificate, clientKeyPair.getKey(), clientCertificate, cvcRefId);
       }
       else
       {
-        connector = new PKIServiceConnector(600, keys.getServerCertificate(), hsmKeyStore, null, cvcRefId);
+        connector = new PKIServiceConnector(600, dvcaCertificate, hsmKeyStore, null, cvcRefId);
       }
-      return ServiceWrapperFactory.createDvcaCertDescriptionWrapper(connector, serviceUrl);
+      return new DvcaCertDescriptionService(connector, serviceUrl);
     }
-    catch (GeneralSecurityException e)
+    catch (GeneralSecurityException | NullPointerException e)
     {
       log.error("{}: problem with crypto data", cvcRefId, e);
       throw new GovManagementException(GlobalManagementCodes.EC_UNEXPECTED_ERROR, e.getMessage());
@@ -954,8 +966,8 @@ public class CVCRequestHandler extends BerCaRequestHandlerBase
     {
       PKIServiceConnector.getContextLock();
       log.debug("{}: obtained lock on SSL context for downloading CACerts", cvcRefId);
-      TermAuthServiceWrapper wrapper = createWrapper();
-      result = wrapper.getCACertificates();
+      TermAuthService service = createService();
+      result = service.getCACertificates();
     }
     catch (WebServiceException e)
     {
@@ -1072,19 +1084,6 @@ public class CVCRequestHandler extends BerCaRequestHandlerBase
                                   description == null ? null : description.getEncoded(),
                                   chain,
                                   pkcs8PrivateKey);
-  }
-
-  private static boolean canBeGivenToRequestGenerator(byte[] data)
-  {
-    try
-    {
-      ECCVCertificate cert = new ECCVCertificate(data);
-      return cert.getChildElementByPath(ECCVCPath.PUBLIC_KEY_PRIME_MODULUS) != null;
-    }
-    catch (IOException e)
-    {
-      return false;
-    }
   }
 
   /**

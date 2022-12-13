@@ -3,10 +3,8 @@ package de.governikus.eumw.eidasstarterkit;
 import java.io.ByteArrayInputStream;
 import java.io.InputStream;
 import java.security.PrivateKey;
-import java.security.Security;
 import java.security.cert.X509Certificate;
 
-import org.bouncycastle.jce.provider.BouncyCastleProvider;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -37,13 +35,14 @@ class XMLSignatureHandlerTest
   @BeforeEach
   void setUp() throws Exception
   {
-    Security.addProvider(new BouncyCastleProvider());
     EidasSaml.init();
     signableXMLObject = getSignableXmlObject();
   }
 
-  @Test
-  void testWhenAddSignatureCalledWithUnknownDigestAlgoThenThrowIllegalArgumentException() throws Exception
+  @ParameterizedTest
+  @ValueSource(strings = {"SHB-256", "SHA-256-PSS", "SHA256-PSS", "SHA256PSS", "SHA-1", "SHA1"})
+  void testWhenAddSignatureCalledWithUnknownDigestAlgoThenThrowIllegalArgumentException(String digestAlgo)
+    throws Exception
   {
     X509Certificate cert = Utils.readCert(XMLSignatureHandlerTest.class.getResourceAsStream("/EidasSignerTest_x509.cer"));
     PrivateKey pk = Utils.readPKCS12(XMLSignatureHandlerTest.class.getResourceAsStream(TEST_P12_RSA),
@@ -54,7 +53,7 @@ class XMLSignatureHandlerTest
                                                                    pk,
                                                                    cert,
                                                                    XMLSignatureHandler.SigEntryType.CERTIFICATE,
-                                                                   "SHB-256"));
+                                                                   digestAlgo));
   }
 
   @Test
@@ -74,8 +73,7 @@ class XMLSignatureHandlerTest
   }
 
   @ParameterizedTest
-  @ValueSource(strings = {"SHA-256", "SHA256", "SHA-256-PSS", "SHA256-PSS", "SHA256PSS", "SHA-1", "SHA1",
-                          "SHA384", "SHA-384", "SHA512", "SHA-512"})
+  @ValueSource(strings = {"SHA-256", "SHA256", "SHA384", "SHA-384", "SHA512", "SHA-512"})
   void testWhenAddSignatureCalledWithRSAKeyAndKnownDigestAlgorithmThenAddSignature(String digestAlgo)
     throws Exception
   {
@@ -93,8 +91,7 @@ class XMLSignatureHandlerTest
   }
 
   @ParameterizedTest
-  @ValueSource(strings = {"SHA-256", "SHA256", "SHA-256-PSS", "SHA256-PSS", "SHA256PSS", "SHA-1", "SHA1",
-                          "SHA384", "SHA-384", "SHA512", "SHA-512"})
+  @ValueSource(strings = {"SHA-256", "SHA256", "SHA384", "SHA-384", "SHA512", "SHA-512"})
   void testWhenAddSignatureCalledWithECKeyAndKnownDigestAlgorithmThenAddSignature(String digestAlgo)
     throws Exception
   {

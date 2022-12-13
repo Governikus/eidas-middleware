@@ -1,0 +1,140 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<EidasMiddlewareConfig xmlns="http://www.governikus.de/2021/03/eumw-config">
+    <ServerUrl>https://localhost:9443/eidas-middleware</ServerUrl>
+    <EidasConfiguration PublicServiceProviderName="providerA" DecryptionKeyPairName="ServerSamlDecryptionKeyPair"
+                        SignatureKeyPairName="ServerSamlSignatureKeyPair"
+                        MetadataSignatureVerificationCertificateName="Metadata">
+        <ConnectorMetadata>
+            PD94bWwgdmVyc2lvbj0iMS4wIiBlbmNvZGluZz0iVVRGLTgiPz48bWQ6RW50aXR5RGVzY3JpcHRvciB4bWxuczptZD0idXJuOm9hc2lzOm5hbWVzOnRjOlNBTUw6Mi4wOm1ldGFkYXRhIiB4bWxuczphbGc9InVybjpvYXNpczpuYW1lczp0YzpTQU1MOm1ldGFkYXRhOmFsZ3N1cHBvcnQiIHhtbG5zOmVpZGFzPSJodHRwOi8vZWlkYXMuZXVyb3BhLmV1L3NhbWwtZXh0ZW5zaW9ucyIgeG1sbnM6eHNkPSJodHRwOi8vd3d3LnczLm9yZy8yMDAxL1hNTFNjaGVtYSIgeG1sbnM6eHNpPSJodHRwOi8vd3d3LnczLm9yZy8yMDAxL1hNTFNjaGVtYS1pbnN0YW5jZSIgSUQ9ImVJREFTU0FNTERlbW8iIGVudGl0eUlEPSJodHRwczovL2xvY2FsaG9zdDo5NDQzL2VJREFTRGVtb0FwcGxpY2F0aW9uL01ldGFkYXRhIiB2YWxpZFVudGlsPSIyMDIyLTAyLTE2VDEwOjU0OjQ0Ljk5N1oiPjxkczpTaWduYXR1cmUgeG1sbnM6ZHM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvMDkveG1sZHNpZyMiPgo8ZHM6U2lnbmVkSW5mbz4KPGRzOkNhbm9uaWNhbGl6YXRpb25NZXRob2QgQWxnb3JpdGhtPSJodHRwOi8vd3d3LnczLm9yZy8yMDAxLzEwL3htbC1leGMtYzE0biMiLz4KPGRzOlNpZ25hdHVyZU1ldGhvZCBBbGdvcml0aG09Imh0dHA6Ly93d3cudzMub3JnLzIwMDEvMDQveG1sZHNpZy1tb3JlI2VjZHNhLXNoYTI1NiIvPgo8ZHM6UmVmZXJlbmNlIFVSST0iI2VJREFTU0FNTERlbW8iPgo8ZHM6VHJhbnNmb3Jtcz4KPGRzOlRyYW5zZm9ybSBBbGdvcml0aG09Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvMDkveG1sZHNpZyNlbnZlbG9wZWQtc2lnbmF0dXJlIi8+CjxkczpUcmFuc2Zvcm0gQWxnb3JpdGhtPSJodHRwOi8vd3d3LnczLm9yZy8yMDAxLzEwL3htbC1leGMtYzE0biMiLz4KPC9kczpUcmFuc2Zvcm1zPgo8ZHM6RGlnZXN0TWV0aG9kIEFsZ29yaXRobT0iaHR0cDovL3d3dy53My5vcmcvMjAwMS8wNC94bWxlbmMjc2hhMjU2Ii8+CjxkczpEaWdlc3RWYWx1ZT5PRlAwTTI3R3JlaGlsNG5ZLzhxUVA1Y3hlTVVuSU1ZMjNydnVaZm5vbWE0PTwvZHM6RGlnZXN0VmFsdWU+CjwvZHM6UmVmZXJlbmNlPgo8L2RzOlNpZ25lZEluZm8+CjxkczpTaWduYXR1cmVWYWx1ZT4Kd2crYU8rMjNMMWl2NHRjOTIwb3NoTXRzYjcwZzdHR0dqdW1tc2o2K1hRd1hiNHJ4Tm4xSmE0ZFNpbXNOVVFzVG44Q2RmNStJS1NvNCYjMTM7Cmw1YmdFd3JENDhwb1VXK3NuNVhpbEpaUWpQS2pXS2lwRVR2VkxFeXRzbWNzQlZ4c1dKUW9vTHF4T0V2Y0QxM1d1VWg1Q21nM1FXRTAmIzEzOwpRblBzcGJ1QTZCcVdSUlF6UE5Sc0pnPT0KPC9kczpTaWduYXR1cmVWYWx1ZT4KPGRzOktleUluZm8+PGRzOlg1MDlEYXRhPjxkczpYNTA5Q2VydGlmaWNhdGU+TUlJQm1qQ0IvYUFEQWdFQ0FnUmJLTDM3TUFvR0NDcUdTTTQ5QkFNQ01CSXhFREFPQmdOVkJBTU1CMlZqTFhOcFoyNHdIaGNOTVRnd05qRTVNRGd5TlRNeFdoY05Namd3TmpFNU1EZ3lOVE14V2pBU01SQXdEZ1lEVlFRRERBZGxZeTF6YVdkdU1JR2JNQkFHQnlxR1NNNDlBZ0VHQlN1QkJBQWpBNEdHQUFRQklCM01xRFMzTklndkk4UTh4WHY5NFFpay9HVGhXOFlrWHZUSzEyenh3TE15QmQ3VG5MQUV3OHMvdFp5UTdtUXVIN1pmUlJGek16R29IRzBvUUwwSytyZ0FYZk5WY0ZGSHZ3TnU3ejEzd3RDZzJiVWMxTU1HQlJDbXcrT3FNMDFEbUV5TWlkTjdybzAyblRIK2lYVEFsNGFMcFVUNklhaGRrU05wb25saWI0UEZiVjR3Q2dZSUtvWkl6ajBFQXdJRGdZc0FNSUdIQWtFQnV5N1JzSDhCSjM3ZFA0UG4vRGw2dXo1cGFzSUtiZ2s2cHF0cG1RRlFyN3hBQ0cyWE5XNDFhT1VycjlwcmhqN2hydmx0WmtsaE1LREFrMWl2QWdzUTNRSkNBUEVTT3E0L2JLb1dPT3l1Q01nTVFnVjcyQ0h3R2QxRmIvNElzNTBKM0IyTU5xZXNWemRwbmJGYkk0bk5PVC9sdlpnb2I2aVp3dE05TXJtdEEyc21iTFlFPC9kczpYNTA5Q2VydGlmaWNhdGU+PC9kczpYNTA5RGF0YT48L2RzOktleUluZm8+PC9kczpTaWduYXR1cmU+PG1kOkV4dGVuc2lvbnM+PGFsZzpEaWdlc3RNZXRob2QgQWxnb3JpdGhtPSJodHRwOi8vd3d3LnczLm9yZy8yMDAxLzA0L3htbGVuYyNzaGEyNTYiLz48YWxnOlNpZ25pbmdNZXRob2QgQWxnb3JpdGhtPSJodHRwOi8vd3d3LnczLm9yZy8yMDAxLzA0L3htbGRzaWctbW9yZSNlY2RzYS1zaGEyNTYiIE1pbktleVNpemU9IjI1NiIvPjxlaWRhczpTUFR5cGU+cHVibGljPC9laWRhczpTUFR5cGU+PGFsZzpTaWduaW5nTWV0aG9kIEFsZ29yaXRobT0iaHR0cDovL3d3dy53My5vcmcvMjAwNy8wNS94bWxkc2lnLW1vcmUjc2hhMjU2LXJzYS1NR0YxIiBNYXhLZXlTaXplPSI0MDk2IiBNaW5LZXlTaXplPSIzMDcyIi8+PC9tZDpFeHRlbnNpb25zPjxtZDpTUFNTT0Rlc2NyaXB0b3IgQXV0aG5SZXF1ZXN0c1NpZ25lZD0idHJ1ZSIgV2FudEFzc2VydGlvbnNTaWduZWQ9ImZhbHNlIiBwcm90b2NvbFN1cHBvcnRFbnVtZXJhdGlvbj0idXJuOm9hc2lzOm5hbWVzOnRjOlNBTUw6Mi4wOnByb3RvY29sIj48bWQ6S2V5RGVzY3JpcHRvciB1c2U9InNpZ25pbmciPjxkczpLZXlJbmZvIHhtbG5zOmRzPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwLzA5L3htbGRzaWcjIj48ZHM6WDUwOURhdGE+PGRzOlg1MDlDZXJ0aWZpY2F0ZT5NSUlCbWpDQi9hQURBZ0VDQWdSYktMMzdNQW9HQ0NxR1NNNDlCQU1DTUJJeEVEQU9CZ05WQkFNTUIyVmpMWE5wWjI0d0hoY05NVGd3TmpFNU1EZ3lOVE14V2hjTk1qZ3dOakU1TURneU5UTXhXakFTTVJBd0RnWURWUVFEREFkbFl5MXphV2R1TUlHYk1CQUdCeXFHU000OUFnRUdCU3VCQkFBakE0R0dBQVFCSUIzTXFEUzNOSWd2SThROHhYdjk0UWlrL0dUaFc4WWtYdlRLMTJ6eHdMTXlCZDdUbkxBRXc4cy90WnlRN21RdUg3WmZSUkZ6TXpHb0hHMG9RTDBLK3JnQVhmTlZjRkZIdndOdTd6MTN3dENnMmJVYzFNTUdCUkNtdytPcU0wMURtRXlNaWRON3JvMDJuVEgraVhUQWw0YUxwVVQ2SWFoZGtTTnBvbmxpYjRQRmJWNHdDZ1lJS29aSXpqMEVBd0lEZ1lzQU1JR0hBa0VCdXk3UnNIOEJKMzdkUDRQbi9EbDZ1ejVwYXNJS2JnazZwcXRwbVFGUXI3eEFDRzJYTlc0MWFPVXJyOXByaGo3aHJ2bHRaa2xoTUtEQWsxaXZBZ3NRM1FKQ0FQRVNPcTQvYktvV09PeXVDTWdNUWdWNzJDSHdHZDFGYi80SXM1MEozQjJNTnFlc1Z6ZHBuYkZiSTRuTk9UL2x2WmdvYjZpWnd0TTlNcm10QTJzbWJMWUU8L2RzOlg1MDlDZXJ0aWZpY2F0ZT48L2RzOlg1MDlEYXRhPjwvZHM6S2V5SW5mbz48L21kOktleURlc2NyaXB0b3I+PG1kOktleURlc2NyaXB0b3IgdXNlPSJlbmNyeXB0aW9uIj48ZHM6S2V5SW5mbyB4bWxuczpkcz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC8wOS94bWxkc2lnIyI+PGRzOlg1MDlEYXRhPjxkczpYNTA5Q2VydGlmaWNhdGU+TUlJQm1qQ0IvYUFEQWdFQ0FnUmJLTDM3TUFvR0NDcUdTTTQ5QkFNQ01CSXhFREFPQmdOVkJBTU1CMlZqTFhOcFoyNHdIaGNOTVRnd05qRTVNRGd5TlRNeFdoY05Namd3TmpFNU1EZ3lOVE14V2pBU01SQXdEZ1lEVlFRRERBZGxZeTF6YVdkdU1JR2JNQkFHQnlxR1NNNDlBZ0VHQlN1QkJBQWpBNEdHQUFRQklCM01xRFMzTklndkk4UTh4WHY5NFFpay9HVGhXOFlrWHZUSzEyenh3TE15QmQ3VG5MQUV3OHMvdFp5UTdtUXVIN1pmUlJGek16R29IRzBvUUwwSytyZ0FYZk5WY0ZGSHZ3TnU3ejEzd3RDZzJiVWMxTU1HQlJDbXcrT3FNMDFEbUV5TWlkTjdybzAyblRIK2lYVEFsNGFMcFVUNklhaGRrU05wb25saWI0UEZiVjR3Q2dZSUtvWkl6ajBFQXdJRGdZc0FNSUdIQWtFQnV5N1JzSDhCSjM3ZFA0UG4vRGw2dXo1cGFzSUtiZ2s2cHF0cG1RRlFyN3hBQ0cyWE5XNDFhT1VycjlwcmhqN2hydmx0WmtsaE1LREFrMWl2QWdzUTNRSkNBUEVTT3E0L2JLb1dPT3l1Q01nTVFnVjcyQ0h3R2QxRmIvNElzNTBKM0IyTU5xZXNWemRwbmJGYkk0bk5PVC9sdlpnb2I2aVp3dE05TXJtdEEyc21iTFlFPC9kczpYNTA5Q2VydGlmaWNhdGU+PC9kczpYNTA5RGF0YT48L2RzOktleUluZm8+PG1kOkVuY3J5cHRpb25NZXRob2QgQWxnb3JpdGhtPSJodHRwOi8vd3d3LnczLm9yZy8yMDA5L3htbGVuYzExI2FlczI1Ni1nY20iLz48L21kOktleURlc2NyaXB0b3I+PG1kOk5hbWVJREZvcm1hdD51cm46b2FzaXM6bmFtZXM6dGM6U0FNTDoyLjA6bmFtZWlkLWZvcm1hdDpwZXJzaXN0ZW50PC9tZDpOYW1lSURGb3JtYXQ+PG1kOk5hbWVJREZvcm1hdD51cm46b2FzaXM6bmFtZXM6dGM6U0FNTDoyLjA6bmFtZWlkLWZvcm1hdDp0cmFuc2llbnQ8L21kOk5hbWVJREZvcm1hdD48bWQ6TmFtZUlERm9ybWF0PnVybjpvYXNpczpuYW1lczp0YzpTQU1MOjEuMTpuYW1laWQtZm9ybWF0OnVuc3BlY2lmaWVkPC9tZDpOYW1lSURGb3JtYXQ+PG1kOkFzc2VydGlvbkNvbnN1bWVyU2VydmljZSBCaW5kaW5nPSJ1cm46b2FzaXM6bmFtZXM6dGM6U0FNTDoyLjA6YmluZGluZ3M6SFRUUC1QT1NUIiBMb2NhdGlvbj0iaHR0cHM6Ly9sb2NhbGhvc3Q6OTQ0My9lSURBU0RlbW9BcHBsaWNhdGlvbi9OZXdSZWNlaXZlclNlcnZsZXQiIGluZGV4PSIxIiBpc0RlZmF1bHQ9InRydWUiLz48L21kOlNQU1NPRGVzY3JpcHRvcj48bWQ6T3JnYW5pemF0aW9uPjxtZDpPcmdhbml6YXRpb25OYW1lIHhtbDpsYW5nPSJkZW1vIj5kZW1vPC9tZDpPcmdhbml6YXRpb25OYW1lPjxtZDpPcmdhbml6YXRpb25EaXNwbGF5TmFtZSB4bWw6bGFuZz0iZGVtbyI+ZGVtbzwvbWQ6T3JnYW5pemF0aW9uRGlzcGxheU5hbWU+PG1kOk9yZ2FuaXphdGlvblVSTCB4bWw6bGFuZz0iZGVtbyI+ZGVtbzwvbWQ6T3JnYW5pemF0aW9uVVJMPjwvbWQ6T3JnYW5pemF0aW9uPjxtZDpDb250YWN0UGVyc29uIGNvbnRhY3RUeXBlPSJ0ZWNobmljYWwiPjxtZDpDb21wYW55PmRlbW88L21kOkNvbXBhbnk+PG1kOkdpdmVuTmFtZT5kZW1vPC9tZDpHaXZlbk5hbWU+PG1kOlN1ck5hbWU+ZGVtbzwvbWQ6U3VyTmFtZT48bWQ6RW1haWxBZGRyZXNzPmRlbW88L21kOkVtYWlsQWRkcmVzcz48bWQ6VGVsZXBob25lTnVtYmVyPmRlbW88L21kOlRlbGVwaG9uZU51bWJlcj48L21kOkNvbnRhY3RQZXJzb24+PG1kOkNvbnRhY3RQZXJzb24gY29udGFjdFR5cGU9InN1cHBvcnQiPjxtZDpDb21wYW55PmRlbW88L21kOkNvbXBhbnk+PG1kOkdpdmVuTmFtZT5kZW1vPC9tZDpHaXZlbk5hbWU+PG1kOlN1ck5hbWU+ZGVtbzwvbWQ6U3VyTmFtZT48bWQ6RW1haWxBZGRyZXNzPmRlbW88L21kOkVtYWlsQWRkcmVzcz48bWQ6VGVsZXBob25lTnVtYmVyPmRlbW88L21kOlRlbGVwaG9uZU51bWJlcj48L21kOkNvbnRhY3RQZXJzb24+PC9tZDpFbnRpdHlEZXNjcmlwdG9yPg==
+        </ConnectorMetadata>
+        <DoSign>true</DoSign>
+        <MetadataValidity>0</MetadataValidity>
+        <CountryCode>DE</CountryCode>
+        <ContactPerson>
+            <Company>1</Company>
+            <Givenname>2</Givenname>
+            <Surname>3</Surname>
+            <Email>4</Email>
+            <Telephone>5</Telephone>
+        </ContactPerson>
+        <Organization>
+            <Displayname>6</Displayname>
+            <Name>7</Name>
+            <Language>8</Language>
+            <Url>9</Url>
+        </Organization>
+    </EidasConfiguration>
+    <EidConfiguration>
+        <DvcaConfiguration ServerSSLCertificateName="DvcaServerSSL" BlackListTrustAnchorCertificateName="BlTrustAnchor"
+                           MasterListTrustAnchorCertificateName="MlTrustAnchor">
+            <Name>gov</Name>
+            <TerminalAuthServiceUrl>https://dvca-r1.governikus-eid.de:8444/gov_dvca/ta-service</TerminalAuthServiceUrl>
+            <RestrictedIdServiceUrl>https://dvca-r1.governikus-eid.de:8444/gov_dvca/ri-service</RestrictedIdServiceUrl>
+            <PassiveAuthServiceUrl>https://dvca-r1.governikus-eid.de:8444/gov_dvca/pa-service</PassiveAuthServiceUrl>
+            <DvcaCertificateDescriptionServiceUrl>https://dvca-r1.governikus-eid.de:8444/gov_dvca/certDesc-service
+            </DvcaCertificateDescriptionServiceUrl>
+            <PolicyImplementationId>govDvca</PolicyImplementationId>
+        </DvcaConfiguration>
+        <TimerConfiguration>
+            <CertRenewal Length="2" Unit="Hours">
+                <HoursRefreshCVCBeforeExpires>48</HoursRefreshCVCBeforeExpires>
+            </CertRenewal>
+            <BlacklistRenewal Length="2" Unit="Hours"/>
+            <MasterAndDefectListRenewal Length="2" Unit="Hours"/>
+            <CrlRenewal Length="2" Unit="Hours"/>
+        </TimerConfiguration>
+        <ServiceProvider DvcaConfigurationName="gov" ClientKeyPairName="ServerSamlSignatureKeyPair">
+            <Name>providerA</Name>
+            <Enabled>true</Enabled>
+            <CVCRefID>providerA</CVCRefID>
+        </ServiceProvider>
+        <ServiceProvider DvcaConfigurationName="gov" ClientKeyPairName="ServerSamlSignatureKeyPair">
+            <Name>asd</Name>
+            <Enabled>false</Enabled>
+            <CVCRefID>asd</CVCRefID>
+        </ServiceProvider>
+        <AllowedDocumentTypes>A</AllowedDocumentTypes>
+    </EidConfiguration>
+    <KeyData>
+        <Certificate>
+            <Name>ServerMetadataSignatureVerificationCertificate</Name>
+            <Certificate>
+                MIICvDCCAaSgAwIBAgIEYBEyeTANBgkqhkiG9w0BAQsFADAgMR4wHAYDVQQDDBVldW13c2lnbmF0dXJla2V5c3RvcmUwHhcNMjEwMTI3MDkyOTI5WhcNNDEwMTI3MDkyOTI5WjAgMR4wHAYDVQQDDBVldW13c2lnbmF0dXJla2V5c3RvcmUwggEiMA0GCSqGSIb3DQEBAQUAA4IBDwAwggEKAoIBAQC2Q2A+sdd29mjx+ZC1L88D/G8ZfBZw+PBhJCFwT/KW4zKai/7soRrO+1vZBUJdvtl2NS8MGplT1mOqk/n2AA2URLYjf+Dj9JuFMTigmkmnKBTTeEAtbdqOQWayrIY8ze6H0CBvuMeh/bnSX/Rxh5pmYWZKy9A1Rna7ltVN3pmPdsGTVX70qT9GwqOW84XYryC5Iftdg2uF6oNsXbMhTD9uUY+NsZ7621KJLtcnAKAWB0d6RDYQXsb7v93B6qnywEqA9i+VmxW40oTDchNM5+RqbwlYcEul8YLUa46SoUZe7nqlJmELW/OiFIHNCHdxu4AWHX7RajD/bzBDxWyCfR4bAgMBAAEwDQYJKoZIhvcNAQELBQADggEBAErXtOCyCJoY4u2/v/kW1D5+9clEit5gxlPAzWvMJ/7020iQlHXYj5o3hj1J+joIMQ/cwWJSRxhIIHPLXXZHeA81UNrqOhteAxU3ugOnlEH3TfLmFrFihQ4XH/kjy+T9pGu2tqktQfgdU3vEgo2nrTIGnbGYJ1EcwFHURjKF9Ae45M5ha9qRjHjfIodnraoRII6L4YDfhc7dLGJHChgfrLVdE3TrQllmQXVgrzXxQXe6QkljWr6GS4JMDlAOmL2mJnnTmFqSEgV5wTIlTABX6wmOTylDlR9AwdL2WXQR56DTf9wCgW2slPcQV8ib4bayf0Q5NZpX8FsPTNVG7OOV28U=
+            </Certificate>
+            <Keystore>SamlKeystore</Keystore>
+            <Alias>eumwsignaturekeystore</Alias>
+        </Certificate>
+        <Certificate>
+            <Name>DvcaServerSSL</Name>
+            <Certificate></Certificate>
+        </Certificate>
+        <Certificate>
+            <Name>WrongCertificate</Name>
+            <Certificate>
+                MIICsDCCAZigAwIBAgIEYanbhDANBgkqhkiG9w0BAQsFADAaMRgwFgYDVQQDDA9vbGQgY2VydGlmaWNhdGUwHhcNMjExMjAzMDg1NTMyWhcNMjExMjAxMDg1NTMyWjAaMRgwFgYDVQQDDA9vbGQgY2VydGlmaWNhdGUwggEiMA0GCSqGSIb3DQEBAQUAA4IBDwAwggEKAoIBAQCkdeLpSTqzCLpJmGSkKxHfRRgD5xixfUVKQIWU1sMk8uv22UtQgYGFn0F/QZL5TtidQcagTxJx6sbWsN0ZXtmgH9LgNgsDg2hVmE0tZ9SmZgt/otOhSY2sDPL9YflJLIfxSK7V4SXzFj4RPVAqa2uAstGM1UUdkMUjDXGD1BoIvCmS81p2r2dH6RHSnUxP7oWYrtzZkDnRIkvHvsoD83bqITalgi87wWDMgZifXK+vUqai19vQV5aXadziiniIgDKG3UXOd2pWebgcC2gVNo0rSYdGcgXmfkfBYcY110R/hz/O5jfqPX0rrbQ/nENH78tw6JVy9K7LFZ+f21w18NQhAgMBAAEwDQYJKoZIhvcNAQELBQADggEBAISpY2jHX2jzC/pZ8bT3OHj8vS/WmqiBBtKQh3X7CPyMzicoplEHbQetM/7i+H9fXAGCoO3M7kNPuFk0+knxnLVKIMp/HtUUPvoycWyQMTlUl81mC/06KnPckqOcmdynr2ktz1XWbQ9/iPdMxOeGSJu+HXVu+IVoAhB6lSLxZT4jlLtFubsBx9NnF304LFSin7wMoYgcC17fQY9IxMw9tNEDtURRFE53Ps4KhtHCyKO7f4i5IKloRu4VBKukune3ncCoM/nyzCVtvSjBQbqDaSCl7RGcWzEEfa9fK3MNqjsO6pI96kMzmsKvb9kiVcT1XcN8oT72UgPz1JWFOaEU1zo=
+            </Certificate>
+        </Certificate>
+        <Certificate>
+            <Name>BlTrustAnchor</Name>
+            <Certificate>
+                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
+            </Certificate>
+        </Certificate>
+        <Certificate>
+            <Name>MlTrustAnchor</Name>
+            <Certificate>
+                MIIEszCCBDmgAwIBAgICBEwwCgYIKoZIzj0EAwMwVTELMAkGA1UEBhMCREUxDTALBgNVBAoMBGJ1bmQxDDAKBgNVBAsMA2JzaTENMAsGA1UEBRMEMDAwNjEaMBgGA1UEAwwRVEVTVCBjc2NhLWdlcm1hbnkwHhcNMTYwODA5MTIyNDU0WhcNMzAwMjA5MjM1OTU5WjBVMQswCQYDVQQGEwJERTENMAsGA1UECgwEYnVuZDEMMAoGA1UECwwDYnNpMQ0wCwYDVQQFEwQwMDA2MRowGAYDVQQDDBFURVNUIGNzY2EtZ2VybWFueTCCAbUwggFNBgcqhkjOPQIBMIIBQAIBATA8BgcqhkjOPQEBAjEAjLkegqM4bSgPXW9+UOZB3xUvcQntVFa0ErHaGX+3ESOs06cpkB0acYdHABMxB+xTMGQEMHvDgsY9jBUMPHIICs4Fr6DCvqKOT7InhxORZe+6kfkPiqWBSlA61OsEqMfdIs4oJgQwBKjH3SLOKCaLObVUFvBEfC+3feEH3NKmLogOpT7rYtV8tDkCldvJlDq3hpb6UEwRBGEEHRxk8GjPRf+ipjqBt8E/a4hHo+d+8U/j23/K/gy9EOjoJuA0NtZGqu+HsuJH1K8eir4ddSD5wqRcseuOlc/VUmK3Cyn+7Fhk4ZwFT/mRKSgORkYhd5GBEUKCA0EmPFMVAjEAjLkegqM4bSgPXW9+UOZB3xUvcQntVFazHxZubKwEJafPOrava3/DEDuIMgLpBGVlAgEBA2IABDfwyU+90CWFVcRX/Qdmqf3nwOL8dZw/U02Nqc6bABLk4CsU6lvOBz50KwKG5TSnbnCXKc6Ml4rioT6qkNXj4oJ2xWusnRjJtPXIvm8gEt1ewwyI37cwGDypFbx+kK2CmaOCAZkwggGVMB0GA1UdDgQWBBQcDTXFf9QDqX6gnl9hAP3DCCWxLzAOBgNVHQ8BAf8EBAMCAQYwKwYDVR0QBCQwIoAPMjAxNjA4MDkxMjI0NTRagQ8yMDE5MDgwOTIzNTk1OVowFgYDVR0gBA8wDTALBgkEAH8ABwMBAQEwUQYDVR0RBEowSIEYY3NjYS1nZXJtYW55QGJzaS5idW5kLmRlhhxodHRwczovL3d3dy5ic2kuYnVuZC5kZS9jc2NhpA4wDDEKMAgGA1UEBwwBRDBRBgNVHRIESjBIgRhjc2NhLWdlcm1hbnlAYnNpLmJ1bmQuZGWGHGh0dHBzOi8vd3d3LmJzaS5idW5kLmRlL2NzY2GkDjAMMQowCAYDVQQHDAFEMBIGA1UdEwEB/wQIMAYBAf8CAQAwNQYDVR0fBC4wLDAqoCigJoYkaHR0cDovL3d3dy5ic2kuYnVuZC5kZS90ZXN0X2NzY2FfY3JsMA0GB2eBCAEBBgEEAgUAMB8GA1UdIwQYMBaAFBwNNcV/1AOpfqCeX2EA/cMIJbEvMAoGCCqGSM49BAMDA2gAMGUCMQCHS2/ZIof66Avhs980nmh1t40zWz0xwghE+wBrht5uBGhOt1ion6RDFnddS6z8x5gCMB8k4lb7D7SZVPG22EfD0K/xgyGqiqnM8P6QcvU3wjxCc427c+9DkMS6b3UAzityZQ==
+            </Certificate>
+        </Certificate>
+        <Certificate>
+            <Name>providerAClientCert</Name>
+            <Certificate>
+                MIIFATCCAumgAwIBAgIEXpmNNDANBgkqhkiG9w0BAQsFADBvMQswCQYDVQQGEwJERTEPMA0GA1UECAwGQnJlbWVuMQ8wDQYDVQQHDAZCcmVtZW4xFjAUBgNVBAoMDUdvdmVybmlrdXMgS0cxDDAKBgNVBAsMA0FBQTEYMBYGA1UEAwwPUm9vdCBUTFMgQ2xpZW50MB4XDTIwMDQxNzExMDQyMFoXDTMwMDQxNzExMDQyMFowFjEUMBIGA1UEAwwLREVTVkxPQ0VVTVcwggIiMA0GCSqGSIb3DQEBAQUAA4ICDwAwggIKAoICAQDbBSW5jIgXtjkHwJHPsRcz2KoZnkxvcF9YENSlDjM1DJrmSvtrW9Xa8rXBJuXcwD6s8By5JP7FHAnbOPbtGccLL0fT8IwR8Dt9uqbwBzQPwewXYugvshSmy0OE78144iUa3KC734WzspiN7ofQv75xG1Mx2wj2pMeDK9Wi3g1mbqbrKQkZmvVSpseVd93sMF75iEYpU4yz2kxm4Ut/fXeZ72hCo8O+ash4LLqEj4/YogAKWy1Kt0QTmeNkJb2z41IiQRWS4e+SPcRLEd0oOY1zOndry24srFZOM6W0KR5f4Av/9UaEthHe5byYEMhOnt/qvinMjTx1wqp+YOnJ05lOYHL3gnyRcU1tPxLohA3680nGpnE2FUL+fmkWCPaccftDYk9aLkT8qQQUgosAtrzlOxbM3nPYkkDusnulKGPomN2z/D3ZCG8PB1nQR2YOmCS8QNokqBGG1fgbqlSPb52rUKvsJIudw1NLOMkww24V9dDdNUDcVOMhw24eyU9I3LdbebFby61B8L8lAUzJNeb/mS94DVdIcWIndRj8b5yAB4YlzpUsqS977UsafuKRN1BUPCDqQ1m4AxiglD07b7a/uZtkYo/lo7joOPs2TG4QAwmJrdhH6Jt0PaEQBguJmMJDsju9ss8J1zKNAXEk9VzHGqT9pgc2zW/bQsu9vCs8vQIDAQABMA0GCSqGSIb3DQEBCwUAA4ICAQCwz0bfm4WaQ2nv7Nis6tdw5HMDcgHdy5Rn6JYodenXrZDFy1nceRfC/PlsfYvsT/asDlJFiidzqcSEkQDR5dd+fdW3rSQBqZ/AJ08pWd1C4dWGFba6G4PV0XQephIcX8TrQGgioOyuyxQDBPoUzCN5ZDMJ1UXVnG98XiamSyrOZ1yHXY/S3adGkD+cmdZ9KFUQjIbkCTydsOIM4HQe3ursxGmigvTDOEcM9HJWs2eLvOF7Mebclnj3Rul4hGCNGHZg9JbCejN3sd24QqH5vwnffOjp6Y62H7W5SdGQ9HIyQsO1qY6ZOyRZA15ggecUmsBDDjlD5y58TjKxBi3zu3K/Jk7XpBm141/BzCDhk/6n6Ooljtol/ui185MtgsiPMiJR/qVvKjWLP4atn2wskDDk9R7HYM9jgOlBwFThFkUJ2DXdqhtv0w6P/7JMkQqWrT6jFyFzokMlYVqpDGfF3+HTVCr4ElS+pz4mzR2+OSw7mWVylv1hkUHLbz1BB51vzjksRuUIlGp9fJbNyax+5WFBt7IajtGzY2Xj9+ZJm8rZvQouZrHT6YV1KFI0NeChj73ES4K5yo8Q+s5MbtLBgkVmNl+xXE7s1JUEot0pkFZIWbLP27t33oLhQIIO1GU8bBrOK+G+VbeUy51JVCFXtyO/9cjwPiPINuPDVQWTOGVPsQ==
+            </Certificate>
+        </Certificate>
+        <Certificate>
+            <Name>Metadata</Name>
+            <Certificate>
+                MIIBmjCB/aADAgECAgRbKL37MAoGCCqGSM49BAMCMBIxEDAOBgNVBAMMB2VjLXNpZ24wHhcNMTgwNjE5MDgyNTMxWhcNMjgwNjE5MDgyNTMxWjASMRAwDgYDVQQDDAdlYy1zaWduMIGbMBAGByqGSM49AgEGBSuBBAAjA4GGAAQBIB3MqDS3NIgvI8Q8xXv94Qik/GThW8YkXvTK12zxwLMyBd7TnLAEw8s/tZyQ7mQuH7ZfRRFzMzGoHG0oQL0K+rgAXfNVcFFHvwNu7z13wtCg2bUc1MMGBRCmw+OqM01DmEyMidN7ro02nTH+iXTAl4aLpUT6IahdkSNponlib4PFbV4wCgYIKoZIzj0EAwIDgYsAMIGHAkEBuy7RsH8BJ37dP4Pn/Dl6uz5pasIKbgk6pqtpmQFQr7xACG2XNW41aOUrr9prhj7hrvltZklhMKDAk1ivAgsQ3QJCAPESOq4/bKoWOOyuCMgMQgV72CHwGd1Fb/4Is50J3B2MNqesVzdpnbFbI4nNOT/lvZgob6iZwtM9MrmtA2smbLYE
+            </Certificate>
+        </Certificate>
+        <Certificate>
+            <Name>asdasdasd</Name>
+            <Certificate></Certificate>
+        </Certificate>
+        <Certificate>
+            <Name>providerAClientCert</Name>
+            <Certificate>
+                LS0tLS1CRUdJTiBDRVJUSUZJQ0FURS0tLS0tCk1JSUVOakNDQXg2Z0F3SUJBZ0lJUVdWdTlheU5SZnd3RFFZSktvWklodmNOQVFFTEJRQXdWekVuTUNVR0ExVUUKQXd3ZVltOXpJRU5CSUdWSlJDQkRiMjF0ZFc1cFkyRjBhVzl1SUVObGNuUnpNUjh3SFFZRFZRUUtEQlppY21WdApaVzRnYjI1c2FXNWxJSE5sY25acFkyVnpNUXN3Q1FZRFZRUUdFd0pFUlRBZUZ3MHhNekEyTVRFeE1UTXlNakphCkZ3MHhOakEyTVRBeE1UTXlNakphTUcweEl6QWhCZ05WQkFNTUdtSnZjeTEwWlhOMExYUmpkRzlyWlc0dWMyRnQKYkMxbGJtTnlNUmd3RmdZRFZRUUxEQTkwWlhOMFkyVnlkR2xtYVdOaGRHVXhIekFkQmdOVkJBb01GbUp5WlcxbApiaUJ2Ym14cGJtVWdjMlZ5ZG1salpYTXhDekFKQmdOVkJBWVRBbVJsTUlJQklqQU5CZ2txaGtpRzl3MEJBUUVGCkFBT0NBUThBTUlJQkNnS0NBUUVBajFxZzB5R0JlSkI4WVB1YmtpQmFuL1lBYjV4dFlLM2ViUWhBOTBXa1l4anEKMjQycVptV09YYTdFdVRVN1AwRVJIQm5ZbUVwSFVjbXNwTzlXU1FOWXVUYWRzQUFQdzd2dXBCbmNtYVM4a01NYwprcktIbndER1J1VHIyRmtETHdwWUNTVTJSaEx6ekJNbEp3eEs1d3IvRWQ4aEcxaldKTnBCWktvQWtsNjhKbURPClJyaHkrN08zUW44QXNEb2hyemx5WHlTdzNjcVViRVdodE9kSklxbjZpdE9CN3UrMFpjVnBLTUwvVy94SjUvL2gKSUFQd28wcFdkQTM5bnNnQis5THR5dHJ4TWRPMmxsKzBLcnErSHFlamtBMWd0RGdBck9CZHZZN1NwdmhXV2N3UgptQ2Vrd3JzSENTclMrMnZEdFVXbzRGZ1lSUk5wK05CWW9QODVjMWhWMlFJREFRQUJvNEh2TUlIc01Bd0dBMVVkCkV3RUIvd1FDTUFBd1B3WURWUjBsQkRnd05nWUlLd1lCQlFVSEF3RUdDQ3NHQVFVRkJ3TUNCZ2dyQmdFRkJRY0QKQkFZS0t3WUJCQUdDTnhRQ0FnWUtLd1lCQkFHQ053b0REREFmQmdOVkhTTUVHREFXZ0JRRklxazgrS1FSL1N0YQo0M0x3ODVjelZKbHhqekFPQmdOVkhROEJBZjhFQkFNQ0JMQXdIUVlEVlIwT0JCWUVGRlVXKzNOeDlWakNOYnllCldmakkvem50MWJQT01Fc0dDQ3NHQVFVRkJ3RUJCRDh3UFRBN0JnZ3JCZ0VGQlFjd0FZWXZhSFIwY0RvdkwyOWoKYzNBdVltOXpMV0p5WlcxbGJpNWtaUzl3ZFdKc2FXTjNaV0l2YzNSaGRIVnpMMjlqYzNBd0RRWUpLb1pJaHZjTgpBUUVMQlFBRGdnRUJBTEVNUDB5OEhQMWlTMDVycWpadjgrY1hoekpMbUUreGgxckk1WVdQZnNOcVFPcGVKNDRKCmoxU20zaE5SOUh2RlZqUUw5bVlLUUo0SWE1R2VTOXNXZHZLckE4MW9TM0lkZ2haNTFuODVxTGxFSmZ4WnpsaGEKcUdwM2tHQjhlU1hVRnQ4bWx4YjNkbHFubDcrTEpsZ2h0WXZVTnNLWUM5QnBDYmY5M2QrY0dwQk1ha041dG82agpsU2ZiczFjRHl6emJKbjRRSXdiVlhoRERMblBPNG9hYllkdlRIRnk5NDRrb3gvblpjSmVDV0JhaWg1aXhiZkFZCmhPSkEyY3ZiQU9CTGYxZHhiQ2VXemZkUGpBTktNN3Jvam5sUEhxUFRwV0ZaZ1hGUEs4REdTVkpObUhhNmVMZ1EKTkdJenh1cWFkUzVtTnZROGtOR3k1SkthL0k2cEt3SDJZWmc9Ci0tLS0tRU5EIENFUlRJRklDQVRFLS0tLS0K
+            </Certificate>
+        </Certificate>
+        <KeyStore>
+            <Name>SamlKeystore</Name>
+            <Type>PKCS12</Type>
+        </KeyStore>
+        <KeyStore>
+            <Name>providerA</Name>
+            <Type>JKS</Type>
+        </KeyStore>
+        <KeyStore>
+            <Name>test</Name>
+            <Type>PKCS12</Type>
+        </KeyStore>
+        <KeyPair KeyStoreName="SamlKeystore">
+            <Name>ServerSamlSignatureKeyPair</Name>
+            <Alias>eumwsignaturekeystore</Alias>
+        </KeyPair>
+        <KeyPair KeyStoreName="SamlKeystore">
+            <Name>ServerSamlDecryptionKeyPair</Name>
+            <Alias>eumwsignaturekeystore</Alias>
+        </KeyPair>
+        <KeyPair KeyStoreName="providerA">
+            <Name>providerAClientKey</Name>
+            <Alias>client</Alias>
+        </KeyPair>
+        <KeyPair KeyStoreName="test">
+            <Name>a</Name>
+            <Alias>michi</Alias>
+        </KeyPair>
+    </KeyData>
+</EidasMiddlewareConfig>

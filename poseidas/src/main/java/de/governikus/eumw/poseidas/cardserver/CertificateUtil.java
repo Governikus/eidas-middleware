@@ -3,6 +3,7 @@ package de.governikus.eumw.poseidas.cardserver;
 import java.math.BigInteger;
 import java.security.KeyPair;
 import java.security.PrivateKey;
+import java.security.Provider;
 import java.security.PublicKey;
 import java.security.cert.Certificate;
 import java.security.cert.CertificateException;
@@ -22,11 +23,11 @@ import org.bouncycastle.asn1.x500.X500Name;
 import org.bouncycastle.asn1.x509.Extension;
 import org.bouncycastle.cert.jcajce.JcaX509CertificateConverter;
 import org.bouncycastle.cert.jcajce.JcaX509v3CertificateBuilder;
-import org.bouncycastle.jce.provider.BouncyCastleProvider;
 import org.bouncycastle.operator.ContentSigner;
 import org.bouncycastle.operator.OperatorCreationException;
 import org.bouncycastle.operator.jcajce.JcaContentSignerBuilder;
 
+import de.governikus.eumw.utils.key.SecurityProvider;
 import lombok.extern.slf4j.Slf4j;
 
 
@@ -45,20 +46,15 @@ public final class CertificateUtil
    * @param keyPair key pair
    * @param subject subject for the certificate as X.500 name
    * @param lifespan how many month the certificate will be valid
-   * @param providerName name of security provider to use
+   * @param provider security provider to use
    * @return self-signed certificate or null when no certificate could created
    */
   public static Certificate createSelfSignedCert(KeyPair keyPair,
                                                  String subject,
                                                  int lifespan,
-                                                 String providerName)
+                                                 Provider provider)
   {
-    return createSignedCert(keyPair.getPublic(),
-                            keyPair.getPrivate(),
-                            subject,
-                            subject,
-                            lifespan,
-                            providerName);
+    return createSignedCert(keyPair.getPublic(), keyPair.getPrivate(), subject, subject, lifespan, provider);
   }
 
   /**
@@ -69,7 +65,7 @@ public final class CertificateUtil
    * @param subject subject for the certificate as X.500 name
    * @param issuer issuer for the certificate as X.500 name
    * @param lifespan how many month the certificate will be valid
-   * @param providerName name of security provider to use
+   * @param provider security provider to use
    * @return signed certificate or null when no certificate could created
    */
   public static Certificate createSignedCert(PublicKey publicKey,
@@ -77,7 +73,7 @@ public final class CertificateUtil
                                              String subject,
                                              String issuer,
                                              int lifespan,
-                                             String providerName)
+                                             Provider provider)
   {
     String algo = getAlgorithm(privateKey);
 
@@ -89,13 +85,12 @@ public final class CertificateUtil
 
     try
     {
-      ContentSigner contentSigner = new JcaContentSignerBuilder(algo).setProvider(providerName)
-                                                                     .build(privateKey);
+      ContentSigner contentSigner = new JcaContentSignerBuilder(algo).setProvider(provider).build(privateKey);
       JcaX509v3CertificateBuilder certBuilder = new JcaX509v3CertificateBuilder(issuerDnName,
                                                                                 certSerialNumber, startDate,
                                                                                 endDate, subjectDnName,
                                                                                 publicKey);
-      return new JcaX509CertificateConverter().setProvider(BouncyCastleProvider.PROVIDER_NAME)
+      return new JcaX509CertificateConverter().setProvider(SecurityProvider.BOUNCY_CASTLE_PROVIDER)
                                               .getCertificate(certBuilder.build(contentSigner));
     }
     catch (OperatorCreationException e)

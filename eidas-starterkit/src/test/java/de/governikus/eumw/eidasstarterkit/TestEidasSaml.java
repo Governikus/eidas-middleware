@@ -19,14 +19,12 @@ import java.security.KeyStoreException;
 import java.security.NoSuchAlgorithmException;
 import java.security.NoSuchProviderException;
 import java.security.PrivateKey;
-import java.security.Security;
 import java.security.UnrecoverableKeyException;
 import java.security.cert.CertificateException;
 import java.security.cert.X509Certificate;
 import java.text.ParseException;
-import java.text.SimpleDateFormat;
+import java.time.Instant;
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -35,7 +33,6 @@ import javax.xml.namespace.QName;
 import javax.xml.transform.TransformerException;
 import javax.xml.transform.TransformerFactoryConfigurationError;
 
-import org.bouncycastle.jce.provider.BouncyCastleProvider;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -94,7 +91,6 @@ class TestEidasSaml
   void setUp() throws Exception
   {
     EidasSaml.init();
-    Security.addProvider(new BouncyCastleProvider());
     requestedAttributes.put(EidasNaturalPersonAttributes.BIRTH_NAME, true);
     requestedAttributes.put(EidasNaturalPersonAttributes.CURRENT_ADDRESS, false);
     requestedAttributes.put(EidasNaturalPersonAttributes.DATE_OF_BIRTH, true);
@@ -286,7 +282,7 @@ class TestEidasSaml
     String id = "test id";
     String entityId = "test entityid";
     String middlewareVersion = "1.2";
-    Date validUntil = new SimpleDateFormat("dd.MM.yyyy").parse("01.01.2025");
+    Instant validUntil = Instant.parse("2025-01-01T00:00:00Z");
 
     X509Certificate sigCert = Utils.readCert(TestEidasSaml.class.getResourceAsStream("/EidasSignerTest_x509.cer"));
     X509Certificate encCert = Utils.readCert(TestEidasSaml.class.getResourceAsStream("/EidasSignerTest_x509.cer"));
@@ -330,7 +326,8 @@ class TestEidasSaml
                                                  signer,
                                                  middlewareVersion,
                                                  true,
-                                                 true);
+                                                 true,
+                                                 null);
     EidasMetadataService emds = EidasSaml.parseMetaDataService(new ByteArrayInputStream(mds));
     Assertions.assertEquals(encCert, emds.getEncCert());
     Assertions.assertEquals(entityId, emds.getEntityId());

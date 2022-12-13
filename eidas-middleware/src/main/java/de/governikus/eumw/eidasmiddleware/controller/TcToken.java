@@ -1,17 +1,17 @@
 /*
- * Copyright (c) 2020 Governikus KG. Licensed under the EUPL, Version 1.2 or as soon they will be approved by
- * the European Commission - subsequent versions of the EUPL (the "Licence"); You may not use this work except
- * in compliance with the Licence. You may obtain a copy of the Licence at:
- * http://joinup.ec.europa.eu/software/page/eupl Unless required by applicable law or agreed to in writing,
- * software distributed under the Licence is distributed on an "AS IS" basis, WITHOUT WARRANTIES OR CONDITIONS
- * OF ANY KIND, either express or implied. See the Licence for the specific language governing permissions and
- * limitations under the Licence.
+ * Copyright (c) 2020 Governikus KG. Licensed under the EUPL, Version 1.2 or as soon they will be approved by the
+ * European Commission - subsequent versions of the EUPL (the "Licence"); You may not use this work except in compliance
+ * with the Licence. You may obtain a copy of the Licence at: http://joinup.ec.europa.eu/software/page/eupl Unless
+ * required by applicable law or agreed to in writing, software distributed under the Licence is distributed on an
+ * "AS IS" basis, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the Licence for the
+ * specific language governing permissions and limitations under the Licence.
  */
 
 package de.governikus.eumw.eidasmiddleware.controller;
 
 import java.io.IOException;
 import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
 import java.util.Map.Entry;
 
 import javax.servlet.http.HttpServletResponse;
@@ -21,11 +21,12 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 
+import de.governikus.eumw.config.EidasMiddlewareConfig;
+import de.governikus.eumw.config.ServiceProviderType;
 import de.governikus.eumw.eidascommon.Constants;
 import de.governikus.eumw.eidascommon.ContextPaths;
 import de.governikus.eumw.eidascommon.ErrorCodeException;
 import de.governikus.eumw.eidascommon.Utils;
-import de.governikus.eumw.eidasmiddleware.ConfigHolder;
 import de.governikus.eumw.eidasmiddleware.WebServiceHelper;
 import de.governikus.eumw.eidasmiddleware.entities.RequestSession;
 import de.governikus.eumw.eidasmiddleware.repositories.RequestSessionRepository;
@@ -34,9 +35,8 @@ import de.governikus.eumw.poseidas.eidmodel.data.EIDKeys;
 import de.governikus.eumw.poseidas.server.eidservice.EIDInternal;
 import de.governikus.eumw.poseidas.server.eidservice.EIDRequestInput;
 import de.governikus.eumw.poseidas.server.eidservice.EIDRequestResponse;
-import de.governikus.eumw.poseidas.server.idprovider.config.CoreConfigurationDto;
-import de.governikus.eumw.poseidas.server.idprovider.config.PoseidasConfigurator;
-import de.governikus.eumw.poseidas.server.idprovider.config.ServiceProviderDto;
+import de.governikus.eumw.poseidas.server.idprovider.config.ConfigurationService;
+import de.governikus.eumw.poseidas.server.idprovider.exceptions.InvalidConfigurationException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
@@ -50,7 +50,7 @@ public class TcToken
 
   private final RequestSessionRepository requestSessionRepository;
 
-  private final ConfigHolder configHolder;
+  private final ConfigurationService configurationService;
 
   private final EIDInternal eidInternal;
 
@@ -117,7 +117,7 @@ public class TcToken
     {
       log.error("cannot create tc token response", e);
     }
-    catch (ResultMajorException e)
+    catch (ResultMajorException | InvalidConfigurationException e)
     {
       log.error(e.getMessage(), e);
     }
@@ -130,12 +130,13 @@ public class TcToken
    * @param reqParser
    * @throws IOException
    */
-  protected void tcTokenResponse(HttpServletResponse response, RequestSession reqParser) throws IOException
+  protected void tcTokenResponse(HttpServletResponse response, RequestSession reqParser)
+    throws IOException, InvalidConfigurationException
   {
-    CoreConfigurationDto config = PoseidasConfigurator.getInstance().getCurrentConfig();
+    EidasMiddlewareConfig configuration = configurationService.getConfiguration()
+                                                              .orElseThrow(() -> new ResultMajorException("Cannot get configuration"));
 
     EIDRequestInput intRequest = new EIDRequestInput(true);
-    intRequest.setConfig(config);
 
     for ( Entry<String, Boolean> entry : reqParser.getRequestedAttributes().entrySet() )
     {
@@ -187,25 +188,26 @@ public class TcToken
       }
     }
 
-    ServiceProviderDto provider = config.getServiceProvider()
-                                        .get(reqParser.getReqProviderName() == null
-                                          ? configHolder.getEntityIDInt() : reqParser.getReqProviderName());
-    if (provider == null)
-    {
-      log.error("Cannot get service provider from config with name {}", reqParser.getReqProviderName());
-    }
-
+    var publicServiceProviderName = configuration.getEidasConfiguration().getPublicServiceProviderName();
+    var spName = reqParser.getReqProviderName() == null ? publicServiceProviderName : reqParser.getReqProviderName();
+    ServiceProviderType provider = configuration.getEidConfiguration()
+                                                .getServiceProvider()
+                                                .stream()
+                                                .filter(sp -> sp.getName().equals(spName))
+                                                .findFirst()
+                                                .orElseThrow(() -> new ResultMajorException("Cannot get service provider from config with name "
+                                                                                            + spName));
     EIDRequestResponse eidResult = eidInternal.useID(intRequest, provider);
 
-    String refID = URLEncoder.encode(eidResult.getRequestId(), "UTF-8");
+    String refID = URLEncoder.encode(eidResult.getRequestId(), StandardCharsets.UTF_8);
 
     reqParser.setEidRef(refID);
     requestSessionRepository.save(reqParser);
 
     if (!eidResult.getResultMajor().equals(Constants.EID_MAJOR_OK))
     {
-      String errorMessage = "Error while requesting attributes. <br/>Major result: "
-                            + eidResult.getResultMajor() + " <br/>Minor result: " + eidResult.getResultMinor()
+      String errorMessage = "Error while requesting attributes. <br/>Major result: " + eidResult.getResultMajor()
+                            + " <br/>Minor result: " + eidResult.getResultMinor()
                             + (eidResult.getResultMessage() == null ? ""
                               : " <br/>Result message: " + eidResult.getResultMessage());
       log.error(errorMessage);
@@ -213,16 +215,16 @@ public class TcToken
     }
 
     String eIDPSKId = eidResult.getSessionId();
-    String paosReceiverURL = eidResult.getECardServerAddress();
 
     response.setContentType("text/xml");
     response.setCharacterEncoding("utf-8");
     response.getWriter()
             .write(Utils.readFromStream(WebServiceHelper.class.getResourceAsStream("tcTokenAttached.xml"))
-                        .replace("#{PAOS_RECEIVER_URL}", paosReceiverURL)
+                        .replace("#{PAOS_RECEIVER_URL}",
+                                 configurationService.getServerURLWithEidasContextPath() + ContextPaths.PAOS_SERVLET)
                         .replace("#{SESSIONID}", eIDPSKId)
                         .replace("#{REFRESH_ADDRESS}",
-                                 configHolder.getServerURLWithContextPath() + ContextPaths.RESPONSE_SENDER
+                                 configurationService.getServerURLWithEidasContextPath() + ContextPaths.RESPONSE_SENDER
                                                        + "?refID=" + refID));
   }
 

@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html th:replace="~{base-template/main :: main(~{::title}, ~{::section})}"
+      xmlns:th="http://www.thymeleaf.org">
+
+<title>Connector metadata - eIDAS Middleware configuration and administration</title>
+
+<section>
+
+
+    <h1>Connector metadata configuration</h1>
+    <hr class="text-primary" style="height: 4px"/>
+
+    <div class="card shadow mt-2">
+        <div class="card-body">
+            <h3 class="card-title">Metadata signature verification certificate</h3>
+            <form method="post" class="" id="metadataSignatureVerificationCertificate"
+                  action="/admin-interface/metadataConfig/metadataSignatureVerificationCertificate"
+                  th:object="${metadataVerificationModel}" enctype="multipart/form-data">
+                <input type="hidden"
+                       th:name="${_csrf.parameterName}"
+                       th:value="${_csrf.token}"/>
+                <div th:replace="~{fragments/configOptions :: certificates('Metadata signature verification certificate', 'metadataSignatureVerificationCertificateName', 'The certificate to verify signatures of connector metadata')}"/>
+                <div th:replace="fragments/form :: submit()"></div>
+            </form>
+        </div>
+    </div>
+
+    <div class="card shadow">
+        <div class="card-body">
+            <h3 class="card-title">Metadata files</h3>
+            <table class="table">
+                <thead>
+                <th>Entity ID</th>
+                <th>signature valid</th>
+                <th />
+                </thead>
+                <tbody>
+                <tr th:each="meta,iterStat : ${metafiles}" id="entry-" th:attrappend="id=${iterStat.index}">
+                    <td>
+                        <span id="entityId" th:text="${meta.entityId}"/>
+                    </td>
+                    <td>
+                        <span id="signatureValid"
+                              th:text="${meta.getCheckedAsValid() == null ? 'unsigned' : meta.getCheckedAsValid() ? '✔' : '❌'}"/>
+                    </td>
+                    <td>
+                        <a th:href="${'/admin-interface/metadataConfig/download?entityID=' +  #uris.escapePathSegment(meta.entityId)}"
+                           class="btn btn-primary">Download
+                            <span
+                                    class="fa fa-download"></span></a>
+                        <a th:href="${'/admin-interface/metadataConfig/remove?entityID=' + #uris.escapePathSegment(meta.entityId)}"
+                           class="btn btn-danger">Delete <span
+                                class="fa fa-trash"></span></a>
+                    </td>
+                </tr>
+                </tbody>
+            </table>
+
+            <span th:if="${metafiles.isEmpty()}">There are currently no valid metadata files configured.</span>
+
+            <form method="post" class="input-group mt-4" action="/admin-interface/metadataConfig/metadata"
+                  enctype="multipart/form-data" id="uploadMetadata">
+                <input type="hidden"
+                       th:name="${_csrf.parameterName}"
+                       th:value="${_csrf.token}"/>
+                <div class="row w-100 d-flex align-items-center">
+                    <div class="col-10">
+                        <div th:replace="~{fragments/form :: inputRow_upload('metadataFile', null, 'metadataFile', 'Metadata file')}"/>
+                    </div>
+                    <div class="col-2">
+                        <div th:replace="fragments/form :: submitTextUploadIcon('Upload')"/>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+
+</section>
+
+</html>

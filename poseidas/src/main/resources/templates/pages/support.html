@@ -1,0 +1,78 @@
+<!--
+  ~ Copyright (c) 2022 Governikus KG. Licensed under the EUPL, Version 1.2 or as soon they will be approved by
+  ~ the European Commission - subsequent versions of the EUPL (the "Licence"); You may not use this work except
+  ~ in compliance with the Licence. You may obtain a copy of the Licence at:
+  ~ http://joinup.ec.europa.eu/software/page/eupl Unless required by applicable law or agreed to in writing,
+  ~ software distributed under the Licence is distributed on an "AS IS" basis, WITHOUT WARRANTIES OR CONDITIONS
+  ~ OF ANY KIND, either express or implied. See the Licence for the specific language governing permissions and
+  ~ limitations under the Licence.
+  -->
+
+<!DOCTYPE html>
+<html th:replace="~{base-template/main :: main(~{::title}, ~{::section})}"
+      xmlns:th="http://www.thymeleaf.org">
+
+<title>Support - eIDAS Middleware configuration and administration</title>
+
+<section>
+    <h1>Support</h1>
+    <hr class="text-primary" style="height: 4px"/>
+    <div class="container">
+        <div class="row">
+            <div class="col-md-12 p-1 mb-4 ">
+                <div class="card shadow h-100">
+                    <div class="card-header bg-light">
+                        <h4>Step 1</h4>
+                        Download configuration
+                    </div>
+                    <div class="card-body">
+                        The exported configuration does not contain any private keys or passwords.<br><br>
+                        <a th:href="@{importExportConfiguration/downloadWithoutPrivateKeys}" class=" btn btn-primary"
+                           id="download-configuration">Download
+                            configuration <i class="fa fa-download"></i></a>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-12 p-1 mb-4">
+                <div class="card shadow h-100">
+                    <div class="card-header bg-light">
+                        <h4>Step 2</h4>
+                        Open mail client
+                    </div>
+                    <div class="card-body">
+                        The default configured mail client will open a new message with a prepared text. Please add
+                        additional information, if necessary.<br><br>
+                        <a th:href="${mailtoLink}" class="btn btn-primary" id="send-email">Open mail client <i
+                                class="fa fa-at"></i></a><br><br>
+                        If the recipient is empty, fill in eidas-middleware@governikus.de<br><br>
+                        If the body in the mail client is empty copy the text below and paste it into the body:<br><br>
+                        <textarea id="mailText" th:text="${mailText}" class="w-100" style="min-height: 25vh"
+                                  disabled></textarea>
+                        <div style="float: right">
+                            <span id="copied" style="display: none"><i>Text copied! </i></span>
+                            <button id="copyButton" class="btn btn-secondary" style="display: none; margin-left: 5px;">
+                                Copy text <i class="fa fa-copy"></i></button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-12 p-1 mb-4">
+                <div class="card shadow h-100">
+                    <div class="card-header bg-light">
+                        <h4>Step 3</h4>
+                        Attach downloaded configuration
+                    </div>
+                    <div class="card-body">
+                        Attach the downloaded configuration to the email.<br><br>
+                        Now you are ready to send the email to the Governikus Support Team. They will get back to you
+                        soon.
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="/js/js-copy-text.js">
+    </script>
+</section>
+</html>

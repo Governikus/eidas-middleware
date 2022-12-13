@@ -10,6 +10,7 @@
 package de.governikus.eumw.poseidas.server.idprovider.config;
 
 import java.io.IOException;
+import java.net.URI;
 import java.net.URL;
 import java.net.URLConnection;
 import java.security.KeyManagementException;
@@ -23,6 +24,7 @@ import java.security.cert.CertificateNotYetValidException;
 import java.security.cert.X509Certificate;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
@@ -32,8 +34,12 @@ import javax.net.ssl.SSLSocketFactory;
 import javax.net.ssl.TrustManager;
 import javax.net.ssl.X509TrustManager;
 
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.stereotype.Component;
+import org.springframework.web.util.UriComponentsBuilder;
 
+import de.governikus.eumw.config.EidasMiddlewareConfig;
+import de.governikus.eumw.config.ServiceProviderType;
 import de.governikus.eumw.poseidas.cardbase.ByteUtil;
 import de.governikus.eumw.poseidas.cardbase.crypto.DigestUtil;
 import de.governikus.eumw.poseidas.eidmodel.TerminalData;
@@ -55,16 +61,23 @@ public class CvcTlsCheck
 
   private TerminalPermissionAO facade;
 
+  private final ConfigurationService configurationService;
+
   /**
    * Performs the following checks: - TLS server certificate valid? - CVC valid? - server URL matches the one in CVC? -
    * TLS server certificate referenced in CVC?
    *
    * @return object holding the results
    */
-  public CvcTlsCheckResult check()
+  public Optional<CvcTlsCheckResult> check()
   {
-    CoreConfigurationDto config = PoseidasConfigurator.getInstance().getCurrentConfig();
-
+    Optional<EidasMiddlewareConfig> configuration = configurationService.getConfiguration();
+    if (configuration.isEmpty())
+    {
+      log.warn("No eidas middleware configuration present. Cannot perform cvc tls checks");
+      return Optional.empty();
+    }
+    EidasMiddlewareConfig config = configuration.get();
     CvcTlsCheckResult resultHolder = new CvcTlsCheckResult();
     Optional<X509Certificate> certificate = getOwnTlsCertificate(config.getServerUrl());
 
@@ -80,11 +93,13 @@ public class CvcTlsCheck
     }
 
     // Check CVCs
-    for ( ServiceProviderDto sp : config.getServiceProvider().values() )
-    {
-      resultHolder.getProviderCvcChecks().put(sp.getEntityID(), getCvcResultsForSp(sp, config, certificate));
-    }
-    return resultHolder;
+    configuration.map(EidasMiddlewareConfig::getEidConfiguration)
+                 .map(EidasMiddlewareConfig.EidConfiguration::getServiceProvider)
+                 .stream()
+                 .flatMap(List::stream)
+                 .forEach(sp -> resultHolder.getProviderCvcChecks()
+                                            .put(sp.getName(), getCvcResultsForSp(sp, config, certificate)));
+    return Optional.of(resultHolder);
   }
 
   /**
@@ -96,28 +111,35 @@ public class CvcTlsCheck
    */
   public CvcCheckResults checkCvcProvider(String entityId)
   {
-    CoreConfigurationDto config = PoseidasConfigurator.getInstance().getCurrentConfig();
-    Optional<ServiceProviderDto> serviceProviderDtoOptional = config.getServiceProvider()
-                                                                    .values()
-                                                                    .stream()
-                                                                    .filter(sp -> sp.getEntityID().equals(entityId))
-                                                                    .findFirst();
-    CvcCheckResults cvcResults = new CvcCheckResults();
-    if (serviceProviderDtoOptional.isPresent())
+    Optional<EidasMiddlewareConfig> configuration = configurationService.getConfiguration();
+    if (configuration.isEmpty())
     {
-      ServiceProviderDto sp = serviceProviderDtoOptional.get();
-      Optional<X509Certificate> certificate = getOwnTlsCertificate(config.getServerUrl());
-      cvcResults = getCvcResultsForSp(sp, config, certificate);
+      log.warn("No eidas middleware configuration present. Cannot perform cvc tls checks for service provider: {}",
+               entityId);
+      return null;
+    }
+    Optional<ServiceProviderType> serviceProvider = configuration.get()
+                                                                 .getEidConfiguration()
+                                                                 .getServiceProvider()
+                                                                 .stream()
+                                                                 .filter(sp -> sp.getName().equals(entityId))
+                                                                 .findFirst();
+    CvcCheckResults cvcResults = new CvcCheckResults();
+    if (serviceProvider.isPresent())
+    {
+      ServiceProviderType sp = serviceProvider.get();
+      Optional<X509Certificate> certificate = getOwnTlsCertificate(configuration.get().getServerUrl());
+      cvcResults = getCvcResultsForSp(sp, configuration.get(), certificate);
     }
     return cvcResults;
   }
 
-  private CvcCheckResults getCvcResultsForSp(ServiceProviderDto sp,
-                                             CoreConfigurationDto config,
+  private CvcCheckResults getCvcResultsForSp(ServiceProviderType sp,
+                                             EidasMiddlewareConfig config,
                                              Optional<X509Certificate> certificate)
   {
     CvcCheckResults cvcResults = new CvcCheckResults();
-    TerminalPermission tp = facade.getTerminalPermission(sp.getEpaConnectorConfiguration().getCVCRefID());
+    TerminalPermission tp = facade.getTerminalPermission(sp.getCVCRefID());
     if (tp != null)
     {
       try
@@ -138,7 +160,7 @@ public class CvcTlsCheck
 
   private static boolean testCvcTlsMatch(TerminalData data, Optional<X509Certificate> certificate)
   {
-    if (!certificate.isPresent())
+    if (certificate.isEmpty())
     {
       return false;
     }
@@ -166,9 +188,20 @@ public class CvcTlsCheck
     return false;
   }
 
-  private static boolean testCvcUrlMatch(TerminalData data, String serverUrl)
+  protected static boolean testCvcUrlMatch(TerminalData data, String serverUrl)
   {
-    boolean result = serverUrl.trim().startsWith(data.getCVCDescription().getSubjectUrl());
+    URI serverUri = UriComponentsBuilder.fromUriString(serverUrl).build().toUri();
+    URI subjectUri = UriComponentsBuilder.fromUriString(data.getCVCDescription().getSubjectUrl()).build().toUri();
+    URI serverUrlToCompare = UriComponentsBuilder.fromUriString(removeTrailingSlash(serverUri.toString()))
+                                                 .port(getPort(serverUri))
+                                                 .build()
+                                                 .toUri();
+    URI subjectUrlToCompare = UriComponentsBuilder.fromUriString(removeTrailingSlash(subjectUri.toString()))
+                                                  .port(getPort(subjectUri))
+                                                  .build()
+                                                  .toUri();
+
+    boolean result = serverUrlToCompare.equals(subjectUrlToCompare);
     if (result)
     {
       log.info("Server URL from config and CVC {} match", data.getHolderReferenceString());
@@ -180,8 +213,31 @@ public class CvcTlsCheck
     return result;
   }
 
+  private static String removeTrailingSlash(String uri)
+  {
+    if (uri.endsWith("/"))
+    {
+      return uri.substring(0, uri.length() - 1);
+    }
+    return uri;
+  }
+
+  private static int getPort(URI uri)
+  {
+    int port = uri.getPort();
+    if (port == -1)
+    {
+      port = "https".equals(uri.getScheme()) ? 443 : 80;
+    }
+    return port;
+  }
+
   private static Optional<X509Certificate> getOwnTlsCertificate(String url)
   {
+    if (StringUtils.isBlank(url))
+    {
+      return Optional.empty();
+    }
     Certificate[] certs;
     try
     {
@@ -209,6 +265,8 @@ public class CvcTlsCheck
       return Optional.empty();
     }
 
+    // TODO determine which certificate to use
+    // --> there is no guaranteed order
     if (certs[0] instanceof X509Certificate)
     {
       return Optional.of((X509Certificate)certs[0]);
@@ -279,8 +337,8 @@ public class CvcTlsCheck
 
   public Date getTLSExpirationDate() throws IOException
   {
-    Optional<X509Certificate> ownTlsCertificate = getOwnTlsCertificate(PoseidasConfigurator.getInstance()
-                                                                                           .getCurrentConfig()
+    Optional<X509Certificate> ownTlsCertificate = getOwnTlsCertificate(configurationService.getConfiguration()
+                                                                                           .orElseThrow(() -> new ConfigurationException("Cannot retrieve own TLS certificate. No eumw configuration present"))
                                                                                            .getServerUrl());
     return ownTlsCertificate.map(X509Certificate::getNotAfter)
                             .orElseThrow(() -> new IOException("Cannot retrieve own TLS certificate"));
@@ -288,7 +346,7 @@ public class CvcTlsCheck
 
   @Getter
   @NoArgsConstructor
-  public class CvcTlsCheckResult
+  public static class CvcTlsCheckResult
   {
 
     @Setter

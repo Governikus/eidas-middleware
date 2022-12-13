@@ -15,6 +15,7 @@ import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 import java.util.Locale;
 
+import lombok.RequiredArgsConstructor;
 import org.apache.commons.lang.StringUtils;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Controller;
@@ -29,7 +30,6 @@ import de.governikus.eumw.eidascommon.ContextPaths;
 import de.governikus.eumw.eidascommon.ErrorCodeWithResponseException;
 import de.governikus.eumw.eidascommon.HttpRedirectUtils;
 import de.governikus.eumw.eidasmiddleware.RequestProcessingException;
-import de.governikus.eumw.eidasmiddleware.ServiceProviderConfig;
 import de.governikus.eumw.eidasmiddleware.eid.RequestingServiceProvider;
 import de.governikus.eumw.eidasmiddleware.handler.RequestHandler;
 import de.governikus.eumw.eidasmiddleware.handler.ResponseHandler;
@@ -37,6 +37,7 @@ import de.governikus.eumw.eidasmiddleware.model.ResponseModel;
 import de.governikus.eumw.eidasstarterkit.EidasLoaEnum;
 import de.governikus.eumw.eidasstarterkit.EidasRequest;
 import de.governikus.eumw.poseidas.cardbase.StringUtil;
+import de.governikus.eumw.poseidas.server.idprovider.config.ConfigurationService;
 import lombok.extern.slf4j.Slf4j;
 
 
@@ -46,6 +47,7 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 @Controller
 @RequestMapping(ContextPaths.EIDAS_CONTEXT_PATH + ContextPaths.REQUEST_RECEIVER)
+@RequiredArgsConstructor
 public class RequestReceiver
 {
 
@@ -53,16 +55,7 @@ public class RequestReceiver
 
   private final ResponseHandler responseHandler;
 
-  private final ServiceProviderConfig serviceProviderConfig;
-
-  public RequestReceiver(RequestHandler requestHandler,
-                         ResponseHandler responseHandler,
-                         ServiceProviderConfig serviceProviderConfig)
-  {
-    this.requestHandler = requestHandler;
-    this.responseHandler = responseHandler;
-    this.serviceProviderConfig = serviceProviderConfig;
-  }
+  private final ConfigurationService configurationService;
 
   /**
    * This endpoint accepts incoming SAML requests using the SAML redirect binding protocol. The endpoint can also be
@@ -115,8 +108,7 @@ public class RequestReceiver
                                   samlResponse,
                                   responseHandler.getConsumerURLForRequestID(request.getId()));
       }
-      return new ModelAndView("redirect:" + ContextPaths.EIDAS_CONTEXT_PATH + ContextPaths.REQUEST_RECEIVER
-                              + "?sessionId=" + request.getId());
+      return showMiddlewarePage(request.getId(), userAgent);
     }
     catch (ErrorCodeWithResponseException e)
     {
@@ -194,7 +186,7 @@ public class RequestReceiver
 
   private ModelAndView showSamlErrorPage(ErrorCodeWithResponseException e, String relayState)
   {
-    RequestingServiceProvider reqSP = serviceProviderConfig.getProviderByEntityID(e.getIssuer());
+    RequestingServiceProvider reqSP = configurationService.getProviderByEntityID(e.getIssuer());
     String samlResponse = responseHandler.prepareSAMLErrorResponse(reqSP,
                                                                    e.getRequestId(),
                                                                    e.getCode(),

@@ -51,6 +51,7 @@ import javax.xml.validation.Validator;
 import org.xml.sax.SAXNotRecognizedException;
 import org.xml.sax.SAXNotSupportedException;
 
+import de.governikus.eumw.utils.key.SecurityProvider;
 import lombok.extern.slf4j.Slf4j;
 import net.shibboleth.utilities.java.support.component.ComponentInitializationException;
 import net.shibboleth.utilities.java.support.xml.BasicParserPool;
@@ -328,7 +329,7 @@ public final class Utils
     KeyStore keyStore;
     try
     {
-      keyStore = KeyStore.getInstance(type, "BC");
+      keyStore = KeyStore.getInstance(type, SecurityProvider.BOUNCY_CASTLE_PROVIDER);
     }
     catch (GeneralSecurityException e)
     {
@@ -403,15 +404,8 @@ public final class Utils
     {
       throw new NullPointerException("input stream to load key and cert from cannot be null");
     }
-    CertificateFactory certFactory;
-    try
-    {
-      certFactory = CertificateFactory.getInstance(type, "BC");
-    }
-    catch (NoSuchProviderException e)
-    {
-      certFactory = CertificateFactory.getInstance(type);
-    }
+    CertificateFactory certFactory = CertificateFactory.getInstance(type,
+                                                                    SecurityProvider.BOUNCY_CASTLE_PROVIDER);
     Certificate cert = certFactory.generateCertificate(ins);
     if (cert == null)
     {
@@ -489,13 +483,12 @@ public final class Utils
    * @throws CertificateException
    * @throws IOException
    * @throws UnrecoverableKeyException
-   * @throws NoSuchProviderException
    */
   private static X509KeyPair readPKCS12(InputStream stream, char[] password, String alias)
     throws KeyStoreException, NoSuchAlgorithmException, CertificateException, IOException,
-    UnrecoverableKeyException, NoSuchProviderException
+    UnrecoverableKeyException
   {
-    KeyStore p12 = KeyStore.getInstance("pkcs12", "BC");
+    KeyStore p12 = KeyStore.getInstance("pkcs12", SecurityProvider.BOUNCY_CASTLE_PROVIDER);
     p12.load(stream, password);
     Enumeration<String> e = p12.aliases();
     PrivateKey key = null;

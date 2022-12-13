@@ -1,12 +1,12 @@
 <?xml version="1.0"?>
-<!-- ~ Copyright (c) 2020 Governikus KG. Licensed under the EUPL, Version 
-    1.2 or as soon they will be approved by ~ the European Commission - subsequent 
-    versions of the EUPL (the "Licence"); You may not use this work except ~ 
-    in compliance with the Licence. You may obtain a copy of the Licence at: 
-    ~ http://joinup.ec.europa.eu/software/page/eupl Unless required by applicable 
-    law or agreed to in writing, ~ software distributed under the Licence is 
-    distributed on an "AS IS" basis, WITHOUT WARRANTIES OR CONDITIONS ~ OF ANY 
-    KIND, either express or implied. See the Licence for the specific language 
+<!-- ~ Copyright (c) 2020 Governikus KG. Licensed under the EUPL, Version
+    1.2 or as soon they will be approved by ~ the European Commission - subsequent
+    versions of the EUPL (the "Licence"); You may not use this work except ~
+    in compliance with the Licence. You may obtain a copy of the Licence at:
+    ~ http://joinup.ec.europa.eu/software/page/eupl Unless required by applicable
+    law or agreed to in writing, ~ software distributed under the Licence is
+    distributed on an "AS IS" basis, WITHOUT WARRANTIES OR CONDITIONS ~ OF ANY
+    KIND, either express or implied. See the Licence for the specific language
     governing permissions and ~ limitations under the Licence. -->
 
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
@@ -14,7 +14,7 @@
     <parent>
         <groupId>de.governikus.eumw</groupId>
         <artifactId>eumw</artifactId>
-        <version>2.2.8</version>
+        <version>3.0.0</version>
     </parent>
     <artifactId>poseidas</artifactId>
 
@@ -28,11 +28,11 @@
         </dependency>
         <dependency>
             <groupId>de.governikus.eumw</groupId>
-            <artifactId>poseidas-configuration</artifactId>
+            <artifactId>utils</artifactId>
         </dependency>
         <dependency>
             <groupId>de.governikus.eumw</groupId>
-            <artifactId>utils</artifactId>
+            <artifactId>eidas-starterkit</artifactId>
         </dependency>
 
         <dependency>
@@ -76,6 +76,26 @@
         <dependency>
             <groupId>org.webjars</groupId>
             <artifactId>jquery</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.webjars</groupId>
+            <artifactId>webjars-locator</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.webjars</groupId>
+            <artifactId>font-awesome</artifactId>
+        </dependency>
+
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-validation</artifactId>
+        </dependency>
+
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-devtools</artifactId>
+            <scope>runtime</scope>
+            <optional>true</optional>
         </dependency>
 
 
@@ -121,6 +141,16 @@
         </dependency>
 
         <dependency>
+            <groupId>jakarta.xml.ws</groupId>
+            <artifactId>jakarta.xml.ws-api</artifactId>
+            <scope>compile</scope>
+        </dependency>
+        <dependency>
+            <groupId>jakarta.jws</groupId>
+            <artifactId>jakarta.jws-api</artifactId>
+        </dependency>
+
+        <dependency>
             <groupId>org.apache.httpcomponents</groupId>
             <artifactId>httpclient</artifactId>
         </dependency>
@@ -136,6 +166,10 @@
         <dependency>
             <groupId>org.mock-server</groupId>
             <artifactId>mockserver-junit-jupiter</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>net.sourceforge.htmlunit</groupId>
+            <artifactId>htmlunit</artifactId>
         </dependency>
     </dependencies>
 
@@ -159,168 +193,48 @@
                             <catalog>src/main/resources/ecard115/catalog.cat</catalog>
                         </configuration>
                     </execution>
+                    <execution>
+                        <id>eumw-config</id>
+                        <goals>
+                            <goal>generate</goal>
+                        </goals>
+                        <configuration>
+                            <schemaDirectory>
+                                ${project.basedir}/src/main/resources/configuration
+                            </schemaDirectory>
+                            <schemaIncludes>
+                                <schemaInclude>eumw-configuration.xsd</schemaInclude>
+                            </schemaIncludes>
+                            <extension>true</extension>
+                            <args>
+                                <arg>-Xequals</arg>
+                                <arg>-XhashCode</arg>
+                                <arg>-Xcopyable</arg>
+                                <arg>-XtoString</arg>
+                                <arg>-Xvalue-constructor</arg>
+                            </args>
+                            <generateDirectory>${project.build.directory}/generated-sources/eumw-config
+                            </generateDirectory>
+                            <generatePackage>de.governikus.eumw.config</generatePackage>
+                        </configuration>
+                    </execution>
                 </executions>
                 <configuration>
                     <schemaDirectory>src/main/xsd</schemaDirectory>
                     <bindingDirectory>src/main/xjb</bindingDirectory>
                     <extension>true</extension>
-                </configuration>
-            </plugin>
-            <plugin>
-                <groupId>org.jvnet.jax-ws-commons</groupId>
-                <artifactId>jaxws-maven-plugin</artifactId>
-                <executions>
-                    <execution>
-                        <id>WS_IS_PassiveAuth</id>
-                        <goals>
-                            <goal>wsimport</goal>
-                        </goals>
-                        <configuration>
-                            <wsdlFiles>
-                                <wsdlFile>CA-Services/PassiveAuth/Terminal/WS_IS_PassiveAuth.wsdl</wsdlFile>
-                            </wsdlFiles>
-                            <wsdlLocation>http://localhost/wsdl/CA-Services/PassiveAuth/Terminal/WS_IS_PassiveAuth.wsdl</wsdlLocation>
-                            <bindingFiles>
-                                <bindingFile>CA-Services/passiveAuth.terminal.jxb</bindingFile>
-                                <bindingFile>CA-Services/passiveAuth.terminal.wsb</bindingFile>
-                            </bindingFiles>
-                        </configuration>
-                    </execution>
-                    <execution>
-                        <id>WS_DV_PassiveAuth</id>
-                        <goals>
-                            <goal>wsimport</goal>
-                        </goals>
-                        <configuration>
-                            <wsdlFiles>
-                                <wsdlFile>CA-Services/PassiveAuth/DV/WS_DV_PassiveAuth.wsdl</wsdlFile>
-                            </wsdlFiles>
-                            <wsdlLocation>http://localhost/wsdl/CA-Services/PassiveAuth/DV/WS_DV_PassiveAuth.wsdl</wsdlLocation>
-                            <bindingFiles>
-                                <bindingFile>CA-Services/passiveAuth.dv.jxb</bindingFile>
-                                <bindingFile>CA-Services/passiveAuth.dv.wsb</bindingFile>
-                            </bindingFiles>
-                        </configuration>
-                    </execution>
-                    <execution>
-                        <id>WS_DV_TerminalAuth</id>
-                        <goals>
-                            <goal>wsimport</goal>
-                        </goals>
-                        <configuration>
-                            <wsdlFiles>
-                                <wsdlFile>CA-Services/TermAuth/DV_TermAuth/WS_DV_TerminalAuth.wsdl</wsdlFile>
-                            </wsdlFiles>
-                            <wsdlLocation>http://localhost/wsdl/CA-Services/TermAuth/DV_TermAuth/WS_DV_TerminalAuth.wsdl</wsdlLocation>
-                            <bindingFiles>
-                                <bindingFile>CA-Services/termAuth.dv.jxb</bindingFile>
-                                <bindingFile>CA-Services/termAuth.dv.wsb</bindingFile>
-                            </bindingFiles>
-                        </configuration>
-                    </execution>
-                    <execution>
-                        <id>WS_IS_termcontr_TerminalAuth</id>
-                        <goals>
-                            <goal>wsimport</goal>
-                        </goals>
-                        <configuration>
-                            <wsdlFiles>
-                                <wsdlFile>CA-Services/TermAuth/Terminal/IS_termcontr/WS_IS_termcontr_TerminalAuth.wsdl</wsdlFile>
-                            </wsdlFiles>
-                            <wsdlLocation>http://localhost/wsdl/CA-Services/TermAuth/Terminal/IS_termcontr/WS_IS_termcontr_TerminalAuth.wsdl</wsdlLocation>
-                            <bindingFiles>
-                                <bindingFile>CA-Services/termAuth.termcontr.jxb</bindingFile>
-                                <bindingFile>CA-Services/termAuth.termcontr.wsb</bindingFile>
-                            </bindingFiles>
-                        </configuration>
-                    </execution>
-                    <execution>
-                        <id>WS_DV_RestrictedID</id>
-                        <goals>
-                            <goal>wsimport</goal>
-                        </goals>
-                        <configuration>
-                            <wsdlFiles>
-                                <wsdlFile>CA-Services/Restricted_ID/DV/WS_DV_RestrictedID.wsdl</wsdlFile>
-                            </wsdlFiles>
-                            <wsdlLocation>http://localhost/wsdl/CA-Services/Restricted_ID/DV/WS_DV_RestrictedID.wsdl</wsdlLocation>
-                            <bindingFiles>
-                                <bindingFile>CA-Services/restrictedId.dv.jxb</bindingFile>
-                                <bindingFile>CA-Services/restrictedId.dv.wsb</bindingFile>
-                            </bindingFiles>
-                        </configuration>
-                    </execution>
-                    <execution>
-                        <id>WS_DV_PassiveAuth_OLD</id>
-                        <goals>
-                            <goal>wsimport</goal>
-                        </goals>
-                        <configuration>
-                            <wsdlFiles>
-                                <wsdlFile>CA-Services.old/budru/WS_DV_PassiveAuth.wsdl</wsdlFile>
-                            </wsdlFiles>
-                            <wsdlLocation>http://localhost/wsdl/CA-Services.old/budru/WS_DV_PassiveAuth.wsdl</wsdlLocation>
-                            <bindingFiles>
-                                <bindingFile>CA-Services.old/passiveAuth.dv.jxb</bindingFile>
-                                <bindingFile>CA-Services.old/passiveAuth.dv.wsb</bindingFile>
-                            </bindingFiles>
-                        </configuration>
-                    </execution>
-                    <execution>
-                        <id>WS_DV_RestrictedID_OLD</id>
-                        <goals>
-                            <goal>wsimport</goal>
-                        </goals>
-                        <configuration>
-                            <wsdlFiles>
-                                <wsdlFile>CA-Services.old/budru/WS_DV_RestrictedID.wsdl</wsdlFile>
-                            </wsdlFiles>
-                            <wsdlLocation>http://localhost/wsdl/CA-Services.old/budru/WS_DV_RestrictedID.wsdl</wsdlLocation>
-                            <bindingFiles>
-                                <bindingFile>CA-Services.old/restrictedId.dv.jxb</bindingFile>
-                                <bindingFile>CA-Services.old/restrictedId.dv.wsb</bindingFile>
-                            </bindingFiles>
-                        </configuration>
-                    </execution>
-                    <execution>
-                        <id>WS_DV_TerminalAuth_OLD</id>
-                        <goals>
-                            <goal>wsimport</goal>
-                        </goals>
-                        <configuration>
-                            <wsdlFiles>
-                                <wsdlFile>CA-Services.old/budru/WS_DV_TerminalAuth.wsdl</wsdlFile>
-                            </wsdlFiles>
-                            <wsdlLocation>http://localhost/wsdl/CA-Services.old/budru/WS_DV_TerminalAuth.wsdl</wsdlLocation>
-                            <bindingFiles>
-                                <bindingFile>CA-Services.old/termAuth.dv.jxb</bindingFile>
-                                <bindingFile>CA-Services.old/termAuth.dv.wsb</bindingFile>
-                            </bindingFiles>
-                        </configuration>
-                    </execution>
-                    <execution>
-                        <id>WS_DV_CertDesc_OLD</id>
-                        <goals>
-                            <goal>wsimport</goal>
-                        </goals>
-                        <configuration>
-                            <wsdlFiles>
-                                <wsdlFile>CA-Services.old/budru/WS_DV_CertDesc.wsdl</wsdlFile>
-                            </wsdlFiles>
-                            <wsdlLocation>http://localhost/wsdl/CA-Services.old/budru/WS_DV_CertDesc.wsdl</wsdlLocation>
-                        </configuration>
-                    </execution>
-                </executions>
-                <configuration>
-                    <xuseBaseResourceAndURLToLoadWSDL>false</xuseBaseResourceAndURLToLoadWSDL>
-                    <verbose>false</verbose>
-                    <keep>true</keep>
-                    <extension>true</extension>
-                    <xadditionalHeaders>true</xadditionalHeaders>
-                    <xnocompile>true</xnocompile>
-                    <wsdlDirectory>src/main/resources/META-INF/wsdl</wsdlDirectory>
-                    <bindingDirectory>src/main/resources/META-INF/wsdl</bindingDirectory>
-                    <catalog>src/main/resources/META-INF/jax-ws-catalog.xml</catalog>
+                    <plugins>
+                        <plugin>
+                            <groupId>org.jvnet.jaxb2_commons</groupId>
+                            <artifactId>jaxb2-value-constructor</artifactId>
+                            <version>${version.jaxb2-value-constructor}</version>
+                        </plugin>
+                        <plugin>
+                            <groupId>org.jvnet.jaxb2_commons</groupId>
+                            <artifactId>jaxb2-basics</artifactId>
+                            <version>${version.jaxb2-basics}</version>
+                        </plugin>
+                    </plugins>
                 </configuration>
             </plugin>
             <plugin>
@@ -337,6 +251,7 @@
                             <sources>
                                 <source>target/generated-sources/wsimport</source>
                                 <source>target/generated-sources/xjc</source>
+                                <source>target/generated-sources/eumw-config</source>
                             </sources>
                         </configuration>
                     </execution>
@@ -356,6 +271,93 @@
                     </execution>
                 </executions>
             </plugin>
+
+            <plugin>
+                <groupId>org.codehaus.mojo</groupId>
+                <artifactId>jaxws-maven-plugin</artifactId>
+                <configuration>
+                    <!-- using wsdls file directory -->
+                    <wsdlDirectory>
+                        src/main/resources/META-INF/wsdl
+                    </wsdlDirectory>
+                    <!-- Keep generated files -->
+                    <keep>true</keep>
+                    <!-- generated source files destination -->
+                    <sourceDestDir>target/generated-sources/wsimport</sourceDestDir>
+                    <encoding>${project.build.sourceEncoding}</encoding>
+                </configuration>
+                <executions>
+                    <execution>
+                        <id>wsimport terminal auth version 1.1</id>
+                        <phase>generate-sources</phase>
+                        <goals>
+                            <goal>wsimport</goal>
+                        </goals>
+                        <configuration>
+                            <!-- CAUTION! linebreaks will prevent the schemata from being parsed correctly -->
+                            <wsdlFiles>
+                                <wsdlFile>CA-Services/TermAuth/WS_DV_TerminalAuth.wsdl</wsdlFile>
+                            </wsdlFiles>
+                            <bindingDirectory>src/main/resources/META-INF/wsdl</bindingDirectory>
+                            <bindingFiles>
+                                <bindingFile>CA-Services/termAuth.dv.jxb</bindingFile>
+                                <bindingFile>CA-Services/termAuth.dv.wsb</bindingFile>
+                            </bindingFiles>
+                        </configuration>
+                    </execution>
+                    <execution>
+                        <id>wsimport passive auth version 1.1</id>
+                        <phase>generate-sources</phase>
+                        <goals>
+                            <goal>wsimport</goal>
+                        </goals>
+                        <configuration>
+                            <!-- CAUTION! linebreaks will prevent the schemata from being parsed correctly -->
+                            <wsdlFiles>
+                                <wsdlFile>CA-Services/PassiveAuth/WS_DV_PassiveAuth.wsdl</wsdlFile>
+                            </wsdlFiles>
+                            <bindingDirectory>src/main/resources/META-INF/wsdl</bindingDirectory>
+                            <bindingFiles>
+                                <bindingFile>CA-Services/passiveAuth.dv.jxb</bindingFile>
+                                <bindingFile>CA-Services/passiveAuth.dv.wsb</bindingFile>
+                            </bindingFiles>
+                        </configuration>
+                    </execution>
+                    <execution>
+                        <id>wsimport restricted id service version 1.1</id>
+                        <phase>generate-sources</phase>
+                        <goals>
+                            <goal>wsimport</goal>
+                        </goals>
+                        <configuration>
+                            <!-- CAUTION! linebreaks will prevent the schemata from being parsed correctly -->
+                            <wsdlFiles>
+                                <wsdlFile>CA-Services/Restricted_ID/WS_DV_RestrictedID.wsdl</wsdlFile>
+                            </wsdlFiles>
+                            <bindingDirectory>src/main/resources/META-INF/wsdl</bindingDirectory>
+                            <bindingFiles>
+                                <bindingFile>CA-Services/restrictedId.dv.jxb</bindingFile>
+                                <bindingFile>CA-Services/restrictedId.dv.wsb</bindingFile>
+                            </bindingFiles>
+                        </configuration>
+                    </execution>
+                    <execution>
+                        <id>wsimport certificate description service version 2.0</id>
+                        <phase>generate-sources</phase>
+                        <goals>
+                            <goal>wsimport</goal>
+                        </goals>
+                        <configuration>
+                            <!-- CAUTION! linebreaks will prevent the schemata from being parsed correctly -->
+                            <wsdlFiles>
+                                <wsdlFile>CA-Services/CertDesc/WS_DV_CertDesc.wsdl</wsdlFile>
+                            </wsdlFiles>
+                            <extension>true</extension>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+
         </plugins>
     </build>
 </project>

@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html th:replace="~{base-template/main :: main(~{::title}, ~{::section})}"
+      xmlns:th="http://www.thymeleaf.org">
+
+<title>DVCA configuration - eIDAS Middleware configuration and administration</title>
+
+<section>
+
+    <h1>DVCA configuration</h1>
+    <hr class="text-primary" style="height: 4px"/>
+
+    <div class="card col shadow p-1 mb-4">
+        <div class="card-body">
+            <h5 class="card-title">
+                Delete DVCA configuration <span th:text="${name}"></span>
+            </h5>
+            <p>Do you really want to delete the DVCA configuration <b th:text="${name}"/> ?</p>
+            <br/>
+            <div style="float: right">
+                <a class="btn btn-secondary" th:href="@{/admin-interface/dvcaConfiguration}">Abort</a>
+                <a class="btn btn-danger" th:href="${'/admin-interface/dvcaConfiguration/remove/' + name + '?yes'}">Delete
+                    this DVCA configuration <span class="fa fa-trash"></span></a>
+            </div>
+        </div>
+    </div>
+
+
+</section>
+
+</html>

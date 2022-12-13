@@ -73,7 +73,8 @@ class RequestSessionRepositoryTest
     Optional<RequestSession> requestSessionByEidRef = requestSessionRepository.findByEidRef(eidRef);
     Assertions.assertTrue(requestSessionByEidRef.isPresent());
     assertFinalFields(requestSessionByEidRef.get());
-    Assertions.assertEquals(savedCreationTime, requestSessionByEidRef.get().getCreationTime());
+    Assertions.assertEquals(savedCreationTime.truncatedTo(ChronoUnit.SECONDS),
+                            requestSessionByEidRef.get().getCreationTime().truncatedTo(ChronoUnit.SECONDS));
     Assertions.assertEquals(eidRef, requestSessionByEidRef.get().getEidRef());
   }
 

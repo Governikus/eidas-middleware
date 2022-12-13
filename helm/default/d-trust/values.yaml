@@ -1,0 +1,38 @@
+debug: true
+hsm: false
+
+eidas_middleware:
+  hostname:
+    eumw: autent-eumw-dtrust-rsz.govkg.de
+    admin_interface: autent-eumw-dtrust-rsz-admin.govkg.de
+  port:
+    server: 8443
+    admin_interface: 8449
+    debug:
+      intern: 5005
+      extern: 31856
+  image: dev-docker.governikus.de/governikus/eidas-middleware-application
+  tag: latest
+  hashed_password: $2a$10$EIwUSRpSu/eQzbtOw2dhvOJ2N6PIbTCGMhp9kc1sxEI2AAhKi0LxK
+  volume: eumw-dtrust-rsz-db
+  database: eidasmw
+  datapase_pw: fallturm
+  database_user: h2
+
+eidas_demo:
+  hostname: autent-eumw-dtrust-rsz-demo.govkg.de
+  middleware_samlreceiverurl: https://autent-eumw-head.govkg.de/eidas-middleware/RequestReceiver
+  ports:
+    server: 8080
+    debug:
+      intern: 5005
+      extern: 31857
+  image: dev-docker.governikus.de/governikus/eidas-demo-application
+  tag: latest
+  demo_decryption_keystore: brainpool-384-enc.jks
+  demo_decryption_alias: brainpoolP384r1
+  demo_decryption_pin: 123456
+  middleware_signature_certificate: middlewareSig_der.cer
+  demo_signature_keystore: bos-test-tctoken.saml-sign.p12
+  demo_signature_alias: bos-test-tctoken.saml-sign
+  demo_signature_pin: 123456

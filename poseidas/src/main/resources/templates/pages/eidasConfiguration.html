@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html th:replace="~{base-template/main :: main(~{::title}, ~{::section})}"
+      xmlns:th="http://www.thymeleaf.org">
+
+<title>eIDAS configuration - eIDAS Middleware configuration and administration</title>
+
+<section>
+
+
+    <h1>eIDAS configuration</h1>
+    <hr class="text-primary" style="height: 4px"/>
+
+    <form method="post" class="" action="" th:object="${eidasConfigModel}" enctype="multipart/form-data">
+
+
+        <input type="hidden"
+               th:name="${_csrf.parameterName}"
+               th:value="${_csrf.token}"/>
+
+        <div class=" form-group row m-1">
+            <label class="col-sm-3 col-form-label text-left" for="Public-service-provider">Public eID service
+                provider</label>
+            <div class="col-sm-9">
+
+                <select class="form-select" id="Public-service-provider"
+                        th:classappend="${#fields.hasErrors('publicServiceProviderName') ? 'border-danger' : ''}"
+                        th:field="*{publicServiceProviderName}">
+                    <option th:each="serviceProvider : ${#serviceProvider}"
+                            th:text="${serviceProvider.name}"
+                            th:value="${serviceProvider.name}"></option>
+                </select>
+                <p class="m-0 text-danger" th:errors="*{publicServiceProviderName}"/>
+                <p class="text-secondary">The public eID service provider</p>
+            </div>
+        </div>
+
+
+        <div th:replace="~{fragments/form :: inputRow_text('Server URL', 'serverUrl', 'The server URL to reach this eIDAS Middleware')}"/>
+        <div th:replace="~{fragments/form :: inputRow_text('Country code', 'countryCode', 'The country code from the eIDAS Middleware')}"/>
+        <hr>
+        <h2>Metadata information</h2>
+        <label>This information will be shown in the metadata file for this eIDAS Middleware.</label>
+        <div class="row">
+            <div class="col">
+                <h3>Contact person</h3>
+                <div th:replace="~{fragments/form :: inputRow_text('Company name', 'contactPersonCompanyName', '')}"/>
+                <div th:replace="~{fragments/form :: inputRow_text('Given name', 'contactPersonName', '')}"/>
+                <div th:replace="~{fragments/form :: inputRow_text('Surname', 'contactPersonSurname', '')}"/>
+                <div th:replace="~{fragments/form :: inputRow_text('Email', 'contactPersonMail', '')}"/>
+                <div th:replace="~{fragments/form :: inputRow_text('Phone', 'contactPersonTel', '')}"/>
+            </div>
+            <div class="col">
+                <h3>Organization</h3>
+                <div th:replace="~{fragments/form :: inputRow_text('Display name', 'organizationDisplayname', '')}"/>
+                <div th:replace="~{fragments/form :: inputRow_text('Name', 'organizationName', '')}"/>
+                <div th:replace="~{fragments/form :: inputRow_text('Language', 'organizationLanguage', '')}"/>
+                <div th:replace="~{fragments/form :: inputRow_text('URL', 'organizationUrl', '')}"/>
+            </div>
+        </div>
+        <hr>
+        <h3>Certificates and key pairs</h3>
+        <div th:replace="~{fragments/configOptions :: keypairs('Decryption key pair', 'decryptionKeyPairName', 'The key pair to decrypt incoming SAML requests')}"/>
+
+        <div th:if="${@environment.getProperty('hsm.type') != 'PKCS11'}">
+            <!-- Do not show signature key pair if hsmis in use -->
+            <div th:replace="~{fragments/configOptions :: keypairs('Signature key pair', 'signatureKeyPairName', 'The key pair to sign responses and metadata')}"/>
+        </div>
+
+        <div th:replace="~{fragments/form :: inputRow_bool('Sign metadata', 'signMetadata')}"/>
+        <div th:replace="fragments/form :: submit()"></div>
+    </form>
+
+
+</section>
+
+</html>

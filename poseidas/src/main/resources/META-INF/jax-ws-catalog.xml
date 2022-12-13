@@ -2,31 +2,16 @@
 <catalog xmlns="urn:oasis:names:tc:entity:xmlns:xml:catalog"
 	prefer="system">
 	<system
-		systemId="http://localhost/wsdl/CA-Services/PassiveAuth/Terminal/WS_IS_PassiveAuth.wsdl"
-		uri="wsdl/CA-Services/PassiveAuth/Terminal/WS_IS_PassiveAuth.wsdl" />
+		systemId="http://localhost/wsdl/CA-Services/PassiveAuth/WS_DV_PassiveAuth.wsdl"
+		uri="wsdl/CA-Services/PassiveAuth/WS_DV_PassiveAuth.wsdl" />
 	<system
-		systemId="http://localhost/wsdl/CA-Services/PassiveAuth/DV/WS_DV_PassiveAuth.wsdl"
-		uri="wsdl/CA-Services/PassiveAuth/DV/WS_DV_PassiveAuth.wsdl" />
+		systemId="http://localhost/wsdl/CA-Services/TermAuth/WS_DV_TerminalAuth.wsdl"
+		uri="wsdl/CA-Services/TermAuth/WS_DV_TerminalAuth.wsdl" />
 	<system
-		systemId="http://localhost/wsdl/CA-Services/TermAuth/DV_TermAuth/WS_DV_TerminalAuth.wsdl"
-		uri="wsdl/CA-Services/TermAuth/DV_TermAuth/WS_DV_TerminalAuth.wsdl" />
-	<system
-		systemId="http://localhost/wsdl/CA-Services/TermAuth/Terminal/IS_termcontr/WS_IS_termcontr_TerminalAuth.wsdl"
-		uri="wsdl/CA-Services/TermAuth/Terminal/IS_termcontr/WS_IS_termcontr_TerminalAuth.wsdl" />
-	<system
-		systemId="http://localhost/wsdl/CA-Services/Restricted_ID/DV/WS_DV_RestrictedID.wsdl"
-		uri="wsdl/CA-Services/Restricted_ID/DV/WS_DV_RestrictedID.wsdl" />
+		systemId="http://localhost/wsdl/CA-Services/Restricted_ID/WS_DV_RestrictedID.wsdl"
+		uri="wsdl/CA-Services/Restricted_ID/WS_DV_RestrictedID.wsdl" />
 	<system systemId="http://localhost/wsdl/CA-Services/BerCa-mtg-authorization.wsdl"
 		uri="wsdl/CA-Services/BerCa-mtg-authorization.wsdl" />
-		
-	<system systemId="http://localhost/wsdl/CA-Services.old/budru/WS_DV_PassiveAuth.wsdl"
-		uri="wsdl/CA-Services.old/budru/WS_DV_PassiveAuth.wsdl" />
-	<system
-		systemId="http://localhost/wsdl/CA-Services.old/budru/WS_DV_RestrictedID.wsdl"
-		uri="wsdl/CA-Services.old/budru/WS_DV_RestrictedID.wsdl" />
-	<system
-		systemId="http://localhost/wsdl/CA-Services.old/budru/WS_DV_TerminalAuth.wsdl"
-		uri="wsdl/CA-Services.old/budru/WS_DV_TerminalAuth.wsdl" />
-	<system systemId="http://localhost/wsdl/CA-Services.old/budru/WS_DV_CertDesc.wsdl"
-		uri="wsdl/CA-Services.old/budru/WS_DV_CertDesc.wsdl" />
+	<system systemId="http://localhost/wsdl/CA-Services/CertDesc/WS_DV_CertDesc.wsdl"
+		uri="wsdl/CA-Services/CertDesc/WS_DV_CertDesc.wsdl" />
 </catalog>

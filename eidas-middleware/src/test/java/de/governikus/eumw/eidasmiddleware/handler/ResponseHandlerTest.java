@@ -15,8 +15,6 @@ import java.io.IOException;
 import java.net.URISyntaxException;
 import java.security.GeneralSecurityException;
 import java.security.KeyStore;
-import java.security.PrivateKey;
-import java.security.Security;
 import java.security.cert.X509Certificate;
 import java.sql.SQLException;
 import java.util.ArrayList;
@@ -26,24 +24,23 @@ import java.util.Optional;
 
 import javax.xml.bind.DatatypeConverter;
 
-import org.bouncycastle.jce.provider.BouncyCastleProvider;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
+import org.mockito.Mockito;
 import org.mockito.MockitoAnnotations;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 
+import de.governikus.eumw.config.EidasMiddlewareConfig;
 import de.governikus.eumw.eidascommon.Constants;
 import de.governikus.eumw.eidascommon.ErrorCode;
 import de.governikus.eumw.eidascommon.ErrorCodeException;
 import de.governikus.eumw.eidascommon.Utils;
-import de.governikus.eumw.eidasmiddleware.ConfigHolder;
 import de.governikus.eumw.eidasmiddleware.RequestProcessingException;
-import de.governikus.eumw.eidasmiddleware.ServiceProviderConfig;
 import de.governikus.eumw.eidasmiddleware.eid.RequestingServiceProvider;
 import de.governikus.eumw.eidasmiddleware.entities.RequestSession;
 import de.governikus.eumw.eidasmiddleware.repositories.RequestSessionRepository;
@@ -67,7 +64,9 @@ import de.governikus.eumw.poseidas.eidserver.convenience.EIDInfoResultPlaceStruc
 import de.governikus.eumw.poseidas.eidserver.convenience.EIDInfoResultString;
 import de.governikus.eumw.poseidas.server.eidservice.EIDInternal;
 import de.governikus.eumw.poseidas.server.eidservice.EIDResultResponse;
+import de.governikus.eumw.poseidas.server.idprovider.config.ConfigurationService;
 import de.governikus.eumw.poseidas.server.idprovider.config.CvcTlsCheck;
+import de.governikus.eumw.poseidas.server.idprovider.config.KeyPair;
 import de.governikus.eumw.poseidas.server.pki.HSMServiceHolder;
 import de.governikus.eumw.utils.key.KeyStoreSupporter;
 import lombok.extern.slf4j.Slf4j;
@@ -108,10 +107,7 @@ class ResponseHandlerTest
   private RequestSessionRepository requestSessionRepository;
 
   @Mock
-  private ServiceProviderConfig mockServiceProviderConfig;
-
-  @Mock
-  private ConfigHolder mockConfigHolder;
+  private ConfigurationService mockConfigurationService;
 
   @Mock
   private HSMServiceHolder mockHsmServiceHolder;
@@ -147,17 +143,15 @@ class ResponseHandlerTest
   @BeforeAll
   static void prepare() throws Exception
   {
-    Security.addProvider(new BouncyCastleProvider());
     OpenSAMLInitializer.getInstance().initialize(new OpenSAMLSecurityExtensionConfig());
-
   }
 
 
   @BeforeEach
   void setUp()
   {
-    systemUnderTest = spy(new ResponseHandler(requestSessionRepository, mockConfigHolder, mockServiceProviderConfig,
-                                              mockHsmServiceHolder, mockEidInternal, mockCvcTlsCheck));
+    systemUnderTest = spy(new ResponseHandler(requestSessionRepository, mockConfigurationService, mockHsmServiceHolder,
+                                              mockEidInternal, mockCvcTlsCheck));
   }
 
   @Test
@@ -202,11 +196,11 @@ class ResponseHandlerTest
 
     // Mock RequestingServiceProvider
     RequestingServiceProvider mockRequestingServiceProvider = mock(RequestingServiceProvider.class);
-    when(mockServiceProviderConfig.getProviderByEntityID(mockRequestSession.getReqProviderEntityId())).thenReturn(mockRequestingServiceProvider);
+    when(mockConfigurationService.getProviderByEntityID(mockRequestSession.getReqProviderEntityId())).thenReturn(mockRequestingServiceProvider);
     when(mockRequestingServiceProvider.getEntityID()).thenReturn("asd");
     when(mockRequestingServiceProvider.getAssertionConsumerURL()).thenReturn("asd");
     when(mockRequestingServiceProvider.getEncryptionCert()).thenReturn((X509Certificate)signatureKeystore.getCertificate("bos-test-tctoken.saml-sign"));
-    mockConfigHolderForEidasSigner();
+    mockConfigurationServiceForEidasSigner();
 
     // Action
     systemUnderTest.getResultForRefID(TEST_REF_ID);
@@ -238,11 +232,11 @@ class ResponseHandlerTest
 
     // Mock RequestingServiceProvider
     RequestingServiceProvider mockRequestingServiceProvider = mock(RequestingServiceProvider.class);
-    when(mockServiceProviderConfig.getProviderByEntityID(mockRequestSession.getReqProviderEntityId())).thenReturn(mockRequestingServiceProvider);
+    when(mockConfigurationService.getProviderByEntityID(mockRequestSession.getReqProviderEntityId())).thenReturn(mockRequestingServiceProvider);
     when(mockRequestingServiceProvider.getEntityID()).thenReturn("asd");
     when(mockRequestingServiceProvider.getAssertionConsumerURL()).thenReturn("asd");
 
-    mockConfigHolderForEidasSigner();
+    mockConfigurationServiceForEidasSigner();
 
     // Action
     systemUnderTest.getResultForRefID(TEST_REF_ID);
@@ -275,12 +269,12 @@ class ResponseHandlerTest
 
     // Mock RequestingServiceProvider
     RequestingServiceProvider mockRequestingServiceProvider = mock(RequestingServiceProvider.class);
-    when(mockServiceProviderConfig.getProviderByEntityID(mockRequestSession.getReqProviderEntityId())).thenReturn(mockRequestingServiceProvider);
+    when(mockConfigurationService.getProviderByEntityID(mockRequestSession.getReqProviderEntityId())).thenReturn(mockRequestingServiceProvider);
     when(mockRequestingServiceProvider.getEntityID()).thenReturn("asd");
     when(mockRequestingServiceProvider.getAssertionConsumerURL()).thenReturn("asd");
 
 
-    mockConfigHolderForEidasSigner();
+    mockConfigurationServiceForEidasSigner();
 
     // Action
     systemUnderTest.getResultForRefID(TEST_REF_ID);
@@ -314,11 +308,11 @@ class ResponseHandlerTest
 
     // Mock RequestingServiceProvider
     RequestingServiceProvider mockRequestingServiceProvider = mock(RequestingServiceProvider.class);
-    when(mockServiceProviderConfig.getProviderByEntityID(mockRequestSession.getReqProviderEntityId())).thenReturn(mockRequestingServiceProvider);
+    when(mockConfigurationService.getProviderByEntityID(mockRequestSession.getReqProviderEntityId())).thenReturn(mockRequestingServiceProvider);
     when(mockRequestingServiceProvider.getEntityID()).thenReturn("asd");
     when(mockRequestingServiceProvider.getAssertionConsumerURL()).thenReturn("asd");
 
-    mockConfigHolderForEidasSigner();
+    mockConfigurationServiceForEidasSigner();
 
     // Action
     systemUnderTest.getResultForRefID(TEST_REF_ID);
@@ -330,14 +324,15 @@ class ResponseHandlerTest
                                                      "ResultMinor");
   }
 
-  private void mockConfigHolderForEidasSigner() throws IOException, GeneralSecurityException
+  private void mockConfigurationServiceForEidasSigner() throws IOException, GeneralSecurityException
   {
-    Utils.X509KeyPair mockAppSignatureKeyPair = mock(Utils.X509KeyPair.class);
-    when(mockConfigHolder.getAppSignatureKeyPair()).thenReturn(mockAppSignatureKeyPair);
-
-    when(mockAppSignatureKeyPair.getKey()).thenReturn((PrivateKey)signatureKeystore.getKey("bos-test-tctoken.saml-sign",
-                                                                                           DEFAULT_PASSWORD.toCharArray()));
-    when(mockAppSignatureKeyPair.getCert()).thenReturn((X509Certificate)signatureKeystore.getCertificate("bos-test-tctoken.saml-sign"));
+    var eidasMiddlewareConfiguration = new EidasMiddlewareConfig();
+    eidasMiddlewareConfiguration.setEidasConfiguration(new EidasMiddlewareConfig.EidasConfiguration());
+    eidasMiddlewareConfiguration.getEidasConfiguration().setSignatureKeyPairName("signatureKeystore");
+    when(mockConfigurationService.getConfiguration()).thenReturn(Optional.of(eidasMiddlewareConfiguration));
+    when(mockConfigurationService.getKeyPair(Mockito.anyString())).thenReturn(new KeyPair(signatureKeystore,
+                                                                                          "bos-test-tctoken.saml-sign",
+                                                                                          DEFAULT_PASSWORD));
   }
 
   @Test
@@ -356,7 +351,7 @@ class ResponseHandlerTest
 
     // Mock ServiceProvider
     RequestingServiceProvider mockRequestingServiceProvider = mock(RequestingServiceProvider.class);
-    when(mockServiceProviderConfig.getProviderByEntityID(mockRequestSession.getReqProviderEntityId())).thenReturn(mockRequestingServiceProvider);
+    when(mockConfigurationService.getProviderByEntityID(mockRequestSession.getReqProviderEntityId())).thenReturn(mockRequestingServiceProvider);
     when(mockRequestingServiceProvider.getAssertionConsumerURL()).thenReturn(anyString());
 
     Assertions.assertDoesNotThrow(() -> systemUnderTest.getConsumerURLForRefID(""));
@@ -668,23 +663,30 @@ class ResponseHandlerTest
   void testPrepareDummyResponseWithoutTestCaseReturnsResponseWithDummyValues() throws Exception
   {
     X509Certificate cert = Utils.readCert(RequestHandlerTest.class.getResourceAsStream(EIDAS_SIGNER_TEST_CER));
-    Utils.X509KeyPair keypair = Utils.readPKCS12(RequestHandlerTest.class.getResourceAsStream(TEST_P12),
-                                                 DEFAULT_PASSWORD.toCharArray());
-    prepareMocks(keypair);
+    var keyStore = KeyStoreSupporter.readKeyStore(RequestHandlerTest.class.getResourceAsStream(TEST_P12),
+                                                  KeyStoreSupporter.KeyStoreType.PKCS12,
+                                                  DEFAULT_PASSWORD);
+    prepareMocks(keyStore, "eidassignertest", DEFAULT_PASSWORD);
     doReturn(cert).when(mockRequestingServiceProvider).getEncryptionCert();
-    when(mockConfigHolder.getCountryCode()).thenReturn("DE");
+    var eidasMiddlewareConfig = new EidasMiddlewareConfig();
+    eidasMiddlewareConfig.setEidasConfiguration(new EidasMiddlewareConfig.EidasConfiguration());
+    eidasMiddlewareConfig.getEidasConfiguration().setCountryCode("DE");
+    eidasMiddlewareConfig.getEidasConfiguration().setSignatureKeyPairName("signer");
+    eidasMiddlewareConfig.getEidasConfiguration().setPublicServiceProviderName("public");
+    when(mockConfigurationService.getConfiguration()).thenReturn(Optional.of(eidasMiddlewareConfig));
     when(mockCvcResults.isCvcPresent()).thenReturn(true);
     when(mockCvcResults.isCvcValidity()).thenReturn(true);
     when(mockCvcResults.isCvcTlsMatch()).thenReturn(true);
     when(mockCvcResults.isCvcUrlMatch()).thenReturn(true);
-    ResponseHandler responseHandler = new ResponseHandler(requestSessionRepository, mockConfigHolder,
-                                                          mockServiceProviderConfig, mockHsmServiceHolder,
-                                                          mockEidInternal, mockCvcTlsCheck);
+    ResponseHandler responseHandler = new ResponseHandler(requestSessionRepository, mockConfigurationService,
+                                                          mockHsmServiceHolder, mockEidInternal, mockCvcTlsCheck);
     String dummyResponse = responseHandler.prepareDummyResponse(REQUEST_ID, null);
 
     Assertions.assertNotNull(dummyResponse);
 
     byte[] samlResponseBytes = DatatypeConverter.parseBase64Binary(dummyResponse);
+    Utils.X509KeyPair keypair = Utils.readPKCS12(RequestHandlerTest.class.getResourceAsStream(TEST_P12),
+                                                 DEFAULT_PASSWORD.toCharArray());
     Utils.X509KeyPair[] keyPairs = {keypair};
     EidasResponse result = EidasResponse.parse(new ByteArrayInputStream(samlResponseBytes), keyPairs, cert);
 
@@ -704,21 +706,23 @@ class ResponseHandlerTest
   void testRequestWithTestCaseCancellationByUserReturnsErrorResponse() throws Exception
   {
     X509Certificate cert = Utils.readCert(RequestHandlerTest.class.getResourceAsStream(EIDAS_SIGNER_TEST_CER));
-    Utils.X509KeyPair keypair = Utils.readPKCS12(RequestHandlerTest.class.getResourceAsStream(TEST_P12),
-                                                 DEFAULT_PASSWORD.toCharArray());
-    prepareMocks(keypair);
+    var keyStore = KeyStoreSupporter.readKeyStore(RequestHandlerTest.class.getResourceAsStream(TEST_P12),
+                                                  KeyStoreSupporter.KeyStoreType.PKCS12,
+                                                  DEFAULT_PASSWORD);
+    prepareMocks(keyStore, "eidassignertest", DEFAULT_PASSWORD);
     when(mockCvcResults.isCvcPresent()).thenReturn(true);
     when(mockCvcResults.isCvcValidity()).thenReturn(true);
     when(mockCvcResults.isCvcTlsMatch()).thenReturn(true);
     when(mockCvcResults.isCvcUrlMatch()).thenReturn(true);
-    ResponseHandler responseHandler = new ResponseHandler(requestSessionRepository, mockConfigHolder,
-                                                          mockServiceProviderConfig, mockHsmServiceHolder,
-                                                          mockEidInternal, mockCvcTlsCheck);
+    ResponseHandler responseHandler = new ResponseHandler(requestSessionRepository, mockConfigurationService,
+                                                          mockHsmServiceHolder, mockEidInternal, mockCvcTlsCheck);
     String dummyResponse = responseHandler.prepareDummyResponse(REQUEST_ID, TestCaseEnum.CANCELLATION_BY_USER);
 
     Assertions.assertNotNull(dummyResponse);
 
     byte[] samlResponseBytes = DatatypeConverter.parseBase64Binary(dummyResponse);
+    Utils.X509KeyPair keypair = Utils.readPKCS12(RequestHandlerTest.class.getResourceAsStream(TEST_P12),
+                                                 DEFAULT_PASSWORD.toCharArray());
     Utils.X509KeyPair[] keyPairs = {keypair};
     EidasResponse result = EidasResponse.parse(new ByteArrayInputStream(samlResponseBytes), keyPairs, cert);
 
@@ -738,21 +742,23 @@ class ResponseHandlerTest
   void testRequestWithTestCaseWrongSignatureReturnsErrorResponse() throws Exception
   {
     X509Certificate cert = Utils.readCert(RequestHandlerTest.class.getResourceAsStream(EIDAS_SIGNER_TEST_CER));
-    Utils.X509KeyPair keypair = Utils.readPKCS12(RequestHandlerTest.class.getResourceAsStream(TEST_P12),
-                                                 DEFAULT_PASSWORD.toCharArray());
-    prepareMocks(keypair);
+    var keyStore = KeyStoreSupporter.readKeyStore(RequestHandlerTest.class.getResourceAsStream(TEST_P12),
+                                                  KeyStoreSupporter.KeyStoreType.PKCS12,
+                                                  DEFAULT_PASSWORD);
+    prepareMocks(keyStore, "eidassignertest", DEFAULT_PASSWORD);
     when(mockCvcResults.isCvcPresent()).thenReturn(true);
     when(mockCvcResults.isCvcValidity()).thenReturn(true);
     when(mockCvcResults.isCvcTlsMatch()).thenReturn(true);
     when(mockCvcResults.isCvcUrlMatch()).thenReturn(true);
-    ResponseHandler responseHandler = new ResponseHandler(requestSessionRepository, mockConfigHolder,
-                                                          mockServiceProviderConfig, mockHsmServiceHolder,
-                                                          mockEidInternal, mockCvcTlsCheck);
+    ResponseHandler responseHandler = new ResponseHandler(requestSessionRepository, mockConfigurationService,
+                                                          mockHsmServiceHolder, mockEidInternal, mockCvcTlsCheck);
     String dummyResponse = responseHandler.prepareDummyResponse(REQUEST_ID, TestCaseEnum.WRONG_SIGNATURE);
 
     Assertions.assertNotNull(dummyResponse);
 
     byte[] samlResponseBytes = DatatypeConverter.parseBase64Binary(dummyResponse);
+    Utils.X509KeyPair keypair = Utils.readPKCS12(RequestHandlerTest.class.getResourceAsStream(TEST_P12),
+                                                 DEFAULT_PASSWORD.toCharArray());
     Utils.X509KeyPair[] keyPairs = {keypair};
     EidasResponse result = EidasResponse.parse(new ByteArrayInputStream(samlResponseBytes), keyPairs, cert);
 
@@ -766,21 +772,23 @@ class ResponseHandlerTest
   void testRequestWithTestCaseUnknownReturnsErrorResponse() throws Exception
   {
     X509Certificate cert = Utils.readCert(RequestHandlerTest.class.getResourceAsStream(EIDAS_SIGNER_TEST_CER));
-    Utils.X509KeyPair keypair = Utils.readPKCS12(RequestHandlerTest.class.getResourceAsStream(TEST_P12),
-                                                 DEFAULT_PASSWORD.toCharArray());
-    prepareMocks(keypair);
+    var keyStore = KeyStoreSupporter.readKeyStore(RequestHandlerTest.class.getResourceAsStream(TEST_P12),
+                                                  KeyStoreSupporter.KeyStoreType.PKCS12,
+                                                  DEFAULT_PASSWORD);
+    prepareMocks(keyStore, "eidassignertest", DEFAULT_PASSWORD);
     when(mockCvcResults.isCvcPresent()).thenReturn(true);
     when(mockCvcResults.isCvcValidity()).thenReturn(true);
     when(mockCvcResults.isCvcTlsMatch()).thenReturn(true);
     when(mockCvcResults.isCvcUrlMatch()).thenReturn(true);
-    ResponseHandler responseHandler = new ResponseHandler(requestSessionRepository, mockConfigHolder,
-                                                          mockServiceProviderConfig, mockHsmServiceHolder,
-                                                          mockEidInternal, mockCvcTlsCheck);
+    ResponseHandler responseHandler = new ResponseHandler(requestSessionRepository, mockConfigurationService,
+                                                          mockHsmServiceHolder, mockEidInternal, mockCvcTlsCheck);
     String dummyResponse = responseHandler.prepareDummyResponse(REQUEST_ID, TestCaseEnum.UNKNOWN);
 
     Assertions.assertNotNull(dummyResponse);
 
     byte[] samlResponseBytes = DatatypeConverter.parseBase64Binary(dummyResponse);
+    Utils.X509KeyPair keypair = Utils.readPKCS12(RequestHandlerTest.class.getResourceAsStream(TEST_P12),
+                                                 DEFAULT_PASSWORD.toCharArray());
     Utils.X509KeyPair[] keyPairs = {keypair};
     EidasResponse result = EidasResponse.parse(new ByteArrayInputStream(samlResponseBytes), keyPairs, cert);
 
@@ -794,23 +802,25 @@ class ResponseHandlerTest
   void testWhenCvcCheckFailedThenReturnErrorResponse() throws Exception
   {
     X509Certificate cert = Utils.readCert(RequestHandlerTest.class.getResourceAsStream(EIDAS_SIGNER_TEST_CER));
-    Utils.X509KeyPair keypair = Utils.readPKCS12(RequestHandlerTest.class.getResourceAsStream(TEST_P12),
-                                                 DEFAULT_PASSWORD.toCharArray());
-    prepareMocks(keypair);
+    var keyStore = KeyStoreSupporter.readKeyStore(RequestHandlerTest.class.getResourceAsStream(TEST_P12),
+                                                  KeyStoreSupporter.KeyStoreType.PKCS12,
+                                                  DEFAULT_PASSWORD);
+    prepareMocks(keyStore, "eidassignertest", DEFAULT_PASSWORD);
     CvcTlsCheck.CvcCheckResults checkResults = new CvcTlsCheck.CvcCheckResults();
     checkResults.setCvcPresent(true);
     checkResults.setCvcValidity(false);
     checkResults.setCvcUrlMatch(true);
     checkResults.setCvcTlsMatch(true);
     when(mockCvcTlsCheck.checkCvcProvider(anyString())).thenReturn(checkResults);
-    ResponseHandler responseHandler = new ResponseHandler(requestSessionRepository, mockConfigHolder,
-                                                          mockServiceProviderConfig, mockHsmServiceHolder,
-                                                          mockEidInternal, mockCvcTlsCheck);
+    ResponseHandler responseHandler = new ResponseHandler(requestSessionRepository, mockConfigurationService,
+                                                          mockHsmServiceHolder, mockEidInternal, mockCvcTlsCheck);
     String dummyResponse = responseHandler.prepareDummyResponse(REQUEST_ID, TestCaseEnum.UNKNOWN);
 
     Assertions.assertNotNull(dummyResponse);
 
     byte[] samlResponseBytes = DatatypeConverter.parseBase64Binary(dummyResponse);
+    Utils.X509KeyPair keypair = Utils.readPKCS12(RequestHandlerTest.class.getResourceAsStream(TEST_P12),
+                                                 DEFAULT_PASSWORD.toCharArray());
     Utils.X509KeyPair[] keyPairs = {keypair};
     EidasResponse result = EidasResponse.parse(new ByteArrayInputStream(samlResponseBytes), keyPairs, cert);
 
@@ -866,19 +876,23 @@ class ResponseHandlerTest
     }
   }
 
-  private void prepareMocks(Utils.X509KeyPair keypair)
+  private void prepareMocks(KeyStore keystore, String alias, String password)
     throws SQLException, ErrorCodeException, IOException, GeneralSecurityException
   {
     when(requestSessionRepository.findById(anyString())).thenReturn(Optional.of(mockRequestSession));
     when(mockRequestSession.getReqProviderEntityId()).thenReturn(ENTITY_ID);
-    when(mockServiceProviderConfig.getProviderByEntityID(ENTITY_ID)).thenReturn(mockRequestingServiceProvider);
+    when(mockConfigurationService.getProviderByEntityID(ENTITY_ID)).thenReturn(mockRequestingServiceProvider);
     when(mockHsmServiceHolder.getKeyStore()).thenReturn(null);
-    doReturn(keypair).when(mockConfigHolder).getAppSignatureKeyPair();
+    when(mockConfigurationService.getKeyPair(Mockito.anyString())).thenReturn(new KeyPair(keystore, alias, password));
     when(mockRequestingServiceProvider.getAssertionConsumerURL()).thenReturn("consumerUrl");
-    when(mockConfigHolder.getServerURLWithContextPath()).thenReturn("https://localhost");
+    when(mockConfigurationService.getServerURLWithEidasContextPath()).thenReturn("https://localhost");
     when(mockRequestingServiceProvider.getEntityID()).thenReturn(ENTITY_ID);
     when(mockRequestSession.getReqId()).thenReturn(REQUEST_ID);
-    when(mockConfigHolder.getEntityIDInt()).thenReturn(ENTITY_ID);
+    var eidasMiddlewareConfig = new EidasMiddlewareConfig();
+    eidasMiddlewareConfig.setEidasConfiguration(new EidasMiddlewareConfig.EidasConfiguration());
+    eidasMiddlewareConfig.getEidasConfiguration().setPublicServiceProviderName(ENTITY_ID);
+    eidasMiddlewareConfig.getEidasConfiguration().setSignatureKeyPairName("signatureKeystore");
+    when(mockConfigurationService.getConfiguration()).thenReturn(Optional.of(eidasMiddlewareConfig));
     when(mockCvcTlsCheck.checkCvcProvider(anyString())).thenReturn(mockCvcResults);
   }
 }

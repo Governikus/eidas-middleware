@@ -2,7 +2,7 @@
 <jaxws:bindings 
                xmlns:jaxws="http://java.sun.com/xml/ns/jaxws"
                xmlns:xs="http://www.w3.org/2001/XMLSchema"
-               wsdlLocation="TermAuth/DV_TermAuth/WS_DV_TerminalAuth.wsdl">
+               wsdlLocation="TermAuth/WS_DV_TerminalAuth.wsdl">
                <jaxws:bindings node="wsdl:definitions" xmlns:wsdl="http://schemas.xmlsoap.org/wsdl/">
                <jaxws:package name="uri.eac_pki_is_protocol._1.termAuth.dv"/>
                </jaxws:bindings>     

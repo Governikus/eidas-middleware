@@ -5,52 +5,6 @@
 Operating the server
 ====================================
 
-.. _first_startup:
-
-First time startup
-------------------
-After the middleware was configured successfully (see :ref:`configuration-mw`) you can start
-the application. If you are using an HSM, please make sure it is running before starting the middleware
-as failing to connect to the HSM will cause errors.
-
-To check the connection to the :term:`Authorization CA` and to receive the :term:`Authorization Certificate`,
-open ``https://<YOUR_SERVERURL>/admin-interface/list`` in your Browser.
-Enter the login credentials that you have configured earlier.
-
-After logging in, you will see your :term:`eID Service Providers<eID Service Provider>`.
-Click on the name to open the details.
-
-With clicking the button ``Check connection`` you can check the connection to the :term:`Authorization CA`.
-If this check does not succeed, take a look in the log for more details.
-Possible errors are firewalls that block the connection to the :term:`Authorization CA` or the :term:`Authorization CA`
-has not yet stored your client TLS certificate.
-If the error persists, send the log file and your error description to eidas-middleware@governikus.com.
-
-You are also advised to create a :term:`Request Signer Certificate` before you send the initial request.
-For private sector :term:`eID Service Providers<eID Service Provider>`,
-please enter the holder for the :term:`Request Signer Certificate`
-assigned to the provider by the :term:`Authorization CA` and then press `Generate Request Signer Certificate`.
-The public sector :term:`eID Service Provider` does not need to enter a holder and can push the button directly.
-If the request signer certificate has been successfully generated the button changes to
-`Download Request Signer Certificate`. You can download the certificate and forward it to the PoSC or its representative
-(production system) / :term:`Authorization CA` (test system).
-
-If the connection check is successful and the :term:`Authorization CA` has confirmed that your Request Signer
-Certificate had been processed, you can request the :term:`Authorization Certificate`.
-To do that, fill in the form `Initial CVC Request to DVCA` with the values that you should have received from the
-:term:`Authorization CA`.
-If the CA did not specify a sequence number, you can start with 1. Then click on `Send initial request to DVCA`.
-If this request was unsuccessful, take a look in the log for more details and double check that the country code and
-CHR Mnemonic are correct.
-If the error persists, send the log file and your error description to eidas-middleware@governikus.com.
-
-After a successful initial request the eIDAS Middleware should be ready to receive eIDAS requests from your eIDAS
-connector.
-
-The eIDAS Middleware automatically renews the :term:`Authorization Certificate`.
-It also checks regularly for updates of the :term:`Black List`, :term:`Master List` and :term:`Defect List`.
-
-
 .. _startup_and_shutdown:
 
 Startup and shutdown
@@ -106,21 +60,21 @@ To run the eIDAS Middleware, execute the following command.
 It will mount the named volumes containing the database and configuration in the container
 and the application will be available on port 8443. ::
 
-    docker run --rm -it -v eidas-configuration:/opt/eidas-middleware/configuration -v eidas-database:/opt/eidas-middleware/database -p 8443:8443 --name eidas-middleware-application governikus/eidas-middleware-application:2.2.8
+    docker run --rm -it -v eidas-configuration:/opt/eidas-middleware/configuration -v eidas-database:/opt/eidas-middleware/database -p 8443:8443 --name eidas-middleware-application governikus/eidas-middleware-application:3.0.0
 
 To stop and remove the container, just hit ``CTRL+C``.
 
 To keep the container running longer without being attached to the STDOUT and STDERR, change the command to
 the following::
 
-    docker run -d -v eidas-configuration:/opt/eidas-middleware/configuration -v eidas-database:/opt/eidas-middleware/database -p 8443:8443 --name eidas-middleware-application governikus/eidas-middleware-application:2.2.8
+    docker run -d -v eidas-configuration:/opt/eidas-middleware/configuration -v eidas-database:/opt/eidas-middleware/database -p 8443:8443 --name eidas-middleware-application governikus/eidas-middleware-application:3.0.0
 
 For more information on starting and stopping containers and viewing the logs,
 see the `Docker Docs <https://docs.docker.com/engine/reference/run/>`_.
 
 As mentioned before, the eIDAS Middleware application configuration is located in the named volume.
-If you want to change the TLS keystore or disable https because you are using a reverse proxy,
-you should use the configuration wizard to modify the configuration
+If you want to change the TLS key store or disable https because you are using a reverse proxy,
+you should use the admin interface to modify the configuration
 instead of adding environment variables to the Docker run command.
 
 To use this container with Docker Compose, see the example Docker Compose file at `GitHub <https://github.com/Governikus/eidas-middleware/blob/master/eidas-middleware/docker-compose/docker-compose.yaml>`_.
@@ -130,6 +84,47 @@ You can use docker-compose.yaml out of the box to start the eIDAS Middleware app
     docker-compose up
 
 To stop the container, hit ``CTRL+C``. To remove the container afterwards, execute ``docker-compose down``.
+
+
+Obtain authorization certificate
+--------------------------------
+
+When the middleware is running, direct your browser to the admin interface at
+``https://<YOUR_SERVERURL>:<YOUR_ADMIN_PORT>/admin-interface``.
+
+After logging in, you will see your :term:`eID Service Providers<eID Service Provider>` in the dashboard
+(assuming you have already completed the configuration as in :ref:`configuration-mw`).
+Please open the details for the provider you want to obtain the certificate for.
+
+By clicking the button ``Start connection check`` you can check the connection to the :term:`Authorization CA`.
+If this check does not succeed, take a look in the log for more details.
+Possible errors are firewalls that block the connection to the :term:`Authorization CA` or the :term:`Authorization CA`
+has not yet stored your client TLS certificate.
+If the error persists, send the log file and your error description to eidas-middleware@governikus.com.
+
+You are also advised to create a :term:`Request Signer Certificate` before you send the initial request.
+Navigate to the tab ``RSC``. For private sector :term:`eID Service Providers<eID Service Provider>`,
+please enter the holder for the :term:`Request Signer Certificate`
+assigned to the provider by the :term:`Authorization CA` and then press `Generate RSC`.
+The public sector :term:`eID Service Provider` does not need to enter a holder and can push the button directly.
+If the request signer certificate has been successfully generated the button changes to
+`Download RSC`. You can download the certificate and forward it to the PoSC or its representative
+(production system) / :term:`Authorization CA` (test system).
+
+If the connection check is successful and the :term:`Authorization CA` has confirmed that your Request Signer
+Certificate had been processed, you can request the :term:`Authorization Certificate`.
+To do that, fill in the form `Start an initial request` with the values that you should have received from the
+:term:`Authorization CA`.
+If the CA did not specify a sequence number, you can start with 1. Then click on `Send initial request to DVCA`.
+If this request was unsuccessful, take a look in the log for more details and double check that the country code and
+CHR Mnemonic are correct.
+If the error persists, send the log file and your error description to eidas-middleware@governikus.com.
+
+After a successful initial request the eIDAS Middleware should be ready to receive eIDAS requests from your eIDAS
+connector.
+
+The eIDAS Middleware automatically renews the :term:`Authorization Certificate`.
+It also checks regularly for updates of the :term:`Black List`, :term:`Master List` and :term:`Defect List`.
 
 
 Additional information
@@ -172,12 +167,13 @@ installed on a regular basis. To update the operating system issue the following
 
 When using systemd, the eIDAS Middleware log files can be found in the directory ``/var/log/eidas-middleware``.
 
+
 Scalability
 ^^^^^^^^^^^
 The performance of the eIDAS Middleware improves by adding more memory (RAM) and using a faster CPU.
 In case the memory configuration has changed, the server needs to be restarted.
 To start the JVM with more memory, add ``-Xmx`` with the new maximum memory size to the start command,
-e.g. ``java -Xmx8g -jar eidas-middleware-2.2.8.jar`` for 8 GB.
+e.g. ``java -Xmx8g -jar eidas-middleware-3.0.0.jar`` for 8 GB.
 
 
 Request Signer Certificate
@@ -185,7 +181,7 @@ Request Signer Certificate
 Starting with version 2.1.0, the middleware supports :term:`Request Signer Certificates<Request Signer Certificate>`.
 These are long-term certificates used to sign requests for
 :term:`Authorization Certificates<Authorization Certificate>`, both initial and subsequent.
-When you have not yet generated one, you can do so by clicking `Generate Request Signer Certificate`.
+When you have not yet generated one, you can do so by clicking `Generate RSC`.
 After that, the new request signer certificate will automatically be used for any
 :term:`Authorization Certificate` request.
 
@@ -195,9 +191,9 @@ expires before it has been renewed, as they can simply sign a new initial reques
 
 However, in order to accept requests signed with the :term:`Request Signer Certificate`,
 the :term:`Authorization CA` needs to know this certificate. You need to download the freshly
-generated :term:`Request Signer Certificate` using `Download Request Signer Certificate` and forward
+generated :term:`Request Signer Certificate` using `Download RSC` and forward
 it to the PoSC or its reprensentative (production system) / :term:`Authorization CA` (test system).
-As a fallback, the :term:`Authorization Certificate` requests are still signed using legacy method when the
+As a fallback, the :term:`Authorization Certificate` requests are still signed using certificate chain method when the
 :term:`Authorization CA` has not yet processed your new request signer certificate.
 
 When a :term:`Request Signer Certificate` itself is about to expire (the usual validity is 3 years), the middleware will
@@ -256,7 +252,7 @@ md5, sha, hmac128sha224, hmac192sha256, hmac256sha384, hmac384sha512 (hmac384sha
 ``poseidas.snmp.privalgo`` (encryption algorithm) with one of these values: des, 3des, aes128, aes192, aes256
 (aes256 is the default value when not set).
 
-There are two different ways to use the SNMP agent to monitor the application. It is devided in ``GET`` and ``TRAP``.
+There are two different ways to use the SNMP agent to monitor the application. It is divided in ``GET`` and ``TRAP``.
 
 Optional properties for ``GET`` and ``GET NEXT`` requests can be set in the application.properties:
 ``poseidas.snmp.agenthost`` with the default value set to localhost and ``poseidas.snmp.agentport`` with the default
@@ -269,7 +265,7 @@ Optional property for ``TRAP`` is ``poseidas.snmp.managementport`` (port 162 is 
 set).
 
 All existing SNMP GET values are explained in detail in the MIB located at
-``https://github.com/Governikus/eidas-middleware/blob/2.2.8/poseidas/snmp/EIDASMW-SNMP-MIB.mib``.
+``https://github.com/Governikus/eidas-middleware/blob/3.0.0/poseidas/snmp/EIDASMW-SNMP-MIB.mib``.
 
 Global GET
 ''''''''''
@@ -298,20 +294,20 @@ Get prefix = |GET_PREFIX|
     OID; GET (Return value datatype); Description
     |PROVIDER_NAME_GET|; serviceProviderName (OCTET STRING); The service provider name used for identifying instances of the columnar objects in the serviceProviderTable
     |CVC_GET_PRESENT|; cvcPresent (Integer32); CVC present: 0 = not present, 1 = present
-    |CVC_GET_VALID_UNTIL|; cvcExpirationDate (DateAndTime); Date until the cvc is valid
-    |CVC_GET_SUBJECT_URL|; cvcSubjectUrl (OCTET STRING); The cvc certificates subject url
+    |CVC_GET_VALID_UNTIL|; cvcExpirationDate (DateAndTime); Date until the CVC is valid
+    |CVC_GET_SUBJECT_URL|; cvcSubjectUrl (OCTET STRING); The Subject URL of the CVC
     |CVC_GET_TLS_CERTIFICATE_LINK_STATUS|; cvcAndTlsLinked (Integer32); TLS server certificate referenced in CVC: 0 = not linked, 1 = linked
-    |BLACKLIST_GET_LIST_AVAILABLE|; blackListAvailable (Integer32); Blacklist availability: 0 = not available, 1 = available
-    |BLACKLIST_GET_LAST_SUCCESSFUL_RETRIEVAL|; lastBlackListRenewal (DateAndTime); Date of last successful blacklist renewal
-    |BLACKLIST_GET_DVCA_AVAILABILITY|; blackListCAAvailable (Integer32); Blacklist PKI availability: 0 = not available, 1 = available
-    |MASTERLIST_GET_LIST_AVAILABLE|; masterListAvailable (Integer32); Masterlist availability: 0 = not available, 1 = available
-    |MASTERLIST_GET_LAST_SUCCESSFUL_RETRIEVAL|; lastMasterListRenewal (DateAndTime); Date of last successful masterlist renewal
-    |MASTERLIST_GET_DVCA_AVAILABILITY|; masterListCAAvailable (Integer32); Masterlist PKI availability: 0 = not available, 1 = available
-    |DEFECTLIST_GET_LIST_AVAILABLE|; defectListAvailable (Integer32); Defectlist availability: 0 = not available, 1 = available
-    |DEFECTLIST_GET_LAST_SUCCESSFUL_RETRIEVAL|; lastDefectListRenewal (DateAndTime); Date of last successful defectlist renewal
-    |DEFECTLIST_GET_DVCA_AVAILABILITY|; defectListCAAvailable (Integer32); Defectlist PKI availability: 0 = not available, 1 = available
+    |BLACKLIST_GET_LIST_AVAILABLE|; blackListAvailable (Integer32); Black List availability: 0 = not available, 1 = available
+    |BLACKLIST_GET_LAST_SUCCESSFUL_RETRIEVAL|; lastBlackListRenewal (DateAndTime); Date of last successful Black List renewal
+    |BLACKLIST_GET_DVCA_AVAILABILITY|; blackListCAAvailable (Integer32); Black List PKI availability: 0 = not available, 1 = available
+    |MASTERLIST_GET_LIST_AVAILABLE|; masterListAvailable (Integer32); Master List availability: 0 = not available, 1 = available
+    |MASTERLIST_GET_LAST_SUCCESSFUL_RETRIEVAL|; lastMasterListRenewal (DateAndTime); Date of last successful Master List renewal
+    |MASTERLIST_GET_DVCA_AVAILABILITY|; masterListCAAvailable (Integer32); Master List PKI availability: 0 = not available, 1 = available
+    |DEFECTLIST_GET_LIST_AVAILABLE|; defectListAvailable (Integer32); Defect List availability: 0 = not available, 1 = available
+    |DEFECTLIST_GET_LAST_SUCCESSFUL_RETRIEVAL|; lastDefectListRenewal (DateAndTime); Date of last successful Defect List renewal
+    |DEFECTLIST_GET_DVCA_AVAILABILITY|; defectListCAAvailable (Integer32); Defect List PKI availability: 0 = not available, 1 = available
     |RSC_GET_PENDING_AVAILABLE|; rscPendingAvailable (Integer32); Pending RSC availability: 0 = not available, 1 = available
-    |RSC_GET_CURRENT_CERTIFICATE_VALID_UNTIL|; rscCurrentValidUntil (DateAndTime); Last date of validity
+    |RSC_GET_CURRENT_CERTIFICATE_VALID_UNTIL|; rscCurrentValidUntil (DateAndTime); Last date of RSC validity
 
 TRAP
 ''''
@@ -327,23 +323,23 @@ Trap prefix = |TRAP_PREFIX|
     :delim: ;
 
     OID; Description; Messages (Datetype)
-    |CVC_TRAP_LAST_RENEWAL_STATUS|; The status of the last renewal of the certificate revocation list; 0 = success, 1 = failed (Integer32)
-    |BLACKLIST_TRAP_LAST_RENEWAL_STATUS| ; The status of the last renewal of the blacklist; 0 = renewed, 1 = no list received, 2 = list signature check failed, 3 = list processing error (Integer32)
-    |BLACKLIST_TRAP_LAST_RENEWAL_PROCESSING_DURATION|; The last renewal processing duration of the blacklist; The duration in milliseconds (long)
-    |MASTERLIST_TRAP_LAST_RENEWAL_STATUS|; The status of the last renewal of the masterlist; 0 = renewed, 1 = no list received, 2 = list signature check failed, 3 = list processing error (Integer32)
-    |MASTERLIST_TRAP_LAST_RENEWAL_PROCESSING_DURATION|; The last renewal processing duration of the blacklist; The duration in milliseconds (long)
-    |DEFECTLIST_TRAP_LAST_RENEWAL_STATUS|; The status of the last renewal of the defectlist; 0 = renewed, 1 = no list received, 2 = list signature check failed, 3 = list processing error (Integer32)
-    |DEFECTLIST_TRAP_LAST_RENEWAL_PROCESSING_DURATION|; The last renewal processing duration of the blacklist; The duration in milliseconds (long)
-    |CRL_TRAP_LAST_RENEWAL_STATUS|; The status of the last renewal of the certificate revocation list; 0 = success, 1 = failed (Integer32)
-    |RSC_TRAP_CHANGE_TO_CURRENT_RSC|; A pending Requestsignercertificate is now current; 0 = success, 1 = failed because there is no pending rsc, 2 = failed because there is no RefID (Integer32)
-    |RSC_TRAP_NEW_PENDING_CERTIFICATE|; A new pending Requestsingercertificate has been generated; Certificate information (OCTET STRING)
+    |CVC_TRAP_LAST_RENEWAL_STATUS|; The status of the last renewal of the CVC; 0 = success, 1 = failed (Integer32)
+    |BLACKLIST_TRAP_LAST_RENEWAL_STATUS| ; The status of the last renewal of the Black List; 0 = renewed, 1 = no list received, 2 = list signature check failed, 3 = list processing error (Integer32)
+    |BLACKLIST_TRAP_LAST_RENEWAL_PROCESSING_DURATION|; The last renewal processing duration of the Black List; The duration in milliseconds (long)
+    |MASTERLIST_TRAP_LAST_RENEWAL_STATUS|; The status of the last renewal of the Master List; 0 = renewed, 1 = no list received, 2 = list signature check failed, 3 = list processing error (Integer32)
+    |MASTERLIST_TRAP_LAST_RENEWAL_PROCESSING_DURATION|; The last renewal processing duration of the Master List; The duration in milliseconds (long)
+    |DEFECTLIST_TRAP_LAST_RENEWAL_STATUS|; The status of the last renewal of the Defect List; 0 = renewed, 1 = no list received, 2 = list signature check failed, 3 = list processing error (Integer32)
+    |DEFECTLIST_TRAP_LAST_RENEWAL_PROCESSING_DURATION|; The last renewal processing duration of the Defect List; The duration in milliseconds (long)
+    |CRL_TRAP_LAST_RENEWAL_STATUS|; The status of the last renewal of the Certificate Revocation List; 0 = success, 1 = failed (Integer32)
+    |RSC_TRAP_CHANGE_TO_CURRENT_RSC|; A pending Request Signer Certificate is now current; 0 = success, 1 = failed because there is no pending rsc, 2 = failed because there is no RefID (Integer32)
+    |RSC_TRAP_NEW_PENDING_CERTIFICATE|; A new pending Request Signer Certificate has been generated; Certificate information (OCTET STRING)
 
 
 .. _database_migration:
 
 Migration Instructions
 ----------------------
-In version 1.0.3 the database schema was changed to improve the handling of productive blacklists.
+In version 1.0.3 the database schema was changed to improve the handling of productive Black Lists.
 This means that you must perform a database migration when you want to upgrade a previous eIDAS Middleware Application
 to version 1.0.3 and later.
 
@@ -369,6 +365,26 @@ Stop the eIDAS Middleware Application and copy the database file to your backup 
 e.g. ``cp /opt/eidas-middleware/database/eidasmw.mv.db /path/to/your/backup-location/eidasmw.mv.db``.
 
 To perform the migration, copy the database migration JAR file to the directory where your
-configuration file is available and execute the command ``java -jar database-migration-2.2.8.jar``.
+configuration file is available and execute the command ``java -jar database-migration-3.0.0.jar``.
 If there are errors in the log output, please send the complete log output and some information on your environment to
 eidas-middleware@governikus.com.
+
+
+Test mode
+---------
+
+The eIDAS middleware includes a test mode to demonstrate handling various errors. To do this, a RequestedAuthnContext
+must be added to the SAML request, e.g. ::
+
+    <saml2p:RequestedAuthnContext Comparison="minimum">
+        <saml2:AuthnContextClassRef xmlns:saml2="urn:oasis:names:tc:SAML:2.0:assertion">test</saml2:AuthnContextClassRef>
+    </saml2p:RequestedAuthnContext>
+
+Possible values are: ::
+
+    test
+    test#CANCELLATIONBYUSER
+    test#WRONGPIN
+    test#WRONGSIGNATURE
+    test#CARDEXPIRED
+    test#UNKNOWN

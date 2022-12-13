@@ -16,11 +16,9 @@ import java.security.cert.X509Certificate;
 
 import javax.xml.bind.DatatypeConverter;
 
-import org.apache.xml.security.signature.XMLSignature;
 import org.opensaml.saml.common.SAMLObjectContentReference;
 import org.opensaml.saml.security.impl.SAMLSignatureProfileValidator;
 import org.opensaml.security.x509.BasicX509Credential;
-import org.opensaml.xmlsec.encryption.support.EncryptionConstants;
 import org.opensaml.xmlsec.signature.KeyInfo;
 import org.opensaml.xmlsec.signature.SignableXMLObject;
 import org.opensaml.xmlsec.signature.Signature;
@@ -39,6 +37,7 @@ import org.opensaml.xmlsec.signature.support.SignatureConstants;
 import org.opensaml.xmlsec.signature.support.SignatureException;
 import org.opensaml.xmlsec.signature.support.SignatureValidator;
 
+import de.governikus.eumw.eidascommon.CryptoAlgUtil;
 import de.governikus.eumw.eidascommon.ErrorCode;
 import de.governikus.eumw.eidascommon.ErrorCodeException;
 import lombok.AccessLevel;
@@ -65,19 +64,6 @@ import lombok.NoArgsConstructor;
 final class XMLSignatureHandler
 {
 
-  private static final String SHA_1_PATTERN = "^SHA-?1";
-
-  private static final String SHA_256_PATTERN = "^SHA-?256";
-
-  private static final String SHA_256_PSS_PATTERN = "^SHA-?256-?PSS";
-
-  private static final String SHA_384_PATTERN = "^SHA-?384";
-
-  private static final String SHA_512_PATTERN = "^SHA-?512";
-
-  public static final String GIVEN_DIGEST_ALGORITHM = "Given digest algorithm ";
-
-
   /**
    * available kinds of key info
    */
@@ -99,13 +85,14 @@ final class XMLSignatureHandler
    * @param key signature key
    * @param cert certificate matching the signature key
    * @param type specifies how to identify the key in the signature
+   * @param digestAlg
    * @throws CertificateEncodingException
    */
   static void addSignature(SignableXMLObject signable,
                            PrivateKey key,
                            X509Certificate cert,
                            SigEntryType type,
-                           String sigDigestAlg)
+                           String digestAlg)
     throws CertificateEncodingException
   {
     if (type == SigEntryType.NONE)
@@ -113,7 +100,7 @@ final class XMLSignatureHandler
       return;
     }
 
-    if (sigDigestAlg == null)
+    if (digestAlg == null)
     {
       throw new IllegalArgumentException("Signature Digest Algorithm must not be null.");
     }
@@ -122,25 +109,7 @@ final class XMLSignatureHandler
     BasicX509Credential credential = new BasicX509Credential(cert);
     credential.setPrivateKey(key);
     sig.setSigningCredential(credential);
-    String keyAlg = key.getAlgorithm();
-
-    if ("EC".equalsIgnoreCase(keyAlg) || "ECDSA".equalsIgnoreCase(keyAlg))
-    {
-      checkForECSignatures(sigDigestAlg, sig);
-    }
-    else if ("RSA".equalsIgnoreCase(keyAlg))
-    {
-      checkForRSASignatures(sigDigestAlg, sig);
-    }
-    else if ("DSA".equalsIgnoreCase(keyAlg))
-    {
-      checkForDSASignatures(sigDigestAlg, sig);
-    }
-    else
-    {
-      throw new IllegalArgumentException("Unsupported key algorithm " + keyAlg
-                                         + ", use RSA, DSA, ECDSA or EC");
-    }
+    sig.setSignatureAlgorithm(CryptoAlgUtil.toXmlSigAlgId(digestAlg, key.getAlgorithm()));
     sig.setCanonicalizationAlgorithm(SignatureConstants.ALGO_ID_C14N_EXCL_OMIT_COMMENTS);
     KeyInfo keyInfo = new KeyInfoBuilder().buildObject();
     X509Data x509Data = new X509DataBuilder().buildObject();
@@ -156,78 +125,8 @@ final class XMLSignatureHandler
     sig.setKeyInfo(keyInfo);
     signable.setSignature(sig);
 
-    if ("SHA256".equals(sigDigestAlg) || "SHA256-PSS".equals(sigDigestAlg))
-    {
-      ((SAMLObjectContentReference)sig.getContentReferences()
-                                      .get(0)).setDigestAlgorithm(EncryptionConstants.ALGO_ID_DIGEST_SHA256);
-    }
-  }
-
-  private static void checkForDSASignatures(String sigDigestAlg, Signature sig)
-  {
-    if (sigDigestAlg.matches(SHA_1_PATTERN))
-    {
-      sig.setSignatureAlgorithm(SignatureConstants.ALGO_ID_SIGNATURE_DSA_SHA1);
-    }
-    else
-    {
-      throw new IllegalArgumentException(GIVEN_DIGEST_ALGORITHM + sigDigestAlg
-                                         + " not supported with DSA keys, use SHA1");
-    }
-  }
-
-  private static void checkForRSASignatures(String sigDigestAlg, Signature sig)
-  {
-    if (sigDigestAlg.matches(SHA_1_PATTERN))
-    {
-      sig.setSignatureAlgorithm(SignatureConstants.ALGO_ID_SIGNATURE_RSA_SHA1);
-    }
-    else if (sigDigestAlg.matches(SHA_256_PATTERN))
-    {
-      sig.setSignatureAlgorithm(SignatureConstants.ALGO_ID_SIGNATURE_RSA_SHA256);
-    }
-    else if (sigDigestAlg.matches(SHA_256_PSS_PATTERN))
-    {
-      sig.setSignatureAlgorithm(XMLSignature.ALGO_ID_SIGNATURE_RSA_SHA256_MGF1);
-    }
-    else if (sigDigestAlg.matches(SHA_384_PATTERN))
-    {
-      sig.setSignatureAlgorithm(SignatureConstants.ALGO_ID_SIGNATURE_RSA_SHA384);
-    }
-    else if (sigDigestAlg.matches(SHA_512_PATTERN))
-    {
-      sig.setSignatureAlgorithm(SignatureConstants.ALGO_ID_SIGNATURE_RSA_SHA512);
-    }
-    else
-    {
-      throw new IllegalArgumentException(GIVEN_DIGEST_ALGORITHM + sigDigestAlg
-                                         + " not supported with RSA keys, use SHA1, SHA256, SHA384 or SHA512");
-    }
-  }
-
-  private static void checkForECSignatures(String sigDigestAlg, Signature sig)
-  {
-    if (sigDigestAlg.matches(SHA_1_PATTERN))
-    {
-      sig.setSignatureAlgorithm(SignatureConstants.ALGO_ID_SIGNATURE_ECDSA_SHA1);
-    }
-    else if (sigDigestAlg.matches(SHA_256_PATTERN) || sigDigestAlg.matches(SHA_256_PSS_PATTERN))
-    // SHA256-PSS at the moment sigDigestAlg will be always SHA256
-    {
-      sig.setSignatureAlgorithm(XMLSignature.ALGO_ID_SIGNATURE_ECDSA_SHA256);
-    }
-    else if (sigDigestAlg.matches(SHA_384_PATTERN))
-    {
-      sig.setSignatureAlgorithm(SignatureConstants.ALGO_ID_SIGNATURE_ECDSA_SHA384);
-    }
-    else if (sigDigestAlg.matches(SHA_512_PATTERN))
-    {
-      sig.setSignatureAlgorithm(SignatureConstants.ALGO_ID_SIGNATURE_ECDSA_SHA512);
-    }
-    else
-    {
-      throw new IllegalArgumentException(GIVEN_DIGEST_ALGORITHM + sigDigestAlg + " not supported");
-    }
+    ((SAMLObjectContentReference)sig.getContentReferences()
+                                    .get(0)).setDigestAlgorithm(CryptoAlgUtil.toXmlDigestAlgId(digestAlg));
   }
 
   private static void addCertificate(X509Certificate cert, X509Data data) throws CertificateEncodingException
