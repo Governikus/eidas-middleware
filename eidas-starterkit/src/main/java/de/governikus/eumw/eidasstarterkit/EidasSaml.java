@@ -327,7 +327,7 @@ public class EidasSaml
                                              String middlewareVersion,
                                              boolean doSign,
                                              boolean requesterIdFlag,
-                                             String nodeCountry)
+                                             String countryCode)
     throws CertificateEncodingException, IOException, MarshallingException, SignatureException,
     TransformerFactoryConfigurationError, TransformerException, InitializationException
   {
@@ -336,7 +336,7 @@ public class EidasSaml
                                                          organisation, technicalcontact, supportContact,
                                                          postEndpoint, redirectEndpoint, attributes,
                                                          supportedNameIdTypes, middlewareVersion, doSign,
-                                                         requesterIdFlag, nodeCountry);
+                                                         requesterIdFlag, countryCode);
     return meta.generate(signer);
   }
 

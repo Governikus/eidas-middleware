@@ -327,7 +327,7 @@ class TestEidasSaml
                                                  middlewareVersion,
                                                  true,
                                                  true,
-                                                 null);
+                                                 "DE");
     EidasMetadataService emds = EidasSaml.parseMetaDataService(new ByteArrayInputStream(mds));
     Assertions.assertEquals(encCert, emds.getEncCert());
     Assertions.assertEquals(entityId, emds.getEntityId());
@@ -354,6 +354,7 @@ class TestEidasSaml
     Assertions.assertEquals(technicalcontact.getType(), emds.getTechnicalContact().getType());
     Assertions.assertEquals(validUntil, emds.getValidUntil());
     Assertions.assertEquals(attributes.size(), emds.getAttributes().size());
+    Assertions.assertEquals("DE", emds.getNodeCountry());
   }
 
   @Test

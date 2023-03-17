@@ -14,7 +14,7 @@
 
     <groupId>de.governikus.eumw</groupId>
     <artifactId>eumw</artifactId>
-    <version>3.0.0</version>
+    <version>3.0.1</version>
     <packaging>pom</packaging>
 
     <name>EU Middleware</name>
@@ -37,7 +37,7 @@
     <scm>
         <url>https://hg.govkg.de/Autent/eumw</url>
         <connection>scm:hg:https://hg.govkg.de/Autent/eumw</connection>
-        <tag>eumw-3.0.0</tag>
+        <tag>eumw-3.0.1</tag>
     </scm>
 
     <developers>
@@ -88,18 +88,18 @@
         <version.velocity>2.3</version.velocity>
         <version.xmlsec>2.3.1</version.xmlsec>
 
-        <version.cxf>3.5.3</version.cxf>
-        <version.springboot>2.6.10</version.springboot>
+        <version.cxf>3.5.5</version.cxf>
+        <version.springboot>2.7.9</version.springboot>
         <version.thymeleaf>3.0.15.RELEASE</version.thymeleaf>
         <version.thymeleaf-layout-dialect>3.1.0</version.thymeleaf-layout-dialect>
-        <version.woodstox>6.3.0</version.woodstox>
+        <version.woodstox>6.5.0</version.woodstox>
 
-        <version.asm>9.3</version.asm>
+        <version.asm>9.4</version.asm>
         <version.classgraph>4.8.149</version.classgraph>
         <version.commons.codec>1.15</version.commons.codec>
-        <version.commons.fileupload>1.4</version.commons.fileupload>
+        <version.commons.fileupload>1.5</version.commons.fileupload>
         <version.commons.io>2.11.0</version.commons.io>
-        <version.commons.text>1.9</version.commons.text>
+        <version.commons.text>1.10.0</version.commons.text>
         <version.commons.lang3>3.12.0</version.commons.lang3>
         <version.guava>31.1-jre</version.guava>
         <!-- h2 2.x apparently needs a manual database migration -->

@@ -21,6 +21,7 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 import org.apache.commons.lang3.ArrayUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.web.util.UriComponents;
 import org.springframework.web.util.UriComponentsBuilder;
 
@@ -394,16 +395,16 @@ public class ConfigurationMigrationService
     newDvcaConfiguration.setDvcaCertificateDescriptionServiceUrl(pkiConf.getDvcaCertDescriptionService().getUrl());
 
     String restrictedIdUrl = pkiConf.getRestrictedIdService().getUrl();
-    if ("https://berca-r1.d-trust.net/rs/dvsd_v2".equals(restrictedIdUrl))
+    if (StringUtils.startsWith(restrictedIdUrl, "https://berca-p1.d-trust.net/ps/dvsd_v2"))
     {
-      restrictedIdUrl += "/v1_1";
+      restrictedIdUrl = "https://berca-p1.d-trust.net/ps/dvsd_v2/v1_1";
     }
     newDvcaConfiguration.setRestrictedIdServiceUrl(restrictedIdUrl);
 
     String terminalAuthenticationUrl = pkiConf.getTerminalAuthService().getUrl();
-    if ("https://berca-r1.d-trust.net/rs/dvca-at".equals(terminalAuthenticationUrl))
+    if (StringUtils.startsWith(terminalAuthenticationUrl, "https://berca-p1.d-trust.net/ps/dvca-at"))
     {
-      terminalAuthenticationUrl += "/v1_1";
+      terminalAuthenticationUrl = "https://berca-p1.d-trust.net/ps/dvca-at/v1_1";
     }
     newDvcaConfiguration.setTerminalAuthServiceUrl(terminalAuthenticationUrl);
 

@@ -176,6 +176,6 @@ class EidasMetadataServiceTest
     return new EidasMetadataService("id", "entityID", Instant.now(), keyPair.getCert(), keyPair.getCert(),
                                     organisation, contactPerson, contactPerson, "https://post-endpoint.com",
                                     "https://redirect-endpoint.com", attributes, supportedNameIdTypes, "2.0",
-                                    signed, true, null);
+                                    signed, true, "DE");
   }
 }

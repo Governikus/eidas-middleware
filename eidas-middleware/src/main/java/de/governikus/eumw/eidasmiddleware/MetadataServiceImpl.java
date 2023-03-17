@@ -70,6 +70,8 @@ public class MetadataServiceImpl implements MetadataService
 
     List<EidasNameIdType> supportedNameIdTypes = new ArrayList<>();
     supportedNameIdTypes.add(EidasNameIdType.TRANSIENT);
+    supportedNameIdTypes.add(EidasNameIdType.PERSISTENT);
+    supportedNameIdTypes.add(EidasNameIdType.UNSPECIFIED);
     try
     {
       var optionalEidasMiddlewareConfig = configurationService.getConfiguration();
@@ -115,10 +117,9 @@ public class MetadataServiceImpl implements MetadataService
                                              middlewareVersion,
                                              eidasMiddlewareConfig.getEidasConfiguration().isDoSign(),
                                              requesterIdFlag,
-                                             configurationService.getConfiguration()
-                                                                 .map(EidasMiddlewareConfig::getEidasConfiguration)
-                                                                 .map(EidasConfiguration::getCountryCode)
-                                                                 .orElse(null));
+                                             // Country Code is always 'DE' for eIDAS-Service metadata.
+                                             "DE");
+
     }
     catch (Exception e)
     {

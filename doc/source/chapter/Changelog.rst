@@ -108,7 +108,7 @@ Changelog
 * 1.2.9
 
     - eIDAS Middleware: Update third party libraries for security fixes.
-	
+
 * 1.2.10
 
     - eIDAS Middleware: Security Patch
@@ -203,3 +203,12 @@ Changelog
     - Configuration Migration: Add new component to facilitate migration from 2.x.
     - Remove configuration-wizard and password-generator. The functionality of these two artifacts is now
       implemented in the eIDAS Middleware.
+
+* 3.0.1
+
+    - eIDAS Middleware: Fix a bug where the wrong country code was published in the metadata.
+    - eIDAS Middleware: All name identifiers are published in the metadata as required by eIDAS SAML Message Format
+      1.2.
+    - eIDAS Middleware: Update DVCA server certificate in eIDAS_Middleware_configuration_test.xml
+    - Configuration Migration: Fix a bug that migrated the wrong URL for communication with the DVCA for production
+      systems.

@@ -40,6 +40,8 @@ class ConfigurationMigrationServiceTest
 
   private static final String GOV_DVCA_DVCA_R1_GOVERNIKUS_EID_DE = "dvca-r1.governikus-eid.de";
 
+  private static final String BERCA_PS_1_1 = "berca-p1.d-trust.net";
+
   private static final String METADATA_SIGNATURE_VERIFICATION_CERTIFICATE = "metadataSignatureVerificationCertificate";
 
   private static final String MIDDLEWARE_SIGNING_KEY_PAIR = "middlewareSigningKeyPair";
@@ -90,9 +92,9 @@ class ConfigurationMigrationServiceTest
     Assertions.assertEquals(11, serviceProviderList.size());
     List<DvcaConfigurationType> dvcaConfigurationTypeList = eidasMiddlewareConfig.getEidConfiguration()
                                                                                  .getDvcaConfiguration();
-    Assertions.assertEquals(2, dvcaConfigurationTypeList.size());
+    Assertions.assertEquals(3, dvcaConfigurationTypeList.size());
     List<CertificateType> certificates = eidasMiddlewareConfig.getKeyData().getCertificate();
-    Assertions.assertEquals(7, certificates.size());
+    Assertions.assertEquals(10, certificates.size());
     List<KeyStoreType> keyStores = eidasMiddlewareConfig.getKeyData().getKeyStore();
     Assertions.assertEquals(13, keyStores.size());
     List<KeyPairType> keyPairs = eidasMiddlewareConfig.getKeyData().getKeyPair();
@@ -125,7 +127,7 @@ class ConfigurationMigrationServiceTest
     assertServiceProvider(serviceProviderList, "TestbedEDSA", "EDSA", GOV_DVCA_LOCALHOST);
     assertServiceProvider(serviceProviderList, "TestbedERSA", "ERSA", GOV_DVCA_LOCALHOST);
     assertServiceProvider(serviceProviderList, "TestbedF", "F", GOV_DVCA_LOCALHOST);
-    assertServiceProvider(serviceProviderList, "TestbedG", "G", GOV_DVCA_LOCALHOST);
+    assertServiceProvider(serviceProviderList, "TestbedG", "G", BERCA_PS_1_1);
 
     assertDvca(dvcaConfigurationTypeList,
                GOV_DVCA_LOCALHOST,
@@ -140,6 +142,12 @@ class ConfigurationMigrationServiceTest
                "https://dvca-r1.governikus-eid.de:8444/gov_dvca/ri-service",
                "https://dvca-r1.governikus-eid.de:8444/gov_dvca/pa-service",
                "https://dvca-r1.governikus-eid.de:8444/gov_dvca/certDesc-service");
+    assertDvca(dvcaConfigurationTypeList,
+               BERCA_PS_1_1,
+               "https://berca-p1.d-trust.net/ps/dvca-at/v1_1",
+               "https://berca-p1.d-trust.net/ps/dvsd_v2/v1_1",
+               "https://berca-p1.d-trust.net/ps/scs",
+               "https://berca-p1.d-trust.net/ps/dvca-at-cert-desc");
     Assertions.assertEquals("A,ID,UB", eidasMiddlewareConfig.getEidConfiguration().getAllowedEidMeans());
     Assertions.assertEquals("providerA", eidasMiddlewareConfig.getEidasConfiguration().getPublicServiceProviderName());
     Assertions.assertEquals("DE", eidasMiddlewareConfig.getEidasConfiguration().getCountryCode());
