@@ -519,14 +519,14 @@ public final class Utils
   }
 
   /**
-   * This functions checks if a String is null or zero
+   * Checks if a given string is null or empty.
    *
-   * @param s
-   * @return
+   * @param s the string to be checked
+   * @return true if the string is null or empty, false otherwise
    */
   public static boolean isNullOrEmpty(String s)
   {
-    return s == null ? true : "".equals(s);
+    return s == null || s.isEmpty();
   }
 
   /**
