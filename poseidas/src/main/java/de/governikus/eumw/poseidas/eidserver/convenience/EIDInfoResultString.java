@@ -25,7 +25,7 @@ public class EIDInfoResultString implements EIDInfoResult, Serializable
 
   private final String result;
 
-  EIDInfoResultString(String result)
+  public EIDInfoResultString(String result)
   {
     this.result = result;
   }

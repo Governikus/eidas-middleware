@@ -14,6 +14,7 @@ import javax.xml.namespace.QName;
 
 import de.governikus.eumw.eidascommon.ErrorCode;
 import de.governikus.eumw.eidascommon.ErrorCodeException;
+import de.governikus.eumw.eidasstarterkit.additional.attributes.NationalityType;
 import de.governikus.eumw.eidasstarterkit.person_attributes.EidasPersonAttributes;
 import de.governikus.eumw.eidasstarterkit.person_attributes.natural_persons_attribute.BirthNameAttribute;
 import de.governikus.eumw.eidasstarterkit.person_attributes.natural_persons_attribute.CurrentAddressAttribute;
@@ -21,6 +22,7 @@ import de.governikus.eumw.eidasstarterkit.person_attributes.natural_persons_attr
 import de.governikus.eumw.eidasstarterkit.person_attributes.natural_persons_attribute.FamilyNameAttribute;
 import de.governikus.eumw.eidasstarterkit.person_attributes.natural_persons_attribute.GenderAttribute;
 import de.governikus.eumw.eidasstarterkit.person_attributes.natural_persons_attribute.GivenNameAttribute;
+import de.governikus.eumw.eidasstarterkit.person_attributes.natural_persons_attribute.NationalityAttribute;
 import de.governikus.eumw.eidasstarterkit.person_attributes.natural_persons_attribute.PersonIdentifierAttribute;
 import de.governikus.eumw.eidasstarterkit.person_attributes.natural_persons_attribute.PlaceOfBirthAttribute;
 import lombok.AllArgsConstructor;
@@ -70,7 +72,11 @@ public enum EidasNaturalPersonAttributes implements EidasPersonAttributes
   PERSON_IDENTIFIER(AttributeConstants.EIDAS_PERSON_IDENTIFIER_ATTRIBUTE_NAME,
                     AttributeConstants.EIDAS_PERSON_IDENTIFIER_ATTRIBUTE_FRIENDLY_NAME,
                     PersonIdentifierType.TYPE_NAME,
-                    PersonIdentifierAttribute.class);
+                    PersonIdentifierAttribute.class),
+  NATIONALITY(NationalityAttribute.NATIONALITY_ATTRIBUTE_NAME,
+              NationalityAttribute.NATIONALITY_ATTRIBUTE_FRIENDLY_NAME,
+              NationalityType.TYPE_NAME,
+              NationalityAttribute.class);
 
   @Getter
   private final String name;

@@ -192,12 +192,20 @@ public class CvcTlsCheck
   {
     URI serverUri = UriComponentsBuilder.fromUriString(serverUrl).build().toUri();
     URI subjectUri = UriComponentsBuilder.fromUriString(data.getCVCDescription().getSubjectUrl()).build().toUri();
-    URI serverUrlToCompare = UriComponentsBuilder.fromUriString(removeTrailingSlash(serverUri.toString()))
+    URI serverUrlToCompare = UriComponentsBuilder.fromUriString(serverUri.toString())
                                                  .port(getPort(serverUri))
+                                                 .replacePath(null)
+                                                 .replaceQuery(null)
+                                                 .fragment(null)
+                                                 .userInfo(null)
                                                  .build()
                                                  .toUri();
-    URI subjectUrlToCompare = UriComponentsBuilder.fromUriString(removeTrailingSlash(subjectUri.toString()))
+    URI subjectUrlToCompare = UriComponentsBuilder.fromUriString(subjectUri.toString())
                                                   .port(getPort(subjectUri))
+                                                  .replacePath(null)
+                                                  .replaceQuery(null)
+                                                  .fragment(null)
+                                                  .userInfo(null)
                                                   .build()
                                                   .toUri();
 
@@ -211,15 +219,6 @@ public class CvcTlsCheck
       log.warn("Server URL from config and CVC {} do not match", data.getHolderReferenceString());
     }
     return result;
-  }
-
-  private static String removeTrailingSlash(String uri)
-  {
-    if (uri.endsWith("/"))
-    {
-      return uri.substring(0, uri.length() - 1);
-    }
-    return uri;
   }
 
   private static int getPort(URI uri)

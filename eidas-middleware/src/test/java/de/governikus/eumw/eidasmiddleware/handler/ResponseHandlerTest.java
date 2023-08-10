@@ -21,14 +21,19 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.stream.Stream;
 
 import javax.xml.bind.DatatypeConverter;
 
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.Arguments;
+import org.junit.jupiter.params.provider.MethodSource;
 import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.MockitoAnnotations;
@@ -58,6 +63,7 @@ import de.governikus.eumw.eidasstarterkit.person_attributes.natural_persons_attr
 import de.governikus.eumw.eidasstarterkit.person_attributes.natural_persons_attribute.PlaceOfBirthAttribute;
 import de.governikus.eumw.poseidas.ecardcore.model.ResultMinor;
 import de.governikus.eumw.poseidas.eidmodel.data.EIDKeys;
+import de.governikus.eumw.poseidas.eidserver.convenience.EIDInfoResult;
 import de.governikus.eumw.poseidas.eidserver.convenience.EIDInfoResultDeselected;
 import de.governikus.eumw.poseidas.eidserver.convenience.EIDInfoResultNotOnChip;
 import de.governikus.eumw.poseidas.eidserver.convenience.EIDInfoResultPlaceStructured;
@@ -186,13 +192,13 @@ class ResponseHandlerTest
     when(mockEidResultResponse.getEIDInfo(EIDKeys.PLACE_OF_RESIDENCE)).thenReturn(mockPlaceOfBirthEidInfoResult);
     EIDInfoResultNotOnChip mockBirthNameEidInfoResult = mock(EIDInfoResultNotOnChip.class);
     when(mockEidResultResponse.getEIDInfo(EIDKeys.BIRTH_NAME)).thenReturn(mockBirthNameEidInfoResult);
-
+    EIDInfoResultNotOnChip mockNationalityEidInfoResult = mock(EIDInfoResultNotOnChip.class);
+    when(mockEidResultResponse.getEIDInfo(EIDKeys.NATIONALITY)).thenReturn(mockNationalityEidInfoResult);
 
     // Mock EID Reponse Result
     Result mockEidResultResponseResult = mock(Result.class);
     when(mockEidResultResponse.getResult()).thenReturn(mockEidResultResponseResult);
     when(mockEidResultResponseResult.getResultMajor()).thenReturn(Constants.EID_MAJOR_OK);
-
 
     // Mock RequestingServiceProvider
     RequestingServiceProvider mockRequestingServiceProvider = mock(RequestingServiceProvider.class);
@@ -209,8 +215,24 @@ class ResponseHandlerTest
     verify(systemUnderTest).prepareSAMLResponse(mockRequestingServiceProvider,
                                                 mockRequestSession,
                                                 mockEidResultResponse);
+    verify(systemUnderTest).convertNationality(mockNationalityEidInfoResult);
   }
 
+  @ParameterizedTest
+  @MethodSource("testNationalityConvesionParameters")
+  void testNationalityConvesion(EIDInfoResult nationalityResult, String expected)
+  {
+    Assertions.assertEquals(expected, systemUnderTest.convertNationality(nationalityResult));
+  }
+
+  private static Stream<Arguments> testNationalityConvesionParameters()
+  {
+    return Stream.of(Arguments.of(new EIDInfoResultNotOnChip(), ""),
+                     Arguments.of(new EIDInfoResultString("D"), "DE"),
+                     Arguments.of(new EIDInfoResultString(""), "DE"),
+                     Arguments.of(new EIDInfoResultString("GRC"), "EL"),
+                     Arguments.of(new EIDInfoResultString("RKS"), "KS"));
+  }
 
   @Test
   void testGetResultForRefIDResultMajorErrorByUser()
@@ -272,7 +294,6 @@ class ResponseHandlerTest
     when(mockConfigurationService.getProviderByEntityID(mockRequestSession.getReqProviderEntityId())).thenReturn(mockRequestingServiceProvider);
     when(mockRequestingServiceProvider.getEntityID()).thenReturn("asd");
     when(mockRequestingServiceProvider.getAssertionConsumerURL()).thenReturn("asd");
-
 
     mockConfigurationServiceForEidasSigner();
 
@@ -487,7 +508,6 @@ class ResponseHandlerTest
     verify(attributes).add(new BirthNameAttribute(GIVEN_NAME + " " + FAMILY_NAME));
   }
 
-
   @Test
   void testCreateAllNamesForFamilyName()
   {
@@ -659,6 +679,11 @@ class ResponseHandlerTest
     Assertions.assertEquals(country, addrAttr.getAdminunitFirstline());
   }
 
+  @Disabled("This test has UTF-8 characters which are not decoded correctly under systems with a different "
+            + "standard character set as UTF-8. The Problem is the method CurrentAddressTypeUnmarshaller#parseContents."
+            + "The decoding of the base64 byte array has no explicit character decoding. Until the "
+            + "litsec/eidas-opensaml has this bug, this test will be disabled."
+            + "See https://github.com/litsec/eidas-opensaml/pull/52")
   @Test
   void testPrepareDummyResponseWithoutTestCaseReturnsResponseWithDummyValues() throws Exception
   {

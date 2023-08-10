@@ -19,6 +19,7 @@ import java.security.KeyManagementException;
 import java.security.KeyStore;
 import java.security.KeyStoreException;
 import java.security.NoSuchAlgorithmException;
+import java.security.NoSuchProviderException;
 import java.security.Principal;
 import java.security.PrivateKey;
 import java.security.SecureRandom;
@@ -52,6 +53,7 @@ import org.apache.tomcat.util.net.Constants;
 
 import de.governikus.eumw.eidascommon.Utils;
 import de.governikus.eumw.utils.key.SecurityProvider;
+import lombok.RequiredArgsConstructor;
 
 
 /**
@@ -107,6 +109,8 @@ public class PKIServiceConnector
 
   private final String entityID;
 
+  private final boolean hsmMode;
+
 
   /**
    * Create new instance for specifies SSL parameters
@@ -148,6 +152,7 @@ public class PKIServiceConnector
     this.clientCertAndKey = clientCertAndKey;
     this.storePass = storePass;
     this.entityID = entityID;
+    this.hsmMode = clientCertAndKey.getProvider().getName().startsWith("SunPKCS11-");
   }
 
   private static KeyStore createKeystore(Key sslClientKey,
@@ -263,7 +268,7 @@ public class PKIServiceConnector
       client = HttpClients.custom().useSystemProperties().setSSLSocketFactory(sslSocketFactory).build();
     }
     catch (CertificateException | NoSuchAlgorithmException | UnrecoverableKeyException | KeyStoreException
-      | KeyManagementException e)
+      | KeyManagementException | NoSuchProviderException e)
     {
       throw new IOException("Cannot create http client", e);
     }
@@ -273,19 +278,23 @@ public class PKIServiceConnector
     }
   }
 
-  private SSLContext createSSLContext() throws NoSuchAlgorithmException, KeyStoreException,
-    UnrecoverableKeyException, KeyManagementException, IOException, CertificateException
+  private SSLContext createSSLContext() throws NoSuchAlgorithmException, KeyStoreException, UnrecoverableKeyException,
+    KeyManagementException, IOException, CertificateException, NoSuchProviderException
   {
-    SSLContext ctx = SSLContext.getInstance(Constants.SSL_PROTO_TLSv1_2);
+    SSLContext ctx = SSLContext.getInstance(Constants.SSL_PROTO_TLSv1_2,
+                                            hsmMode ? SecurityProvider.SUN_JSSE_PROVIDER
+                                              : SecurityProvider.BOUNCY_CASTLE_JSSE_PROVIDER);
     KeyManager[] km = createKeyManager();
     ctx.init(km, createTrustManager(), new SecureRandom());
     return ctx;
   }
 
   private TrustManager[] createTrustManager()
-    throws NoSuchAlgorithmException, KeyStoreException, IOException, CertificateException
+    throws NoSuchAlgorithmException, KeyStoreException, IOException, CertificateException, NoSuchProviderException
   {
-    TrustManagerFactory tmf = TrustManagerFactory.getInstance(TrustManagerFactory.getDefaultAlgorithm());
+    TrustManagerFactory tmf = TrustManagerFactory.getInstance(TrustManagerFactory.getDefaultAlgorithm(),
+                                                              hsmMode ? SecurityProvider.SUN_JSSE_PROVIDER
+                                                                : SecurityProvider.BOUNCY_CASTLE_JSSE_PROVIDER);
     KeyStore trustStore = KeyStore.getInstance("jks");
     trustStore.load(null, null);
     trustStore.setCertificateEntry("alias", sslServersCert);
@@ -293,16 +302,26 @@ public class PKIServiceConnector
     return tmf.getTrustManagers();
   }
 
-  private KeyManager[] createKeyManager()
-    throws NoSuchAlgorithmException, KeyStoreException, UnrecoverableKeyException
+  private KeyManager[] createKeyManager() throws NoSuchAlgorithmException, KeyStoreException, UnrecoverableKeyException
   {
-    KeyManager km;
-    KeyManagerFactory kmf = KeyManagerFactory.getInstance(KeyManagerFactory.getDefaultAlgorithm());
+    KeyManagerFactory kmf;
+    if (hsmMode)
+    {
+      kmf = KeyManagerFactory.getInstance("SUNX509", SecurityProvider.SUN_JSSE_PROVIDER);
+    }
+    else
+    {
+      kmf = KeyManagerFactory.getInstance("PKIX", SecurityProvider.BOUNCY_CASTLE_JSSE_PROVIDER);
+    }
     kmf.init(clientCertAndKey, storePass);
-    X509KeyManager origKM = (X509KeyManager)kmf.getKeyManagers()[0];
-    // force the key manager to use a defined key in case there is more than one
-    km = new AliasKeyManager(origKM, entityID);
-    return new KeyManager[]{km};
+    if (hsmMode)
+    {
+      X509KeyManager origKM = (X509KeyManager)kmf.getKeyManagers()[0];
+      // force the key manager to use a defined key in case there is more than one
+      KeyManager km = new AliasKeyManager(origKM, entityID);
+      return new KeyManager[]{km};
+    }
+    return kmf.getKeyManagers();
   }
 
   void setHttpsConnectionSetting(BindingProvider port, String uri) throws URISyntaxException
@@ -366,6 +385,7 @@ public class PKIServiceConnector
   /**
    * Wrap a {@link KeyManager} in order to force use of a defined key as client key.
    */
+  @RequiredArgsConstructor
   private static final class AliasKeyManager implements X509KeyManager
   {
 
@@ -378,18 +398,6 @@ public class PKIServiceConnector
      * Alias of the client key.
      */
     private final String alias;
-
-    /**
-     * Constructor.
-     *
-     * @param wrapped the wrapped {@link KeyManager}
-     * @param alias alias of the client key to be used
-     */
-    private AliasKeyManager(X509KeyManager wrapped, String alias)
-    {
-      this.wrapped = wrapped;
-      this.alias = alias;
-    }
 
     /**
      * {@inheritDoc}

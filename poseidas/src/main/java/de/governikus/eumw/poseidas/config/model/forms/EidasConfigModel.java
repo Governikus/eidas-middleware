@@ -56,10 +56,6 @@ public class EidasConfigModel
 
   @KeyPairNameExists
   @NotEmpty(message = "Has to be selected")
-  private String decryptionKeyPairName;
-
-  @KeyPairNameExists
-  @NotEmpty(message = "Has to be selected")
   private String signatureKeyPairName;
 
   private boolean signMetadata;

@@ -47,8 +47,8 @@ For a **test system**, the following URLs need to be reachable::
 
 For a **production system**, the following URLs need to be reachable::
 
-    https://berca-p1.d-trust.net/ps/dvca-at
-    https://berca-p1.d-trust.net/ps/dvsd_v2
+    https://berca-p1.d-trust.net/ps/dvca-at/v1_1
+    https://berca-p1.d-trust.net/ps/dvsd_v2/v1_1
     https://berca-p1.d-trust.net/ps/scs
     https://berca-p1.d-trust.net/ps/dvca-at-cert-desc
 

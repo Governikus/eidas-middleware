@@ -285,6 +285,13 @@ public class ECCVCertificate extends AbstractASN1Encoder
     return this.profileIdentifier;
   }
 
+  /**
+   * This method returns not the actual value from the ASN.1 structure of the CVC, but the value from the ASN.1
+   * structure of the CVC plus 24 hours. The actual value of the expiration date from the ASN.1 structure of a CVC is
+   * the date after which the certificate expires. See TR 3110-3.
+   *
+   * @return the date when the cvc is expired
+   */
   public Date getExpirationDateDate()
   {
     return this.expirationDate;

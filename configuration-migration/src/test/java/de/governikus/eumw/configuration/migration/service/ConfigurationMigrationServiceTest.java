@@ -46,8 +46,6 @@ class ConfigurationMigrationServiceTest
 
   private static final String MIDDLEWARE_SIGNING_KEY_PAIR = "middlewareSigningKeyPair";
 
-  private static final String MIDDLEWARE_DECRYPTION_KEY_PAIR = "middlewareDecryptionKeyPair";
-
   private static final String BLACK_LIST_TRUST_ANCHOR = "BlackListTrustAnchor";
 
   private static final String MASTER_LIST_TRUST_ANCHOR = "MasterListTrustAnchor";
@@ -96,9 +94,9 @@ class ConfigurationMigrationServiceTest
     List<CertificateType> certificates = eidasMiddlewareConfig.getKeyData().getCertificate();
     Assertions.assertEquals(10, certificates.size());
     List<KeyStoreType> keyStores = eidasMiddlewareConfig.getKeyData().getKeyStore();
-    Assertions.assertEquals(13, keyStores.size());
+    Assertions.assertEquals(12, keyStores.size());
     List<KeyPairType> keyPairs = eidasMiddlewareConfig.getKeyData().getKeyPair();
-    Assertions.assertEquals(13, keyPairs.size());
+    Assertions.assertEquals(12, keyPairs.size());
     Assertions.assertEquals(1, eidasMiddlewareConfig.getEidasConfiguration().getConnectorMetadata().size());
     Assertions.assertEquals("https://localhost:8443", eidasMiddlewareConfig.getServerUrl());
     TimerConfigurationType timerConfiguration = eidasMiddlewareConfig.getEidConfiguration().getTimerConfiguration();
@@ -155,8 +153,7 @@ class ConfigurationMigrationServiceTest
     Assertions.assertEquals(30, eidasMiddlewareConfig.getEidasConfiguration().getMetadataValidity());
     Assertions.assertNotNull(eidasMiddlewareConfig.getEidasConfiguration().getContactPerson());
     Assertions.assertNotNull(eidasMiddlewareConfig.getEidasConfiguration().getOrganization());
-    Assertions.assertEquals(MIDDLEWARE_DECRYPTION_KEY_PAIR,
-                            eidasMiddlewareConfig.getEidasConfiguration().getDecryptionKeyPairName());
+    Assertions.assertNull(eidasMiddlewareConfig.getEidasConfiguration().getDecryptionKeyPairName());
     Assertions.assertEquals(MIDDLEWARE_SIGNING_KEY_PAIR,
                             eidasMiddlewareConfig.getEidasConfiguration().getSignatureKeyPairName());
     Assertions.assertEquals(METADATA_SIGNATURE_VERIFICATION_CERTIFICATE,
@@ -180,7 +177,6 @@ class ConfigurationMigrationServiceTest
     assertKeyPairAndKeyStore(keyPairs, keyStores, "TestbedERSADvcaClientKeyPair", "TestbedERSADvcaKeyStore");
     assertKeyPairAndKeyStore(keyPairs, keyStores, "TestbedFDvcaClientKeyPair", "TestbedFDvcaKeyStore");
     assertKeyPairAndKeyStore(keyPairs, keyStores, "TestbedGDvcaClientKeyPair", "TestbedGDvcaKeyStore");
-    assertKeyPairAndKeyStore(keyPairs, keyStores, MIDDLEWARE_DECRYPTION_KEY_PAIR, "middlewareDecryption", MIDDLEWARE);
     assertKeyPairAndKeyStore(keyPairs, keyStores, MIDDLEWARE_SIGNING_KEY_PAIR, "middlewareSigning", MIDDLEWARE);
   }
 
@@ -217,9 +213,9 @@ class ConfigurationMigrationServiceTest
     List<CertificateType> certificates = eidasMiddlewareConfig.getKeyData().getCertificate();
     Assertions.assertEquals(4, certificates.size());
     List<KeyStoreType> keyStores = eidasMiddlewareConfig.getKeyData().getKeyStore();
-    Assertions.assertEquals(1, keyStores.size());
+    Assertions.assertTrue(keyStores.isEmpty());
     List<KeyPairType> keyPairs = eidasMiddlewareConfig.getKeyData().getKeyPair();
-    Assertions.assertEquals(1, keyPairs.size());
+    Assertions.assertTrue(keyPairs.isEmpty());
     Assertions.assertNull(serviceProviderList.get(0).getClientKeyPairName());
     Assertions.assertNull(eidasMiddlewareConfig.getEidasConfiguration().getSignatureKeyPairName());
   }

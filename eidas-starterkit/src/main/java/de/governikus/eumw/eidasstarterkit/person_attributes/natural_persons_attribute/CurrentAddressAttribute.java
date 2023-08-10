@@ -62,8 +62,8 @@ public class CurrentAddressAttribute extends AbstractEidasAttribute
     return type().getFriendlyName() + ": [LocatorDesignator: " + this.locatorDesignator + "] [Thoroughfare: "
            + this.thoroughfare + "] [PostCode: " + this.postCode + "] [PostName: " + this.postName + "] [PoBox: "
            + this.poBox + "] [LocatorName: " + this.locatorName + "] [CvaddressArea: " + this.cvaddressArea
-           + "] [AdminunitFirstline: " + this.adminunitFirstline + "] [AdminunitSecondline: "
-           + this.adminunitSecondline + "]";
+           + "] [AdminunitFirstline: " + this.adminunitFirstline + "] [AdminunitSecondline: " + this.adminunitSecondline
+           + "]";
   }
 
   @Override
@@ -110,6 +110,9 @@ public class CurrentAddressAttribute extends AbstractEidasAttribute
   @Override
   public String getValue()
   {
-    throw new UnsupportedOperationException("simple value has no use for CurrentAddressType");
+    return "[LocatorDesignator: " + this.locatorDesignator + "] [Thoroughfare: " + this.thoroughfare + "] [PostCode: "
+           + this.postCode + "] [PostName: " + this.postName + "] [PoBox: " + this.poBox + "] [LocatorName: "
+           + this.locatorName + "] [CvaddressArea: " + this.cvaddressArea + "] [AdminunitFirstline: "
+           + this.adminunitFirstline + "] [AdminunitSecondline: " + this.adminunitSecondline + "]";
   }
 }

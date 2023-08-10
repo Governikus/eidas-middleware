@@ -12,6 +12,7 @@ package de.governikus.eumw.poseidas.config;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.io.IOException;
@@ -134,7 +135,7 @@ class ImportExportConfigurationControllerTest extends WebAdminTestBase
                                       .get(0)
                                       .getServerSSLCertificateName());
     assertTrue(eidasMiddlewareConfig.getKeyData().getKeyPair().isEmpty());
-    assertEquals("", eidasMiddlewareConfig.getEidasConfiguration().getDecryptionKeyPairName());
+    assertNull(eidasMiddlewareConfig.getEidasConfiguration().getDecryptionKeyPairName());
 
     eidasMiddlewareConfig.getEidasConfiguration();
   }

@@ -26,6 +26,7 @@ import de.governikus.eumw.eidascommon.ContextPaths;
 import de.governikus.eumw.poseidas.config.model.ServiceProviderDetails;
 import de.governikus.eumw.poseidas.server.idprovider.config.ConfigurationService;
 import de.governikus.eumw.poseidas.server.pki.PermissionDataHandlingMBean;
+import de.governikus.eumw.poseidas.server.pki.TerminalPermissionAOBean;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
@@ -45,6 +46,8 @@ public class OverviewController
   private final PermissionDataHandlingMBean data;
 
   private final ConfigurationService configurationService;
+
+  private final TerminalPermissionAOBean terminalPermissionAOBean;
 
   /**
    * The index route redirects to /dashboard
@@ -86,7 +89,8 @@ public class OverviewController
                                                                     new ServiceProviderDetails(serviceProviderType,
                                                                                                data.getPermissionDataInfo(serviceProviderType.getCVCRefID(),
                                                                                                                           false),
-                                                                                               null)));
+                                                                                               null,
+                                                                                               terminalPermissionAOBean)));
     return cvcList;
   }
 }

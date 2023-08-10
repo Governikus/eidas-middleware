@@ -334,7 +334,7 @@ class DvcaControllerTest extends WebAdminTestBase
                                                .map(HtmlAnchor.class::cast)
                                                .filter(a -> a.getHrefAttribute()
                                                              .startsWith("/admin-interface/dvcaConfiguration/remove")
-                                                            && a.getHrefAttribute().endsWith("?yes"))
+                                                            && a.getHrefAttribute().endsWith("&yes"))
                                                .findFirst();
     assertTrue(optionalRemoveButton.isPresent());
     dvcaConfigMainPage = optionalRemoveButton.get().click();

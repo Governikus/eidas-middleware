@@ -182,6 +182,10 @@ public class TcToken
           intRequest.addRequiredFields(EIDKeys.RESTRICTED_ID);
           break;
 
+        case NATIONALITY:
+          intRequest.addOptionalFields(EIDKeys.NATIONALITY);
+          break;
+
         default:
           log.warn("UNKNOWN Authrequest Attribute: '{}'", eidasNaturalPersonAttribute);
           break;

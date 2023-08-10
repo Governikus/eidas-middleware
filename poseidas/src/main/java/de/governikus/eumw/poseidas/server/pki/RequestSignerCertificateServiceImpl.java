@@ -31,8 +31,8 @@ import de.governikus.eumw.poseidas.cardserver.service.hsm.impl.HSMService;
 import de.governikus.eumw.poseidas.server.idprovider.config.ConfigurationService;
 import de.governikus.eumw.poseidas.server.monitoring.SNMPConstants;
 import de.governikus.eumw.poseidas.server.monitoring.SNMPTrapSender;
-import lombok.RequiredArgsConstructor;
 import de.governikus.eumw.utils.key.SecurityProvider;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 
@@ -78,7 +78,7 @@ public class RequestSignerCertificateServiceImpl implements RequestSignerCertifi
                  .getEidConfiguration()
                  .getServiceProvider()
                  .stream()
-                 .filter(sp -> sp.getName().equals(entityId))
+                 .filter(sp -> sp.getName().equals(entityId) || sp.getCVCRefID().equals(entityId))
                  .findFirst()
                  .orElse(new ServiceProviderType())
                  .getCVCRefID();
@@ -279,6 +279,12 @@ public class RequestSignerCertificateServiceImpl implements RequestSignerCertifi
       return getRequestSignerCertificate(entityId, true);
     }
     return pending;
+  }
+
+  @Override
+  public boolean hasRequestSignerCertificate(String entityId)
+  {
+    return getRequestSignerCertificate(entityId) != null;
   }
 
   @Override

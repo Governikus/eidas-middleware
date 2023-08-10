@@ -20,6 +20,7 @@ import java.security.UnrecoverableKeyException;
 import java.security.cert.CertificateEncodingException;
 import java.security.cert.X509Certificate;
 import java.util.ArrayList;
+import java.util.Base64;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Optional;
@@ -42,7 +43,6 @@ import org.springframework.test.context.junit.jupiter.SpringExtension;
 import de.governikus.eumw.config.EidasMiddlewareConfig;
 import de.governikus.eumw.config.ServiceProviderType;
 import de.governikus.eumw.eidascommon.ErrorCodeWithResponseException;
-import de.governikus.eumw.eidascommon.HttpRedirectUtils;
 import de.governikus.eumw.eidasmiddleware.eid.RequestingServiceProvider;
 import de.governikus.eumw.eidasmiddleware.repositories.RequestSessionRepository;
 import de.governikus.eumw.eidasstarterkit.EidasLoaEnum;
@@ -129,7 +129,7 @@ class RequestHandlerMatrixTest
                                            testPrerequisites.spTypeRequest);
 
     RequestHandler requestHandler = new RequestHandler(requestSessionRepository, mockConfigurationService);
-    EidasRequest eIDASRequest = requestHandler.handleSAMLRequest("RELAY_STATE", samlRequest, false);
+    EidasRequest eIDASRequest = requestHandler.handleSAMLPostRequest("RELAY_STATE", samlRequest);
     Assertions.assertNotNull(eIDASRequest.getId());
   }
 
@@ -147,7 +147,7 @@ class RequestHandlerMatrixTest
 
     RequestHandler requestHandler = new RequestHandler(requestSessionRepository, mockConfigurationService);
     Assertions.assertThrows(ErrorCodeWithResponseException.class,
-                            () -> requestHandler.handleSAMLRequest("RELAY_STATE", samlRequest, false));
+                            () -> requestHandler.handleSAMLPostRequest("RELAY_STATE", samlRequest));
   }
 
   private void prepareConfig()
@@ -220,7 +220,7 @@ class RequestHandlerMatrixTest
       return null;
     }
 
-    return HttpRedirectUtils.deflate(samlRequest);
+    return Base64.getEncoder().encodeToString(samlRequest);
   }
 
   @ToString

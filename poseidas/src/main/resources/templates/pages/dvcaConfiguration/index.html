@@ -98,9 +98,9 @@
                     </div>
                     <hr/>
                     <div style="float: right">
-                        <a class="btn btn-secondary" th:href="*{'/admin-interface/dvcaConfiguration/edit/' + name}">Edit
+                        <a class="btn btn-secondary" th:href="@{'/admin-interface/dvcaConfiguration/edit?dvcaname=' + *{#uris.escapeQueryParam(name)}}">Edit
                             <span class="fa fa-pencil-alt"></span></a>
-                        <a class="btn btn-danger" th:href="*{'/admin-interface/dvcaConfiguration/remove/' + name}">Delete
+                        <a class="btn btn-danger" th:href="@{'/admin-interface/dvcaConfiguration/remove?dvcaname=' + *{#uris.escapeQueryParam(name)}}">Delete
                             <span class="fa fa-trash"></span></a>
                     </div>
 

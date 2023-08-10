@@ -212,3 +212,22 @@ Changelog
     - eIDAS Middleware: Update DVCA server certificate in eIDAS_Middleware_configuration_test.xml
     - Configuration Migration: Fix a bug that migrated the wrong URL for communication with the DVCA for production
       systems.
+
+
+* 3.1.0
+
+    - All components: Code cleanups.
+    - eIDAS Middleware: Using identglue to check the availability of the AusweisApp2.
+    - eIDAS Middleware: Added a timer to renew an expired CVC with a
+      :term:`Request Signer Certificate<Request Signer Certificate>` when the current CVC is expired less than two days.
+        - Added a notification in the Admin-UI to indicate that the renewal will be tried.
+    - eIDAS Middleware: Fix unsuccessful indication of a public service provider on certain conditions.
+    - eIDAS Middleware: Obsolete decryption key pair for SAML has been removed in the Admin-UI.
+    - eIDAS Middleware: The used holder reference will be logged if an CVC request is unsuccessful.
+    - eIDAS Middleware: A sequence number is never reused for CVC requests of a service provider.
+    - eIDAS Demo: Improved design and added decrypted assertion on result page.
+    - eIDAS Middleware: Added support for Brainpool elliptic curves on TLS connections.
+    - eIDAS Middleware: Static resources have been moved from the base path to module specific paths.
+    - eIDAS Middleware: SAML redirect binding has been added.
+    - eIDAS Middleware: Added support for the natural person attribute 'Nationality'.
+

@@ -117,7 +117,10 @@ class MetadataServiceImplTest
                                                     + ContextPaths.REQUEST_RECEIVER));
     Assertions.assertTrue(metadataAsString.contains("http://serverURL" + ContextPaths.EIDAS_CONTEXT_PATH
                                                     + ContextPaths.METADATA));
-    Assertions.assertTrue(new String(metadata).contains("2.0"));
+    Assertions.assertTrue(metadataAsString.contains("2.0"));
+    // part of sig cert
+    Assertions.assertTrue(metadataAsString.contains("j51v55HpaAA9farLNsxNsmYHKKF8D12gNGHs8XFuVLkG8iHU07RoYJ3h1vrumrd4"));
+    Assertions.assertFalse(metadataAsString.contains("KeyDescriptor use=\"encryption\""));
   }
 
   private byte[] createConfiguration() throws IOException

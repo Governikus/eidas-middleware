@@ -222,8 +222,9 @@ eIDAS SP it is imperative that the name matches the ``providerName`` used in eID
 
 The client authentication key pair is used for the communication to the :term:`Authorization CA`.
 The associated certificate must be given to the :term:`Authorization CA`.
-In case you use a PKCS11 HSM, this key must be stored in the HSM using label and ID identical to
-the ``CVCRefID`` of the :term:`eID Service Provider` (usually the same value as the name).
+In case you use a PKCS11 HSM, this key must be stored in the HSM. It is required that the the label and the ID for the
+certificate and key entry in the HSM are identical. As the ID is a hexadecimal value, use the hex-value of the ASCII
+string.
 
 
 eIDAS

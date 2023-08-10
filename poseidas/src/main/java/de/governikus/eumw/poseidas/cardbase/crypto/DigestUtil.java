@@ -16,16 +16,12 @@ import java.security.NoSuchAlgorithmException;
 import de.governikus.eumw.poseidas.cardbase.AssertUtil;
 import de.governikus.eumw.poseidas.cardbase.asn1.OID;
 import de.governikus.eumw.poseidas.cardbase.constants.OIDConstants;
+import lombok.experimental.UtilityClass;
 
 
+@UtilityClass
 public final class DigestUtil
 {
-
-  /** Constructor. */
-  private DigestUtil()
-  {
-    super();
-  }
 
   /**
    * Gets {@link MessageDigest} instance by OID.
@@ -40,11 +36,8 @@ public final class DigestUtil
    * @see #getSHA256Digest(OID)
    * @see #getSHA384Digest(OID)
    * @see #getSHA512Digest(OID)
-   * @see #getRIPEMD160Digest(OID)
-   * @see #getWHRILPOOLDigest(OID)
    */
-  public static MessageDigest getDigestByOID(OID oid) throws
-    NoSuchAlgorithmException
+  public static MessageDigest getDigestByOID(OID oid) throws NoSuchAlgorithmException
   {
     AssertUtil.notNull(oid, "OID");
 
@@ -73,16 +66,6 @@ public final class DigestUtil
     {
       return md;
     }
-    md = getRIPEMD160Digest(oid);
-    if (md != null)
-    {
-      return md;
-    }
-    md = getWHRILPOOLDigest(oid);
-    if (md != null)
-    {
-      return md;
-    }
     throw new IllegalArgumentException("unknown OID");
   }
 
@@ -99,8 +82,7 @@ public final class DigestUtil
     MessageDigest md = null;
     if (oid.equals(OIDConstants.OID_TA_ECDSA_SHA_1) || oid.equals(OIDConstants.OID_TA_RSA_PSS_SHA_1)
         || oid.equals(OIDConstants.OID_TA_RSA_V1_5_SHA_1) || oid.equals(OIDConstants.OID_RI_ECDH_SHA_1)
-        || oid.equals(OIDConstants.OID_RI_DH_SHA_1) || oid.equals(OIDConstants.OID_RSADSI_SHA1_WITH_RSA)
-        || oid.equals(HashAlgorithmEnum.SHA1.getOID()))
+        || oid.equals(OIDConstants.OID_RI_DH_SHA_1) || oid.equals(HashAlgorithmEnum.SHA1.getOID()))
     {
       md = MessageDigest.getInstance("SHA-1");
     }
@@ -119,8 +101,7 @@ public final class DigestUtil
   {
     MessageDigest md = null;
     if (oid.equals(OIDConstants.OID_TA_ECDSA_SHA_224) || oid.equals(OIDConstants.OID_RI_ECDH_SHA_224)
-        || oid.equals(OIDConstants.OID_RI_DH_SHA_224) || oid.equals(OIDConstants.OID_RSADSI_SHA224_WITH_RSA)
-        || oid.equals(HashAlgorithmEnum.SHA224.getOID()))
+        || oid.equals(OIDConstants.OID_RI_DH_SHA_224) || oid.equals(HashAlgorithmEnum.SHA224.getOID()))
     {
       md = MessageDigest.getInstance("SHA-224");
     }
@@ -140,11 +121,9 @@ public final class DigestUtil
     MessageDigest md = null;
     if (oid.equals(OIDConstants.OID_TA_ECDSA_SHA_256) || oid.equals(OIDConstants.OID_TA_RSA_PSS_SHA_256)
         || oid.equals(OIDConstants.OID_TA_RSA_V1_5_SHA_256) || oid.equals(OIDConstants.OID_RI_ECDH_SHA_256)
-        || oid.equals(OIDConstants.OID_RI_DH_SHA_256) || oid.equals(OIDConstants.OID_RSADSI_SHA256_WITH_RSA)
-        || oid.equals(OIDConstants.OID_PSA_ECDH_ECSCHNORR_SHA256)
+        || oid.equals(OIDConstants.OID_RI_DH_SHA_256) || oid.equals(OIDConstants.OID_PSA_ECDH_ECSCHNORR_SHA256)
         || oid.equals(OIDConstants.OID_PSC_ECDH_ECSCHNORR_SHA256)
-        || oid.equals(OIDConstants.OID_PSM_ECDH_ECSCHNORR_SHA256)
-        || oid.equals(HashAlgorithmEnum.SHA256.getOID()))
+        || oid.equals(OIDConstants.OID_PSM_ECDH_ECSCHNORR_SHA256) || oid.equals(HashAlgorithmEnum.SHA256.getOID()))
     {
       md = MessageDigest.getInstance("SHA-256");
     }
@@ -162,9 +141,8 @@ public final class DigestUtil
   private static MessageDigest getSHA384Digest(OID oid) throws NoSuchAlgorithmException
   {
     MessageDigest md = null;
-    if (oid.equals(HashAlgorithmEnum.SHA384.getOID()) || oid.equals(OIDConstants.OID_RSADSI_SHA384_WITH_RSA)
-        || oid.equals(OIDConstants.OID_TA_ECDSA_SHA_384) || oid.equals(OIDConstants.OID_RI_ECDH_SHA_384)
-        || oid.equals(OIDConstants.OID_RI_DH_SHA_384)
+    if (oid.equals(HashAlgorithmEnum.SHA384.getOID()) || oid.equals(OIDConstants.OID_TA_ECDSA_SHA_384)
+        || oid.equals(OIDConstants.OID_RI_ECDH_SHA_384) || oid.equals(OIDConstants.OID_RI_DH_SHA_384)
         || oid.equals(OIDConstants.OID_PSA_ECDH_ECSCHNORR_SHA384)
         || oid.equals(OIDConstants.OID_PSC_ECDH_ECSCHNORR_SHA384)
         || oid.equals(OIDConstants.OID_PSM_ECDH_ECSCHNORR_SHA384))
@@ -185,51 +163,14 @@ public final class DigestUtil
   private static MessageDigest getSHA512Digest(OID oid) throws NoSuchAlgorithmException
   {
     MessageDigest md = null;
-    if (oid.equals(HashAlgorithmEnum.SHA512.getOID()) || oid.equals(OIDConstants.OID_RSADSI_SHA512_WITH_RSA)
-        || oid.equals(OIDConstants.OID_TA_ECDSA_SHA_512) || oid.equals(OIDConstants.OID_TA_RSA_PSS_SHA_512)
-        || oid.equals(OIDConstants.OID_TA_RSA_V1_5_SHA_512) || oid.equals(OIDConstants.OID_RI_ECDH_SHA_512)
-        || oid.equals(OIDConstants.OID_RI_DH_SHA_512)
+    if (oid.equals(HashAlgorithmEnum.SHA512.getOID()) || oid.equals(OIDConstants.OID_TA_ECDSA_SHA_512)
+        || oid.equals(OIDConstants.OID_TA_RSA_PSS_SHA_512) || oid.equals(OIDConstants.OID_TA_RSA_V1_5_SHA_512)
+        || oid.equals(OIDConstants.OID_RI_ECDH_SHA_512) || oid.equals(OIDConstants.OID_RI_DH_SHA_512)
         || oid.equals(OIDConstants.OID_PSA_ECDH_ECSCHNORR_SHA512)
         || oid.equals(OIDConstants.OID_PSC_ECDH_ECSCHNORR_SHA512)
         || oid.equals(OIDConstants.OID_PSM_ECDH_ECSCHNORR_SHA512))
     {
       md = MessageDigest.getInstance("SHA-512");
-    }
-    return md;
-  }
-
-  /**
-   * Gets MessageDigest in case use of RIPEMD160 indicated in OID.
-   *
-   * @param oid oid
-   * @return MessageDigest, <code>null</code> for RIPEMD 150not used
-   * @throws NoSuchAlgorithmException if MessageDigest can not be instantiated
-   * @see HashAlgorithmEnum#RIPEMD160
-   */
-  private static MessageDigest getRIPEMD160Digest(OID oid) throws NoSuchAlgorithmException
-  {
-    MessageDigest md = null;
-    if (oid.equals(HashAlgorithmEnum.RIPEMD160.getOID()))
-    {
-      md = MessageDigest.getInstance("RIPEMD160");
-    }
-    return md;
-  }
-
-  /**
-   * Gets MessageDigest in case use of WHIRLPOOL indicated in OID.
-   *
-   * @param oid oid
-   * @return MessageDigest, <code>null</code> for WHIRLPOOL not used
-   * @throws NoSuchAlgorithmException if MessageDigest can not be instantiated
-   * @see HashAlgorithmEnum#WHIRLPOOL
-   */
-  private static MessageDigest getWHRILPOOLDigest(OID oid) throws NoSuchAlgorithmException
-  {
-    MessageDigest md = null;
-    if (oid.equals(HashAlgorithmEnum.WHIRLPOOL.getOID()))
-    {
-      md = MessageDigest.getInstance("WHIRLPOOL");
     }
     return md;
   }

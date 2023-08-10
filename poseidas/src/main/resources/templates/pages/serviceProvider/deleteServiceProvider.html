@@ -12,7 +12,8 @@
             </h5>
             <p>Do you really want to delete the eID service provider <b th:text="${name}"/>?</p>
             <br/>
-            <form method="post" th:action="${'/admin-interface/serviceProvider/remove/' + name }">
+            <form method="post"
+                  th:action="@{'/admin-interface/serviceProvider/remove?serviceprovidername=' + ${#uris.escapeQueryParam(name)}}">
                 <input type="hidden"
                        th:name="${_csrf.parameterName}"
                        th:value="${_csrf.token}"/>

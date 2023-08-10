@@ -75,9 +75,12 @@ public class PermissionDataHandling implements PermissionDataHandlingMBean
 
   private final ConfigurationService configurationService;
 
+  private final PendingCertificateRequestRepository pendingCertificateRequestRepository;
+
   private CVCRequestHandler getCvcRequestHandler(ServiceProviderType serviceProvider) throws GovManagementException
   {
-    return new CVCRequestHandler(serviceProvider, facade, hsmServiceHolder.getKeyStore(), configurationService);
+    return new CVCRequestHandler(serviceProvider, facade, hsmServiceHolder.getKeyStore(), configurationService,
+                                 pendingCertificateRequestRepository);
   }
 
   private ServiceProviderType getServiceProvider(String entityID) throws GovManagementException
@@ -473,7 +476,7 @@ public class PermissionDataHandling implements PermissionDataHandlingMBean
       ServiceProviderType serviceProvider = getServiceProvider(entityID);
 
       TerminalPermission tp = getTerminalPermissionForRenewal(serviceProvider.getCVCRefID());
-      ManagementMessage message = getCvcRequestHandler(serviceProvider).makeSubsequentRequest(tp, true);
+      ManagementMessage message = getCvcRequestHandler(serviceProvider).makeSubsequentRequest(tp);
       return message == null ? GlobalManagementCodes.OK.createMessage() : message;
     }
     catch (GovManagementException e)
@@ -678,7 +681,7 @@ public class PermissionDataHandling implements PermissionDataHandlingMBean
       else
       {
         connector = new PKIServiceConnector(30, dvcaServerCertificate, hsmServiceHolder.getKeyStore(), null,
-                                            serviceProviderName);
+                                            serviceProvider.getCVCRefID());
       }
       byte[] content = connector.getFile(pkiUrl + "?wsdl");
       if (!new String(content).contains("wsdl"))
@@ -718,21 +721,6 @@ public class PermissionDataHandling implements PermissionDataHandlingMBean
       throw new GovManagementException(IDManagementCodes.INVALID_INPUT_DATA.createMessage("cvcRefId"));
     }
     return tp.getCvcDescription();
-  }
-
-  @Override
-  public ManagementMessage deletePendingCertRequest(String entityID)
-  {
-    try
-    {
-      ServiceProviderType serviceProvider = getServiceProvider(entityID);
-      return getCvcRequestHandler(serviceProvider).deletePendingRequest();
-    }
-    catch (GovManagementException e)
-    {
-      log.error("{}: Problem while deleting cvc request: {}", entityID, e.getManagementMessage());
-      return e.getManagementMessage();
-    }
   }
 
   @Override

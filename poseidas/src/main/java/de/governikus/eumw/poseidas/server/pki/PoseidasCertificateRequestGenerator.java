@@ -19,9 +19,9 @@ import de.governikus.eumw.poseidas.cardbase.asn1.npa.ATConstants;
 import de.governikus.eumw.poseidas.cardbase.asn1.npa.CertificateDescription;
 import de.governikus.eumw.poseidas.cardbase.asn1.npa.CertificateHolderAuthorizationTemplate;
 import de.governikus.eumw.poseidas.cardbase.asn1.npa.ECCVCertificate;
-import de.governikus.eumw.poseidas.cardserver.certrequest.CertificateRequestGenerator;
-import de.governikus.eumw.poseidas.cardserver.certrequest.CertificateRequestGenerator.AdditionalData;
-import de.governikus.eumw.poseidas.cardserver.certrequest.CertificateRequestGenerator.CertificateRequestResponse;
+import de.governikus.eumw.poseidas.cardserver.certrequest.CvcRequestGenerator;
+import de.governikus.eumw.poseidas.cardserver.certrequest.CvcRequestGenerator.AdditionalCvcRequestInput;
+import de.governikus.eumw.poseidas.cardserver.certrequest.CvcRequestGenerator.CvcRequestData;
 import de.governikus.eumw.poseidas.cardserver.service.ServiceRegistry;
 import de.governikus.eumw.poseidas.cardserver.service.hsm.HSMServiceFactory;
 import de.governikus.eumw.poseidas.cardserver.service.hsm.impl.HSMException;
@@ -40,17 +40,26 @@ class PoseidasCertificateRequestGenerator
   private static final Log LOG = LogFactory.getLog(PoseidasCertificateRequestGenerator.class);
 
   private final TerminalPermissionAO facade;
+
   private final String entityID;
+
   private ECCVCertificate rootCVC;
+
   private ECCVCertificate oldCVC;
+
   private byte[] oldPrivKey;
+
   private CertificateDescription description;
-  private AdditionalData addData;
+
+  private AdditionalCvcRequestInput addData;
+
   @Setter
   private byte[] rscPrivateKey;
 
   @Setter
   private String rscAlias;
+
+  private Integer nextCvcSequenceNumber;
 
   /**
    * Create instance for one-time use on behalf of specified service provider
@@ -95,7 +104,7 @@ class PoseidasCertificateRequestGenerator
     CertificateHolderAuthorizationTemplate chat = new CertificateHolderAuthorizationTemplate(ATConstants.OID_AUTHENTICATION_TERMINALS,
                                                                                              new byte[ATConstants.VALUE_BYTE_COUNT]);
 
-    addData = new AdditionalData(createChr(countryCode, chrMnemonic, sequenceNumber), null, chat);
+    addData = new AdditionalCvcRequestInput(createChr(countryCode, chrMnemonic, sequenceNumber), null, chat);
   }
 
   /**
@@ -105,17 +114,20 @@ class PoseidasCertificateRequestGenerator
    * @param encodedOldCVC
    * @param oldPrivateKey can be null if old private key is in the HSM
    * @param descriptionAsBytes
+   * @param nextCvcSequenceNumber
    * @throws IOException
    */
   void prepareSubsequentRequest(byte[] encodedRootCVC,
                                 byte[] encodedOldCVC,
                                 byte[] oldPrivateKey,
-                                byte[] descriptionAsBytes)
+                                byte[] descriptionAsBytes,
+                                Integer nextCvcSequenceNumber)
     throws IOException
   {
     rootCVC = new ECCVCertificate(encodedRootCVC);
     oldCVC = new ECCVCertificate(encodedOldCVC);
     oldPrivKey = oldPrivateKey;
+    this.nextCvcSequenceNumber = nextCvcSequenceNumber;
     if (descriptionAsBytes != null)
     {
       description = new CertificateDescription(descriptionAsBytes);
@@ -133,9 +145,9 @@ class PoseidasCertificateRequestGenerator
    * @throws IOException
    * @throws SignatureException
    */
-  CertificateRequestResponse create() throws IOException, SignatureException
+  CvcRequestData create() throws IOException, SignatureException
   {
-    String newCHR = CertificateRequestGenerator.generateNewCHR(oldCVC, addData);
+    String newCHR = CvcRequestGenerator.generateNewCHR(oldCVC, addData, nextCvcSequenceNumber);
     boolean keyAlreadyThere = false;
     try
     {
@@ -153,14 +165,15 @@ class PoseidasCertificateRequestGenerator
 
     if (keyAlreadyThere)
     {
-      return CertificateRequestGenerator.generateRequest(oldCVC,
-                                                         oldPrivKey,
-                                                         rootCVC,
-                                                         description,
-                                                         addData,
-                                                         true,
-                                                         rscAlias,
-                                                         rscPrivateKey);
+      return CvcRequestGenerator.generateRequest(oldCVC,
+                                                 oldPrivKey,
+                                                 rootCVC,
+                                                 description,
+                                                 addData,
+                                                 true,
+                                                 rscAlias,
+                                                 rscPrivateKey,
+                                                 nextCvcSequenceNumber);
     }
 
     ChangeKeyLock lock = null;
@@ -174,14 +187,15 @@ class PoseidasCertificateRequestGenerator
       }
       LOG.debug(entityID + ": lock for key " + newCHR + " obtained");
     }
-    return CertificateRequestGenerator.generateRequest(oldCVC,
-                                                       oldPrivKey,
-                                                       rootCVC,
-                                                       description,
-                                                       addData,
-                                                       false,
-                                                       rscAlias,
-                                                       rscPrivateKey);
+    return CvcRequestGenerator.generateRequest(oldCVC,
+                                               oldPrivKey,
+                                               rootCVC,
+                                               description,
+                                               addData,
+                                               false,
+                                               rscAlias,
+                                               rscPrivateKey,
+                                               nextCvcSequenceNumber);
   }
 
   /**

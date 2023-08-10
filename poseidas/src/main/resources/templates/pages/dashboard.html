@@ -31,7 +31,7 @@
                         <span th:text="${entity.getEntityID()}"/>
                         <small th:unless="${entity.isEnabled()}"><i class="fa fa-eye-slash"></i> (Inactive)</small>
                         <a href="details.html"
-                           th:href="@{/admin-interface/details/__${entity.getEntityID()}__}"
+                           th:href="@{'/admin-interface/details?entityid=' + ${#uris.escapeQueryParam(entity.getEntityID())}}"
                            class="float-end"><button class="btn btn-primary">Details</button>
                         </a>
                     </h4>

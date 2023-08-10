@@ -18,6 +18,7 @@ import java.time.format.DateTimeFormatter;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
@@ -32,6 +33,8 @@ import org.springframework.http.MediaType;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 
 import com.gargoylesoftware.htmlunit.UnexpectedPage;
+import com.gargoylesoftware.htmlunit.html.DomNode;
+import com.gargoylesoftware.htmlunit.html.DomText;
 import com.gargoylesoftware.htmlunit.html.HtmlDivision;
 import com.gargoylesoftware.htmlunit.html.HtmlPage;
 
@@ -72,7 +75,8 @@ class CVCControllerTest extends ServiceProviderTestBase
 
   private HtmlPage getServiceProviderPage() throws IOException
   {
-    HtmlPage loginPage = getWebClient().getPage(getRequestUrl("/details/" + ServiceProviderTestBase.SERVICE_PROVIDER));
+    HtmlPage loginPage = getWebClient().getPage(getRequestUrl("/details?entityid="
+                                                              + ServiceProviderTestBase.SERVICE_PROVIDER));
     return login(loginPage);
   }
 
@@ -102,17 +106,11 @@ class CVCControllerTest extends ServiceProviderTestBase
   void testServiceProviderInfo() throws IOException
   {
     HtmlPage serviceProvider = getServiceProviderPage();
-    HtmlDivision serviceProviderInfo = (HtmlDivision)serviceProvider.getByXPath("//div[contains(@class, 'card-body table')]")
-                                                                    .stream()
-                                                                    .filter(htmlDivision -> ((HtmlDivision)htmlDivision).asNormalizedText()
-                                                                                                                        .contains("CVC Info"))
-                                                                    .findFirst()
-                                                                    .orElseThrow();
+    List<HtmlDivision> serviceProviderInfo = serviceProvider.getByXPath("//div[contains(@class, 'cvcInfoBox')]");
     Map<String, String> cvcInfo = new HashMap<>();
-    List<HtmlDivision> infoColumns = serviceProviderInfo.getByXPath("div[contains(@class, 'row')]/div[contains(@class, 'col')]");
-    for ( HtmlDivision infoColumn : infoColumns )
+    for ( HtmlDivision htmlDivision : serviceProviderInfo )
     {
-      getInfoFromTable(cvcInfo, infoColumn);
+      getInfoFromTable(cvcInfo, htmlDivision);
     }
     Assertions.assertEquals(10, cvcInfo.size());
     Assertions.assertEquals(INFO_MAP.get(CHR), cvcInfo.get(CHR));
@@ -129,11 +127,14 @@ class CVCControllerTest extends ServiceProviderTestBase
 
   private void getInfoFromTable(Map<String, String> infoMap, HtmlDivision infoDivCol)
   {
-    infoDivCol.getByXPath("div[contains(@class, 'row')]")
-              .stream()
-              .map(o -> (HtmlDivision)o)
-              .forEach(htmlDivision -> infoMap.put(((HtmlDivision)htmlDivision.getFirstByXPath("div[contains(@class, 'col-3')]")).asNormalizedText(),
-                                                   ((HtmlDivision)htmlDivision.getFirstByXPath("div[contains(@class, 'col-auto')]")).asNormalizedText()));
+    List<DomNode> childNodes = infoDivCol.getChildNodes()
+                                         .stream()
+                                         .filter(element -> !(element instanceof DomText))
+                                         .collect(Collectors.toList());
+    for ( int i = 1 ; i < childNodes.size() ; i = i + 2 )
+    {
+      infoMap.put(childNodes.get(i - 1).asNormalizedText(), childNodes.get(i).asNormalizedText());
+    }
   }
 
   @Test
@@ -249,7 +250,7 @@ class CVCControllerTest extends ServiceProviderTestBase
     Mockito.when(serviceProviderStatusService.getServiceProviderStatus(Mockito.any()))
            .thenReturn(serviceProviderStatus);
 
-    HtmlPage currentRscPage = getWebClient().getPage(getRequestUrl("/details/"
+    HtmlPage currentRscPage = getWebClient().getPage(getRequestUrl("/details?entityid="
                                                                    + ServiceProviderTestBase.SERVICE_PROVIDER));
     rscInfoTable = (HtmlDivision)currentRscPage.getElementById("rsc-info-table");
     getInfoFromTable(rscInfoMap, rscInfoTable);

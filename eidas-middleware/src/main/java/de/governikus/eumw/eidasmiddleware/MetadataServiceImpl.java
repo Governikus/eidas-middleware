@@ -22,7 +22,6 @@ import org.springframework.boot.info.BuildProperties;
 import org.springframework.stereotype.Service;
 
 import de.governikus.eumw.config.EidasMiddlewareConfig;
-import de.governikus.eumw.config.EidasMiddlewareConfig.EidasConfiguration;
 import de.governikus.eumw.eidascommon.ContextPaths;
 import de.governikus.eumw.eidasmiddleware.mapper.EidasMapper;
 import de.governikus.eumw.eidasstarterkit.EidasNameIdType;
@@ -100,9 +99,7 @@ public class MetadataServiceImpl implements MetadataService
                                                               + ContextPaths.METADATA,
                                              validUntil,
                                              signer.getSigCert(),
-                                             configurationService.getKeyPair(eidasMiddlewareConfig.getEidasConfiguration()
-                                                                                                  .getDecryptionKeyPairName())
-                                                                 .getCertificate(),
+                                             null,
                                              EidasMapper.toEidasOrganisation(eidasMiddlewareConfig.getEidasConfiguration()
                                                                                                   .getOrganization()),
                                              EidasMapper.toEidasContactPerson(eidasMiddlewareConfig.getEidasConfiguration()
@@ -119,7 +116,6 @@ public class MetadataServiceImpl implements MetadataService
                                              requesterIdFlag,
                                              // Country Code is always 'DE' for eIDAS-Service metadata.
                                              "DE");
-
     }
     catch (Exception e)
     {

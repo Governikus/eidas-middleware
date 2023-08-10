@@ -43,6 +43,20 @@ public final class Util
 
   private static final ThreadLocal<DocumentBuilder> docBuilder = new ThreadLocal<>();
 
+  private static final JAXBContext JAXB_CONTEXT;
+
+  static
+  {
+    try
+    {
+      JAXB_CONTEXT = JAXBContext.newInstance("iso.std.iso_iec._24727.tech.schema");
+    }
+    catch (JAXBException e)
+    {
+      throw new RuntimeException("Cannot create JAXBContext for PAOS messages", e);
+    }
+  }
+
 
   public static Document xml2document(InputStream documentStream)
     throws SAXException, IOException, ParserConfigurationException
@@ -76,8 +90,7 @@ public final class Util
       }
       if (child != null)
       {
-        JAXBContext context = JAXBContext.newInstance("iso.std.iso_iec._24727.tech.schema");
-        Unmarshaller um = context.createUnmarshaller();
+        Unmarshaller um = JAXB_CONTEXT.createUnmarshaller();
         SchemaFactory sf = Utils.getSchemaFactory();
         // we must permit file access for there are some schema files referenced in the catalog
         sf.setProperty(XMLConstants.ACCESS_EXTERNAL_SCHEMA, "file");

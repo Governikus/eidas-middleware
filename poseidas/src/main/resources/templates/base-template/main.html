@@ -9,9 +9,9 @@
 
     <title th:replace="${pageTitle}">TitleNotSet</title>
 
-    <link href="/webjars/bootstrap/css/bootstrap.min.css" rel="stylesheet"/>
-    <link href="/webjars/font-awesome/css/all.css" rel="stylesheet">
-    <link rel="stylesheet" href="/css/config.css">
+    <link th:href="@{/admin-interface/webjars/bootstrap/css/bootstrap.min.css}" rel="stylesheet"/>
+    <link th:href="@{/admin-interface/webjars/font-awesome/css/all.css}" rel="stylesheet">
+    <link rel="stylesheet" th:href="@{/admin-interface/css/config.css}">
 </head>
 
 <body style="height: 100vh; overflow-x: hidden">
@@ -19,7 +19,7 @@
 <div class="d-flex flex-column bg-white" id="sidebar"
      style="min-width: 17rem;  width: 17rem;  height: 100vh;  position: fixed;  top: 0;  left: 0;  box-shadow: 3px 3px 10px rgba(0, 0, 0, 0.1);  transition: all 0.4s;">
     <div class="py-4 px-3 bg-light">
-        <img src="/images/Logo-Governikus-600px.png" alt="Governikus"
+        <img th:src="@{/admin-interface/images/Logo-Governikus-600px.png}" alt="Governikus"
              width="100%">
         <div class="media-body">
             <h4 class="m-0">eIDAS Middleware</h4>
@@ -141,8 +141,8 @@
 <div class="page-content p-3" id="content" style="width: calc(100% - 17rem);
   margin-left: 17rem;
   transition: all 0.4s;">
-    <script src="/webjars/jquery/jquery.min.js"></script>
-    <script src="/webjars/bootstrap/js/bootstrap.min.js"></script>
+    <script th:src="@{/admin-interface/webjars/jquery/jquery.min.js}"></script>
+    <script th:src="@{/admin-interface/webjars/bootstrap/js/bootstrap.min.js}"></script>
 
     <div th:replace="fragments/message :: msg"></div>
 

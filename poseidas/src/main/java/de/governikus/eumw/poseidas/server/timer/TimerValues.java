@@ -9,6 +9,7 @@
 
 package de.governikus.eumw.poseidas.server.timer;
 
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
@@ -33,6 +34,7 @@ public class TimerValues
 
   static final long HOUR = MINUTE * 60;
 
+
   @Bean
   public String getFullBlacklistRate()
   {
@@ -53,6 +55,16 @@ public class TimerValues
     String rate = String.valueOf(MINUTE);
     logRateForTimer(timerName, rate);
     return rate;
+  }
+
+
+  @Bean
+  public String getCvcRscRenewDelay(@Value("${timer.invalidCvcRscRenew.delayInSeconds:120}") int rate)
+  {
+    String timerName = "Invalid cvc renewal with rsc timer";
+    String rateAsString = String.valueOf(rate);
+    logRateForTimer(timerName, String.valueOf(rate * 1000));
+    return rateAsString;
   }
 
   @Bean

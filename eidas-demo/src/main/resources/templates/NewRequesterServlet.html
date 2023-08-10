@@ -1,0 +1,152 @@
+<!--
+  ~ Copyright (c) 2020 Governikus KG. Licensed under the EUPL, Version 1.2 or as soon they will be approved by
+  ~ the European Commission - subsequent versions of the EUPL (the "Licence"); You may not use this work except
+  ~ in compliance with the Licence. You may obtain a copy of the Licence at:
+  ~ http://joinup.ec.europa.eu/software/page/eupl Unless required by applicable law or agreed to in writing,
+  ~ software distributed under the Licence is distributed on an "AS IS" basis, WITHOUT WARRANTIES OR CONDITIONS
+  ~ OF ANY KIND, either express or implied. See the Licence for the specific language governing permissions and
+  ~ limitations under the Licence.
+  -->
+
+<!DOCTYPE html>
+<html lang="en"
+      xmlns="http://www.w3.org/1999/xhtml" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title>German eIDAS Middleware Demo Application</title>
+    <meta content="text/html; charset=UTF-8" http-equiv="Content-Type">
+    <meta content="IE=edge" http-equiv="X-UA-Compatible">
+    <meta charset="utf-8">
+    <!-- Viewport Meta Tag -->
+    <meta content="width=device-width, initial-scale=1" name="viewport">
+    <!-- Bootstrap -->
+    <link th:href="@{/webjars/bootstrap/css/bootstrap.min.css}"
+          rel="stylesheet"/>
+    <link th:href="@{css/main.css}" rel="stylesheet"/>
+</head>
+<body>
+<section class="split section">
+    <!-- Container Starts -->
+    <div th:insert="~{fragments/Layout :: navbar}"></div>
+    <div class="container px-5">
+        <div class="card mb-3">
+            <div class="card-body">
+                <h4 class="card-title">eIDAS Requests using Redirect Binding</h4>
+                <p class="card-text">These eIDAS SAML Authn Requests are sent using the SAML Redirect Binding.</p>
+                <p>
+                    <a th:href="${redirectWithRelayState}"
+                       th:text="'Go to the eIDAS Middleware with relay state: ' + ${relayState}"></a>
+                </p>
+                <p>
+                    <a th:href="${redirectEmptyRelayState}"> Go to the eIDAS Middleware with an empty relay state</a>
+                </p>
+                <p>
+                    <a th:href="${redirectWithoutRelayState}"> Go to the eIDAS Middleware without a relay state</a>
+                </p>
+            </div>
+        </div>
+        <div class="card mb-3">
+            <div class="card-body">
+                <h4 class="card-title">eIDAS Requests using Post Binding</h4>
+                <p class="card-text">These eIDAS SAML Authn Requests are sent using the SAML Post Binding.</p>
+                <form method="post" th:action="${receiverUrl}">
+                    <input type="hidden" th:value="${postRequest}" name="SAMLRequest">
+                    <input type="hidden" th:value="${relayState}" name="RelayState">
+                    <p>
+                        <button type="submit" class="btn-link"
+                                th:text="'Go to the eIDAS Middleware with relay state: ' + ${relayState}"/>
+                    </p>
+                </form>
+                <form method="post" th:action="${receiverUrl}">
+                    <input type="hidden" th:value="${postRequest}" name="SAMLRequest">
+                    <input type="hidden" value="" name="RelayState">
+                    <p>
+                        <button type="submit" class="btn-link">
+                            Go to the eIDAS Middleware with an empty relay state
+                        </button>
+                    </p>
+                </form>
+                <form method="post" th:action="${receiverUrl}">
+                    <input type="hidden" th:value="${postRequest}" name="SAMLRequest">
+                    <p>
+                        <button type="submit" class="btn-link">
+                            Go to the eIDAS Middleware without a relay state
+                        </button>
+                    </p>
+                </form>
+            </div>
+        </div>
+        <div class="card mb-3">
+            <div class="card-body">
+                <h4 class="card-title">eIDAS Requests with different SPTypes</h4>
+                <p class="card-text">The following links include the SPType value in the SAML request. As the SPType
+                    must not present both in
+                    the request
+                    and metadata, disable the SPType value in the metadata of the demo by setting
+                    "demo.metadata.sptype=none"
+                    in the
+                    application.properties of the demo application. Do not forget to update the metadata file in the
+                    middleware's
+                    configuration and to restart the middleware in case you have changed the SPType configuration for
+                    the
+                    demo.</p>
+                <p>
+                    <a th:href="${requestPublicSP}"> Go to the eIDAS Middleware with a request containing SPType
+                        public</a>
+                </p>
+                <p>
+                    <a th:href="${requestPrivateSP}"> Go to the eIDAS Middleware with a request containing SPType
+                        private and
+                        requesterID
+                        "providerB"</a>
+                </p>
+            </div>
+        </div>
+
+        <div class="card mb-3">
+            <div class="card-body">
+                <h4 class="card-title">eIDAS Requests with Level of Assurance <code>test</code></h4>
+                <p class="card-text">The following links use the Level of Assurance <code>test</code>.
+                    These requests do not lead to an actual online authentication. Instead, dummy data or error messages
+                    are directly returned to the service provider.</p>
+                <p>
+                    <a th:href="${queryTestRequest}"> Go to the eIDAS Middleware with a request containing Level of
+                        Assurance
+                        test</a>
+                </p>
+
+                <p>
+                    <a th:href="${queryTestRequestCancellationByUser}"> Go to the eIDAS Middleware with a test request
+                        containing Level
+                        of Assurance test#cancellationByUser
+                    </a>
+                </p>
+                <p>
+                    <a th:href="${queryTestRequestWrongPin}"> Go to the eIDAS Middleware with a test request containing
+                        Level
+                        of Assurance test#wrongPin
+                    </a>
+                </p>
+                <p>
+                    <a th:href="${queryTestRequestWrongSignature}"> Go to the eIDAS Middleware with a test request
+                        containing Level
+                        of Assurance test#wrongSignature
+                    </a>
+                </p>
+                <p>
+                    <a th:href="${queryTestRequestCardExpired}"> Go to the eIDAS Middleware with a test request
+                        containing Level
+                        of Assurance test#cardExpired
+                    </a>
+                </p>
+                <p>
+                    <a th:href="${queryTestRequestUnknown}"> Go to the eIDAS Middleware with a test request containing
+                        Level
+                        of Assurance test#unknown
+                    </a>
+                </p>
+            </div>
+        </div>
+    </div>
+</section>
+</body>
+</html>

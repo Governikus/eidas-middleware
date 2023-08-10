@@ -23,10 +23,10 @@ import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.ModelAttribute;
-import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import de.governikus.eumw.config.EidasMiddlewareConfig;
@@ -40,6 +40,7 @@ import de.governikus.eumw.poseidas.server.pki.PermissionDataHandlingMBean;
 import de.governikus.eumw.poseidas.server.pki.RequestSignerCertificateService;
 import de.governikus.eumw.poseidas.server.pki.RequestSignerCertificateServiceImpl;
 import de.governikus.eumw.poseidas.server.pki.ServiceProviderStatusService;
+import de.governikus.eumw.poseidas.server.pki.TerminalPermissionAOBean;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
@@ -79,6 +80,8 @@ public class CVCController
 
   private static final String RSC = "RSC";
 
+  public static final String ENTITYID = "entityid";
+
   private final PermissionDataHandlingMBean data;
 
   private final RequestSignerCertificateService requestSignerCertificateService;
@@ -87,12 +90,14 @@ public class CVCController
 
   private final ServiceProviderStatusService serviceProviderStatusService;
 
+  private final TerminalPermissionAOBean terminalPermissionAOBean;
+
 
   /**
    * This route represents the details view for the given entityID
    */
-  @GetMapping("{entityID}")
-  public String details(@PathVariable String entityID,
+  @GetMapping()
+  public String details(@RequestParam(ENTITYID) String entityID,
                         Model model,
                         RedirectAttributes redirectAttributes,
                         @RequestHeader(value = "referer", required = false) String referer)
@@ -133,8 +138,8 @@ public class CVCController
   /**
    * This route performs the connection check to the DVCA
    */
-  @PostMapping("{entityID}/check")
-  public String check(@PathVariable String entityID, RedirectAttributes redirectAttributes)
+  @PostMapping("/check")
+  public String check(@RequestParam(ENTITYID) String entityID, RedirectAttributes redirectAttributes)
   {
     ServiceProviderDetails serviceProviderDetails = getServiceProviderDetails(entityID);
     if (serviceProviderDetails == null)
@@ -152,14 +157,15 @@ public class CVCController
     {
       redirectAttributes.addFlashAttribute(ERROR, "Connection check failed: " + result);
     }
-    return REDIRECT_PREFIX + ContextPaths.ADMIN_CONTEXT_PATH + ContextPaths.DETAILS + '/' + entityID;
+    redirectAttributes.addAttribute(ENTITYID, entityID);
+    return REDIRECT_PREFIX + ContextPaths.ADMIN_CONTEXT_PATH + ContextPaths.DETAILS;
   }
 
   /**
    * This route performs the initial certificate request
    */
-  @PostMapping("{entityID}/initialRequest")
-  public String initialRequest(@PathVariable String entityID,
+  @PostMapping("/initialRequest")
+  public String initialRequest(@RequestParam(ENTITYID) String entityID,
                                @ModelAttribute CVCRequestModel form,
                                RedirectAttributes redirectAttributes)
   {
@@ -186,14 +192,15 @@ public class CVCController
       redirectAttributes.addFlashAttribute(ERROR, "Initial request failed: " + result);
     }
     redirectAttributes.addFlashAttribute(JUMP_TO_TAB, CVC);
-    return REDIRECT_PREFIX + ContextPaths.ADMIN_CONTEXT_PATH + ContextPaths.DETAILS + '/' + entityID;
+    redirectAttributes.addAttribute(ENTITYID, entityID);
+    return REDIRECT_PREFIX + ContextPaths.ADMIN_CONTEXT_PATH + ContextPaths.DETAILS;
   }
 
   /**
    * This route performs the renewal of the black list
    */
-  @PostMapping("{entityID}/renewBlackList")
-  public String renewBlackList(@PathVariable String entityID, RedirectAttributes redirectAttributes)
+  @PostMapping("/renewBlackList")
+  public String renewBlackList(@RequestParam(ENTITYID) String entityID, RedirectAttributes redirectAttributes)
   {
     ServiceProviderDetails serviceProviderDetails = getServiceProviderDetails(entityID);
     if (serviceProviderDetails == null)
@@ -212,14 +219,15 @@ public class CVCController
       redirectAttributes.addFlashAttribute(ERROR, "Renew black list failed: " + result);
     }
     redirectAttributes.addFlashAttribute(JUMP_TO_TAB, LISTS);
-    return REDIRECT_PREFIX + ContextPaths.ADMIN_CONTEXT_PATH + ContextPaths.DETAILS + '/' + entityID;
+    redirectAttributes.addAttribute(ENTITYID, entityID);
+    return REDIRECT_PREFIX + ContextPaths.ADMIN_CONTEXT_PATH + ContextPaths.DETAILS;
   }
 
   /**
    * This route performs the renewal of the master defect list
    */
-  @PostMapping("{entityID}/renewMasterDefectList")
-  public String renewMasterDefectList(@PathVariable String entityID, RedirectAttributes redirectAttributes)
+  @PostMapping("/renewMasterDefectList")
+  public String renewMasterDefectList(@RequestParam(ENTITYID) String entityID, RedirectAttributes redirectAttributes)
   {
     ServiceProviderDetails serviceProviderDetails = getServiceProviderDetails(entityID);
     if (serviceProviderDetails == null)
@@ -238,14 +246,15 @@ public class CVCController
       redirectAttributes.addFlashAttribute(ERROR, "Renew Master and Defect List failed: " + result);
     }
     redirectAttributes.addFlashAttribute(JUMP_TO_TAB, LISTS);
-    return REDIRECT_PREFIX + ContextPaths.ADMIN_CONTEXT_PATH + ContextPaths.DETAILS + '/' + entityID;
+    redirectAttributes.addAttribute(ENTITYID, entityID);
+    return REDIRECT_PREFIX + ContextPaths.ADMIN_CONTEXT_PATH + ContextPaths.DETAILS;
   }
 
   /**
    * This route performs the renewal CVC
    */
-  @PostMapping("{entityID}/renewCVC")
-  public String renewCVC(@PathVariable String entityID, RedirectAttributes redirectAttributes)
+  @PostMapping("/renewCVC")
+  public String renewCVC(@RequestParam(ENTITYID) String entityID, RedirectAttributes redirectAttributes)
   {
     ServiceProviderDetails serviceProviderDetails = getServiceProviderDetails(entityID);
     if (serviceProviderDetails == null)
@@ -264,14 +273,15 @@ public class CVCController
       redirectAttributes.addFlashAttribute(ERROR, "Renew CVC failed: " + result);
     }
     redirectAttributes.addFlashAttribute(JUMP_TO_TAB, CVC);
-    return REDIRECT_PREFIX + ContextPaths.ADMIN_CONTEXT_PATH + ContextPaths.DETAILS + '/' + entityID;
+    redirectAttributes.addAttribute(ENTITYID, entityID);
+    return REDIRECT_PREFIX + ContextPaths.ADMIN_CONTEXT_PATH + ContextPaths.DETAILS;
   }
 
   /**
    * This route performs the generation of a @{@link de.governikus.eumw.poseidas.server.pki.RequestSignerCertificate}
    **/
-  @PostMapping("{entityID}/generateRSC")
-  public String generateRSC(@PathVariable String entityID,
+  @PostMapping("/generateRSC")
+  public String generateRSC(@RequestParam(ENTITYID) String entityID,
                             RedirectAttributes redirectAttributes,
                             @ModelAttribute CVCRequestModel form)
   {
@@ -287,7 +297,8 @@ public class CVCController
       redirectAttributes.addFlashAttribute(ERROR, "Creation of request signer certificate failed");
     }
     redirectAttributes.addFlashAttribute(JUMP_TO_TAB, RSC);
-    return REDIRECT_PREFIX + ContextPaths.ADMIN_CONTEXT_PATH + ContextPaths.DETAILS + "/" + entityID;
+    redirectAttributes.addAttribute(ENTITYID, entityID);
+    return REDIRECT_PREFIX + ContextPaths.ADMIN_CONTEXT_PATH + ContextPaths.DETAILS;
   }
 
   /**
@@ -295,8 +306,8 @@ public class CVCController
    *
    * @return ResponseEntity with the request signer certificate as byte array
    */
-  @GetMapping(value = "{entityID}/downloadRSC", produces = MediaType.APPLICATION_OCTET_STREAM_VALUE)
-  public ResponseEntity<byte[]> downloadRequestSignerCertificate(@PathVariable String entityID)
+  @GetMapping(value = "/downloadRSC", produces = MediaType.APPLICATION_OCTET_STREAM_VALUE)
+  public ResponseEntity<byte[]> downloadRequestSignerCertificate(@RequestParam(ENTITYID) String entityID)
     throws RequestSignerDownloadException
   {
     X509Certificate requestSignerCertificate = requestSignerCertificateService.getRequestSignerCertificate(entityID);
@@ -332,7 +343,8 @@ public class CVCController
                         .map(serviceProviderType -> new ServiceProviderDetails(serviceProviderType,
                                                                                data.getPermissionDataInfo(serviceProviderType.getCVCRefID(),
                                                                                                           false),
-                                                                               serviceProviderStatusService.getServiceProviderStatus(serviceProviderType)))
+                                                                               serviceProviderStatusService.getServiceProviderStatus(serviceProviderType),
+                                                                               terminalPermissionAOBean))
                         .orElse(null);
   }
 

@@ -14,11 +14,12 @@
             <h5 class="card-title">
                 Delete DVCA configuration <span th:text="${name}"></span>
             </h5>
-            <p>Do you really want to delete the DVCA configuration <b th:text="${name}"/> ?</p>
+            <p>Do you really want to delete the DVCA configuration <b th:text="${name}"/>?</p>
             <br/>
             <div style="float: right">
                 <a class="btn btn-secondary" th:href="@{/admin-interface/dvcaConfiguration}">Abort</a>
-                <a class="btn btn-danger" th:href="${'/admin-interface/dvcaConfiguration/remove/' + name + '?yes'}">Delete
+                <a class="btn btn-danger"
+                   th:href="@{'/admin-interface/dvcaConfiguration/remove?dvcaname=' + ${#uris.escapeQueryParam(name)} + '&yes'}">Delete
                     this DVCA configuration <span class="fa fa-trash"></span></a>
             </div>
         </div>

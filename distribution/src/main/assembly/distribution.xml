@@ -25,6 +25,10 @@
     </files>
     <dependencySets>
         <dependencySet>
+            <includes>
+                <include>de.governikus.eumw:eidas-middleware</include>
+                <include>de.governikus.eumw:eidas-demo</include>
+            </includes>
             <useTransitiveDependencies>false</useTransitiveDependencies>
         </dependencySet>
     </dependencySets>

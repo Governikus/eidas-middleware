@@ -249,20 +249,17 @@ class EidasMetadataService
     idpDescriptor.setWantAuthnRequestsSigned(true);
     idpDescriptor.addSupportedProtocol(SAMLConstants.SAML20P_NS);
 
-    if (nodeCountry != null)
+    NodeCountry nc = new NodeCountryBuilder().buildObject();
+    nc.setNodeCountry(nodeCountry);
+    if (idpDescriptor.getExtensions() == null)
     {
-      NodeCountry nc = new NodeCountryBuilder().buildObject();
-      nc.setNodeCountry(nodeCountry);
-      if (idpDescriptor.getExtensions() == null)
-      {
-        Extensions ex = new ExtensionsBuilder().buildObject();
-        ex.getUnknownXMLObjects().add(nc);
-        idpDescriptor.setExtensions(ex);
-      }
-      else
-      {
-        idpDescriptor.getExtensions().getUnknownXMLObjects().add(nc);
-      }
+      Extensions ex = new ExtensionsBuilder().buildObject();
+      ex.getUnknownXMLObjects().add(nc);
+      idpDescriptor.setExtensions(ex);
+    }
+    else
+    {
+      idpDescriptor.getExtensions().getUnknownXMLObjects().add(nc);
     }
 
     KeyDescriptor kd = new KeyDescriptorBuilder().buildObject();
@@ -276,19 +273,22 @@ class EidasMetadataService
     kd.setKeyInfo(ki);
     idpDescriptor.getKeyDescriptors().add(kd);
 
-    kd = new KeyDescriptorBuilder().buildObject();
-    kd.setUse(UsageType.ENCRYPTION);
-    ki = new KeyInfoBuilder().buildObject();
-    x509 = new X509DataBuilder().buildObject();
-    x509Cert = new X509CertificateBuilder().buildObject();
-    x509Cert.setValue(new String(Base64.getEncoder().encode(encCert.getEncoded()), StandardCharsets.UTF_8));
-    x509.getX509Certificates().add(x509Cert);
-    ki.getX509Datas().add(x509);
-    kd.setKeyInfo(ki);
-    EncryptionMethod encMethod = new EncryptionMethodBuilder().buildObject();
-    encMethod.setAlgorithm(EncryptionConstants.ALGO_ID_BLOCKCIPHER_AES256_GCM);
-    kd.getEncryptionMethods().add(encMethod);
-    idpDescriptor.getKeyDescriptors().add(kd);
+    if (encCert != null)
+    {
+      kd = new KeyDescriptorBuilder().buildObject();
+      kd.setUse(UsageType.ENCRYPTION);
+      ki = new KeyInfoBuilder().buildObject();
+      x509 = new X509DataBuilder().buildObject();
+      x509Cert = new X509CertificateBuilder().buildObject();
+      x509Cert.setValue(new String(Base64.getEncoder().encode(encCert.getEncoded()), StandardCharsets.UTF_8));
+      x509.getX509Certificates().add(x509Cert);
+      ki.getX509Datas().add(x509);
+      kd.setKeyInfo(ki);
+      EncryptionMethod encMethod = new EncryptionMethodBuilder().buildObject();
+      encMethod.setAlgorithm(EncryptionConstants.ALGO_ID_BLOCKCIPHER_AES256_GCM);
+      kd.getEncryptionMethods().add(encMethod);
+      idpDescriptor.getKeyDescriptors().add(kd);
+    }
 
     SingleSignOnService sso = new SingleSignOnServiceBuilder().buildObject();
     sso.setBinding(SAMLConstants.SAML2_POST_BINDING_URI);

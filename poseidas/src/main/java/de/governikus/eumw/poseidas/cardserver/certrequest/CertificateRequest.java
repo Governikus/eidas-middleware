@@ -58,7 +58,7 @@ public class CertificateRequest extends AbstractASN1Encoder
    * @see CertificateRequestPath#getTag()
    * @see CertificateRequestPath#CV_CERTIFICATE
    */
-  CertificateRequest(byte[] valueBytes) throws IOException
+  public CertificateRequest(byte[] valueBytes) throws IOException
   {
     super(CertificateRequestPath.AUTHENTICATION.getTag().toByteArray(), valueBytes);
     check();

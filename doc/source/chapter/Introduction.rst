@@ -20,7 +20,7 @@ The German eID scheme fulfills all requirements of the eIDAS Level of Assurance 
 One of the major security-by-design feature is strong and mutual authentication between the relying party and the user.
 For example, using authorization certificates is a strong cryptographic binding between the service provider and the user.
 It is highly recommended to read the `German eID Whitepaper <https://www.bsi.bund.de/SharedDocs/Downloads/EN/BSI/EIDAS/German_eID_Whitepaper_v1-4.pdf?__blob=publicationFile&v=2>`_ in order to understand the German eID scheme.
-For additional information see the page about the `eIDAS Notification of the German eID <https://www.bsi.bund.de/EN/Topics/ElectrIDDocuments/German-eID/eIDAS-notification/eIDAS_notification_node.html>`_  and the `eID Infrastructure <https://www.bsi.bund.de/EN/Topics/ElectrIDDocuments/German-eID/eID-Infrastructure/eID-Infrastructure_node.html>`_.
+For additional information see the page about the `eIDAS Notification of the German eID <https://www.bsi.bund.de/EN/Themen/Oeffentliche-Verwaltung/Elektronische-Identitaeten/Online-Ausweisfunktion/eIDAS-Notifizierung/eidas-notifizierung_node.html>`_  and the `eID Infrastructure <https://www.bsi.bund.de/EN/Themen/Oeffentliche-Verwaltung/Elektronische-Identitaeten/Online-Ausweisfunktion/eID-Infrastruktur/eid-infrastruktur_node.html>`_.
 
 The following brief description facilitates the understanding and configuration of the eIDAS Middleware.
 

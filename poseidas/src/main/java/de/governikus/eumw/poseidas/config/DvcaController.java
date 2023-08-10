@@ -148,11 +148,11 @@ public class DvcaController
   /**
    * Edit an existing dvca config
    */
-  @GetMapping("/edit/{name}")
+  @GetMapping("/edit")
   public String edit(Model model,
                      @ModelAttribute String error,
                      @ModelAttribute String msg,
-                     @PathVariable String name,
+                     @RequestParam("dvcaname") String name,
                      RedirectAttributes redirectAttributes)
   {
     if (error != null && !error.isBlank())
@@ -180,9 +180,9 @@ public class DvcaController
   /**
    * Remove an existing dvca config
    */
-  @GetMapping("/remove/{name}")
+  @GetMapping("/remove")
   public String remove(Model model,
-                       @PathVariable String name,
+                       @RequestParam("dvcaname") String name,
                        @RequestParam(name = "yes", required = false) Optional<String> confirmed,
                        RedirectAttributes redirectAttributes)
   {
@@ -236,9 +236,9 @@ public class DvcaController
   /**
    * Save edited or new dvca config
    */
-  @PostMapping({"/edit/{name}", "/create"})
+  @PostMapping({"/edit", "/create"})
   public String edit(Model model,
-                     @PathVariable(required = false) Optional<String> name,
+                     @RequestParam(name = "dvcaname", required = false) Optional<String> currentName,
                      @Valid @ModelAttribute DvcaConfigModel dvcaConfigModel,
                      BindingResult bindingResult,
                      RedirectAttributes redirectAttributes)
@@ -273,17 +273,17 @@ public class DvcaController
 
     final Optional<DvcaConfigurationType> optionalOldDvcaConfig = eidConfiguration.getDvcaConfiguration()
                                                                                   .parallelStream()
-                                                                                  .filter(p -> name.orElse("")
+                                                                                  .filter(p -> currentName.orElse("")
                                                                                                    .equalsIgnoreCase(p.getName()))
                                                                                   .findAny();
 
     // If an existing DVCA configuration is edited and its name is changed, change also the name in the service
     // providers that use this DVCA configuration
-    if (name.isPresent() && !name.get().equals(dvcaConfigModel.getName()))
+    if (currentName.isPresent() && !currentName.get().equals(dvcaConfigModel.getName()))
     {
       eidConfiguration.getServiceProvider()
                       .parallelStream()
-                      .filter(s -> name.orElse("").equalsIgnoreCase(s.getDvcaConfigurationName()))
+                      .filter(s -> currentName.orElse("").equalsIgnoreCase(s.getDvcaConfigurationName()))
                       .forEach(s -> s.setDvcaConfigurationName(dvcaConfigModel.getName()));
     }
 

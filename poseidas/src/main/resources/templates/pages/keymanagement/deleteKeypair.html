@@ -16,7 +16,7 @@
             </h5>
             <p>Do you really want to delete the key pair <b th:text="${name}"/>?</p>
             <br/>
-            <form method="post" th:action="${'/admin-interface/keymanagement/deleteKeypair/' + name}">
+            <form method="post" th:action="@{'/admin-interface/keymanagement/deleteKeypair?keypairname=' +  ${#uris.escapeQueryParam(name)}}">
                 <input type="hidden"
                        th:name="${_csrf.parameterName}"
                        th:value="${_csrf.token}"/>

@@ -123,7 +123,7 @@ public class TermAuthService
     RequestCertificateReturnCodeType returnCode = result.getReturnCode();
     RequestCertificateReturnCodeType expected = isAsync ? RequestCertificateReturnCodeType.OK_SYNTAX
       : RequestCertificateReturnCodeType.OK_CERT_AVAILABLE;
-    if (!returnCode.equals(expected))
+    if (returnCode != expected)
     {
       throw new GovManagementException(GlobalManagementCodes.EC_UNEXPECTED_ERROR,
                                        "send request returned " + returnCode);

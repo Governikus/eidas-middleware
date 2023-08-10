@@ -18,12 +18,10 @@ import java.security.cert.CertificateException;
 import java.security.cert.X509Certificate;
 
 import javax.annotation.PostConstruct;
-import javax.servlet.http.HttpServletResponse;
 
 import org.apache.commons.lang.StringUtils;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
-import org.springframework.web.util.HtmlUtils;
 
 import de.governikus.eumw.eidascommon.Utils;
 import de.governikus.eumw.eidascommon.Utils.X509KeyPair;
@@ -210,56 +208,4 @@ public class SamlExampleHelper
   }
 
 
-  /**
-   * Fill the response such that the browser displays an appropriate error page
-   *
-   * @param response HTTPServletResponse object
-   * @param errorCode main code or status
-   * @param details further information about the error
-   */
-  public void showErrorPage(HttpServletResponse response, String errorCode, String... details)
-  {
-    StringBuilder builder = new StringBuilder();
-    builder.append("<h3>");
-    builder.append(HtmlUtils.htmlEscape(errorCode));
-    builder.append("</h3>");
-    for ( String detail : details )
-    {
-      if (detail != null)
-      {
-        builder.append("<p>");
-        builder.append(HtmlUtils.htmlEscape(detail));
-        builder.append("</p>");
-      }
-    }
-    String html = Utils.createErrorMessage(builder.toString());
-    // status code 400 is needed for new eID activation as defined in TR-03130 version 2.0 and above.
-    response.setStatus(400);
-    try
-    {
-      response.getWriter().write(html);
-    }
-    catch (IOException e)
-    {
-      log.error(e.getMessage(), e);
-      handleResponseException(response);
-    }
-  }
-
-  /**
-   * Make sure no exception is thrown for a HTTPServletResponse
-   *
-   * @param response The response that should be submitted
-   */
-  void handleResponseException(HttpServletResponse response)
-  {
-    try
-    {
-      response.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
-    }
-    catch (IOException e)
-    {
-      log.error("Cannot send HTTP Status 500", e);
-    }
-  }
 }

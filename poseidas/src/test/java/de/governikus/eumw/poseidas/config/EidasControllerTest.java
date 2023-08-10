@@ -10,6 +10,7 @@
 package de.governikus.eumw.poseidas.config;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.io.IOException;
@@ -80,8 +81,6 @@ class EidasControllerTest extends WebAdminTestBase
 
   private static final String ORGANIZATION_URL_ID = "URL";
 
-  private static final String DECRYPTION_KEYPAIR_ID = "decryptionKeyPairName";
-
   private static final String SIGNATURE_KEYPAIR_ID = "signatureKeyPairName";
 
   private static final String METADATA_SIGNATURE_VERIFICATION_CERTIFICATE_ID = "metadataSignatureVerificationCertificateName";
@@ -121,7 +120,6 @@ class EidasControllerTest extends WebAdminTestBase
     assertValidationMessagePresent(eidasConfigPage, PUBLIC_SP_SELECT_ID, PROVIDER_DOES_NOT_EXIST, HAS_TO_BE_SELECTED);
     assertValidationMessagePresent(eidasConfigPage, SERVER_URL_ID, "May not be empty");
     assertValidationMessagePresent(eidasConfigPage, COUNTRY_CODE_ID, "A Country code has exactly two characters");
-    assertValidationMessagePresent(eidasConfigPage, DECRYPTION_KEYPAIR_ID, KEY_PAIR_DOES_NOT_EXIST, HAS_TO_BE_SELECTED);
     assertValidationMessagePresent(eidasConfigPage, SIGNATURE_KEYPAIR_ID, KEY_PAIR_DOES_NOT_EXIST, HAS_TO_BE_SELECTED);
 
     assertTrue(configurationService.getConfiguration().map(EidasMiddlewareConfig::getEidasConfiguration).isEmpty());
@@ -168,8 +166,6 @@ class EidasControllerTest extends WebAdminTestBase
     setTextValue(eidasConfigPage, ORGANIZATION_LANGUAGE_ID, "OrgaL");
     setTextValue(eidasConfigPage, ORGANIZATION_URL_ID, "OrgaUrl");
 
-
-    setSelectValue(eidasConfigPage, DECRYPTION_KEYPAIR_ID, "KP1");
     setSelectValue(eidasConfigPage, SIGNATURE_KEYPAIR_ID, "KP2");
 
     setCheckboxValue(eidasConfigPage, SIGN_METADATA_ID, true);
@@ -197,7 +193,7 @@ class EidasControllerTest extends WebAdminTestBase
     assertEquals("OrgaL", eidasConfiguration.getOrganization().getLanguage());
     assertEquals("OrgaUrl", eidasConfiguration.getOrganization().getUrl());
 
-    assertEquals("KP1", eidasConfiguration.getDecryptionKeyPairName());
+    assertNull(eidasConfiguration.getDecryptionKeyPairName());
     assertEquals("KP2", eidasConfiguration.getSignatureKeyPairName());
 
     assertTrue(eidasConfiguration.isDoSign());

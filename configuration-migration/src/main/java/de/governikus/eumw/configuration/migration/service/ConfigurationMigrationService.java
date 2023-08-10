@@ -186,20 +186,6 @@ public class ConfigurationMigrationService
     }
     try
     {
-      String decryption = createAndGetKeyStoreName(configHolder,
-                                                   configHolder.getAppCryptionKeyStoreType(),
-                                                   ConfigHolder.KEY_APP_CRYPT_ALIAS,
-                                                   ConfigHolder.KEY_APP_CRYPT_PIN,
-                                                   "Decryption",
-                                                   configHolder.getAppDecryptionKeyPair());
-      eidasConfiguration.setDecryptionKeyPairName(decryption);
-    }
-    catch (Exception e)
-    {
-      log.error("Cannot migrate eidas middleware decryption keystore", e);
-    }
-    try
-    {
       CertificateType metadataSignatureVerifyCertificate = new CertificateType(METADATA_SIGNATURE_VERIFICATION_CERTIFICATE,
                                                                                configHolder.getMetadataSignatureCert()
                                                                                            .getEncoded(),

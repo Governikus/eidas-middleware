@@ -11,6 +11,7 @@
 package de.governikus.eumw.poseidas.cardbase.constants;
 
 import de.governikus.eumw.poseidas.cardbase.asn1.OID;
+import lombok.experimental.UtilityClass;
 
 
 /**
@@ -19,46 +20,9 @@ import de.governikus.eumw.poseidas.cardbase.asn1.OID;
  * @author Jens Wothe, jw@bos-bremen.de
  * @author Arne Stahlbock, ast@bos-bremen.de
  */
+@UtilityClass
 public final class OIDConstants
 {
-
-  /** OID of RSADSI: <code>1.2.840.113549.1.1</code>. */
-  public static final OID OID_RSADSI_PKCS_PKCS1 = new OID("1.2.840.113549.1.1");
-
-  /**
-   * OID of SHA1 with RSA signature algorithm: <code>1.2.840.113549.1.1.5</code>.
-   *
-   * @see #OID_RSADSI_PKCS_PKCS1
-   */
-  public static final OID OID_RSADSI_SHA1_WITH_RSA = new OID(OID_RSADSI_PKCS_PKCS1.getOIDString() + ".5");
-
-  /**
-   * OID of SHA256 with RSA signature algorithm: <code>1.2.840.113549.1.1.11</code>.
-   *
-   * @see #OID_RSADSI_PKCS_PKCS1
-   */
-  public static final OID OID_RSADSI_SHA256_WITH_RSA = new OID(OID_RSADSI_PKCS_PKCS1.getOIDString() + ".11");
-
-  /**
-   * OID of SHA384 with RSA signature algorithm: <code>1.2.840.113549.1.1.12</code>.
-   *
-   * @see #OID_RSADSI_PKCS_PKCS1
-   */
-  public static final OID OID_RSADSI_SHA384_WITH_RSA = new OID(OID_RSADSI_PKCS_PKCS1.getOIDString() + ".12");
-
-  /**
-   * OID of SHA512 with RSA signature algorithm: <code>1.2.840.113549.1.1.13</code>.
-   *
-   * @see #OID_RSADSI_PKCS_PKCS1
-   */
-  public static final OID OID_RSADSI_SHA512_WITH_RSA = new OID(OID_RSADSI_PKCS_PKCS1.getOIDString() + ".13");
-
-  /**
-   * OID of SHA224 with RSA signature algorithm: <code>1.2.840.113549.1.1.14</code>.
-   *
-   * @see #OID_RSADSI_PKCS_PKCS1
-   */
-  public static final OID OID_RSADSI_SHA224_WITH_RSA = new OID(OID_RSADSI_PKCS_PKCS1.getOIDString() + ".14");
 
   /**
    * OID of id-ecPublicKey: <code>1.2.840.10045.2.1</code>.
@@ -106,8 +70,7 @@ public final class OIDConstants
   public static final OID OID_PK_PS = new OID(OID_PK.getOIDString() + ".3");
 
   /**
-   * OID of <b>P</b>seudonymous <b>S</b>ignature <b>p</b>ublic <b>k</b>ey:
-   * <code>0.4.0.127.0.7.2.2.1.3.2</code>.
+   * OID of <b>P</b>seudonymous <b>S</b>ignature <b>p</b>ublic <b>k</b>ey: <code>0.4.0.127.0.7.2.2.1.3.2</code>.
    *
    * @see #OID_PK_PS
    */
@@ -135,8 +98,7 @@ public final class OIDConstants
   public static final OID OID_TA_RSA_V1_5_SHA_1 = new OID(OID_TA_RSA.getOIDString() + ".1");
 
   /**
-   * OID of terminal authentication using RSA with 1.5 padding and SHA256:
-   * <code>0.4.0.127.0.7.2.2.2.1.2</code>.
+   * OID of terminal authentication using RSA with 1.5 padding and SHA256: <code>0.4.0.127.0.7.2.2.2.1.2</code>.
    *
    * @see #OID_TA_RSA
    */
@@ -150,24 +112,21 @@ public final class OIDConstants
   public static final OID OID_TA_RSA_PSS_SHA_1 = new OID(OID_TA_RSA.getOIDString() + ".3");
 
   /**
-   * OID of terminal authentication using RSA with PSS padding and SHA256:
-   * <code>0.4.0.127.0.7.2.2.2.1.4</code>.
+   * OID of terminal authentication using RSA with PSS padding and SHA256: <code>0.4.0.127.0.7.2.2.2.1.4</code>.
    *
    * @see #OID_TA_RSA
    */
   public static final OID OID_TA_RSA_PSS_SHA_256 = new OID(OID_TA_RSA.getOIDString() + ".4");
 
   /**
-   * OID of terminal authentication using RSA with 1.5 padding and SHA512:
-   * <code>0.4.0.127.0.7.2.2.2.1.5</code>.
+   * OID of terminal authentication using RSA with 1.5 padding and SHA512: <code>0.4.0.127.0.7.2.2.2.1.5</code>.
    *
    * @see #OID_TA_RSA
    */
   public static final OID OID_TA_RSA_V1_5_SHA_512 = new OID(OID_TA_RSA.getOIDString() + ".5");
 
   /**
-   * OID of terminal authentication using RSA with PSS padding and SHA512:
-   * <code>0.4.0.127.0.7.2.2.2.1.6</code>.
+   * OID of terminal authentication using RSA with PSS padding and SHA512: <code>0.4.0.127.0.7.2.2.2.1.6</code>.
    *
    * @see #OID_TA_RSA
    */
@@ -425,8 +384,7 @@ public final class OIDConstants
   public static final OID OID_PACE_DH_IM_AES_CBC_CMAC_256 = new OID(OID_PACE_DH_IM.getOIDString() + ".4");
 
   /**
-   * OID of PACE with Elliptic Curve Diffie Hellman and Integrated Mapping: <code>0.4.0.127.0.7.2.2.4.4</code>
-   * .
+   * OID of PACE with Elliptic Curve Diffie Hellman and Integrated Mapping: <code>0.4.0.127.0.7.2.2.4.4</code> .
    *
    * @see #OID_PACE
    */
@@ -521,8 +479,7 @@ public final class OIDConstants
   public static final OID OID_RI_ECDH = new OID(OID_RI.getOIDString() + ".2");
 
   /**
-   * OID of Restricted Identification with Elliptic Curve Diffie Hellman and SHA1:
-   * <code>0.4.0.127.0.7.2.2.5.2.1</code>.
+   * OID of Restricted Identification with Elliptic Curve Diffie Hellman and SHA1: <code>0.4.0.127.0.7.2.2.5.2.1</code>.
    *
    * @see #OID_RI_ECDH
    */
@@ -609,8 +566,7 @@ public final class OIDConstants
    *
    * @see #OID_PSA_ECDH_ECSCHNORR
    */
-  public static final OID OID_PSA_ECDH_ECSCHNORR_SHA256 = new OID(OID_PSA_ECDH_ECSCHNORR.getOIDString()
-                                                                  + ".3");
+  public static final OID OID_PSA_ECDH_ECSCHNORR_SHA256 = new OID(OID_PSA_ECDH_ECSCHNORR.getOIDString() + ".3");
 
   /**
    * OID of <b>P</b>seudonymous <b>S</b>ignature <b>A</b>uthentication-ECDH-ECSchnorr-SHA384:
@@ -618,8 +574,7 @@ public final class OIDConstants
    *
    * @see #OID_PSA_ECDH_ECSCHNORR
    */
-  public static final OID OID_PSA_ECDH_ECSCHNORR_SHA384 = new OID(OID_PSA_ECDH_ECSCHNORR.getOIDString()
-                                                                  + ".4");
+  public static final OID OID_PSA_ECDH_ECSCHNORR_SHA384 = new OID(OID_PSA_ECDH_ECSCHNORR.getOIDString() + ".4");
 
   /**
    * OID of <b>P</b>seudonymous <b>S</b>ignature <b>A</b>uthentication-ECDH-ECSchnorr-SHA512:
@@ -627,8 +582,7 @@ public final class OIDConstants
    *
    * @see #OID_PSA_ECDH_ECSCHNORR
    */
-  public static final OID OID_PSA_ECDH_ECSCHNORR_SHA512 = new OID(OID_PSA_ECDH_ECSCHNORR.getOIDString()
-                                                                  + ".5");
+  public static final OID OID_PSA_ECDH_ECSCHNORR_SHA512 = new OID(OID_PSA_ECDH_ECSCHNORR.getOIDString() + ".5");
 
   /**
    * OID of <b>P</b>seudonymous <b>S</b>ignature <b>M</b>essages: <code>0.4.0.127.0.7.2.2.11.2</code>.
@@ -638,8 +592,7 @@ public final class OIDConstants
   public static final OID OID_PSM = new OID(OID_PS.getOIDString() + ".2");
 
   /**
-   * OID of <b>P</b>seudonymous <b>S</b>ignature <b>M</b>essages-ECDH-ECSchnorr:
-   * <code>0.4.0.127.0.7.2.2.11.2.2</code>.
+   * OID of <b>P</b>seudonymous <b>S</b>ignature <b>M</b>essages-ECDH-ECSchnorr: <code>0.4.0.127.0.7.2.2.11.2.2</code>.
    *
    * @see #OID_PSM
    */
@@ -651,8 +604,7 @@ public final class OIDConstants
    *
    * @see #OID_PSM_ECDH_ECSCHNORR
    */
-  public static final OID OID_PSM_ECDH_ECSCHNORR_SHA256 = new OID(OID_PSM_ECDH_ECSCHNORR.getOIDString()
-                                                                  + ".3");
+  public static final OID OID_PSM_ECDH_ECSCHNORR_SHA256 = new OID(OID_PSM_ECDH_ECSCHNORR.getOIDString() + ".3");
 
   /**
    * OID of <b>P</b>seudonymous <b>S</b>ignature <b>M</b>essages-ECDH-ECSchnorr-SHA384:
@@ -660,8 +612,7 @@ public final class OIDConstants
    *
    * @see #OID_PSM_ECDH_ECSCHNORR
    */
-  public static final OID OID_PSM_ECDH_ECSCHNORR_SHA384 = new OID(OID_PSM_ECDH_ECSCHNORR.getOIDString()
-                                                                  + ".4");
+  public static final OID OID_PSM_ECDH_ECSCHNORR_SHA384 = new OID(OID_PSM_ECDH_ECSCHNORR.getOIDString() + ".4");
 
   /**
    * OID of <b>P</b>seudonymous <b>S</b>ignature <b>M</b>essages-ECDH-ECSchnorr-SHA512:
@@ -669,8 +620,7 @@ public final class OIDConstants
    *
    * @see #OID_PSM_ECDH_ECSCHNORR
    */
-  public static final OID OID_PSM_ECDH_ECSCHNORR_SHA512 = new OID(OID_PSM_ECDH_ECSCHNORR.getOIDString()
-                                                                  + ".5");
+  public static final OID OID_PSM_ECDH_ECSCHNORR_SHA512 = new OID(OID_PSM_ECDH_ECSCHNORR.getOIDString() + ".5");
 
   /**
    * OID of <b>P</b>seudonymous <b>S</b>ignature <b>C</b>redentials: <code>0.4.0.127.0.7.2.2.11.3</code>.
@@ -693,8 +643,7 @@ public final class OIDConstants
    *
    * @see #OID_PSC_ECDH_ECSCHNORR
    */
-  public static final OID OID_PSC_ECDH_ECSCHNORR_SHA256 = new OID(OID_PSC_ECDH_ECSCHNORR.getOIDString()
-                                                                  + ".3");
+  public static final OID OID_PSC_ECDH_ECSCHNORR_SHA256 = new OID(OID_PSC_ECDH_ECSCHNORR.getOIDString() + ".3");
 
   /**
    * OID of <b>P</b>seudonymous <b>S</b>ignature <b>C</b>redentials-ECDH-ECSchnorr-SHA384:
@@ -702,8 +651,7 @@ public final class OIDConstants
    *
    * @see #OID_PSC_ECDH_ECSCHNORR
    */
-  public static final OID OID_PSC_ECDH_ECSCHNORR_SHA384 = new OID(OID_PSC_ECDH_ECSCHNORR.getOIDString()
-                                                                  + ".4");
+  public static final OID OID_PSC_ECDH_ECSCHNORR_SHA384 = new OID(OID_PSC_ECDH_ECSCHNORR.getOIDString() + ".4");
 
   /**
    * OID of <b>P</b>seudonymous <b>S</b>ignature <b>C</b>redentials-ECDH-ECSchnorr-SHA512:
@@ -711,8 +659,7 @@ public final class OIDConstants
    *
    * @see #OID_PSC_ECDH_ECSCHNORR
    */
-  public static final OID OID_PSC_ECDH_ECSCHNORR_SHA512 = new OID(OID_PSC_ECDH_ECSCHNORR.getOIDString()
-                                                                  + ".5");
+  public static final OID OID_PSC_ECDH_ECSCHNORR_SHA512 = new OID(OID_PSC_ECDH_ECSCHNORR.getOIDString() + ".5");
 
   /**
    * OID of Password Type: <code>0.4.0.127.0.7.2.2.12</code>.
@@ -748,7 +695,4 @@ public final class OIDConstants
    * @see #OID_PASSWORD_TYPE
    */
   public static final OID OID_PASSWORD_TYPE_PUK = new OID(OID_PASSWORD_TYPE.getOIDString() + ".4");
-
-  private OIDConstants()
-  {}
 }

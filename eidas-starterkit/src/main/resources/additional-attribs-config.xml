@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<XMLTooling xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:eidasnp="http://eidas.europa.eu/attributes/naturalperson" 
+  xmlns="http://www.opensaml.org/xmltooling-config"
+  xsi:schemaLocation="http://www.opensaml.org/xmltooling-config ../../src/schema/xmltooling-config.xsd">
+
+  <ObjectProviders>
+
+    <!-- eidasnp:NationalityType -->
+    <ObjectProvider qualifiedName="eidasnp:NationalityType">
+      <BuilderClass className="de.governikus.eumw.eidasstarterkit.additional.attributes.NationalityTypeBuilder" />
+      <MarshallingClass className="org.opensaml.core.xml.schema.impl.XSStringMarshaller" />
+      <UnmarshallingClass className="org.opensaml.core.xml.schema.impl.XSStringUnmarshaller" />
+    </ObjectProvider>
+    
+  </ObjectProviders>
+
+</XMLTooling>

@@ -110,8 +110,7 @@ public class EidasController
                                 config.getContactPerson().getSurname(), config.getContactPerson().getEmail(),
                                 config.getContactPerson().getTelephone(), config.getOrganization().getDisplayname(),
                                 config.getOrganization().getName(), config.getOrganization().getLanguage(),
-                                config.getOrganization().getUrl(), config.getDecryptionKeyPairName(),
-                                config.getSignatureKeyPairName(), config.isDoSign());
+                                config.getOrganization().getUrl(), config.getSignatureKeyPairName(), config.isDoSign());
   }
 
   private EidasMiddlewareConfig.EidasConfiguration toConfigType(EidasConfigModel model)
@@ -131,8 +130,7 @@ public class EidasController
                                                                              model.getOrganizationName(),
                                                                              model.getOrganizationLanguage(),
                                                                              model.getOrganizationUrl()),
-                                                        model.getPublicServiceProviderName(),
-                                                        model.getDecryptionKeyPairName(),
+                                                        model.getPublicServiceProviderName(), null,
                                                         model.getSignatureKeyPairName(),
                                                         configurationService.getConfiguration()
                                                                             .map(EidasMiddlewareConfig::getEidasConfiguration)

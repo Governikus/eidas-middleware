@@ -15,7 +15,7 @@
 
         </div>
         <div class="col">
-            <form method="POST" th:action="@{/admin-interface/details/__${entityID}__/check}">
+            <form method="POST" th:action="@{'/admin-interface/details/check?entityid=' + ${#uris.escapeQueryParam(entityID)}}">
                 <button name="submit" type="submit" value="value" class="btn btn-primary" id="check-button">Start
                     connection check
                 </button>
@@ -54,110 +54,88 @@
         </li>
     </ul>
 
-    <!--    CVC -->
+    <!-- CVC -->
     <div class="tab-content" id="pills-tabContent">
         <div class="tab-pane fade show active mb-2" id="pills-cvc" role="tabpanel" aria-labelledby="pills-cvc-tab">
             <div class="card js-remove-border">
                 <div class="card-body">
                     <h5 class="card-title">CVC</h5>
-                    <h6 class="card-subtitle mb-2 text-muted">Check CVC information, send initial requests or renew the
+                    <h6 class="card-subtitle mb-4 text-muted">Check CVC information, send initial requests or renew the
                         CVC</h6>
-
                     <!-- CVC Info Card-->
-
                     <div class="card shadow">
-                        <div class="card-body table">
-                            <h4 class="card-text">CVC Info</h4>
-
+                        <h4 class="card-header bg-light">CVC Info</h4>
+                        <div class="card-body">
+                            <div th:if="${entity.isExpiredUnderTwoDaysWithRsc()}"
+                                 class="alert alert-warning" role="alert">The CVC has expired. The system tries to
+                                renew the CVC in the background. Alternatively, a manual initial request can be
+                                performed. Please use this sequence number for the initial request: <label
+                                        th:text="${entity.getSuggestedCvcNextSequence()}"/>
+                            </div>
+                            <div th:if="${entity.isExpiredOverTwoDaysWithRsc()}"
+                                 class="alert alert-danger" role="alert">The CVC has expired. No automatic
+                                renewal could be performed within the last two days. Further automated renewals will
+                                not take place! A new initial request must be made.
+                            </div>
+                            <div th:if="${entity.isExpiredNoRsc()}"
+                                 class="alert alert-danger" role="alert">The CVC has expired. A new initial
+                                request must be made.
+                            </div>
                             <div class="row">
-                                <div class="col">
-                                    <div class="row">
-                                        <div class="col-3">CHR:</div>
-                                        <div class="col-auto" th:text="${entity.getCHR()}">
-                                        </div>
-                                    </div>
-                                    <div class="row">
-                                        <div class="col-3">Subject:</div>
-                                        <div class="col-auto" th:text="${entity.getSubjectName()}">
-                                        </div>
-                                    </div>
-                                    <div class="row">
-                                        <div class="col-3">Subject URL:</div>
-                                        <div class="col-auto" th:text="${entity.getSubjectURL()}">
-                                        </div>
-                                    </div>
-                                    <div class="row">
-                                        <div class="col-3">Redirect URL:</div>
-                                        <div class="col-auto" th:text="${entity.getRedirectURL()}">
-                                        </div>
-                                    </div>
-                                    <div class="row">
-                                        <div class="col-3">Terms of usage:</div>
-                                        <div class="col-auto" th:text="${entity.getTermsOfUsagePlanText()}">
-                                        </div>
+                                <div class="col-12 col-xl-6">
+                                    <div class="row cvcInfoBox">
+                                        <div class="col-3 col-form-label">CHR:</div>
+                                        <pre class="col-9 col-form-label" th:text="${entity.getCHR()}"/>
+                                        <div class="col-3 col-form-label">Subject:</div>
+                                        <pre class="col-9 col-form-label" th:text="${entity.getSubjectName()}"/>
+                                        <div class="col-3 col-form-label">Subject URL:</div>
+                                        <pre class="col-9 col-form-label" th:text="${entity.getSubjectURL()}"/>
+                                        <div class="col-3 col-form-label">Redirect URL:</div>
+                                        <pre class="col-9 col-form-label" th:text="${entity.getRedirectURL()}"/>
+                                        <div class="col-3 col-form-label">Terms of usage:</div>
+                                        <pre class="col-9 col-form-label"
+                                             th:text="${entity.getTermsOfUsagePlainText()}"/>
                                     </div>
                                 </div>
-
-                                <div class="col">
-                                    <div class="row">
-                                        <div class="col-3">CAR:</div>
-                                        <div class="col-auto" th:text="${entity.getCAR()}">
-                                        </div>
+                                <div class="col-12 col-xl-6">
+                                    <div class="row cvcInfoBox">
+                                        <div class="col-3 col-form-label">CAR:</div>
+                                        <pre class="col-9 col-form-label" th:text="${entity.getCAR()}"/>
+                                        <div class="col-3 col-form-label">Issuer:</div>
+                                        <pre class="col-9 col-form-label" th:text="${entity.getIssuerName()}"/>
+                                        <div class="col-3 col-form-label">Issuer URL:</div>
+                                        <pre class="col-9 col-form-label" th:text="${entity.getIssuerURL()}"/>
+                                        <div class="col-3 col-form-label">Valid from:</div>
+                                        <pre class="col-9 col-form-label" th:text="${entity.getValidFrom()}"/>
+                                        <div class="col-3 col-form-label">Valid until:</div>
+                                        <pre class="col-9 col-form-label" th:text="${entity.getValidUntil()}"/>
                                     </div>
-                                    <div class="row">
-                                        <div class="col-3">Issuer:</div>
-                                        <div class="col-auto" th:text="${entity.getIssuerName()}">
-                                        </div>
-                                    </div>
-                                    <div class="row">
-                                        <div class="col-3">Issuer URL:</div>
-                                        <div class="col-auto" th:text="${entity.getIssuerURL()}">
-                                        </div>
-                                    </div>
-                                    <div class="row">
-                                        <div class="col-3">Valid from:</div>
-                                        <div class="col-auto" th:text="${entity.getValidFrom()}">
-                                        </div>
-                                    </div>
-                                    <div class="row">
-                                        <div class="col-3">Valid until:</div>
-                                        <div class="col-auto" th:text="${entity.getValidUntil()}">
-                                        </div>
-                                    </div>
-
                                 </div>
                             </div>
-                        </div>
-                    </div>
-
-                    <!--                    RENEW CVC -->
-                    <div class="card shadow mt-3" th:unless="${entity.getCHR() == null or entity.getCHR().isEmpty()}">
-                        <div class="card-body">
-                            <h4 class="card-text">Renew CVC</h4>
-
-                            <div class="form-group">
+                            <div th:unless="${entity.getCHR() == null or entity.getCHR().isEmpty()}">
+                                <hr>
                                 <form method="POST"
-                                      th:action="@{/admin-interface/details/__${entityID}__/renewCVC}">
-                                    <button type="submit" name="submit" value="value" class="btn btn-primary"
+                                      th:action="@{'/admin-interface/details/renewCVC?entityid=' + ${#uris.escapeQueryParam(entityID)}}">
+                                    <button type="submit" name="submit" value="value" class="btn btn-primary w-100"
                                             id="renew-cvc-button">
-                                        Renew CVC
+                                        Renew this CVC
                                     </button>
                                 </form>
                             </div>
                         </div>
                     </div>
 
-
                     <div class="card shadow mt-3">
+                        <h4 class="card-header bg-light">Initial CVC request</h4>
                         <div class="card-body">
-                            <h4 class="card-text">Start an initial request</h4>
-
                             <div th:unless="${entity.getCHR() == null or entity.getCHR().isEmpty()}"
-                                 class="alert alert-warning">
-                                You already have an authorization certificate. Please only make a new initial request
+                                 class="alert alert-warning" role="alert">
+                                You already have an authorization certificate. Please only make a new initial
+                                request
                                 after consultation with the authorization CA.
                             </div>
-                            <form action="#" th:action="@{/admin-interface/details/__${entityID}__/initialRequest}"
+                            <form action="#"
+                                  th:action="@{'/admin-interface/details/initialRequest?entityid=' + ${#uris.escapeQueryParam(entityID)}}"
                                   th:object="${form}" method="post" id="initial-request-form">
                                 <div class="form-group row">
                                     <div th:replace="~{fragments/form :: inputRow_text('Country code', 'countryCode', 'The two character country code')}"/>
@@ -179,35 +157,28 @@
         <!--        RSC-->
         <div class="tab-pane fade show active js-remove-class mb-2" id="pills-rsc" role="tabpanel"
              aria-labelledby="pills-rsc-tab">
-            <div class="card js-remove-border ">
+            <div class="card js-remove-border">
                 <div class="card-body">
                     <h5 class="card-title">RSC (Request Signer Certificate)</h5>
-                    <h6 class="card-subtitle mb-2 text-muted">Create, download and inspect the RSC</h6>
+                    <h6 class="card-subtitle mb-4 text-muted">Create, download and inspect the RSC</h6>
 
                     <div class="row">
                         <div class="col">
                             <div class="card shadow">
-                                <div class="card-body table">
-                                    <h4 class="card-text">RSC info</h4>
+                                <h4 class="card-header bg-light">RSC info</h4>
+                                <div class="card-body">
                                     <div class="row">
-                                        <div class="col" id="rsc-info-table">
-                                            <div class="row">
-                                                <div class="col-3">Is RSC in use:</div>
-                                                <div class="col-auto"
-                                                     th:text="${entity.serviceProviderStatus.rscCurrentValidUntil == null ? '❌' : '✔'}">
-                                                </div>
-                                            </div>
-                                            <div class="row">
-                                                <div class="col-3">Valid until:</div>
-                                                <div class="col-auto"
-                                                     th:text="${entity.serviceProviderStatus.rscCurrentValidUntil}">
-                                                </div>
-                                            </div>
-                                            <div class="row">
-                                                <div class="col-3">RSC pending</div>
-                                                <div class="col-auto"
-                                                     th:text="${entity.serviceProviderStatus.rscPendingPresent ? '✔' : '❌'}">
-                                                </div>
+                                        <div class="col">
+                                            <div class="row" id="rsc-info-table">
+                                                <div class="col-3 col-form-label">Is RSC in use:</div>
+                                                <div class="col-9 col-form-label"
+                                                     th:text="${entity.serviceProviderStatus.rscCurrentValidUntil == null ? '❌' : '✔'}"/>
+                                                <div class="col-3 col-form-label">Valid until:</div>
+                                                <div class="col-9 col-form-label"
+                                                     th:text="${entity.serviceProviderStatus.rscCurrentValidUntil}"/>
+                                                <div class="col-3 col-form-label">RSC pending</div>
+                                                <div class="col-9 col-form-label"
+                                                     th:text="${entity.serviceProviderStatus.rscPendingPresent ? '✔' : '❌'}"/>
                                             </div>
                                         </div>
                                     </div>
@@ -216,15 +187,16 @@
                         </div>
                         <div class="col">
                             <div class="card shadow">
-                                <div class="card-body table">
-                                    <h4 class="card-text">RSC actions</h4>
+                                <h4 class="card-header bg-light">RSC actions</h4>
+                                <div class="card-body">
                                     <form method="POST"
-                                          th:action="@{/admin-interface/details/__${entityID}__/generateRSC}"
+                                          th:action="@{'/admin-interface/details/generateRSC?entityid=' + ${#uris.escapeQueryParam(entityID)}}"
                                           th:object="${form}"
                                           th:unless="${entity.serviceProviderStatus.rscAnyPresent}"
                                           id="generate-rsc-form">
                                         <div class="form-group row" th:unless="${entity.isPublicClient()}">
-                                            <label class="col-sm-4 col-form-label" for="form:rscChrId">Holder for
+                                            <label class="col-sm-4 col-form-label" for="form:rscChrId">Holder
+                                                for
                                                 request signer
                                                 certificate</label>
                                             <div class="col-sm-8">
@@ -233,20 +205,24 @@
                                                        th:field="*{rscChr}">
                                             </div>
                                         </div>
-                                        <button name="submit" type="submit" value="value" class="btn btn-primary w-100">
+                                        <button name="submit" type="submit" value="value"
+                                                class="btn btn-primary w-100">
                                             Generate RSC
                                         </button>
                                     </form>
                                     <form action="#" method=get
-                                          th:action="@{/admin-interface/details/__${entityID}__/downloadRSC}"
+                                          th:action="@{'/admin-interface/details/downloadRSC'}"
                                           th:if="${entity.serviceProviderStatus.rscAnyPresent}">
+                                        <input hidden name="entityid" type="text" th:value="${entityID}">
                                         <button type="submit" class="btn btn-primary w-100"
                                                 value="Download RSC" id="download-rsc-button">Download RSC
                                         </button>
                                         <div th:if="${entity.serviceProviderStatus.rscPendingPresent}">
-                                            <p class="text-danger">There is a new request signer certificate. Please
+                                            <p class="text-danger">There is a new request signer certificate.
+                                                Please
                                                 make sure
-                                                to send it manually (via email) to the DVCA if you have not yet done
+                                                to send it manually (via email) to the DVCA if you have not yet
+                                                done
                                                 so.</p>
                                         </div>
                                     </form>
@@ -261,83 +237,60 @@
         <!--        LISTS-->
         <div class="tab-pane fade show active js-remove-class mb-2" id="pills-lists" role="tabpanel"
              aria-labelledby="pills-lists-tab">
-            <div class="card js-remove-border ">
+            <div class="card js-remove-border">
                 <div class="card-body">
                     <h5 class="card-title">Lists</h5>
-                    <h6 class="card-subtitle mb-2 text-muted">Check status of the Black, Master and
+                    <h6 class="card-subtitle mb-4 text-muted">Check status of the Black, Master and
                         Defect List</h6>
-
-                    <div class="row m-auto mb-3">
+                    <div class="row">
                         <div class="col">
                             <div class="card shadow mb-3">
-                                <div class="card-body" id="black-list-info">
-                                    <h5 class="card-title">Black List</h5>
-                                    <div class="row">
+                                <h5 class="card-header bg-light">Black List</h5>
+                                <div class="card-body">
+                                    <div class="row" id="black-list-info">
                                         <div class="col-3">Available:</div>
-                                        <div class="col-auto"
-                                             th:text="${entity.serviceProviderStatus.blackListPresent ? '✔' : '❌'}">
-                                        </div>
-                                    </div>
-                                    <div class="row">
+                                        <div class="col-9"
+                                             th:text="${entity.serviceProviderStatus.blackListPresent ? '✔' : '❌'}"/>
                                         <div class="col-3">Last renewal:</div>
-                                        <div class="col-auto"
-                                             th:text="${entity.serviceProviderStatus.blackListPresent ? entity.serviceProviderStatus.blackListLastRetrieval: '-'}">
-                                        </div>
-                                    </div>
-                                    <div class="row">
+                                        <div class="col-9"
+                                             th:text="${entity.serviceProviderStatus.blackListPresent ? entity.serviceProviderStatus.blackListLastRetrieval: '-'}"/>
                                         <div class="col-3">CA reachable:</div>
-                                        <div class="col-auto"
-                                             th:text="${entity.serviceProviderStatus.blackListDVCAAvailability ? '✔' : '❌'}">
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-
-
-                            <div class="card shadow mb-3">
-                                <div class="card-body" id="master-list-info">
-                                    <h5 class="card-title">Master List</h5>
-                                    <div class="row">
-                                        <div class="col-3">Available:</div>
-                                        <div class="col-auto"
-                                             th:text="${entity.serviceProviderStatus.masterListPresent ? '✔' : '❌'}">
-                                        </div>
-                                    </div>
-                                    <div class="row">
-                                        <div class="col-3">Last renewal:</div>
-                                        <div class="col-auto"
-                                             th:text="${entity.serviceProviderStatus.masterListPresent ? entity.serviceProviderStatus.masterListLastRetrieval : '-'}">
-                                        </div>
-                                    </div>
-                                    <div class="row">
-                                        <div class="col-3">CA reachable:</div>
-                                        <div class="col-auto"
-                                             th:text="${entity.serviceProviderStatus.masterListDVCAAvailability ? '✔' : '❌'}">
-                                        </div>
+                                        <div class="col-9"
+                                             th:text="${entity.serviceProviderStatus.blackListDVCAAvailability ? '✔' : '❌'}"/>
                                     </div>
                                 </div>
                             </div>
 
                             <div class="card shadow mb-3">
-                                <div class="card-body" id="defect-list-info">
-                                    <h5 class="card-title">Defect List</h5>
-                                    <div class="row">
+                                <h5 class="card-header bg-light">Master List</h5>
+                                <div class="card-body">
+                                    <div class="row" id="master-list-info">
                                         <div class="col-3">Available:</div>
-                                        <div class="col-auto"
-                                             th:text="${entity.serviceProviderStatus.defectListPresent ? '✔' : '❌'}">
-                                        </div>
-                                    </div>
-                                    <div class="row">
+                                        <div class="col-9"
+                                             th:text="${entity.serviceProviderStatus.masterListPresent ? '✔' : '❌'}"/>
                                         <div class="col-3">Last renewal:</div>
-                                        <div class="col-auto"
-                                             th:text="${entity.serviceProviderStatus.defectListPresent ? entity.serviceProviderStatus.defectListLastRetrieval : '-'}">
-                                        </div>
-                                    </div>
-                                    <div class="row">
+                                        <div class="col-9"
+                                             th:text="${entity.serviceProviderStatus.masterListPresent ? entity.serviceProviderStatus.masterListLastRetrieval : '-'}"/>
                                         <div class="col-3">CA reachable:</div>
-                                        <div class="col-auto"
-                                             th:text="${entity.serviceProviderStatus.defectListDVCAAvailability ? '✔' : '❌'}">
-                                        </div>
+                                        <div class="col-9"
+                                             th:text="${entity.serviceProviderStatus.masterListDVCAAvailability ? '✔' : '❌'}"/>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="card shadow mb-3">
+                                <h5 class="card-header bg-light">Defect List</h5>
+                                <div class="card-body">
+                                    <div class="row" id="defect-list-info">
+                                        <div class="col-3">Available:</div>
+                                        <div class="col-9"
+                                             th:text="${entity.serviceProviderStatus.defectListPresent ? '✔' : '❌'}"/>
+                                        <div class="col-3">Last renewal:</div>
+                                        <div class="col-9"
+                                             th:text="${entity.serviceProviderStatus.defectListPresent ? entity.serviceProviderStatus.defectListLastRetrieval : '-'}"/>
+                                        <div class="col-3">CA reachable:</div>
+                                        <div class="col-9"
+                                             th:text="${entity.serviceProviderStatus.defectListDVCAAvailability ? '✔' : '❌'}"/>
                                     </div>
                                 </div>
                             </div>
@@ -345,13 +298,11 @@
 
                         <div class="col" th:unless="${entity.getCHR() == null or entity.getCHR().isEmpty()}">
                             <div class="card shadow mb-3">
+                                <h5 class="card-header bg-light">List actions</h5>
                                 <div class="card-body">
-
-                                    <h5 class="card-title">List actions</h5>
-
                                     <div class="form-group mb-3">
                                         <form method="POST"
-                                              th:action="@{/admin-interface/details/__${entityID}__/renewBlackList}">
+                                              th:action="@{'/admin-interface/details/renewBlackList?entityid=' + ${#uris.escapeQueryParam(entityID)}}">
                                             <button type="submit" name="submit" value="value"
                                                     class="btn btn-primary w-100" id="renew-blacklist-button">
                                                 Renew Black List
@@ -360,9 +311,10 @@
                                     </div>
                                     <div class="form-group">
                                         <form method="POST"
-                                              th:action="@{/admin-interface/details/__${entityID}__/renewMasterDefectList}">
+                                              th:action="@{'/admin-interface/details/renewMasterDefectList?entityid=' + ${#uris.escapeQueryParam(entityID)}}">
                                             <button type="submit" name="submit" value="value"
-                                                    class="btn btn-primary w-100" id="renew-masterdefectlist-button">
+                                                    class="btn btn-primary w-100"
+                                                    id="renew-masterdefectlist-button">
                                                 Renew Master and Defect List
                                             </button>
                                         </form>
@@ -374,7 +326,7 @@
                 </div>
             </div>
         </div>
-        <script src="/js/js-save-tabs.js"></script>
+        <script th:src="@{/admin-interface/js/js-save-tabs.js}"></script>
 </section>
 
 </html>

@@ -13,30 +13,35 @@ import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.nio.charset.StandardCharsets;
+import java.util.stream.Collectors;
 
 import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
 import javax.xml.bind.DatatypeConverter;
 import javax.xml.transform.OutputKeys;
 import javax.xml.transform.Transformer;
+import javax.xml.transform.TransformerException;
 import javax.xml.transform.dom.DOMSource;
 import javax.xml.transform.stream.StreamResult;
 
 import org.apache.commons.lang.StringUtils;
-import org.opensaml.core.config.InitializationException;
 import org.opensaml.core.xml.config.XMLObjectProviderRegistrySupport;
+import org.opensaml.core.xml.io.MarshallingException;
 import org.opensaml.core.xml.io.UnmarshallingException;
+import org.opensaml.saml.saml2.core.impl.AssertionMarshaller;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.servlet.ModelAndView;
 import org.w3c.dom.Document;
+import org.w3c.dom.Element;
 
 import de.governikus.eumw.eidascommon.ErrorCodeException;
 import de.governikus.eumw.eidascommon.HttpRedirectUtils;
 import de.governikus.eumw.eidascommon.Utils;
 import de.governikus.eumw.eidascommon.Utils.X509KeyPair;
+import de.governikus.eumw.eidasstarterkit.EidasAttribute;
 import de.governikus.eumw.eidasstarterkit.EidasResponse;
-import de.governikus.eumw.eidasstarterkit.EidasSaml;
 import lombok.extern.slf4j.Slf4j;
 import net.shibboleth.utilities.java.support.component.ComponentInitializationException;
 import net.shibboleth.utilities.java.support.xml.XMLParserException;
@@ -83,7 +88,7 @@ public class NewReceiverServlet
       ByteArrayOutputStream bout = new ByteArrayOutputStream();
       trans.transform(new DOMSource(doc), new StreamResult(bout));
 
-      return new String(bout.toByteArray(), Utils.ENCODING);
+      return bout.toString(Utils.ENCODING);
     }
     catch (Exception e)
     {
@@ -96,20 +101,21 @@ public class NewReceiverServlet
    * The Middleware ResponseSender performs a post request with the SAML response to this endpoint
    */
   @PostMapping
-  public void doPost(HttpServletRequest req, HttpServletResponse resp)
+  public ModelAndView doPost(HttpServletRequest req)
   {
     try
     {
-      EidasSaml.init();
+      final SamlResult samlResult = processIncomingSAMLResponse(req);
+      return displayResultPage(samlResult);
     }
-    catch (InitializationException e)
+    catch (Exception e)
     {
-      log.error("Could not initialize SAML ", e);
-      helper.showErrorPage(resp, "Can not initialize SAML", e.getMessage());
-      return;
+      log.error("Could not process SAML response", e);
+      ModelAndView error = new ModelAndView("Error");
+      error.addObject("errorCode", "Could not process SAML response");
+      error.addObject("details", e.getMessage());
+      return error;
     }
-    final SamlResult samlResult = processIncomingSAMLResponse(req);
-    displayResultPage(samlResult, resp);
   }
 
   /**
@@ -119,25 +125,14 @@ public class NewReceiverServlet
    * @param request The incoming HTTP request to extract the SAML and relay state data
    * @return The SamlResult containing the retrieved data or an error message
    */
-  private SamlResult processIncomingSAMLResponse(HttpServletRequest request)
+  private SamlResult processIncomingSAMLResponse(HttpServletRequest request) throws Exception
   {
-    try
-    {
-      String samlResponseBase64 = request.getParameter(HttpRedirectUtils.RESPONSE_PARAMNAME);
+    String samlResponseBase64 = request.getParameter(HttpRedirectUtils.RESPONSE_PARAMNAME);
 
-      byte[] samlResponse = DatatypeConverter.parseBase64Binary(samlResponseBase64);
+    byte[] samlResponse = DatatypeConverter.parseBase64Binary(samlResponseBase64);
 
-      String relayState = request.getParameter(HttpRedirectUtils.RELAYSTATE_PARAMNAME);
-      return extractDataFromResponse(samlResponse, relayState);
-    }
-    catch (ErrorCodeException | IOException | ComponentInitializationException | XMLParserException
-      | UnmarshallingException e)
-    {
-      log.error("Error during SAML response processing", e);
-      SamlResult samlResult = new SamlResult();
-      samlResult.setErrorDetails(e.getMessage());
-      return samlResult;
-    }
+    String relayState = request.getParameter(HttpRedirectUtils.RELAYSTATE_PARAMNAME);
+    return extractDataFromResponse(samlResponse, relayState);
   }
 
   /**
@@ -148,7 +143,8 @@ public class NewReceiverServlet
    * @return The SAML result containing the retrieved data
    */
   private SamlResult extractDataFromResponse(byte[] samlResponse, String relayState)
-    throws XMLParserException, IOException, UnmarshallingException, ErrorCodeException, ComponentInitializationException
+    throws XMLParserException, IOException, UnmarshallingException, ErrorCodeException,
+    ComponentInitializationException, MarshallingException, TransformerException
   {
     String saml = getXMLFromBytes(samlResponse);
     SamlResult samlResult = new SamlResult();
@@ -160,14 +156,19 @@ public class NewReceiverServlet
       EidasResponse resp = EidasResponse.parse(is,
                                                new X509KeyPair[]{helper.demoDecryptionKeyPair},
                                                helper.serverSigCert);
-      samlResult.setLevelOfAssurance(resp.getLoa() == null ? "" : resp.getLoa().getUri());
-      StringBuilder attributes = new StringBuilder();
-
-      resp.getAttributes().forEach(e -> {
-        attributes.append(e.toString());
-        attributes.append("\n");
-      });
-      samlResult.setAttributes(attributes.toString());
+      samlResult.setLevelOfAssurance(resp.getLoa() == null ? null : resp.getLoa().getUri());
+      samlResult.setAttributes(resp.getAttributes());
+      if (resp.getOpenSamlResponse().getAssertions().size() == 1)
+      {
+        Element assertionElement = new AssertionMarshaller().marshall(resp.getOpenSamlResponse()
+                                                                          .getAssertions()
+                                                                          .get(0));
+        Transformer transformer = Utils.getTransformer();
+        transformer.setOutputProperty(OutputKeys.INDENT, "yes");
+        ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
+        transformer.transform(new DOMSource(assertionElement), new StreamResult(outputStream));
+        samlResult.setAssertion(outputStream.toString(StandardCharsets.UTF_8));
+      }
     }
     return samlResult;
 
@@ -177,50 +178,38 @@ public class NewReceiverServlet
    * Display the result in the user's browser.
    *
    * @param samlResult The SamlResult do be displayed
-   * @param response response object
    */
-  private void displayResultPage(SamlResult samlResult, HttpServletResponse response)
+  private ModelAndView displayResultPage(SamlResult samlResult)
   {
-    try
+    ModelAndView resultPage = new ModelAndView("NewReceiverServlet");
+    if (samlResult.getErrorDetails() == null)
     {
-      if (samlResult.getErrorDetails() == null)
+      if (samlResult.getRelayState() == null)
       {
-        response.setContentType("text/plain");
-        response.setCharacterEncoding("UTF-8");
-        response.getWriter().write("Relay State: ");
-        if (samlResult.getRelayState() == null)
-        {
-          response.getWriter().write("<null>");
-        }
-        else if (StringUtils.isBlank(samlResult.getRelayState()))
-        {
-          response.getWriter().write("<empty string>");
-        }
-        else
-        {
-          response.getWriter().write(samlResult.getRelayState());
-        }
-        response.getWriter().write("\n\r");
-        response.getWriter().write("Level Of Assurance: ");
-        response.getWriter().write(samlResult.getLevelOfAssurance());
-        response.getWriter().write("\n\r");
-        response.getWriter().write("\n\r");
-        response.getWriter().write(samlResult.getSamlResponse());
-        response.getWriter().write("\n\r");
-        response.getWriter().write("\n\r");
-        response.getWriter().write(samlResult.getAttributes());
+        resultPage.addObject("relayState", "<null>");
+      }
+      else if (StringUtils.isBlank(samlResult.getRelayState()))
+      {
+        resultPage.addObject("relayState", "<empty string>");
       }
       else
       {
-        response.getWriter().write("Error:");
-        response.getWriter().write("\n\r");
-        response.getWriter().write(samlResult.getErrorDetails());
+        resultPage.addObject("relayState", samlResult.getRelayState());
       }
+      resultPage.addObject("levelOfAssurance", samlResult.getLevelOfAssurance());
+      resultPage.addObject("samlResponse", samlResult.getSamlResponse());
+      resultPage.addObject("samlResult",
+                           samlResult.getAttributes()
+                                     .stream()
+                                     .collect(Collectors.toMap(eidasAttribute -> eidasAttribute.type()
+                                                                                               .getFriendlyName(),
+                                                               EidasAttribute::getValue)));
+      resultPage.addObject("samlAssertion", samlResult.getAssertion());
     }
-    catch (IOException e)
+    else
     {
-      log.error("Cannot show result page", e);
-      response.setStatus(500);
+      resultPage.addObject("relayState", samlResult.getErrorDetails());
     }
+    return resultPage;
   }
 }

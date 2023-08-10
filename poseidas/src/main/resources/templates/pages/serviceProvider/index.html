@@ -14,7 +14,8 @@
             <div class="card shadow p-1 mb-4" th:each="serviceprovider : ${serviceProviderViewModel}">
                 <h4 class="card-header bg-light">
                     <span th:text="*{serviceprovider.name}"/>
-                    <a th:href="@{/admin-interface/details/__${serviceprovider.name}__}" class="float-end">
+                    <a th:href="@{'/admin-interface/details?entityid=' + ${#uris.escapeQueryParam(serviceprovider.name)}}"
+                       class="float-end">
                         <button class="btn btn-primary">Details</button>
                     </a>
                 </h4>
@@ -50,10 +51,10 @@
                     <hr/>
                     <div style="float: right">
                         <a class="btn btn-secondary"
-                           th:href="${'/admin-interface/serviceProvider/edit/' + serviceprovider.name}">Edit <span
-                                class="fa fa-pencil-alt"></span></a>
+                           th:href="@{'/admin-interface/serviceProvider/edit?serviceprovidername=' + ${#uris.escapeQueryParam(serviceprovider.name)}}">Edit
+                            <span class="fa fa-pencil-alt"></span></a>
                         <a class="btn btn-danger"
-                           th:href="${'/admin-interface/serviceProvider/remove/' + serviceprovider.name}">Delete
+                           th:href="@{'/admin-interface/serviceProvider/remove?serviceprovidername=' + ${#uris.escapeQueryParam(serviceprovider.name)}}">Delete
                             <span class="fa fa-trash"></span></a>
                     </div>
                 </div>

@@ -400,7 +400,7 @@ public class EidasSaml
 
   /**
    * Parse metadata of another node, not accepting invalid signatures.
-   * 
+   *
    * @param is stream containing metadata
    * @param signer verification certificate (optional)
    * @return
@@ -421,7 +421,7 @@ public class EidasSaml
 
   /**
    * Parse metadata of another node.
-   * 
+   *
    * @param is stream containing metadata
    * @param signer verification certificate (optional)
    * @param continueOnInvalidSig <code>true</code> for allowing to continue on failed signature validation,

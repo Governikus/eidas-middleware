@@ -11,6 +11,9 @@
 package de.governikus.eumw.poseidas.cardbase.crypto;
 
 import de.governikus.eumw.poseidas.cardbase.asn1.OID;
+import lombok.AccessLevel;
+import lombok.AllArgsConstructor;
+import lombok.Getter;
 
 
 /**
@@ -21,14 +24,11 @@ import de.governikus.eumw.poseidas.cardbase.asn1.OID;
  * @see HashInfo
  * @author Jens Wothe, jw@bos-bremen.de
  */
+@Getter
+@AllArgsConstructor(access = AccessLevel.PRIVATE)
 enum HashAlgorithmEnum implements HashInfo
 {
-  /**
-   * MD5.
-   *
-   * @see HashConstants#MD5_ALGORITHM
-   */
-  MD5(HashConstants.MD5_ALGORITHM),
+
   /**
    * SHA1.
    *
@@ -36,23 +36,17 @@ enum HashAlgorithmEnum implements HashInfo
    */
   SHA1(HashConstants.SHA1_ALGORITHM),
   /**
-   * SHA526.
-   *
-   * @see HashConstants#SHA256_ALGORITHM
-   */
-  SHA256(HashConstants.SHA256_ALGORITHM),
-  /**
-   * SHA512.
-   *
-   * @see HashConstants#SHA512_ALGORITHM
-   */
-  SHA512(HashConstants.SHA512_ALGORITHM),
-  /**
    * SHA224.
    *
    * @see HashConstants#SHA224_ALGORITHM
    */
   SHA224(HashConstants.SHA224_ALGORITHM),
+  /**
+   * SHA526.
+   *
+   * @see HashConstants#SHA256_ALGORITHM
+   */
+  SHA256(HashConstants.SHA256_ALGORITHM),
   /**
    * SHA384.
    *
@@ -60,40 +54,14 @@ enum HashAlgorithmEnum implements HashInfo
    */
   SHA384(HashConstants.SHA384_ALGORITHM),
   /**
-   * RIPEMD160.
+   * SHA512.
    *
-   * @see HashConstants#RIPEMD160_ALGORITHM
+   * @see HashConstants#SHA512_ALGORITHM
    */
-  RIPEMD160(HashConstants.RIPEMD160_ALGORITHM),
-  /**
-   * WHIRLPOOL.
-   *
-   * @see HashConstants#WHIRLPOOL_ALGORITHM
-   */
-  WHIRLPOOL(HashConstants.WHIRLPOOL_ALGORITHM);
+  SHA512(HashConstants.SHA512_ALGORITHM);
 
   // algorithm
   private HashAlgorithm hashAlgorithm = null;
-
-  /**
-   * Constructor.
-   *
-   * @param hashAlgorithm algorithm
-   */
-  private HashAlgorithmEnum(HashAlgorithm hashAlgorithm)
-  {
-    this.hashAlgorithm = hashAlgorithm;
-  }
-
-  /**
-   * Gets hash algorithm.
-   *
-   * @return algorithm
-   */
-  public HashAlgorithm getHashAlgoritm()
-  {
-    return hashAlgorithm;
-  }
 
   /** {@inheritDoc} */
   @Override
@@ -136,5 +104,4 @@ enum HashAlgorithmEnum implements HashInfo
   {
     return hashAlgorithm.getEncoded();
   }
-
 }

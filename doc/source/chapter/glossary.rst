@@ -7,7 +7,7 @@ Glossary
 
     German eID PKI
         PKI for the German ID card. See `Country Verifying Certificate Authority - electronic Identity
-        <https://www.bsi.bund.de/EN/Topics/ElectrIDDocuments/CVCAeID/CVCAeID_node.html>`_
+        <https://www.bsi.bund.de/EN/Themen/Oeffentliche-Verwaltung/Elektronische-Identitaeten/Public-Key-Infrastrukturen/CVCA/Country-Verifying-Certificate-Authority-electronic-Identity/country-verifying-certificate-authority-electronic-identity_node.html>`_
 
     BerCA
         Part of the :term:`German eID PKI`, see :term:`Authorization CA`

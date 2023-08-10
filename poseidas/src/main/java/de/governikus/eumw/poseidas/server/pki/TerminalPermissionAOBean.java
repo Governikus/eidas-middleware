@@ -9,6 +9,9 @@
 
 package de.governikus.eumw.poseidas.server.pki;
 
+import static de.governikus.eumw.poseidas.config.model.ServiceProviderDetails.getNumberOfCHR;
+import static de.governikus.eumw.poseidas.server.pki.CVCRequestHandler.getHolderReferenceStringOfPendingRequest;
+
 import java.io.ByteArrayInputStream;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
@@ -616,7 +619,6 @@ public class TerminalPermissionAOBean implements TerminalPermissionAO
     {
       pending = new PendingCertificateRequest(refID);
       pendingCertificateRequestRepository.saveAndFlush(pending);
-      tp.setPendingRequest(pending);
     }
     else
     {
@@ -629,6 +631,13 @@ public class TerminalPermissionAOBean implements TerminalPermissionAO
     if (chain != null)
     {
       storeCertInChain(chain, tp);
+    }
+
+    tp.setPendingRequest(pending);
+    Integer usedSequenceNumber = getNumberOfCHR(getHolderReferenceStringOfPendingRequest(pending));
+    if (tp.getNextCvcSequenceNumber() == null && usedSequenceNumber != null)
+    {
+      tp.setNextCvcSequenceNumber(usedSequenceNumber);
     }
 
     pendingCertificateRequestRepository.saveAndFlush(pending);
@@ -1071,7 +1080,14 @@ public class TerminalPermissionAOBean implements TerminalPermissionAO
     }
     if (ArrayUtil.isNullOrEmpty(certByteArray))
     {
-      log.debug("No request signer certificate for refId {} found", refID);
+      if (current)
+      {
+        log.debug("No request signer certificate for refId {} found", refID);
+      }
+      else
+      {
+        log.debug("No pending request signer certificate for refId {} found", refID);
+      }
       return null;
     }
     try
@@ -1095,7 +1111,14 @@ public class TerminalPermissionAOBean implements TerminalPermissionAO
     {
       return rsc.getPrivateKey();
     }
-    log.debug("No request signer certificate for refID {} found", refID);
+    if (current)
+    {
+      log.debug("No request signer certificate for refID {} found", refID);
+    }
+    else
+    {
+      log.debug("No pending request signer certificate for refID {} found", refID);
+    }
     return null;
   }
 
@@ -1130,7 +1153,17 @@ public class TerminalPermissionAOBean implements TerminalPermissionAO
     var optionalPublicServiceProviderName = configurationService.getConfiguration()
                                                                 .map(EidasMiddlewareConfig::getEidasConfiguration)
                                                                 .map(EidasMiddlewareConfig.EidasConfiguration::getPublicServiceProviderName);
-    return optionalPublicServiceProviderName.isPresent() && entityId.equals(optionalPublicServiceProviderName.get());
+    if (optionalPublicServiceProviderName.isEmpty())
+    {
+      return false;
+    }
+    final String publicSpName = optionalPublicServiceProviderName.get();
+    return configurationService.getConfiguration()
+                               .map(EidasMiddlewareConfig::getEidConfiguration)
+                               .map(EidasMiddlewareConfig.EidConfiguration::getServiceProvider)
+                               .stream()
+                               .flatMap(List::stream)
+                               .anyMatch(sp -> sp.getCVCRefID().equals(entityId) && sp.getName().equals(publicSpName));
   }
 
   @Override
@@ -1144,6 +1177,37 @@ public class TerminalPermissionAOBean implements TerminalPermissionAO
     }
     TerminalPermission permission = tp.get();
     permission.setRscChr(holder);
+    terminalPermissionRepository.saveAndFlush(permission);
+  }
+
+  @Override
+  public void increaseSequenceNumber(String refId)
+  {
+    Optional<TerminalPermission> tp = terminalPermissionRepository.findById(refId);
+    if (!tp.isPresent())
+    {
+      log.error("Could not increase sequence number for {}. RefID does not exist.", refId);
+      return;
+    }
+    TerminalPermission permission = tp.get();
+    Integer counter = permission.getNextCvcSequenceNumber();
+
+    // should not happen because we store it on creating the CVC request
+    // and this method should only be called when receiving the response
+    if (counter == null)
+    {
+      return;
+    }
+
+    if (counter == 99999)
+    {
+      counter = 1;
+    }
+    else
+    {
+      counter++;
+    }
+    permission.setNextCvcSequenceNumber(counter);
     terminalPermissionRepository.saveAndFlush(permission);
   }
 }

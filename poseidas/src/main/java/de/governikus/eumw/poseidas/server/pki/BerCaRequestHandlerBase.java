@@ -73,7 +73,7 @@ class BerCaRequestHandlerBase
     this.configurationService = configurationService;
     if (StringUtils.isBlank(serviceProvider.getDvcaConfigurationName()))
     {
-      throw new GovManagementException(IDManagementCodes.INVALID_INPUT_DATA.createMessage("this is not configurated for nPA"));
+      throw new GovManagementException(IDManagementCodes.INVALID_INPUT_DATA.createMessage("this is not configured for nPA"));
     }
     dvcaConfiguration = configurationService.getDvcaConfiguration(serviceProvider);
     this.cvcRefId = serviceProvider.getCVCRefID();

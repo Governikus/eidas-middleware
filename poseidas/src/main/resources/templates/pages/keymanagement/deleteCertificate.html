@@ -18,7 +18,7 @@
             <br/>
 
 
-            <form method="post" th:action="${'/admin-interface/keymanagement/deleteCertificate/' + name }">
+            <form method="post" th:action="@{'/admin-interface/keymanagement/deleteCertificate?certificatename=' +  ${#uris.escapeQueryParam(name)}}">
                 <input type="hidden"
                        th:name="${_csrf.parameterName}"
                        th:value="${_csrf.token}"/>

@@ -28,6 +28,14 @@ public interface RequestSignerCertificateService
   X509Certificate getRequestSignerCertificate(String entityId);
 
   /**
+   * Checks if a sp has a request signer certificate.
+   * 
+   * @param entityId entityId
+   * @return true if a pending or current request signer certificate is present. false otherwise.
+   */
+  boolean hasRequestSignerCertificate(String entityId);
+
+  /**
    * Gets the current or pending request signer certificate for the given entityId
    * 
    * @param entityId entityId

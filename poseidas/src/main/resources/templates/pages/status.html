@@ -6,15 +6,16 @@
 
 <section>
     <div class="row">
-    <div class="col-auto"><h1>Status of the eIDAS Middleware</h1></div>
-    <div class="col row d-flex align-items-center" th:if="${valuesAvailable}">
-        <div class="col-auto">
-        <form action="#" th:action="@{/admin-interface/status}" method=get>
-            <input type="submit" class="btn btn-primary" value="Start check"/>
-        </form></div>
-        <div class="col">
-        Last check at: <span th:text="${lastCheck}"/></div>
-    </div>
+        <div class="col-auto"><h1>Status of the eIDAS Middleware</h1></div>
+        <div class="col row d-flex align-items-center" th:if="${valuesAvailable}">
+            <div class="col-auto">
+                <form action="#" th:action="@{/admin-interface/status}" method=get>
+                    <input type="submit" class="btn btn-primary" value="Start check"/>
+                </form>
+            </div>
+            <div class="col">
+                Last check at: <span th:text="${lastCheck}"/></div>
+        </div>
     </div>
 
     <hr class="text-primary" style="height: 4px"/>
@@ -63,10 +64,12 @@
                         <div class="card-header bg-light">
                             <h4>
                                 <span th:text="${entity.key}"/>
-                                <small th:unless="${entity.value.enabled}"><i class="fa fa-eye-slash"></i> (Inactive)</small>
+                                <small th:unless="${entity.value.enabled}"><i class="fa fa-eye-slash"></i>
+                                    (Inactive)</small>
                                 <a href="details.html"
-                                   th:href="@{/admin-interface/details/__${entity.key}__}"
-                                   class="float-end"><button class="btn btn-primary">Details</button>
+                                   th:href="@{'/admin-interface/details?entityid=' + ${#uris.escapeQueryParam(entity.key)}}"
+                                   class="float-end">
+                                    <button class="btn btn-primary">Details</button>
                                 </a>
                             </h4>
                         </div>

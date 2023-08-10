@@ -1,11 +1,10 @@
 /*
- * Copyright (c) 2020 Governikus KG. Licensed under the EUPL, Version 1.2 or as soon they will be approved by
- * the European Commission - subsequent versions of the EUPL (the "Licence"); You may not use this work except
- * in compliance with the Licence. You may obtain a copy of the Licence at:
- * http://joinup.ec.europa.eu/software/page/eupl Unless required by applicable law or agreed to in writing,
- * software distributed under the Licence is distributed on an "AS IS" basis, WITHOUT WARRANTIES OR CONDITIONS
- * OF ANY KIND, either express or implied. See the Licence for the specific language governing permissions and
- * limitations under the Licence.
+ * Copyright (c) 2020 Governikus KG. Licensed under the EUPL, Version 1.2 or as soon they will be approved by the
+ * European Commission - subsequent versions of the EUPL (the "Licence"); You may not use this work except in compliance
+ * with the Licence. You may obtain a copy of the Licence at: http://joinup.ec.europa.eu/software/page/eupl Unless
+ * required by applicable law or agreed to in writing, software distributed under the Licence is distributed on an
+ * "AS IS" basis, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the Licence for the
+ * specific language governing permissions and limitations under the Licence.
  */
 
 package de.governikus.eumw.eidascommon;
@@ -14,21 +13,28 @@ import java.io.UnsupportedEncodingException;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
 import java.security.GeneralSecurityException;
 import java.security.PrivateKey;
 import java.security.Signature;
+import java.security.cert.X509Certificate;
 import java.util.zip.DataFormatException;
 import java.util.zip.Deflater;
 import java.util.zip.Inflater;
 
 import javax.xml.bind.DatatypeConverter;
 
+import org.apache.commons.lang3.StringUtils;
+
+import lombok.extern.slf4j.Slf4j;
+
 
 /**
  * Definitions and methods needed to implement HTTP redirect binding.
- * 
+ *
  * @author TT
  */
+@Slf4j
 public final class HttpRedirectUtils
 {
 
@@ -50,7 +56,7 @@ public final class HttpRedirectUtils
   /**
    * name of HTTP request parameter holding the signature algorithm
    */
-  private static final String SIGALG_PARAMNAME = "SigAlg";
+  public static final String SIGALG_PARAMNAME = "SigAlg";
 
   /**
    * name of HTTP request parameter holding the relay state
@@ -60,11 +66,11 @@ public final class HttpRedirectUtils
   /**
    * name of HTTP request parameter holding the signature value
    */
-  private static final String SIGVALUE_PARAMNAME = "Signature";
+  public static final String SIGVALUE_PARAMNAME = "Signature";
 
   /**
-   * Name of HTTP request parameter identifying the request as referencing to a former SAML request. If this
-   * parameter is given, all other parameters are ignored.
+   * Name of HTTP request parameter identifying the request as referencing to a former SAML request. If this parameter
+   * is given, all other parameters are ignored.
    */
   public static final String REFERENCE_PARAMNAME = "refID";
 
@@ -159,6 +165,62 @@ public final class HttpRedirectUtils
     else
     {
       return url + "&" + result.toString();
+    }
+  }
+
+  public static void verifyQueryString(String samlRequest,
+                                       String relayState,
+                                       String sigAlg,
+                                       String signature,
+                                       X509Certificate verificationCertificate)
+    throws ErrorCodeException
+  {
+    checkQueryParam(samlRequest, REQUEST_PARAMNAME);
+    checkQueryParam(sigAlg, SIGALG_PARAMNAME);
+    checkQueryParam(signature, SIGVALUE_PARAMNAME);
+    checkVerificationCertificate(verificationCertificate);
+
+    String javaSigAlg = CryptoAlgUtil.fromXmlSigAlg(sigAlg);
+    try
+    {
+      StringBuilder queryStringToCheck = new StringBuilder();
+      appendParam(queryStringToCheck, true, REQUEST_PARAMNAME, samlRequest);
+      if (relayState != null)
+      {
+        appendParam(queryStringToCheck, false, RELAYSTATE_PARAMNAME, relayState);
+      }
+      appendParam(queryStringToCheck, false, SIGALG_PARAMNAME, sigAlg);
+
+
+      Signature sig = Signature.getInstance(javaSigAlg);
+      sig.initVerify(verificationCertificate);
+      sig.update(queryStringToCheck.toString().getBytes(StandardCharsets.UTF_8));
+      if (!sig.verify(DatatypeConverter.parseBase64Binary(signature)))
+      {
+        throw new ErrorCodeException(ErrorCode.SIGNATURE_CHECK_FAILED);
+      }
+    }
+    catch (Exception e)
+    {
+      throw new ErrorCodeException(ErrorCode.SIGNATURE_CHECK_FAILED, e);
+    }
+  }
+
+  private static void checkVerificationCertificate(X509Certificate verificationCertificate) throws ErrorCodeException
+  {
+    if (verificationCertificate == null)
+    {
+      log.debug("Missing verification certificate for authn request verification");
+      throw new ErrorCodeException(ErrorCode.SIGNATURE_CHECK_FAILED);
+    }
+  }
+
+  private static void checkQueryParam(String queryParam, String queryParamName) throws ErrorCodeException
+  {
+    if (StringUtils.isBlank(queryParam))
+    {
+      log.debug("Missing query parameter: " + queryParamName);
+      throw new ErrorCodeException(ErrorCode.SIGNATURE_CHECK_FAILED);
     }
   }
 

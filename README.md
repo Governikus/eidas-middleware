@@ -11,8 +11,8 @@ The signed release artifacts will be released on github as well.
 We are using maven to build and test the software.
 
 To build the software, execute the following command:
-```
-maven clean install
+```console
+$ mvn clean install
 ```
 You can find the compiled JARs in the `target/` directory of each module.
 
@@ -24,11 +24,11 @@ on how to install sphinx on your system.
 
 To create the pdf file, issue the following commands:
 
-```
-cd doc && make clean latexpdf
+```console
+$ (cd doc && make clean latexpdf)
 ```
 
-The created pdf document can be found at `_build/latex/eIDASMiddleware.pdf`.
+The created pdf document can be found at `doc/_build/latex/eIDASMiddleware.pdf`.
 
 ## Documentation
 The user documentation for each release is available in the release artifacts.

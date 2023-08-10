@@ -217,7 +217,8 @@ public class TerminalData
 
 
   /**
-   * gets the expiration date of the certificate as a java date object.
+   * Gets the expiration date of the certificate as a java date object. The returned date is the moment from which a CVC
+   * can no longer be used.
    *
    * @return the expiration date of the certificate as Date object
    */

@@ -1,11 +1,10 @@
 /*
- * Copyright (c) 2020 Governikus KG. Licensed under the EUPL, Version 1.2 or as soon they will be approved by
- * the European Commission - subsequent versions of the EUPL (the "Licence"); You may not use this work except
- * in compliance with the Licence. You may obtain a copy of the Licence at:
- * http://joinup.ec.europa.eu/software/page/eupl Unless required by applicable law or agreed to in writing,
- * software distributed under the Licence is distributed on an "AS IS" basis, WITHOUT WARRANTIES OR CONDITIONS
- * OF ANY KIND, either express or implied. See the Licence for the specific language governing permissions and
- * limitations under the Licence.
+ * Copyright (c) 2020 Governikus KG. Licensed under the EUPL, Version 1.2 or as soon they will be approved by the
+ * European Commission - subsequent versions of the EUPL (the "Licence"); You may not use this work except in compliance
+ * with the Licence. You may obtain a copy of the Licence at: http://joinup.ec.europa.eu/software/page/eupl Unless
+ * required by applicable law or agreed to in writing, software distributed under the Licence is distributed on an
+ * "AS IS" basis, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the Licence for the
+ * specific language governing permissions and limitations under the Licence.
  */
 
 package de.governikus.eumw.poseidas.server.pki;
@@ -18,6 +17,7 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Set;
 
+import javax.annotation.Nullable;
 import javax.persistence.CascadeType;
 import javax.persistence.Entity;
 import javax.persistence.FetchType;
@@ -34,8 +34,8 @@ import lombok.Data;
 
 
 /**
- * Entity to persist the terminal permission data needed to access an ePA. That data contains the access data
- * for the PKI which issues the terminal certificates as well because it is needed in the renewal process.
+ * Entity to persist the terminal permission data needed to access an ePA. That data contains the access data for the
+ * PKI which issues the terminal certificates as well because it is needed in the renewal process.
  *
  * @author TT
  */
@@ -101,6 +101,14 @@ public class TerminalPermission implements Serializable
 
   @OneToOne(cascade = CascadeType.ALL)
   private RequestSignerCertificate pendingRequestSignerCertificate;
+
+
+  /**
+   * Holds the sequence number to use next for a CVC request. Nullable because field was added lately and could stay
+   * undefined through migration.
+   */
+  @Nullable
+  private Integer nextCvcSequenceNumber;
 
   /**
    * Constructor needed by hibernate

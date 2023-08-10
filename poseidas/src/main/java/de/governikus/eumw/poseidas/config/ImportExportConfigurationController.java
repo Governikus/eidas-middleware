@@ -95,6 +95,7 @@ public class ImportExportConfigurationController
       EidasMiddlewareConfig eidasMiddlewareConfig = XmlHelper.unmarshal(new String(xml.getBytes(),
                                                                                    StandardCharsets.UTF_8),
                                                                         EidasMiddlewareConfig.class);
+      eidasMiddlewareConfig.getEidasConfiguration().setDecryptionKeyPairName(null);
 
       StringBuilder errors = new StringBuilder("Following errors occurred while importing configuration: <br>");
       boolean anyError = false;
@@ -263,10 +264,6 @@ public class ImportExportConfigurationController
         }
       }
 
-      if (eidasMiddlewareConfig.getEidasConfiguration().getDecryptionKeyPairName().equals(referencingKeyPair.getName()))
-      {
-        eidasMiddlewareConfig.getEidasConfiguration().setDecryptionKeyPairName("");
-      }
       if (eidasMiddlewareConfig.getEidasConfiguration().getSignatureKeyPairName().equals(referencingKeyPair.getName()))
       {
         eidasMiddlewareConfig.getEidasConfiguration().setSignatureKeyPairName("");

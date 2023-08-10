@@ -47,16 +47,6 @@ public class ConfigHolder
   public static final String KEY_APP_SIGN_ALIAS = "MIDDLEWARE_SIGN_ALIAS";
 
   /**
-   * Pin of the decryption key for the SAML interface
-   */
-  public static final String KEY_APP_CRYPT_PIN = "MIDDLEWARE_CRYPT_PIN";
-
-  /**
-   * Alias of the decryption key for the SAML interface
-   */
-  public static final String KEY_APP_CRYPT_ALIAS = "MIDDLEWARE_CRYPT_ALIAS";
-
-  /**
    * Contact Person Details for the idp metadata.xml
    */
   static final String KEY_CONTACT_PERSON_COMPANY = "CONTACT_PERSON_COMPANY";
@@ -116,19 +106,12 @@ public class ConfigHolder
    */
   private static final String KEY_APP_SIGN_KEY = "MIDDLEWARE_SIGN_KEY";
 
-  /**
-   * Path to the decryption keystore for the SAML interface
-   */
-  private static final String KEY_APP_CRYPT_KEY = "MIDDLEWARE_CRYPT_KEY";
-
   @Getter
   private Properties properties;
 
   private X509Certificate metadataSigner;
 
   private X509KeyPair signKey;
-
-  private X509KeyPair cryptKey;
 
   private EidasContactPerson contactPerson;
 
@@ -243,46 +226,6 @@ public class ConfigHolder
   {
     String keyStoreFileName = properties.getProperty(KEY_APP_SIGN_KEY);
     return keyStoreFileName.toLowerCase(Locale.GERMAN).endsWith("jks") ? "JKS" : "PKCS12";
-  }
-
-  /**
-   * Get the type of the encryption key store
-   *
-   * @return the type of the keystore
-   */
-  public String getAppCryptionKeyStoreType()
-  {
-    String keyStoreFileName = properties.getProperty(KEY_APP_CRYPT_KEY);
-    return keyStoreFileName.toLowerCase(Locale.GERMAN).endsWith("jks") ? "JKS" : "PKCS12";
-  }
-
-  /**
-   * Get the depryption key pair
-   *
-   * @return the decryption key pair
-   * @throws IOException when the key pair cannot be read
-   * @throws GeneralSecurityException when the key pair cannot be loaded
-   */
-  public X509KeyPair getAppDecryptionKeyPair() throws IOException, GeneralSecurityException
-  {
-    if (cryptKey == null)
-    {
-      String keystoreFileName = getCanonicalPath(properties.getProperty(KEY_APP_CRYPT_KEY));
-      try (FileInputStream fis = new FileInputStream(keystoreFileName))
-      {
-        cryptKey = Utils.readKeyAndCert(fis,
-                                        getAppCryptionKeyStoreType(),
-                                        properties.getProperty(KEY_APP_CRYPT_PIN).toCharArray(),
-                                        properties.getProperty(KEY_APP_CRYPT_ALIAS),
-                                        properties.getProperty(KEY_APP_CRYPT_PIN).toCharArray(),
-                                        true);
-        return cryptKey;
-      }
-    }
-    else
-    {
-      return cryptKey;
-    }
   }
 
   /**

@@ -33,7 +33,7 @@
                 <hr/>
                 <div style="float: right">
                     <a class="btn btn-danger"
-                       th:href="${'/admin-interface/keymanagement/deleteCertificate/' + name}">Delete
+                       th:href="@{'/admin-interface/keymanagement/deleteCertificate?certificatename=' + ${#uris.escapeQueryParam(name)}}">Delete
                         <span class="fa fa-trash"/></a>
                 </div>
             </div>
@@ -77,7 +77,7 @@
                 <hr/>
                 <div style="float: right">
                     <a class="btn btn-danger"
-                       th:href="${'/admin-interface/keymanagement/deleteKeypair/' + name}">Delete
+                       th:href="@{'/admin-interface/keymanagement/deleteKeypair?keypairname=' + ${#uris.escapeQueryParam(name)}}">Delete
                         <span class="fa fa-trash"/></a>
                 </div>
             </div>

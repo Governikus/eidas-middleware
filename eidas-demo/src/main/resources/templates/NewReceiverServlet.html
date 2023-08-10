@@ -1,0 +1,77 @@
+<!--
+  ~ Copyright (c) 2020 Governikus KG. Licensed under the EUPL, Version 1.2 or as soon they will be approved by
+  ~ the European Commission - subsequent versions of the EUPL (the "Licence"); You may not use this work except
+  ~ in compliance with the Licence. You may obtain a copy of the Licence at:
+  ~ http://joinup.ec.europa.eu/software/page/eupl Unless required by applicable law or agreed to in writing,
+  ~ software distributed under the Licence is distributed on an "AS IS" basis, WITHOUT WARRANTIES OR CONDITIONS
+  ~ OF ANY KIND, either express or implied. See the Licence for the specific language governing permissions and
+  ~ limitations under the Licence.
+  -->
+
+<!DOCTYPE html>
+<html lang="en"
+      xmlns="http://www.w3.org/1999/xhtml" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title>German eIDAS Middleware Demo Application</title>
+    <meta content="text/html; charset=UTF-8" http-equiv="Content-Type">
+    <meta content="IE=edge" http-equiv="X-UA-Compatible">
+    <meta charset="utf-8">
+    <!-- Viewport Meta Tag -->
+    <meta content="width=device-width, initial-scale=1" name="viewport">
+    <!-- Bootstrap -->
+    <link th:href="@{/webjars/bootstrap/css/bootstrap.min.css}"
+          rel="stylesheet"/>
+    <link th:href="@{css/main.css}" rel="stylesheet"/>
+</head>
+<body>
+<section class="split section">
+    <!-- Container Starts -->
+    <div th:insert="~{fragments/Layout :: navbar}"></div>
+    <div class="container px-5">
+        <div class="card mb-3">
+            <div class="card-body">
+                <h4 class="card-title">Extracted data from the eIDAS Response</h4>
+                <p class="card-text">The following data was contained in the eIDAS SAML response:</p>
+                <table class="table table-bordered">
+                    <thead>
+                    <tr>
+                        <th>Attribute</th>
+                        <th>Value</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    <tr>
+                        <td>Relay State</td>
+                        <td th:text="${relayState}"/>
+                    </tr>
+                    <tr th:if="${levelOfAssurance != null}">
+                        <td>Level Of Assurance</td>
+                        <td th:text="${levelOfAssurance}"/>
+                    </tr>
+                    <th:block th:each="attribute : ${samlResult}">
+                        <tr>
+                            <td th:text="${attribute.getKey()}"/>
+                            <td th:text="${attribute.getValue()}"/>
+                        </tr>
+                    </th:block>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        <div class="card mb-3">
+            <div class="card-body">
+                <h4 class="card-title">Received SAML Response</h4>
+                <pre lang="xml" th:text="${samlResponse}"/>
+            </div>
+        </div>
+        <div class="card mb-3">
+            <div class="card-body">
+                <h4 class="card-title">Decrypted SAML Assertion</h4>
+                <pre lang="xml" th:unless="${samlAssertion == null}" th:text="${samlAssertion}"/>
+                <pre lang="xml" th:if="${samlAssertion == null}">No assertion present.</pre>
+            </div>
+        </div>
+    </div>
+</section>
+</body>
+</html>

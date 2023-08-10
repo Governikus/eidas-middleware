@@ -59,8 +59,6 @@
         </div>
         <hr>
         <h3>Certificates and key pairs</h3>
-        <div th:replace="~{fragments/configOptions :: keypairs('Decryption key pair', 'decryptionKeyPairName', 'The key pair to decrypt incoming SAML requests')}"/>
-
         <div th:if="${@environment.getProperty('hsm.type') != 'PKCS11'}">
             <!-- Do not show signature key pair if hsmis in use -->
             <div th:replace="~{fragments/configOptions :: keypairs('Signature key pair', 'signatureKeyPairName', 'The key pair to sign responses and metadata')}"/>

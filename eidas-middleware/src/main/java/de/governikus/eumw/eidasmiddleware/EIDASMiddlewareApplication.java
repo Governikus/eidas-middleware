@@ -12,7 +12,6 @@ package de.governikus.eumw.eidasmiddleware;
 
 import java.security.Security;
 
-import org.bouncycastle.jce.provider.BouncyCastleProvider;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.web.servlet.ServletComponentScan;
@@ -21,6 +20,7 @@ import org.springframework.scheduling.annotation.EnableScheduling;
 import org.springframework.transaction.annotation.EnableTransactionManagement;
 
 import de.governikus.eumw.eidascommon.Utils;
+import de.governikus.eumw.utils.key.SecurityProvider;
 
 
 @SpringBootApplication
@@ -34,10 +34,13 @@ public class EIDASMiddlewareApplication
 
   public static void main(String[] args)
   {
-    // do not remove bouncy without consideration, it will impact ECDH
-    Security.addProvider(new BouncyCastleProvider());
-    System.setProperty("jdk.tls.namedGroups", "secp521r1,secp384r1,secp256r1");
+    // add bouncy for brainpool and ECDH
+    Security.insertProviderAt(SecurityProvider.BOUNCY_CASTLE_JSSE_PROVIDER, 1);
+    Security.insertProviderAt(SecurityProvider.BOUNCY_CASTLE_PROVIDER, 2);
+    System.setProperty("jdk.tls.namedGroups",
+                       "brainpoolP512r1,brainpoolP384r1,brainpoolP256r1,secp521r1,secp384r1,secp256r1");
     System.setProperty("jdk.tls.ephemeralDHKeySize", "2048");
+    Security.setProperty("ssl.KeyManagerFactory.algorithm", "PKIX");
     Security.setProperty("jdk.tls.disabledAlgorithms",
                          "SSLv3, TLSv1, TLSv1.1, RC4, DES, MD5, DSA, rsa_pkcs1_sha1, ecdsa_sha1, DH keySize < "
                                                        + Utils.MIN_KEY_SIZE_RSA_TLS + ", ECDH keySize < "

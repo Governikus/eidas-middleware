@@ -126,13 +126,6 @@ public interface PermissionDataHandlingMBean
   byte[] getCvcDescription(String cvcRefId) throws GovManagementException;
 
   /**
-   * Delete pending certificate request associated with the given entityID from database.
-   *
-   * @return ok, if everything was ok or an error message.
-   */
-  ManagementMessage deletePendingCertRequest(String entityID);
-
-  /**
    * Checks if the PA service for a given entityID is reachable.
    * 
    * @param entityID

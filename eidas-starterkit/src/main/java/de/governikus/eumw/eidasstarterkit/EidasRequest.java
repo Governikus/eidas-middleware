@@ -181,7 +181,7 @@ public class EidasRequest
    * @param issuer the issuer of the eIDAS-Request.
    * @param providerName the provider name of the eIDAS-Request. Can be null.
    * @param requesterId the requester id of the eIDAS-Request. Can be null.
-   * @param signer the signer to sign the eIDAS-Request. Must not be null.
+   * @param signer the signer to sign the eIDAS-Request. Can be null, this would create unsigned requests.
    * @param testCase the enum of the test case for the eIDAS-Request. Can be null.
    * @see EidasRequest#EidasRequest(String, String, SPTypeEnumeration, EidasNameIdType, EidasLoaEnum, String, String,
    *      String, EidasSigner, TestCaseEnum) to create an eIDAS-Request with an id.
@@ -221,12 +221,12 @@ public class EidasRequest
    * @param sectorType the sector type of the eIDAS-Request.
    * @param nameIdPolicy the nameIdPolicy of theeIDAS-Request. Can be null. The default value is
    *          {@link EidasNameIdType#TRANSIENT}.
-   * @param loa the level of assurance of the eIDAS-Request. Can be null. The defaul value is
+   * @param loa the level of assurance of the eIDAS-Request. Can be null. The default value is
    *          {@link EidasLoaEnum#LOA_HIGH}.
    * @param issuer the issuer of the eIDAS-Request.
    * @param providerName the provider name of the eIDAS-Request. Can be null.
    * @param requesterId the requester id of the eIDAS-Request. Can be null.
-   * @param signer the signer to sign the eIDAS-Request. Must not be null.
+   * @param signer the signer to sign the eIDAS-Request. Can be null, this would create unsigned requests.
    * @param testCase the enum of the test case for the eIDAS-Request. Can be null.
    * @see EidasRequest#EidasRequest(String, SPTypeEnumeration, EidasNameIdType, EidasLoaEnum, String, String, String,
    *      EidasSigner, TestCaseEnum) create an eIDAS-Request without an id.
@@ -328,16 +328,25 @@ public class EidasRequest
     }
     authnRequest.setExtensions(extensions);
 
-    List<Signature> sigs = new ArrayList<>();
-    XMLSignatureHandler.addSignature(authnRequest,
-                                     signer.getSigKey(),
-                                     signer.getSigCert(),
-                                     signer.getSigType(),
-                                     signer.getSigDigestAlg());
-    sigs.add(authnRequest.getSignature());
-    AuthnRequestMarshaller arm = new AuthnRequestMarshaller();
-    Element all = arm.marshall(authnRequest);
-    Signer.signObjects(sigs);
+    Element all;
+    if (signer != null)
+    {
+      List<Signature> sigs = new ArrayList<>();
+      XMLSignatureHandler.addSignature(authnRequest,
+                                       signer.getSigKey(),
+                                       signer.getSigCert(),
+                                       signer.getSigType(),
+                                       signer.getSigDigestAlg());
+      sigs.add(authnRequest.getSignature());
+      AuthnRequestMarshaller arm = new AuthnRequestMarshaller();
+      all = arm.marshall(authnRequest);
+      Signer.signObjects(sigs);
+    }
+    else
+    {
+      AuthnRequestMarshaller arm = new AuthnRequestMarshaller();
+      all = arm.marshall(authnRequest);
+    }
 
     Transformer trans = Utils.getTransformer();
     trans.setOutputProperty(OutputKeys.ENCODING, StandardCharsets.UTF_8.name());

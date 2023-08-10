@@ -32,6 +32,10 @@ import org.springframework.data.domain.Sort;
 
 import com.google.common.io.ByteStreams;
 
+import de.governikus.eumw.config.EidasMiddlewareConfig;
+import de.governikus.eumw.poseidas.server.idprovider.config.ConfigurationService;
+import de.governikus.eumw.poseidas.server.idprovider.config.ConfigurationTestHelper;
+
 
 class TerminalPermissionAOBeanTest
 {
@@ -766,4 +770,27 @@ class TerminalPermissionAOBeanTest
     Assertions.assertTrue(specificIDList.isEmpty());
   }
 
+  @Test
+  void testIsPublicClient() throws Exception
+  {
+    ConfigurationService configurationService = Mockito.mock(ConfigurationService.class);
+    EidasMiddlewareConfig validConfiguration = ConfigurationTestHelper.createValidConfiguration();
+    validConfiguration.getEidasConfiguration().setPublicServiceProviderName("sp-name");
+    Mockito.when(configurationService.getConfiguration()).thenReturn(Optional.of(validConfiguration));
+    TerminalPermissionAOBean terminalPermissionAOBean = new TerminalPermissionAOBean(null, null, null, null, null, null,
+                                                                                     null, null, configurationService);
+    //Correct name and cvcRefId
+    Assertions.assertTrue(terminalPermissionAOBean.isPublicClient("cvcRefId"));
+
+    //Wrong cvcRefId
+    Assertions.assertFalse(terminalPermissionAOBean.isPublicClient("wrongCvcRefId"));
+
+    //Wrong name
+    validConfiguration.getEidasConfiguration().setPublicServiceProviderName("otherName");
+    Assertions.assertFalse(terminalPermissionAOBean.isPublicClient("cvcRefId"));
+
+    //No public SP in config
+    validConfiguration.getEidasConfiguration().setPublicServiceProviderName(null);
+    Assertions.assertFalse(terminalPermissionAOBean.isPublicClient("cvcRefId"));
+  }
 }

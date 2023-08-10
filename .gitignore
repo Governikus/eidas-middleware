@@ -2,6 +2,7 @@ target/
 packer/
 *Jenkinsfile*
 .hg/
+/helm/
 
 # IntelliJ project files
 *.iml

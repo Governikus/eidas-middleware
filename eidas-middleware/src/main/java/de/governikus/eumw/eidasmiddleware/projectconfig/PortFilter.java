@@ -70,20 +70,6 @@ public class PortFilter extends OncePerRequestFilter
     {
       filterChain.doFilter(httpServletRequest, httpServletResponse);
     }
-    else if (httpServletRequest.getServletPath().startsWith("/webjars"))
-    {
-      filterChain.doFilter(httpServletRequest, httpServletResponse);
-    }
-    // allow favicon, images and css
-    else if (httpServletRequest.getServletPath().endsWith(".css")
-             || httpServletRequest.getServletPath().endsWith(".css.map")
-             || httpServletRequest.getServletPath().endsWith(".png")
-             || httpServletRequest.getServletPath().endsWith(".jpg")
-             || httpServletRequest.getServletPath().endsWith(".js")
-             || httpServletRequest.getServletPath().endsWith(".ico"))
-    {
-      filterChain.doFilter(httpServletRequest, httpServletResponse);
-    }
     else
     {
       log.warn("Path {} cannot be accessed on port {}",

@@ -32,6 +32,8 @@ import java.util.Set;
 import javax.xml.bind.DatatypeConverter;
 import javax.xml.ws.WebServiceException;
 
+import org.apache.commons.lang.ArrayUtils;
+
 import de.governikus.eumw.config.ServiceProviderType;
 import de.governikus.eumw.eidascommon.Utils;
 import de.governikus.eumw.poseidas.cardbase.Hex;
@@ -41,8 +43,8 @@ import de.governikus.eumw.poseidas.cardbase.asn1.npa.ECCVCPath;
 import de.governikus.eumw.poseidas.cardbase.asn1.npa.ECCVCertificate;
 import de.governikus.eumw.poseidas.cardbase.asn1.npa.ECPublicKeyPath;
 import de.governikus.eumw.poseidas.cardserver.certrequest.CertificateRequest;
-import de.governikus.eumw.poseidas.cardserver.certrequest.CertificateRequestGenerator.CertificateRequestResponse;
 import de.governikus.eumw.poseidas.cardserver.certrequest.CertificateRequestPath;
+import de.governikus.eumw.poseidas.cardserver.certrequest.CvcRequestGenerator.CvcRequestData;
 import de.governikus.eumw.poseidas.eidmodel.TerminalData;
 import de.governikus.eumw.poseidas.eidserver.crl.CertificationRevocationListImpl;
 import de.governikus.eumw.poseidas.gov2server.GovManagementException;
@@ -53,11 +55,11 @@ import de.governikus.eumw.poseidas.server.idprovider.config.ConfigurationService
 import de.governikus.eumw.poseidas.server.idprovider.config.KeyPair;
 import de.governikus.eumw.poseidas.server.monitoring.SNMPConstants;
 import de.governikus.eumw.poseidas.server.monitoring.SNMPTrapSender;
-import de.governikus.eumw.poseidas.server.pki.PendingCertificateRequest.Status;
 import de.governikus.eumw.poseidas.server.pki.caserviceaccess.DvcaCertDescriptionService;
 import de.governikus.eumw.poseidas.server.pki.caserviceaccess.PKIServiceConnector;
 import de.governikus.eumw.poseidas.server.pki.caserviceaccess.TermAuthService;
 import lombok.extern.slf4j.Slf4j;
+import uri.eacbt._1.termAuth.dv.RequestCertificateReturnCodeType;
 
 
 /**
@@ -91,8 +93,6 @@ public class CVCRequestHandler extends BerCaRequestHandlerBase
     addKnowRootCert(DECVCA_EID00103);
   }
 
-  private byte[] collectedRequestData;
-
   /**
    * Create new Object which can be used for one service provider only as long as configuration is not changed.
    *
@@ -103,7 +103,8 @@ public class CVCRequestHandler extends BerCaRequestHandlerBase
   CVCRequestHandler(ServiceProviderType epaConfig,
                     TerminalPermissionAO facade,
                     KeyStore hsmKeyStore,
-                    ConfigurationService configurationService)
+                    ConfigurationService configurationService,
+                    PendingCertificateRequestRepository pendingCertificateRequestRepository)
     throws GovManagementException
   {
     super(epaConfig, facade, hsmKeyStore, configurationService);
@@ -391,33 +392,35 @@ public class CVCRequestHandler extends BerCaRequestHandlerBase
                                        chrMnemonic,
                                        sequenceNumber);
       boolean withPendingRsc = false;
-      if (facade.getPendingRscChrId(cvcRefId) != null)
+      if (facade.getPendingRscChrId(cvcRefId) != null
+          && facade.getRequestSignerCertificate(cvcRefId, false).getNotAfter().after(new Date()))
       {
         log.info("{}: Make an initial request with the pending request signer certificate.", cvcRefId);
         withPendingRsc = true;
         generator.setRscAlias(buildAlias(cvcRefId, facade, false));
         generator.setRscPrivateKey(tp.getPendingRequestSignerCertificate().getPrivateKey());
       }
-      else if (facade.getCurrentRscChrId(cvcRefId) != null)
+      else if (facade.getCurrentRscChrId(cvcRefId) != null
+               && facade.getRequestSignerCertificate(cvcRefId, true).getNotAfter().after(new Date()))
       {
         log.info("{}: Make an initial request with the current request signer certificate.", cvcRefId);
         generator.setRscAlias(buildAlias(cvcRefId, facade, true));
         generator.setRscPrivateKey(tp.getCurrentRequestSignerCertificate().getPrivateKey());
       }
-      CertificateRequestResponse response = generator.create();
+      CvcRequestData requestData = generator.create();
       String messageId = "#" + Utils.generateUniqueID();
       storeRequestData(cvcRefId,
                        messageId,
-                       response.getCertificateRequest(),
-                       response.getCertificateDescription(),
+                       requestData.getCertificateRequest(),
+                       requestData.getCertificateDescription(),
                        encodedCvcs,
-                       response.getPKCS8PrivateKey());
-      log.info("{}: Created and stored initial certificate request\n{}", cvcRefId, response.getCertificateRequest());
+                       requestData.getPkcs8PrivateKey());
+      log.info("{}: Created and stored initial certificate request\n{}", cvcRefId, requestData.getCertificateRequest());
 
       byte[] cert;
       try
       {
-        cert = sendCertificateRequest(response.getCertificateRequest().getEncoded());
+        cert = sendCertificateRequest(requestData.getCertificateRequest().getEncoded());
         if (withPendingRsc)
         {
           facade.makePendingRscToCurrentRsc(cvcRefId);
@@ -440,18 +443,18 @@ public class CVCRequestHandler extends BerCaRequestHandlerBase
             log.info("{}: Fallback to initial request with the current request signer certificate.", cvcRefId);
             generator.setRscPrivateKey(tp.getCurrentRequestSignerCertificate().getPrivateKey());
           }
-          response = generator.create();
+          requestData = generator.create();
           messageId = "#" + Utils.generateUniqueID();
           storeRequestData(cvcRefId,
                            messageId,
-                           response.getCertificateRequest(),
-                           response.getCertificateDescription(),
+                           requestData.getCertificateRequest(),
+                           requestData.getCertificateDescription(),
                            encodedCvcs,
-                           response.getPKCS8PrivateKey());
+                           requestData.getPkcs8PrivateKey());
           log.info("{}: Created and stored second initial certificate request\n{}",
                    cvcRefId,
-                   response.getCertificateRequest());
-          cert = sendCertificateRequest(response.getCertificateRequest().getEncoded());
+                   requestData.getCertificateRequest());
+          cert = sendCertificateRequest(requestData.getCertificateRequest().getEncoded());
           installNewCertificate(cert);
         }
         else
@@ -486,16 +489,6 @@ public class CVCRequestHandler extends BerCaRequestHandlerBase
   }
 
   /**
-   * Return a zip file content with communication certificates, input parameters and certificate description collected
-   * in the last call of
-   * {@link #prepareInitialRequest(String, String, String, boolean, boolean, String, String, String, int, List)}
-   */
-  public byte[] getCollectedRequestData()
-  {
-    return collectedRequestData;
-  }
-
-  /**
    * create and send a subsequent request, store the obtained data in the persistence layer.
    *
    * @param tp terminal permission to be renewed
@@ -503,189 +496,175 @@ public class CVCRequestHandler extends BerCaRequestHandlerBase
    */
   ManagementMessage makeSubsequentRequest(TerminalPermission tp)
   {
-    return this.makeSubsequentRequest(tp, false);
-  }
+    if (tp.getCvc() == null)
+    {
+      // none present
+      return GlobalManagementCodes.EC_UNEXPECTED_ERROR.createMessage("cannot renew certificate as there is none for provider "
+                                                                     + cvcRefId);
+    }
 
-  /**
-   * create and send a subsequent request, store the obtained data in the persistence layer.
-   *
-   * @param tp terminal permission to be renewed
-   * @param forceSendAgain <code>true</code> to force a pending request to be sent again
-   * @return null if successful, technical error message otherwise
-   */
-  ManagementMessage makeSubsequentRequest(TerminalPermission tp, boolean forceSendAgain)
-  {
-    log.debug("{}: started makeSubsequentRequest", cvcRefId);
+    boolean expired = tp.getNotOnOrAfter().before(new Date());
+    boolean hasPendingRsc = tp.getPendingRequestSignerCertificate() != null;
+    boolean hasCurrentRsc = tp.getCurrentRequestSignerCertificate() != null;
+    if (expired && !hasPendingRsc && !hasCurrentRsc)
+    {
+      // no recovery possible
+      return GlobalManagementCodes.EC_UNEXPECTED_ERROR.createMessage("cannot renew certificate as it is expired and no RSC available for provider "
+                                                                     + cvcRefId);
+    }
+
     try
     {
-      byte[] cvcRequestData = null;
-      PendingCertificateRequest pendingRequest = tp.getPendingRequest();
-      String messageId = null;
-      if (pendingRequest != null)
-      {
-        Status requestStatus = pendingRequest.getStatus();
-        // The certificate request was sent or is currently send.
-        if (!forceSendAgain
-            && (Status.SENT.equals(requestStatus)
-                || Status.CREATED.equals(requestStatus)
-                   && pendingRequest.getLastChanged().after(new Date(System.currentTimeMillis() - 10L * 60 * 1000))))
-        {
-          String message = "cannot request a new certificate as long as there is a pending request for same data with status "
-                           + requestStatus + " for " + cvcRefId;
-          log.error("{}: {}", cvcRefId, message);
-          SNMPTrapSender.sendSNMPTrap(SNMPConstants.TrapOID.CVC_TRAP_LAST_RENEWAL_STATUS, 1);
-          return GlobalManagementCodes.EC_UNEXPECTED_ERROR.createMessage("cannot request a new certificate as long as there is a pending request for same data for "
-                                                                         + cvcRefId);
-        }
-        if (Status.CREATED.equals(requestStatus) || Status.SENT.equals(requestStatus))
-        {
-          messageId = pendingRequest.getMessageID();
-          cvcRequestData = pendingRequest.getRequestData();
-          log.warn("{}: Will send existing subsequent certificate request (again), messageID={}", cvcRefId, messageId);
-        }
-        else
-        {
-          String message = "cannot re-send certificate request as there is already a result with status "
-                           + requestStatus + " for " + cvcRefId;
-          log.error("{}: {}", cvcRefId, message);
-          return GlobalManagementCodes.EC_UNEXPECTED_ERROR.createMessage("cannot re-send certificate request as there is already a result for "
-                                                                         + cvcRefId);
-        }
-      }
-      byte[][] chain = null;
-      boolean withPendingRsc = false;
-
-      if (cvcRequestData == null)
-      {
-        if (tp.getPendingRequestSignerCertificate() != null)
-        {
-          withPendingRsc = true;
-        }
-
-        try
-        {
-          chain = getCACertificates(null);
-        }
-        catch (GovManagementException e)
-        {
-          log.warn("{}: cannot download ca certificates, will keep old certificate chain", cvcRefId);
-        }
-
-        if (chain == null) // download failed
-        {
-          chain = new byte[tp.getChain().size()][];
-          for ( CertInChain cin : tp.getChain() )
-          {
-            chain[cin.getKey().getPosInChain()] = cin.getData();
-          }
-        }
-        CertificateRequestResponse response = createRequest(tp, chain, withPendingRsc);
-        messageId = "s" + Utils.generateUniqueID();
-        storeRequestData(cvcRefId,
-                         messageId,
-                         response.getCertificateRequest(),
-                         response.getCertificateDescription(),
-                         null,
-                         response.getPKCS8PrivateKey());
-        log.info("{}: Created and stored subsequent certificate request:\n{}",
-                 cvcRefId,
-                 response.getCertificateRequest());
-        cvcRequestData = response.getCertificateRequest().getEncoded();
-      }
-
       String chr = new ECCVCertificate(tp.getCvc()).getHolderReferenceString();
       this.facade.archiveCVC(chr, tp.getCvc());
       log.debug("{}: CVC {} successfully archived", cvcRefId, chr);
+    }
+    catch (IOException e)
+    {
+      log.warn("{}: CVC could not be archived", cvcRefId);
+    }
 
-      byte[] newCert = null;
-      try
+    return renewCvc(tp, hasPendingRsc);
+  }
+
+  private ManagementMessage renewCvc(TerminalPermission tp, boolean usePendingRsc)
+  {
+    byte[][] chain = null;
+    try
+    {
+      chain = getCACertificates(null);
+    }
+    catch (GovManagementException e)
+    {
+      log.warn("{}: cannot download CA certificates, will keep old certificate chain", cvcRefId);
+    }
+
+    if (chain == null) // download failed
+    {
+      chain = new byte[tp.getChain().size()][];
+      for ( CertInChain cin : tp.getChain() )
       {
-        newCert = sendCertificateRequest(cvcRequestData);
-        if (withPendingRsc)
-        {
-          facade.makePendingRscToCurrentRsc(cvcRefId);
-        }
+        chain[cin.getKey().getPosInChain()] = cin.getData();
       }
-      catch (GovManagementException e)
+    }
+
+    try
+    {
+      CvcRequestData requestData = createRequest(tp, chain, usePendingRsc);
+      storeRequestData(cvcRefId,
+                       "s" + Utils.generateUniqueID(),
+                       requestData.getCertificateRequest(),
+                       requestData.getCertificateDescription(),
+                       null,
+                       requestData.getPkcs8PrivateKey());
+      log.info("{}: Created and stored subsequent certificate request:\n{}",
+               cvcRefId,
+               requestData.getCertificateRequest());
+      byte[] cvcRequestData = requestData.getCertificateRequest().getEncoded();
+      byte[] newCert = sendCertificateRequest(cvcRequestData);
+      if (usePendingRsc)
       {
-        if (withPendingRsc)
-        {
-          log.debug("Request with pending request signer certificate failed", e);
-          log.info("{}: Could not make a subsequent request with pending request signer certificate.", cvcRefId);
-          CertificateRequestResponse secondResponse = createRequest(tp, chain, false);
-          messageId = "s" + Utils.generateUniqueID();
-          storeRequestData(cvcRefId,
-                           messageId,
-                           secondResponse.getCertificateRequest(),
-                           secondResponse.getCertificateDescription(),
-                           null,
-                           secondResponse.getPKCS8PrivateKey());
-          log.info("{}: Created and stored second subsequent certificate request:\n{}",
-                   cvcRefId,
-                   secondResponse.getCertificateRequest());
-          newCert = sendCertificateRequest(secondResponse.getCertificateRequest().getEncoded());
-        }
-        else
-        {
-          throw e;
-        }
+        facade.makePendingRscToCurrentRsc(cvcRefId);
       }
       installNewCertificate(newCert);
       log.debug("{}: successfully finished makeSubsequentRequest", cvcRefId);
       SNMPTrapSender.sendSNMPTrap(SNMPConstants.TrapOID.CVC_TRAP_LAST_RENEWAL_STATUS, 0);
-
-      return null;
-    }
-    catch (GovManagementException e)
-    {
-      log.error("{}: cannot renew certificate", cvcRefId, e);
-      SNMPTrapSender.sendSNMPTrap(SNMPConstants.TrapOID.CVC_TRAP_LAST_RENEWAL_STATUS, 1);
-      return e.getManagementMessage();
     }
     catch (Exception e)
     {
+      if (usePendingRsc)
+      {
+        log.info("{}: subsequent request using pending RSC was not successful, will retry without", cvcRefId);
+        if (log.isDebugEnabled())
+        {
+          log.debug(cvcRefId + ": Received exception for request with pending RSC", e);
+        }
+        return renewCvc(tp, false);
+      }
       log.error("{}: cannot renew certificate", cvcRefId, e);
       SNMPTrapSender.sendSNMPTrap(SNMPConstants.TrapOID.CVC_TRAP_LAST_RENEWAL_STATUS, 1);
+      if (e instanceof GovManagementException)
+      {
+        return ((GovManagementException)e).getManagementMessage();
+      }
       return GlobalManagementCodes.EC_UNEXPECTED_ERROR.createMessage(e.getMessage());
+    }
+    return null;
+  }
+
+  public static String getHolderReferenceStringOfPendingRequest(PendingCertificateRequest pendingCertificateRequest)
+  {
+    try
+    {
+      if (pendingCertificateRequest == null)
+      {
+        return null;
+      }
+      // Get encoded certificate request
+      byte[] requestData = pendingCertificateRequest.getRequestData();
+      if (ArrayUtils.isEmpty(requestData))
+      {
+        return null;
+      }
+      // Encoded certificate request is wrapped in an application tag, that needs to be unwrapped (removed) for parsing
+      ASN1 asn1 = new ASN1(requestData);
+      byte[] value = asn1.getValue();
+      if (value == null)
+      {
+        return null;
+      }
+      CertificateRequest certificateRequest = new CertificateRequest(value);
+      return certificateRequest.getHolderReferenceString();
+    }
+    catch (IOException e)
+    {
+      if (log.isDebugEnabled())
+      {
+        log.debug("Could not get holder reference from pending request {}", pendingCertificateRequest.getRefID(), e);
+      }
+      return "holder reference not found";
     }
   }
 
-  private CertificateRequestResponse createRequest(TerminalPermission tp, byte[][] chain, boolean firstTry)
+  private CvcRequestData createRequest(TerminalPermission tp, byte[][] chain, boolean usePendingRsc)
     throws IOException, SignatureException
   {
     PoseidasCertificateRequestGenerator generator = new PoseidasCertificateRequestGenerator(cvcRefId, facade);
     generator.prepareSubsequentRequest(selectRootCert(chain),
                                        tp.getCvc(),
                                        tp.getCvcPrivateKey(),
-                                       tp.getCvcDescription());
+                                       tp.getCvcDescription(),
+                                       tp.getNextCvcSequenceNumber());
 
-    if (firstTry)
+    if (usePendingRsc)
     {
       log.info("{}: Make a subsequent request with the pending request signer certificate.", cvcRefId);
       generator.setRscPrivateKey(tp.getPendingRequestSignerCertificate().getPrivateKey());
+      generator.setRscAlias(buildAlias(cvcRefId, facade, false));
     }
-    else if (tp.getCurrentRequestSignerCertificate() == null)
-    {
-      log.info("{}: Make a subsequent request with the previous CVC.", cvcRefId);
-    }
-    else
+    else if (tp.getCurrentRequestSignerCertificate() != null
+             && facade.getRequestSignerCertificate(cvcRefId, true).getNotAfter().after(new Date()))
     {
       log.info("{}: Make a subsequent request with the current request signer certificate.", cvcRefId);
       generator.setRscPrivateKey(tp.getCurrentRequestSignerCertificate().getPrivateKey());
+      generator.setRscAlias(buildAlias(cvcRefId, facade, true));
     }
-    generator.setRscAlias(buildAlias(cvcRefId, facade, !firstTry));
+    else
+    {
+      log.info("{}: Make a subsequent request with the previous CVC.", cvcRefId);
+    }
 
     return generator.create();
   }
 
-  private String buildAlias(String cvcRefId, TerminalPermissionAO facade, boolean current)
+  private static String buildAlias(String cvcRefId, TerminalPermissionAO facade, boolean useCurrent)
   {
     String requestSignerCertificateHolder = facade.getRequestSignerCertificateHolder(cvcRefId);
     if (requestSignerCertificateHolder == null)
     {
       return null;
     }
-    Integer rscChrId = current ? facade.getCurrentRscChrId(cvcRefId) : facade.getPendingRscChrId(cvcRefId);
+    Integer rscChrId = useCurrent ? facade.getCurrentRscChrId(cvcRefId) : facade.getPendingRscChrId(cvcRefId);
     if (rscChrId == null)
     {
       return null;
@@ -850,15 +829,29 @@ public class CVCRequestHandler extends BerCaRequestHandlerBase
   private byte[] sendCertificateRequest(byte[] certReq) throws GovManagementException
   {
     byte[] obtainedCert = null;
+    boolean increaseCounter = false;
     try
     {
       PKIServiceConnector.getContextLock();
       TermAuthService service = createService();
       obtainedCert = service.requestCertificate(certReq, null, null);
+      increaseCounter = true;
+    }
+    catch (GovManagementException e)
+    {
+      if (e.getManagementMessage().toString().contains(RequestCertificateReturnCodeType.FAILURE_INNER_SIGNATURE.name()))
+      {
+        increaseCounter = true;
+      }
+      throw e;
     }
     finally
     {
       PKIServiceConnector.releaseContextLock();
+      if (increaseCounter)
+      {
+        facade.increaseSequenceNumber(cvcRefId);
+      }
     }
     facade.storeCVCRequestSent(cvcRefId);
     return obtainedCert;
@@ -1084,16 +1077,5 @@ public class CVCRequestHandler extends BerCaRequestHandlerBase
                                   description == null ? null : description.getEncoded(),
                                   chain,
                                   pkcs8PrivateKey);
-  }
-
-  /**
-   * Deletes a pending certificate request from database.
-   *
-   * @return management message
-   */
-  ManagementMessage deletePendingRequest()
-  {
-    facade.deleteCVCRequest(cvcRefId);
-    return GlobalManagementCodes.OK.createMessage();
   }
 }

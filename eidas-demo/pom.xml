@@ -14,7 +14,7 @@
     <parent>
         <groupId>de.governikus.eumw</groupId>
         <artifactId>eumw</artifactId>
-        <version>3.0.1</version>
+        <version>3.1.0</version>
     </parent>
     <artifactId>eidas-demo</artifactId>
 
@@ -49,6 +49,21 @@
                     <artifactId>log4j-to-slf4j</artifactId>
                 </exclusion>
             </exclusions>
+        </dependency>
+
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-thymeleaf</artifactId>
+        </dependency>
+
+        <dependency>
+            <groupId>org.webjars</groupId>
+            <artifactId>webjars-locator</artifactId>
+        </dependency>
+
+        <dependency>
+            <groupId>org.webjars</groupId>
+            <artifactId>bootstrap</artifactId>
         </dependency>
 
         <!-- logging -->
@@ -94,6 +109,9 @@
                         <image>
                             <name>governikus/eidas-demo-application:${project.version}</name>
                             <build>
+                                <tags>
+                                    <tag>latest</tag>
+                                </tags>
                                 <contextDir>.</contextDir>
                                 <assembly>
                                     <descriptorRef>artifact</descriptorRef>

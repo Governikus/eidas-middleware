@@ -1,11 +1,10 @@
 /*
- * Copyright (c) 2020 Governikus KG. Licensed under the EUPL, Version 1.2 or as soon they will be approved by
- * the European Commission - subsequent versions of the EUPL (the "Licence"); You may not use this work except
- * in compliance with the Licence. You may obtain a copy of the Licence at:
- * http://joinup.ec.europa.eu/software/page/eupl Unless required by applicable law or agreed to in writing,
- * software distributed under the Licence is distributed on an "AS IS" basis, WITHOUT WARRANTIES OR CONDITIONS
- * OF ANY KIND, either express or implied. See the Licence for the specific language governing permissions and
- * limitations under the Licence.
+ * Copyright (c) 2020 Governikus KG. Licensed under the EUPL, Version 1.2 or as soon they will be approved by the
+ * European Commission - subsequent versions of the EUPL (the "Licence"); You may not use this work except in compliance
+ * with the Licence. You may obtain a copy of the Licence at: http://joinup.ec.europa.eu/software/page/eupl Unless
+ * required by applicable law or agreed to in writing, software distributed under the Licence is distributed on an
+ * "AS IS" basis, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the Licence for the
+ * specific language governing permissions and limitations under the Licence.
  */
 
 package de.governikus.eumw.poseidas.server.pki;
@@ -24,8 +23,8 @@ import javax.persistence.TemporalType;
 
 
 /**
- * Holds certificate request data of requests which have been created but not yet answered. You might want to
- * send these request again or take other steps.
+ * Holds certificate request data of requests which have been created but not yet answered. You might want to send these
+ * request again or take other steps.
  *
  * @author tautenhahn
  */
@@ -72,6 +71,12 @@ public class PendingCertificateRequest implements Serializable
 
   @Lob
   private byte[] newCvcDescription;
+
+  /**
+   * Used to check if this pending request may be sent again.
+   */
+  @Column(columnDefinition = "boolean default false")
+  private boolean canBeSentAgain;
 
 
   /**
@@ -199,8 +204,8 @@ public class PendingCertificateRequest implements Serializable
   }
 
   /**
-   * set an optional free String which contains additional information about the current status of the
-   * request. Interpretation is totally up to the the administrator, poseidas will not use this value.
+   * set an optional free String which contains additional information about the current status of the request.
+   * Interpretation is totally up to the the administrator, poseidas will not use this value.
    *
    * @param additionalInfo
    */
@@ -215,5 +220,25 @@ public class PendingCertificateRequest implements Serializable
   public String getAdditionalInfo()
   {
     return additionalInfo;
+  }
+
+  /**
+   * Defines if this pending request may be sent again.
+   * 
+   * @return
+   */
+  public boolean isCanBeSentAgain()
+  {
+    return canBeSentAgain;
+  }
+
+  /**
+   * Set if this pending request may be sent again.
+   * 
+   * @param canBeSentAgain new value
+   */
+  public void setCanBeSentAgain(boolean canBeSentAgain)
+  {
+    this.canBeSentAgain = canBeSentAgain;
   }
 }

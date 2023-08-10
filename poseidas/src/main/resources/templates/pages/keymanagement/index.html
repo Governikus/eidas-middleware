@@ -79,19 +79,15 @@
                                         <hr/>
                                         <div style="float: right">
                                             <a class="btn btn-primary"
-                                               th:href="${'/admin-interface/keymanagement/createCertificateOrKeyFromKeystore/' + keystoreInfo.name}">Extract
+                                               th:href="@{'/admin-interface/keymanagement/createCertificateOrKeyFromKeystore?keystorename=' + ${#uris.escapeQueryParam(keystoreInfo.name)}}">Extract
                                                 entry <i class="fa fa-paste"></i></a>
                                             <a class="btn btn-danger"
-                                               th:href="${'/admin-interface/keymanagement/deleteKeyStore/' + keystoreInfo.name}">Delete
+                                               th:href="@{'/admin-interface/keymanagement/deleteKeyStore?keystorename=' + ${#uris.escapeQueryParam(keystoreInfo.name)}}">Delete
                                                 <span class="fa fa-trash"/></a>
                                         </div>
-
                                     </div>
                                 </div>
-
-
                             </div>
-
                         </div>
                         <div class="col">
 
@@ -212,7 +208,7 @@
     </div>
 
 
-    <script src="/js/js-save-tabs.js">
+    <script th:src="@{/admin-interface/js/js-save-tabs.js}">
     </script>
 
 </section>

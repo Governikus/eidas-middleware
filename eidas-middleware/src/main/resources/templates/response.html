@@ -19,7 +19,7 @@
     <!-- Viewport Meta Tag -->
     <meta content="width=device-width, initial-scale=1" name="viewport">
     <!-- Bootstrap -->
-    <link href="/webjars/bootstrap/css/bootstrap.min.css" rel="stylesheet"/>
+    <link th:href="@{/eidas-middleware/webjars/bootstrap/css/bootstrap.min.css}" rel="stylesheet"/>
     <!-- Main Style -->
     <link rel="stylesheet" th:href="@{/eidas-middleware/css/main.css}" type="text/css">
     <!-- Responsive Style -->
@@ -44,7 +44,7 @@
                 <input id="consumerURL" name="consumerURL" th:value="${consumerURL}" type="hidden"/>
                 <input id="relayState" name="relayState" th:if="${relayState}" th:value="${relayState}"
                        type="hidden"/>
-                <input alt="Switch to English" name="submit" src="/eidas-middleware/img/english.jpg"
+                <input alt="Switch to English" name="submit" th:src="@{/eidas-middleware/img/english.jpg}"
                        style="float: left; height: 25px; margin-right:10px; margin-top: 0px; margin-bottom: 5px; position: relative;"
                        th:attr="src=@{/eidas-middleware/img/english.jpg}"
                        type="image"/>

@@ -20,6 +20,7 @@ import javax.xml.transform.TransformerException;
 
 import org.apache.commons.codec.binary.Hex;
 import org.apache.commons.lang3.StringUtils;
+import org.jmrtd.lds.icao.ICAOCountry;
 import org.opensaml.core.config.InitializationException;
 import org.opensaml.core.xml.io.MarshallingException;
 import org.opensaml.xmlsec.encryption.support.EncryptionException;
@@ -49,6 +50,7 @@ import de.governikus.eumw.eidasstarterkit.person_attributes.natural_persons_attr
 import de.governikus.eumw.eidasstarterkit.person_attributes.natural_persons_attribute.DateOfBirthAttribute;
 import de.governikus.eumw.eidasstarterkit.person_attributes.natural_persons_attribute.FamilyNameAttribute;
 import de.governikus.eumw.eidasstarterkit.person_attributes.natural_persons_attribute.GivenNameAttribute;
+import de.governikus.eumw.eidasstarterkit.person_attributes.natural_persons_attribute.NationalityAttribute;
 import de.governikus.eumw.eidasstarterkit.person_attributes.natural_persons_attribute.PersonIdentifierAttribute;
 import de.governikus.eumw.eidasstarterkit.person_attributes.natural_persons_attribute.PlaceOfBirthAttribute;
 import de.governikus.eumw.poseidas.cardbase.StringUtil;
@@ -328,6 +330,11 @@ public class ResponseHandler
       nameId = new EidasTransientNameId(pi.getValue());
     }
 
+    EIDInfoResult nationality = eidResponse.getEIDInfo(EIDKeys.NATIONALITY);
+    if (nationality != null)
+    {
+      attributes.add(new NationalityAttribute(convertNationality(nationality)));
+    }
 
     try
     {
@@ -351,6 +358,33 @@ public class ResponseHandler
       | MarshallingException | SignatureException | TransformerException e)
     {
       throw new RequestProcessingException(CANNOT_CREATE_SAML_RESPONSE, e);
+    }
+  }
+
+  String convertNationality(EIDInfoResult nationalityResult)
+  {
+    if (nationalityResult instanceof EIDInfoResultNotOnChip)
+    {
+      return "";
+    }
+    String nationalityString = nationalityResult.toString();
+    if ("D".equals(nationalityString) || nationalityString.isEmpty())
+    {
+      return "DE";
+    }
+    if ("GRC".equals(nationalityString))
+    {
+      return "EL";
+    }
+    try
+    {
+      return ICAOCountry.getInstance(nationalityString).toAlpha2Code();
+    }
+    catch (IllegalArgumentException e)
+    {
+      // invalid code found, null and empty included
+      log.info("Nationality from ID could not be converted, continuing without");
+      return "";
     }
   }
 

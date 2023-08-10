@@ -22,9 +22,9 @@ import org.springframework.validation.BindingResult;
 import org.springframework.validation.FieldError;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.ModelAttribute;
-import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import de.governikus.eumw.config.DvcaConfigurationType;
@@ -148,11 +148,11 @@ public class ServiceProviderController
     return SERVICE_PROVIDER_CONFIGURATION_FORM_TEMPLATE;
   }
 
-  @GetMapping("/edit/{name}")
+  @GetMapping("/edit")
   public String edit(Model model,
                      @ModelAttribute String error,
                      @ModelAttribute String msg,
-                     @PathVariable String name,
+                     @RequestParam("serviceprovidername") String name,
                      RedirectAttributes redirectAttributes)
   {
     insertMessagesIntoModel(model, error, msg);
@@ -162,8 +162,7 @@ public class ServiceProviderController
                                                                                                         .findAny();
     if (serviceProviderTypeOptional.isEmpty())
     {
-      redirectAttributes.addFlashAttribute(ERROR_ATTRIBUTE,
-                                           "No service provider configuration found: " + name);
+      redirectAttributes.addFlashAttribute(ERROR_ATTRIBUTE, "No service provider configuration found: " + name);
       return REDIRECT_TO_SERVICE_PROVIDER_INDEX;
     }
 
@@ -221,9 +220,9 @@ public class ServiceProviderController
     return REDIRECT_TO_SERVICE_PROVIDER_INDEX;
   }
 
-  @PostMapping("/edit/{currentName}")
+  @PostMapping("/edit")
   public String saveAfterChange(Model model,
-                                @PathVariable String currentName,
+                                @RequestParam("serviceprovidername") String currentName,
                                 @Valid @ModelAttribute ServiceProviderConfigModel serviceProviderConfigModel,
                                 BindingResult bindingResult,
                                 RedirectAttributes redirectAttributes)
@@ -314,8 +313,10 @@ public class ServiceProviderController
     return false;
   }
 
-  @GetMapping("/remove/{name}")
-  public String deleteServiceProvider(Model model, @PathVariable String name, RedirectAttributes redirectAttributes)
+  @GetMapping("/remove")
+  public String deleteServiceProvider(Model model,
+                                      @RequestParam("serviceprovidername") String name,
+                                      RedirectAttributes redirectAttributes)
   {
     if (addErrorIfServiceProviderNotFound(name, redirectAttributes))
     {
@@ -344,8 +345,9 @@ public class ServiceProviderController
     return false;
   }
 
-  @PostMapping("/remove/{name}")
-  public String deleteServiceProviderConfirmed(@PathVariable String name, RedirectAttributes redirectAttributes)
+  @PostMapping("/remove")
+  public String deleteServiceProviderConfirmed(@RequestParam("serviceprovidername") String name,
+                                               RedirectAttributes redirectAttributes)
   {
     // check existing
     if (addErrorIfServiceProviderNotFound(name, redirectAttributes))

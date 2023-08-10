@@ -15,21 +15,50 @@
     <parent>
         <groupId>de.governikus.eumw</groupId>
         <artifactId>eumw</artifactId>
-        <version>3.0.1</version>
+        <version>3.1.0</version>
     </parent>
 
     <artifactId>distribution</artifactId>
-    <version>3.0.1</version>
+    <version>3.1.0</version>
     <packaging>pom</packaging>
 
     <dependencies>
+        <!-- add all eumw modules to create an aggregated jacoco coverage report of all modules -->
+        <dependency>
+            <groupId>de.governikus.eumw</groupId>
+            <artifactId>configuration-migration</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>de.governikus.eumw</groupId>
+            <artifactId>database-migration</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>de.governikus.eumw</groupId>
+            <artifactId>eidas-common</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>de.governikus.eumw</groupId>
+            <artifactId>eidas-demo</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>de.governikus.eumw</groupId>
+            <artifactId>eidas-demo</artifactId>
+        </dependency>
         <dependency>
             <groupId>de.governikus.eumw</groupId>
             <artifactId>eidas-middleware</artifactId>
         </dependency>
         <dependency>
             <groupId>de.governikus.eumw</groupId>
-            <artifactId>eidas-demo</artifactId>
+            <artifactId>eidas-starterkit</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>de.governikus.eumw</groupId>
+            <artifactId>poseidas</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>de.governikus.eumw</groupId>
+            <artifactId>utils</artifactId>
         </dependency>
     </dependencies>
 
@@ -57,6 +86,49 @@
                             </descriptors>
                             <finalName>eumw-${project.version}</finalName>
                         </configuration>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+        <profile>
+            <id>coverage</id>
+            <activation>
+                <!-- activate automatically when built on Jenkins build server -->
+                <property>
+                    <name>env.JENKINS_URL</name>
+                </property>
+            </activation>
+            <build>
+                <plugins>
+                    <plugin>
+                        <groupId>org.jacoco</groupId>
+                        <artifactId>jacoco-maven-plugin</artifactId>
+                        <configuration>
+                            <excludes>
+                                <!-- exclude javassist classes (leads to
+                                    runtime exception in coverage) -->
+                                <exclude>*_javassist_*</exclude>
+                                <exclude>org.springframework.*</exclude>
+                                <exclude>com.gargoylesoftware.*</exclude>
+                            </excludes>
+                        </configuration>
+                        <executions>
+                            <!-- aggregate the reports of the other modules for sonarqube -->
+                            <execution>
+                                <id>report-aggregate</id>
+                                <phase>verify</phase>
+                                <goals>
+                                    <goal>report-aggregate</goal>
+                                </goals>
+                                <configuration>
+                                    <dataFileIncludes>
+                                        <dataFileInclude>**/jacoco.exec</dataFileInclude>
+                                    </dataFileIncludes>
+                                    <outputDirectory>${project.reporting.outputDirectory}/jacoco-aggregate
+                                    </outputDirectory>
+                                </configuration>
+                            </execution>
+                        </executions>
                     </plugin>
                 </plugins>
             </build>

@@ -15,8 +15,6 @@ import java.util.Date;
 import java.util.List;
 import java.util.Map;
 
-import org.springframework.context.ApplicationContext;
-
 
 /**
  * Access to terminal permission data.
@@ -372,6 +370,12 @@ public interface TerminalPermissionAO
    * @param holder the new holder to set
    * @throws TerminalPermissionNotFoundException
    */
-  void setRequestSignerCertificateHolder(String refID, String holder)
-    throws TerminalPermissionNotFoundException;
+  void setRequestSignerCertificateHolder(String refID, String holder) throws TerminalPermissionNotFoundException;
+
+  /**
+   * Increase sequence counter for next request.
+   * 
+   * @param refId the refID
+   */
+  void increaseSequenceNumber(String refId);
 }

@@ -16,6 +16,7 @@ import org.bouncycastle.asn1.x509.DigestInfo;
 import de.governikus.eumw.poseidas.cardbase.AssertUtil;
 import de.governikus.eumw.poseidas.cardbase.ByteUtil;
 import de.governikus.eumw.poseidas.cardbase.asn1.OID;
+import lombok.Getter;
 
 
 /**
@@ -26,11 +27,9 @@ import de.governikus.eumw.poseidas.cardbase.asn1.OID;
  * @see HashAlgorithmEnum
  * @author Jens Wothe, jw@bos-bremen.de
  */
-
+@Getter
 public class HashAlgorithm extends OID implements HashInfo
 {
-
-
 
   // name of algorithm
   private final String name;
@@ -99,20 +98,6 @@ public class HashAlgorithm extends OID implements HashInfo
       return false;
     }
     return true;
-  }
-
-  /** {@inheritDoc} */
-  @Override
-  public String getName()
-  {
-    return this.name;
-  }
-
-  /** {@inheritDoc} */
-  @Override
-  public int getHashLength()
-  {
-    return this.hashLength;
   }
 
   /** {@inheritDoc} */

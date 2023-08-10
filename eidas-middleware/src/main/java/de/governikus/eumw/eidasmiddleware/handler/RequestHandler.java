@@ -19,7 +19,6 @@ import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
-import java.util.zip.DataFormatException;
 
 import javax.xml.bind.DatatypeConverter;
 
@@ -80,15 +79,40 @@ public class RequestHandler
   private final ConfigurationService configurationService;
 
 
-  /**
-   * Handles the SAML request.
-   *
-   * @param samlRequestBase64 The SAMLRequest parameter from the incoming request
-   * @param isPost <code>true</code> for HTTP POST, <code>false</code> for HTTP GET
-   */
-  EidasRequest handleSAMLRequest(String samlRequestBase64, boolean isPost) throws ErrorCodeWithResponseException
+  public EidasRequest handleSAMLRedirectRequest(String samlRequest, String relayState, String sigAlg, String signature)
+    throws ErrorCodeWithResponseException
   {
-    return handleSAMLRequest(null, samlRequestBase64, isPost);
+    try
+    {
+      byte[] samlRequestBytes = HttpRedirectUtils.inflate(samlRequest);
+
+      log.trace("Incoming SAML request: {}", new String(samlRequestBytes, StandardCharsets.UTF_8));
+
+      // Pre-validate the request
+      RequestingServiceProvider serviceProvider = preValidateSAMLRequest(samlRequestBytes);
+
+      // Verify the signature of the SAML request
+      HttpRedirectUtils.verifyQueryString(samlRequest,
+                                          relayState,
+                                          sigAlg,
+                                          signature,
+                                          serviceProvider.getSignatureCert());
+
+      // Parse the SAML request
+      EidasRequest eidasReq = EidasSaml.parseRequest(new ByteArrayInputStream(samlRequestBytes), null);
+
+      // post-validate the request and save it in the request session repository
+      postValidateAndSaveSAMLRequest(relayState, serviceProvider, eidasReq);
+      return eidasReq;
+    }
+    catch (ErrorCodeWithResponseException e)
+    {
+      throw e;
+    }
+    catch (Exception e)
+    {
+      throw new RequestProcessingException(CANNOT_PARSE_SAML_REQUEST, e);
+    }
   }
 
   /**
@@ -96,13 +120,11 @@ public class RequestHandler
    *
    * @param relayState The relayState parameter from the incoming request
    * @param samlRequestBase64 The SAMLRequest parameter from the incoming request
-   * @param isPost <code>true</code> for HTTP POST, <code>false</code> for HTTP GET
    * @return The eIDAS request with the stored sessionID for the TcToken endpoint
    */
-  public EidasRequest handleSAMLRequest(String relayState, String samlRequestBase64, boolean isPost)
+  public EidasRequest handleSAMLPostRequest(String relayState, String samlRequestBase64)
     throws ErrorCodeWithResponseException
   {
-    EidasRequest eidasReq;
     try
     {
       if (samlRequestBase64 == null)
@@ -110,42 +132,20 @@ public class RequestHandler
         throw new ErrorCodeException(ErrorCode.ILLEGAL_REQUEST_SYNTAX, "Query Parameter 'SAMLRequest' is missing");
       }
 
-      byte[] samlRequest = getSAMLRequestBytes(isPost, samlRequestBase64);
+      byte[] samlRequest = DatatypeConverter.parseBase64Binary(samlRequestBase64);
 
       log.trace("Incoming SAML request: {}", new String(samlRequest, StandardCharsets.UTF_8));
 
-      // Validate and parse the SAML request
-      eidasReq = parseSAMLRequest(samlRequest);
+      // Pre-validate the request
+      RequestingServiceProvider serviceProvider = preValidateSAMLRequest(samlRequest);
 
-      SPTypeEnumeration metadataSectorType = configurationService.getProviderByEntityID(eidasReq.getIssuer())
-                                                                 .getSectorType();
-      SPTypeEnumeration requestSectorType = eidasReq.getSectorType();
-      if (metadataSectorType == null && requestSectorType == null)
-      {
-        throw new ErrorCodeWithResponseException(ErrorCode.ILLEGAL_REQUEST_SYNTAX, eidasReq.getIssuer(),
-                                                 eidasReq.getId(),
-                                                 "Sector type neither given in request nor in metadata");
-      }
-      if (metadataSectorType != null && requestSectorType != null)
-      {
-        throw new ErrorCodeWithResponseException(ErrorCode.ILLEGAL_REQUEST_SYNTAX, eidasReq.getIssuer(),
-                                                 eidasReq.getId(), "Sector type is present in metadata and request");
-      }
-      if (metadataSectorType != null)
-      {
-        eidasReq.setSectorType(metadataSectorType);
-      }
+      // Verify the signature and parse the SAML request
+      List<X509Certificate> authors = new ArrayList<>();
+      authors.add(serviceProvider.getSignatureCert());
+      EidasRequest eidasReq = EidasSaml.parseRequest(new ByteArrayInputStream(samlRequest), authors);
 
-      requestSessionRepository.save(new RequestSession(relayState, eidasReq, getReqProviderName(eidasReq)));
-
-      // Check that the consumer URL is equal with the connector's metadata
-      if (!Utils.isNullOrEmpty(eidasReq.getAuthnRequest().getAssertionConsumerServiceURL())
-          && !configurationService.getProviderByEntityID(eidasReq.getIssuer())
-                                  .getAssertionConsumerURL()
-                                  .equals(eidasReq.getAuthnRequest().getAssertionConsumerServiceURL()))
-      {
-        throw new ErrorCodeException(ErrorCode.WRONG_DESTINATION, "Given AssertionConsumerServiceURL ist not valid!");
-      }
+      // post-validate the request and save it in the request session repository
+      postValidateAndSaveSAMLRequest(relayState, serviceProvider, eidasReq);
       return eidasReq;
     }
     catch (ErrorCodeWithResponseException e)
@@ -208,12 +208,20 @@ public class RequestHandler
   }
 
   /**
-   * Validate and parse the SAML request
+   * Performs these pre validations for the SAML request:
+   * <ul>
+   * <li>Validate the XML Schema</li>
+   * <li>Check that the AuthnRequest is not older than one minute</li>
+   * <li>Check that there is no RequestSession for this AuthnRequest</li>
+   * </ul>
+   * <b>No signature validation is performed.</b>
    *
-   * @return the parsed {@link EidasRequest}
+   * @return The service provider that sent this SAML request.
+   * @throws Exception when any of these checks fail
    */
-  private EidasRequest parseSAMLRequest(byte[] samlRequest) throws IOException, SAXException, ErrorCodeException,
-    UnmarshallingException, InitializationException, XMLParserException, ComponentInitializationException
+  private RequestingServiceProvider preValidateSAMLRequest(byte[] samlRequest)
+    throws IOException, SAXException, ErrorCodeException, UnmarshallingException, InitializationException,
+    XMLParserException, ComponentInitializationException
   {
     try (InputStream is = new ByteArrayInputStream(samlRequest))
     {
@@ -246,10 +254,44 @@ public class RequestHandler
       {
         throw new ErrorCodeException(ErrorCode.UNKNOWN_PROVIDER, issuer);
       }
-      List<X509Certificate> authors = new ArrayList<>();
-      authors.add(requestingServiceProvider.getSignatureCert());
-      return EidasSaml.parseRequest(is, authors);
+      return requestingServiceProvider;
     }
+  }
+
+  private void postValidateAndSaveSAMLRequest(String relayState,
+                                              RequestingServiceProvider serviceProvider,
+                                              EidasRequest eidasReq)
+    throws ErrorCodeException
+  {
+    // Check that the sector type is specified in either the metadata or the request
+    SPTypeEnumeration metadataSectorType = serviceProvider.getSectorType();
+    SPTypeEnumeration requestSectorType = eidasReq.getSectorType();
+    if (metadataSectorType == null && requestSectorType == null)
+    {
+      throw new ErrorCodeWithResponseException(ErrorCode.ILLEGAL_REQUEST_SYNTAX, eidasReq.getIssuer(), eidasReq.getId(),
+                                               "Sector type neither given in request nor in metadata");
+    }
+    if (metadataSectorType != null && requestSectorType != null)
+    {
+      throw new ErrorCodeWithResponseException(ErrorCode.ILLEGAL_REQUEST_SYNTAX, eidasReq.getIssuer(), eidasReq.getId(),
+                                               "Sector type is present in metadata and request");
+    }
+    if (metadataSectorType != null)
+    {
+      eidasReq.setSectorType(metadataSectorType);
+    }
+
+    // Check that the consumer URL is equal with the connector's metadata
+    if (!Utils.isNullOrEmpty(eidasReq.getAuthnRequest().getAssertionConsumerServiceURL())
+        && !configurationService.getProviderByEntityID(eidasReq.getIssuer())
+                                .getAssertionConsumerURL()
+                                .equals(eidasReq.getAuthnRequest().getAssertionConsumerServiceURL()))
+    {
+      throw new ErrorCodeException(ErrorCode.WRONG_DESTINATION, "Given AssertionConsumerServiceURL ist not valid!");
+    }
+
+    // Save the SAML request for later use
+    requestSessionRepository.save(new RequestSession(relayState, eidasReq, getReqProviderName(eidasReq)));
   }
 
   private AuthnRequest getAuthnRequest(InputStream is)
@@ -263,31 +305,6 @@ public class RequestHandler
     UnmarshallerFactory unmarshallerFactory = XMLObjectProviderRegistrySupport.getUnmarshallerFactory();
     Unmarshaller unmarshaller = unmarshallerFactory.getUnmarshaller(metadataRoot);
     return (AuthnRequest)unmarshaller.unmarshall(metadataRoot);
-  }
-
-  /**
-   * Return the SAML request byte array from the base64 encoded string
-   */
-  private byte[] getSAMLRequestBytes(boolean isPost, String samlRequestBase64)
-    throws DataFormatException, ErrorCodeException
-  {
-    byte[] samlRequest;
-
-    if (isPost)
-    {
-      samlRequest = DatatypeConverter.parseBase64Binary(samlRequestBase64);
-    }
-    else
-    {
-      samlRequest = HttpRedirectUtils.inflate(samlRequestBase64);
-    }
-
-    if (samlRequest == null)
-    {
-      log.warn("cannot parse base64 encoded SAML request: {}", samlRequestBase64);
-      throw new ErrorCodeException(ErrorCode.ILLEGAL_REQUEST_SYNTAX, "cannot parse base64 encoded SAML request");
-    }
-    return samlRequest;
   }
 
   /**

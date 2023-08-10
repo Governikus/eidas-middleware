@@ -77,7 +77,6 @@ public class ConfigurationService
     try
     {
       var eidasMiddlewareConfig = XmlHelper.unmarshal(configurationData, EidasMiddlewareConfig.class);
-      log.trace("Read configuration from database:\n{}", configurationData);
       return Optional.of(eidasMiddlewareConfig);
     }
     catch (XmlException e)

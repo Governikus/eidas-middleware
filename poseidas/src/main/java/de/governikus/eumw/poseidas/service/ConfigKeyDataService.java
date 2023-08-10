@@ -46,7 +46,6 @@ public class ConfigKeyDataService
     if (eidasConfiguration != null)
     {
       referencedKeyPairs.add(eidasConfiguration.getSignatureKeyPairName());
-      referencedKeyPairs.add(eidasConfiguration.getDecryptionKeyPairName());
     }
 
     // Eid config

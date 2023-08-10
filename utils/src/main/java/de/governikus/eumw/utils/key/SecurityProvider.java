@@ -11,8 +11,10 @@
 package de.governikus.eumw.utils.key;
 
 import java.security.Provider;
+import java.security.Security;
 
 import org.bouncycastle.jce.provider.BouncyCastleProvider;
+import org.bouncycastle.jsse.provider.BouncyCastleJsseProvider;
 
 import lombok.experimental.UtilityClass;
 
@@ -25,7 +27,17 @@ public final class SecurityProvider
 {
 
   /**
-   * the bouncy castle provider that is needed for PKCS12 keystores
+   * The BouncyCastle provider that is needed for PKCS12 keystores.
    */
   public static final Provider BOUNCY_CASTLE_PROVIDER = new BouncyCastleProvider();
+
+  /**
+   * The BouncyCastle JSSE provider that is needed for Brainpool support.
+   */
+  public static final Provider BOUNCY_CASTLE_JSSE_PROVIDER = new BouncyCastleJsseProvider();
+
+  /**
+   * The Sun JSSE provider that is needed for TLS client keys in HSM.
+   */
+  public static final Provider SUN_JSSE_PROVIDER = Security.getProvider("SunJSSE");
 }

@@ -15,7 +15,6 @@ import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 import java.util.Locale;
 
-import lombok.RequiredArgsConstructor;
 import org.apache.commons.lang.StringUtils;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Controller;
@@ -38,6 +37,7 @@ import de.governikus.eumw.eidasstarterkit.EidasLoaEnum;
 import de.governikus.eumw.eidasstarterkit.EidasRequest;
 import de.governikus.eumw.poseidas.cardbase.StringUtil;
 import de.governikus.eumw.poseidas.server.idprovider.config.ConfigurationService;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 
@@ -64,13 +64,33 @@ public class RequestReceiver
   @GetMapping
   public ModelAndView doGet(@RequestParam(required = false, name = HttpRedirectUtils.RELAYSTATE_PARAMNAME) String relayState,
                             @RequestParam(required = false, name = HttpRedirectUtils.REQUEST_PARAMNAME) String samlRequestBase64,
+                            @RequestParam(required = false, name = HttpRedirectUtils.SIGALG_PARAMNAME) String sigAlg,
+                            @RequestParam(required = false, name = HttpRedirectUtils.SIGVALUE_PARAMNAME) String signature,
                             @RequestParam(required = false, name = "sessionId") String sessionId,
                             @RequestHeader(required = false, name = "User-Agent") String userAgent)
   {
     // in case this parameter is present this is a SAML authn request
     if (StringUtil.notNullOrEmpty(samlRequestBase64))
     {
-      return handleEIDASRequest(relayState, samlRequestBase64, userAgent, false);
+      try
+      {
+        EidasRequest eidasRequest = requestHandler.handleSAMLRedirectRequest(samlRequestBase64,
+                                                                             relayState,
+                                                                             sigAlg,
+                                                                             signature);
+        return handleEIDASRequest(eidasRequest, relayState, userAgent);
+      }
+      catch (ErrorCodeWithResponseException e)
+      {
+        Arrays.stream(e.getDetails()).forEach(log::warn);
+        log.debug(e.getMessage(), e);
+        return showSamlErrorPage(e, relayState);
+      }
+      catch (RequestProcessingException e)
+      {
+        log.debug("There was an error while processing the request", e);
+        return showErrorPage(e.getMessage());
+      }
     }
     // in case this parameter is present the user already sent the SAML authn request and is now switching the
     // language
@@ -78,7 +98,7 @@ public class RequestReceiver
     {
       return showMiddlewarePage(sessionId, userAgent);
     }
-    // in case neither the samlrequest nor the sessionId parameter is present this is an invalid request
+    // in case neither the saml request nor the sessionId parameter is present this is an invalid request
     else
     {
       return showErrorPage("Either parameter SAMLRequest or sessionId must be present");
@@ -93,22 +113,10 @@ public class RequestReceiver
                              @RequestParam(HttpRedirectUtils.REQUEST_PARAMNAME) String samlRequestBase64,
                              @RequestHeader(required = false, name = "User-Agent") String userAgent)
   {
-    return handleEIDASRequest(relayState, samlRequestBase64, userAgent, true);
-  }
-
-  private ModelAndView handleEIDASRequest(String relayState, String samlRequestBase64, String userAgent, boolean isPost)
-  {
     try
     {
-      EidasRequest request = requestHandler.handleSAMLRequest(relayState, samlRequestBase64, isPost);
-      if (EidasLoaEnum.LOA_TEST.equals(request.getAuthClassRef()))
-      {
-        String samlResponse = responseHandler.prepareDummyResponse(request.getId(), request.getTestCase());
-        return createResponseView(relayState,
-                                  samlResponse,
-                                  responseHandler.getConsumerURLForRequestID(request.getId()));
-      }
-      return showMiddlewarePage(request.getId(), userAgent);
+      EidasRequest eidasRequest = requestHandler.handleSAMLPostRequest(relayState, samlRequestBase64);
+      return handleEIDASRequest(eidasRequest, relayState, userAgent);
     }
     catch (ErrorCodeWithResponseException e)
     {
@@ -121,6 +129,16 @@ public class RequestReceiver
       log.debug("There was an error while processing the request", e);
       return showErrorPage(e.getMessage());
     }
+  }
+
+  private ModelAndView handleEIDASRequest(EidasRequest request, String relayState, String userAgent)
+  {
+    if (EidasLoaEnum.LOA_TEST.equals(request.getAuthClassRef()))
+    {
+      String samlResponse = responseHandler.prepareDummyResponse(request.getId(), request.getTestCase());
+      return createResponseView(relayState, samlResponse, responseHandler.getConsumerURLForRequestID(request.getId()));
+    }
+    return showMiddlewarePage(request.getId(), userAgent);
   }
 
   private ModelAndView createResponseView(String relayState, String samlResponse, String consumerURLForRequestID)
@@ -169,9 +187,12 @@ public class RequestReceiver
       {
         ausweisappLink = "http://127.0.0.1:24727/eID-Client?tcTokenURL=";
       }
-      ausweisappLink = ausweisappLink.concat(URLEncoder.encode(requestHandler.getTcTokenURL(sessionId),
-                                                               StandardCharsets.UTF_8.name()));
       ModelAndView modelAndView = new ModelAndView("middleware");
+
+      String tcTokenURL = requestHandler.getTcTokenURL(sessionId);
+      modelAndView.addObject("tcTokenURL", tcTokenURL);
+
+      ausweisappLink = ausweisappLink.concat(URLEncoder.encode(tcTokenURL, StandardCharsets.UTF_8.name()));
       modelAndView.addObject("ausweisapp", ausweisappLink);
 
       String linkToSelf = ContextPaths.EIDAS_CONTEXT_PATH + ContextPaths.REQUEST_RECEIVER + "?sessionId=" + sessionId;

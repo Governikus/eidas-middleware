@@ -34,7 +34,6 @@ import org.springframework.validation.FieldError;
 import org.springframework.validation.ObjectError;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.ModelAttribute;
-import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -319,9 +318,9 @@ public class KeymanagementController
   /**
    * Allow to extract a key pair or a certificate from a saved key store.
    */
-  @GetMapping("/createCertificateOrKeyFromKeystore/{keystorename}")
+  @GetMapping("/createCertificateOrKeyFromKeystore")
   public String extractFromKeystore(Model model,
-                                    @PathVariable("keystorename") String keyStoreName,
+                                    @RequestParam("keystorename") String keyStoreName,
                                     @ModelAttribute String error,
                                     @ModelAttribute String msg,
                                     RedirectAttributes redirectAttributes)
@@ -488,11 +487,11 @@ public class KeymanagementController
   /**
    * Extract a key pair from a saved key store.
    */
-  @PostMapping("/createCertificateOrKeyFromKeystore/{keystorename}/createKeypair")
+  @PostMapping("/createCertificateOrKeyFromKeystore/createKeypair")
   public String createKeypairFromKeystore(Model model,
                                           @ModelAttribute @Valid CreateKeypairFromKeystoreModel createKeypairFromKeystoreModel,
                                           BindingResult bindingResult,
-                                          @PathVariable("keystorename") String keyStoreName,
+                                          @RequestParam("keystorename") String keyStoreName,
                                           RedirectAttributes redirectAttributes)
   {
 
@@ -598,11 +597,11 @@ public class KeymanagementController
   /**
    * Extract a certificate from a saved key store.
    */
-  @PostMapping("/createCertificateOrKeyFromKeystore/{keystorename}/createCertificate")
+  @PostMapping("/createCertificateOrKeyFromKeystore/createCertificate")
   public String createCertificateFromKeystore(Model model,
                                               @ModelAttribute @Valid CreateCertificateFromKeystoreModel createCertificateFromKeystoreModel,
                                               BindingResult bindingResult,
-                                              @PathVariable("keystorename") String keyStoreName,
+                                              @RequestParam("keystorename") String keyStoreName,
                                               RedirectAttributes redirectAttributes)
   {
 
@@ -711,8 +710,8 @@ public class KeymanagementController
   }
 
 
-  @GetMapping("/deleteKeyStore/{keyStoreName}")
-  public String deleteKeystore(Model model, @PathVariable String keyStoreName, RedirectAttributes redirectAttributes)
+  @GetMapping("/deleteKeyStore")
+  public String deleteKeystore(Model model, @RequestParam("keystorename") String keyStoreName, RedirectAttributes redirectAttributes)
   {
 
     final Optional<KeyStoreType> keyStoreTypeOptional = findKeystoreTypeByName(keyStoreName);
@@ -727,7 +726,7 @@ public class KeymanagementController
     return "pages/keymanagement/deleteKeystore";
   }
 
-  private boolean checkIfKeystoreMayBeDeleted(@PathVariable String keyStoreName,
+  private boolean checkIfKeystoreMayBeDeleted(String keyStoreName,
                                               RedirectAttributes redirectAttributes,
                                               Optional<KeyStoreType> keyStoreTypeOptional)
   {
@@ -771,8 +770,8 @@ public class KeymanagementController
     return true;
   }
 
-  @PostMapping("/deleteKeyStore/{keyStoreName}")
-  public String deleteKeystoreConfirmed(@PathVariable String keyStoreName, RedirectAttributes redirectAttributes)
+  @PostMapping("/deleteKeyStore")
+  public String deleteKeystoreConfirmed(@RequestParam("keystorename") String keyStoreName, RedirectAttributes redirectAttributes)
   {
 
     final Optional<KeyStoreType> keyStoreTypeOptional = findKeystoreTypeByName(keyStoreName);
@@ -797,7 +796,7 @@ public class KeymanagementController
 
   }
 
-  private Optional<KeyStoreType> findKeystoreTypeByName(@PathVariable String keyStoreName)
+  private Optional<KeyStoreType> findKeystoreTypeByName(String keyStoreName)
   {
     return configurationService.getConfiguration()
                                .map(EidasMiddlewareConfig::getKeyData)
@@ -808,8 +807,8 @@ public class KeymanagementController
                                .findFirst();
   }
 
-  @GetMapping("/deleteCertificate/{name}")
-  public String deleteCertificate(Model model, @PathVariable String name, RedirectAttributes redirectAttributes)
+  @GetMapping("/deleteCertificate")
+  public String deleteCertificate(Model model, @RequestParam("certificatename") String name, RedirectAttributes redirectAttributes)
   {
     final Optional<CertificateType> certificateTypeOptional = findCertificateTypeByName(name);
 
@@ -835,8 +834,8 @@ public class KeymanagementController
     return "pages/keymanagement/deleteCertificate";
   }
 
-  @PostMapping("/deleteCertificate/{name}")
-  public String deleteCertificateConfirmed(@PathVariable String name, RedirectAttributes redirectAttributes)
+  @PostMapping("/deleteCertificate")
+  public String deleteCertificateConfirmed(@RequestParam("certificatename") String name, RedirectAttributes redirectAttributes)
   {
     final Optional<CertificateType> certificateTypeOptional = findCertificateTypeByName(name);
     redirectAttributes.addFlashAttribute(JUMP_TO_TAB, CERTIFICATES_TAB);
@@ -864,7 +863,7 @@ public class KeymanagementController
     return REDIRECT_TO_INDEX;
   }
 
-  private Optional<CertificateType> findCertificateTypeByName(@PathVariable String name)
+  private Optional<CertificateType> findCertificateTypeByName(String name)
   {
     return configurationService.getConfiguration()
                                .map(EidasMiddlewareConfig::getKeyData)
@@ -875,8 +874,8 @@ public class KeymanagementController
                                .findFirst();
   }
 
-  @GetMapping("/deleteKeypair/{name}")
-  public String deleteKeypair(Model model, @PathVariable String name, RedirectAttributes redirectAttributes)
+  @GetMapping("/deleteKeypair")
+  public String deleteKeypair(Model model, @RequestParam("keypairname") String name, RedirectAttributes redirectAttributes)
   {
     final Optional<KeyPairType> keyPairTypeOptional = findKeyPairTypeByName(name);
 
@@ -899,8 +898,8 @@ public class KeymanagementController
     return "pages/keymanagement/deleteKeypair";
   }
 
-  @PostMapping("/deleteKeypair/{name}")
-  public String deleteKeypairConfirmed(Model model, @PathVariable String name, RedirectAttributes redirectAttributes)
+  @PostMapping("/deleteKeypair")
+  public String deleteKeypairConfirmed(Model model, @RequestParam("keypairname") String name, RedirectAttributes redirectAttributes)
   {
     final Optional<KeyPairType> keyPairTypeOptional = findKeyPairTypeByName(name);
     redirectAttributes.addFlashAttribute(JUMP_TO_TAB, KEY_PAIRS_TAB);
@@ -929,7 +928,7 @@ public class KeymanagementController
     return REDIRECT_TO_INDEX;
   }
 
-  private Optional<KeyPairType> findKeyPairTypeByName(@PathVariable String name)
+  private Optional<KeyPairType> findKeyPairTypeByName(String name)
   {
     return configurationService.getConfiguration()
                                .map(EidasMiddlewareConfig::getKeyData)

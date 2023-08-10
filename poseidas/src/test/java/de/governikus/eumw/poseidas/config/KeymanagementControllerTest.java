@@ -95,7 +95,7 @@ class KeymanagementControllerTest extends WebAdminTestBase
 
   public static final Predicate<HtmlAnchor> EXTRACT_FROM_KEYSTORE_ANCHOR_PREDICATE = htmlAnchor -> htmlAnchor.getHrefAttribute()
                                                                                                              .startsWith(KEY_MANAGEMENT_PATH
-                                                                                                                         + "/createCertificateOrKeyFromKeystore/K1");
+                                                                                                                         + "/createCertificateOrKeyFromKeystore?keystorename=K1");
 
   public static final Predicate<HtmlAnchor> DELETE_KEYSTORE_ANCHOR_PREDICATE = a -> a.getHrefAttribute()
                                                                                      .startsWith(KEY_MANAGEMENT_PATH
