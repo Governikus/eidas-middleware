@@ -69,7 +69,7 @@ class RequestReceiverTest
     ModelMap modelMap = landingPage.getModelMap();
     Assertions.assertEquals(3, modelMap.size());
     Assertions.assertEquals(EID_CLIENT_URL
-                            + URLEncoder.encode(TC_TOKEN_URL + REQUEST_ID, StandardCharsets.UTF_8.name()),
+                            + URLEncoder.encode(TC_TOKEN_URL + REQUEST_ID, StandardCharsets.UTF_8),
                             modelMap.getAttribute("ausweisapp"));
     Assertions.assertEquals(ContextPaths.EIDAS_CONTEXT_PATH + ContextPaths.REQUEST_RECEIVER + "?sessionId="
                             + REQUEST_ID,
@@ -88,7 +88,7 @@ class RequestReceiverTest
     ModelMap modelMap = landingPage.getModelMap();
     Assertions.assertEquals(3, modelMap.size());
     Assertions.assertEquals(EID_CLIENT_URL
-                            + URLEncoder.encode(TC_TOKEN_URL + REQUEST_ID, StandardCharsets.UTF_8.name()),
+                            + URLEncoder.encode(TC_TOKEN_URL + REQUEST_ID, StandardCharsets.UTF_8),
                             modelMap.getAttribute("ausweisapp"));
     Assertions.assertEquals(ContextPaths.EIDAS_CONTEXT_PATH + ContextPaths.REQUEST_RECEIVER + "?sessionId="
                             + REQUEST_ID,
@@ -197,7 +197,7 @@ class RequestReceiverTest
     ModelMap modelMap = landingPage.getModelMap();
     Assertions.assertEquals(3, modelMap.size());
     Assertions.assertEquals(EID_CLIENT_MOBIL_URL
-                            + URLEncoder.encode(TC_TOKEN_URL + REQUEST_ID, StandardCharsets.UTF_8.name()),
+                            + URLEncoder.encode(TC_TOKEN_URL + REQUEST_ID, StandardCharsets.UTF_8),
                             modelMap.getAttribute("ausweisapp"));
     Assertions.assertEquals(ContextPaths.EIDAS_CONTEXT_PATH + ContextPaths.REQUEST_RECEIVER + "?sessionId="
                             + REQUEST_ID,
