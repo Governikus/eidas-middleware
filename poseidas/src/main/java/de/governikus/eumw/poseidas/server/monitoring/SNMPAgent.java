@@ -222,9 +222,9 @@ public final class SNMPAgent implements CommandResponder
     if (matcher.find())
     {
       String stringType = matcher.group(1);
-      Integer type = Integer.valueOf(stringType);
+      int type = Integer.parseInt(stringType);
       String stringId = matcher.group(2);
-      Integer id = Integer.valueOf(stringId);
+      int id = Integer.parseInt(stringId);
 
       EidasMiddlewareConfig configuration = configurationService.getConfiguration()
                                                                 .orElseThrow(() -> new ConfigurationException("No eidas middleware configuration present"));
@@ -291,7 +291,7 @@ public final class SNMPAgent implements CommandResponder
       Matcher matcher = SERVICE_PROVIDER_PREFIX_PATTERN.matcher(oidStr);
       if (matcher.find())
       {
-        Integer id = Integer.valueOf(matcher.group(2));
+        int id = Integer.parseInt(matcher.group(2));
         EidasMiddlewareConfig configuration = configurationService.getConfiguration()
                                                                   .orElseThrow(() -> new ConfigurationException("No eidas middleware configuration present"));
         if (id + 1 < configuration.getEidConfiguration().getServiceProvider().size())
