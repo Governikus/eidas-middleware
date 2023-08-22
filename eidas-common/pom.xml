@@ -21,6 +21,18 @@
     <name>${project.artifactId}</name>
     <description>Common sources for all eIDAS modules</description>
 
+    <repositories>
+        <repository>
+            <id>shib-release</id>
+            <url>
+                https://build.shibboleth.net/nexus/content/groups/public
+            </url>
+            <snapshots>
+                <enabled>false</enabled>
+            </snapshots>
+        </repository>
+    </repositories>
+
     <dependencies>
         <dependency>
             <groupId>de.governikus.eumw</groupId>
