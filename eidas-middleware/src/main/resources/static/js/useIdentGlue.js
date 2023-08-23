@@ -9,29 +9,27 @@
  */
 
 $(function () {
-    // Stationary Status
-    const observer = new AusweisApp2.StationaryStatusObserver((status) => {
-        console.log("new status", status);
-        if (status.status === "available") {
-            $("#client-inactive").attr("hidden", "hidden");
-            $("#client-active").removeAttr("hidden");
-        } else if (status.status === "safari") {
-            $("#client-inactive").attr("hidden", "hidden");
-            $("#client-active").attr("hidden", "hidden");
-        } else {
-            $("#client-active").attr("hidden", "hidden");
-            $("#client-inactive").removeAttr("hidden");
-        }
-    });
-    observer.observe();
-    if (observer.isMobile) {
+
+    if (AusweisApp2.isMobile()) {
         $("#goToAa2").attr("href", getEIDLink(true));
-        // Mobile
-        AusweisApp2.observeEIDLink($("#identGlueMobileLink")[0], () => {
-            console.log("App not installed?");
-            $("#eid-install-app-hint").removeAttr("hidden");
-        });
+        $("#eid-install-app-hint").removeAttr("hidden");
+        $("#eid-install-stationary").attr("hidden", "hidden");
     } else {
+        // Stationary Status
+        const observer = new AusweisApp2.StationaryStatusObserver((status) => {
+            console.log("new status", status);
+            if (status.status === "available") {
+                $("#client-inactive").attr("hidden", "hidden");
+                $("#client-active").removeAttr("hidden");
+            } else if (status.status === "safari") {
+                $("#client-inactive").attr("hidden", "hidden");
+                $("#client-active").attr("hidden", "hidden");
+            } else {
+                $("#client-active").attr("hidden", "hidden");
+                $("#client-inactive").removeAttr("hidden");
+            }
+        });
+        observer.observe();
         $("#goToAa2").attr("href", getEIDLink(false));
     }
 });

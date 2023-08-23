@@ -26,7 +26,9 @@
     <link rel="stylesheet" th:href="@{/eidas-middleware/css/responsive.css}" type="text/css">
     <!-- HTML5 Shim and Respond.js IE8 support of HTML5 elements and media queries -->
     <script th:src="@{/eidas-middleware/webjars/jquery/jquery.min.js}"></script>
-    <script th:src="@{/eidas-middleware/js/identglue-1.0.4.umd.js}"></script>
+
+    <script th:src="@{/eidas-middleware/webjars/ausweisapp2__identglue/dist/identglue.umd.js}" type="text/javascript"></script>
+
     <script th:src="@{/eidas-middleware/js/useIdentGlue.js}"></script>
 
 </head>
@@ -115,16 +117,14 @@
                 <div class="content-inner">
                     <div class="details-list">
                         <h3 th:text="#{content.requirements.app}">3. The AusweisApp2</h3>
-                        <p class="lead" th:utext="#{content.requirements.app.hint}">
+                        <p id="eid-install-stationary" class="lead" th:utext="#{content.requirements.app.hint}">
                             The App can be downloaded for free here:
                             <br> <a href="/ausweisapp-redirect"
                                     title="Redirect to download page"><b>ausweisapp.bund.de/en/</b></a>
                         </p>
                         <div id="status">
                             <div hidden id="eid-install-app-hint">
-                                <p class="text-danger">The start of AusweisApp2 was not successful.</p>
-                                <br/>
-                                First install the AusweisApp2 on your device:<br/>
+                                <p th:utext="#{content.requirements.app.hint.mobile}"></p>
                                 <a href="https://apps.apple.com/us/app/ausweisapp2/id948660805?l=de&ls=1"
                                    target="_blank">
                                     <img th:src="@{/eidas-middleware/img/AppStore.svg}" style="height: 50px;">

@@ -231,3 +231,7 @@ Changelog
     - eIDAS Middleware: SAML redirect binding has been added.
     - eIDAS Middleware: Added support for the natural person attribute 'Nationality'.
 
+* 3.1.1
+
+    - eIDAS Middleware: Update identglue and fix behaviour for mobile use.
+    - eIDAS Middleware: Add the shibboleth repository to pom.xml
