@@ -212,3 +212,7 @@ Changelog
     - eIDAS Middleware: Update DVCA server certificate in eIDAS_Middleware_configuration_test.xml
     - Configuration Migration: Fix a bug that migrated the wrong URL for communication with the DVCA for production
       systems.
+
+* 3.0.2
+
+    - eIDAS Middleware: Fix CVEs by updating affected libraries, most notably xmlsec.
