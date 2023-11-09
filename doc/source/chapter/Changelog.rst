@@ -235,3 +235,7 @@ Changelog
 
     - eIDAS Middleware: Update identglue and fix behaviour for mobile use.
     - eIDAS Middleware: Add the shibboleth repository to pom.xml
+
+* 3.1.2
+
+    - eIDAS Middleware: Fix CVEs by updating affected libraries, most notably xmlsec.

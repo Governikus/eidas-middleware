@@ -14,7 +14,7 @@
 
     <groupId>de.governikus.eumw</groupId>
     <artifactId>eumw</artifactId>
-    <version>3.1.1</version>
+    <version>3.1.2</version>
     <packaging>pom</packaging>
 
     <name>EU Middleware</name>
@@ -37,7 +37,7 @@
     <scm>
         <url>https://hg.govkg.de/Autent/eumw</url>
         <connection>scm:hg:https://hg.govkg.de/Autent/eumw</connection>
-        <tag>eumw-3.1.1</tag>
+        <tag>eumw-3.1.2</tag>
     </scm>
 
     <repositories>
@@ -95,7 +95,7 @@
         <version.opensaml>4.0.1</version.opensaml>
         <!-- OpenSAML versions <4.1.1 ship with velocity 2.2 which has a CVE -->
         <version.velocity>2.3</version.velocity>
-        <version.xmlsec>2.3.3</version.xmlsec>
+        <version.xmlsec>2.3.4</version.xmlsec>
 
         <!-- 3.6.1 is available but there are problems with the client services to the dvca. Version 4.0.0 has the jakarta namespace -->
         <version.cxf>3.5.6</version.cxf>
@@ -129,6 +129,8 @@
         <version.jsr305>3.0.2</version.jsr305>
         <version.groovy>3.0.18</version.groovy>
         <version.snmp4j>3.6.7</version.snmp4j>
+        <!-- manage for CVE -->
+        <version.tomcat>9.0.82</version.tomcat>
 
         <!-- IDE helper -->
         <version.lombok>1.18.28</version.lombok>
@@ -876,6 +878,23 @@
                 <groupId>org.jmrtd</groupId>
                 <artifactId>jmrtd</artifactId>
                 <version>${version.jmrtd}</version>
+            </dependency>
+
+            <!-- manage tomcat for CVE -->
+            <dependency>
+                <groupId>org.apache.tomcat.embed</groupId>
+                <artifactId>tomcat-embed-core</artifactId>
+                <version>${version.tomcat}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.apache.tomcat.embed</groupId>
+                <artifactId>tomcat-embed-el</artifactId>
+                <version>${version.tomcat}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.apache.tomcat.embed</groupId>
+                <artifactId>tomcat-embed-websocket</artifactId>
+                <version>${version.tomcat}</version>
             </dependency>
 
             <!-- test dependencies -->
