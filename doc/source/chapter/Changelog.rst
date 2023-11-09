@@ -187,3 +187,7 @@ Changelog
 * 2.2.8
 
     - eIDAS Middleware: Security patch.
+
+* 2.2.9
+
+    - eIDAS Middleware: Fix CVEs by updating affected libraries, most notably xmlsec.
