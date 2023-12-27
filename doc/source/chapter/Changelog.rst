@@ -239,3 +239,7 @@ Changelog
 * 3.1.2
 
     - eIDAS Middleware: Fix CVEs by updating affected libraries, most notably xmlsec.
+
+* 3.1.3
+
+    - eIDAS Middleware: Fix CVEs by updating affected libraries, most notably Tomcat.

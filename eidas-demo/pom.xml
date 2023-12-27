@@ -14,7 +14,7 @@
     <parent>
         <groupId>de.governikus.eumw</groupId>
         <artifactId>eumw</artifactId>
-        <version>3.1.2</version>
+        <version>3.1.3</version>
     </parent>
     <artifactId>eidas-demo</artifactId>
 
@@ -109,9 +109,6 @@
                         <image>
                             <name>governikus/eidas-demo-application:${project.version}</name>
                             <build>
-                                <tags>
-                                    <tag>latest</tag>
-                                </tags>
                                 <contextDir>.</contextDir>
                                 <assembly>
                                     <descriptorRef>artifact</descriptorRef>
