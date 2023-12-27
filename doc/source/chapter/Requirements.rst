@@ -9,8 +9,8 @@ Software Requirements
 ---------------------
 
 The eIDAS Middleware is a Spring Boot Application. This means that you can start the application with a JRE and
-there is no need for an application server. We support the latest available Zulu JDK in Version 11,
-at the time of this release this is 11.0.16
+there is no need for an application server. We support the latest available Zulu JDK in Version 17,
+at the time of this release this is 17.0.9
 
 For the operating system we support Debian 11 “Bullseye” (LTS).
 

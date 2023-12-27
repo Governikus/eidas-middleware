@@ -13,7 +13,7 @@ import java.security.cert.X509Certificate;
 
 import lombok.Getter;
 import lombok.Setter;
-import se.litsec.eidas.opensaml.ext.SPTypeEnumeration;
+import se.swedenconnect.opensaml.eidas.ext.SPTypeEnumeration;
 
 
 /**

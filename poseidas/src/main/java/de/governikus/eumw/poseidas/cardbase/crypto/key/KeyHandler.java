@@ -21,7 +21,7 @@ import java.security.spec.AlgorithmParameterSpec;
 import java.security.spec.InvalidKeySpecException;
 
 import de.governikus.eumw.poseidas.cardbase.asn1.OID;
-import de.governikus.eumw.poseidas.cardbase.asn1.npa.si.GeneralDomainParameterInfo;
+import de.governikus.eumw.poseidas.cardbase.asn1.npa.si.DomainParameterInfo;
 
 
 /**
@@ -35,7 +35,7 @@ public interface KeyHandler
   /**
    * Generates a key pair.
    *
-   * @param params {@link GeneralDomainParameterInfo} to use in generation, <code>null</code> not permitted
+   * @param params {@link DomainParameterInfo} to use in generation, <code>null</code> not permitted
    * @return generated {@link KeyPair}
    * @throws IllegalArgumentException if params <code>null</code>
    * @throws IOException
@@ -43,7 +43,7 @@ public interface KeyHandler
    * @throws NoSuchProviderException
    * @throws NoSuchAlgorithmException
    */
-  public abstract KeyPair generateKeyPair(GeneralDomainParameterInfo params) throws
+  public abstract KeyPair generateKeyPair(DomainParameterInfo params) throws
     IOException, NoSuchAlgorithmException, NoSuchProviderException, InvalidAlgorithmParameterException;
 
   /**
@@ -62,7 +62,7 @@ public interface KeyHandler
   /**
    * Builds {@link PublicKey} object from byte-array encoding the key.
    *
-   * @param params domain parameters as {@link GeneralDomainParameterInfo}, <code>null</code> not permitted
+   * @param params domain parameters as {@link DomainParameterInfo}, <code>null</code> not permitted
    * @param keyBytes key data as byte-array, <code>null</code> or empty not permitted
    * @return generated {@link PublicKey}
    * @throws IllegalArgumentException if any argument <code>null</code> or if keyBytes empty
@@ -71,7 +71,7 @@ public interface KeyHandler
    * @throws NoSuchProviderException
    * @throws NoSuchAlgorithmException
    */
-  public abstract PublicKey buildKeyFromBytes(GeneralDomainParameterInfo params, byte[] keyBytes)
+  public abstract PublicKey buildKeyFromBytes(DomainParameterInfo params, byte[] keyBytes)
     throws IOException;
 
   /**

@@ -1,11 +1,10 @@
 /*
- * Copyright (c) 2020 Governikus KG. Licensed under the EUPL, Version 1.2 or as soon they will be approved by
- * the European Commission - subsequent versions of the EUPL (the "Licence"); You may not use this work except
- * in compliance with the Licence. You may obtain a copy of the Licence at:
- * http://joinup.ec.europa.eu/software/page/eupl Unless required by applicable law or agreed to in writing,
- * software distributed under the Licence is distributed on an "AS IS" basis, WITHOUT WARRANTIES OR CONDITIONS
- * OF ANY KIND, either express or implied. See the Licence for the specific language governing permissions and
- * limitations under the Licence.
+ * Copyright (c) 2020 Governikus KG. Licensed under the EUPL, Version 1.2 or as soon they will be approved by the
+ * European Commission - subsequent versions of the EUPL (the "Licence"); You may not use this work except in compliance
+ * with the Licence. You may obtain a copy of the Licence at: http://joinup.ec.europa.eu/software/page/eupl Unless
+ * required by applicable law or agreed to in writing, software distributed under the Licence is distributed on an
+ * "AS IS" basis, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the Licence for the
+ * specific language governing permissions and limitations under the Licence.
  */
 
 package de.governikus.eumw.eidascommon;
@@ -28,6 +27,7 @@ import java.security.cert.CertificateFactory;
 import java.security.cert.X509Certificate;
 import java.security.interfaces.ECPublicKey;
 import java.security.interfaces.RSAPublicKey;
+import java.security.spec.ECParameterSpec;
 import java.util.Arrays;
 import java.util.Base64;
 import java.util.Enumeration;
@@ -35,7 +35,6 @@ import java.util.HashMap;
 import java.util.UUID;
 import java.util.zip.ZipInputStream;
 
-import javax.servlet.http.HttpServletRequest;
 import javax.xml.XMLConstants;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
@@ -48,6 +47,9 @@ import javax.xml.validation.Schema;
 import javax.xml.validation.SchemaFactory;
 import javax.xml.validation.Validator;
 
+import jakarta.servlet.http.HttpServletRequest;
+
+import org.bouncycastle.jce.spec.ECNamedCurveSpec;
 import org.xml.sax.SAXNotRecognizedException;
 import org.xml.sax.SAXNotSupportedException;
 
@@ -69,12 +71,12 @@ public final class Utils
   /**
    * Minimal size for RSA keys (SAML).
    */
-  private static final int MIN_KEY_SIZE_RSA = 3072;
+  private static final int MIN_KEY_SIZE_RSA_SAML = 3072;
 
   /**
    * Minimal size for EC keys (SAML).
    */
-  private static final int MIN_KEY_SIZE_EC = 256;
+  private static final int MIN_KEY_SIZE_EC_SAML = 256;
 
   /**
    * Minimal size for RSA keys (TLS).
@@ -302,23 +304,19 @@ public final class Utils
 
 
   /**
-   * Read a key and certificate form a given input stream. When reading a pem file it does only work for pem
-   * files containing not more than one certificate and one private key. Providing more causes unpredictable
-   * behavior. Pem file containing only a private key or only a certificate are also supported. Reading of pem
-   * files is not supported with java 1.5 (also, java 1.5 needs endorsed xerces!)
+   * Read a key and certificate form a given input stream. When reading a pem file it does only work for pem files
+   * containing not more than one certificate and one private key. Providing more causes unpredictable behavior. Pem
+   * file containing only a private key or only a certificate are also supported. Reading of pem files is not supported
+   * with java 1.5 (also, java 1.5 needs endorsed xerces!)
    *
    * @param ins stream to read the keystore or PEM from
    * @param type keystore type, i.e. "PKCS12", "JKS" or "PEM"
    * @param pin keystore password
-   * @param alias alias of the requested key pair. If a wrong value is given, look at stderr to see the
-   *          available aliases. The alias parameter is not supported for pem files.
+   * @param alias alias of the requested key pair. If a wrong value is given, look at stderr to see the available
+   *          aliases. The alias parameter is not supported for pem files.
    * @param keyPin key password
    */
-  private static X509KeyPair readKeyAndCert(InputStream ins,
-                                            String type,
-                                            char[] pin,
-                                            String alias,
-                                            char[] keyPin)
+  private static X509KeyPair readKeyAndCert(InputStream ins, String type, char[] pin, String alias, char[] keyPin)
     throws IOException, GeneralSecurityException
   {
     if (ins == null)
@@ -357,16 +355,16 @@ public final class Utils
   }
 
   /**
-   * Read a key and certificate form a given input stream. When reading a pem file it does only work for pem
-   * files containing not more than one certificate and one private key. Providing more causes unpredictable
-   * behavior. Pem file containing only a private key or only a certificate are also supported. Reading of pem
-   * files is not supported with java 1.5 (also, java 1.5 needs endorsed xerces!)
+   * Read a key and certificate form a given input stream. When reading a pem file it does only work for pem files
+   * containing not more than one certificate and one private key. Providing more causes unpredictable behavior. Pem
+   * file containing only a private key or only a certificate are also supported. Reading of pem files is not supported
+   * with java 1.5 (also, java 1.5 needs endorsed xerces!)
    *
    * @param ins stream to read the keystore or PEM from
    * @param type keystore type, i.e. "PKCS12", "JKS" or "PEM"
    * @param pin keystore password
-   * @param alias alias of the requested key pair. If a wrong value is given, look at stderr to see the
-   *          available aliases. The alias parameter is not supported for pem files.
+   * @param alias alias of the requested key pair. If a wrong value is given, look at stderr to see the available
+   *          aliases. The alias parameter is not supported for pem files.
    * @param keyPin key password
    * @param strict <code>true</code> for checking key size
    */
@@ -376,7 +374,7 @@ public final class Utils
                                            String alias,
                                            char[] keyPin,
                                            boolean strict)
-    throws IOException, GeneralSecurityException
+    throws IOException, GeneralSecurityException, ErrorCodeException
   {
     X509KeyPair kp = readKeyAndCert(ins, type, pin, alias, keyPin);
     if (strict)
@@ -390,12 +388,12 @@ public final class Utils
   }
 
   /**
-   * Read a certificate form a given input stream. Reading of pem files is not supported with java 1.5 (also,
-   * java 1.5 needs endorsed xerces!)
+   * Read a certificate form a given input stream. Reading of pem files is not supported with java 1.5 (also, java 1.5
+   * needs endorsed xerces!)
    *
    * @param ins stream to read the keystore or pem from
-   * @param type for normal certificate the type is "X509", when reading a certificate from pem file use "PEM"
-   *          as type. This will also return an X509 certificate.
+   * @param type for normal certificate the type is "X509", when reading a certificate from pem file use "PEM" as type.
+   *          This will also return an X509 certificate.
    * @throws CertificateException
    */
   public static Certificate readCert(InputStream ins, String type) throws CertificateException
@@ -404,8 +402,7 @@ public final class Utils
     {
       throw new NullPointerException("input stream to load key and cert from cannot be null");
     }
-    CertificateFactory certFactory = CertificateFactory.getInstance(type,
-                                                                    SecurityProvider.BOUNCY_CASTLE_PROVIDER);
+    CertificateFactory certFactory = CertificateFactory.getInstance(type, SecurityProvider.BOUNCY_CASTLE_PROVIDER);
     Certificate cert = certFactory.generateCertificate(ins);
     if (cert == null)
     {
@@ -426,16 +423,15 @@ public final class Utils
   }
 
   /**
-   * Converts the given certificate to a certificate from the Sun provider. Some application need the
-   * certificates to come from the sun certificate provider and do not work correctly with BC certificates.
+   * Converts the given certificate to a certificate from the Sun provider. Some application need the certificates to
+   * come from the sun certificate provider and do not work correctly with BC certificates.
    *
    * @param cert
    * @return
    * @throws CertificateException
    * @throws NoSuchProviderException
    */
-  public static <T extends Certificate> T convertToSun(T cert)
-    throws CertificateException, NoSuchProviderException
+  public static <T extends Certificate> T convertToSun(T cert) throws CertificateException, NoSuchProviderException
   {
     if (cert == null)
     {
@@ -485,8 +481,7 @@ public final class Utils
    * @throws UnrecoverableKeyException
    */
   private static X509KeyPair readPKCS12(InputStream stream, char[] password, String alias)
-    throws KeyStoreException, NoSuchAlgorithmException, CertificateException, IOException,
-    UnrecoverableKeyException
+    throws KeyStoreException, NoSuchAlgorithmException, CertificateException, IOException, UnrecoverableKeyException
   {
     KeyStore p12 = KeyStore.getInstance("pkcs12", SecurityProvider.BOUNCY_CASTLE_PROVIDER);
     p12.load(stream, password);
@@ -513,8 +508,7 @@ public final class Utils
     }
     else
     {
-      throw new KeyStoreException("keystore does not contains alias " + alias + ". Try alias "
-                                  + aliasBuf.toString());
+      throw new KeyStoreException("keystore does not contains alias " + alias + ". Try alias " + aliasBuf.toString());
     }
   }
 
@@ -574,7 +568,7 @@ public final class Utils
    * @param strict <code>true</code> for checking minimum key size
    * @throws CertificateException
    */
-  public static X509Certificate readCert(byte[] data, boolean strict) throws CertificateException
+  public static X509Certificate readCert(byte[] data, boolean strict) throws CertificateException, ErrorCodeException
   {
     X509Certificate cert = readCert(data);
     if (strict)
@@ -584,14 +578,9 @@ public final class Utils
     return cert;
   }
 
-  private static void ensureKeySize(X509Certificate cert)
+  public static void ensureKeySize(X509Certificate cert) throws ErrorCodeException
   {
     if (cert == null)
-    {
-      return;
-    }
-
-    if (!log.isErrorEnabled())
     {
       return;
     }
@@ -599,24 +588,34 @@ public final class Utils
     switch (cert.getPublicKey().getAlgorithm())
     {
       case "RSA":
-        if (((RSAPublicKey)cert.getPublicKey()).getModulus().bitLength() < MIN_KEY_SIZE_RSA)
+        if (((RSAPublicKey)cert.getPublicKey()).getModulus().bitLength() < MIN_KEY_SIZE_RSA_SAML)
         {
-          log.error("Certificate with subject {} and serial {} does not meet specified minimum RSA key size of {}",
-                    cert.getSubjectDN(),
-                    cert.getSerialNumber(),
-                    MIN_KEY_SIZE_RSA);
+          String message = String.format("Certificate with subject %s and serial %s does not meet specified minimum RSA key size of %d",
+                                         cert.getSubjectX500Principal(),
+                                         cert.getSerialNumber(),
+                                         MIN_KEY_SIZE_RSA_SAML);
+          log.warn(message);
+          throw new ErrorCodeException(ErrorCode.INVALID_CERTIFICATE, message);
         }
         break;
       case "EC":
-        if (((ECPublicKey)cert.getPublicKey()).getParams()
-                                              .getCurve()
-                                              .getField()
-                                              .getFieldSize() < MIN_KEY_SIZE_EC)
+        ECParameterSpec ecKeyParams = ((ECPublicKey)cert.getPublicKey()).getParams();
+        if (!(ecKeyParams instanceof ECNamedCurveSpec || ecKeyParams instanceof sun.security.util.NamedCurve))
         {
-          log.error("Certificate with subject {} and serial {} does not meet specified minimum EC key size of {}",
-                    cert.getSubjectDN(),
-                    cert.getSerialNumber(),
-                    MIN_KEY_SIZE_EC);
+          String message = String.format("Certificate with subject %s and serial %s does not use a named curve",
+                                         cert.getSubjectX500Principal(),
+                                         cert.getSerialNumber());
+          log.warn(message);
+          throw new ErrorCodeException(ErrorCode.INVALID_CERTIFICATE, message);
+        }
+        if (ecKeyParams.getCurve().getField().getFieldSize() < MIN_KEY_SIZE_EC_SAML)
+        {
+          String message = String.format("Certificate with subject %s and serial %s does not meet specified minimum EC key size of %d",
+                                         cert.getSubjectX500Principal(),
+                                         cert.getSerialNumber(),
+                                         MIN_KEY_SIZE_EC_SAML);
+          log.warn(message);
+          throw new ErrorCodeException(ErrorCode.INVALID_CERTIFICATE, message);
         }
         break;
       default:
@@ -624,11 +623,11 @@ public final class Utils
   }
 
   /**
-   * Removes "file:" from the input if present. This can be used to use SPRING_CONFIG_LOCATION or
-   * spring.config.location to specify config locations.
+   * Removes "file:" from the input if present. This can be used to use SPRING_CONFIG_LOCATION or spring.config.location
+   * to specify config locations.
    *
-   * @param location the string containing the value of SPRING_CONFIG_LOCATION or spring.config.location. Must
-   *          not be null.
+   * @param location the string containing the value of SPRING_CONFIG_LOCATION or spring.config.location. Must not be
+   *          null.
    * @return the input string without "file:" if it was present
    */
   public static String prepareSpringConfigLocation(String location)
@@ -641,8 +640,8 @@ public final class Utils
   }
 
   /**
-   * Returns an initialized {@link BasicParserPool} ready to use, configured with security features preventing
-   * several XXE attacks.
+   * Returns an initialized {@link BasicParserPool} ready to use, configured with security features preventing several
+   * XXE attacks.
    *
    * @return the parser pool
    * @throws ComponentInitializationException
@@ -667,8 +666,8 @@ public final class Utils
   }
 
   /**
-   * Returns an initialized {@link DocumentBuilder} ready to use, configured with security features preventing
-   * several XXE attacks.
+   * Returns an initialized {@link DocumentBuilder} ready to use, configured with security features preventing several
+   * XXE attacks.
    *
    * @return the document builder
    * @throws ParserConfigurationException
@@ -688,8 +687,8 @@ public final class Utils
   }
 
   /**
-   * Returns an initialized {@link Transformer} ready to use, configured with security features preventing
-   * several XXE attacks.
+   * Returns an initialized {@link Transformer} ready to use, configured with security features preventing several XXE
+   * attacks.
    *
    * @return the transformer
    * @throws TransformerConfigurationException
@@ -704,8 +703,8 @@ public final class Utils
   }
 
   /**
-   * Returns an initialized {@link SchemaFactory} ready to use, configured with security features preventing
-   * several XXE attacks.
+   * Returns an initialized {@link SchemaFactory} ready to use, configured with security features preventing several XXE
+   * attacks.
    *
    * @return the schema factory
    * @throws SAXNotRecognizedException
@@ -720,15 +719,14 @@ public final class Utils
   }
 
   /**
-   * Returns an initialized {@link Validator} ready to use, configured with security features preventing
-   * several XXE attacks.
+   * Returns an initialized {@link Validator} ready to use, configured with security features preventing several XXE
+   * attacks.
    *
    * @return the validator
    * @throws SAXNotRecognizedException
    * @throws SAXNotSupportedException
    */
-  public static Validator getValidator(Schema schema)
-    throws SAXNotRecognizedException, SAXNotSupportedException
+  public static Validator getValidator(Schema schema) throws SAXNotRecognizedException, SAXNotSupportedException
   {
     Validator v = schema.newValidator();
     v.setProperty(XMLConstants.ACCESS_EXTERNAL_DTD, "");
@@ -737,8 +735,8 @@ public final class Utils
   }
 
   /**
-   * Returns an initialized {@link SAXParserFactory} ready to use, configured with security features
-   * preventing several XXE attacks.
+   * Returns an initialized {@link SAXParserFactory} ready to use, configured with security features preventing several
+   * XXE attacks.
    *
    * @return the parser factory
    * @throws SAXNotRecognizedException

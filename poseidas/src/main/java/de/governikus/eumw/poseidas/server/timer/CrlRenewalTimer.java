@@ -68,12 +68,12 @@ public class CrlRenewalTimer implements Runnable
         Date date = new Date(triggerContext.getClock().millis() + initialDelay);
         log.debug("First CRL timer task will executed with an initial delay of {} milliseconds", initialDelay);
         log.debug("CRL renewal timer task will be executed at {}", date);
-        return date;
+        return date.toInstant();
       }
       Instant nextExecutiontime = lastCompletion.toInstant().plusMillis(getCrlRenewalTimer());
       Date date = Date.from(nextExecutiontime);
       log.debug("CRL renewal timer task will be executed at {}", date);
-      return date;
+      return date.toInstant();
     };
   }
 

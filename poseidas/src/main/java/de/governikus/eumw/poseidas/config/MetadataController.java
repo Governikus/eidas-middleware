@@ -6,13 +6,16 @@ import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URLDecoder;
 import java.nio.charset.StandardCharsets;
+import java.security.cert.X509Certificate;
 import java.util.Comparator;
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
-import java.util.stream.Collectors;
 
-import javax.validation.Valid;
+import jakarta.validation.Valid;
 
+import org.apache.commons.lang3.StringUtils;
+import org.opensaml.saml.saml2.metadata.EntityDescriptor;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
@@ -29,9 +32,11 @@ import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 import de.governikus.eumw.config.ConnectorMetadataType;
 import de.governikus.eumw.config.EidasMiddlewareConfig;
 import de.governikus.eumw.eidascommon.ContextPaths;
+import de.governikus.eumw.eidascommon.CryptoAlgUtil;
 import de.governikus.eumw.eidasstarterkit.EidasMetadataNode;
 import de.governikus.eumw.eidasstarterkit.EidasSaml;
 import de.governikus.eumw.poseidas.config.model.MetadataVerificationCertificateModel;
+import de.governikus.eumw.poseidas.server.idprovider.config.ConfigurationException;
 import de.governikus.eumw.poseidas.server.idprovider.config.ConfigurationService;
 import de.governikus.eumw.poseidas.service.MetadataService;
 import lombok.RequiredArgsConstructor;
@@ -63,7 +68,7 @@ public class MetadataController
 
   /**
    * Prepare index page.
-   * 
+   *
    * @param model
    * @param error
    * @param msg
@@ -76,52 +81,131 @@ public class MetadataController
     {
       model.addAttribute(REDIRECT_ATTRIBUTE_ERROR, error);
     }
-    if (msg != null && !msg.isBlank())
-    {
-      model.addAttribute("msg", msg);
-    }
 
-    model.addAttribute("metafiles", getMetadataFiles());
+    List<EidasMetadataEntry> metadataFiles = getMetadataFiles();
+    model.addAttribute("metafiles", metadataFiles);
+    List<String> errorMessages = metadataFiles.stream()
+                                              .map(EidasMetadataEntry::errorMessage)
+                                              .filter(Objects::nonNull)
+                                              .toList();
+    String appendCurrentMetadataErrorMessage = addInvalidMetadataErrorMessage(errorMessages, error);
+    if (!appendCurrentMetadataErrorMessage.isBlank())
+    {
+      model.addAttribute(REDIRECT_ATTRIBUTE_ERROR, appendCurrentMetadataErrorMessage);
+    }
+    String metadataSignatureVerificationCertificateName = configurationService.getConfiguration()
+                                                                              .map(EidasMiddlewareConfig::getEidasConfiguration)
+                                                                              .map(EidasMiddlewareConfig.EidasConfiguration::getMetadataSignatureVerificationCertificateName)
+                                                                              .orElse(null);
+    if (StringUtils.isNotBlank(metadataSignatureVerificationCertificateName))
+    {
+      // Ensure Key Size
+      try
+      {
+        configurationService.getSamlCertificate(metadataSignatureVerificationCertificateName);
+      }
+      catch (ConfigurationException e)
+      {
+        String errorMessage = error + "The currently selected metadata verification certificate is not valid: "
+                              + e.getMessage();
+        model.addAttribute(REDIRECT_ATTRIBUTE_ERROR, errorMessage);
+      }
+    }
     model.addAttribute("metadataVerificationModel",
-                       new MetadataVerificationCertificateModel(configurationService.getConfiguration()
-                                                                                    .map(EidasMiddlewareConfig::getEidasConfiguration)
-                                                                                    .map(EidasMiddlewareConfig.EidasConfiguration::getMetadataSignatureVerificationCertificateName)
-                                                                                    .orElse(null)));
+                       new MetadataVerificationCertificateModel(metadataSignatureVerificationCertificateName));
     return INDEX_TEMPLATE;
   }
 
-  private List<EidasMetadataNode> getMetadataFiles()
+  private String addInvalidMetadataErrorMessage(List<String> errorMessages, String error)
+  {
+    StringBuilder stringBuilder = new StringBuilder(error);
+    errorMessages.forEach(s -> stringBuilder.append('\n').append(s));
+    return stringBuilder.toString();
+  }
+
+  private List<EidasMetadataEntry> getMetadataFiles()
   {
     return configurationService.getConfiguration()
                                .map(EidasMiddlewareConfig::getEidasConfiguration)
                                .map(EidasMiddlewareConfig.EidasConfiguration::getConnectorMetadata)
                                .stream()
                                .flatMap(List::stream)
-                               .map(ConnectorMetadataType::getValue)
-                               .map(this::parseToEidasMetadata)
-                               .filter(Optional::isPresent)
-                               .map(Optional::get)
-                               .sorted(Comparator.comparing(EidasMetadataNode::getEntityId))
-                               .collect(Collectors.toList());
+                               .map(connectorMetadataType -> {
+                                 try
+                                 {
+                                   EidasMetadataNode eidasMetadataNode = parseToEidasMetadata(connectorMetadataType.getValue());
+                                   return new EidasMetadataEntry(eidasMetadataNode.getEntityId(),
+                                                                 eidasMetadataNode.getCheckedAsValid(), null);
+                                 }
+                                 catch (Exception e)
+                                 {
+                                   log.warn("Cannot parse already saved metadata with entityId {}. This metadata is not usable by the middleware and must be deleted or replaced.",
+                                            connectorMetadataType.getEntityID(),
+                                            e);
+                                   String errorMessage = String.format("Cannot parse already saved metadata with entityId %s. This metadata is not usable by the middleware and must be deleted or replaced. See the log of the middleware for more details.",
+                                                                       connectorMetadataType.getEntityID());
+                                   return new EidasMetadataEntry(connectorMetadataType.getEntityID(), Boolean.FALSE,
+                                                                 errorMessage);
+                                 }
+                               })
+                               .sorted(Comparator.comparing(EidasMetadataEntry::entityId))
+                               .toList();
   }
 
-  private Optional<EidasMetadataNode> parseToEidasMetadata(byte[] bytes)
+  record EidasMetadataEntry(String entityId, Boolean checkedAsValid, String errorMessage) {
+  }
+
+  private EidasMetadataNode parseToEidasMetadata(byte[] bytes) throws Exception
   {
-    final Optional<String> optionalMetadataVerificationCertificate = configurationService.getConfiguration()
-                                                                                         .map(EidasMiddlewareConfig::getEidasConfiguration)
-                                                                                         .map(EidasMiddlewareConfig.EidasConfiguration::getMetadataSignatureVerificationCertificateName);
+    final Optional<String> metadataVerificationCertificateName = configurationService.getConfiguration()
+                                                                                     .map(EidasMiddlewareConfig::getEidasConfiguration)
+                                                                                     .map(EidasMiddlewareConfig.EidasConfiguration::getMetadataSignatureVerificationCertificateName);
+
+    EntityDescriptor metadata;
     try
     {
-      return Optional.of(EidasSaml.parseMetaDataNode(new ByteArrayInputStream(bytes),
-                                                     optionalMetadataVerificationCertificate.isPresent()
-                                                       ? configurationService.getCertificate(optionalMetadataVerificationCertificate.get())
-                                                       : null,
-                                                     true));
+      metadata = EidasSaml.unmarshalMetadata(new ByteArrayInputStream(bytes));
     }
     catch (Exception e)
     {
       log.info("Could not parse metadata!", e);
-      return Optional.empty();
+      throw e;
+    }
+
+    if (metadata.isSigned())
+    {
+      try
+      {
+        CryptoAlgUtil.verifyDigestAndSignatureAlgorithm(metadata.getSignature());
+      }
+      catch (Exception e)
+      {
+        log.info("Invalid digest hash algorithm or signature algorithm used for the signature of the metadata", e);
+        throw e;
+      }
+    }
+
+    X509Certificate signatureVerificationCertificate = null;
+    if (metadataVerificationCertificateName.isPresent())
+    {
+      try
+      {
+        signatureVerificationCertificate = configurationService.getSamlCertificate(metadataVerificationCertificateName.get());
+      }
+      catch (ConfigurationException e)
+      {
+        log.warn("Cannot get or use the metadata verification certificate", e);
+      }
+    }
+
+    try
+    {
+      return EidasSaml.parseMetaDataNode(new ByteArrayInputStream(bytes), signatureVerificationCertificate, true);
+    }
+    catch (Exception e)
+    {
+      log.info("Could not parse metadata!", e);
+      throw e;
     }
   }
 
@@ -139,7 +223,7 @@ public class MetadataController
 
   /**
    * Remove a metadata file from config (first step, will ask for confirmation).
-   * 
+   *
    * @param model
    * @param entityIDUrlEncoded URL encoded entityID of the metadata to be deleted
    * @param redirectAttributes
@@ -164,7 +248,7 @@ public class MetadataController
 
   /**
    * Remove a metadata file from config (second step, call when confirmation has been given).
-   * 
+   *
    * @param entityIDUrlEncoded URL encoded entityID of the metadata to be deleted
    * @param redirectAttributes
    * @return redirect
@@ -195,7 +279,7 @@ public class MetadataController
 
   /**
    * Download a metadata file.
-   * 
+   *
    * @param entityIDUrlEncoded URL encoded entityID of the metadata to be downloaded
    * @param redirectAttributes
    * @return
@@ -220,7 +304,7 @@ public class MetadataController
 
   /**
    * Download the metadata of the middleware.
-   * 
+   *
    * @param redirectAttributes
    * @param referer
    * @return
@@ -254,7 +338,7 @@ public class MetadataController
 
   /**
    * Upload metadata file.
-   * 
+   *
    * @param metadataFile
    * @param redirectAttributes
    * @return
@@ -271,30 +355,27 @@ public class MetadataController
     try
     {
       // Check if metadata can be parsed!
-      final Optional<EidasMetadataNode> optionalEidasMetadataNode = parseToEidasMetadata(metadataFile.getBytes());
-      if (optionalEidasMetadataNode.isEmpty())
+      final EidasMetadataNode eidasMetadataNode = parseToEidasMetadata(metadataFile.getBytes());
+      final String entityId = eidasMetadataNode.getEntityId();
+      if (getMetadataFileAsBytes(entityId).isPresent())
       {
         redirectAttributes.addFlashAttribute(REDIRECT_ATTRIBUTE_ERROR,
-                                             "Metadata file is not valid and could not be parsed!");
+                                             "There is a metadata file already uploaded with the entityID " + entityId
+                                                                       + " !");
         return REDIRECT_TO_INDEX;
       }
-      else
-      {
-        final String entityId = optionalEidasMetadataNode.get().getEntityId();
-        if (getMetadataFileAsBytes(entityId).isPresent())
-        {
-          redirectAttributes.addFlashAttribute(REDIRECT_ATTRIBUTE_ERROR,
-                                               "There is a metadata file already uploaded with the entityID " + entityId
-                                                                         + " !");
-          return REDIRECT_TO_INDEX;
-        }
-        eidasConfiguration.getConnectorMetadata().add(new ConnectorMetadataType(metadataFile.getBytes(), entityId));
-      }
+      eidasConfiguration.getConnectorMetadata().add(new ConnectorMetadataType(metadataFile.getBytes(), entityId));
     }
     catch (IOException e)
     {
       log.warn("Could not save metadata file", e);
       redirectAttributes.addFlashAttribute("msg", "Could not upload file!");
+      return REDIRECT_TO_INDEX;
+    }
+    catch (Exception e)
+    {
+      log.warn("Could not save metadata file", e);
+      redirectAttributes.addFlashAttribute("msg", e.getMessage());
       return REDIRECT_TO_INDEX;
     }
 
@@ -307,7 +388,7 @@ public class MetadataController
 
   /**
    * Upload metadata verification certificate.
-   * 
+   *
    * @param metadataVerificationCertificateModel
    * @param redirectAttributes
    * @return
@@ -316,6 +397,20 @@ public class MetadataController
   public String uploadMetadataVerificationCertificate(@Valid @ModelAttribute MetadataVerificationCertificateModel metadataVerificationCertificateModel,
                                                       RedirectAttributes redirectAttributes)
   {
+    // Verify the key size of the verification certificate
+    try
+    {
+      configurationService.getSamlCertificate(metadataVerificationCertificateModel.getMetadataSignatureVerificationCertificateName());
+    }
+    catch (ConfigurationException e)
+    {
+      // Exception message already logged in Utils.ensureKeySize
+      redirectAttributes.addFlashAttribute(REDIRECT_ATTRIBUTE_ERROR,
+                                           "Cannot save the selected metadata verification certificate: "
+                                                    + e.getMessage());
+      return REDIRECT_TO_INDEX;
+    }
+
     final EidasMiddlewareConfig eidasMiddlewareConfig = configurationService.getConfiguration()
                                                                             .orElseGet(EidasMiddlewareConfig::new);
 

@@ -19,7 +19,7 @@ import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
-import se.litsec.eidas.opensaml.ext.attributes.TransliterationStringType;
+import se.swedenconnect.opensaml.eidas.ext.attributes.TransliterationStringType;
 
 
 @Getter

@@ -10,12 +10,12 @@
 
 package de.governikus.eumw.eidasstarterkit;
 
-import org.apache.commons.lang.StringEscapeUtils;
-import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.StringEscapeUtils;
+import org.apache.commons.lang3.StringUtils;
 
 import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
-import se.litsec.eidas.opensaml.ext.SPTypeEnumeration;
+import se.swedenconnect.opensaml.eidas.ext.SPTypeEnumeration;
 
 
 /**
@@ -43,7 +43,7 @@ public final class SPTypeHelper
     else
     {
       throw new IllegalArgumentException("Received Invalid SPType: "
-                                         + StringEscapeUtils.escapeHtml(spTypeString));
+                                         + StringEscapeUtils.escapeHtml4(spTypeString));
     }
   }
 }

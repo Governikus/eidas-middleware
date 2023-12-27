@@ -57,7 +57,7 @@ import de.governikus.eumw.utils.key.KeyStoreSupporter;
 import lombok.AllArgsConstructor;
 import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
-import se.litsec.eidas.opensaml.ext.SPTypeEnumeration;
+import se.swedenconnect.opensaml.eidas.ext.SPTypeEnumeration;
 
 
 @Slf4j

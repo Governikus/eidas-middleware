@@ -20,7 +20,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 
-import javax.xml.bind.DatatypeConverter;
+import jakarta.xml.bind.DatatypeConverter;
 
 import org.apache.commons.lang3.StringUtils;
 import org.opensaml.core.config.InitializationException;
@@ -35,6 +35,7 @@ import org.w3c.dom.Element;
 import org.xml.sax.SAXException;
 
 import de.governikus.eumw.eidascommon.ContextPaths;
+import de.governikus.eumw.eidascommon.CryptoAlgUtil;
 import de.governikus.eumw.eidascommon.ErrorCode;
 import de.governikus.eumw.eidascommon.ErrorCodeException;
 import de.governikus.eumw.eidascommon.ErrorCodeWithResponseException;
@@ -54,7 +55,7 @@ import lombok.extern.slf4j.Slf4j;
 import net.shibboleth.utilities.java.support.component.ComponentInitializationException;
 import net.shibboleth.utilities.java.support.xml.BasicParserPool;
 import net.shibboleth.utilities.java.support.xml.XMLParserException;
-import se.litsec.eidas.opensaml.ext.SPTypeEnumeration;
+import se.swedenconnect.opensaml.eidas.ext.SPTypeEnumeration;
 
 
 /**
@@ -89,9 +90,13 @@ public class RequestHandler
       log.trace("Incoming SAML request: {}", new String(samlRequestBytes, StandardCharsets.UTF_8));
 
       // Pre-validate the request
-      RequestingServiceProvider serviceProvider = preValidateSAMLRequest(samlRequestBytes);
+      AuthnRequest authnRequest = preValidateSAMLRequest(samlRequestBytes);
+
+      // Verify the signature algorithm is allowed
+      CryptoAlgUtil.verifySignatureAlgorithm(sigAlg);
 
       // Verify the signature of the SAML request
+      RequestingServiceProvider serviceProvider = getRequestingServiceProvider(authnRequest);
       HttpRedirectUtils.verifyQueryString(samlRequest,
                                           relayState,
                                           sigAlg,
@@ -137,10 +142,14 @@ public class RequestHandler
       log.trace("Incoming SAML request: {}", new String(samlRequest, StandardCharsets.UTF_8));
 
       // Pre-validate the request
-      RequestingServiceProvider serviceProvider = preValidateSAMLRequest(samlRequest);
+      AuthnRequest authnRequest = preValidateSAMLRequest(samlRequest);
+
+      // Verify the hash and signature algorithm are allowed
+      CryptoAlgUtil.verifyDigestAndSignatureAlgorithm(authnRequest.getSignature());
 
       // Verify the signature and parse the SAML request
       List<X509Certificate> authors = new ArrayList<>();
+      RequestingServiceProvider serviceProvider = getRequestingServiceProvider(authnRequest);
       authors.add(serviceProvider.getSignatureCert());
       EidasRequest eidasReq = EidasSaml.parseRequest(new ByteArrayInputStream(samlRequest), authors);
 
@@ -216,12 +225,11 @@ public class RequestHandler
    * </ul>
    * <b>No signature validation is performed.</b>
    *
-   * @return The service provider that sent this SAML request.
+   * @return The parsed SAML request.
    * @throws Exception when any of these checks fail
    */
-  private RequestingServiceProvider preValidateSAMLRequest(byte[] samlRequest)
-    throws IOException, SAXException, ErrorCodeException, UnmarshallingException, InitializationException,
-    XMLParserException, ComponentInitializationException
+  private AuthnRequest preValidateSAMLRequest(byte[] samlRequest) throws IOException, SAXException, ErrorCodeException,
+    UnmarshallingException, InitializationException, XMLParserException, ComponentInitializationException
   {
     try (InputStream is = new ByteArrayInputStream(samlRequest))
     {
@@ -247,15 +255,20 @@ public class RequestHandler
         throw new ErrorCodeException(ErrorCode.DUPLICATE_REQUEST_ID, authnRequestID);
       }
 
-      // Check the AuthnRequest signature
-      String issuer = Objects.requireNonNull(authnRequest.getIssuer().getDOM()).getTextContent();
-      RequestingServiceProvider requestingServiceProvider = configurationService.getProviderByEntityID(issuer);
-      if (requestingServiceProvider == null)
-      {
-        throw new ErrorCodeException(ErrorCode.UNKNOWN_PROVIDER, issuer);
-      }
-      return requestingServiceProvider;
+      return authnRequest;
+
     }
+  }
+
+  private RequestingServiceProvider getRequestingServiceProvider(AuthnRequest authnRequest) throws ErrorCodeException
+  {
+    String issuer = Objects.requireNonNull(authnRequest.getIssuer().getDOM()).getTextContent();
+    RequestingServiceProvider requestingServiceProvider = configurationService.getProviderByEntityID(issuer);
+    if (requestingServiceProvider == null)
+    {
+      throw new ErrorCodeException(ErrorCode.UNKNOWN_PROVIDER, issuer);
+    }
+    return requestingServiceProvider;
   }
 
   private void postValidateAndSaveSAMLRequest(String relayState,

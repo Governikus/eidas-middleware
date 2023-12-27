@@ -9,9 +9,6 @@
 
 package de.governikus.eumw.poseidas.server.pki;
 
-import static de.governikus.eumw.poseidas.config.model.ServiceProviderDetails.getNumberOfCHR;
-import static de.governikus.eumw.poseidas.server.pki.CVCRequestHandler.getHolderReferenceStringOfPendingRequest;
-
 import java.io.ByteArrayInputStream;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
@@ -35,7 +32,7 @@ import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.locks.ReentrantLock;
 import java.util.stream.Collectors;
 
-import javax.xml.bind.DatatypeConverter;
+import jakarta.xml.bind.DatatypeConverter;
 
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Repository;
@@ -47,6 +44,7 @@ import de.governikus.eumw.config.EidasMiddlewareConfig;
 import de.governikus.eumw.poseidas.cardbase.ArrayUtil;
 import de.governikus.eumw.poseidas.cardbase.AssertUtil;
 import de.governikus.eumw.poseidas.cardbase.asn1.npa.ECCVCertificate;
+import de.governikus.eumw.poseidas.config.model.ServiceProviderDetails;
 import de.governikus.eumw.poseidas.eidmodel.TerminalData;
 import de.governikus.eumw.poseidas.server.idprovider.config.ConfigurationService;
 import de.governikus.eumw.poseidas.server.monitoring.SNMPConstants;
@@ -634,8 +632,8 @@ public class TerminalPermissionAOBean implements TerminalPermissionAO
     }
 
     tp.setPendingRequest(pending);
-    Integer usedSequenceNumber = getNumberOfCHR(getHolderReferenceStringOfPendingRequest(pending));
-    if (tp.getNextCvcSequenceNumber() == null && usedSequenceNumber != null)
+    Integer usedSequenceNumber = ServiceProviderDetails.getNumberOfCHR(CVCRequestHandler.getHolderReferenceStringOfPendingRequest(pending));
+    if (usedSequenceNumber != null)
     {
       tp.setNextCvcSequenceNumber(usedSequenceNumber);
     }

@@ -9,9 +9,6 @@
 
 package de.governikus.eumw.poseidas.config.model;
 
-import static de.governikus.eumw.poseidas.cardserver.certrequest.CvcRequestGenerator.increaseCHR;
-import static de.governikus.eumw.poseidas.server.pki.CVCRequestHandler.getHolderReferenceStringOfPendingRequest;
-
 import java.io.IOException;
 import java.text.SimpleDateFormat;
 import java.time.Instant;
@@ -23,7 +20,9 @@ import java.util.Map;
 
 import de.governikus.eumw.config.ServiceProviderType;
 import de.governikus.eumw.poseidas.cardbase.asn1.npa.ECCVCertificate;
+import de.governikus.eumw.poseidas.cardserver.certrequest.CvcRequestGenerator;
 import de.governikus.eumw.poseidas.gov2server.constants.admin.AdminPoseidasConstants;
+import de.governikus.eumw.poseidas.server.pki.CVCRequestHandler;
 import de.governikus.eumw.poseidas.server.pki.PendingCertificateRequest;
 import de.governikus.eumw.poseidas.server.pki.TerminalPermission;
 import de.governikus.eumw.poseidas.server.pki.TerminalPermissionAOBean;
@@ -271,7 +270,7 @@ public class ServiceProviderDetails
     PendingCertificateRequest pendingRequest = terminalPermission.getPendingRequest();
     if (pendingRequest != null)
     {
-      String currentHolderReference = getHolderReferenceStringOfPendingRequest(pendingRequest);
+      String currentHolderReference = CVCRequestHandler.getHolderReferenceStringOfPendingRequest(pendingRequest);
       if (currentHolderReference != null)
       {
         // If pending may be reused, suggest sequence number of pending request
@@ -292,7 +291,7 @@ public class ServiceProviderDetails
                     getCVCRefID());
         }
         // If pending may not be reused, suggest increased sequence number
-        return getNumberOfCHR(increaseCHR(currentHolderReference));
+        return getNumberOfCHR(CvcRequestGenerator.increaseCHR(currentHolderReference));
       }
     }
 
@@ -316,7 +315,7 @@ public class ServiceProviderDetails
     }
 
     // If no last sequence or pending request but cvc is available, suggest increased cvc sequence number
-    return getNumberOfCHR(increaseCHR(new ECCVCertificate(terminalPermission.getCvc()).getHolderReferenceString()));
+    return getNumberOfCHR(CvcRequestGenerator.increaseCHR(new ECCVCertificate(terminalPermission.getCvc()).getHolderReferenceString()));
   }
 
   public static Integer getNumberOfCHR(String currentHolderReference)

@@ -10,7 +10,7 @@
 
 package de.governikus.eumw.eidasmiddleware.controller;
 
-import javax.servlet.http.HttpServlet;
+import jakarta.servlet.http.HttpServlet;
 
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -49,7 +49,7 @@ public class ResponseSender
   }
 
   /**
-   * This endpoint is called after the AusweisApp2 has finished the communication with the eID and redirects
+   * This endpoint is called after the AusweisApp has finished the communication with the eID and redirects
    * the user's browser to this endpoint
    */
   @GetMapping

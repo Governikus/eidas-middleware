@@ -52,7 +52,10 @@ public class ServiceProviderStatusService
 
   public ServiceProviderStatus getServiceProviderStatus(ServiceProviderType serviceProviderType)
   {
-    ServiceProviderStatus.ServiceProviderStatusBuilder builder = ServiceProviderStatus.builder();
+    ServiceProviderStatus.ServiceProviderStatusBuilder builder = ServiceProviderStatus.builder()
+                                                                                      .serviceProviderName(serviceProviderType.getName())
+                                                                                      .enabled(serviceProviderType.isEnabled());
+
     TerminalPermission terminalPermission = facade.getTerminalPermission(serviceProviderType.getCVCRefID());
     if (terminalPermission == null)
     {
@@ -62,12 +65,10 @@ public class ServiceProviderStatusService
 
     CvcTlsCheck.CvcCheckResults cvcCheckResults = cvcTlsCheck.checkCvcProvider(serviceProviderType.getName());
 
-    builder.serviceProviderName(serviceProviderType.getName());
     boolean cvcPresent = cvcCheckResults.isCvcPresent();
     if (cvcPresent)
     {
-      builder.enabled(serviceProviderType.isEnabled())
-             .cvcPresent(true)
+      builder.cvcPresent(true)
              .cvcValidUntil(Optional.ofNullable(dateToLocalDate(terminalPermission.getNotOnOrAfter()))
                                     .map(d -> d.minusDays(1))
                                     .orElse(null))
@@ -87,25 +88,25 @@ public class ServiceProviderStatusService
       }
     }
     builder.blackListPresent(terminalPermission.getBlackListVersion() != null)
-             .blackListLastRetrieval(dateToLocalDateTime(terminalPermission.getBlackListStoreDate()))
-             .blackListDVCAAvailability(permissionDataHandling.pingRIService(serviceProviderType.getName()))
-             .masterListPresent(terminalPermission.getMasterListStoreDate() != null)
-             .masterListLastRetrieval(dateToLocalDateTime(terminalPermission.getMasterListStoreDate()))
-             .masterListDVCAAvailability(permissionDataHandling.pingPAService(serviceProviderType.getName()))
-             .defectListPresent(terminalPermission.getDefectListStoreDate() != null)
-             .defectListLastRetrieval(dateToLocalDateTime(terminalPermission.getDefectListStoreDate()))
-             .defectListDVCAAvailability(permissionDataHandling.pingPAService(serviceProviderType.getName()));
+           .blackListLastRetrieval(dateToLocalDateTime(terminalPermission.getBlackListStoreDate()))
+           .blackListDVCAAvailability(permissionDataHandling.pingRIService(serviceProviderType.getName()))
+           .masterListPresent(terminalPermission.getMasterListStoreDate() != null)
+           .masterListLastRetrieval(dateToLocalDateTime(terminalPermission.getMasterListStoreDate()))
+           .masterListDVCAAvailability(permissionDataHandling.pingPAService(serviceProviderType.getName()))
+           .defectListPresent(terminalPermission.getDefectListStoreDate() != null)
+           .defectListLastRetrieval(dateToLocalDateTime(terminalPermission.getDefectListStoreDate()))
+           .defectListDVCAAvailability(permissionDataHandling.pingPAService(serviceProviderType.getName()));
 
-      X509Certificate pendingRSC = rscService.getRequestSignerCertificate(serviceProviderType.getName(), false);
-      if (pendingRSC != null)
-      {
-        builder.rscPendingPresent(true).rscAnyPresent(true);
-      }
-      X509Certificate currentRSC = rscService.getRequestSignerCertificate(serviceProviderType.getName(), true);
-      if (currentRSC != null)
-      {
-        builder.rscCurrentValidUntil(dateToLocalDate(currentRSC.getNotAfter())).rscAnyPresent(true);
-      }
+    X509Certificate pendingRSC = rscService.getRequestSignerCertificate(serviceProviderType.getName(), false);
+    if (pendingRSC != null)
+    {
+      builder.rscPendingPresent(true).rscAnyPresent(true);
+    }
+    X509Certificate currentRSC = rscService.getRequestSignerCertificate(serviceProviderType.getName(), true);
+    if (currentRSC != null)
+    {
+      builder.rscCurrentValidUntil(dateToLocalDate(currentRSC.getNotAfter())).rscAnyPresent(true);
+    }
 
     return builder.build();
   }

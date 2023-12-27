@@ -99,7 +99,7 @@ class ImportExportConfigurationControllerTest extends WebAdminTestBase
     HtmlPage configurationPage = getConfigurationPage();
     HtmlForm uploadForm = configurationPage.getForms().get(0);
     HtmlFileInput inputField = uploadForm.getInputByName("configurationFile");
-    String pathToConfigFile = Objects.requireNonNull(ImportExportConfigurationControllerTest.class.getResource("/configuration/demo_epa.xml"))
+    String pathToConfigFile = Objects.requireNonNull(ImportExportConfigurationControllerTest.class.getResource("/configuration/metadata-9443.xml"))
                                      .toExternalForm();
     inputField.setValueAttribute(pathToConfigFile);
     HtmlPage savedConfig = configurationPage.getHtmlElementById("save").click();

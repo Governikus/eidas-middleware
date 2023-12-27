@@ -1,11 +1,10 @@
 /*
- * Copyright (c) 2020 Governikus KG. Licensed under the EUPL, Version 1.2 or as soon they will be approved by
- * the European Commission - subsequent versions of the EUPL (the "Licence"); You may not use this work except
- * in compliance with the Licence. You may obtain a copy of the Licence at:
- * http://joinup.ec.europa.eu/software/page/eupl Unless required by applicable law or agreed to in writing,
- * software distributed under the Licence is distributed on an "AS IS" basis, WITHOUT WARRANTIES OR CONDITIONS
- * OF ANY KIND, either express or implied. See the Licence for the specific language governing permissions and
- * limitations under the Licence.
+ * Copyright (c) 2020 Governikus KG. Licensed under the EUPL, Version 1.2 or as soon they will be approved by the
+ * European Commission - subsequent versions of the EUPL (the "Licence"); You may not use this work except in compliance
+ * with the Licence. You may obtain a copy of the Licence at: http://joinup.ec.europa.eu/software/page/eupl Unless
+ * required by applicable law or agreed to in writing, software distributed under the Licence is distributed on an
+ * "AS IS" basis, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the Licence for the
+ * specific language governing permissions and limitations under the Licence.
  */
 
 package de.governikus.eumw.eidasstarterkit;
@@ -13,6 +12,7 @@ package de.governikus.eumw.eidasstarterkit;
 import java.security.KeyException;
 import java.security.NoSuchAlgorithmException;
 import java.security.cert.X509Certificate;
+import java.util.Collection;
 
 import org.apache.xml.security.algorithms.MessageDigestAlgorithm;
 import org.opensaml.core.config.ConfigurationService;
@@ -22,15 +22,19 @@ import org.opensaml.security.credential.Credential;
 import org.opensaml.security.credential.CredentialSupport;
 import org.opensaml.security.x509.BasicX509Credential;
 import org.opensaml.xmlsec.EncryptionConfiguration;
+import org.opensaml.xmlsec.SecurityConfigurationSupport;
+import org.opensaml.xmlsec.agreement.KeyAgreementException;
+import org.opensaml.xmlsec.agreement.KeyAgreementParameter;
+import org.opensaml.xmlsec.agreement.KeyAgreementParameters;
+import org.opensaml.xmlsec.agreement.KeyAgreementProcessor;
+import org.opensaml.xmlsec.agreement.KeyAgreementSupport;
 import org.opensaml.xmlsec.algorithm.AlgorithmSupport;
 import org.opensaml.xmlsec.encryption.support.DataEncryptionParameters;
 import org.opensaml.xmlsec.encryption.support.EncryptionConstants;
 import org.opensaml.xmlsec.encryption.support.KeyEncryptionParameters;
 import org.opensaml.xmlsec.encryption.support.RSAOAEPParameters;
 import org.opensaml.xmlsec.keyinfo.KeyInfoGeneratorFactory;
-
-import se.swedenconnect.opensaml.xmlsec.config.ExtendedDefaultSecurityConfigurationBootstrap;
-import se.swedenconnect.opensaml.xmlsec.encryption.support.ECDHKeyAgreementParameters;
+import org.opensaml.xmlsec.keyinfo.impl.KeyAgreementKeyInfoGeneratorFactory;
 
 
 public class EidasEncrypter
@@ -40,6 +44,19 @@ public class EidasEncrypter
    * Completely configured encryption handler, null if encryption is not set.
    */
   Encrypter encrypter;
+
+  /**
+   * Cipher-Algorithm is set to http://www.w3.org/2009/xmlenc11#aes256-gcm
+   *
+   * @param includeCert
+   * @param cert
+   * @throws NoSuchAlgorithmException
+   * @throws KeyException
+   */
+  public EidasEncrypter(boolean includeCert, X509Certificate cert) throws NoSuchAlgorithmException, KeyException
+  {
+    this(includeCert, cert, EncryptionConstants.ALGO_ID_BLOCKCIPHER_AES256_GCM);
+  }
 
   /**
    * Create a XMLCipher Object.
@@ -62,26 +79,19 @@ public class EidasEncrypter
 
     if ("EC".equals(cert.getPublicKey().getAlgorithm()))
     {
-      ECDHKeyAgreementParameters ecdhKeyAgreementParameters = new ECDHKeyAgreementParameters();
-      ecdhKeyAgreementParameters.setPeerCredential(receiverCredential);
-      ecdhKeyAgreementParameters.setKeyInfoGenerator(ExtendedDefaultSecurityConfigurationBootstrap.buildDefaultKeyAgreementKeyInfoGeneratorFactory()
-                                                                                                  .newInstance());
-      encrypter = new Encrypter(encParams, ecdhKeyAgreementParameters);
+      encrypter = new Encrypter(encParams, getKeyEncryptionParameters(cert, true));
     }
-
     else
     {
-
       /**
-       * key encryption parameters used to set up the {@link #encrypter}, null if encryption is not set. Note
-       * that the encrypter will ignore these values given to it in the constructor when it encrypts an
-       * XMLObject. In that case, you have to give these values again to the encrypt method.
+       * key encryption parameters used to set up the {@link #encrypter}, null if encryption is not set. Note that the
+       * encrypter will ignore these values given to it in the constructor when it encrypts an XMLObject. In that case,
+       * you have to give these values again to the encrypt method.
        */
       KeyEncryptionParameters kek = new KeyEncryptionParameters();
       kek.setAlgorithm(EncryptionConstants.ALGO_ID_KEYTRANSPORT_RSAOAEP);
       kek.setEncryptionCredential(receiverCredential);
-      kek.setRSAOAEPParameters(new RSAOAEPParameters(MessageDigestAlgorithm.ALGO_ID_DIGEST_SHA256, null,
-                                                     null));
+      kek.setRSAOAEPParameters(new RSAOAEPParameters(MessageDigestAlgorithm.ALGO_ID_DIGEST_SHA256, null, null));
       encrypter = new Encrypter(encParams, kek);
       if (includeCert)
       {
@@ -95,17 +105,79 @@ public class EidasEncrypter
     encrypter.setKeyPlacement(KeyPlacement.INLINE);
   }
 
-  /**
-   * Cipher-Algorithm is set to http://www.w3.org/2009/xmlenc11#aes256-gcm
-   *
-   * @param includeCert
-   * @param cert
-   * @throws NoSuchAlgorithmException
-   * @throws KeyException
-   */
-  public EidasEncrypter(boolean includeCert, X509Certificate cert)
+  private static KeyEncryptionParameters getKeyEncryptionParameters(X509Certificate encryptionCertificate,
+                                                                    boolean includeCert)
     throws NoSuchAlgorithmException, KeyException
   {
-    this(includeCert, cert, EncryptionConstants.ALGO_ID_BLOCKCIPHER_AES256_GCM);
+    KeyEncryptionParameters kekParameters = new KeyEncryptionParameters();
+    String algorithm = encryptionCertificate.getPublicKey().getAlgorithm();
+    return switch (algorithm)
+    {
+      case "EC" ->
+      {
+        prepareForEC(encryptionCertificate, kekParameters);
+        yield kekParameters;
+      }
+      case "RSA" ->
+      {
+        prepareForRsa(encryptionCertificate, includeCert, kekParameters);
+        yield kekParameters;
+      }
+      default -> throw new NoSuchAlgorithmException("Not supported or unknown standard algorithm name: "
+                                                    + encryptionCertificate.getPublicKey().getAlgorithm());
+    };
+
+  }
+
+  private static void prepareForRsa(X509Certificate encryptionCertificate,
+                                    boolean includeCert,
+                                    KeyEncryptionParameters kekParameters)
+  {
+    kekParameters.setAlgorithm(EncryptionConstants.ALGO_ID_KEYTRANSPORT_RSAOAEP);
+    kekParameters.setEncryptionCredential(CredentialSupport.getSimpleCredential(encryptionCertificate, null));
+    kekParameters.setRSAOAEPParameters(new RSAOAEPParameters(EncryptionConstants.ALGO_ID_DIGEST_SHA256, null, null));
+    if (includeCert)
+    {
+      KeyInfoGeneratorFactory kigf = ConfigurationService.get(EncryptionConfiguration.class)
+                                                         .getKeyTransportKeyInfoGeneratorManager()
+                                                         .getDefaultManager()
+                                                         .getFactory(new BasicX509Credential(encryptionCertificate));
+      kekParameters.setKeyInfoGenerator(kigf.newInstance());
+    }
+  }
+
+  private static void prepareForEC(X509Certificate encryptionCertificate, KeyEncryptionParameters kekParameters)
+    throws KeyException
+  {
+    kekParameters.setAlgorithm(EncryptionConstants.ALGO_ID_KEYWRAP_AES256);
+    Credential keyAgreementCredential = getKeyAgreementCredential(CredentialSupport.getSimpleCredential(encryptionCertificate,
+                                                                                                        null));
+    kekParameters.setEncryptionCredential(keyAgreementCredential);
+    KeyAgreementKeyInfoGeneratorFactory newKeyInfoGenerator = new KeyAgreementKeyInfoGeneratorFactory();
+    kekParameters.setKeyInfoGenerator(newKeyInfoGenerator.newInstance());
+  }
+
+  private static Credential getKeyAgreementCredential(Credential credential) throws KeyException
+  {
+    try
+    {
+      Collection<KeyAgreementParameter> keyAgreementParameterCollection = SecurityConfigurationSupport.getGlobalEncryptionConfiguration()
+                                                                                                      .getKeyAgreementConfigurations()
+                                                                                                      .get("EC")
+                                                                                                      .getParameters();
+      if (keyAgreementParameterCollection == null)
+      {
+        throw new KeyException("Key agreement parameters are null");
+      }
+
+      KeyAgreementParameters keyAgreementParameters = new KeyAgreementParameters(keyAgreementParameterCollection);
+      KeyAgreementProcessor keyAgreementProcessor = KeyAgreementSupport.getProcessor("http://www.w3.org/2009/xmlenc11#ECDH-ES");
+      return keyAgreementProcessor.execute(credential, EncryptionConstants.ALGO_ID_KEYWRAP_AES256, keyAgreementParameters);
+
+    }
+    catch (KeyAgreementException | KeyException var4)
+    {
+      throw new KeyException("Could not generate key agreement credentials", var4);
+    }
   }
 }

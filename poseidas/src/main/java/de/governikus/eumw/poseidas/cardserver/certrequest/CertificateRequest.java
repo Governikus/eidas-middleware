@@ -1,11 +1,10 @@
 /*
- * Copyright (c) 2020 Governikus KG. Licensed under the EUPL, Version 1.2 or as soon they will be approved by
- * the European Commission - subsequent versions of the EUPL (the "Licence"); You may not use this work except
- * in compliance with the Licence. You may obtain a copy of the Licence at:
- * http://joinup.ec.europa.eu/software/page/eupl Unless required by applicable law or agreed to in writing,
- * software distributed under the Licence is distributed on an "AS IS" basis, WITHOUT WARRANTIES OR CONDITIONS
- * OF ANY KIND, either express or implied. See the Licence for the specific language governing permissions and
- * limitations under the Licence.
+ * Copyright (c) 2020 Governikus KG. Licensed under the EUPL, Version 1.2 or as soon they will be approved by the
+ * European Commission - subsequent versions of the EUPL (the "Licence"); You may not use this work except in compliance
+ * with the Licence. You may obtain a copy of the Licence at: http://joinup.ec.europa.eu/software/page/eupl Unless
+ * required by applicable law or agreed to in writing, software distributed under the Licence is distributed on an
+ * "AS IS" basis, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the Licence for the
+ * specific language governing permissions and limitations under the Licence.
  */
 
 package de.governikus.eumw.poseidas.cardserver.certrequest;
@@ -22,7 +21,6 @@ import java.security.SignatureException;
 import java.security.UnrecoverableKeyException;
 import java.security.cert.CertificateException;
 import java.security.spec.InvalidKeySpecException;
-import java.util.Arrays;
 
 import de.governikus.eumw.poseidas.cardbase.AssertUtil;
 import de.governikus.eumw.poseidas.cardbase.ByteUtil;
@@ -58,7 +56,7 @@ public class CertificateRequest extends AbstractASN1Encoder
    * @see CertificateRequestPath#getTag()
    * @see CertificateRequestPath#CV_CERTIFICATE
    */
-  public CertificateRequest(byte[] valueBytes) throws IOException
+  CertificateRequest(byte[] valueBytes) throws IOException
   {
     super(CertificateRequestPath.AUTHENTICATION.getTag().toByteArray(), valueBytes);
     check();
@@ -71,30 +69,16 @@ public class CertificateRequest extends AbstractASN1Encoder
    * @throws IOException if reading of stream fails
    * @see ASN1#ASN1(InputStream, boolean)
    */
-  CertificateRequest(InputStream stream) throws IOException
+  public CertificateRequest(InputStream stream) throws IOException
   {
     super(stream);
     check();
   }
 
-  /**
-   * Constructor.
-   *
-   * @param stream stream with ASN.1 bytes
-   * @param close <code>true</code>, if stream is to be closed after reading
-   * @throws IOException if reading of stream fails
-   * @see ASN1#ASN1(InputStream, boolean)
-   */
-  public CertificateRequest(InputStream stream, boolean close) throws IOException
-  {
-    super(stream, close);
-    check();
-  }
-
   private void check()
   {
-    if (!Arrays.equals(CertificateRequestPath.AUTHENTICATION.getTag().toByteArray(), getDTagBytes())
-        && !Arrays.equals(CertificateRequestPath.CV_CERTIFICATE.getTag().toByteArray(), getDTagBytes()))
+    if (!CertificateRequestPath.AUTHENTICATION.getTag().equals(getDTag())
+        && !CertificateRequestPath.CV_CERTIFICATE.getTag().equals(getDTag()))
     {
       throw new IllegalArgumentException("ASN.1 does not represent a certificate request");
     }
@@ -102,13 +86,13 @@ public class CertificateRequest extends AbstractASN1Encoder
 
   /** {@inheritDoc} */
   @Override
-  public ASN1 getChildElementByPath(ASN1Path part) throws IOException
+  public ASN1 getChildElementByPath(ASN1Path path) throws IOException
   {
-    if (!CertificateRequestPath.class.isInstance(part))
+    if (!(path instanceof CertificateRequestPath))
     {
       throw new IllegalArgumentException("only CertificateRequestPath permitted");
     }
-    return super.getChildElementByPath(part);
+    return super.getChildElementByPath(path);
   }
 
   /**
@@ -122,15 +106,6 @@ public class CertificateRequest extends AbstractASN1Encoder
   ASN1 getRequestPart(CertificateRequestPath path) throws IOException
   {
     return super.getChildElementByPath(path);
-  }
-
-  /** {@inheritDoc} */
-  @Override
-  public ASN1 decode(byte[] bytes) throws IOException
-  {
-    CertificateRequest result = new CertificateRequest(bytes);
-    super.decode(result);
-    return this;
   }
 
   /**
@@ -153,24 +128,21 @@ public class CertificateRequest extends AbstractASN1Encoder
    * @throws UnrecoverableKeyException
    */
   void signCVCBody(PublicKey publicKey, String alias) throws IOException, UnrecoverableKeyException,
-    InvalidKeyException, NoSuchAlgorithmException, NoSuchProviderException, KeyStoreException,
-    CertificateException, SignatureException, InvalidKeySpecException, HSMException
+    InvalidKeyException, NoSuchAlgorithmException, NoSuchProviderException, KeyStoreException, CertificateException,
+    SignatureException, InvalidKeySpecException, HSMException
   {
     AssertUtil.notNull(publicKey, "public key");
     AssertUtil.notNullOrEmpty(alias, "alias");
-    if (!OIDPublicKey.class.isInstance(publicKey))
+    if (!(publicKey instanceof OIDPublicKey))
     {
       throw new IllegalArgumentException("only " + OIDPublicKey.class + " permitted");
     }
 
     this.setCVCPublicKey(publicKey);
 
-    byte[] body = ByteUtil.copy(this.getChildElementByPath(CertificateRequestPath.CV_CERTIFICATE_BODY)
-                                    .getEncoded());
+    byte[] body = ByteUtil.copy(this.getChildElementByPath(CertificateRequestPath.CV_CERTIFICATE_BODY).getEncoded());
 
-    HSMService hsm = ServiceRegistry.Util.getServiceRegistry()
-                                         .getService(HSMServiceFactory.class)
-                                         .getHSMService();
+    HSMService hsm = ServiceRegistry.Util.getServiceRegistry().getService(HSMServiceFactory.class).getHSMService();
     byte[] signed = hsm.sign(alias, ((OIDPublicKey)publicKey).getOID(), body);
     this.setCVCSignature(signed);
   }
@@ -186,7 +158,7 @@ public class CertificateRequest extends AbstractASN1Encoder
   private void setCVCPublicKey(PublicKey publicKey) throws IOException
   {
     AssertUtil.notNull(publicKey, "public key");
-    if (!OIDPublicKey.class.isInstance(publicKey))
+    if (!(publicKey instanceof OIDPublicKey))
     {
       throw new IllegalArgumentException("only " + OIDPublicKey.class + " permitted");
     }
@@ -281,9 +253,17 @@ public class CertificateRequest extends AbstractASN1Encoder
 
   public ECPublicKey getPublicKey() throws IOException
   {
+    CertificateRequest cr = this;
+    // if we have a CR without outer signature, we must create a full CR structure so that the getRequestPart method can
+    // work correctly
+    if (CertificateRequestPath.CV_CERTIFICATE.getTag().equals(getDTag()))
+    {
+      cr = new CertificateRequest(this.getEncoded());
+    }
+
     try
     {
-      return new ECPublicKey(this.getRequestPart(CertificateRequestPath.PUBLIC_KEY).getEncoded());
+      return new ECPublicKey(cr.getRequestPart(CertificateRequestPath.PUBLIC_KEY).getEncoded());
     }
     catch (NullPointerException e)
     {
@@ -293,23 +273,17 @@ public class CertificateRequest extends AbstractASN1Encoder
 
   public String getHolderReferenceString() throws IOException
   {
-    try
+    CertificateRequest cr = this;
+    // if we have a CR without outer signature, we must create a full CR structure so that the getRequestPart method can
+    // work correctly
+    if (CertificateRequestPath.CV_CERTIFICATE.getTag().equals(getDTag()))
     {
-      return new String(this.getRequestPart(CertificateRequestPath.HOLDER_REFERENCE).getValue(),
-                        StandardCharsets.UTF_8);
+      cr = new CertificateRequest(this.getEncoded());
     }
-    catch (NullPointerException e)
-    {
-      return null;
-    }
-  }
 
-  public String getAuthorityReferenceString() throws IOException
-  {
     try
     {
-      return new String(this.getRequestPart(CertificateRequestPath.CA_REFERENCE).getValue(),
-                        StandardCharsets.UTF_8);
+      return new String(cr.getRequestPart(CertificateRequestPath.HOLDER_REFERENCE).getValue(), StandardCharsets.UTF_8);
     }
     catch (NullPointerException e)
     {
@@ -319,6 +293,11 @@ public class CertificateRequest extends AbstractASN1Encoder
 
   public String getOuterAuthorityReferenceString() throws IOException
   {
+    if (CertificateRequestPath.CV_CERTIFICATE.getTag().equals(getDTag()))
+    {
+      return null;
+    }
+
     try
     {
       return new String(this.getRequestPart(CertificateRequestPath.OUTER_CA_REFERENCE).getValue(),

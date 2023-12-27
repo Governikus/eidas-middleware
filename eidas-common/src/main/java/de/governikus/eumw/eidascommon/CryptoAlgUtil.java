@@ -1,11 +1,15 @@
 package de.governikus.eumw.eidascommon;
 
+import java.util.regex.Pattern;
+
 import org.apache.xml.security.signature.XMLSignature;
+import org.opensaml.xmlsec.signature.DigestMethod;
+import org.opensaml.xmlsec.signature.Signature;
 import org.opensaml.xmlsec.signature.support.SignatureConstants;
+import org.w3c.dom.Node;
+import org.w3c.dom.NodeList;
 
 import lombok.experimental.UtilityClass;
-
-import java.util.regex.Pattern;
 
 
 /**
@@ -14,6 +18,8 @@ import java.util.regex.Pattern;
 @UtilityClass
 public class CryptoAlgUtil
 {
+
+  public static final String INVALID_HASH_OR_SIGNATURE_ALGORITHM = "Invalid hash or signature algorithm";
 
   private final String EC = "EC";
 
@@ -170,5 +176,57 @@ public class CryptoAlgUtil
         throw new UnsupportedOperationException("unsupported signature algorithm " + xmlSigAlgo);
     }
     return algoName;
+  }
+
+  /**
+   * Verify that the signature algorithm used to sign an AuthnRequest is permitted
+   *
+   * @param sigAlg The signature algorithm to be checked
+   * @throws ErrorCodeException Thrown if a non-permitted algorithm is used
+   */
+  public static void verifySignatureAlgorithm(String sigAlg) throws ErrorCodeException
+  {
+    try
+    {
+      fromXmlSigAlg(sigAlg);
+    }
+    catch (Exception e)
+    {
+      throw new ErrorCodeException(ErrorCode.SIGNATURE_CHECK_FAILED, INVALID_HASH_OR_SIGNATURE_ALGORITHM);
+    }
+  }
+
+  /**
+   * Verify that the signature algorithm and the DigestMethod algorithm of the SAML signature are permitted.
+   *
+   * @param signature The signature to be verified
+   * @throws ErrorCodeException Thrown if a non-permitted algorithm is used
+   */
+  public static void verifyDigestAndSignatureAlgorithm(Signature signature) throws ErrorCodeException
+  {
+    // Verify the digest methods of the signature elements are allowed
+    // The OpenSAML API does not return the actual digest method, so we must manually get this from the XML document
+    NodeList elementsByTagName = signature.getDOM()
+                                          .getElementsByTagNameNS(SignatureConstants.XMLSIG_NS,
+                                                                  DigestMethod.DEFAULT_ELEMENT_LOCAL_NAME);
+    for ( int i = 0 ; i < elementsByTagName.getLength() ; i++ )
+    {
+      Node digestMethodElement = elementsByTagName.item(i);
+      Node algorithmAttribute = digestMethodElement.getAttributes().getNamedItem(DigestMethod.ALGORITHM_ATTRIB_NAME);
+      String algorithmUri = algorithmAttribute.getTextContent();
+      if (digestAlgorithmNotPermitted(algorithmUri))
+      {
+        throw new ErrorCodeException(ErrorCode.SIGNATURE_CHECK_FAILED, INVALID_HASH_OR_SIGNATURE_ALGORITHM);
+      }
+    }
+
+    verifySignatureAlgorithm(signature.getSignatureAlgorithm());
+  }
+
+  private static boolean digestAlgorithmNotPermitted(String algorithmUri)
+  {
+    return !(SignatureConstants.ALGO_ID_DIGEST_SHA256.equals(algorithmUri)
+             || SignatureConstants.ALGO_ID_DIGEST_SHA384.equals(algorithmUri)
+             || SignatureConstants.ALGO_ID_DIGEST_SHA512.equals(algorithmUri));
   }
 }

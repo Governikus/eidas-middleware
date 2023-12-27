@@ -119,7 +119,7 @@ class MetadataServiceImplTest
                                                     + ContextPaths.METADATA));
     Assertions.assertTrue(metadataAsString.contains("2.0"));
     // part of sig cert
-    Assertions.assertTrue(metadataAsString.contains("j51v55HpaAA9farLNsxNsmYHKKF8D12gNGHs8XFuVLkG8iHU07RoYJ3h1vrumrd4"));
+    Assertions.assertTrue(metadataAsString.contains("MIIEsDCCApigAwIBAgIEZXgnNjANBgkqhkiG9w0BAQsFADAaMRgwFgYDVQQDDA9t"));
     Assertions.assertFalse(metadataAsString.contains("KeyDescriptor use=\"encryption\""));
   }
 

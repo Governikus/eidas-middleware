@@ -14,13 +14,22 @@ import java.io.IOException;
 
 
 /**
- * Abstract class for domain parameter infos, currently extended by
- * {@link ChipAuthenticationDomainParameterInfo} and {@link PACEDomainParameterInfo}.
+ * Abstract class for domain parameter infos.
  *
  * @author Arne Stahlbock, ast@bos-bremen.de
  */
-public abstract class DomainParameterInfo extends SecurityInfo implements GeneralDomainParameterInfo
+public abstract class DomainParameterInfo extends SecurityInfo
 {
+
+  /**
+   * Current lowest domain parameter ID.
+   */
+  public static final int MIN_DOMAIN_PARAMETER_ID = 8;
+
+  /**
+   * Current highest domain parameter ID.
+   */
+  public static final int MAX_DOMAIN_PARAMETER_ID = 18;
 
   /**
    * Reference to the <code>domainParameter</code> child element.

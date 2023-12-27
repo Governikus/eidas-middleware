@@ -30,6 +30,21 @@ public final class OIDConstants
   public static final OID OID_EC_PUBLIC_KEY = new OID("1.2.840.10045.2.1");
 
   /**
+   * OID of signature algorithm ECDSA with SHA-256.
+   */
+  public static final OID OID_ECDSA_SHA256 = new OID("1.2.840.10045.4.3.2");
+
+  /**
+   * OID of signature algorithm ECDSA with SHA-384.
+   */
+  public static final OID OID_ECDSA_SHA384 = new OID("1.2.840.10045.4.3.3");
+
+  /**
+   * OID of signature algorithm ECDSA with SHA-512.
+   */
+  public static final OID OID_ECDSA_SHA512 = new OID("1.2.840.10045.4.3.4");
+
+  /**
    * OID of BSI: <code>0.4.0.127.0.7</code>.
    */
   public static final OID OID_BSI = new OID("0.4.0.127.0.7");

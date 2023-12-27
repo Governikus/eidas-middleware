@@ -15,7 +15,7 @@ The following overview illustrates the required certificates and key stores.
 The following table describes the individual key stores and certificates:
 
 .. table::
-    :widths: 2 18 40 40
+    :widths: 18 40 40
 
     +--------------------+---------------------------------------------------------------------------------------------+-----------------------------------------------------------------------------+
     | Name               | Description                                                                                 | Where to configure                                                          |
@@ -23,32 +23,22 @@ The following table describes the individual key stores and certificates:
     | Server TLS         | This key store is used to setup the HTTPS port of the server.                               | application.properties > server.ssl.key-store                               |
     | Key Store          |                                                                                             |                                                                             |
     +--------------------+---------------------------------------------------------------------------------------------+-----------------------------------------------------------------------------+
-    | eIDAS Middleware   | This key store is used for the SAML communication with the eIDAS Connector.                 |                                                                             |
-    | SAML Key Store     |                                                                                             |                                                                             |
-    +--+-----------------+---------------------------------------------------------------------------------------------+-----------------------------------------------------------------------------+
-    |  | SAML Signature  | This key store is used to sign the outgoing SAML responses.                                 | Admin-UI > eIDAS > Signature key pair                                       |
-    |  | Key Store       |                                                                                             |                                                                             |
-    |  |                 | In addition this key store is used to sign the SAML metadata of the eIDAS Middleware.       |                                                                             |
-    |  |                 |                                                                                             |                                                                             |
-    |  |                 | The corresponding certificate must be available to the remote party (eIDAS Connector)       |                                                                             |
-    |  |                 | so that the SAML metadata can be verified.                                                  |                                                                             |
-    +--+-----------------+---------------------------------------------------------------------------------------------+-----------------------------------------------------------------------------+
-    |  | SAML Decryption | This key store is used to decrypt the incoming SAML requests.                               | Admin-UI > eIDAS > Decryption key pair                                      |
-    |  | Key Store       |                                                                                             |                                                                             |
-    +--+-----------------+---------------------------------------------------------------------------------------------+-----------------------------------------------------------------------------+
-    | eIDAS Connector    | This key store is used for the SAML communication with the eIDAS-Middleware.                |                                                                             |
-    | SAML Key Store     |                                                                                             |                                                                             |
-    +--+-----------------+---------------------------------------------------------------------------------------------+-----------------------------------------------------------------------------+
-    |  | SAML Signature  | This key store is used to sign the outgoing SAML requests.                                  | Admin-UI > Connector metadata > Metadata signature verification certificate |
-    |  | Key Store       |                                                                                             |                                                                             |
-    |  |                 | In addition this key store is used to sign the SAML metadata of the eIDAS Connector.        |                                                                             |
-    |  |                 |                                                                                             |                                                                             |
-    |  |                 | The corresponding certificate must be available to the remote party                         |                                                                             |
-    |  |                 | (eIDAS Middleware) so that the SAML metadata can be verified.                               |                                                                             |
-    +--+-----------------+---------------------------------------------------------------------------------------------+-----------------------------------------------------------------------------+
-    |  | SAML Decryption | This key store is used to decrypt the incoming SAML responses                               |                                                                             |
-    |  | Key Store       |                                                                                             |                                                                             |
-    +--+-----------------+---------------------------------------------------------------------------------------------+-----------------------------------------------------------------------------+
+    | eIDAS Middleware   | This key store is used for the SAML communication with the eIDAS Connector.                 | Key Store:                                                                  |
+    | SAML Key Store     | Especially to sign the outgoing SAML responses.                                             | Admin-UI > eIDAS > Signature key pair                                       |
+    | and Signature      |                                                                                             | Certificate:                                                                |
+    | Certificate        | In addition this key store is used to sign the SAML metadata of the eIDAS Middleware.       | In eIDAS Connector                                                          |
+    |                    |                                                                                             |                                                                             |
+    |                    | The corresponding certificate must be available to the remote party (eIDAS Connector)       |                                                                             |
+    |                    | so that the SAML metadata can be verified.                                                  |                                                                             |
+    +--------------------+---------------------------------------------------------------------------------------------+-----------------------------------------------------------------------------+
+    | eIDAS Connector    | This key store is used for the SAML communication with the eIDAS-Middleware.                | Key Store:                                                                  |
+    | SAML Key Store     | Especially to sign the outgoing SAML requests.                                              | In eIDAS Connector                                                          |
+    | and Signature      |                                                                                             | Certificate:                                                                |
+    | Certificate        | In addition this key store is used to sign the SAML metadata of the eIDAS Connector.        | Admin-UI > Connector metadata > Metadata signature verification certificate |
+    |                    |                                                                                             |                                                                             |
+    |                    | The corresponding certificate must be available to the remote party                         |                                                                             |
+    |                    | (eIDAS Middleware) so that the SAML metadata can be verified.                               |                                                                             |
+    +--------------------+---------------------------------------------------------------------------------------------+-----------------------------------------------------------------------------+
     | BerCA Client       | This key store is needed to access the :term:`Authorization CA`.                            | Admin-UI > eID service provider > DVCA client authentication key pair       |
     | Key Store          |                                                                                             |                                                                             |
     +--------------------+---------------------------------------------------------------------------------------------+-----------------------------------------------------------------------------+
@@ -71,7 +61,7 @@ They will also provide you with their TLS server certificate which needs to be e
 
 Be advised that the Common Name or Subject Alternative Name of the TLS Certificate must match with the URL of the
 middleware as it is reachable from the Internet.
-This is important as the AusweisApp2 will check the URL in the authorization certificate against the URL that is
+This is important as the AusweisApp will check the URL in the authorization certificate against the URL that is
 received from the eIDAS Middleware.
 E.g., if the middleware is running on ``https://your.eidas.domain.eu/eidas-middleware/`` or
 ``https://your.eidas.domain.eu:8443/eidas-middleware/``, the CN or SAN of the TLS certificate must include
@@ -187,6 +177,12 @@ as it will replace the existing configuration without further notice.
 We provide XML samples for both the test and production environment, which can be uploaded and then completed
 using the web interface.
 
+The XML samples for the test environment is available for download here:
+`Samples Test Environment <https://github.com/Governikus/eidas-middleware/blob/master/doc/source/chapter/eIDAS_Middleware_configuration_test.xml>`_
+
+The XML samples for the production environment is available for download here:
+`Samples Production Environment <https://github.com/Governikus/eidas-middleware/blob/master/doc/source/chapter/eIDAS_Middleware_configuration_prod.xml>`_
+
 .. attention::
     The upload function is not designed to handle POSeIDAS.xml from older middleware versions
     due to changed data structures. It can deal with exports from version 3.0.0+ only.
@@ -217,8 +213,9 @@ This section is for management of :term:`eID Service Providers<eID Service Provi
 Each entry requires a unique name and a unique client authentication key pair.
 
 The name is used for identifying the :term:`eID Service Provider`.
-In case the :term:`eID Service Provider` is dedicated for a private sector
-eIDAS SP it is imperative that the name matches the ``providerName`` used in eIDAS SAML requests made by that SP.
+In case the :term:`eID Service Provider` is dedicated for a private sector eIDAS SP it is imperative that the name
+matches the ``requesterId`` used in eIDAS SAML requests made by that SP. If no match is found via the
+``requesterId``, a second check is carried out via the ``providerName``.
 
 The client authentication key pair is used for the communication to the :term:`Authorization CA`.
 The associated certificate must be given to the :term:`Authorization CA`.
@@ -234,7 +231,7 @@ In this area, the settings for the middleware as an eIDAS node are made.
 You can fill in the information that will be published in the metadata and select the service provider that
 will be used for requests from the public sector.
 Especially important are the server URL, which must have the value as the middleware is reachable from
-the internet, and the SAML key pairs. In case you use a PKCS#11 HSM, the key for SAML signatures must be
+the internet, and the SAML key pair. In case you use a PKCS#11 HSM, the key for SAML signatures must be
 available in the HSM using label and ID ``samlsigning``.
 
 

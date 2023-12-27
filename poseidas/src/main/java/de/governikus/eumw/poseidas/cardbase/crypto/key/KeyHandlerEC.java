@@ -30,7 +30,7 @@ import de.governikus.eumw.poseidas.cardbase.AssertUtil;
 import de.governikus.eumw.poseidas.cardbase.ByteUtil;
 import de.governikus.eumw.poseidas.cardbase.asn1.ASN1;
 import de.governikus.eumw.poseidas.cardbase.asn1.OID;
-import de.governikus.eumw.poseidas.cardbase.asn1.npa.si.GeneralDomainParameterInfo;
+import de.governikus.eumw.poseidas.cardbase.asn1.npa.si.DomainParameterInfo;
 import de.governikus.eumw.poseidas.cardbase.crypto.ec.ECMath;
 import de.governikus.eumw.poseidas.cardbase.crypto.ec.ECPublicKeyImpl;
 import de.governikus.eumw.poseidas.cardbase.crypto.ec.ECUtil;
@@ -66,7 +66,7 @@ public class KeyHandlerEC implements KeyHandler
 
   /** {@inheritDoc} */
   @Override
-  public KeyPair generateKeyPair(GeneralDomainParameterInfo params)
+  public KeyPair generateKeyPair(DomainParameterInfo params)
     throws IOException, NoSuchAlgorithmException, NoSuchProviderException, InvalidAlgorithmParameterException
   {
     AssertUtil.notNull(params, "domain parameter info");
@@ -95,7 +95,7 @@ public class KeyHandlerEC implements KeyHandler
 
   /** {@inheritDoc} */
   @Override
-  public PublicKey buildKeyFromBytes(GeneralDomainParameterInfo params, byte[] keyBytes) throws IOException
+  public PublicKey buildKeyFromBytes(DomainParameterInfo params, byte[] keyBytes) throws IOException
   {
     AssertUtil.notNull(params, "domain parameter info");
     AssertUtil.notNullOrEmpty(keyBytes, "key bytes");

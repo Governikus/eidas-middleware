@@ -19,8 +19,8 @@ import de.governikus.eumw.eidasstarterkit.person_attributes.EidasPersonAttribute
 import lombok.AllArgsConstructor;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
-import se.litsec.eidas.opensaml.ext.attributes.GenderTypeEnumeration;
-import se.litsec.eidas.opensaml.ext.attributes.impl.GenderTypeBuilder;
+import se.swedenconnect.opensaml.eidas.ext.attributes.GenderTypeEnumeration;
+import se.swedenconnect.opensaml.eidas.ext.attributes.impl.GenderTypeBuilder;
 
 
 @NoArgsConstructor
@@ -53,7 +53,7 @@ public class GenderAttribute extends AbstractEidasAttribute
   public Attribute generate()
   {
     Attribute attr = super.generate();
-    se.litsec.eidas.opensaml.ext.attributes.GenderType gt = new GenderTypeBuilder().buildObject(AttributeValue.DEFAULT_ELEMENT_NAME,
+    se.swedenconnect.opensaml.eidas.ext.attributes.GenderType gt = new GenderTypeBuilder().buildObject(AttributeValue.DEFAULT_ELEMENT_NAME,
                                                                                                 type().getQName());
     gt.setGender(GenderTypeEnumeration.fromValue(getValue()));
     attr.getAttributeValues().add(gt);

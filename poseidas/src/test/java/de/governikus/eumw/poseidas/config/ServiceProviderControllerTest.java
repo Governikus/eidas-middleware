@@ -78,7 +78,7 @@ class ServiceProviderControllerTest extends WebAdminTestBase
 
   public static final String ALERT_MSG_HTML_ID = "alertMSG";
 
-  private static final String NAME_HTML_ID = "Name";
+  private static final String NAME_HTML_ID = "name";
 
   private static final String ENABLED_HTML_ID = "Active";
 
@@ -153,8 +153,6 @@ class ServiceProviderControllerTest extends WebAdminTestBase
     assertValidationMessagePresent(createServiceproviderConfigPage,
                                    DVCA_CONFIGURATION_HTML_ID,
                                    THIS_DVCA_CONFIG_DOES_NOT_EXIST);
-    assertValidationMessagePresent(createServiceproviderConfigPage, CLIENT_KEYPAIR_NAME_HTML_ID, HAS_TO_BE_SELECTED);
-
 
     assertTrue(configurationService.getConfiguration()
                                    .map(EidasMiddlewareConfig::getEidConfiguration)

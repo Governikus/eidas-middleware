@@ -27,15 +27,15 @@ import de.governikus.eumw.eidasstarterkit.person_attributes.natural_persons_attr
 import de.governikus.eumw.eidasstarterkit.person_attributes.natural_persons_attribute.PlaceOfBirthAttribute;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
-import se.litsec.eidas.opensaml.ext.attributes.AttributeConstants;
-import se.litsec.eidas.opensaml.ext.attributes.BirthNameType;
-import se.litsec.eidas.opensaml.ext.attributes.CurrentAddressType;
-import se.litsec.eidas.opensaml.ext.attributes.CurrentFamilyNameType;
-import se.litsec.eidas.opensaml.ext.attributes.CurrentGivenNameType;
-import se.litsec.eidas.opensaml.ext.attributes.DateOfBirthType;
-import se.litsec.eidas.opensaml.ext.attributes.GenderType;
-import se.litsec.eidas.opensaml.ext.attributes.PersonIdentifierType;
-import se.litsec.eidas.opensaml.ext.attributes.PlaceOfBirthType;
+import se.swedenconnect.opensaml.eidas.ext.attributes.AttributeConstants;
+import se.swedenconnect.opensaml.eidas.ext.attributes.BirthNameType;
+import se.swedenconnect.opensaml.eidas.ext.attributes.CurrentAddressType;
+import se.swedenconnect.opensaml.eidas.ext.attributes.CurrentFamilyNameType;
+import se.swedenconnect.opensaml.eidas.ext.attributes.CurrentGivenNameType;
+import se.swedenconnect.opensaml.eidas.ext.attributes.DateOfBirthType;
+import se.swedenconnect.opensaml.eidas.ext.attributes.GenderType;
+import se.swedenconnect.opensaml.eidas.ext.attributes.PersonIdentifierType;
+import se.swedenconnect.opensaml.eidas.ext.attributes.PlaceOfBirthType;
 
 
 @AllArgsConstructor

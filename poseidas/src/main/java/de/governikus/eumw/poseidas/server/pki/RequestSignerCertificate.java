@@ -12,9 +12,9 @@ package de.governikus.eumw.poseidas.server.pki;
 
 import java.io.Serializable;
 
-import javax.persistence.EmbeddedId;
-import javax.persistence.Entity;
-import javax.persistence.Lob;
+import jakarta.persistence.EmbeddedId;
+import jakarta.persistence.Entity;
+import jakarta.persistence.Lob;
 
 import lombok.Data;
 

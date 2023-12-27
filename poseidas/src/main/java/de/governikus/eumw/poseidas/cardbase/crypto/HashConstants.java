@@ -23,7 +23,7 @@ import lombok.experimental.UtilityClass;
  * @author Jens Wothe, jw@bos-bremen.de
  */
 @UtilityClass
-final class HashConstants
+public final class HashConstants
 {
 
   /**

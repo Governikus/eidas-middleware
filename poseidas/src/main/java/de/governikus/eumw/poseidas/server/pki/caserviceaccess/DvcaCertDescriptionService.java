@@ -11,7 +11,7 @@ package de.governikus.eumw.poseidas.server.pki.caserviceaccess;
 
 import java.net.URISyntaxException;
 
-import javax.xml.ws.BindingProvider;
+import jakarta.xml.ws.BindingProvider;
 
 import dvca.v2.DVCACERTDESCRIPTION;
 import dvca.v2.DVCACertDescriptionService;

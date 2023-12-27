@@ -1,11 +1,10 @@
 /*
- * Copyright (c) 2020 Governikus KG. Licensed under the EUPL, Version 1.2 or as soon they will be approved by
- * the European Commission - subsequent versions of the EUPL (the "Licence"); You may not use this work except
- * in compliance with the Licence. You may obtain a copy of the Licence at:
- * http://joinup.ec.europa.eu/software/page/eupl Unless required by applicable law or agreed to in writing,
- * software distributed under the Licence is distributed on an "AS IS" basis, WITHOUT WARRANTIES OR CONDITIONS
- * OF ANY KIND, either express or implied. See the Licence for the specific language governing permissions and
- * limitations under the Licence.
+ * Copyright (c) 2020 Governikus KG. Licensed under the EUPL, Version 1.2 or as soon they will be approved by the
+ * European Commission - subsequent versions of the EUPL (the "Licence"); You may not use this work except in compliance
+ * with the Licence. You may obtain a copy of the Licence at: http://joinup.ec.europa.eu/software/page/eupl Unless
+ * required by applicable law or agreed to in writing, software distributed under the Licence is distributed on an
+ * "AS IS" basis, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the Licence for the
+ * specific language governing permissions and limitations under the Licence.
  */
 
 package de.governikus.eumw.eidasmiddleware;
@@ -58,7 +57,7 @@ import de.governikus.eumw.eidasstarterkit.person_attributes.natural_persons_attr
 import de.governikus.eumw.eidasstarterkit.person_attributes.natural_persons_attribute.PersonIdentifierAttribute;
 import net.shibboleth.utilities.java.support.component.ComponentInitializationException;
 import net.shibboleth.utilities.java.support.xml.XMLParserException;
-import se.litsec.eidas.opensaml.ext.SPTypeEnumeration;
+import se.swedenconnect.opensaml.eidas.ext.SPTypeEnumeration;
 
 
 public class EidasRoundTrip
@@ -77,9 +76,9 @@ public class EidasRoundTrip
 
     try
     {
-      keyPair = Utils.readPKCS12(EidasRoundTrip.class.getResourceAsStream("bos-test.saml-sign.p12"),
+      keyPair = Utils.readPKCS12(EidasRoundTrip.class.getResourceAsStream("bos-test-tctoken.saml-sign.p12"),
                                  "123456".toCharArray());
-      keyPair2 = Utils.readPKCS12(EidasRoundTrip.class.getResourceAsStream("bos-test.saml-sign.p12"),
+      keyPair2 = Utils.readPKCS12(EidasRoundTrip.class.getResourceAsStream("bos-test-tctoken.saml-encr.p12"),
                                   "123456".toCharArray());
     }
     catch (UnrecoverableKeyException | KeyStoreException | NoSuchAlgorithmException | CertificateException
@@ -186,8 +185,8 @@ public class EidasRoundTrip
       }
     }
     catch (CertificateEncodingException | InitializationException | IOException | XMLParserException
-      | UnmarshallingException | MarshallingException | SignatureException
-      | TransformerFactoryConfigurationError | TransformerException | ComponentInitializationException e)
+      | UnmarshallingException | MarshallingException | SignatureException | TransformerFactoryConfigurationError
+      | TransformerException | ComponentInitializationException e)
     {
       e.printStackTrace();
     }

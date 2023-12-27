@@ -20,7 +20,7 @@ import java.security.SignatureException;
 import java.security.interfaces.ECPublicKey;
 import java.util.Arrays;
 
-import javax.annotation.Nullable;
+import jakarta.annotation.Nullable;
 
 import de.governikus.eumw.poseidas.cardbase.AssertUtil;
 import de.governikus.eumw.poseidas.cardbase.asn1.ASN1;
@@ -343,7 +343,6 @@ public class CvcRequestGenerator
     {
       asn1.getChildElementByPath(ECCVCPath.CV_CERTIFICATE_BODY)
           .removeChildElement(asn1.getChildElementByPath(ECCVCPath.CA_REFERENCE), asn1);
-
       asn1.getChildElementByPath(ECCVCPath.CV_CERTIFICATE_BODY)
           .removeChildElement(asn1.getChildElementByPath(ECCVCPath.EFFECTIVE_DATE), asn1);
       asn1.getChildElementByPath(ECCVCPath.CV_CERTIFICATE_BODY)

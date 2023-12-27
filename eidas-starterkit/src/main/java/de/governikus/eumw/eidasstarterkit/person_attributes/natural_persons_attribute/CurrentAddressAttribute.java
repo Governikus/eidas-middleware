@@ -20,8 +20,8 @@ import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
-import se.litsec.eidas.opensaml.ext.attributes.CurrentAddressType;
-import se.litsec.eidas.opensaml.ext.attributes.impl.CurrentAddressTypeBuilder;
+import se.swedenconnect.opensaml.eidas.ext.attributes.CurrentAddressType;
+import se.swedenconnect.opensaml.eidas.ext.attributes.impl.CurrentAddressTypeBuilder;
 
 
 @Getter

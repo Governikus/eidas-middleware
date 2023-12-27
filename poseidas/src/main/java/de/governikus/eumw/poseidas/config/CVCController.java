@@ -15,11 +15,15 @@ import java.net.URISyntaxException;
 import java.security.cert.CertificateEncodingException;
 import java.security.cert.X509Certificate;
 import java.util.List;
+import java.util.Objects;
+
+import jakarta.validation.Valid;
 
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
+import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.ModelAttribute;
@@ -131,7 +135,7 @@ public class CVCController
     }
     model.addAttribute("entity", serviceProviderDetails);
     model.addAttribute("entityID", entityID);
-    model.addAttribute("form", new CVCRequestModel());
+    model.addAttribute("form", Objects.requireNonNullElseGet(model.getAttribute("form"), CVCRequestModel::new));
     return "pages/details";
   }
 
@@ -165,8 +169,7 @@ public class CVCController
    * This route performs the initial certificate request
    */
   @PostMapping("/initialRequest")
-  public String initialRequest(@RequestParam(ENTITYID) String entityID,
-                               @ModelAttribute CVCRequestModel form,
+  public String initialRequest(@RequestParam(ENTITYID) String entityID, @Valid @ModelAttribute CVCRequestModel form, BindingResult bindingResult,
                                RedirectAttributes redirectAttributes)
   {
     ServiceProviderDetails serviceProviderDetails = getServiceProviderDetails(entityID);
@@ -176,20 +179,21 @@ public class CVCController
                                                  "Initial request failed: " + ERROR_MESSAGE_NO_SP_PRESENT,
                                                  entityID);
     }
+    if (bindingResult.hasErrors()) {
 
-    String result = data.requestFirstTerminalCertificate(entityID,
-                                                         form.getCountryCode(),
-                                                         form.getChrMnemonic(),
-                                                         form.getSequenceNumber())
-                        .toString();
-    if (CO_MSG_OK_OK.equals(result))
-    {
-      redirectAttributes.addFlashAttribute(SUCCESS, "Initial request succeeded");
-    }
-    else
-    {
+      redirectAttributes.addFlashAttribute("org.springframework.validation.BindingResult.form", bindingResult);
+      redirectAttributes.addFlashAttribute("form", form);
+      redirectAttributes.addFlashAttribute(ERROR, "Initial request was not sent. Please check \"Initial CVC request\" below.");
 
-      redirectAttributes.addFlashAttribute(ERROR, "Initial request failed: " + result);
+    } else {
+
+      String result = data.requestFirstTerminalCertificate(entityID, form.getCountryCode(), form.getChrMnemonic(), form.getSequenceNumber()).toString();
+      if (CO_MSG_OK_OK.equals(result)) {
+        redirectAttributes.addFlashAttribute(SUCCESS, "Initial request succeeded");
+      } else {
+
+        redirectAttributes.addFlashAttribute(ERROR, "Initial request failed: " + result);
+      }
     }
     redirectAttributes.addFlashAttribute(JUMP_TO_TAB, CVC);
     redirectAttributes.addAttribute(ENTITYID, entityID);

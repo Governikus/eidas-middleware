@@ -9,12 +9,13 @@
   ~ limitations under the Licence.
   -->
 
+<!--suppress PyInterpreter -->
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
 
     <groupId>de.governikus.eumw</groupId>
     <artifactId>eumw</artifactId>
-    <version>3.1.2</version>
+    <version>3.2.0</version>
     <packaging>pom</packaging>
 
     <name>EU Middleware</name>
@@ -37,7 +38,7 @@
     <scm>
         <url>https://hg.govkg.de/Autent/eumw</url>
         <connection>scm:hg:https://hg.govkg.de/Autent/eumw</connection>
-        <tag>eumw-3.1.2</tag>
+        <tag>eumw-3.2.0</tag>
     </scm>
 
     <repositories>
@@ -81,81 +82,73 @@
         <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
 
         <!-- Java compiler source version -->
-        <maven.compiler.source>11</maven.compiler.source>
+        <maven.compiler.source>17</maven.compiler.source>
         <!-- Java compiler target version -->
-        <maven.compiler.target>11</maven.compiler.target>
+        <maven.compiler.target>17</maven.compiler.target>
 
         <!-- crypto -->
-        <!-- 1.67-1.69-1.70 available but incompatible with opensaml-security-ext-2.1.0 -->
-        <version.bouncycastle>1.66</version.bouncycastle>
-        <!-- Newer Versions available see https://jira.governikus.de/browse/EID-384 -->
-        <version.eidas-opensaml4>2.1.2</version.eidas-opensaml4>
+        <version.bouncycastle>1.77</version.bouncycastle>
         <version.javasupport>8.4.0</version.javasupport>
-        <version.opensaml-security-ext>2.1.0</version.opensaml-security-ext>
-        <version.opensaml>4.0.1</version.opensaml>
-        <!-- OpenSAML versions <4.1.1 ship with velocity 2.2 which has a CVE -->
-        <version.velocity>2.3</version.velocity>
-        <version.xmlsec>2.3.4</version.xmlsec>
+        <version.opensaml>5.0.0</version.opensaml>
+        <version.opensaml-eidas>3.0.0</version.opensaml-eidas>
+        <version.opensaml-security-ext>4.0.0</version.opensaml-security-ext>
+        <version.xmlsec>4.0.0</version.xmlsec>
 
-        <!-- 3.6.1 is available but there are problems with the client services to the dvca. Version 4.0.0 has the jakarta namespace -->
-        <version.cxf>3.5.6</version.cxf>
-        <version.springboot>2.7.13</version.springboot>
-        <!-- thymeleaf 3.1.x has support for spring 6 and the jakarta namespace -->
-        <version.thymeleaf>3.0.15.RELEASE</version.thymeleaf>
-        <version.thymeleaf-layout-dialect>3.2.1</version.thymeleaf-layout-dialect>
+        <version.cxf>4.0.3</version.cxf>
+        <!-- Spring Boot 3.2.x only supports H2 from version 2.2 -->
+        <version.springboot>3.1.6</version.springboot>
+        <version.thymeleaf-layout-dialect>3.3.0</version.thymeleaf-layout-dialect>
 
         <version.woodstox>6.5.1</version.woodstox>
 
-        <version.asm>9.5</version.asm>
-        <version.classgraph>4.8.162</version.classgraph>
-        <version.commons.codec>1.16.0</version.commons.codec>
+        <version.asm>9.6</version.asm>
+        <version.classgraph>4.8.165</version.classgraph>
         <version.commons.fileupload>1.5</version.commons.fileupload>
-        <version.commons.io>2.13.0</version.commons.io>
-        <version.commons.text>1.10.0</version.commons.text>
-        <version.commons.lang3>3.13.0</version.commons.lang3>
-        <version.guava>32.1.2-jre</version.guava>
+        <version.commons.io>2.15.0</version.commons.io>
+        <version.commons.text>1.11.0</version.commons.text>
+        <version.commons.lang3>3.14.0</version.commons.lang3>
+        <version.guava>32.1.3-jre</version.guava>
         <!-- h2 2.x apparently needs a manual database migration -->
         <version.h2>1.4.200</version.h2>
+        <!-- httpclient is moved to httpclient5 and needs a code migration -->
+        <version.httpclient>4.5.14</version.httpclient>
         <version.istack-commons-runtime>4.2.0</version.istack-commons-runtime>
-        <version.jackson>2.15.2</version.jackson>
+        <version.jackson>2.16.0</version.jackson>
         <version.jakarta.activation>2.0.1</version.jakarta.activation>
-        <!-- Version 3.0.0 is available but changed the namespace to jakarta.jws.* -->
-        <version.jakarta.jws-api>2.1.0</version.jakarta.jws-api>
+        <version.jakarta.jws-api>3.0.0</version.jakarta.jws-api>
         <version.jaxb2-basics>1.11.1</version.jaxb2-basics>
-        <!-- Newer version is available but changed the namespace to jakarta.xml.bind.* -->
-        <version.jaxb-runtime>2.3.8</version.jaxb-runtime>
-        <version.jmrtd>0.7.39</version.jmrtd>
+        <version.jaxws.maven.plugin>4.0.2</version.jaxws.maven.plugin>
+        <version.jaxb-runtime>4.0.4</version.jaxb-runtime>
+        <version.jmrtd>0.7.40</version.jmrtd>
         <version.json-schema-validator>2.2.14</version.json-schema-validator>
         <version.jsr305>3.0.2</version.jsr305>
-        <version.groovy>3.0.18</version.groovy>
+        <version.groovy>4.0.15</version.groovy>
         <version.snmp4j>3.6.7</version.snmp4j>
-        <!-- manage for CVE -->
-        <version.tomcat>9.0.82</version.tomcat>
+        <version.snakeyaml>2.2</version.snakeyaml>
 
         <!-- IDE helper -->
-        <version.lombok>1.18.28</version.lombok>
+        <version.lombok>1.18.30</version.lombok>
 
         <!-- logging dependencies -->
-        <version.log4j2>2.20.0</version.log4j2>
-        <version.slf4j>1.7.36</version.slf4j>
+        <version.log4j2>2.22.0</version.log4j2>
+        <version.slf4j>2.0.9</version.slf4j>
 
         <!-- test dependencies -->
         <version.htmlunit>2.70.0</version.htmlunit>
-        <version.httpclient>4.5.14</version.httpclient>
-        <version.junit-bom>5.10.0</version.junit-bom>
+        <version.junit-bom>5.10.1</version.junit-bom>
         <!-- Newer version is available but not compatible with HtmlUnit -->
         <version.mockserver>5.12.0</version.mockserver>
         <version.opentest4j>1.3.0</version.opentest4j>
 
         <!-- version for dependency check, can be overwritten by Jenkins -->
-        <version.dependency-check-maven>8.4.0</version.dependency-check-maven>
+        <version.dependency-check-maven>9.0.6</version.dependency-check-maven>
 
         <!-- version for Webjars -->
-        <version.webjars.locator>0.47</version.webjars.locator>
+        <version.webjars.locator>0.50</version.webjars.locator>
         <version.webjars.fontawesome>6.4.2</version.webjars.fontawesome>
-        <version.webjars.identglue>1.0.4</version.webjars.identglue>
-        <version.webjars.bootstrap>5.3.1</version.webjars.bootstrap>
-        <version.webjars.jquery>3.7.0</version.webjars.jquery>
+        <version.webjars.identglue>1.0.7</version.webjars.identglue>
+        <version.webjars.bootstrap>5.3.2</version.webjars.bootstrap>
+        <version.webjars.jquery>3.7.1</version.webjars.jquery>
 
         <!-- versions for plugins -->
         <!-- The versions only need to be updated when a new feature is needed or there are problems with previous versions -->
@@ -163,9 +156,9 @@
         <version.docker-maven-plugin>0.43.0</version.docker-maven-plugin>
         <version.extra-enforcer-rules>1.0-beta-7</version.extra-enforcer-rules>
         <version.jacoco-maven-plugin>0.8.4</version.jacoco-maven-plugin>
-        <version.jaxb2-maven-plugin>0.14.0</version.jaxb2-maven-plugin>
+        <version.jaxb2-maven-plugin>0.15.3</version.jaxb2-maven-plugin>
         <version.jaxb2-value-constructor>3.0</version.jaxb2-value-constructor>
-        <version.jaxws-maven-plugin>2.6</version.jaxws-maven-plugin>
+        <version.jaxws-maven-plugin>4.0.1</version.jaxws-maven-plugin>
         <version.license-maven-plugin>2.0.0</version.license-maven-plugin>
         <version.maven-assembly-plugin>3.2.0</version.maven-assembly-plugin>
         <version.maven-clean-plugin>3.0.0</version.maven-clean-plugin>
@@ -183,15 +176,26 @@
         <version.maven-site-plugin>3.7</version.maven-site-plugin>
         <version.maven-source-plugin>3.0.1</version.maven-source-plugin>
         <version.maven-surefire-plugin>2.22.2</version.maven-surefire-plugin>
+
+
+        <!-- this must be compatible to jakarta-xml-ws.version from spring-boot-dependencies -->
+        <version.jaxws-rt>4.0.1</version.jaxws-rt>
+        <version.jvnet.jaxb>3.0.1</version.jvnet.jaxb>
+        <version.commons.codec>1.16.0</version.commons.codec>
     </properties>
 
     <build>
         <pluginManagement>
             <plugins>
                 <plugin>
-                    <groupId>org.codehaus.mojo</groupId>
+                    <groupId>org.jvnet.jaxb</groupId>
+                    <artifactId>jaxb-maven-plugin</artifactId>
+                    <version>${version.jvnet.jaxb}</version>
+                </plugin>
+                <plugin>
+                    <groupId>com.sun.xml.ws</groupId>
                     <artifactId>jaxws-maven-plugin</artifactId>
-                    <version>${version.jaxws-maven-plugin}</version>
+                    <version>${version.jaxws.maven.plugin}</version>
                     <configuration>
                         <vmArgs>
                             <vmArg>-Djavax.xml.accessExternalSchema=all</vmArg>
@@ -409,7 +413,7 @@
                                 </requireMavenVersion>
 
                                 <requireJavaVersion>
-                                    <version>[11, 12)</version>
+                                    <version>17</version>
                                 </requireJavaVersion>
 
                                 <dependencyConvergence />
@@ -441,6 +445,36 @@
                         </configuration>
                     </execution>
                 </executions>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-compiler-plugin</artifactId>
+                <configuration>
+                    <compilerArgs>
+                        <arg>--add-exports</arg>
+                        <arg>java.base/sun.security.util=ALL-UNNAMED</arg>
+                    </compilerArgs>
+                </configuration>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-surefire-plugin</artifactId>
+                <configuration>
+                    <argLine>
+                        --add-opens java.base/sun.security.util=ALL-UNNAMED
+                    </argLine>
+                </configuration>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-jar-plugin</artifactId>
+                <configuration>
+                    <archive>
+                        <manifestEntries>
+                            <Add-Exports>java.base/sun.security.util</Add-Exports>
+                        </manifestEntries>
+                    </archive>
+                </configuration>
             </plugin>
         </plugins>
     </build>
@@ -483,6 +517,24 @@
             <groupId>org.junit.vintage</groupId>
             <artifactId>junit-vintage-engine</artifactId>
             <scope>test</scope>
+        </dependency>
+
+
+        <!-- dependencies for SOAP and generated sources -->
+        <dependency>
+            <groupId>com.sun.xml.ws</groupId>
+            <artifactId>jaxws-rt</artifactId>
+            <version>${version.jaxws-rt}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.jvnet.jaxb</groupId>
+            <artifactId>jaxb-plugins-runtime</artifactId>
+            <version>${version.jvnet.jaxb}</version>
+        </dependency>
+        <dependency>
+            <groupId>commons-codec</groupId>
+            <artifactId>commons-codec</artifactId>
+            <version>${version.commons.codec}</version>
         </dependency>
     </dependencies>
 
@@ -581,16 +633,7 @@
                 </exclusions>
             </dependency>
 
-            <dependency>
-                <groupId>org.thymeleaf</groupId>
-                <artifactId>thymeleaf-spring5</artifactId>
-                <version>${version.thymeleaf}</version>
-            </dependency>
-            <dependency>
-                <groupId>org.thymeleaf</groupId>
-                <artifactId>thymeleaf</artifactId>
-                <version>${version.thymeleaf}</version>
-            </dependency>
+
             <dependency>
                 <groupId>nz.net.ultraq.thymeleaf</groupId>
                 <artifactId>thymeleaf-layout-dialect</artifactId>
@@ -690,9 +733,9 @@
             </dependency>
             <!--OpenSAML -->
             <dependency>
-                <groupId>se.litsec.eidas</groupId>
-                <artifactId>eidas-opensaml4</artifactId>
-                <version>${version.eidas-opensaml4}</version>
+                <groupId>se.swedenconnect.opensaml</groupId>
+                <artifactId>opensaml-eidas</artifactId>
+                <version>${version.opensaml-eidas}</version>
             </dependency>
 
             <dependency>
@@ -703,7 +746,13 @@
 
             <dependency>
                 <groupId>org.opensaml</groupId>
-                <artifactId>opensaml-core</artifactId>
+                <artifactId>opensaml-core-api</artifactId>
+                <version>${version.opensaml}</version>
+            </dependency>
+
+            <dependency>
+                <groupId>org.opensaml</groupId>
+                <artifactId>opensaml-core-impl</artifactId>
                 <version>${version.opensaml}</version>
             </dependency>
 
@@ -744,12 +793,6 @@
             </dependency>
 
             <dependency>
-                <groupId>org.apache.velocity</groupId>
-                <artifactId>velocity-engine-core</artifactId>
-                <version>${version.velocity}</version>
-            </dependency>
-
-            <dependency>
                 <groupId>net.shibboleth.utilities</groupId>
                 <artifactId>java-support</artifactId>
                 <version>${version.javasupport}</version>
@@ -757,20 +800,24 @@
 
             <dependency>
                 <groupId>org.bouncycastle</groupId>
-                <artifactId>bcprov-jdk15on</artifactId>
+                <artifactId>bcprov-jdk18on</artifactId>
                 <version>${version.bouncycastle}</version>
             </dependency>
             <dependency>
                 <groupId>org.bouncycastle</groupId>
-                <artifactId>bcpkix-jdk15on</artifactId>
+                <artifactId>bcpkix-jdk18on</artifactId>
                 <version>${version.bouncycastle}</version>
             </dependency>
             <dependency>
                 <groupId>org.bouncycastle</groupId>
-                <artifactId>bctls-jdk15on</artifactId>
+                <artifactId>bctls-jdk18on</artifactId>
                 <version>${version.bouncycastle}</version>
             </dependency>
-
+            <dependency>
+                <groupId>org.bouncycastle</groupId>
+                <artifactId>bcutil-jdk18on</artifactId>
+                <version>${version.bouncycastle}</version>
+            </dependency>
             <dependency>
                 <groupId>org.jvnet.jaxb2_commons</groupId>
                 <artifactId>jaxb2-basics-runtime</artifactId>
@@ -880,21 +927,10 @@
                 <version>${version.jmrtd}</version>
             </dependency>
 
-            <!-- manage tomcat for CVE -->
             <dependency>
-                <groupId>org.apache.tomcat.embed</groupId>
-                <artifactId>tomcat-embed-core</artifactId>
-                <version>${version.tomcat}</version>
-            </dependency>
-            <dependency>
-                <groupId>org.apache.tomcat.embed</groupId>
-                <artifactId>tomcat-embed-el</artifactId>
-                <version>${version.tomcat}</version>
-            </dependency>
-            <dependency>
-                <groupId>org.apache.tomcat.embed</groupId>
-                <artifactId>tomcat-embed-websocket</artifactId>
-                <version>${version.tomcat}</version>
+                <groupId>org.yaml</groupId>
+                <artifactId>snakeyaml</artifactId>
+                <version>${version.snakeyaml}</version>
             </dependency>
 
             <!-- test dependencies -->
@@ -954,7 +990,7 @@
                 <version>${version.httpclient}</version>
             </dependency>
             <dependency>
-                <groupId>org.codehaus.groovy</groupId>
+                <groupId>org.apache.groovy</groupId>
                 <artifactId>groovy</artifactId>
                 <version>${version.groovy}</version>
             </dependency>

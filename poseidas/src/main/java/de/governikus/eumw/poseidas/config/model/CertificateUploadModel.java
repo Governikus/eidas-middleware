@@ -1,6 +1,6 @@
 package de.governikus.eumw.poseidas.config.model;
 
-import javax.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotBlank;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;

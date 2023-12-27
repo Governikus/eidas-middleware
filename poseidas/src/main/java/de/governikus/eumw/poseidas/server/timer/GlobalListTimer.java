@@ -63,12 +63,12 @@ public class GlobalListTimer implements Runnable
         Date date = new Date(triggerContext.getClock().millis() + initialDelay);
         log.debug("First global list timer task will executed with an initial delay of {} milliseconds", initialDelay);
         log.debug("Global list timer task will be executed at {}", date);
-        return date;
+        return date.toInstant();
       }
       Instant nextExecutiontime = lastCompletion.toInstant().plusMillis(getGlobalListTimer());
       Date date = Date.from(nextExecutiontime);
       log.debug("Global list timer task will be executed at {}", date);
-      return date;
+      return date.toInstant();
     };
   }
 

@@ -17,14 +17,5 @@ demo.signature.alias=
 # Pin for that keystore and entry
 demo.signature.pin=
 
-# Keystore that is used to decrypt incoming eIDAS responses
-demo.decryption.keystore=
-
-# Alias for that key
-demo.decryption.alias=
-
-# Pin for that keystore and entry
-demo.decryption.pin=
-
 # The port the application should listen on.
 server.port=8080

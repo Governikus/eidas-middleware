@@ -24,6 +24,8 @@ import org.bouncycastle.cms.CMSException;
 import de.governikus.eumw.config.EidasMiddlewareConfig;
 import de.governikus.eumw.poseidas.SpringApplicationContextHelper;
 import de.governikus.eumw.poseidas.cardbase.asn1.ASN1;
+import de.governikus.eumw.poseidas.cardbase.constants.OIDConstants;
+import de.governikus.eumw.poseidas.cardbase.crypto.HashConstants;
 import de.governikus.eumw.poseidas.cardserver.eac.crypto.SignedDataChecker;
 import de.governikus.eumw.poseidas.eidserver.crl.CertificationRevocationListImpl;
 import de.governikus.eumw.poseidas.server.idprovider.config.ConfigurationService;
@@ -54,7 +56,16 @@ public class EACSignedDataChecker extends EACSignedDataParser implements SignedD
   public EACSignedDataChecker(List<X509Certificate> masterList, String logPrefix)
   {
     super(logPrefix);
-    cmsSignatureChecker = new CmsSignatureChecker(masterList);
+    //The allowed Digest Algorithms and Signature Algorithms can be found in TR-3116-2 2.1.2 (Status 2023)
+    //The allowed elliptic curves can be found in TR-3116-2 1.4.2 (Status 2023)
+    cmsSignatureChecker = new CmsSignatureChecker(masterList,
+                                                  Set.of(HashConstants.SHA256_OID_STRING,
+                                                         HashConstants.SHA384_OID_STRING,
+                                                         HashConstants.SHA512_OID_STRING),
+                                                  Set.of(OIDConstants.OID_ECDSA_SHA256.getOIDString(),
+                                                         OIDConstants.OID_ECDSA_SHA384.getOIDString(),
+                                                         OIDConstants.OID_ECDSA_SHA512.getOIDString()),
+                                                  Set.of("brainpoolP256r1", "brainpoolP384r1", "brainpoolP512r1"));
     this.allowedDocumentTypes = getAllowedDocuments();
   }
 

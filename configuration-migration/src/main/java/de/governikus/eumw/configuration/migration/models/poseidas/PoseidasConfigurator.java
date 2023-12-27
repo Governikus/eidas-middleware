@@ -13,7 +13,7 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
 
-import javax.xml.bind.JAXBException;
+import jakarta.xml.bind.JAXBException;
 
 import de.governikus.eumw.poseidas.server.idprovider.exceptions.InvalidConfigurationException;
 import lombok.NoArgsConstructor;

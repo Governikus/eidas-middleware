@@ -23,7 +23,13 @@
                 <p class="text-secondary">The DVCA configuration to use</p>
             </div>
         </div>
-        <div th:if="${@environment.getProperty('hsm.type') != 'PKCS11'}">
+        <div th:if="${@environment.getProperty('hsm.type') == 'PKCS11'}"  class="text-danger form-group row m-1">
+            <div class="col">
+                <i class="fa fa-exclamation-triangle"></i>
+                Attention: HSM is active, DVCA client authentication key pair from HSM is used instead of potentially configured value
+            </div>
+        </div>
+        <div th:if="${@environment.getProperty('hsm.type') != 'PKCS11' || serviceProviderConfigModel.clientKeyPairName != null}">
             <div th:replace="~{fragments/configOptions :: keypairs('DVCA client authentication key pair', 'clientKeyPairName', 'Key pair for TLS client authentication with referenced DVCA')}"/>
         </div>
         <input type="hidden"

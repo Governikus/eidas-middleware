@@ -11,7 +11,7 @@ package de.governikus.eumw.poseidas.server.pki.caserviceaccess;
 
 import java.net.URISyntaxException;
 
-import javax.xml.ws.BindingProvider;
+import jakarta.xml.ws.BindingProvider;
 
 import de.governikus.eumw.poseidas.gov2server.GovManagementException;
 import de.governikus.eumw.poseidas.gov2server.constants.admin.GlobalManagementCodes;

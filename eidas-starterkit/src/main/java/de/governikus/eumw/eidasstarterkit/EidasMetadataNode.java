@@ -1,11 +1,10 @@
 /*
- * Copyright (c) 2020 Governikus KG. Licensed under the EUPL, Version 1.2 or as soon they will be approved by
- * the European Commission - subsequent versions of the EUPL (the "Licence"); You may not use this work except
- * in compliance with the Licence. You may obtain a copy of the Licence at:
- * http://joinup.ec.europa.eu/software/page/eupl Unless required by applicable law or agreed to in writing,
- * software distributed under the Licence is distributed on an "AS IS" basis, WITHOUT WARRANTIES OR CONDITIONS
- * OF ANY KIND, either express or implied. See the Licence for the specific language governing permissions and
- * limitations under the Licence.
+ * Copyright (c) 2020 Governikus KG. Licensed under the EUPL, Version 1.2 or as soon they will be approved by the
+ * European Commission - subsequent versions of the EUPL (the "Licence"); You may not use this work except in compliance
+ * with the Licence. You may obtain a copy of the Licence at: http://joinup.ec.europa.eu/software/page/eupl Unless
+ * required by applicable law or agreed to in writing, software distributed under the Licence is distributed on an
+ * "AS IS" basis, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the Licence for the
+ * specific language governing permissions and limitations under the Licence.
  */
 
 package de.governikus.eumw.eidasstarterkit;
@@ -30,11 +29,9 @@ import javax.xml.transform.stream.StreamResult;
 
 import org.apache.xml.security.algorithms.MessageDigestAlgorithm;
 import org.apache.xml.security.signature.XMLSignature;
+import org.opensaml.core.config.InitializationException;
 import org.opensaml.core.xml.Namespace;
-import org.opensaml.core.xml.config.XMLObjectProviderRegistrySupport;
 import org.opensaml.core.xml.io.MarshallingException;
-import org.opensaml.core.xml.io.Unmarshaller;
-import org.opensaml.core.xml.io.UnmarshallerFactory;
 import org.opensaml.core.xml.io.UnmarshallingException;
 import org.opensaml.saml.common.xml.SAMLConstants;
 import org.opensaml.saml.ext.saml2alg.DigestMethod;
@@ -88,7 +85,6 @@ import org.opensaml.xmlsec.signature.impl.X509DataBuilder;
 import org.opensaml.xmlsec.signature.support.SignatureException;
 import org.opensaml.xmlsec.signature.support.Signer;
 import org.w3c.dom.DOMException;
-import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;
 
@@ -100,13 +96,12 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 import net.shibboleth.utilities.java.support.component.ComponentInitializationException;
-import net.shibboleth.utilities.java.support.xml.BasicParserPool;
 import net.shibboleth.utilities.java.support.xml.XMLConstants;
 import net.shibboleth.utilities.java.support.xml.XMLParserException;
-import se.litsec.eidas.opensaml.common.EidasConstants;
-import se.litsec.eidas.opensaml.ext.SPType;
-import se.litsec.eidas.opensaml.ext.SPTypeEnumeration;
-import se.litsec.eidas.opensaml.ext.impl.SPTypeBuilder;
+import se.swedenconnect.opensaml.eidas.common.EidasConstants;
+import se.swedenconnect.opensaml.eidas.ext.SPType;
+import se.swedenconnect.opensaml.eidas.ext.SPTypeEnumeration;
+import se.swedenconnect.opensaml.eidas.ext.impl.SPTypeBuilder;
 
 
 /**
@@ -182,22 +177,19 @@ public class EidasMetadataNode
     }
   }
 
-  byte[] generate(EidasSigner signer) throws CertificateEncodingException, MarshallingException,
-    SignatureException, TransformerException, IOException
+  byte[] generate(EidasSigner signer)
+    throws CertificateEncodingException, MarshallingException, SignatureException, TransformerException, IOException
   {
     EntityDescriptor entityDescriptor = new EntityDescriptorBuilder().buildObject();
     entityDescriptor.getNamespaceManager()
-                    .registerNamespaceDeclaration(new Namespace(EidasConstants.EIDAS_NS,
-                                                                EidasConstants.EIDAS_PREFIX));
+                    .registerNamespaceDeclaration(new Namespace(EidasConstants.EIDAS_NS, EidasConstants.EIDAS_PREFIX));
     entityDescriptor.getNamespaceManager()
                     .registerNamespaceDeclaration(new Namespace(SAMLConstants.SAML20ALG_NS,
                                                                 SAMLConstants.SAML20ALG_PREFIX));
     entityDescriptor.getNamespaceManager()
-                    .registerNamespaceDeclaration(new Namespace(XMLConstants.XSD_NS,
-                                                                XMLConstants.XSD_PREFIX));
+                    .registerNamespaceDeclaration(new Namespace(XMLConstants.XSD_NS, XMLConstants.XSD_PREFIX));
     entityDescriptor.getNamespaceManager()
-                    .registerNamespaceDeclaration(new Namespace(XMLConstants.XSI_NS,
-                                                                XMLConstants.XSI_PREFIX));
+                    .registerNamespaceDeclaration(new Namespace(XMLConstants.XSI_NS, XMLConstants.XSI_PREFIX));
     entityDescriptor.setID(id);
     entityDescriptor.setEntityID(entityId);
     entityDescriptor.setValidUntil(validUntil);
@@ -372,15 +364,10 @@ public class EidasMetadataNode
    */
   static EidasMetadataNode parse(InputStream is, X509Certificate signer, boolean continueOnInvalidSig)
     throws XMLParserException, UnmarshallingException, CertificateException, ErrorCodeException,
-    ComponentInitializationException
+    ComponentInitializationException, InitializationException
   {
     EidasMetadataNode eidasMetadataNode = new EidasMetadataNode();
-    BasicParserPool ppMgr = Utils.getBasicParserPool();
-    Document inCommonMDDoc = ppMgr.parse(is);
-    Element metadataRoot = inCommonMDDoc.getDocumentElement();
-    UnmarshallerFactory unmarshallerFactory = XMLObjectProviderRegistrySupport.getUnmarshallerFactory();
-    Unmarshaller unmarshaller = unmarshallerFactory.getUnmarshaller(metadataRoot);
-    EntityDescriptor metaData = (EntityDescriptor)unmarshaller.unmarshall(metadataRoot);
+    EntityDescriptor metaData = EidasSaml.unmarshalMetadata(is);
 
     Signature sig = metaData.getSignature();
     if (sig == null)

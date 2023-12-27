@@ -152,7 +152,7 @@ public class CvcTlsCheck
       }
       catch (IllegalArgumentException e)
       {
-        // happens if no cvc in terminalpermission
+        log.warn(e.getMessage());
       }
     }
     return cvcResults;

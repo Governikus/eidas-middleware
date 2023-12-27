@@ -18,9 +18,9 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.TreeMap;
 
-import javax.xml.bind.JAXBContext;
-import javax.xml.bind.JAXBElement;
-import javax.xml.bind.JAXBException;
+import jakarta.xml.bind.JAXBContext;
+import jakarta.xml.bind.JAXBElement;
+import jakarta.xml.bind.JAXBException;
 
 import de.governikus.eumw.poseidas.config.schema.CoreConfigurationType;
 import de.governikus.eumw.poseidas.config.schema.ObjectFactory;

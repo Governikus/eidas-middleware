@@ -17,8 +17,8 @@ import de.governikus.eumw.eidasstarterkit.EidasNaturalPersonAttributes;
 import de.governikus.eumw.eidasstarterkit.person_attributes.AbstractEidasAttribute;
 import de.governikus.eumw.eidasstarterkit.person_attributes.EidasPersonAttributes;
 import lombok.NoArgsConstructor;
-import se.litsec.eidas.opensaml.ext.attributes.PlaceOfBirthType;
-import se.litsec.eidas.opensaml.ext.attributes.impl.PlaceOfBirthTypeBuilder;
+import se.swedenconnect.opensaml.eidas.ext.attributes.PlaceOfBirthType;
+import se.swedenconnect.opensaml.eidas.ext.attributes.impl.PlaceOfBirthTypeBuilder;
 
 
 @NoArgsConstructor

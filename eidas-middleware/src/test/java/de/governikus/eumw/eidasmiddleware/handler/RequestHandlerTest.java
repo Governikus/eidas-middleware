@@ -24,25 +24,36 @@ import java.security.cert.CertificateEncodingException;
 import java.security.cert.X509Certificate;
 import java.util.Base64;
 import java.util.HashMap;
+import java.util.stream.Stream;
 
 import javax.xml.transform.TransformerException;
 import javax.xml.transform.TransformerFactoryConfigurationError;
 
+import org.apache.xml.security.signature.XMLSignature;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.Arguments;
+import org.junit.jupiter.params.provider.MethodSource;
+import org.junit.jupiter.params.provider.ValueSource;
 import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.opensaml.core.config.InitializationException;
 import org.opensaml.core.xml.io.MarshallingException;
+import org.opensaml.saml.saml2.core.AuthnRequest;
+import org.opensaml.saml.saml2.core.impl.AuthnRequestMarshaller;
+import org.opensaml.xmlsec.signature.support.SignatureConstants;
 import org.opensaml.xmlsec.signature.support.SignatureException;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 import org.springframework.util.MultiValueMap;
 import org.springframework.web.util.UriComponentsBuilder;
+import org.w3c.dom.Element;
 import org.xml.sax.SAXParseException;
 
+import de.governikus.eumw.eidascommon.CryptoAlgUtil;
 import de.governikus.eumw.eidascommon.ErrorCodeException;
 import de.governikus.eumw.eidascommon.HttpRedirectUtils;
 import de.governikus.eumw.eidascommon.Utils;
@@ -59,8 +70,9 @@ import de.governikus.eumw.eidasstarterkit.person_attributes.EidasPersonAttribute
 import de.governikus.eumw.poseidas.server.idprovider.config.ConfigurationService;
 import de.governikus.eumw.utils.key.KeyStoreSupporter;
 import lombok.Data;
+import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
-import se.litsec.eidas.opensaml.ext.SPTypeEnumeration;
+import se.swedenconnect.opensaml.eidas.ext.SPTypeEnumeration;
 
 
 /**
@@ -284,6 +296,62 @@ class RequestHandlerTest
   }
 
   /**
+   * MethodSource for testSha1PostRequest()
+   */
+  static Stream<Arguments> testSha1PostRequest()
+  {
+    return Stream.of(Arguments.of(XMLSignature.ALGO_ID_SIGNATURE_RSA_SHA1_MGF1,
+                                  SignatureConstants.ALGO_ID_DIGEST_SHA1,
+                                  "/de/governikus/eumw/eidasmiddleware/bos-test-tctoken.saml-sign.p12",
+                                  "bos-test-tctoken.saml-sign"),
+                     Arguments.of(XMLSignature.ALGO_ID_SIGNATURE_RSA_SHA256_MGF1,
+                                  SignatureConstants.ALGO_ID_DIGEST_SHA1,
+                                  "/de/governikus/eumw/eidasmiddleware/bos-test-tctoken.saml-sign.p12",
+                                  "bos-test-tctoken.saml-sign"),
+                     Arguments.of(XMLSignature.ALGO_ID_SIGNATURE_RSA_SHA1_MGF1,
+                                  SignatureConstants.ALGO_ID_DIGEST_SHA256,
+                                  "/de/governikus/eumw/eidasmiddleware/bos-test-tctoken.saml-sign.p12",
+                                  "bos-test-tctoken.saml-sign"),
+                     Arguments.of(XMLSignature.ALGO_ID_SIGNATURE_ECDSA_SHA1,
+                                  SignatureConstants.ALGO_ID_DIGEST_SHA1,
+                                  "/de/governikus/eumw/eidasmiddleware/ecc2.p12",
+                                  "ec_nist_p256"),
+                     Arguments.of(XMLSignature.ALGO_ID_SIGNATURE_ECDSA_SHA256,
+                                  SignatureConstants.ALGO_ID_DIGEST_SHA1,
+                                  "/de/governikus/eumw/eidasmiddleware/ecc2.p12",
+                                  "ec_nist_p256"),
+                     Arguments.of(XMLSignature.ALGO_ID_SIGNATURE_ECDSA_SHA1,
+                                  SignatureConstants.ALGO_ID_DIGEST_SHA256,
+                                  "/de/governikus/eumw/eidasmiddleware/ecc2.p12",
+                                  "ec_nist_p256"));
+  }
+
+  @SneakyThrows
+  @ParameterizedTest
+  @MethodSource
+  void testSha1PostRequest(String signatureAlgorithm, String digestAlgorithm, String keyStorePath, String alias)
+  {
+    File keystoreFile = new File(RequestHandlerTest.class.getResource(keyStorePath).toURI());
+    KeyStore keyStore = KeyStoreSupporter.readKeyStore(keystoreFile, DEFAULT_PASSWORD);
+    byte[] sha1SamlRequest = RequestHelper.createSamlPostRequest("http://localhost:8080/eIDASDemoApplication/NewReceiverServlet",
+                                                                 "http://localhost:8080/eIDASDemoApplication/Metadata",
+                                                                 (X509Certificate)keyStore.getCertificate(alias),
+                                                                 (PrivateKey)keyStore.getKey(alias,
+                                                                                             DEFAULT_PASSWORD.toCharArray()),
+                                                                 signatureAlgorithm,
+                                                                 digestAlgorithm);
+
+    RequestHandler requestHandler = new RequestHandler(requestSessionRepository, mockConfigurationService);
+    RequestProcessingException requestProcessingException = Assertions.assertThrows(RequestProcessingException.class,
+                                                                                    () -> requestHandler.handleSAMLPostRequest(RELAY_STATE,
+                                                                                                                               Base64.getEncoder()
+                                                                                                                                     .encodeToString(sha1SamlRequest)));
+    ErrorCodeException errorCodeException = (ErrorCodeException)requestProcessingException.getCause();
+    Assertions.assertEquals(1, errorCodeException.getDetails().length);
+    Assertions.assertEquals(CryptoAlgUtil.INVALID_HASH_OR_SIGNATURE_ALGORITHM, errorCodeException.getDetails()[0]);
+  }
+
+  /**
    * Test that a request with the wrong signature certificate is rejected
    */
   @Test
@@ -484,6 +552,28 @@ class RequestHandlerTest
                             requestProcessingException.getClass(),
                             "RequestProcessingException expected");
     Assertions.assertEquals(RequestHandler.CANNOT_PARSE_SAML_REQUEST, requestProcessingException.getMessage());
+  }
+
+  @SneakyThrows
+  @ParameterizedTest
+  @ValueSource(strings = {XMLSignature.ALGO_ID_SIGNATURE_RSA_SHA1_MGF1, XMLSignature.ALGO_ID_SIGNATURE_ECDSA_SHA1})
+  void testSha1RedirectRequest(String signatureAlgorithm)
+  {
+    RequestHandler requestHandler = new RequestHandler(requestSessionRepository, mockConfigurationService);
+    AuthnRequest unsignedAuthnRequest = RequestHelper.createUnsignedAuthnRequest("http://localhost:8080/eIDASDemoApplication/NewReceiverServlet",
+                                                                                 "http://localhost:8080/eIDASDemoApplication/Metadata");
+    AuthnRequestMarshaller arm = new AuthnRequestMarshaller();
+    Element element = arm.marshall(unsignedAuthnRequest);
+    byte[] authnRequestBytes = RequestHelper.marshallAuthnRequest(element);
+
+    RequestProcessingException requestProcessingException = Assertions.assertThrows(RequestProcessingException.class,
+                                                                                    () -> requestHandler.handleSAMLRedirectRequest(HttpRedirectUtils.deflate(authnRequestBytes),
+                                                                                                                                   RELAY_STATE,
+                                                                                                                                   signatureAlgorithm,
+                                                                                                                                   null));
+    ErrorCodeException errorCodeException = (ErrorCodeException)requestProcessingException.getCause();
+    Assertions.assertEquals(1, errorCodeException.getDetails().length);
+    Assertions.assertEquals(CryptoAlgUtil.INVALID_HASH_OR_SIGNATURE_ALGORITHM, errorCodeException.getDetails()[0]);
   }
 
   /**

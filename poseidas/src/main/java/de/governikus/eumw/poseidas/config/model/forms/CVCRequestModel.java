@@ -9,6 +9,12 @@
 
 package de.governikus.eumw.poseidas.config.model.forms;
 
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
+
+import org.hibernate.validator.constraints.Length;
+import org.hibernate.validator.constraints.Range;
+
 import lombok.Data;
 
 
@@ -21,11 +27,17 @@ import lombok.Data;
 public class CVCRequestModel
 {
 
+  @NotBlank(message = "Country code must not be empty")
+  @Length(min = 2, max = 2, message = "Country code has to be exactly 2 characters long")
   private String countryCode;
 
+  @NotBlank(message = "CHR Mnemonic must not be empty")
+  @Length(max = 9, message = "CHR Mnemonic must not be longer than 9 characters")
   private String chrMnemonic;
 
-  private int sequenceNumber;
+  @Range(min = 0, max = 99999, message = "Sequence number must be between 0-99999")
+  @NotNull(message = "Sequence number must not be empty")
+  private Integer sequenceNumber;
 
   private String rscChr;
 

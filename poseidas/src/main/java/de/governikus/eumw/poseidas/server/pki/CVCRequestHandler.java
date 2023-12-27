@@ -29,13 +29,14 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import javax.xml.bind.DatatypeConverter;
-import javax.xml.ws.WebServiceException;
+import jakarta.xml.bind.DatatypeConverter;
+import jakarta.xml.ws.WebServiceException;
 
-import org.apache.commons.lang.ArrayUtils;
+import org.apache.commons.lang3.ArrayUtils;
 
 import de.governikus.eumw.config.ServiceProviderType;
 import de.governikus.eumw.eidascommon.Utils;
+import de.governikus.eumw.poseidas.cardbase.ByteUtil;
 import de.governikus.eumw.poseidas.cardbase.Hex;
 import de.governikus.eumw.poseidas.cardbase.asn1.ASN1;
 import de.governikus.eumw.poseidas.cardbase.asn1.npa.CertificateDescription;
@@ -43,7 +44,6 @@ import de.governikus.eumw.poseidas.cardbase.asn1.npa.ECCVCPath;
 import de.governikus.eumw.poseidas.cardbase.asn1.npa.ECCVCertificate;
 import de.governikus.eumw.poseidas.cardbase.asn1.npa.ECPublicKeyPath;
 import de.governikus.eumw.poseidas.cardserver.certrequest.CertificateRequest;
-import de.governikus.eumw.poseidas.cardserver.certrequest.CertificateRequestPath;
 import de.governikus.eumw.poseidas.cardserver.certrequest.CvcRequestGenerator.CvcRequestData;
 import de.governikus.eumw.poseidas.eidmodel.TerminalData;
 import de.governikus.eumw.poseidas.eidserver.crl.CertificationRevocationListImpl;
@@ -127,7 +127,7 @@ public class CVCRequestHandler extends BerCaRequestHandlerBase
                                byte[] oldCvcBytes,
                                byte[][] chain,
                                ASN1 publicKey,
-                               ASN1 holderReference,
+                               String holderReference,
                                Date actualDate,
                                String cvcRefId)
     throws CertificateException, GovManagementException
@@ -259,21 +259,16 @@ public class CVCRequestHandler extends BerCaRequestHandlerBase
    */
   private static byte[] getBasicHolderReference(TerminalData newCVC)
   {
-    byte[] newHolderReference = new byte[newCVC.getHolderReference().length - 5];
-    System.arraycopy(newCVC.getHolderReference(), 0, newHolderReference, 0, newHolderReference.length);
-    return newHolderReference;
+    return ByteUtil.subbytes(newCVC.getHolderReference(), 0, newCVC.getHolderReference().length - 5);
   }
 
   /**
    * @param holderReference
    * @return
    */
-  private static byte[] getBasicHolderReference(ASN1 holderReference)
+  private static byte[] getBasicHolderReference(String holderReference)
   {
-    byte[] hrBytes = holderReference.getValue();
-    byte[] newHolderReference = new byte[hrBytes.length - 5];
-    System.arraycopy(hrBytes, 0, newHolderReference, 0, newHolderReference.length);
-    return newHolderReference;
+    return holderReference.substring(0, holderReference.length() - 5).getBytes();
   }
 
   /**
@@ -594,26 +589,20 @@ public class CVCRequestHandler extends BerCaRequestHandlerBase
 
   public static String getHolderReferenceStringOfPendingRequest(PendingCertificateRequest pendingCertificateRequest)
   {
+    if (pendingCertificateRequest == null)
+    {
+      return null;
+    }
+    // Get encoded certificate request
+    byte[] requestData = pendingCertificateRequest.getRequestData();
+    if (ArrayUtils.isEmpty(requestData))
+    {
+      return null;
+    }
+
     try
     {
-      if (pendingCertificateRequest == null)
-      {
-        return null;
-      }
-      // Get encoded certificate request
-      byte[] requestData = pendingCertificateRequest.getRequestData();
-      if (ArrayUtils.isEmpty(requestData))
-      {
-        return null;
-      }
-      // Encoded certificate request is wrapped in an application tag, that needs to be unwrapped (removed) for parsing
-      ASN1 asn1 = new ASN1(requestData);
-      byte[] value = asn1.getValue();
-      if (value == null)
-      {
-        return null;
-      }
-      CertificateRequest certificateRequest = new CertificateRequest(value);
+      CertificateRequest certificateRequest = new CertificateRequest(new ByteArrayInputStream(requestData));
       return certificateRequest.getHolderReferenceString();
     }
     catch (IOException e)
@@ -715,17 +704,9 @@ public class CVCRequestHandler extends BerCaRequestHandlerBase
           chainForCheck[cin.getKey().getPosInChain()] = cin.getData();
         }
       }
-      byte[] requestData = pendingCertificateRequest.getRequestData();
-      CertificateRequest certificateRequest = new CertificateRequest(new ByteArrayInputStream(requestData), true);
-      ASN1 publicKey = certificateRequest.getChildElementByPath(CertificateRequestPath.PUBLIC_KEY);
-      if (publicKey == null)
-      {
-        ASN1[] bodies = certificateRequest.getChildElementsByTag(CertificateRequestPath.CV_CERTIFICATE_BODY.getTag());
-        ASN1 body = bodies[0];
-        ASN1[] publicKeys = body.getChildElementsByTag(CertificateRequestPath.PUBLIC_KEY.getTag());
-        publicKey = publicKeys[0];
-      }
-      ASN1 holderReference = certificateRequest.getChildElementByPath(CertificateRequestPath.HOLDER_REFERENCE);
+      CertificateRequest certificateRequest = new CertificateRequest(new ByteArrayInputStream(pendingCertificateRequest.getRequestData()));
+      ASN1 publicKey = certificateRequest.getPublicKey();
+      String holderReference = certificateRequest.getHolderReferenceString();
       checkCVC(cert, tp.getCvc(), chainForCheck, publicKey, holderReference, new Date(), cvcRefId);
     }
     catch (Exception e)

@@ -42,13 +42,17 @@
 </div>
 
 <!-- FORM FIELDS -->
-<div th:fragment="inputRow_text(id, obj, hint)">
+<div th:fragment="inputRow_text(text, obj, hint)">
+    <div th:replace="~{fragments/form :: inputRow_text_with_id(${obj}, ${text},${obj}, ${hint})}"/>
+</div>
+
+<div th:fragment="inputRow_text_with_id(id, text, obj, hint)">
     <div class="form-group row m-1">
-        <label class="col-sm-3 col-form-label text-left" th:for="${id}" th:text="${id}"></label>
+        <label class="col-sm-3 col-form-label text-left" th:for="${id}" th:text="${text}"></label>
         <div class="col-sm-9">
             <input class="form-control "
                    th:classappend="${#fields.hasErrors(obj) ? 'border-danger' : ''}"
-                   th:field="*{__${obj}__}" th:id="${id.replace(' ','-')}"
+                   th:field="*{__${obj}__}" th:id="${id}"
                    type="text"/>
             <p class="m-0 text-danger" th:errors="*{__${obj}__}"/>
             <p class="text-secondary" th:text="${hint}"/>
@@ -81,16 +85,17 @@
     </div>
 </div>
 
-<div th:fragment="inputRow_number(id, obj, min)">
+<div th:fragment="inputRow_number(text, obj, hint)">
     <div class=" form-group row m-1">
-        <label class="col-sm-3 col-form-label text-left" th:for="${id.replace(' ','-')}" th:text="${id}"></label>
+        <label class="col-sm-3 col-form-label text-left" th:for="${obj}" th:text="${text}"></label>
         <div class="col-sm-9">
             <input class="form-control"
                    th:classappend="${#fields.hasErrors(obj) ? 'border-danger' : ''}"
                    th:field="*{__${obj}__}"
-                   th:id="${id.replace(' ','-')}"
+                   th:id="${obj}"
                    type="number"/>
             <p class="m-0 text-danger" th:errors="*{__${obj}__}"/>
+            <p class="text-secondary" th:text="${hint}"/>
         </div>
     </div>
 </div>

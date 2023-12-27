@@ -41,7 +41,6 @@ import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.DynamicPropertyRegistry;
 import org.springframework.test.context.DynamicPropertySource;
-import org.springframework.util.SocketUtils;
 
 import de.governikus.eumw.config.EidasMiddlewareConfig;
 import de.governikus.eumw.config.ServiceProviderType;
@@ -53,6 +52,7 @@ import de.governikus.eumw.poseidas.server.idprovider.config.ConfigurationTestHel
 import de.governikus.eumw.poseidas.server.pki.TerminalPermission;
 import de.governikus.eumw.poseidas.server.pki.TerminalPermissionAO;
 import de.governikus.eumw.poseidas.service.MetadataService;
+import org.springframework.test.util.TestSocketUtils;
 
 @ActiveProfiles("db") // Use application-db.properties
 @SpringBootTest
@@ -85,7 +85,7 @@ class SNMPAgentTest
   @DynamicPropertySource
   static void snmpProperties(DynamicPropertyRegistry dynamicPropertyRegistry)
   {
-    snmpPort = SocketUtils.findAvailableUdpPort();
+    snmpPort = TestSocketUtils.findAvailableTcpPort();
     dynamicPropertyRegistry.add("poseidas.snmp.agentport", () -> snmpPort);
   }
 

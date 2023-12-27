@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<jaxb:bindings version="2.1"
-               xmlns:jaxb="http://java.sun.com/xml/ns/jaxb"
+<jaxb:bindings version="3.0"
+               xmlns:jaxb="https://jakarta.ee/xml/ns/jaxb"
                xmlns:xs="http://www.w3.org/2001/XMLSchema"
-               xmlns:xjc="http://java.sun.com/xml/ns/jaxb/xjc">     
+               xmlns:xjc="https://jakarta.ee/xml/ns/jaxb/xjc">
   <jaxb:bindings schemaLocation="PassiveAuth/BasicTypes_DV_PassiveAuth.xsd">
   <jaxb:bindings node="/xs:schema">
    <jaxb:schemaBindings>

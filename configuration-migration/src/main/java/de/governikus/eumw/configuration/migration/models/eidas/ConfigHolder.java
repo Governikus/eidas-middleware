@@ -19,6 +19,7 @@ import java.security.cert.X509Certificate;
 import java.util.Locale;
 import java.util.Properties;
 
+import de.governikus.eumw.eidascommon.ErrorCodeException;
 import de.governikus.eumw.eidascommon.Utils;
 import de.governikus.eumw.eidascommon.Utils.X509KeyPair;
 import de.governikus.eumw.eidasstarterkit.EidasContactPerson;
@@ -127,7 +128,7 @@ public class ConfigHolder
 
   /**
    * When setting the path to config folder for migration make is canonical.
-   * 
+   *
    * @param inputPathToConfig
    * @throws IOException
    */
@@ -195,7 +196,7 @@ public class ConfigHolder
   /**
    * Get the keypair to sign the messages and metadata
    */
-  public X509KeyPair getAppSignatureKeyPair() throws IOException, GeneralSecurityException
+  public X509KeyPair getAppSignatureKeyPair() throws IOException, GeneralSecurityException, ErrorCodeException
   {
     if (signKey == null)
     {

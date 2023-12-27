@@ -1,11 +1,10 @@
 /*
- * Copyright (c) 2020 Governikus KG. Licensed under the EUPL, Version 1.2 or as soon they will be approved by
- * the European Commission - subsequent versions of the EUPL (the "Licence"); You may not use this work except
- * in compliance with the Licence. You may obtain a copy of the Licence at:
- * http://joinup.ec.europa.eu/software/page/eupl Unless required by applicable law or agreed to in writing,
- * software distributed under the Licence is distributed on an "AS IS" basis, WITHOUT WARRANTIES OR CONDITIONS
- * OF ANY KIND, either express or implied. See the Licence for the specific language governing permissions and
- * limitations under the Licence.
+ * Copyright (c) 2020 Governikus KG. Licensed under the EUPL, Version 1.2 or as soon they will be approved by the
+ * European Commission - subsequent versions of the EUPL (the "Licence"); You may not use this work except in compliance
+ * with the Licence. You may obtain a copy of the Licence at: http://joinup.ec.europa.eu/software/page/eupl Unless
+ * required by applicable law or agreed to in writing, software distributed under the Licence is distributed on an
+ * "AS IS" basis, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the Licence for the
+ * specific language governing permissions and limitations under the Licence.
  */
 
 package de.governikus.eumw.eidasstarterkit;
@@ -29,9 +28,14 @@ import javax.xml.validation.Validator;
 import org.opensaml.core.config.InitializationException;
 import org.opensaml.core.xml.config.XMLObjectProviderRegistrySupport;
 import org.opensaml.core.xml.io.MarshallingException;
+import org.opensaml.core.xml.io.Unmarshaller;
+import org.opensaml.core.xml.io.UnmarshallerFactory;
 import org.opensaml.core.xml.io.UnmarshallingException;
+import org.opensaml.saml.saml2.metadata.EntityDescriptor;
 import org.opensaml.xmlsec.encryption.support.EncryptionException;
 import org.opensaml.xmlsec.signature.support.SignatureException;
+import org.w3c.dom.Document;
+import org.w3c.dom.Element;
 import org.xml.sax.SAXException;
 
 import de.governikus.eumw.eidascommon.ErrorCodeException;
@@ -41,15 +45,16 @@ import de.governikus.eumw.eidasstarterkit.person_attributes.EidasPersonAttribute
 import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
 import net.shibboleth.utilities.java.support.component.ComponentInitializationException;
+import net.shibboleth.utilities.java.support.xml.BasicParserPool;
 import net.shibboleth.utilities.java.support.xml.XMLParserException;
-import se.litsec.eidas.opensaml.ext.SPTypeEnumeration;
 import se.swedenconnect.opensaml.OpenSAMLInitializer;
 import se.swedenconnect.opensaml.OpenSAMLSecurityExtensionConfig;
+import se.swedenconnect.opensaml.eidas.ext.SPTypeEnumeration;
 
 
 /**
- * Put all method together for creating, validating and parsing of saml messages and make it easy. Using the
- * methods of this class will init opensaml automatically
+ * Put all method together for creating, validating and parsing of saml messages and make it easy. Using the methods of
+ * this class will init opensaml automatically
  *
  * @author hohnholt
  */
@@ -108,12 +113,12 @@ public class EidasSaml
                                      SPTypeEnumeration sectorType,
                                      EidasNameIdType nameIdPolicy,
                                      EidasLoaEnum loa)
-    throws InitializationException, CertificateEncodingException, IOException, MarshallingException,
-    SignatureException, TransformerFactoryConfigurationError, TransformerException
+    throws InitializationException, CertificateEncodingException, IOException, MarshallingException, SignatureException,
+    TransformerFactoryConfigurationError, TransformerException
   {
     init();
-    EidasRequest eidasRequest = new EidasRequest(destination, sectorType, nameIdPolicy, loa, issuer,
-                                                 providerName, requesterId, signer);
+    EidasRequest eidasRequest = new EidasRequest(destination, sectorType, nameIdPolicy, loa, issuer, providerName,
+                                                 requesterId, signer);
     return eidasRequest.generate(requestedAttributes);
   }
 
@@ -124,8 +129,8 @@ public class EidasSaml
                                      SPTypeEnumeration sectorType,
                                      EidasNameIdType nameIdPolicy,
                                      EidasLoaEnum loa)
-    throws InitializationException, CertificateEncodingException, IOException, MarshallingException,
-    SignatureException, TransformerFactoryConfigurationError, TransformerException
+    throws InitializationException, CertificateEncodingException, IOException, MarshallingException, SignatureException,
+    TransformerFactoryConfigurationError, TransformerException
   {
     init();
     EidasRequest eidasRequest = new EidasRequest(destination, sectorType, nameIdPolicy, loa, issuer,
@@ -147,8 +152,8 @@ public class EidasSaml
    *          {@link EidasLoaEnum#LOA_HIGH}.
    * @param testCase the enum of the test case for the eIDAS-Request. Can be null.
    * @return the eIDAS-Request as a byte array.
-   * @see EidasSaml#createRequest(String, String, EidasSigner, Map, SPTypeEnumeration, EidasNameIdType,
-   *      EidasLoaEnum) create a request without a test case.
+   * @see EidasSaml#createRequest(String, String, EidasSigner, Map, SPTypeEnumeration, EidasNameIdType, EidasLoaEnum)
+   *      create a request without a test case.
    **/
   public static byte[] createRequest(String issuer,
                                      String destination,
@@ -158,8 +163,8 @@ public class EidasSaml
                                      EidasNameIdType nameIdPolicy,
                                      EidasLoaEnum loa,
                                      TestCaseEnum testCase)
-    throws InitializationException, CertificateEncodingException, IOException, MarshallingException,
-    SignatureException, TransformerFactoryConfigurationError, TransformerException
+    throws InitializationException, CertificateEncodingException, IOException, MarshallingException, SignatureException,
+    TransformerFactoryConfigurationError, TransformerException
   {
     init();
     EidasRequest eidasRequest = new EidasRequest(destination, sectorType, nameIdPolicy, loa, issuer,
@@ -197,9 +202,8 @@ public class EidasSaml
    * @throws InitializationException
    * @throws ComponentInitializationException
    */
-  public static EidasRequest parseRequest(InputStream is, List<X509Certificate> authors)
-    throws InitializationException, XMLParserException, UnmarshallingException, ErrorCodeException,
-    ComponentInitializationException
+  public static EidasRequest parseRequest(InputStream is, List<X509Certificate> authors) throws InitializationException,
+    XMLParserException, UnmarshallingException, ErrorCodeException, ComponentInitializationException
   {
     init();
     return EidasRequest.parse(is, authors);
@@ -251,13 +255,12 @@ public class EidasSaml
                                       String inResponseTo,
                                       EidasEncrypter encrypter,
                                       EidasSigner signer)
-    throws InitializationException, CertificateEncodingException, XMLParserException, IOException,
-    EncryptionException, MarshallingException, SignatureException, TransformerFactoryConfigurationError,
-    TransformerException
+    throws InitializationException, CertificateEncodingException, XMLParserException, IOException, EncryptionException,
+    MarshallingException, SignatureException, TransformerFactoryConfigurationError, TransformerException
   {
     init();
-    EidasResponse response = new EidasResponse(att, destination, recipient, nameid, inResponseTo, issuer, loa,
-                                               signer, encrypter);
+    EidasResponse response = new EidasResponse(att, destination, recipient, nameid, inResponseTo, issuer, loa, signer,
+                                               encrypter);
     return response.generate();
   }
 
@@ -332,11 +335,10 @@ public class EidasSaml
     TransformerFactoryConfigurationError, TransformerException, InitializationException
   {
     init();
-    EidasMetadataService meta = new EidasMetadataService(id, entityId, validUntil, sigCert, encCert,
-                                                         organisation, technicalcontact, supportContact,
-                                                         postEndpoint, redirectEndpoint, attributes,
-                                                         supportedNameIdTypes, middlewareVersion, doSign,
-                                                         requesterIdFlag, countryCode);
+    EidasMetadataService meta = new EidasMetadataService(id, entityId, validUntil, sigCert, encCert, organisation,
+                                                         technicalcontact, supportContact, postEndpoint,
+                                                         redirectEndpoint, attributes, supportedNameIdTypes,
+                                                         middlewareVersion, doSign, requesterIdFlag, countryCode);
     return meta.generate(signer);
   }
 
@@ -350,8 +352,8 @@ public class EidasSaml
    * @throws IOException
    * @throws ComponentInitializationException
    */
-  static EidasMetadataService parseMetaDataService(InputStream is) throws CertificateException,
-    XMLParserException, UnmarshallingException, InitializationException, ComponentInitializationException
+  static EidasMetadataService parseMetaDataService(InputStream is) throws CertificateException, XMLParserException,
+    UnmarshallingException, InitializationException, ComponentInitializationException, ErrorCodeException
   {
     init();
     return EidasMetadataService.parse(is);
@@ -388,8 +390,8 @@ public class EidasSaml
                                           SPTypeEnumeration spType,
                                           List<EidasNameIdType> supportedNameIdTypes,
                                           EidasSigner signer)
-    throws InitializationException, CertificateEncodingException, IOException, MarshallingException,
-    SignatureException, TransformerException
+    throws InitializationException, CertificateEncodingException, IOException, MarshallingException, SignatureException,
+    TransformerException
   {
     init();
     EidasMetadataNode meta = new EidasMetadataNode(id, entityId, validUntil, sigCert, encCert, organisation,
@@ -445,9 +447,8 @@ public class EidasSaml
   }
 
   /**
-   * Validates a saml message with the saml-schema-protocol-2_0.xsd, saml-schema-assertion-2_0.xsd,
-   * xenc-schema.xsd, xmldsig-core-schema.xsd,NaturalPersonShema.xsd If the message is not valid a
-   * SAXException will be thrown
+   * Validates a saml message with the saml-schema-protocol-2_0.xsd, saml-schema-assertion-2_0.xsd, xenc-schema.xsd,
+   * xmldsig-core-schema.xsd,NaturalPersonShema.xsd If the message is not valid a SAXException will be thrown
    *
    * @param is the saml message as stream
    * @param resetStreamAfterValidation if u like to parse the given stream later u have to reset the stream
@@ -475,4 +476,25 @@ public class EidasSaml
     }
   }
 
+  /**
+   * Unmarshal a SAML metadata document from an input stream
+   *
+   * @param is The input stream of the SAML metadata document
+   * @return The unmarshalled metadata
+   * @throws ComponentInitializationException
+   * @throws XMLParserException
+   * @throws UnmarshallingException
+   */
+  public static EntityDescriptor unmarshalMetadata(InputStream is)
+    throws ComponentInitializationException, XMLParserException, UnmarshallingException, InitializationException
+  {
+    init();
+
+    BasicParserPool ppMgr = Utils.getBasicParserPool();
+    Document inCommonMDDoc = ppMgr.parse(is);
+    Element metadataRoot = inCommonMDDoc.getDocumentElement();
+    UnmarshallerFactory unmarshallerFactory = XMLObjectProviderRegistrySupport.getUnmarshallerFactory();
+    Unmarshaller unmarshaller = unmarshallerFactory.getUnmarshaller(metadataRoot);
+    return (EntityDescriptor)unmarshaller.unmarshall(metadataRoot);
+  }
 }

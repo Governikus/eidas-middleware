@@ -16,10 +16,10 @@ import java.net.URL;
 import java.nio.charset.StandardCharsets;
 
 import javax.xml.XMLConstants;
-import javax.xml.bind.JAXBContext;
-import javax.xml.bind.JAXBException;
-import javax.xml.bind.Marshaller;
-import javax.xml.bind.Unmarshaller;
+import jakarta.xml.bind.JAXBContext;
+import jakarta.xml.bind.JAXBException;
+import jakarta.xml.bind.Marshaller;
+import jakarta.xml.bind.Unmarshaller;
 import javax.xml.transform.Source;
 import javax.xml.transform.stream.StreamSource;
 import javax.xml.validation.Schema;
@@ -64,7 +64,7 @@ public final class XmlHelper
   }
 
   /**
-   * this method will marshal any element that is annotated with {@link javax.xml.bind.annotation.XmlRootElement}
+   * this method will marshal any element that is annotated with {@link jakarta.xml.bind.annotation.XmlRootElement}
    *
    * @param object the annotated xml-object
    * @return the string representation of the xml-object

@@ -59,13 +59,13 @@ import lombok.extern.slf4j.Slf4j;
 class KeymanagementControllerTest extends WebAdminTestBase
 {
 
-  public static final String CERTIFICATE_UPLOAD_NAME_ID = "Certificate-name";
+  public static final String CERTIFICATE_UPLOAD_NAME_ID = "certificateName";
 
   public static final String CERTIFICATE_UPLOAD_FILE_INPUT_ID = "certificate-upload";
 
   public static final String KEY_STORE_UPLOAD_FORM_ID = "KeyStoreUpload";
 
-  public static final String KEYSTORE_UPLOAD_NAME_ID = "Key-store-name";
+  public static final String KEYSTORE_UPLOAD_NAME_ID = "keyStoreName";
 
   public static final String KEYSTORE_UPLOAD_PASSWORD_ID = "Key-store-password";
 
@@ -73,7 +73,7 @@ class KeymanagementControllerTest extends WebAdminTestBase
 
   public static final String KEYSTORE_UPLOAD_FILE_ID = "keystore-upload";
 
-  public static final String EXTRACT_CERTIFICATE_NAME_ID = "Certificate-name";
+  public static final String EXTRACT_CERTIFICATE_NAME_ID = "certificateName";
 
   public static final String EXTRACT_CERTIFICATE_ALIAS_ID = "certalias";
 
@@ -81,7 +81,7 @@ class KeymanagementControllerTest extends WebAdminTestBase
 
   public static final String EXTRACT_KEY_PAIR_FORM_ID = "extractKeyPairForm";
 
-  public static final String EXTRACT_KEY_PAIR_NAME_ID = "Key-pair-name";
+  public static final String EXTRACT_KEY_PAIR_NAME_ID = "keyPairName";
 
   public static final String EXTRACT_KEY_PAIR_ALIAS_ID = "keyPairalias";
 

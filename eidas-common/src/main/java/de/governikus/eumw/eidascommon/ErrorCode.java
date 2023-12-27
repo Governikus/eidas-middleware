@@ -1,11 +1,10 @@
 /*
- * Copyright (c) 2020 Governikus KG. Licensed under the EUPL, Version 1.2 or as soon they will be approved by
- * the European Commission - subsequent versions of the EUPL (the "Licence"); You may not use this work except
- * in compliance with the Licence. You may obtain a copy of the Licence at:
- * http://joinup.ec.europa.eu/software/page/eupl Unless required by applicable law or agreed to in writing,
- * software distributed under the Licence is distributed on an "AS IS" basis, WITHOUT WARRANTIES OR CONDITIONS
- * OF ANY KIND, either express or implied. See the Licence for the specific language governing permissions and
- * limitations under the Licence.
+ * Copyright (c) 2020 Governikus KG. Licensed under the EUPL, Version 1.2 or as soon they will be approved by the
+ * European Commission - subsequent versions of the EUPL (the "Licence"); You may not use this work except in compliance
+ * with the Licence. You may obtain a copy of the Licence at: http://joinup.ec.europa.eu/software/page/eupl Unless
+ * required by applicable law or agreed to in writing, software distributed under the Licence is distributed on an
+ * "AS IS" basis, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the Licence for the
+ * specific language governing permissions and limitations under the Licence.
  */
 
 package de.governikus.eumw.eidascommon;
@@ -14,15 +13,16 @@ import java.util.ResourceBundle;
 
 
 /**
- * Codes to identify various error situations for the eID-Server. Clients (both those communicating with the
- * respective module and the receiver of the SAML response itself) should be able to display a comprehensive
- * message for each of these codes or handle the respective situation automatically. Please note that the SAML
- * status codes are insufficient to cover all specific situations in sufficient detail.
+ * Codes to identify various error situations for the eID-Server. Clients (both those communicating with the respective
+ * module and the receiver of the SAML response itself) should be able to display a comprehensive message for each of
+ * these codes or handle the respective situation automatically. Please note that the SAML status codes are insufficient
+ * to cover all specific situations in sufficient detail.
  *
  * @author TT
  */
 public enum ErrorCode
 {
+
   /**
    * Conversation finished successfully.
    */
@@ -36,8 +36,8 @@ public enum ErrorCode
    */
   INTERNAL_ERROR,
   /**
-   * Request specifies AssertionConsumerURL but is not signed - will be rejected. May be returned to browser
-   * outside a SAML-response!
+   * Request specifies AssertionConsumerURL but is not signed - will be rejected. May be returned to browser outside a
+   * SAML-response!
    */
   UNSIGNED_ASSERTIONCONSUMER_URL,
   /**
@@ -49,8 +49,7 @@ public enum ErrorCode
    */
   TOO_MANY_OPEN_SESSIONS,
   /**
-   * SAML requestID not specified in the subsequent request. May be returned to browser outside a
-   * SAML-response!
+   * SAML requestID not specified in the subsequent request. May be returned to browser outside a SAML-response!
    */
   MISSING_REQUEST_ID,
   /**
@@ -62,8 +61,7 @@ public enum ErrorCode
    */
   SIGNATURE_MISSING,
   /**
-   * There is a syntax error in the request so it cannot be parsed. May be returned to browser outside a
-   * SAML-response!
+   * There is a syntax error in the request so it cannot be parsed. May be returned to browser outside a SAML-response!
    */
   ILLEGAL_REQUEST_SYNTAX,
   /**
@@ -71,13 +69,13 @@ public enum ErrorCode
    */
   AUTHORIZATION_FAILED,
   /**
-   * Cannot get SAML response because another client action is needed first. May be returned to browser
-   * outside a SAML-response!
+   * Cannot get SAML response because another client action is needed first. May be returned to browser outside a
+   * SAML-response!
    */
   AUTHORIZATION_UNFINISHED,
   /**
-   * The SAML request does not specify one of the providers in the eID-Servers configuration. May be returned
-   * to browser outside a SAML-response!
+   * The SAML request does not specify one of the providers in the eID-Servers configuration. May be returned to browser
+   * outside a SAML-response!
    */
   UNKNOWN_PROVIDER,
   /**
@@ -126,8 +124,8 @@ public enum ErrorCode
    */
   REQUEST_FROM_FUTURE,
   /**
-   * The request has an ID which is not unique among the IDs of all received requests. May be returned to
-   * browser outside a SAML-response!
+   * The request has an ID which is not unique among the IDs of all received requests. May be returned to browser
+   * outside a SAML-response!
    */
   DUPLICATE_REQUEST_ID,
   /**
@@ -210,7 +208,16 @@ public enum ErrorCode
     {
       for ( int i = 0 ; i < details.length ; i++ )
       {
-        result = result.replace("{" + i + "}", details[i] == null ? "" : details[i]);
+        String detailMessage = details[i] == null ? "" : details[i];
+        String placeholder = "{" + i + "}";
+        if (result.contains(placeholder))
+        {
+          result = result.replace(placeholder, detailMessage);
+        }
+        else if (!detailMessage.isBlank())
+        {
+          result += " / " + detailMessage;
+        }
       }
     }
     return result;

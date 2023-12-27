@@ -112,7 +112,7 @@ public abstract class AbstractASN1List // ocard asn1
         // Try to find the ObjectId for the list
         if (identifier.equals(identifierInList))
         {
-          ASN1Primitive object = ((ASN1TaggedObject)parser.readObject()).getObject();
+          ASN1Primitive object = ((ASN1TaggedObject)parser.readObject()).getBaseObject().toASN1Primitive();
           parseList(object);
           catalogued = true;
           return;
@@ -157,7 +157,7 @@ public abstract class AbstractASN1List // ocard asn1
     }
     else if (obj instanceof ASN1TaggedObject)
     {
-      parseASN1Encodable(((ASN1TaggedObject)obj).getObject());
+      parseASN1Encodable(((ASN1TaggedObject)obj).getBaseObject());
     }
   }
 

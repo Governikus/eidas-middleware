@@ -13,7 +13,7 @@ import java.util.Locale;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
-import javax.validation.Valid;
+import jakarta.validation.Valid;
 
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Controller;
@@ -472,5 +472,4 @@ public class ServiceProviderController
       throw new CertificateException("Could not work with certificate of keypair: " + keyPairType.getName(), e);
     }
   }
-
 }

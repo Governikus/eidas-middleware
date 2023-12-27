@@ -14,7 +14,7 @@ import java.security.PrivateKey;
 import java.security.cert.CertificateEncodingException;
 import java.security.cert.X509Certificate;
 
-import javax.xml.bind.DatatypeConverter;
+import jakarta.xml.bind.DatatypeConverter;
 
 import org.opensaml.saml.common.SAMLObjectContentReference;
 import org.opensaml.saml.security.impl.SAMLSignatureProfileValidator;

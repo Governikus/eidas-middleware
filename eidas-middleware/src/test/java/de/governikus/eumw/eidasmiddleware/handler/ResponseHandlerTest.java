@@ -23,7 +23,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Stream;
 
-import javax.xml.bind.DatatypeConverter;
+import jakarta.xml.bind.DatatypeConverter;
 
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeAll;
@@ -351,9 +351,9 @@ class ResponseHandlerTest
     eidasMiddlewareConfiguration.setEidasConfiguration(new EidasMiddlewareConfig.EidasConfiguration());
     eidasMiddlewareConfiguration.getEidasConfiguration().setSignatureKeyPairName("signatureKeystore");
     when(mockConfigurationService.getConfiguration()).thenReturn(Optional.of(eidasMiddlewareConfiguration));
-    when(mockConfigurationService.getKeyPair(Mockito.anyString())).thenReturn(new KeyPair(signatureKeystore,
-                                                                                          "bos-test-tctoken.saml-sign",
-                                                                                          DEFAULT_PASSWORD));
+    when(mockConfigurationService.getSamlKeyPair(Mockito.anyString())).thenReturn(new KeyPair(signatureKeystore,
+                                                                                              "bos-test-tctoken.saml-sign",
+                                                                                              DEFAULT_PASSWORD));
   }
 
   @Test
@@ -759,7 +759,7 @@ class ResponseHandlerTest
                                 .getValue()
                                 .contains("AuthnFailed"));
     Assertions.assertEquals("Authentication cancelled by user",
-                            result.getOpenSamlResponse().getStatus().getStatusMessage().getMessage());
+                            result.getOpenSamlResponse().getStatus().getStatusMessage().getValue());
     Assertions.assertNull(result.getLoa());
   }
 
@@ -789,7 +789,7 @@ class ResponseHandlerTest
 
     Assertions.assertTrue(result.getOpenSamlResponse().getStatus().getStatusCode().getValue().contains(RESPONDER));
     Assertions.assertEquals("An error was reported from eID-Server: http://www.bsi.bund.de/eid/server/2.0/resultminor/getResult#invalidDocument",
-                            result.getOpenSamlResponse().getStatus().getStatusMessage().getMessage());
+                            result.getOpenSamlResponse().getStatus().getStatusMessage().getValue());
     Assertions.assertNull(result.getLoa());
   }
 
@@ -819,7 +819,7 @@ class ResponseHandlerTest
 
     Assertions.assertTrue(result.getOpenSamlResponse().getStatus().getStatusCode().getValue().contains(RESPONDER));
     Assertions.assertEquals("An internal error occurred, see log file of the application server. Details: An unknown error occurred",
-                            result.getOpenSamlResponse().getStatus().getStatusMessage().getMessage());
+                            result.getOpenSamlResponse().getStatus().getStatusMessage().getValue());
     Assertions.assertNull(result.getLoa());
   }
 
@@ -851,7 +851,7 @@ class ResponseHandlerTest
 
     Assertions.assertTrue(result.getOpenSamlResponse().getStatus().getStatusCode().getValue().contains(RESPONDER));
     Assertions.assertEquals("There is an error in the configuration of the server, attribute with the value 'false' need to be fixed. CvcCheckResults{cvcPresent=true, cvcValidity=false, cvcUrlMatch=true, cvcTlsMatch=true}",
-                            result.getOpenSamlResponse().getStatus().getStatusMessage().getMessage());
+                            result.getOpenSamlResponse().getStatus().getStatusMessage().getValue());
     Assertions.assertNull(result.getLoa());
   }
 
@@ -908,7 +908,7 @@ class ResponseHandlerTest
     when(mockRequestSession.getReqProviderEntityId()).thenReturn(ENTITY_ID);
     when(mockConfigurationService.getProviderByEntityID(ENTITY_ID)).thenReturn(mockRequestingServiceProvider);
     when(mockHsmServiceHolder.getKeyStore()).thenReturn(null);
-    when(mockConfigurationService.getKeyPair(Mockito.anyString())).thenReturn(new KeyPair(keystore, alias, password));
+    when(mockConfigurationService.getSamlKeyPair(Mockito.anyString())).thenReturn(new KeyPair(keystore, alias, password));
     when(mockRequestingServiceProvider.getAssertionConsumerURL()).thenReturn("consumerUrl");
     when(mockConfigurationService.getServerURLWithEidasContextPath()).thenReturn("https://localhost");
     when(mockRequestingServiceProvider.getEntityID()).thenReturn(ENTITY_ID);

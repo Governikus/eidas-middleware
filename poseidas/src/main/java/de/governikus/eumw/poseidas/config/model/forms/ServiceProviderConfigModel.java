@@ -1,7 +1,8 @@
 package de.governikus.eumw.poseidas.config.model.forms;
 
-import javax.validation.constraints.NotBlank;
-import javax.validation.constraints.NotEmpty;
+import jakarta.validation.constraints.NotBlank;
+
+import org.apache.commons.lang3.StringUtils;
 
 import de.governikus.eumw.config.ServiceProviderType;
 import de.governikus.eumw.poseidas.config.validation.DvcaConfigNameExists;
@@ -24,7 +25,6 @@ public class ServiceProviderConfigModel
   private String dvcaConfigurationName;
 
   @KeyPairNameExists
-  @NotEmpty(message = "Has to be selected")
   private String clientKeyPairName;
 
   @NotBlank(message = "May not be empty")
@@ -34,11 +34,13 @@ public class ServiceProviderConfigModel
 
   public ServiceProviderType toServiceProviderType()
   {
-    return new ServiceProviderType(name, enabled, name, dvcaConfigurationName, clientKeyPairName);
+    return new ServiceProviderType(name, enabled, name, dvcaConfigurationName,
+                                   StringUtils.isBlank(clientKeyPairName) ? null : clientKeyPairName);
   }
 
   public ServiceProviderType toServiceProviderType(String cvcRefID)
   {
-    return new ServiceProviderType(name, enabled, cvcRefID, dvcaConfigurationName, clientKeyPairName);
+    return new ServiceProviderType(name, enabled, cvcRefID, dvcaConfigurationName,
+                                   StringUtils.isBlank(clientKeyPairName) ? null : clientKeyPairName);
   }
 }

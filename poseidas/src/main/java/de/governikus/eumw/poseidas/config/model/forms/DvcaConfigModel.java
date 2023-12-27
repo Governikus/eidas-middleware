@@ -1,6 +1,6 @@
 package de.governikus.eumw.poseidas.config.model.forms;
 
-import javax.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotBlank;
 
 import org.hibernate.validator.constraints.URL;
 

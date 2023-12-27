@@ -22,7 +22,6 @@ import java.security.PrivateKey;
 import java.security.UnrecoverableKeyException;
 import java.security.cert.CertificateException;
 import java.security.cert.X509Certificate;
-import java.text.ParseException;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -161,7 +160,7 @@ class TestEidasSaml
     String issuer = "https://test/";
     String destination = "test destination";
     String providerName = "test providername";
-    X509Certificate cert = Utils.readCert(TestEidasSaml.class.getResourceAsStream("/EidasSignerTest_x509.cer"));
+    X509Certificate cert = Utils.readCert(TestEidasSaml.class.getResourceAsStream("/EidasSignerTest_x509-old.cer"));
     List<X509Certificate> authors = new ArrayList<>();
     authors.add(cert);
 
@@ -277,7 +276,7 @@ class TestEidasSaml
   void createParseMetaDataService() throws IOException, XMLParserException, UnmarshallingException,
     MarshallingException, SignatureException, TransformerFactoryConfigurationError, TransformerException,
     CertificateException, UnrecoverableKeyException, KeyStoreException, NoSuchAlgorithmException,
-    NoSuchProviderException, ParseException, InitializationException, ComponentInitializationException
+    NoSuchProviderException, InitializationException, ComponentInitializationException, ErrorCodeException
   {
     String id = "test id";
     String entityId = "test entityid";
@@ -444,7 +443,7 @@ class TestEidasSaml
   {
     Scoping scoping = new ScopingBuilder().buildObject();
     RequesterID requesterID = new RequesterIDBuilder().buildObject();
-    requesterID.setRequesterID("test requesterId");
+    requesterID.setURI("test requesterId");
     scoping.getRequesterIDs().add(requesterID);
     authnRequest.setScoping(scoping);
   }

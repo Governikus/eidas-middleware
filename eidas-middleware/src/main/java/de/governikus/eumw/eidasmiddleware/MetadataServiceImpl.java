@@ -30,6 +30,7 @@ import de.governikus.eumw.eidasstarterkit.EidasSaml;
 import de.governikus.eumw.eidasstarterkit.EidasSigner;
 import de.governikus.eumw.eidasstarterkit.person_attributes.EidasPersonAttributes;
 import de.governikus.eumw.poseidas.server.idprovider.config.ConfigurationService;
+import de.governikus.eumw.poseidas.server.idprovider.config.KeyPair;
 import de.governikus.eumw.poseidas.server.pki.HSMServiceHolder;
 import de.governikus.eumw.poseidas.service.MetadataService;
 import lombok.RequiredArgsConstructor;
@@ -130,13 +131,9 @@ public class MetadataServiceImpl implements MetadataService
     EidasSigner signer;
     if (hsmServiceHolder.getKeyStore() == null)
     {
-      signer = new EidasSigner(true,
-                               configurationService.getKeyPair(eidasMiddlewareConfig.getEidasConfiguration()
-                                                                                    .getSignatureKeyPairName())
-                                                   .getKey(),
-                               configurationService.getKeyPair(eidasMiddlewareConfig.getEidasConfiguration()
-                                                                                    .getSignatureKeyPairName())
-                                                   .getCertificate());
+      KeyPair signatureKeyPair = configurationService.getSamlKeyPair(eidasMiddlewareConfig.getEidasConfiguration()
+                                                                                          .getSignatureKeyPairName());
+      signer = new EidasSigner(true, signatureKeyPair.getKey(), signatureKeyPair.getCertificate());
     }
     else
     {

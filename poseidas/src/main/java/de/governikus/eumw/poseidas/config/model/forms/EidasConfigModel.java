@@ -1,7 +1,7 @@
 package de.governikus.eumw.poseidas.config.model.forms;
 
-import javax.validation.constraints.NotEmpty;
-import javax.validation.constraints.NotNull;
+import jakarta.validation.constraints.NotEmpty;
+import jakarta.validation.constraints.NotNull;
 
 import org.hibernate.validator.constraints.Length;
 import org.hibernate.validator.constraints.URL;
@@ -55,7 +55,6 @@ public class EidasConfigModel
   private String organizationUrl;
 
   @KeyPairNameExists
-  @NotEmpty(message = "Has to be selected")
   private String signatureKeyPairName;
 
   private boolean signMetadata;

@@ -40,7 +40,7 @@ import com.google.common.io.ByteStreams;
 import de.governikus.eumw.eidascommon.Utils;
 import de.governikus.eumw.eidascommon.Utils.X509KeyPair;
 import de.governikus.eumw.eidasstarterkit.person_attributes.EidasPersonAttributes;
-import net.shibboleth.utilities.java.support.logic.ConstraintViolationException;
+import net.shibboleth.shared.logic.ConstraintViolationException;
 import net.shibboleth.utilities.java.support.xml.BasicParserPool;
 
 
@@ -105,7 +105,7 @@ class EidasMetadataServiceTest
     EidasSigner signer = new EidasSigner(keyPair.getKey(), keyPair.getCert());
     byte[] metadataByteArray = eidasMetadataService.generate(signer);
     String metadataString = new String(metadataByteArray);
-    String manipulatedString = metadataString.replace("entityID", "newEntityID");
+    String manipulatedString = metadataString.replace("\"entityID\"", "\"newEntityID\"");
     byte[] manipulatedStringBytes = manipulatedString.getBytes(StandardCharsets.UTF_8);
     EntityDescriptor entityDescriptor = getEntityDescriptor(manipulatedStringBytes);
     SAMLSignatureProfileValidator samlSignatureProfileValidator = new SAMLSignatureProfileValidator();

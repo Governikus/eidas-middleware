@@ -20,7 +20,6 @@ import de.governikus.eumw.poseidas.cardbase.asn1.npa.si.ChipAuthenticationDomain
 import de.governikus.eumw.poseidas.cardbase.asn1.npa.si.ChipAuthenticationInfo;
 import de.governikus.eumw.poseidas.cardbase.asn1.npa.si.ChipAuthenticationPublicKeyInfo;
 import de.governikus.eumw.poseidas.cardbase.asn1.npa.si.DomainParameterInfo;
-import de.governikus.eumw.poseidas.cardbase.asn1.npa.si.GeneralDomainParameterInfo;
 import de.governikus.eumw.poseidas.cardbase.asn1.npa.si.PACEDomainParameterInfo;
 import de.governikus.eumw.poseidas.cardbase.asn1.npa.si.PACEInfo;
 import de.governikus.eumw.poseidas.cardbase.asn1.npa.si.TerminalAuthenticationInfo;
@@ -42,26 +41,23 @@ public final class InfoSelector
    *
    * @param setCADomainParameterInfos set of available {@link ChipAuthenticationDomainParameterInfo}, <code>null</code>
    *          or empty not permitted
-   * @return selected {@link ChipAuthenticationDomainParameterInfo}
+   * @return selected {@link ChipAuthenticationDomainParameterInfo}, <code>null</code> if no acceptable selection
+   *         possible
    * @throws IllegalArgumentException if given set <code>null</code> or empty
    */
   private static ChipAuthenticationDomainParameterInfo selectCADomainParameterInfo(Collection<ChipAuthenticationDomainParameterInfo> setCADomainParameterInfos)
   {
     AssertUtil.notNullOrEmpty(setCADomainParameterInfos, "list of domain parameter info");
 
-    // if only one element present, use it
-    if (setCADomainParameterInfos.size() == 1)
-    {
-      return setCADomainParameterInfos.iterator().next();
-    }
-
-    // otherwise, prefer standardized parameters
+    // only use standardized parameters in specified range
     for ( ChipAuthenticationDomainParameterInfo info : setCADomainParameterInfos )
     {
       try
       {
         AlgorithmIdentifier ai = info.getDomainParameter();
-        if (OIDConstants.OID_STANDARDIZED_DOMAIN_PARAMETERS.equals(ai.getAlgorithm()))
+        if (OIDConstants.OID_STANDARDIZED_DOMAIN_PARAMETERS.equals(ai.getAlgorithm())
+            && ai.getParameterID() >= DomainParameterInfo.MIN_DOMAIN_PARAMETER_ID
+            && ai.getParameterID() <= DomainParameterInfo.MAX_DOMAIN_PARAMETER_ID)
         {
           return info;
         }
@@ -71,9 +67,7 @@ public final class InfoSelector
         // nothing
       }
     }
-
-    // there are more than one, but no standardized parameters
-    return setCADomainParameterInfos.iterator().next();
+    return null;
   }
 
   /**
@@ -144,8 +138,8 @@ public final class InfoSelector
       }
 
       // prefer standard domain parameters
-      if (pID != null && pID >= GeneralDomainParameterInfo.MIN_DOMAIN_PARAMETER_ID
-          && pID <= GeneralDomainParameterInfo.MAX_DOMAIN_PARAMETER_ID)
+      if (pID != null && pID >= DomainParameterInfo.MIN_DOMAIN_PARAMETER_ID
+          && pID <= DomainParameterInfo.MAX_DOMAIN_PARAMETER_ID)
       {
         return info;
       }

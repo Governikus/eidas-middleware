@@ -29,7 +29,7 @@ import de.governikus.eumw.eidascommon.ErrorCodeException;
 import de.governikus.eumw.eidascommon.Utils;
 import de.governikus.eumw.eidasstarterkit.person_attributes.EidasPersonAttributes;
 import de.governikus.eumw.utils.key.KeyStoreSupporter;
-import se.litsec.eidas.opensaml.ext.SPTypeEnumeration;
+import se.swedenconnect.opensaml.eidas.ext.SPTypeEnumeration;
 
 
 class EidasRequestTest
@@ -42,7 +42,7 @@ class EidasRequestTest
   {
     EidasSaml.init();
     authors = new ArrayList<>();
-    X509Certificate cert = Utils.readCert(TestEidasSaml.class.getResourceAsStream("/EidasSignerTest_x509.cer"));
+    X509Certificate cert = Utils.readCert(TestEidasSaml.class.getResourceAsStream("/EidasSignerTest_x509-old.cer"));
     authors.add(cert);
   }
 
@@ -113,8 +113,8 @@ class EidasRequestTest
   void createSignedRequest() throws Exception
   {
     // Prepare request
-    KeyStore keyStore = KeyStoreSupporter.readKeyStore(EidasRequestTest.class.getResourceAsStream("/eidassignertest.jks"),
-                                                       KeyStoreSupporter.KeyStoreType.JKS,
+    KeyStore keyStore = KeyStoreSupporter.readKeyStore(EidasRequestTest.class.getResourceAsStream("/eidassignertest.p12"),
+                                                       KeyStoreSupporter.KeyStoreType.PKCS12,
                                                        "123456");
     EidasSigner signer = new EidasSigner(true, (PrivateKey)keyStore.getKey("eidassignertest", "123456".toCharArray()),
                                          (X509Certificate)keyStore.getCertificate("eidassignertest"));
@@ -148,8 +148,8 @@ class EidasRequestTest
   void createUnsignedRequest() throws Exception
   {
     // Prepare request
-    KeyStore keyStore = KeyStoreSupporter.readKeyStore(EidasRequestTest.class.getResourceAsStream("/eidassignertest.jks"),
-                                                       KeyStoreSupporter.KeyStoreType.JKS,
+    KeyStore keyStore = KeyStoreSupporter.readKeyStore(EidasRequestTest.class.getResourceAsStream("/eidassignertest.p12"),
+                                                       KeyStoreSupporter.KeyStoreType.PKCS12,
                                                        "123456");
     HashMap<EidasPersonAttributes, Boolean> reqAtt = new HashMap<>();
     reqAtt.put(EidasNaturalPersonAttributes.FIRST_NAME, true);

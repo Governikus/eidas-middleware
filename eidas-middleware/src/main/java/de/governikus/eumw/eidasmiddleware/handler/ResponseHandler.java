@@ -15,16 +15,11 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
 
-import javax.xml.bind.DatatypeConverter;
-import javax.xml.transform.TransformerException;
+import jakarta.xml.bind.DatatypeConverter;
 
 import org.apache.commons.codec.binary.Hex;
 import org.apache.commons.lang3.StringUtils;
 import org.jmrtd.lds.icao.ICAOCountry;
-import org.opensaml.core.config.InitializationException;
-import org.opensaml.core.xml.io.MarshallingException;
-import org.opensaml.xmlsec.encryption.support.EncryptionException;
-import org.opensaml.xmlsec.signature.support.SignatureException;
 import org.springframework.stereotype.Service;
 
 import de.governikus.eumw.eidascommon.Constants;
@@ -71,11 +66,10 @@ import de.governikus.eumw.poseidas.server.idprovider.config.CvcTlsCheck;
 import de.governikus.eumw.poseidas.server.pki.HSMServiceHolder;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import net.shibboleth.utilities.java.support.xml.XMLParserException;
 
 
 /**
- * Handle the incoming redirect from the Ausweisapp2. Check for eID errors or gather the received data from the eID card
+ * Handle the incoming redirect from the AusweisApp. Check for eID errors or gather the received data from the eID card
  * and prepare the SAML response.
  */
 @Slf4j
@@ -125,7 +119,7 @@ public class ResponseHandler
   /**
    * Get the SAML response string for this refID
    *
-   * @param refID The refID that was sent from the AusweisApp2
+   * @param refID The refID that was sent from the AusweisApp
    * @return The SAML response, already encrypted if necessary, signed and base64 encoded
    */
   public String getResultForRefID(String refID)
@@ -193,7 +187,7 @@ public class ResponseHandler
       byte[] eidasResp = rsp.generateErrorRsp(errorCode, msg);
       return DatatypeConverter.printBase64Binary(eidasResp);
     }
-    catch (IOException | GeneralSecurityException | MarshallingException | SignatureException | TransformerException e)
+    catch (Exception e)
     {
       throw new RequestProcessingException(CANNOT_CREATE_SAML_RESPONSE, e);
     }
@@ -210,9 +204,9 @@ public class ResponseHandler
         log.debug("Cannot prepare key pair for signature creation without configuration");
         throw new RequestProcessingException(CANNOT_CREATE_SAML_RESPONSE);
       }
-      var signatureKeyPair = configurationService.getKeyPair(optionalConfiguration.get()
-                                                                                  .getEidasConfiguration()
-                                                                                  .getSignatureKeyPairName());
+      var signatureKeyPair = configurationService.getSamlKeyPair(optionalConfiguration.get()
+                                                                                      .getEidasConfiguration()
+                                                                                      .getSignatureKeyPairName());
       signer = new EidasSigner(true, signatureKeyPair.getKey(), signatureKeyPair.getCertificate());
     }
     else
@@ -354,8 +348,7 @@ public class ResponseHandler
                                                   signer);
       return DatatypeConverter.printBase64Binary(eidasResp);
     }
-    catch (IOException | GeneralSecurityException | InitializationException | XMLParserException | EncryptionException
-      | MarshallingException | SignatureException | TransformerException e)
+    catch (Exception e)
     {
       throw new RequestProcessingException(CANNOT_CREATE_SAML_RESPONSE, e);
     }
@@ -445,8 +438,7 @@ public class ResponseHandler
                                                   signer);
       return DatatypeConverter.printBase64Binary(eidasResp);
     }
-    catch (IOException | GeneralSecurityException | InitializationException | XMLParserException | EncryptionException
-      | MarshallingException | SignatureException | TransformerException e)
+    catch (Exception e)
     {
       throw new RequestProcessingException(CANNOT_CREATE_SAML_RESPONSE, e);
     }

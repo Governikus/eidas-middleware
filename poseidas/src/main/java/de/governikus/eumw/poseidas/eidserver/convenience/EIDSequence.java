@@ -19,7 +19,7 @@ import java.util.Date;
 import java.util.List;
 import java.util.Set;
 
-import javax.xml.bind.JAXBElement;
+import jakarta.xml.bind.JAXBElement;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -776,8 +776,9 @@ public class EIDSequence extends ECardConvenienceSequenceAdapter
     }
     catch (InvalidEidException e)
     {
-      // should not be thrown in this step, if this ever is reached we do have a problem
-      return handleError(ResultMinor.COMMON_INTERNAL_ERROR, e.getMessage());
+      LOG.debug(logPrefix + "Unsafe domain parameters detected...abort process");
+      eidInfoContainer.setStatus(EIDStatus.NOT_AUTHENTIC);
+      throw new ECardException(ResultMinor.SAL_SECURITY_CONDITION_NOT_SATISFIED, e);
     }
 
     // If the cakProvider for some reason does not provide a certificate chain for the CVC

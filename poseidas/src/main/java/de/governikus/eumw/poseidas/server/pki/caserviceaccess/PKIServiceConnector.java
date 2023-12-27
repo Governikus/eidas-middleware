@@ -35,8 +35,8 @@ import javax.net.ssl.SSLContext;
 import javax.net.ssl.TrustManager;
 import javax.net.ssl.TrustManagerFactory;
 import javax.net.ssl.X509KeyManager;
-import javax.xml.ws.BindingProvider;
-import javax.xml.ws.WebServiceException;
+import jakarta.xml.ws.BindingProvider;
+import jakarta.xml.ws.WebServiceException;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -94,6 +94,8 @@ public class PKIServiceConnector
                                                          "TLS_DHE_DSS_WITH_AES_128_CBC_SHA256"};
 
   private static final char[] DUMMY_KEYPASS = "123456".toCharArray();
+
+  private static final String DVCA_MTLS_ALIAS = "dvca-mtls";
 
   private static boolean sslContextLocked = false;
 
@@ -176,7 +178,13 @@ public class PKIServiceConnector
       LOG.error(entityID + ": KeyStore.load threw IOException even though no load was attempted", e);
     }
     X509Certificate[] clientCertChain = sslClientCert.toArray(new X509Certificate[sslClientCert.size()]);
-    clientKeyStore.setKeyEntry(entityID, sslClientKey, DUMMY_KEYPASS, clientCertChain);
+    // The BC JSSE Provider in version 1.66 manipulates the alias of the key store. For example 'test.alias' will be changed to '0.test.alias.1'
+    // Later when the private key entry will be loaded, the alias will be changed again. Theoretically the alias should be the same again,
+    // but unfortunately the method to build the alias search for '.' only from the beginning. So the alias '0.test.alias.1'
+    // will be just 'test' and not 'test.alias'. When an entity has '.' in the name, BC will not find the private key entry.
+    // Therefore, we change the alias to constant value.
+    // See ProvX509KeyManager#loadPrivateKeyEntry BC version 1.66
+    clientKeyStore.setKeyEntry(DVCA_MTLS_ALIAS, sslClientKey, DUMMY_KEYPASS, clientCertChain);
     return clientKeyStore;
   }
 
@@ -307,15 +315,18 @@ public class PKIServiceConnector
     KeyManagerFactory kmf;
     if (hsmMode)
     {
+      LOG.debug("HSM Mode is true. Use SunJSSE Provider");
       kmf = KeyManagerFactory.getInstance("SUNX509", SecurityProvider.SUN_JSSE_PROVIDER);
     }
     else
     {
+      LOG.debug("HSM Mode is false. " + SecurityProvider.BOUNCY_CASTLE_JSSE_PROVIDER);
       kmf = KeyManagerFactory.getInstance("PKIX", SecurityProvider.BOUNCY_CASTLE_JSSE_PROVIDER);
     }
     kmf.init(clientCertAndKey, storePass);
     if (hsmMode)
     {
+      LOG.debug("HSM Mode is true. Use AliasKeyManager");
       X509KeyManager origKM = (X509KeyManager)kmf.getKeyManagers()[0];
       // force the key manager to use a defined key in case there is more than one
       KeyManager km = new AliasKeyManager(origKM, entityID);
@@ -334,7 +345,7 @@ public class PKIServiceConnector
       if (clientCertAndKey != null)
       {
         SSL_LOGGER.debug(entityID + ": Certificate for SSL client key:\n"
-                         + certificateToString((X509Certificate)clientCertAndKey.getCertificate(entityID)));
+                         + certificateToString((X509Certificate)clientCertAndKey.getCertificate(DVCA_MTLS_ALIAS)));
       }
       else
       {
@@ -360,7 +371,7 @@ public class PKIServiceConnector
       policy.setReceiveTimeout(MILLISECOND_FACTOR * timeout);
       conduit.setClient(policy);
       TLSClientParameters tlsClientParameters = new TLSClientParameters();
-      tlsClientParameters.setSslContext(createSSLContext());
+      tlsClientParameters.setSSLSocketFactory(createSSLContext().getSocketFactory());
       tlsClientParameters.setCipherSuites(Arrays.asList(ENABLED_CIPHER_SUITES));
       conduit.setTlsClientParameters(tlsClientParameters);
     }

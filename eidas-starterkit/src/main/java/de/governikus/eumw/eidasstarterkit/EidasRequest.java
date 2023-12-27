@@ -78,12 +78,12 @@ import lombok.extern.slf4j.Slf4j;
 import net.shibboleth.utilities.java.support.component.ComponentInitializationException;
 import net.shibboleth.utilities.java.support.xml.BasicParserPool;
 import net.shibboleth.utilities.java.support.xml.XMLParserException;
-import se.litsec.eidas.opensaml.common.EidasConstants;
-import se.litsec.eidas.opensaml.ext.RequestedAttribute;
-import se.litsec.eidas.opensaml.ext.SPType;
-import se.litsec.eidas.opensaml.ext.SPTypeEnumeration;
-import se.litsec.eidas.opensaml.ext.impl.RequestedAttributeBuilder;
-import se.litsec.eidas.opensaml.ext.impl.SPTypeBuilder;
+import se.swedenconnect.opensaml.eidas.common.EidasConstants;
+import se.swedenconnect.opensaml.eidas.ext.RequestedAttribute;
+import se.swedenconnect.opensaml.eidas.ext.SPType;
+import se.swedenconnect.opensaml.eidas.ext.SPTypeEnumeration;
+import se.swedenconnect.opensaml.eidas.ext.impl.RequestedAttributeBuilder;
+import se.swedenconnect.opensaml.eidas.ext.impl.SPTypeBuilder;
 
 
 
@@ -279,7 +279,7 @@ public class EidasRequest
     {
       Scoping scoping = new ScopingBuilder().buildObject();
       RequesterID requesterID = new RequesterIDBuilder().buildObject();
-      requesterID.setRequesterID(requesterId);
+      requesterID.setURI(requesterId);
       scoping.getRequesterIDs().add(requesterID);
       authnRequest.setScoping(scoping);
     }
@@ -451,7 +451,7 @@ public class EidasRequest
 
     if (isRequesterIdPresent(eidasReq))
     {
-      eidasReq.requesterId = eidasReq.authnRequest.getScoping().getRequesterIDs().get(0).getRequesterID();
+      eidasReq.requesterId = eidasReq.authnRequest.getScoping().getRequesterIDs().get(0).getURI();
     }
     if (isProviderNamePresent(eidasReq))
     {

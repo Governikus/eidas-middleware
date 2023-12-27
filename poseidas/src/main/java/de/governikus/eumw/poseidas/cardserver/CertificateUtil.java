@@ -167,7 +167,7 @@ public final class CertificateUtil
       {
         ASN1OctetString asn1OctetString = (ASN1OctetString)ASN1Primitive.fromByteArray(authorityKeyIdentifier);
         ASN1Sequence asn1Sequence = (ASN1Sequence)ASN1Primitive.fromByteArray(asn1OctetString.getOctets());
-        ASN1OctetString reference = (ASN1OctetString)((ASN1TaggedObject)asn1Sequence.getObjectAt(0)).getObject();
+        ASN1OctetString reference = (ASN1OctetString)((ASN1TaggedObject)asn1Sequence.getObjectAt(0)).getBaseObject();
 
         ASN1OctetString outerOctetString = (ASN1OctetString)ASN1Primitive.fromByteArray(certificate.getExtensionValue(Extension.subjectKeyIdentifier.getId()));
         ASN1OctetString actual = (ASN1OctetString)ASN1Primitive.fromByteArray(outerOctetString.getOctets());

@@ -66,12 +66,12 @@ public class BlackListTimer implements Runnable
         log.debug("First delta Black List timer task will be executed with an initial delay of {} milliseconds",
                   initialDelay);
         log.debug("Black List timer task will be executed at {}", date);
-        return date;
+        return date.toInstant();
       }
       Instant nextExecutiontime = lastCompletion.toInstant().plusMillis(getDeltaBlackListTimer());
       Date date = Date.from(nextExecutiontime);
       log.debug("Black List timer task will be executed at {}", date);
-      return date;
+      return date.toInstant();
     };
   }
 

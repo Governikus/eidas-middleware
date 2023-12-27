@@ -11,7 +11,7 @@ package de.governikus.eumw.poseidas.server.pki.caserviceaccess;
 
 import java.net.URISyntaxException;
 
-import javax.xml.ws.BindingProvider;
+import jakarta.xml.ws.BindingProvider;
 
 import lombok.extern.slf4j.Slf4j;
 import uri.eac_pki_is_protocol._1.passiveAuth.dv.EACDVProtocolService;

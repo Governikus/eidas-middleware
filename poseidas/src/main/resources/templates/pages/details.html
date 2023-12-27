@@ -138,9 +138,12 @@
                                   th:action="@{'/admin-interface/details/initialRequest?entityid=' + ${#uris.escapeQueryParam(entityID)}}"
                                   th:object="${form}" method="post" id="initial-request-form">
                                 <div class="form-group row">
-                                    <div th:replace="~{fragments/form :: inputRow_text('Country code', 'countryCode', 'The two character country code')}"/>
-                                    <div th:replace="~{fragments/form :: inputRow_text('CHR Mnemonic', 'chrMnemonic', 'Your specific mnemonic')}"/>
-                                    <div th:replace="~{fragments/form :: inputRow_number('Sequence number', 'sequenceNumber', 0)}"/>
+                                    <div th:replace="~{fragments/form :: inputRow_text('Country code*', 'countryCode', 'The two character country code')}"/>
+                                    <div th:replace="~{fragments/form :: inputRow_text('CHR Mnemonic*', 'chrMnemonic', 'Your specific mnemonic')}"/>
+                                    <div th:replace="~{fragments/form :: inputRow_number('Sequence number*', 'sequenceNumber', 'Sequence number from which the new CVC will start counting')}"/>
+                                    <div class="ms-3">
+                                        *Required fields
+                                    </div>
                                 </div>
                                 <div class="form-group mt-2">
                                     <button type="submit" class="btn btn-primary w-100"

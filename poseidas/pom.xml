@@ -14,7 +14,7 @@
     <parent>
         <groupId>de.governikus.eumw</groupId>
         <artifactId>eumw</artifactId>
-        <version>3.1.2</version>
+        <version>3.2.0</version>
     </parent>
     <artifactId>poseidas</artifactId>
 
@@ -54,11 +54,11 @@
 
         <dependency>
             <groupId>org.bouncycastle</groupId>
-            <artifactId>bcprov-jdk15on</artifactId>
+            <artifactId>bcprov-jdk18on</artifactId>
         </dependency>
         <dependency>
             <groupId>org.bouncycastle</groupId>
-            <artifactId>bcpkix-jdk15on</artifactId>
+            <artifactId>bcpkix-jdk18on</artifactId>
         </dependency>
         <dependency>
             <groupId>org.jvnet.jaxb2_commons</groupId>
@@ -132,7 +132,7 @@
         </dependency>
         <dependency>
             <groupId>org.thymeleaf.extras</groupId>
-            <artifactId>thymeleaf-extras-springsecurity5</artifactId>
+            <artifactId>thymeleaf-extras-springsecurity6</artifactId>
         </dependency>
 
         <dependency>
@@ -177,8 +177,8 @@
         <finalName>${project.name}</finalName>
         <plugins>
             <plugin>
-                <groupId>org.jvnet.jaxb2.maven2</groupId>
-                <artifactId>maven-jaxb2-plugin</artifactId>
+                <groupId>org.jvnet.jaxb</groupId>
+                <artifactId>jaxb-maven-plugin</artifactId>
                 <executions>
                     <execution>
                         <id>xjc-ecard</id>
@@ -225,15 +225,21 @@
                     <extension>true</extension>
                     <plugins>
                         <plugin>
-                            <groupId>org.jvnet.jaxb2_commons</groupId>
-                            <artifactId>jaxb2-value-constructor</artifactId>
-                            <version>${version.jaxb2-value-constructor}</version>
+                            <groupId>org.jvnet.jaxb</groupId>
+                            <artifactId>jaxb-plugins</artifactId>
+                            <version>${version.jvnet.jaxb}</version>
                         </plugin>
-                        <plugin>
-                            <groupId>org.jvnet.jaxb2_commons</groupId>
-                            <artifactId>jaxb2-basics</artifactId>
-                            <version>${version.jaxb2-basics}</version>
-                        </plugin>
+
+<!--                        <plugin>-->
+<!--                            <groupId>org.jvnet.jaxb2_commons</groupId>-->
+<!--                            <artifactId>jaxb2-value-constructor</artifactId>-->
+<!--                            <version>${version.jaxb2-value-constructor}</version>-->
+<!--                        </plugin>-->
+<!--                        <plugin>-->
+<!--                            <groupId>org.jvnet.jaxb2_commons</groupId>-->
+<!--                            <artifactId>jaxb2-basics</artifactId>-->
+<!--                            <version>${version.jaxb2-basics}</version>-->
+<!--                        </plugin>-->
                     </plugins>
                 </configuration>
             </plugin>
@@ -273,7 +279,7 @@
             </plugin>
 
             <plugin>
-                <groupId>org.codehaus.mojo</groupId>
+                <groupId>com.sun.xml.ws</groupId>
                 <artifactId>jaxws-maven-plugin</artifactId>
                 <configuration>
                     <!-- using wsdls file directory -->

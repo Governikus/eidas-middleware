@@ -15,7 +15,7 @@ import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 import java.util.Locale;
 
-import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -167,11 +167,11 @@ public class RequestReceiver
   }
 
   /**
-   * Show the middleware page where the user can start the AusweisApp2.
+   * Show the middleware page where the user can start the AusweisApp.
    *
    * @param sessionId The sessionId that is returned by
    *          {@link RequestHandler#handleSAMLRequest(String, String, boolean)}
-   * @param userAgent to redirect the user the correct way to AusweisApp2
+   * @param userAgent to redirect the user the correct way to AusweisApp
    * @return The ModelAndView object that represents the thymeleaf view
    */
   private ModelAndView showMiddlewarePage(String sessionId, String userAgent)

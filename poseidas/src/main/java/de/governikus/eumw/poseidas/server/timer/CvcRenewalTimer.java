@@ -65,12 +65,12 @@ public class CvcRenewalTimer implements Runnable
         Date date = new Date(triggerContext.getClock().millis() + initialDelay);
         log.debug("First CVC renewal timer task will executed with an initial delay of {} milliseconds", initialDelay);
         log.debug("CVC renewal timer task will be executed at {}", date);
-        return date;
+        return date.toInstant();
       }
       Instant nextExecutiontime = lastCompletion.toInstant().plusMillis(getCvcRenewalTimer());
       Date date = Date.from(nextExecutiontime);
       log.debug("CVC renewal timer task will be executed at {}", date);
-      return date;
+      return date.toInstant();
     };
   }
 

@@ -1,11 +1,10 @@
 /*
- * Copyright (c) 2020 Governikus KG. Licensed under the EUPL, Version 1.2 or as soon they will be approved by
- * the European Commission - subsequent versions of the EUPL (the "Licence"); You may not use this work except
- * in compliance with the Licence. You may obtain a copy of the Licence at:
- * http://joinup.ec.europa.eu/software/page/eupl Unless required by applicable law or agreed to in writing,
- * software distributed under the Licence is distributed on an "AS IS" basis, WITHOUT WARRANTIES OR CONDITIONS
- * OF ANY KIND, either express or implied. See the Licence for the specific language governing permissions and
- * limitations under the Licence.
+ * Copyright (c) 2020 Governikus KG. Licensed under the EUPL, Version 1.2 or as soon they will be approved by the
+ * European Commission - subsequent versions of the EUPL (the "Licence"); You may not use this work except in compliance
+ * with the Licence. You may obtain a copy of the Licence at: http://joinup.ec.europa.eu/software/page/eupl Unless
+ * required by applicable law or agreed to in writing, software distributed under the Licence is distributed on an
+ * "AS IS" basis, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the Licence for the
+ * specific language governing permissions and limitations under the Licence.
  */
 
 package de.governikus.eumw.eidasstarterkit;
@@ -31,12 +30,10 @@ import javax.xml.transform.stream.StreamResult;
 
 import org.apache.xml.security.algorithms.MessageDigestAlgorithm;
 import org.apache.xml.security.signature.XMLSignature;
+import org.opensaml.core.config.InitializationException;
 import org.opensaml.core.xml.Namespace;
 import org.opensaml.core.xml.XMLObject;
-import org.opensaml.core.xml.config.XMLObjectProviderRegistrySupport;
 import org.opensaml.core.xml.io.MarshallingException;
-import org.opensaml.core.xml.io.Unmarshaller;
-import org.opensaml.core.xml.io.UnmarshallerFactory;
 import org.opensaml.core.xml.io.UnmarshallingException;
 import org.opensaml.core.xml.schema.XSAny;
 import org.opensaml.core.xml.schema.XSString;
@@ -99,7 +96,6 @@ import org.opensaml.xmlsec.signature.impl.X509DataBuilder;
 import org.opensaml.xmlsec.signature.support.SignatureConstants;
 import org.opensaml.xmlsec.signature.support.SignatureException;
 import org.opensaml.xmlsec.signature.support.Signer;
-import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.NodeList;
 
@@ -112,12 +108,11 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 import net.shibboleth.utilities.java.support.component.ComponentInitializationException;
-import net.shibboleth.utilities.java.support.xml.BasicParserPool;
 import net.shibboleth.utilities.java.support.xml.XMLConstants;
 import net.shibboleth.utilities.java.support.xml.XMLParserException;
-import se.litsec.eidas.opensaml.common.EidasConstants;
-import se.litsec.eidas.opensaml.ext.NodeCountry;
-import se.litsec.eidas.opensaml.ext.impl.NodeCountryBuilder;
+import se.swedenconnect.opensaml.eidas.common.EidasConstants;
+import se.swedenconnect.opensaml.eidas.ext.NodeCountry;
+import se.swedenconnect.opensaml.eidas.ext.impl.NodeCountryBuilder;
 
 
 /**
@@ -224,23 +219,19 @@ class EidasMetadataService
   {
     EntityDescriptor entityDescriptor = new EntityDescriptorBuilder().buildObject();
     entityDescriptor.getNamespaceManager()
-                    .registerNamespaceDeclaration(new Namespace(SAMLConstants.SAML20_NS,
-                                                                SAMLConstants.SAML20_PREFIX));
+                    .registerNamespaceDeclaration(new Namespace(SAMLConstants.SAML20_NS, SAMLConstants.SAML20_PREFIX));
     entityDescriptor.getNamespaceManager()
                     .registerNamespaceDeclaration(new Namespace(SAMLConstants.SAML20ALG_NS,
                                                                 SAMLConstants.SAML20ALG_PREFIX));
     entityDescriptor.getNamespaceManager()
-                    .registerNamespaceDeclaration(new Namespace(XMLConstants.XSD_NS,
-                                                                XMLConstants.XSD_PREFIX));
+                    .registerNamespaceDeclaration(new Namespace(XMLConstants.XSD_NS, XMLConstants.XSD_PREFIX));
     entityDescriptor.getNamespaceManager()
-                    .registerNamespaceDeclaration(new Namespace(XMLConstants.XSI_NS,
-                                                                XMLConstants.XSI_PREFIX));
+                    .registerNamespaceDeclaration(new Namespace(XMLConstants.XSI_NS, XMLConstants.XSI_PREFIX));
     entityDescriptor.getNamespaceManager()
                     .registerNamespaceDeclaration(new Namespace(SignatureConstants.XMLSIG_NS,
                                                                 SignatureConstants.XMLSIG_PREFIX));
     entityDescriptor.getNamespaceManager()
-                    .registerNamespaceDeclaration(new Namespace(EidasConstants.EIDAS_NS,
-                                                                EidasConstants.EIDAS_PREFIX));
+                    .registerNamespaceDeclaration(new Namespace(EidasConstants.EIDAS_NS, EidasConstants.EIDAS_PREFIX));
     entityDescriptor.setID(id);
     entityDescriptor.setEntityID(entityId);
     entityDescriptor.setValidUntil(validUntil);
@@ -459,20 +450,14 @@ class EidasMetadataService
     return result;
   }
 
-  static EidasMetadataService parse(InputStream is)
-    throws XMLParserException, UnmarshallingException, CertificateException, ComponentInitializationException
+  static EidasMetadataService parse(InputStream is) throws XMLParserException, UnmarshallingException,
+    CertificateException, ComponentInitializationException, InitializationException, ErrorCodeException
   {
     EidasMetadataService eidasMetadataService = new EidasMetadataService();
-    BasicParserPool ppMgr = Utils.getBasicParserPool();
-    Document inCommonMDDoc = ppMgr.parse(is);
-    Element metadataRoot = inCommonMDDoc.getDocumentElement();
-    UnmarshallerFactory unmarshallerFactory = XMLObjectProviderRegistrySupport.getUnmarshallerFactory();
-    Unmarshaller unmarshaller = unmarshallerFactory.getUnmarshaller(metadataRoot);
-    EntityDescriptor metaData = (EntityDescriptor)unmarshaller.unmarshall(metadataRoot);
+    EntityDescriptor metaData = EidasSaml.unmarshalMetadata(is);
 
     eidasMetadataService.setSupportContact(unmarshalContactPerson(metaData.getContactPersons(), "support"));
-    eidasMetadataService.setTechnicalContact(unmarshalContactPerson(metaData.getContactPersons(),
-                                                                    "technical"));
+    eidasMetadataService.setTechnicalContact(unmarshalContactPerson(metaData.getContactPersons(), "technical"));
     eidasMetadataService.setOrganisation(unmarshalOrganisation(metaData.getOrganization()));
     eidasMetadataService.setId(metaData.getID());
     eidasMetadataService.setEntityId(metaData.getEntityID());
@@ -574,11 +559,11 @@ class EidasMetadataService
   {
     for ( ContactPerson cp : cps )
     {
-      String company = cp.getCompany().getName();
-      String givenName = cp.getGivenName().getName();
-      String surName = cp.getSurName().getName();
-      String tel = cp.getTelephoneNumbers().get(0).getNumber();
-      String email = cp.getEmailAddresses().get(0).getAddress();
+      String company = cp.getCompany().getValue();
+      String givenName = cp.getGivenName().getValue();
+      String surName = cp.getSurName().getValue();
+      String tel = cp.getTelephoneNumbers().get(0).getValue();
+      String email = cp.getEmailAddresses().get(0).getURI();
       String type = cp.getType().toString();
       EidasContactPerson ecp = new EidasContactPerson(company, givenName, surName, tel, email, type);
       if (type != null && (type).equalsIgnoreCase(contactType))
@@ -593,7 +578,7 @@ class EidasMetadataService
   {
     String displayName = org.getDisplayNames().get(0).getValue();
     String name = org.getOrganizationNames().get(0).getValue();
-    String url = org.getURLs().get(0).getValue();
+    String url = org.getURLs().get(0).getURI();
     String langId = org.getDisplayNames().get(0).getXMLLang();
     return new EidasOrganisation(name, displayName, url, langId);
   }
@@ -606,7 +591,7 @@ class EidasMetadataService
    * @throws CertificateException
    */
   static X509Certificate getFirstCertFromKeyDescriptor(KeyDescriptor keyDescriptor)
-    throws CertificateException
+    throws CertificateException, ErrorCodeException
   {
     X509Certificate cert = null;
     if (keyDescriptor.getKeyInfo() != null && !keyDescriptor.getKeyInfo().getX509Datas().isEmpty())

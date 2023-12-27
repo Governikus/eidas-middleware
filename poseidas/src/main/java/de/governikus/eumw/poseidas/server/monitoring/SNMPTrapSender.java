@@ -12,8 +12,8 @@ package de.governikus.eumw.poseidas.server.monitoring;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 
-import javax.annotation.PostConstruct;
-import javax.annotation.PreDestroy;
+import jakarta.annotation.PostConstruct;
+import jakarta.annotation.PreDestroy;
 
 import org.snmp4j.PDU;
 import org.snmp4j.SNMP4JSettings;

@@ -55,7 +55,7 @@ public abstract class EACSignedDataParser
       LOG.debug(logPrefix + "Unexpected size of signature data for ASN1: " + signatureObjectSize);
     }
     ASN1TaggedObject dto = (ASN1TaggedObject)(seq.getObjectAt(1));
-    SignedData signedDataFromCard = new SignedData((ASN1Sequence)(dto.getObject()));
+    SignedData signedDataFromCard = new SignedData((ASN1Sequence)(dto.getBaseObject()));
     LOG.debug(logPrefix + "Check signature data:\n  "
               + signedDataFromCard.getSignerInfos().toString());
     return signedDataFromCard;

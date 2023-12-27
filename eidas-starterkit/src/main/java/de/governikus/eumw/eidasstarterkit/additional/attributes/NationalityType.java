@@ -4,8 +4,8 @@ import javax.xml.namespace.QName;
 
 import org.opensaml.core.xml.schema.XSString;
 
-import se.litsec.eidas.opensaml.common.EidasConstants;
-import se.litsec.eidas.opensaml.ext.attributes.EidasAttributeValueType;
+import se.swedenconnect.opensaml.eidas.common.EidasConstants;
+import se.swedenconnect.opensaml.eidas.ext.attributes.EidasAttributeValueType;
 
 
 /**

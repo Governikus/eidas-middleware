@@ -53,7 +53,7 @@ public final class ContextPaths
   public static final String PAOS_SERVLET = "/paosreceiver";
 
   /**
-   * The path to the AusweisApp2 redirect controller
+   * The path to the AusweisApp redirect controller
    */
   public static final String AUSWEISAPP_REDIRECT = "/ausweisapp-redirect";
 

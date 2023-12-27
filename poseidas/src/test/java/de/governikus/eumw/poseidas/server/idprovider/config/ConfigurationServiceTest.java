@@ -9,13 +9,20 @@
 
 package de.governikus.eumw.poseidas.server.idprovider.config;
 
+import java.math.BigInteger;
 import java.nio.charset.StandardCharsets;
+import java.security.cert.X509Certificate;
 import java.util.Optional;
+import java.util.stream.Stream;
 
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.Arguments;
+import org.junit.jupiter.params.provider.MethodSource;
+import org.junit.jupiter.params.provider.ValueSource;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
 
@@ -27,6 +34,8 @@ import de.governikus.eumw.config.KeyPairType;
 import de.governikus.eumw.config.KeyStoreType;
 import de.governikus.eumw.config.KeyStoreTypeType;
 import de.governikus.eumw.config.ServiceProviderType;
+import de.governikus.eumw.eidascommon.ErrorCodeException;
+import de.governikus.eumw.eidasmiddleware.eid.RequestingServiceProvider;
 import de.governikus.eumw.utils.xml.XmlException;
 import de.governikus.eumw.utils.xml.XmlHelper;
 import lombok.extern.slf4j.Slf4j;
@@ -223,8 +232,68 @@ class ConfigurationServiceTest
 
     // Get the certificate
     Assertions.assertEquals("CN=jks-keystore",
-                            configurationService.getCertificate("certificateName").getSubjectDN().getName());
+                            configurationService.getCertificate("certificateName").getSubjectX500Principal().getName());
 
+  }
+
+  @ParameterizedTest
+  @ValueSource(strings = {"rsa_saml_2048.cer", "ec_saml_224.cer"})
+  void testGetSamlCertificateIsNullWhenKeySizeTooShort(String certificateName) throws Exception
+  {
+    var configuration = configurationService.saveConfiguration(ConfigurationTestHelper.createValidConfiguration(),
+                                                               true);
+    configuration.getKeyData()
+                 .getCertificate()
+                 .add(new CertificateType("certificateName",
+                                          ConfigurationServiceTest.class.getResourceAsStream("/keys/" + certificateName)
+                                                                        .readAllBytes(),
+                                          null, null));
+    configuration.getEidasConfiguration().setMetadataSignatureVerificationCertificateName("certificateName");
+    configurationService.saveConfiguration(configuration, true);
+    ConfigurationException configurationException = Assertions.assertThrows(ConfigurationException.class,
+                                                                            () -> configurationService.getSamlCertificate("certificateName"));
+    Assertions.assertTrue(configurationException.getMessage()
+                                                .startsWith("The certificate does not fulfill the eIDAS crypto requirements: "));
+  }
+
+  @Test
+  void testGetSamlCertificateThrowsExceptionWhenExplicitECIsUsed() throws Exception
+  {
+    var configuration = configurationService.saveConfiguration(ConfigurationTestHelper.createValidConfiguration(),
+                                                               true);
+    configuration.getKeyData()
+                 .getCertificate()
+                 .add(new CertificateType("certificateName",
+                                          ConfigurationServiceTest.class.getResourceAsStream("/keys/ec-explicit-curve.cer")
+                                                                        .readAllBytes(),
+                                          null, null));
+    configuration.getEidasConfiguration().setMetadataSignatureVerificationCertificateName("certificateName");
+    configurationService.saveConfiguration(configuration, true);
+    ConfigurationException configurationException = Assertions.assertThrows(ConfigurationException.class,
+                                                                            () -> configurationService.getSamlCertificate("certificateName"));
+    Assertions.assertEquals("The certificate does not fulfill the eIDAS crypto requirements: Certificate is not valid for that purpose because of "
+                            + "reason Certificate with subject CN=TEST csca-germany, OU=bsi, O=bund, C=DE and serial 1264 does not use a named curve.",
+                            configurationException.getMessage());
+  }
+
+  @ParameterizedTest
+  @MethodSource("validMetadataVerificationCerts")
+  void testGetSamlCertificateIsPresentWithValidKeySize(String certificateName, String serialNumber) throws Exception
+  {
+    var configuration = configurationService.saveConfiguration(ConfigurationTestHelper.createValidConfiguration(),
+                                                               true);
+    configuration.getKeyData()
+                 .getCertificate()
+                 .add(new CertificateType("certificateName",
+                                          ConfigurationServiceTest.class.getResourceAsStream("/keys/" + certificateName)
+                                                                        .readAllBytes(),
+                                          null, null));
+    configuration.getEidasConfiguration().setMetadataSignatureVerificationCertificateName("certificateName");
+    configurationService.saveConfiguration(configuration, true);
+    X509Certificate metadataVerificationCertificate = configurationService.getSamlCertificate("certificateName");
+    // Get the certificate
+    Assertions.assertEquals(new BigInteger(serialNumber),
+                            metadataVerificationCertificate.getSerialNumber());
   }
 
   @Test
@@ -265,6 +334,96 @@ class ConfigurationServiceTest
     Assertions.assertDoesNotThrow(() -> configurationService.saveConfiguration(invalidConfig, false));
   }
 
+  @ParameterizedTest
+  @ValueSource(strings = {"/configuration/metadata-9444-shortcrypt-ec.xml",
+                          "/configuration/metadata-9444-shortsign-ec.xml"})
+  void testGetProviderUnusableShortEc(String metaFile) throws Exception
+  {
+    // prepare valid configuration
+    EidasMiddlewareConfig validConfig = ConfigurationTestHelper.createValidConfiguration();
+    validConfig.getKeyData()
+               .getCertificate()
+               .add(new CertificateType("sigCert",
+                                        ConfigurationServiceTest.class.getResourceAsStream("/configuration/metadata-signer.cer")
+                                                                      .readAllBytes(),
+                                        null, null));
+    validConfig.getEidasConfiguration().setMetadataSignatureVerificationCertificateName("sigCert");
+
+    // and add metadata with short key
+    byte[] metadataBytes = ConfigurationServiceTest.class.getResourceAsStream(metaFile).readAllBytes();
+    final String entityId = "https://localhost:9444/eIDASDemoApplication/Metadata";
+    ConnectorMetadataType meta = new ConnectorMetadataType(metadataBytes, entityId);
+    validConfig.getEidasConfiguration().getConnectorMetadata().add(meta);
+    configurationService.saveConfiguration(validConfig, false);
+
+    // try to load short key metadata
+    ConfigurationException e = Assertions.assertThrows(ConfigurationException.class,
+                                                       () -> configurationService.getProviderByEntityID(entityId));
+    Assertions.assertTrue(e.getCause() instanceof ErrorCodeException);
+    Assertions.assertEquals("Certificate is not valid for that purpose because of reason Certificate with subject CN=Wurst, OU=Autent A, O=Governikus, L=Bremen, ST=Bremen, C=DE and serial 1701967321 does not meet specified minimum EC key size of 256.",
+                            e.getCause().getMessage());
+  }
+
+  @ParameterizedTest
+  @ValueSource(strings = {"/configuration/metadata-9444-shortcrypt-rsa.xml",
+                          "/configuration/metadata-9444-shortsign-rsa.xml"})
+  void testGetProviderUnusableShortRsa(String metaFile) throws Exception
+  {
+    // prepare valid configuration
+    EidasMiddlewareConfig validConfig = ConfigurationTestHelper.createValidConfiguration();
+    validConfig.getKeyData()
+               .getCertificate()
+               .add(new CertificateType("sigCert",
+                                        ConfigurationServiceTest.class.getResourceAsStream("/configuration/metadata-signer.cer")
+                                                                      .readAllBytes(),
+                                        null, null));
+    validConfig.getEidasConfiguration().setMetadataSignatureVerificationCertificateName("sigCert");
+
+    // and add metadata with short key
+    byte[] metadataBytes = ConfigurationServiceTest.class.getResourceAsStream(metaFile).readAllBytes();
+    final String entityId = "https://localhost:9444/eIDASDemoApplication/Metadata";
+    ConnectorMetadataType meta = new ConnectorMetadataType(metadataBytes, entityId);
+    validConfig.getEidasConfiguration().getConnectorMetadata().add(meta);
+    configurationService.saveConfiguration(validConfig, false);
+
+    // try to load short key metadata
+    ConfigurationException e = Assertions.assertThrows(ConfigurationException.class,
+                                                       () -> configurationService.getProviderByEntityID(entityId));
+    Assertions.assertTrue(e.getCause() instanceof ErrorCodeException);
+    Assertions.assertEquals("Certificate is not valid for that purpose because of reason Certificate with subject CN=Wurst, OU=Autent A, O=Governikus, L=Bremen, ST=Bremen, C=DE and serial 1701967541 does not meet specified minimum RSA key size of 3072.",
+                            e.getCause().getMessage());
+  }
+
+  @ParameterizedTest
+  @ValueSource(strings = {"/configuration/metadata-9444-explicit-crypt.xml",
+                          "/configuration/metadata-9444-explicit-sign.xml"})
+  void testGetProviderUnusableExplicit(String metaFile) throws Exception
+  {
+    // prepare valid configuration
+    EidasMiddlewareConfig validConfig = ConfigurationTestHelper.createValidConfiguration();
+    validConfig.getKeyData()
+               .getCertificate()
+               .add(new CertificateType("sigCert",
+                                        ConfigurationServiceTest.class.getResourceAsStream("/configuration/metadata-signer.cer")
+                                                                      .readAllBytes(),
+                                        null, null));
+    validConfig.getEidasConfiguration().setMetadataSignatureVerificationCertificateName("sigCert");
+
+    // and add metadata with short key
+    byte[] metadataBytes = ConfigurationServiceTest.class.getResourceAsStream(metaFile).readAllBytes();
+    final String entityId = "https://localhost:9444/eIDASDemoApplication/Metadata";
+    ConnectorMetadataType meta = new ConnectorMetadataType(metadataBytes, entityId);
+    validConfig.getEidasConfiguration().getConnectorMetadata().add(meta);
+    configurationService.saveConfiguration(validConfig, false);
+
+    // try to load short key metadata
+    ConfigurationException e = Assertions.assertThrows(ConfigurationException.class,
+                                                       () -> configurationService.getProviderByEntityID(entityId));
+    Assertions.assertTrue(e.getCause() instanceof ErrorCodeException);
+    Assertions.assertEquals("Certificate is not valid for that purpose because of reason Certificate with subject CN=TEST csca-germany, OU=bsi, O=bund, C=DE and serial 1264 does not use a named curve.",
+                            e.getCause().getMessage());
+  }
+
   @Test
   void testGetProviderWithErrors() throws Exception
   {
@@ -284,38 +443,39 @@ class ConfigurationServiceTest
   @Test
   void testGetProvider() throws Exception
   {
-    // Prepare configuration with certificate and two metadata entries, one with a valid signature and the other one is
+    // Prepare configuration with certificate and three metadata entries, one with a valid signature and certificates,
+    // one with a valid signature and invalid certificates and the other one is
     // invalid
     EidasMiddlewareConfig validConfig = ConfigurationTestHelper.createValidConfiguration();
     validConfig.getKeyData()
                .getCertificate()
                .add(new CertificateType("sigCert",
-                                        ConfigurationServiceTest.class.getResourceAsStream("/configuration/sigCert.crt")
+                                        ConfigurationServiceTest.class.getResourceAsStream("/configuration/metadata-signer.cer")
                                                                       .readAllBytes(),
                                         null, null));
     validConfig.getEidasConfiguration().setMetadataSignatureVerificationCertificateName("sigCert");
+
+    // Valid metadata signature and valid certificates
     validConfig.getEidasConfiguration()
                .getConnectorMetadata()
-               .add(new ConnectorMetadataType(ConfigurationServiceTest.class.getResourceAsStream("/configuration/demo_epa.xml")
+               .add(new ConnectorMetadataType(ConfigurationServiceTest.class.getResourceAsStream("/configuration/metadata-9443.xml")
                                                                             .readAllBytes(),
-                                              "https://demo.mein-servicekonto.de/EidasNode/ConnectorMetadata?SP=demo_epa"));
+                                              "https://localhost:9443/eIDASDemoApplication/Metadata"));
+
+    // Invalid metadata signature
     validConfig.getEidasConfiguration()
                .getConnectorMetadata()
-               .add(new ConnectorMetadataType(ConfigurationServiceTest.class.getResourceAsStream("/configuration/demo_epa_20.xml")
+               .add(new ConnectorMetadataType(ConfigurationServiceTest.class.getResourceAsStream("/configuration/metadata-9445-invalid.xml")
                                                                             .readAllBytes(),
-                                              "https://demo.mein-servicekonto.de/EidasNode/ConnectorMetadata?SP=demo_epa_20"));
-    validConfig.getEidasConfiguration()
-               .getConnectorMetadata()
-               .add(new ConnectorMetadataType(ConfigurationServiceTest.class.getResourceAsStream("/configuration/demo_epa_invalid.xml")
-                                                                            .readAllBytes(),
-                                              "https://demo.mein-servicekonto.de/EidasNode/ConnectorMetadata?SP=demo_epa_invalid"));
+                                              "https://localhost:9445/eIDASDemoApplication/Metadata"));
     configurationService.saveConfiguration(validConfig, false);
 
     // Get Provider
-    Assertions.assertNotNull(configurationService.getProviderByEntityID("https://demo.mein-servicekonto.de/EidasNode/ConnectorMetadata?SP=demo_epa"));
-    Assertions.assertNotNull(configurationService.getProviderByEntityID("https://demo.mein-servicekonto.de/EidasNode/ConnectorMetadata?SP=demo_epa_20"));
-    Assertions.assertThrows(ConfigurationException.class,
-                            () -> configurationService.getProviderByEntityID("https://demo.mein-servicekonto.de/EidasNode/ConnectorMetadata?SP=demo_epa_invalid"));
+    RequestingServiceProvider providerByEntityID = configurationService.getProviderByEntityID("https://localhost:9443/eIDASDemoApplication/Metadata");
+    Assertions.assertEquals("https://localhost:9443/eIDASDemoApplication/Metadata", providerByEntityID.getEntityID());
+    ConfigurationException configurationException = Assertions.assertThrows(ConfigurationException.class,
+                                                                            () -> configurationService.getProviderByEntityID("https://localhost:9445/eIDASDemoApplication/Metadata"));
+    Assertions.assertEquals("The signature check failed.", configurationException.getCause().getMessage());
   }
 
   @Test
@@ -363,5 +523,14 @@ class ConfigurationServiceTest
                                                                                                      .get(0));
     Assertions.assertNotNull(dvcaConfiguration);
     Assertions.assertEquals(configuration.getEidConfiguration().getDvcaConfiguration().get(0), dvcaConfiguration);
+  }
+
+  static Stream<Arguments> validMetadataVerificationCerts()
+  {
+    return Stream.of(Arguments.of("rsa_saml_3072.cer", "1669970371"),
+                     Arguments.of("rsa_saml_4096.cer", "1669970742"),
+                     Arguments.of("ec_saml_256.cer", "1669970936"),
+                     Arguments.of("ec_saml_384.cer", "1669970973"),
+                     Arguments.of("ec_saml_521.cer", "1669971052"));
   }
 }

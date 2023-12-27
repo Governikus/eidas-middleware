@@ -1,11 +1,10 @@
 /*
- * Copyright (c) 2020 Governikus KG. Licensed under the EUPL, Version 1.2 or as soon they will be approved by
- * the European Commission - subsequent versions of the EUPL (the "Licence"); You may not use this work except
- * in compliance with the Licence. You may obtain a copy of the Licence at:
- * http://joinup.ec.europa.eu/software/page/eupl Unless required by applicable law or agreed to in writing,
- * software distributed under the Licence is distributed on an "AS IS" basis, WITHOUT WARRANTIES OR CONDITIONS
- * OF ANY KIND, either express or implied. See the Licence for the specific language governing permissions and
- * limitations under the Licence.
+ * Copyright (c) 2020 Governikus KG. Licensed under the EUPL, Version 1.2 or as soon they will be approved by the
+ * European Commission - subsequent versions of the EUPL (the "Licence"); You may not use this work except in compliance
+ * with the Licence. You may obtain a copy of the Licence at: http://joinup.ec.europa.eu/software/page/eupl Unless
+ * required by applicable law or agreed to in writing, software distributed under the Licence is distributed on an
+ * "AS IS" basis, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the Licence for the
+ * specific language governing permissions and limitations under the Licence.
  */
 
 package de.governikus.eumw.eidasstarterkit;
@@ -101,8 +100,8 @@ import lombok.Setter;
 import net.shibboleth.utilities.java.support.component.ComponentInitializationException;
 import net.shibboleth.utilities.java.support.xml.BasicParserPool;
 import net.shibboleth.utilities.java.support.xml.XMLParserException;
-import se.litsec.eidas.opensaml.common.EidasConstants;
-import se.litsec.eidas.opensaml.ext.attributes.CurrentAddressType;
+import se.swedenconnect.opensaml.eidas.common.EidasConstants;
+import se.swedenconnect.opensaml.eidas.ext.attributes.CurrentAddressType;
 import se.swedenconnect.opensaml.xmlsec.encryption.support.DecryptionUtils;
 
 
@@ -123,24 +122,18 @@ public class EidasResponse
     errorCodeToSamlStatus.put(ErrorCode.UNSIGNED_ASSERTIONCONSUMER_URL,
                               Collections.singletonList(StatusCode.REQUESTER));
     errorCodeToSamlStatus.put(ErrorCode.INVALID_SESSION_ID, Collections.singletonList(StatusCode.REQUESTER));
-    errorCodeToSamlStatus.put(ErrorCode.TOO_MANY_OPEN_SESSIONS,
-                              Collections.singletonList(StatusCode.REQUESTER));
+    errorCodeToSamlStatus.put(ErrorCode.TOO_MANY_OPEN_SESSIONS, Collections.singletonList(StatusCode.REQUESTER));
     errorCodeToSamlStatus.put(ErrorCode.MISSING_REQUEST_ID, Collections.singletonList(StatusCode.REQUESTER));
-    errorCodeToSamlStatus.put(ErrorCode.SIGNATURE_CHECK_FAILED,
-                              Collections.singletonList(StatusCode.REQUESTER));
+    errorCodeToSamlStatus.put(ErrorCode.SIGNATURE_CHECK_FAILED, Collections.singletonList(StatusCode.REQUESTER));
     errorCodeToSamlStatus.put(ErrorCode.SIGNATURE_MISSING, Collections.singletonList(StatusCode.REQUESTER));
-    errorCodeToSamlStatus.put(ErrorCode.ILLEGAL_REQUEST_SYNTAX,
-                              Collections.singletonList(StatusCode.REQUESTER));
+    errorCodeToSamlStatus.put(ErrorCode.ILLEGAL_REQUEST_SYNTAX, Collections.singletonList(StatusCode.REQUESTER));
     errorCodeToSamlStatus.put(ErrorCode.AUTHORIZATION_FAILED,
                               Arrays.asList(StatusCode.RESPONDER, StatusCode.AUTHN_FAILED));
-    errorCodeToSamlStatus.put(ErrorCode.AUTHORIZATION_UNFINISHED,
-                              Collections.singletonList(StatusCode.REQUESTER));
+    errorCodeToSamlStatus.put(ErrorCode.AUTHORIZATION_UNFINISHED, Collections.singletonList(StatusCode.REQUESTER));
     errorCodeToSamlStatus.put(ErrorCode.UNKNOWN_PROVIDER,
                               Arrays.asList(StatusCode.RESPONDER, StatusCode.REQUEST_UNSUPPORTED));
-    errorCodeToSamlStatus.put(ErrorCode.ILLEGAL_CONFIGURATION,
-                              Collections.singletonList(StatusCode.RESPONDER));
-    errorCodeToSamlStatus.put(ErrorCode.CANNOT_ACCESS_CREDENTIALS,
-                              Collections.singletonList(StatusCode.RESPONDER));
+    errorCodeToSamlStatus.put(ErrorCode.ILLEGAL_CONFIGURATION, Collections.singletonList(StatusCode.RESPONDER));
+    errorCodeToSamlStatus.put(ErrorCode.CANNOT_ACCESS_CREDENTIALS, Collections.singletonList(StatusCode.RESPONDER));
     errorCodeToSamlStatus.put(ErrorCode.INVALID_CERTIFICATE,
                               Arrays.asList(StatusCode.RESPONDER, StatusCode.AUTHN_FAILED));
     errorCodeToSamlStatus.put(ErrorCode.ILLEGAL_ACCESS_METHOD,
@@ -154,29 +147,21 @@ public class EidasResponse
     errorCodeToSamlStatus.put(ErrorCode.UNEXPECTED_EVENT, Collections.singletonList(StatusCode.REQUESTER));
     errorCodeToSamlStatus.put(ErrorCode.OUTDATED_REQUEST, Collections.singletonList(StatusCode.REQUESTER));
     errorCodeToSamlStatus.put(ErrorCode.REQUEST_FROM_FUTURE, Collections.singletonList(StatusCode.REQUESTER));
-    errorCodeToSamlStatus.put(ErrorCode.DUPLICATE_REQUEST_ID,
-                              Collections.singletonList(StatusCode.REQUESTER));
+    errorCodeToSamlStatus.put(ErrorCode.DUPLICATE_REQUEST_ID, Collections.singletonList(StatusCode.REQUESTER));
     errorCodeToSamlStatus.put(ErrorCode.EID_ERROR, Collections.singletonList(StatusCode.RESPONDER));
-    errorCodeToSamlStatus.put(ErrorCode.ECARD_ERROR,
-                              Arrays.asList(StatusCode.RESPONDER, StatusCode.AUTHN_FAILED));
-    errorCodeToSamlStatus.put(ErrorCode.EID_MISSING_TERMINAL_RIGHTS,
-                              Collections.singletonList(StatusCode.RESPONDER));
-    errorCodeToSamlStatus.put(ErrorCode.EID_MISSING_ARGUMENT,
-                              Collections.singletonList(StatusCode.RESPONDER));
-    errorCodeToSamlStatus.put(ErrorCode.PASSWORD_EXPIRED,
-                              Arrays.asList(StatusCode.RESPONDER, StatusCode.AUTHN_FAILED));
-    errorCodeToSamlStatus.put(ErrorCode.PASSWORD_LOCKED,
-                              Arrays.asList(StatusCode.RESPONDER, StatusCode.AUTHN_FAILED));
+    errorCodeToSamlStatus.put(ErrorCode.ECARD_ERROR, Arrays.asList(StatusCode.RESPONDER, StatusCode.AUTHN_FAILED));
+    errorCodeToSamlStatus.put(ErrorCode.EID_MISSING_TERMINAL_RIGHTS, Collections.singletonList(StatusCode.RESPONDER));
+    errorCodeToSamlStatus.put(ErrorCode.EID_MISSING_ARGUMENT, Collections.singletonList(StatusCode.RESPONDER));
+    errorCodeToSamlStatus.put(ErrorCode.PASSWORD_EXPIRED, Arrays.asList(StatusCode.RESPONDER, StatusCode.AUTHN_FAILED));
+    errorCodeToSamlStatus.put(ErrorCode.PASSWORD_LOCKED, Arrays.asList(StatusCode.RESPONDER, StatusCode.AUTHN_FAILED));
     errorCodeToSamlStatus.put(ErrorCode.CANNOT_DECRYPT, Collections.singletonList(StatusCode.REQUESTER));
     errorCodeToSamlStatus.put(ErrorCode.ILLEGAL_PSK, Collections.singletonList(StatusCode.REQUESTER));
-    errorCodeToSamlStatus.put(ErrorCode.CLIENT_ERROR,
-                              Arrays.asList(StatusCode.RESPONDER, StatusCode.AUTHN_FAILED));
+    errorCodeToSamlStatus.put(ErrorCode.CLIENT_ERROR, Arrays.asList(StatusCode.RESPONDER, StatusCode.AUTHN_FAILED));
     errorCodeToSamlStatus.put(ErrorCode.PROXY_COUNT_EXCEEDED,
                               Arrays.asList(StatusCode.RESPONDER, StatusCode.PROXY_COUNT_EXCEEDED));
     errorCodeToSamlStatus.put(ErrorCode.NO_SUPPORTED_IDP,
                               Arrays.asList(StatusCode.RESPONDER, StatusCode.NO_SUPPORTED_IDP));
-    errorCodeToSamlStatus.put(ErrorCode.REQUEST_DENIED,
-                              Arrays.asList(StatusCode.RESPONDER, StatusCode.REQUEST_DENIED));
+    errorCodeToSamlStatus.put(ErrorCode.REQUEST_DENIED, Arrays.asList(StatusCode.RESPONDER, StatusCode.REQUEST_DENIED));
     errorCodeToSamlStatus.put(ErrorCode.CANCELLATION_BY_USER,
                               Arrays.asList(StatusCode.RESPONDER, StatusCode.AUTHN_FAILED));
     errorCodeToSamlStatus.put(ErrorCode.INVALID_NAME_ID_TYPE,
@@ -317,8 +302,7 @@ public class EidasResponse
       if (code == null)
       {
         code = ErrorCode.INTERNAL_ERROR;
-        throw new ErrorCodeException(code,
-                                     "Unkown statuscode " + resp.getStatus().getStatusCode().getValue());
+        throw new ErrorCodeException(code, "Unkown statuscode " + resp.getStatus().getStatusCode().getValue());
       }
       // Error response, so un-encrypted assertion!
       for ( Assertion assertion : resp.getAssertions() )
@@ -347,11 +331,7 @@ public class EidasResponse
 
   private static void setLevelOfAssuranceFromAssertion(EidasResponse eidasResp, Assertion assertion)
   {
-    String loa = assertion.getAuthnStatements()
-                          .get(0)
-                          .getAuthnContext()
-                          .getAuthnContextClassRef()
-                          .getURI();
+    String loa = assertion.getAuthnStatements().get(0).getAuthnContext().getAuthnContextClassRef().getURI();
     EidasLoaEnum loaEnum = EidasLoaEnum.parse(loa);
     eidasResp.setLoa(loaEnum);
   }
@@ -368,21 +348,18 @@ public class EidasResponse
       EidasPersonAttributes personAttributes = getEidasPersonAttributes(att);
       EidasAttribute eidasAttribute = personAttributes.getInstance();
       XMLObject attributeValue = att.getAttributeValues().get(0);
-      if (eidasAttribute instanceof AbstractNonLatinScriptAttribute)
+      if (eidasAttribute instanceof AbstractNonLatinScriptAttribute attribute)
       {
-        AbstractNonLatinScriptAttribute attribute = (AbstractNonLatinScriptAttribute)eidasAttribute;
         attribute.setValue(attributeValue.getDOM().getTextContent());
         if (att.getAttributeValues().size() == 2)
         {
           attribute.setNonLatinScript(att.getAttributeValues().get(1).getDOM().getTextContent());
         }
       }
-      else if (eidasAttribute instanceof CurrentAddressAttribute
-               && attributeValue instanceof CurrentAddressType)
+      else if (eidasAttribute instanceof CurrentAddressAttribute currentAddressAttribute
+               && attributeValue instanceof CurrentAddressType currentAddressType)
       {
-        CurrentAddressAttribute attribute = (CurrentAddressAttribute)eidasAttribute;
-        CurrentAddressType cat = (CurrentAddressType)attributeValue;
-        attribute.setFromCurrentAddressType(cat);
+        currentAddressAttribute.setFromCurrentAddressType(currentAddressType);
       }
       else
       {
@@ -435,8 +412,7 @@ public class EidasResponse
     }
   }
 
-  private static List<Assertion> collectDecryptedAssertions(Response resp, Decrypter decr)
-    throws ErrorCodeException
+  private static List<Assertion> collectDecryptedAssertions(Response resp, Decrypter decr) throws ErrorCodeException
   {
     List<Assertion> assertions = new ArrayList<>();
 
@@ -504,24 +480,21 @@ public class EidasResponse
                .getAudienceRestrictions()
                .stream()
                .findFirst()
-               .orElseThrow(() -> new ErrorCodeException(ErrorCode.ERROR,
-                                                         "Missing AudienceRestrictions in response."))
+               .orElseThrow(() -> new ErrorCodeException(ErrorCode.ERROR, "Missing AudienceRestrictions in response."))
                .getAudiences()
                .stream()
                .findFirst()
                .orElseThrow(() -> new ErrorCodeException(ErrorCode.ERROR, "Missing Audiences in response."))
-               .getAudienceURI();
+               .getURI();
   }
 
-  private static void checkSignature(Signature sig, List<X509Certificate> trustedAnchorList)
-    throws ErrorCodeException
+  private static void checkSignature(Signature sig, List<X509Certificate> trustedAnchorList) throws ErrorCodeException
   {
     if (sig == null)
     {
       throw new ErrorCodeException(ErrorCode.SIGNATURE_CHECK_FAILED);
     }
-    XMLSignatureHandler.checkSignature(sig,
-                                       trustedAnchorList.toArray(new X509Certificate[trustedAnchorList.size()]));
+    XMLSignatureHandler.checkSignature(sig, trustedAnchorList.toArray(new X509Certificate[0]));
   }
 
   private static ErrorCode findErrorCode(String s)
@@ -536,9 +509,8 @@ public class EidasResponse
     return null;
   }
 
-  public byte[] generateErrorRsp(ErrorCode code, String... msg)
-    throws IOException, CertificateEncodingException, MarshallingException, SignatureException,
-    TransformerFactoryConfigurationError, TransformerException
+  public byte[] generateErrorRsp(ErrorCode code, String... msg) throws IOException, CertificateEncodingException,
+    MarshallingException, SignatureException, TransformerFactoryConfigurationError, TransformerException
   {
     Response response = new ResponseBuilder().buildObject();
     response.setDestination(destination);
@@ -577,8 +549,7 @@ public class EidasResponse
 
     Assertion assertion = new AssertionBuilder().buildObject();
     assertion.getNamespaceManager()
-             .registerNamespaceDeclaration(new Namespace(EidasConstants.EIDAS_NP_NS,
-                                                         EidasConstants.EIDAS_NP_PREFIX));
+             .registerNamespaceDeclaration(new Namespace(EidasConstants.EIDAS_NP_NS, EidasConstants.EIDAS_NP_PREFIX));
     assertion.setIssueInstant(now);
     assertion.setID("_" + Utils.generateUniqueID());
 
@@ -617,8 +588,7 @@ public class EidasResponse
     throws IOException, TransformerException, MarshallingException, SignatureException
   {
 
-    Marshaller rm = XMLObjectProviderRegistrySupport.getMarshallerFactory()
-                                                    .getMarshaller(response.getElementQName());
+    Marshaller rm = XMLObjectProviderRegistrySupport.getMarshallerFactory().getMarshaller(response.getElementQName());
     Element all = rm.marshall(response);
     Signer.signObjects(signatures);
 

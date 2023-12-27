@@ -59,8 +59,13 @@
         </div>
         <hr>
         <h3>Certificates and key pairs</h3>
-        <div th:if="${@environment.getProperty('hsm.type') != 'PKCS11'}">
-            <!-- Do not show signature key pair if hsmis in use -->
+        <div th:if="${@environment.getProperty('hsm.type') == 'PKCS11'}" class="text-danger form-group row m-1">
+            <div class="col">
+                <i class="fa fa-exclamation-triangle"></i>
+                Attention: HSM is active, signature key pair from HSM is used instead of potentially configured value
+            </div>
+        </div>
+        <div th:if="${@environment.getProperty('hsm.type') != 'PKCS11' || eidasConfigModel.signatureKeyPairName != null}">
             <div th:replace="~{fragments/configOptions :: keypairs('Signature key pair', 'signatureKeyPairName', 'The key pair to sign responses and metadata')}"/>
         </div>
 

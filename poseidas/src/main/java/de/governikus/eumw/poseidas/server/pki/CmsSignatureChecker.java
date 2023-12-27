@@ -28,6 +28,7 @@ import java.util.Set;
 import javax.security.auth.x500.X500Principal;
 
 import org.bouncycastle.asn1.x509.Extension;
+import org.bouncycastle.asn1.x9.ECNamedCurveTable;
 import org.bouncycastle.cert.X509CertificateHolder;
 import org.bouncycastle.cms.CMSException;
 import org.bouncycastle.cms.CMSSignedData;
@@ -38,6 +39,7 @@ import org.bouncycastle.cms.jcajce.JcaSimpleSignerInfoVerifierBuilder;
 import org.bouncycastle.operator.OperatorCreationException;
 import org.bouncycastle.util.Store;
 
+import de.governikus.eumw.poseidas.cardbase.ByteUtil;
 import de.governikus.eumw.poseidas.cardserver.CertificateUtil;
 import de.governikus.eumw.poseidas.eidserver.crl.CertificationRevocationListImpl;
 import de.governikus.eumw.utils.key.KeyReader;
@@ -63,6 +65,12 @@ public class CmsSignatureChecker
    */
   private final Set<X509Certificate> trustAnchors = new HashSet<>();
 
+  private final Set<String> acceptedDigestAlgs = new HashSet<>();
+
+  private final Set<String> acceptedSigAlgs = new HashSet<>();
+
+  private final Set<String> acceptedCurves = new HashSet<>();
+
   /** holds the signed content after successful verification */
   @Getter
   private Object verifiedContent;
@@ -87,6 +95,25 @@ public class CmsSignatureChecker
   public CmsSignatureChecker(Collection<X509Certificate> trustAnchors)
   {
     this.trustAnchors.addAll(Objects.requireNonNull(trustAnchors));
+  }
+
+  /**
+   * Constructor allowing configuration of accepted cryptographic algorithms.
+   * 
+   * @param trustAnchors trust anchor certificates, <code>null</code> not permitted
+   * @param digestAlgs accepted digest algorithms as OID strings, <code>null</code> or empty for accepting any digest
+   * @param sigAlgs accepted signature algorithms as OID strings, <code>null</code> or empty for accepting any algorithm
+   * @param curves accepted elliptic curves as names, <code>null</code> or empty for accepting any curve
+   */
+  public CmsSignatureChecker(Collection<X509Certificate> trustAnchors,
+                             Collection<String> digestAlgs,
+                             Collection<String> sigAlgs,
+                             Collection<String> curves)
+  {
+    this.trustAnchors.addAll(Objects.requireNonNull(trustAnchors));
+    this.acceptedDigestAlgs.addAll(Objects.requireNonNullElse(digestAlgs, Set.of()));
+    this.acceptedSigAlgs.addAll(Objects.requireNonNullElse(sigAlgs, Set.of()));
+    this.acceptedCurves.addAll(Objects.requireNonNullElse(curves, Set.of()));
   }
 
   /**
@@ -144,12 +171,54 @@ public class CmsSignatureChecker
     Store<X509CertificateHolder> certificateStorage = cmsSignedData.getCertificates();
     for ( SignerInformation signer : signers.getSigners() )
     {
+      if (!acceptedDigestAlgs.isEmpty() && !acceptedDigestAlgs.contains(signer.getDigestAlgOID()))
+      {
+        throw new SignatureException("Unsupported digest algorithm detected");
+      }
+      if (!acceptedSigAlgs.isEmpty() && !acceptedSigAlgs.contains(signer.getEncryptionAlgOID()))
+      {
+        throw new SignatureException("Unsupported signature algorithm detected");
+      }
+
       @SuppressWarnings("unchecked")
       X509CertificateHolder holder = (X509CertificateHolder)certificateStorage.getMatches(signer.getSID())
                                                                               .iterator()
                                                                               .next();
       ByteArrayInputStream certInputStream = getInputStreamOfCertificateData(holder);
       X509Certificate signatureVerificationCertificate = KeyReader.readX509Certificate(certInputStream);
+
+      if (!acceptedCurves.isEmpty() && "EC".equals(signatureVerificationCertificate.getPublicKey().getAlgorithm()))
+      {
+        byte[] paramsFromCert;
+        try
+        {
+          paramsFromCert = holder.getSubjectPublicKeyInfo()
+                                 .getAlgorithm()
+                                 .getParameters()
+                                 .toASN1Primitive()
+                                 .getEncoded();
+        }
+        catch (IOException e)
+        {
+          throw new SignatureException("Unable to extract curve parameters from certificate", e);
+        }
+
+        boolean found = acceptedCurves.stream().map(c -> {
+          try
+          {
+            return ECNamedCurveTable.getByName(c).getEncoded();
+          }
+          catch (IOException e)
+          {
+            return null;
+          }
+        }).anyMatch(b -> ByteUtil.equals(b, paramsFromCert));
+        if (!found)
+        {
+          throw new SignatureException("Unsupported elliptic curve detected");
+        }
+      }
+
       validateCertificate(signatureVerificationCertificate, crlService);
 
       PublicKey publicKey = signatureVerificationCertificate.getPublicKey();

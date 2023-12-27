@@ -236,6 +236,14 @@ Changelog
     - eIDAS Middleware: Update identglue and fix behaviour for mobile use.
     - eIDAS Middleware: Add the shibboleth repository to pom.xml
 
-* 3.1.2
+* 3.2.0
 
-    - eIDAS Middleware: Fix CVEs by updating affected libraries, most notably xmlsec.
+    - All components: Update to Java 17.
+    - All components: Update to Spring Boot 3.1.
+    - eIDAS Middleware: Fix use of P12 keystores for TLS keys.
+    - eIDAS Middleware: Fix display of CVC availability on the status page.
+    - eIDAS Middleware: Remove deprecated configuration parts in the documentation.
+    - eIDAS Middleware: Only accept specified cryptographic algorithms and elliptic curve parameters.
+    - eIDAS Middleware: Fix generation of sequence number after an initial CVC request.
+    - eIDAS Middleware: Improve form validation for initial CVC request.
+    - eIDAS Middleware & Demo: Update new references to the German eID client.

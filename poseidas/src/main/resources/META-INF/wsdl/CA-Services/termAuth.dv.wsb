@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <jaxws:bindings 
-               xmlns:jaxws="http://java.sun.com/xml/ns/jaxws"
+               xmlns:jaxws="https://jakarta.ee/xml/ns/jaxws"
                xmlns:xs="http://www.w3.org/2001/XMLSchema"
                wsdlLocation="TermAuth/WS_DV_TerminalAuth.wsdl">
                <jaxws:bindings node="wsdl:definitions" xmlns:wsdl="http://schemas.xmlsoap.org/wsdl/">

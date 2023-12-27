@@ -46,7 +46,7 @@ class EidControllerTest extends WebAdminTestBase
 
   private final ConfigurationService configurationService;
 
-  private final static String ALLOWED_EID_TYPES_FIELD_ID = "Allowed-eID-means";
+  private final static String ALLOWED_EID_TYPES_FIELD_ID = "allowedEidMeans";
 
   @Autowired
   public EidControllerTest(ConfigurationService configurationService)

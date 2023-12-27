@@ -9,7 +9,7 @@ import de.governikus.eumw.eidasstarterkit.additional.attributes.NationalityTypeB
 import de.governikus.eumw.eidasstarterkit.person_attributes.AbstractEidasAttribute;
 import de.governikus.eumw.eidasstarterkit.person_attributes.EidasPersonAttributes;
 import lombok.NoArgsConstructor;
-import se.litsec.eidas.opensaml.ext.attributes.AttributeConstants;
+import se.swedenconnect.opensaml.eidas.ext.attributes.AttributeConstants;
 
 
 /**

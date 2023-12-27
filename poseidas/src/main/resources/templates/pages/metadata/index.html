@@ -32,7 +32,7 @@
                 <thead>
                 <th>Entity ID</th>
                 <th>signature valid</th>
-                <th />
+                <th/>
                 </thead>
                 <tbody>
                 <tr th:each="meta,iterStat : ${metafiles}" id="entry-" th:attrappend="id=${iterStat.index}">
@@ -41,7 +41,7 @@
                     </td>
                     <td>
                         <span id="signatureValid"
-                              th:text="${meta.getCheckedAsValid() == null ? 'unsigned' : meta.getCheckedAsValid() ? '✔' : '❌'}"/>
+                              th:text="${meta.checkedAsValid == null ? 'unsigned' : meta.checkedAsValid ? '✔' : '❌'}"/>
                     </td>
                     <td>
                         <a th:href="${'/admin-interface/metadataConfig/download?entityID=' +  #uris.escapePathSegment(meta.entityId)}"

@@ -12,21 +12,20 @@ package de.governikus.eumw.eidasdemo;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
-import java.security.GeneralSecurityException;
 import java.security.PrivateKey;
 import java.security.cert.CertificateException;
 import java.security.cert.X509Certificate;
 
-import javax.annotation.PostConstruct;
+import jakarta.annotation.PostConstruct;
 
-import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
 import de.governikus.eumw.eidascommon.Utils;
 import de.governikus.eumw.eidascommon.Utils.X509KeyPair;
 import lombok.extern.slf4j.Slf4j;
-import se.litsec.eidas.opensaml.ext.SPTypeEnumeration;
+import se.swedenconnect.opensaml.eidas.ext.SPTypeEnumeration;
 
 
 /**
@@ -147,7 +146,7 @@ public class SamlExampleHelper
       demoSignatureCertificate = keyPair.getCert();
       demoSignatureKey = keyPair.getKey();
     }
-    catch (IOException | GeneralSecurityException e)
+    catch (Exception e)
     {
       log.error("Cannot load signature keystore", e);
     }
@@ -161,7 +160,7 @@ public class SamlExampleHelper
                                                    demoDecryptionKeystorePin.toCharArray(),
                                                    true);
     }
-    catch (IOException | GeneralSecurityException e)
+    catch (Exception e)
     {
       log.error("Cannot load signature keystore", e);
     }

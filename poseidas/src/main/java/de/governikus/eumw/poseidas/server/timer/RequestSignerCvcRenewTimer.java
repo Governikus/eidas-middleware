@@ -1,5 +1,6 @@
 package de.governikus.eumw.poseidas.server.timer;
 
+import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.security.cert.CertificateEncodingException;
 import java.security.cert.X509Certificate;
@@ -25,7 +26,6 @@ import org.springframework.stereotype.Component;
 
 import de.governikus.eumw.config.EidasMiddlewareConfig;
 import de.governikus.eumw.config.ServiceProviderType;
-import de.governikus.eumw.poseidas.cardbase.asn1.ASN1;
 import de.governikus.eumw.poseidas.cardserver.certrequest.CertificateRequest;
 import de.governikus.eumw.poseidas.server.idprovider.config.ConfigurationService;
 import de.governikus.eumw.poseidas.server.pki.PendingCertificateRequest;
@@ -170,7 +170,7 @@ public class RequestSignerCvcRenewTimer
     String outerAuthorityReferenceString;
     try
     {
-      CertificateRequest certificateRequest = new CertificateRequest(new ASN1(pendingCertificateRequest.getRequestData()).getValue());
+      CertificateRequest certificateRequest = new CertificateRequest(new ByteArrayInputStream(pendingCertificateRequest.getRequestData()));
       outerAuthorityReferenceString = certificateRequest.getOuterAuthorityReferenceString();
     }
     catch (IOException e)

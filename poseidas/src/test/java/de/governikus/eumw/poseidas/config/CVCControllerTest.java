@@ -180,9 +180,9 @@ class CVCControllerTest extends ServiceProviderTestBase
            });
 
     HtmlPage serviceProviderPage = getServiceProviderPage();
-    setTextValue(serviceProviderPage, "Country-code", "DE");
-    setTextValue(serviceProviderPage, "CHR-Mnemonic", "CHR");
-    setNumberValue(serviceProviderPage, "Sequence-number", 42);
+    setTextValue(serviceProviderPage, "countryCode", "DE");
+    setTextValue(serviceProviderPage, "chrMnemonic", "CHR");
+    setNumberValue(serviceProviderPage, "sequenceNumber", 42);
     HtmlPage requestedCvcPage = submitFormById(serviceProviderPage, "initial-request-form");
     assertMessageAlert(requestedCvcPage, "Initial request succeeded");
   }
@@ -197,9 +197,9 @@ class CVCControllerTest extends ServiceProviderTestBase
            .thenReturn(GlobalManagementCodes.INTERNAL_ERROR.createMessage());
 
     HtmlPage serviceProviderPage = getServiceProviderPage();
-    setTextValue(serviceProviderPage, "Country-code", "DE");
-    setTextValue(serviceProviderPage, "CHR-Mnemonic", "CHR");
-    setNumberValue(serviceProviderPage, "Sequence-number", 42);
+    setTextValue(serviceProviderPage, "countryCode", "DE");
+    setTextValue(serviceProviderPage, "chrMnemonic", "CHR");
+    setNumberValue(serviceProviderPage, "sequenceNumber", 42);
     HtmlPage requestedCvcPage = submitFormById(serviceProviderPage, "initial-request-form");
     assertErrorAlert(requestedCvcPage, "Initial request failed");
   }

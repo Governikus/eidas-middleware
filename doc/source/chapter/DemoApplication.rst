@@ -27,15 +27,6 @@ It must contain the following content. Adapt all the values to match your setup.
     # The pin of the keystore and key of the demo_signature_keystore
     demo.signature.pin=123456
 
-    # The path to the keystore that will be used to decrypt the eIDAS responses from the Middleware
-    demo.decryption.keystore=/path/to/your/demo_decryption_keystore.p12
-
-    # The alias for the demo_decryption_keystore
-    demo.decryption.alias=alias
-
-    # The pin of the keystore and key of demo_decryption_keystore
-    demo.decryption.pin=123456
-
     # Optional: Add a context path to the eIDAS Demo Application
     #server.contextPath=/eIDASDemoApplication
 
@@ -51,8 +42,8 @@ Using the eIDAS Demo Application
 To use the eIDAS Demo Application, start by running the eIDAS Demo Application.
 
 #. Change to the correct directory where the aforementioned configuration is present.
-#. If not present, copy the ``eidas-demo-3.1.2.jar`` file in this directory.
-#. Start the application by executing ``java -jar eidas-demo-3.1.2.jar``.
+#. If not present, copy the ``eidas-demo-3.2.0.jar`` file in this directory.
+#. Start the application by executing ``java -jar eidas-demo-3.2.0.jar``.
 
 Now you must configure your eIDAS Middleware to communicate with the eIDAS Demo Application.
 
@@ -67,7 +58,7 @@ Once you have configured the eIDAS Middleware, you are ready to test your system
 
 #. Open the URL ``http://your.demo.host:8080/NewRequesterServlet``.
 #. Click on ``Go to the eIDAS Middleware``.
-#. Click on ``Understood, start online identification`` to start the authorization procedure with your test eID card and the AusweisApp2.
+#. Click on ``Understood, start online identification`` to start the authorization procedure with your test eID card and the AusweisApp.
 #. Finally, you should be redirected to ``http://your.demo.host:8080/NewReceiverServlet``.
 
 At the top you can see the full eIDAS SAML response with the encrypted SAML assertion.
@@ -76,7 +67,7 @@ If there was an error or the user aborted the authorization procedure, you would
 
 There is also the possibility to demonstrate the eIDAS Middleware handling various errors.
 Open the URL ``http://your.demo.host:8080/NewRequesterServlet``. The third part of the linklist sends
-``LoA = Test`` with different error provocations. This test works without eID card and AusweisApp2. In this
+``LoA = Test`` with different error provocations. This test works without eID card and AusweisApp. In this
 demonstration also the CVC check is conducted. The result is shown if the CVC check wasn't successful. If the CVC
 check was successful the eIDAS Middleware is configured properly.
 
@@ -90,7 +81,7 @@ Also bear in mind that you must use the path of the container file system in the
 
 To run the middleware, execute the following command after you have prepared the configuration, certificate and key stores::
 
-    docker run --rm -it -v /path/to/your/config-directory:/opt/eidas-middleware/config -p 8080:8080 governikus/eidas-demo-application:3.1.2
+    docker run --rm -it -v /path/to/your/config-directory:/opt/eidas-middleware/config -p 8080:8080 governikus/eidas-demo-application:3.2.0
 
 Now you can follow the steps above to configure and test the eIDAS Middleware.
 

@@ -32,6 +32,7 @@ import de.governikus.eumw.config.KeyPairType;
 import de.governikus.eumw.config.ServiceProviderType;
 import de.governikus.eumw.eidascommon.ContextPaths;
 import de.governikus.eumw.eidascommon.ErrorCodeException;
+import de.governikus.eumw.eidascommon.Utils;
 import de.governikus.eumw.eidasmiddleware.eid.RequestingServiceProvider;
 import de.governikus.eumw.eidasstarterkit.EidasMetadataNode;
 import de.governikus.eumw.eidasstarterkit.EidasSaml;
@@ -213,6 +214,40 @@ public class ConfigurationService
     }
   }
 
+  public KeyPair getSamlKeyPair(String keyPairName)
+  {
+    KeyPair keyPair = getKeyPair(keyPairName);
+    try
+    {
+      Utils.ensureKeySize(keyPair.getCertificate());
+    }
+    catch (ErrorCodeException e)
+    {
+      throw new ConfigurationException("The key pair does not fulfill the eIDAS crypto requirements: "
+                                       + e.getMessage());
+    }
+    return keyPair;
+  }
+
+  /**
+   * Get the certificate with the given name. Additionally, check that the certificate meets the crypto requirements for
+   * SAML certificates.
+   */
+  public X509Certificate getSamlCertificate(String certificateName)
+  {
+    X509Certificate certificate = getCertificate(certificateName);
+    try
+    {
+      Utils.ensureKeySize(certificate);
+    }
+    catch (ErrorCodeException e)
+    {
+      throw new ConfigurationException("The certificate does not fulfill the eIDAS crypto requirements: "
+                                       + e.getMessage());
+    }
+    return certificate;
+  }
+
   /**
    * Get the certificate with the given name
    */
@@ -253,7 +288,7 @@ public class ConfigurationService
       throw new ConfigurationException("No metadata verification certificate present in the configuration");
     }
 
-    var metadataSignatureVerificationCertificate = getCertificate(metadataSignatureVerificationCertificateName);
+    var metadataSignatureVerificationCertificate = getSamlCertificate(metadataSignatureVerificationCertificateName);
 
     ConnectorMetadataType metadata = getConfiguration().orElseThrow(() -> new ConfigurationException("No configuration present"))
                                                        .getEidasConfiguration()

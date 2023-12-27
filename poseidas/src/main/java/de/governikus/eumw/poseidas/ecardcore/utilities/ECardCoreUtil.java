@@ -10,7 +10,7 @@
 
 package de.governikus.eumw.poseidas.ecardcore.utilities;
 
-import javax.xml.bind.JAXBElement;
+import jakarta.xml.bind.JAXBElement;
 
 import oasis.names.tc.dss._1_0.core.schema.InternationalStringType;
 import oasis.names.tc.dss._1_0.core.schema.ObjectFactory;

@@ -11,10 +11,13 @@ package de.governikus.eumw.eidasmiddleware.projectconfig;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.Arrays;
 
 import org.apache.catalina.connector.Connector;
 import org.apache.coyote.http11.AbstractHttp11Protocol;
 import org.apache.coyote.http11.Http11NioProtocol;
+import org.apache.tomcat.util.net.SSLHostConfig;
+import org.apache.tomcat.util.net.SSLHostConfigCertificate;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.web.embedded.tomcat.TomcatServletWebServerFactory;
 import org.springframework.boot.web.server.WebServerFactoryCustomizer;
@@ -99,7 +102,13 @@ public class PortCreator
   @Bean
   public WebServerFactoryCustomizer<TomcatServletWebServerFactory> servletContainerCustomizer()
   {
-    return factory -> factory.addConnectorCustomizers(c -> ((AbstractHttp11Protocol<?>)c.getProtocolHandler()).setSSLHonorCipherOrder(true));
+    return factory -> factory.addConnectorCustomizers(connector -> {
+      if (connector.getProtocolHandler() instanceof AbstractHttp11Protocol<?> httpHandler)
+      {
+        Arrays.stream(httpHandler.findSslHostConfigs())
+              .forEach(sslHostConfig -> sslHostConfig.setHonorCipherOrder(true));
+      }
+    });
   }
 
   /**
@@ -159,14 +168,27 @@ public class PortCreator
     protocol.setSecure(true);
     protocol.setPort(adminInterfacePort);
     File keystoreFile = getSslConnectorKeystoreFile();
-    protocol.setKeystoreFile(keystoreFile.getAbsolutePath());
-    protocol.setKeystorePass(keystorePassword);
-    protocol.setKeyAlias(keyAlias);
-    protocol.setKeyPass(keystorePassword);
-    protocol.setSslEnabledProtocols(serverSslProtocols);
-    protocol.setCiphers(serverSslCiphers);
-    protocol.setSSLHonorCipherOrder(true);
+
+    SSLHostConfig sslHostConfig = new SSLHostConfig();
+
+    sslHostConfig.setEnabledProtocols(serverSslProtocols.split(","));
+    // sslHostConfig.setCiphers(serverSslCiphers);
+    sslHostConfig.setEnabledCiphers(serverSslCiphers.split(","));
+    sslHostConfig.setHonorCipherOrder(true);
+
+    SSLHostConfigCertificate sslHostConfigCertificate = new SSLHostConfigCertificate(sslHostConfig,
+                                                                                     SSLHostConfigCertificate.Type.UNDEFINED);
+    sslHostConfigCertificate.setCertificateKeystoreFile(keystoreFile.getAbsolutePath());
+    sslHostConfigCertificate.setCertificateKeystoreType(keystoreType);
+    sslHostConfigCertificate.setCertificateKeystorePassword(keystorePassword);
+    sslHostConfigCertificate.setCertificateKeyAlias(keyAlias);
+    sslHostConfigCertificate.setCertificateKeyPassword(keystorePassword);
+
+    sslHostConfig.addCertificate(sslHostConfigCertificate);
+
+    protocol.addSslHostConfig(sslHostConfig);
     protocol.setMaxHttpHeaderSize(maxHeaderSize);
+
   }
 
   /**

@@ -149,8 +149,8 @@ public class EACServer
   private EAC2InputTypeWrapper produceSecondInput(EAC1OutputTypeWrapper firstOutput,
                                                   Object[] additionalParameters)
     throws IOException, InvalidAlgorithmParameterException, NoSuchAlgorithmException, NoSuchProviderException,
-    InvalidKeyException, InvalidKeySpecException, SignatureException, UnrecoverableKeyException,
-    KeyStoreException, CertificateException, HSMException
+    InvalidKeyException, InvalidKeySpecException, SignatureException, UnrecoverableKeyException, KeyStoreException,
+    CertificateException, HSMException, InvalidEidException
   {
     AssertUtil.notNull(firstOutput, "first output");
     AssertUtil.notNullOrEmpty(additionalParameters, "additional parameters");
@@ -160,11 +160,11 @@ public class EACServer
     }
     AssertUtil.notNull(additionalParameters[0], "instance of EAC1InputType");
     AssertUtil.notNull(additionalParameters[1], "instance of CertAndKeyProvider");
-    if (!EAC1InputTypeWrapper.class.isInstance(additionalParameters[0]))
+    if (!(additionalParameters[0] instanceof EAC1InputTypeWrapper))
     {
       throw new IllegalArgumentException("parameter is not instance of EAC1InputType");
     }
-    if (!CertAndKeyProvider.class.isInstance(additionalParameters[1]))
+    if (!(additionalParameters[1] instanceof CertAndKeyProvider))
     {
       throw new IllegalArgumentException("parameter is not instance of CertAndKeyProvider");
     }
@@ -187,6 +187,10 @@ public class EACServer
     AssertUtil.notNullOrEmpty(paceInfoList, "list of PACE info");
 
     this.caData = InfoSelector.selectCAData(caInfoList, caDomParamList);
+    if (this.caData == null)
+    {
+      throw new InvalidEidException("no acceptable chip authentication domain parameters found");
+    }
 
     this.paceInfo = InfoSelector.selectPACEInfo(paceInfoList);
     OID protocol = this.caData.getCaDomParamInfo().getProtocol();
@@ -330,7 +334,7 @@ public class EACServer
       throw new IllegalArgumentException("exactly one parameter required as instance of SignedDataChecker");
     }
     AssertUtil.notNull(additionalParameters[0], "instance of SignedDataChecker");
-    if (!SignedDataChecker.class.isInstance(additionalParameters[0]))
+    if (!(additionalParameters[0] instanceof SignedDataChecker))
     {
       throw new IllegalArgumentException("parameter is not instance of SignedDataChecker");
     }
@@ -449,7 +453,7 @@ public class EACServer
         return parameterClass.cast(this.produceSecondInput((EAC1OutputTypeWrapper)result,
                                                            additionalParameters));
       }
-      catch (IllegalArgumentException e)
+      catch (IllegalArgumentException | InvalidEidException e)
       {
         throw e;
       }

@@ -12,8 +12,8 @@ package de.governikus.eumw.poseidas.server.idprovider.core;
 
 import java.util.Objects;
 
-import javax.persistence.Entity;
-import javax.persistence.Id;
+import jakarta.persistence.Entity;
+import jakarta.persistence.Id;
 
 
 /**

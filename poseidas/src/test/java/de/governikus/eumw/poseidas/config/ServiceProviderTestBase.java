@@ -142,19 +142,19 @@ class ServiceProviderTestBase extends WebAdminTestBase
     // Add connector metadata and a validation certificate
     EidasMiddlewareConfig.EidasConfiguration eidasConfiguration = new EidasMiddlewareConfig.EidasConfiguration();
     ConnectorMetadataType validMetadata = new ConnectorMetadataType();
-    validMetadata.setValue(ServiceProviderTestBase.class.getResourceAsStream("/configuration/demo_epa.xml")
+    validMetadata.setValue(ServiceProviderTestBase.class.getResourceAsStream("/configuration/metadata-9443.xml")
                                                         .readAllBytes());
-    validMetadata.setEntityID("https://demo.mein-servicekonto.de/EidasNode/ConnectorMetadata?SP=demo_epa");
+    validMetadata.setEntityID("https://localhost:9443/eIDASDemoApplication/Metadata");
     eidasConfiguration.getConnectorMetadata().add(validMetadata);
     ConnectorMetadataType invalidMetadata = new ConnectorMetadataType();
-    invalidMetadata.setValue(ServiceProviderTestBase.class.getResourceAsStream("/configuration/demo_epa_invalid.xml")
+    invalidMetadata.setValue(ServiceProviderTestBase.class.getResourceAsStream("/configuration/metadata-9445-invalid.xml")
                                                           .readAllBytes());
-    invalidMetadata.setEntityID("https://demo.mein-servicekonto.de/EidasNode/ConnectorMetadata?SP=demo_epa_invalid");
+    invalidMetadata.setEntityID("https://localhost:9445/eIDASDemoApplication/Metadata");
     eidasConfiguration.getConnectorMetadata().add(invalidMetadata);
     eidasConfiguration.setMetadataSignatureVerificationCertificateName("sigCert");
     keyData.getCertificate()
            .add(new CertificateType("sigCert",
-                                    ServiceProviderTestBase.class.getResourceAsStream("/configuration/sigCert.crt")
+                                    ServiceProviderTestBase.class.getResourceAsStream("/configuration/metadata-signer.cer")
                                                                  .readAllBytes(),
                                     null, null));
     eidasMiddlewareConfig.setEidasConfiguration(eidasConfiguration);

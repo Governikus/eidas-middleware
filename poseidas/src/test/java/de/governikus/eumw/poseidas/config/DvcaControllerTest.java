@@ -54,7 +54,7 @@ class DvcaControllerTest extends WebAdminTestBase
 
   private final ConfigurationService configurationService;
 
-  private static final String NAME_ID = "Name";
+  private static final String NAME_ID = "name";
 
   private static final String DVCA_SERVER_CERT_ID = "serverSSLCertificateName";
 
@@ -62,13 +62,13 @@ class DvcaControllerTest extends WebAdminTestBase
 
   private static final String ML_TRUSTANCHOR_CERT_ID = "masterListTrustAnchorCertificateName";
 
-  private static final String TERMINALAUTHENTICATION_SERVICE_URL_ID = "Terminal-Authentication-service-URL";
+  private static final String TERMINALAUTHENTICATION_SERVICE_URL_ID = "terminalAuthServiceUrl";
 
-  private static final String RESTRICTED_ID_SERVICE_URL_ID = "Restricted-Identification-service-URL";
+  private static final String RESTRICTED_ID_SERVICE_URL_ID = "restrictedIdServiceUrl";
 
-  private static final String PASSIVEAUTHENTICATION_SERVICE_URL_ID = "Passive-Authentication-service-URL";
+  private static final String PASSIVEAUTHENTICATION_SERVICE_URL_ID = "passiveAuthServiceUrl";
 
-  private static final String DVCA_CERTIFICATE_DESCRIPTION_SERVICE_URL_ID = "CVC-description-service-URL";
+  private static final String DVCA_CERTIFICATE_DESCRIPTION_SERVICE_URL_ID = "dvcaCertificateDescrptionServiceUrl";
 
 
   @Autowired

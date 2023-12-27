@@ -108,7 +108,7 @@
                                             <div class=" row m-1">
                                                 <p th:errors="${keystoreUploadModel}" class="alert alert-danger"></p>
                                             </div>
-                                            <div th:replace="~{fragments/form :: inputRow_text('Key store name', 'name', 'Name to identify the key store')}"/>
+                                            <div th:replace="~{fragments/form :: inputRow_text_with_id('keyStoreName','Key store name', 'name', 'Name to identify the key store')}"/>
                                             <div th:replace="~{fragments/form :: inputRow_password('Key store password', 'password', 'Password to unlock key store')}"/>
 
                                             <div class=" form-group row m-1">
@@ -174,7 +174,7 @@
                                                 <p th:errors="${certificateUploadModel}" class="alert alert-danger"></p>
                                             </div>
 
-                                            <div th:replace="~{fragments/form :: inputRow_text('Certificate name', 'name', 'Name to identify the certificate')}"/>
+                                            <div th:replace="~{fragments/form :: inputRow_text_with_id('certificateName','Certificate name', 'name', 'Name to identify the certificate')}"/>
                                             <div th:replace="~{fragments/form :: inputRow_upload('certificate-upload', null, 'certificateFile', 'Certificate file')}"/>
                                             <hr/>
                                             <div th:replace="fragments/form :: submitTextUploadIcon('Upload')"/>

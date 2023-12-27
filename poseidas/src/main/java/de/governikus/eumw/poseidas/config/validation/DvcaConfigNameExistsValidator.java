@@ -2,8 +2,8 @@ package de.governikus.eumw.poseidas.config.validation;
 
 import java.util.List;
 
-import javax.validation.ConstraintValidator;
-import javax.validation.ConstraintValidatorContext;
+import jakarta.validation.ConstraintValidator;
+import jakarta.validation.ConstraintValidatorContext;
 
 import org.springframework.stereotype.Component;
 

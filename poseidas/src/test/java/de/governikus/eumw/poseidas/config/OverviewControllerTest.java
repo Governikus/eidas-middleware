@@ -50,7 +50,7 @@ class OverviewControllerTest extends ServiceProviderTestBase
 
   private HtmlPage openDashboard() throws IOException
   {
-    HtmlPage loginPage = getWebClient().getPage(getRequestUrl("/"));
+    HtmlPage loginPage = getWebClient().getPage(getRequestUrl("/dashboard"));
     HtmlPage dashboardPage = login(loginPage);
     Assertions.assertTrue(dashboardPage.getUrl().getPath().endsWith("/dashboard"));
     return dashboardPage;

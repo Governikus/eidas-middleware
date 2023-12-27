@@ -9,7 +9,7 @@
 
 package de.governikus.eumw.poseidas.config.model;
 
-import javax.validation.constraints.NotEmpty;
+import jakarta.validation.constraints.NotEmpty;
 
 import de.governikus.eumw.poseidas.config.validation.CertificateNameExists;
 import lombok.AllArgsConstructor;

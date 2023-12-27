@@ -1,6 +1,6 @@
 package de.governikus.eumw.eidasstarterkit;
 
-import se.litsec.eidas.opensaml.common.EidasConstants;
+import se.swedenconnect.opensaml.eidas.common.EidasConstants;
 
 
 public enum EidasLoaEnum

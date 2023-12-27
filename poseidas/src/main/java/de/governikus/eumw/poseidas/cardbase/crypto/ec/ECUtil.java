@@ -28,8 +28,6 @@ import de.governikus.eumw.poseidas.cardbase.asn1.npa.ECPublicKeyPath;
 import de.governikus.eumw.poseidas.cardbase.asn1.npa.SecurityInfos;
 import de.governikus.eumw.poseidas.cardbase.asn1.npa.si.AlgorithmIdentifier;
 import de.governikus.eumw.poseidas.cardbase.asn1.npa.si.DomainParameterInfo;
-import de.governikus.eumw.poseidas.cardbase.asn1.npa.si.GeneralDomainParameterInfo;
-import de.governikus.eumw.poseidas.cardbase.asn1.npa.si.StandardDomainParameterInfo;
 import de.governikus.eumw.poseidas.cardbase.constants.OIDConstants;
 import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
@@ -46,33 +44,24 @@ public class ECUtil
 {
 
   /**
-   * Builds {@link ECParameterSpec} object using the different variants of domain parameter information
-   * structures contained in EF.CardAccess.
+   * Builds {@link ECParameterSpec} object using the different variants of domain parameter information structures
+   * contained in EF.CardAccess.
    *
-   * @param paramInfo domain parameter object, <code>null</code> not permitted, currently accepted types are
-   *          {@link DomainParameterInfo} and {@link StandardDomainParameterInfo}
+   * @param paramInfo domain parameter object, <code>null</code> not permitted
    * @return {@link ECParameterSpec} object containing given domain parameters
    * @throws IllegalArgumentException if paramInfo <code>null</code> or unknown type
    * @throws IOException
    */
-  public static ECParameterSpec parameterSpecFromDomainParameters(GeneralDomainParameterInfo paramInfo)
-    throws IOException
+  public static ECParameterSpec parameterSpecFromDomainParameters(DomainParameterInfo paramInfo) throws IOException
   {
     AssertUtil.notNull(paramInfo, "domain parameter info");
-    if (paramInfo instanceof DomainParameterInfo)
+
+    AlgorithmIdentifier ai = paramInfo.getDomainParameter();
+    if (OIDConstants.OID_STANDARDIZED_DOMAIN_PARAMETERS.equals(ai.getAlgorithm()))
     {
-      AlgorithmIdentifier ai = ((DomainParameterInfo)paramInfo).getDomainParameter();
-      if (OIDConstants.OID_STANDARDIZED_DOMAIN_PARAMETERS.equals(ai.getAlgorithm()))
-      {
-        return parameterSpecFromCurveID(ai.getParameterID());
-      }
-      return parameterSpecFromAlgorithmIdentifier(ai);
+      return parameterSpecFromCurveID(ai.getParameterID());
     }
-    if (paramInfo instanceof StandardDomainParameterInfo)
-    {
-      return parameterSpecFromCurveID(((StandardDomainParameterInfo)paramInfo).getdpiID());
-    }
-    throw new IllegalArgumentException("unknown domain parameter info");
+    return parameterSpecFromAlgorithmIdentifier(ai);
   }
 
   /**
@@ -83,8 +72,7 @@ public class ECUtil
    * @throws IllegalArgumentException if algorithm identifier <code>null</code>
    * @throws IOException
    */
-  public static ECParameterSpec parameterSpecFromAlgorithmIdentifier(AlgorithmIdentifier ai)
-    throws IOException
+  private static ECParameterSpec parameterSpecFromAlgorithmIdentifier(AlgorithmIdentifier ai) throws IOException
   {
     AssertUtil.notNull(ai, "algorithm identifier");
     if (!OIDConstants.OID_EC_PUBLIC_KEY.equals(ai.getAlgorithm()))
@@ -208,8 +196,7 @@ public class ECUtil
    */
   private static ECParameterSpec parameterSpecFromCurveID(int id)
   {
-    if (id < GeneralDomainParameterInfo.MIN_DOMAIN_PARAMETER_ID
-        || id > GeneralDomainParameterInfo.MAX_DOMAIN_PARAMETER_ID)
+    if (id < DomainParameterInfo.MIN_DOMAIN_PARAMETER_ID || id > DomainParameterInfo.MAX_DOMAIN_PARAMETER_ID)
     {
       throw new IllegalArgumentException("given curve ID currently not specified");
     }

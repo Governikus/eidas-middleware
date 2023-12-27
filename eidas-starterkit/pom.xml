@@ -14,7 +14,7 @@
     <parent>
         <groupId>de.governikus.eumw</groupId>
         <artifactId>eumw</artifactId>
-        <version>3.1.2</version>
+        <version>3.2.0</version>
     </parent>
     <artifactId>eidas-starterkit</artifactId>
 
@@ -28,12 +28,17 @@
 
         <dependency>
             <groupId>se.swedenconnect.opensaml</groupId>
+            <artifactId>opensaml-eidas</artifactId>
+        </dependency>
+
+        <dependency>
+            <groupId>se.swedenconnect.opensaml</groupId>
             <artifactId>opensaml-security-ext</artifactId>
         </dependency>
 
         <dependency>
-            <groupId>se.litsec.eidas</groupId>
-            <artifactId>eidas-opensaml4</artifactId>
+            <groupId>org.apache.commons</groupId>
+            <artifactId>commons-lang3</artifactId>
         </dependency>
 
         <dependency>
@@ -49,6 +54,27 @@
         <dependency>
             <groupId>junit</groupId>
             <artifactId>junit</artifactId>
+            <scope>test</scope>
+        </dependency>
+
+        <dependency>
+            <groupId>org.slf4j</groupId>
+            <artifactId>slf4j-simple</artifactId>
+            <scope>test</scope>
         </dependency>
     </dependencies>
+
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-surefire-plugin</artifactId>
+                <configuration>
+                    <argLine>
+                        --add-opens java.base/sun.security.util=ALL-UNNAMED
+                    </argLine>
+                </configuration>
+            </plugin>
+        </plugins>
+    </build>
 </project>
