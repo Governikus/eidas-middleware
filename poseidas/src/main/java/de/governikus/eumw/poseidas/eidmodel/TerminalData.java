@@ -125,11 +125,6 @@ public class TerminalData
           throw new IllegalArgumentException("Description does not match the terminal certificate: "
                                              + cvcDescription);
         }
-        else
-        {
-          LOG.debug("Description '" + cvcDescription.getIssuerName() + "[" + cvcDescription.getSubjectName()
-                    + "]'" + " used for CVC '" + getHolderReferenceString());
-        }
       }
       catch (IOException e)
       {
@@ -138,37 +133,23 @@ public class TerminalData
         throw new IllegalArgumentException(message, e);
       }
     }
-    else
-    {
-      LOG.debug("Description for CVC is empty");
-    }
 
     // Set the private key
     if (pkcs8PrivateKeyBytes != null && pkcs8PrivateKeyBytes.length > 0)
     {
       this.pkcs8PrivateKeyBytes = pkcs8PrivateKeyBytes.clone();
     }
-    else
-    {
-      LOG.debug("Private key is empty");
-    }
 
     if (riKeyIBytes != null && riKeyIBytes.length > 0)
     {
       this.riKeyIBytes = riKeyIBytes.clone();
     }
-    else
-    {
-      LOG.debug("Restricted identity is empty");
-    }
+
     if (psKeyBytes != null && psKeyBytes.length > 0)
     {
       this.psKeyBytes = psKeyBytes.clone();
     }
-    else
-    {
-      LOG.debug("Pseudonymous signature is empty");
-    }
+
   }
 
   /**

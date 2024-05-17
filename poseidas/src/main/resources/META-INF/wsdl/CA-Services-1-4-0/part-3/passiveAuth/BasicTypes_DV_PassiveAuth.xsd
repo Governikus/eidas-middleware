@@ -1,0 +1,175 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<xsd:schema xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:nsBT="uri:eacBT/1.4" targetNamespace="uri:eacBT/1.4"
+            elementFormDefault="qualified">
+    <!-- this scheme is based on the document
+    Protocols for the Management of Certificates and CRLs in Public-Key-Infrastructures (PKIs) Part 3
+    Version 1.40
+    -->
+
+    <!-- Definition of the type for a callbackIndicator -->
+    <xsd:simpleType name="callbackIndicatorType">
+        <xsd:restriction base="xsd:string">
+            <xsd:enumeration value="callback_possible"/>
+            <xsd:enumeration value="callback_not_possible"/>
+        </xsd:restriction>
+    </xsd:simpleType>
+
+    <!-- Definition of the type for a message -->
+    <xsd:simpleType name="messageType">
+        <xsd:restriction base="xsd:string">
+            <xsd:maxLength value="1024"/>
+        </xsd:restriction>
+    </xsd:simpleType>
+
+    <!-- Definition of the type for an optional message -->
+    <xsd:complexType name="optionalMessageType">
+        <xsd:sequence>
+            <xsd:element name="message" type="nsBT:messageType"/>
+        </xsd:sequence>
+    </xsd:complexType>
+
+    <!-- Definition of the type for a conditional messageID parameter -->
+    <xsd:complexType name="conditionalMessageIDType">
+        <xsd:sequence>
+            <xsd:element name="messageID" type="xsd:string"/>
+        </xsd:sequence>
+    </xsd:complexType>
+
+    <!-- Definition of the type for a deprecated optional string parameter -->
+    <xsd:complexType name="deprecatedOptionalStringType">
+        <xsd:sequence>
+            <xsd:element name="string" type="xsd:string"/>
+        </xsd:sequence>
+    </xsd:complexType>
+
+    <!-- Definition of the type for a conditional binary parameter -->
+    <xsd:complexType name="conditionalBinaryType">
+        <xsd:sequence>
+            <xsd:element name="binary" type="xsd:base64Binary"/>
+        </xsd:sequence>
+    </xsd:complexType>
+
+    <!-- ==================== -->
+    <!-- Definition of the types of the return codes for the different messages -->
+    <xsd:simpleType name="getReturnCodeType">
+        <xsd:restriction base="xsd:string">
+            <xsd:enumeration value="failure_incorrect_request"/>
+            <xsd:enumeration value="failure_internal_error"/>
+            <xsd:enumeration value="failure_list_not_available"/>
+            <xsd:enumeration value="failure_other_error"/>
+            <xsd:enumeration value="failure_synchronous_processing_not_possible"/>
+            <xsd:enumeration value="failure_syntax"/>
+            <xsd:enumeration value="ok_list_available"/>
+            <xsd:enumeration value="ok_syntax"/>
+            <!--DEPRECATED-->
+            <xsd:enumeration value="ok_reception_ack"/>
+        </xsd:restriction>
+    </xsd:simpleType>
+
+
+    <xsd:simpleType name="sendReturnCodeType">
+        <xsd:restriction base="xsd:string">
+            <xsd:enumeration value="failure_internal_error"/>
+            <xsd:enumeration value="failure_messageID_unknown"/>
+            <xsd:enumeration value="failure_other_error"/>
+            <xsd:enumeration value="failure_syntax"/>
+            <xsd:enumeration value="ok_received_correctly"/>
+        </xsd:restriction>
+    </xsd:simpleType>
+
+    <!-- Definition of the types of the status codes for the messages -->
+    <xsd:simpleType name="statusInfoType">
+        <xsd:restriction base="xsd:string">
+            <xsd:enumeration value="failure_incorrect_request"/>
+            <xsd:enumeration value="failure_internal_error"/>
+            <xsd:enumeration value="failure_list_not_available"/>
+            <xsd:enumeration value="failure_other_error"/>
+            <xsd:enumeration value="failure_syntax"/>
+            <xsd:enumeration value="ok_list_available"/>
+        </xsd:restriction>
+    </xsd:simpleType>
+
+    <!-- ==================== -->
+    <!-- Definition of the different messages -->
+    <xsd:element name="getMasterListRequest">
+        <xsd:complexType>
+            <xsd:sequence>
+                <xsd:element name="callbackIndicator" type="nsBT:callbackIndicatorType"/>
+                <xsd:element name="messageID" type="nsBT:conditionalMessageIDType" minOccurs="0"/>
+                <!--DEPRECATED-->
+                <xsd:element name="responseURL" type="nsBT:deprecatedOptionalStringType" minOccurs="0"/>
+            </xsd:sequence>
+        </xsd:complexType>
+    </xsd:element>
+
+    <xsd:element name="getMasterListResult">
+        <xsd:complexType>
+            <xsd:sequence>
+                <xsd:element name="masterList" type="nsBT:conditionalBinaryType" minOccurs="0"/>
+                <xsd:element name="returnCode" type="nsBT:getReturnCodeType"/>
+                <xsd:element name="returnCodeMessage" type="nsBT:optionalMessageType" minOccurs="0"/>
+            </xsd:sequence>
+        </xsd:complexType>
+    </xsd:element>
+
+    <xsd:element name="getDefectListRequest">
+        <xsd:complexType>
+            <xsd:sequence>
+                <xsd:element name="callbackIndicator" type="nsBT:callbackIndicatorType"/>
+                <xsd:element name="messageID" type="nsBT:conditionalMessageIDType" minOccurs="0"/>
+                <!--DEPRECATED-->
+                <xsd:element name="responseURL" type="nsBT:deprecatedOptionalStringType" minOccurs="0"/>
+            </xsd:sequence>
+        </xsd:complexType>
+    </xsd:element>
+
+    <xsd:element name="getDefectListResult">
+        <xsd:complexType>
+            <xsd:sequence>
+                <xsd:element name="defectList" type="nsBT:conditionalBinaryType" minOccurs="0"/>
+                <xsd:element name="returnCode" type="nsBT:getReturnCodeType"/>
+                <xsd:element name="returnCodeMessage" type="nsBT:optionalMessageType" minOccurs="0"/>
+            </xsd:sequence>
+        </xsd:complexType>
+    </xsd:element>
+
+    <xsd:element name="sendMasterListRequest">
+        <xsd:complexType>
+            <xsd:sequence>
+                <xsd:element name="messageID" type="nsBT:conditionalMessageIDType" minOccurs="0"/>
+                <xsd:element name="statusInfo" type="nsBT:statusInfoType"/>
+                <xsd:element name="statusInfoMessage" type="nsBT:optionalMessageType" minOccurs="0"/>
+                <xsd:element name="masterList" type="nsBT:conditionalBinaryType" minOccurs="0"/>
+            </xsd:sequence>
+        </xsd:complexType>
+    </xsd:element>
+
+    <xsd:element name="sendMasterListResult">
+        <xsd:complexType>
+            <xsd:sequence>
+                <xsd:element name="returnCode" type="nsBT:sendReturnCodeType"/>
+                <xsd:element name="returnCodeMessage" type="nsBT:optionalMessageType" minOccurs="0"/>
+            </xsd:sequence>
+        </xsd:complexType>
+    </xsd:element>
+
+    <xsd:element name="sendDefectListRequest">
+        <xsd:complexType>
+            <xsd:sequence>
+                <xsd:element name="messageID" type="nsBT:conditionalMessageIDType" minOccurs="0"/>
+                <xsd:element name="statusInfo" type="nsBT:statusInfoType"/>
+                <xsd:element name="statusInfoMessage" type="nsBT:optionalMessageType" minOccurs="0"/>
+                <xsd:element name="defectList" type="nsBT:conditionalBinaryType" minOccurs="0"/>
+            </xsd:sequence>
+        </xsd:complexType>
+    </xsd:element>
+
+    <xsd:element name="sendDefectListResult">
+        <xsd:complexType>
+            <xsd:sequence>
+                <xsd:element name="returnCode" type="nsBT:sendReturnCodeType"/>
+                <xsd:element name="returnCodeMessage" type="nsBT:optionalMessageType" minOccurs="0"/>
+            </xsd:sequence>
+        </xsd:complexType>
+    </xsd:element>
+</xsd:schema>

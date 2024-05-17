@@ -52,3 +52,10 @@ h3 {
 .initial-request-hint > p {
     color: red;
 }
+
+table .small-col
+{
+    width:auto;
+    text-align:right;
+    white-space: nowrap
+}

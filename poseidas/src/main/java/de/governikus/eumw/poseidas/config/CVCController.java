@@ -16,6 +16,7 @@ import java.security.cert.CertificateEncodingException;
 import java.security.cert.X509Certificate;
 import java.util.List;
 import java.util.Objects;
+import java.util.Optional;
 
 import jakarta.validation.Valid;
 
@@ -45,6 +46,8 @@ import de.governikus.eumw.poseidas.server.pki.RequestSignerCertificateService;
 import de.governikus.eumw.poseidas.server.pki.RequestSignerCertificateServiceImpl;
 import de.governikus.eumw.poseidas.server.pki.ServiceProviderStatusService;
 import de.governikus.eumw.poseidas.server.pki.TerminalPermissionAOBean;
+import de.governikus.eumw.poseidas.server.pki.TlsClientRenewalService;
+import de.governikus.eumw.poseidas.server.pki.entities.RequestSignerCertificate;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
@@ -84,6 +87,8 @@ public class CVCController
 
   private static final String RSC = "RSC";
 
+  private static final String TLS = "TLS";
+
   public static final String ENTITYID = "entityid";
 
   private final PermissionDataHandlingMBean data;
@@ -95,6 +100,8 @@ public class CVCController
   private final ServiceProviderStatusService serviceProviderStatusService;
 
   private final TerminalPermissionAOBean terminalPermissionAOBean;
+
+  private final TlsClientRenewalService tlsClientRenewalService;
 
 
   /**
@@ -117,7 +124,7 @@ public class CVCController
         if (referer == null)
         {
           log.warn("No referer found in header to redirect to");
-          return redirectToDashBoardWithErrorMessage(redirectAttributes, ERROR_MESSAGE_NO_SP_PRESENT, entityID);
+          return redirectToStatusPageWithErrorMessage(redirectAttributes, ERROR_MESSAGE_NO_SP_PRESENT, entityID);
         }
         else
         {
@@ -127,14 +134,16 @@ public class CVCController
       catch (URISyntaxException e)
       {
         log.warn("Could not resolve referer URL to open eID service provider detail site.", e);
-        return redirectToDashBoardWithErrorMessage(redirectAttributes, ERROR_MESSAGE_NO_SP_PRESENT, entityID);
+        return redirectToStatusPageWithErrorMessage(redirectAttributes, ERROR_MESSAGE_NO_SP_PRESENT, entityID);
       }
 
       redirectAttributes.addFlashAttribute(ERROR, ERROR_MESSAGE_NO_SP_PRESENT + entityID);
       return "redirect:" + responseTo;
     }
+    String currentTlsClientKeyPairName = serviceProviderDetails.getCurrentTlsClientKeyPairName();
     model.addAttribute("entity", serviceProviderDetails);
     model.addAttribute("entityID", entityID);
+    model.addAttribute("currentTlsClientKeyPairName", currentTlsClientKeyPairName);
     model.addAttribute("form", Objects.requireNonNullElseGet(model.getAttribute("form"), CVCRequestModel::new));
     return "pages/details";
   }
@@ -148,9 +157,9 @@ public class CVCController
     ServiceProviderDetails serviceProviderDetails = getServiceProviderDetails(entityID);
     if (serviceProviderDetails == null)
     {
-      return redirectToDashBoardWithErrorMessage(redirectAttributes,
-                                                 "Check connection failed: " + ERROR_MESSAGE_NO_SP_PRESENT,
-                                                 entityID);
+      return redirectToStatusPageWithErrorMessage(redirectAttributes,
+                                                  "Check connection failed: " + ERROR_MESSAGE_NO_SP_PRESENT,
+                                                  entityID);
     }
     String result = data.checkReadyForFirstRequest(entityID).toString();
     if (CO_MSG_OK_OK.equals(result))
@@ -169,28 +178,41 @@ public class CVCController
    * This route performs the initial certificate request
    */
   @PostMapping("/initialRequest")
-  public String initialRequest(@RequestParam(ENTITYID) String entityID, @Valid @ModelAttribute CVCRequestModel form, BindingResult bindingResult,
+  public String initialRequest(@RequestParam(ENTITYID) String entityID,
+                               @Valid @ModelAttribute CVCRequestModel form,
+                               BindingResult bindingResult,
                                RedirectAttributes redirectAttributes)
   {
     ServiceProviderDetails serviceProviderDetails = getServiceProviderDetails(entityID);
     if (serviceProviderDetails == null)
     {
-      return redirectToDashBoardWithErrorMessage(redirectAttributes,
-                                                 "Initial request failed: " + ERROR_MESSAGE_NO_SP_PRESENT,
-                                                 entityID);
+      return redirectToStatusPageWithErrorMessage(redirectAttributes,
+                                                  "Initial request failed: " + ERROR_MESSAGE_NO_SP_PRESENT,
+                                                  entityID);
     }
-    if (bindingResult.hasErrors()) {
+    if (bindingResult.hasErrors())
+    {
 
       redirectAttributes.addFlashAttribute("org.springframework.validation.BindingResult.form", bindingResult);
       redirectAttributes.addFlashAttribute("form", form);
-      redirectAttributes.addFlashAttribute(ERROR, "Initial request was not sent. Please check \"Initial CVC request\" below.");
+      redirectAttributes.addFlashAttribute(ERROR,
+                                           "Initial request was not sent. Please check \"Initial CVC request\" below.");
 
-    } else {
+    }
+    else
+    {
 
-      String result = data.requestFirstTerminalCertificate(entityID, form.getCountryCode(), form.getChrMnemonic(), form.getSequenceNumber()).toString();
-      if (CO_MSG_OK_OK.equals(result)) {
+      String result = data.requestFirstTerminalCertificate(entityID,
+                                                           form.getCountryCode(),
+                                                           form.getChrMnemonic(),
+                                                           form.getSequenceNumber())
+                          .toString();
+      if (CO_MSG_OK_OK.equals(result))
+      {
         redirectAttributes.addFlashAttribute(SUCCESS, "Initial request succeeded");
-      } else {
+      }
+      else
+      {
 
         redirectAttributes.addFlashAttribute(ERROR, "Initial request failed: " + result);
       }
@@ -209,18 +231,18 @@ public class CVCController
     ServiceProviderDetails serviceProviderDetails = getServiceProviderDetails(entityID);
     if (serviceProviderDetails == null)
     {
-      return redirectToDashBoardWithErrorMessage(redirectAttributes,
-                                                 "Renew black list failed: " + ERROR_MESSAGE_NO_SP_PRESENT,
-                                                 entityID);
+      return redirectToStatusPageWithErrorMessage(redirectAttributes,
+                                                  "Renew block list failed: " + ERROR_MESSAGE_NO_SP_PRESENT,
+                                                  entityID);
     }
     String result = data.renewBlackList(entityID).toString();
     if (CO_MSG_OK_OK.equals(result))
     {
-      redirectAttributes.addFlashAttribute(SUCCESS, "Renew black list succeeded");
+      redirectAttributes.addFlashAttribute(SUCCESS, "Renew block list succeeded");
     }
     else
     {
-      redirectAttributes.addFlashAttribute(ERROR, "Renew black list failed: " + result);
+      redirectAttributes.addFlashAttribute(ERROR, "Renew block list failed: " + result);
     }
     redirectAttributes.addFlashAttribute(JUMP_TO_TAB, LISTS);
     redirectAttributes.addAttribute(ENTITYID, entityID);
@@ -236,9 +258,9 @@ public class CVCController
     ServiceProviderDetails serviceProviderDetails = getServiceProviderDetails(entityID);
     if (serviceProviderDetails == null)
     {
-      return redirectToDashBoardWithErrorMessage(redirectAttributes,
-                                                 "Renew Master and Defect List failed: " + ERROR_MESSAGE_NO_SP_PRESENT,
-                                                 entityID);
+      return redirectToStatusPageWithErrorMessage(redirectAttributes,
+                                                  "Renew Master and Defect List failed: " + ERROR_MESSAGE_NO_SP_PRESENT,
+                                                  entityID);
     }
     String result = data.renewMasterAndDefectList(entityID).toString();
     if (CO_MSG_OK_OK.equals(result))
@@ -263,9 +285,9 @@ public class CVCController
     ServiceProviderDetails serviceProviderDetails = getServiceProviderDetails(entityID);
     if (serviceProviderDetails == null)
     {
-      return redirectToDashBoardWithErrorMessage(redirectAttributes,
-                                                 "Renew CVC failed: " + ERROR_MESSAGE_NO_SP_PRESENT,
-                                                 entityID);
+      return redirectToStatusPageWithErrorMessage(redirectAttributes,
+                                                  "Renew CVC failed: " + ERROR_MESSAGE_NO_SP_PRESENT,
+                                                  entityID);
     }
     String result = data.triggerCertRenewal(entityID).toString();
     if (CO_MSG_OK_OK.equals(result))
@@ -282,23 +304,23 @@ public class CVCController
   }
 
   /**
-   * This route performs the generation of a @{@link de.governikus.eumw.poseidas.server.pki.RequestSignerCertificate}
+   * This route performs the generation of a @{@link RequestSignerCertificate}
    **/
   @PostMapping("/generateRSC")
   public String generateRSC(@RequestParam(ENTITYID) String entityID,
                             RedirectAttributes redirectAttributes,
                             @ModelAttribute CVCRequestModel form)
   {
-    boolean isSuccess = requestSignerCertificateService.generateNewPendingRequestSignerCertificate(entityID,
-                                                                                                   form.getRscChr(),
-                                                                                                   RequestSignerCertificateServiceImpl.MAXIMUM_LIFESPAN_IN_MONTHS);
-    if (isSuccess)
+    Optional<String> result = requestSignerCertificateService.generateNewPendingRequestSignerCertificate(entityID,
+                                                                                                         form.getRscChr(),
+                                                                                                         RequestSignerCertificateServiceImpl.MAXIMUM_LIFESPAN_IN_MONTHS);
+    if (result.isEmpty())
     {
       redirectAttributes.addFlashAttribute(SUCCESS, "Request signer certificate successfully created");
     }
     else
     {
-      redirectAttributes.addFlashAttribute(ERROR, "Creation of request signer certificate failed");
+      redirectAttributes.addFlashAttribute(ERROR, "Creation of request signer certificate failed: " + result.get());
     }
     redirectAttributes.addFlashAttribute(JUMP_TO_TAB, RSC);
     redirectAttributes.addAttribute(ENTITYID, entityID);
@@ -335,6 +357,129 @@ public class CVCController
     throw new RequestSignerDownloadException(entityID);
   }
 
+  /**
+   * Generates a new RSC and sends the new RSC to the DVCA
+   */
+  @GetMapping("/generateAndSendRSC")
+  public String generateAndSendRSC(@RequestParam(ENTITYID) String entityID,
+                                   RedirectAttributes redirectAttributes,
+                                   @ModelAttribute CVCRequestModel form)
+  {
+    Optional<String> result = requestSignerCertificateService.renewRSC(entityID);
+    if (result.isEmpty())
+    {
+      redirectAttributes.addFlashAttribute(SUCCESS, "Request signer certificate successfully renewed");
+    }
+    else
+    {
+      redirectAttributes.addFlashAttribute(ERROR, "Sending of new request signer certificate failed: " + result.get());
+    }
+    redirectAttributes.addFlashAttribute(JUMP_TO_TAB, RSC);
+    redirectAttributes.addAttribute(ENTITYID, entityID);
+    return REDIRECT_PREFIX + ContextPaths.ADMIN_CONTEXT_PATH + ContextPaths.DETAILS;
+  }
+
+  /**
+   * Sends the pending RSC to the DVCA
+   */
+  @GetMapping("/sendPendingRSC")
+  public String sendPendingRSC(@RequestParam(ENTITYID) String entityID, RedirectAttributes redirectAttributes)
+  {
+    Optional<String> result = requestSignerCertificateService.sendPendingRSC(entityID);
+    if (result.isEmpty())
+    {
+      redirectAttributes.addFlashAttribute(SUCCESS, "Pending Request signer certificate successfully sent");
+    }
+    else
+    {
+      redirectAttributes.addFlashAttribute(ERROR,
+                                           "Sending of pending request signer certificate failed: " + result.get());
+    }
+    redirectAttributes.addFlashAttribute(JUMP_TO_TAB, RSC);
+    redirectAttributes.addAttribute(ENTITYID, entityID);
+    return REDIRECT_PREFIX + ContextPaths.ADMIN_CONTEXT_PATH + ContextPaths.DETAILS;
+  }
+
+  /**
+   * Deletes the pending RSC
+   */
+  @GetMapping("/deletePendingRSC")
+  public String deletePendingRSC(@RequestParam(ENTITYID) String entityID,
+                                 RedirectAttributes redirectAttributes,
+                                 @ModelAttribute CVCRequestModel form)
+  {
+    Optional<String> result = requestSignerCertificateService.deletePendingRSC(entityID);
+    if (result.isEmpty())
+    {
+      redirectAttributes.addFlashAttribute(SUCCESS, "Pending request signer certificate successfully deleted");
+    }
+    else
+    {
+      redirectAttributes.addFlashAttribute(ERROR,
+                                           "Deleting of pending request signer certificate failed: " + result.get());
+    }
+    redirectAttributes.addFlashAttribute(JUMP_TO_TAB, RSC);
+    redirectAttributes.addAttribute(ENTITYID, entityID);
+    return REDIRECT_PREFIX + ContextPaths.ADMIN_CONTEXT_PATH + ContextPaths.DETAILS;
+  }
+
+  @PostMapping("/renewTLSClientCert")
+  public String renewTlsClientKey(@RequestParam(ENTITYID) String entityID,
+                                  @ModelAttribute CVCRequestModel form,
+                                  RedirectAttributes redirectAttributes)
+  {
+    String tlsKeyPairNameToUseForNewCsr = form.getTlsKeyPairNameToUseForNewCsr();
+    Optional<String> optionalErrorMessage;
+    if ("generateNewKeyPair".equals(tlsKeyPairNameToUseForNewCsr) || form.isGenerateNewKey())
+    {
+      optionalErrorMessage = tlsClientRenewalService.generateAndSendCsrWithNewKey(entityID);
+    }
+    else
+    {
+      optionalErrorMessage = tlsClientRenewalService.generateAndSendCsr(entityID, tlsKeyPairNameToUseForNewCsr);
+    }
+    if (optionalErrorMessage.isEmpty())
+    {
+      redirectAttributes.addFlashAttribute(SUCCESS, "Renewal of TLS client certificate was successfully sent");
+    }
+    else
+    {
+      redirectAttributes.addFlashAttribute(ERROR, "Sending of CSR failed: " + optionalErrorMessage.get());
+    }
+    redirectAttributes.addFlashAttribute(JUMP_TO_TAB, TLS);
+    redirectAttributes.addAttribute(ENTITYID, entityID);
+    return REDIRECT_PREFIX + ContextPaths.ADMIN_CONTEXT_PATH + ContextPaths.DETAILS;
+  }
+
+  @GetMapping("/pollTLSClientCert")
+  public String renewTlsClientKey(@RequestParam(ENTITYID) String entityID, RedirectAttributes redirectAttributes)
+  {
+    Optional<String> optionalErrorMessage = tlsClientRenewalService.fetchCertificate(entityID);
+    if (optionalErrorMessage.isEmpty())
+    {
+      redirectAttributes.addFlashAttribute(SUCCESS, "Poll of TLS client certificate was successful.");
+    }
+    else
+    {
+      redirectAttributes.addFlashAttribute(ERROR,
+                                           "Poll of new TLS client certificate failed: " + optionalErrorMessage.get());
+    }
+    redirectAttributes.addFlashAttribute(JUMP_TO_TAB, TLS);
+    redirectAttributes.addAttribute(ENTITYID, entityID);
+    return REDIRECT_PREFIX + ContextPaths.ADMIN_CONTEXT_PATH + ContextPaths.DETAILS;
+  }
+
+  @GetMapping("/deletePendingCsr")
+  public String deletePendingCsr(@RequestParam(ENTITYID) String entityID, RedirectAttributes redirectAttributes)
+  {
+    log.info("Deleting the pending CSR for entityID: {}", entityID);
+    tlsClientRenewalService.deletePendingCsr(entityID);
+    redirectAttributes.addFlashAttribute(JUMP_TO_TAB, TLS);
+    redirectAttributes.addAttribute(ENTITYID, entityID);
+    return REDIRECT_PREFIX + ContextPaths.ADMIN_CONTEXT_PATH + ContextPaths.DETAILS;
+  }
+
+
   private ServiceProviderDetails getServiceProviderDetails(String serviceProviderId)
   {
     return configService.getConfiguration()
@@ -352,9 +497,9 @@ public class CVCController
                         .orElse(null);
   }
 
-  private String redirectToDashBoardWithErrorMessage(RedirectAttributes redirectAttributes,
-                                                     String errorMessage,
-                                                     String entityID)
+  private String redirectToStatusPageWithErrorMessage(RedirectAttributes redirectAttributes,
+                                                      String errorMessage,
+                                                      String entityID)
   {
     log.warn(ERROR_MESSAGE_NO_SP_PRESENT + " {}", entityID);
     redirectAttributes.addFlashAttribute(CVCController.ERROR, errorMessage + ERROR_MESSAGE_NO_SP_PRESENT + entityID);

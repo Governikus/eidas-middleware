@@ -65,6 +65,11 @@ class ServiceProviderTestBase extends WebAdminTestBase
 
   static final String ISSUER = "Issuer:";
 
+  static final String MATCH_URL = "Matches URL:";
+
+  static final String MATCH_LINK = "Matches TLS:";
+
+
   static final String ISSUER_URL = "Issuer URL:";
 
   static final Map<String, String> INFO_MAP;
@@ -83,6 +88,9 @@ class ServiceProviderTestBase extends WebAdminTestBase
     INFO_MAP.put(REDIRECT_URL, "RedirectURL");
     INFO_MAP.put(ISSUER, "Issuer");
     INFO_MAP.put(ISSUER_URL, "IssuerURL");
+    INFO_MAP.put(MATCH_URL, "✔");
+    INFO_MAP.put(MATCH_LINK, "✔");
+
   }
 
   @MockBean
@@ -123,9 +131,9 @@ class ServiceProviderTestBase extends WebAdminTestBase
   {
     // Create Service Provider
     ServiceProviderType serviceProviderType = new ServiceProviderType(SERVICE_PROVIDER, true, INFO_MAP.get(CVC_REF_ID),
-                                                                      "dvca", "client");
+                                                                      "dvca", "client", null);
     ServiceProviderType inactiveProvider = new ServiceProviderType("disabledProvider", false, "otherId", "otherDVCA",
-                                                                   "otherClient");
+                                                                   "otherClient", null);
     EidasMiddlewareConfig.EidConfiguration eidConfiguration = new EidasMiddlewareConfig.EidConfiguration();
     eidConfiguration.getServiceProvider().add(serviceProviderType);
     eidConfiguration.getServiceProvider().add(inactiveProvider);

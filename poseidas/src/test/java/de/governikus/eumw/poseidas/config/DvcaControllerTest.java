@@ -114,15 +114,12 @@ class DvcaControllerTest extends WebAdminTestBase
     assertValidationMessagePresent(createDvcaConfigPage, TERMINALAUTHENTICATION_SERVICE_URL_ID, MAY_NOT_BE_EMPTY);
     assertValidationMessagePresent(createDvcaConfigPage, RESTRICTED_ID_SERVICE_URL_ID, MAY_NOT_BE_EMPTY);
     assertValidationMessagePresent(createDvcaConfigPage, PASSIVEAUTHENTICATION_SERVICE_URL_ID, MAY_NOT_BE_EMPTY);
-    assertValidationMessagePresent(createDvcaConfigPage, DVCA_CERTIFICATE_DESCRIPTION_SERVICE_URL_ID, MAY_NOT_BE_EMPTY);
-
 
     assertTrue(configurationService.getConfiguration()
                                    .map(EidasMiddlewareConfig::getEidConfiguration)
                                    .map(EidasMiddlewareConfig.EidConfiguration::getDvcaConfiguration)
                                    .isEmpty());
   }
-
 
   @Test
   void testUserJourney() throws IOException
@@ -166,8 +163,7 @@ class DvcaControllerTest extends WebAdminTestBase
                      "C4",
                      "https://termauth:80",
                      "https://restricted:80",
-                     "https://passive:80",
-                     "https://certdesc:80");
+                     "https://passive:80");
 
     HtmlPage dvcaConfigMainPage = submitAnyForm(createDvcaConfigPage);
     assertEquals("DVCA configuration saved: DvcaConfigName",
@@ -188,8 +184,7 @@ class DvcaControllerTest extends WebAdminTestBase
                      "C4",
                      "https://termauth:80",
                      "https://restricted:80",
-                     "https://passive:80",
-                     "https://certdesc:80");
+                     "https://passive:80");
 
     return dvcaConfigMainPage;
   }
@@ -201,8 +196,7 @@ class DvcaControllerTest extends WebAdminTestBase
                                 String mlTrustanchor,
                                 String termAuthUrl,
                                 String restricedIdUrl,
-                                String passiveAuthUrl,
-                                String dvcaDescUrl)
+                                String passiveAuthUrl)
   {
     setTextValue(createDvcaConfigPage, NAME_ID, name);
 
@@ -213,7 +207,6 @@ class DvcaControllerTest extends WebAdminTestBase
     setTextValue(createDvcaConfigPage, TERMINALAUTHENTICATION_SERVICE_URL_ID, termAuthUrl);
     setTextValue(createDvcaConfigPage, RESTRICTED_ID_SERVICE_URL_ID, restricedIdUrl);
     setTextValue(createDvcaConfigPage, PASSIVEAUTHENTICATION_SERVICE_URL_ID, passiveAuthUrl);
-    setTextValue(createDvcaConfigPage, DVCA_CERTIFICATE_DESCRIPTION_SERVICE_URL_ID, dvcaDescUrl);
 
   }
 
@@ -224,8 +217,7 @@ class DvcaControllerTest extends WebAdminTestBase
                                 String mlTrustanchor,
                                 String termAuthUrl,
                                 String restricedIdUrl,
-                                String passiveAuthUrl,
-                                String dvcaDescUrl)
+                                String passiveAuthUrl)
   {
     assertEquals(name, dvcaConfigurationType.getName());
 
@@ -236,7 +228,6 @@ class DvcaControllerTest extends WebAdminTestBase
     assertEquals(termAuthUrl, dvcaConfigurationType.getTerminalAuthServiceUrl());
     assertEquals(restricedIdUrl, dvcaConfigurationType.getRestrictedIdServiceUrl());
     assertEquals(passiveAuthUrl, dvcaConfigurationType.getPassiveAuthServiceUrl());
-    assertEquals(dvcaDescUrl, dvcaConfigurationType.getDvcaCertificateDescriptionServiceUrl());
 
   }
 
@@ -261,8 +252,7 @@ class DvcaControllerTest extends WebAdminTestBase
                      "C1",
                      "http://new1:80",
                      "http://new2:80",
-                     "http://new3:80",
-                     "http://new4:80");
+                     "http://new3:80");
     // submit
     dvcaConfigMainPage = submitAnyForm(dvcaConfigEditPage);
 
@@ -282,8 +272,7 @@ class DvcaControllerTest extends WebAdminTestBase
                      "C1",
                      "http://new1:80",
                      "http://new2:80",
-                     "http://new3:80",
-                     "http://new4:80");
+                     "http://new3:80");
 
     return dvcaConfigMainPage;
   }

@@ -1,11 +1,10 @@
 /*
- * Copyright (c) 2020 Governikus KG. Licensed under the EUPL, Version 1.2 or as soon they will be approved by
- * the European Commission - subsequent versions of the EUPL (the "Licence"); You may not use this work except
- * in compliance with the Licence. You may obtain a copy of the Licence at:
- * http://joinup.ec.europa.eu/software/page/eupl Unless required by applicable law or agreed to in writing,
- * software distributed under the Licence is distributed on an "AS IS" basis, WITHOUT WARRANTIES OR CONDITIONS
- * OF ANY KIND, either express or implied. See the Licence for the specific language governing permissions and
- * limitations under the Licence.
+ * Copyright (c) 2020 Governikus KG. Licensed under the EUPL, Version 1.2 or as soon they will be approved by the
+ * European Commission - subsequent versions of the EUPL (the "Licence"); You may not use this work except in compliance
+ * with the Licence. You may obtain a copy of the Licence at: http://joinup.ec.europa.eu/software/page/eupl Unless
+ * required by applicable law or agreed to in writing, software distributed under the Licence is distributed on an
+ * "AS IS" basis, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the Licence for the
+ * specific language governing permissions and limitations under the Licence.
  */
 
 package de.governikus.eumw.poseidas.server.pki;
@@ -19,6 +18,7 @@ import de.governikus.eumw.config.ServiceProviderType;
 import de.governikus.eumw.poseidas.gov2server.GovManagementException;
 import de.governikus.eumw.poseidas.gov2server.constants.admin.IDManagementCodes;
 import de.governikus.eumw.poseidas.server.idprovider.config.ConfigurationService;
+import de.governikus.eumw.poseidas.server.pki.caserviceaccess.DvcaServiceFactory;
 
 
 /**
@@ -56,6 +56,8 @@ class BerCaRequestHandlerBase
 
   protected final ConfigurationService configurationService;
 
+  protected final DvcaServiceFactory dvcaServiceFactory;
+
   /**
    * Create new instance for current configuration
    *
@@ -65,6 +67,21 @@ class BerCaRequestHandlerBase
                                     TerminalPermissionAO facade,
                                     KeyStore hsmKeyStore,
                                     ConfigurationService configurationService)
+    throws GovManagementException
+  {
+    this(serviceProvider, facade, hsmKeyStore, configurationService, new DvcaServiceFactory(configurationService));
+  }
+
+  /**
+   * Create new instance for current configuration
+   *
+   * @param facade must be obtained by client
+   */
+  protected BerCaRequestHandlerBase(ServiceProviderType serviceProvider,
+                                    TerminalPermissionAO facade,
+                                    KeyStore hsmKeyStore,
+                                    ConfigurationService configurationService,
+                                    DvcaServiceFactory dvcaServiceFactory)
     throws GovManagementException
   {
     this.hsmKeyStore = hsmKeyStore;
@@ -77,5 +94,6 @@ class BerCaRequestHandlerBase
     }
     dvcaConfiguration = configurationService.getDvcaConfiguration(serviceProvider);
     this.cvcRefId = serviceProvider.getCVCRefID();
+    this.dvcaServiceFactory = dvcaServiceFactory;
   }
 }

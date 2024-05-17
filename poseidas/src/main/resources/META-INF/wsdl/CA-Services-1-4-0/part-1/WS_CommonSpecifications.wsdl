@@ -1,0 +1,143 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!-- this WSDL-specification is based on the document
+    Protocols for the Management of Certificates and CRLs in Public-Key-Infrastructures (PKIs) Part 1
+    Version 1.40
+    -->
+<!-- this specification contains the common functions on which the subsequent parts are based on.
+    Currently, the following functions are part of this specification:
+    - GetCertificates
+    - RequestCertificate
+    - SendCertificates
+    - SendRSCCert (optional message)
+    -->
+
+<definitions
+        name="EAC-PKI-Common"
+        targetNamespace="uri:EAC-PKI-Common-Protocol/1.4"
+        xmlns:tns="uri:EAC-PKI-Common-Protocol/1.4"
+        xmlns:ns="uri:eacBT/1.4"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://schemas.xmlsoap.org/wsdl/ http://schemas.xmlsoap.org/wsdl/2003-02-11.xsd"
+        xmlns:SOAP="http://schemas.xmlsoap.org/wsdl/soap/"
+        xmlns="http://schemas.xmlsoap.org/wsdl/"
+>
+
+    <types>
+        <schema xmlns="http://www.w3.org/2001/XMLSchema">
+            <import namespace="http://www.w3.org/2001/XMLSchema"/>
+            <import namespace="uri:eacBT/1.4" schemaLocation="BasicTypes_CommonSpecifications.xsd"/>
+        </schema>
+    </types>
+
+    <!-- Definition of the messages of the protocol -->
+    <!-- message GetCertificates -->
+    <message name="GetCertificatesReq">
+        <part name="Request" element="ns:getCertificatesRequest"/>
+    </message>
+    <message name="GetCertificatesRes">
+        <part name="Result" element="ns:getCertificatesResult"/>
+    </message>
+
+    <!-- message RequestCertificate -->
+    <message name="RequestCertificateReq">
+        <part name="Request" element="ns:requestCertificateRequest"/>
+    </message>
+    <message name="RequestCertificateRes">
+        <part name="Result" element="ns:requestCertificateResult"/>
+    </message>
+
+    <!-- message SendCertificates -->
+    <message name="SendCertificatesReq">
+        <part name="Request" element="ns:sendCertificatesRequest"/>
+    </message>
+    <message name="SendCertificatesRes">
+        <part name="Result" element="ns:sendCertificatesResult"/>
+    </message>
+
+    <!-- message SendRSCCert -->
+    <message name="SendRSCCertReq">
+        <part name="Request" element="ns:sendRSCCertRequest"/>
+    </message>
+    <message name="SendRSCCertRes">
+        <part name="Result" element="ns:sendRSCCertResult"/>
+    </message>
+
+    <!-- Definition of the port types -->
+    <portType name="EAC-PKI-Common-ProtocolType">
+        <!-- port type for message GetCertificates -->
+        <operation name="GetCertificates">
+            <input message="tns:GetCertificatesReq"/>
+            <output message="tns:GetCertificatesRes"/>
+        </operation>
+
+        <!-- port type for message RequestCertificate -->
+        <operation name="RequestCertificate">
+            <input message="tns:RequestCertificateReq"/>
+            <output message="tns:RequestCertificateRes"/>
+        </operation>
+
+        <!-- port type for message SendCertificates -->
+        <operation name="SendCertificates">
+            <input message="tns:SendCertificatesReq"/>
+            <output message="tns:SendCertificatesRes"/>
+        </operation>
+
+        <!-- port type for message SendRSCCert -->
+        <operation name="SendRSCCert">
+            <input message="tns:SendRSCCertReq"/>
+            <output message="tns:SendRSCCertRes"/>
+        </operation>
+    </portType>
+
+    <!-- Definition of the bindings -->
+    <binding name="EAC-Common" type="tns:EAC-PKI-Common-ProtocolType">
+        <SOAP:binding style="document" transport="http://schemas.xmlsoap.org/soap/http"/>
+        <operation name="GetCertificates">
+            <SOAP:operation style="document" soapAction=""/>
+            <input>
+                <SOAP:body use="literal"/>
+            </input>
+            <output>
+                <SOAP:body use="literal"/>
+            </output>
+        </operation>
+
+        <operation name="RequestCertificate">
+            <SOAP:operation style="document" soapAction=""/>
+            <input>
+                <SOAP:body use="literal"/>
+            </input>
+            <output>
+                <SOAP:body use="literal"/>
+            </output>
+        </operation>
+
+        <operation name="SendCertificates">
+            <SOAP:operation style="document" soapAction=""/>
+            <input>
+                <SOAP:body use="literal"/>
+            </input>
+            <output>
+                <SOAP:body use="literal"/>
+            </output>
+        </operation>
+
+        <operation name="SendRSCCert">
+            <SOAP:operation style="document" soapAction=""/>
+            <input>
+                <SOAP:body use="literal"/>
+            </input>
+            <output>
+                <SOAP:body use="literal"/>
+            </output>
+        </operation>
+    </binding>
+
+    <!-- Definition of the service -->
+    <service name="EAC-Common-ProtocolService">
+        <port name="EAC-Common-ProtocolServicePort" binding="tns:EAC-Common">
+            <SOAP:address location="http://URL_NOT_SPECIFIED"/>
+        </port>
+    </service>
+</definitions>

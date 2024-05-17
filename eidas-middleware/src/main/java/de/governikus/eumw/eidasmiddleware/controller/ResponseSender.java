@@ -82,6 +82,7 @@ public class ResponseSender
     {
       ModelAndView error = new ModelAndView("error");
       error.addObject("errorMessage", e.getMessage());
+      log.error("Error creating saml response: ", e);
       return error;
     }
   }

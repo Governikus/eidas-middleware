@@ -52,10 +52,20 @@
                 Lists <span class="fa fa-list"></span>
             </button>
         </li>
+        <div th:if="${@environment.getProperty('poseidas.tls.renewal.active')}">
+            <li class="nav-item btn-lg text-center" role="presentation" style="padding-bottom: 0;">
+                <button class="nav-link toggleTabChange" id="pills-tls-tab" data-bs-toggle="pill"
+                        data-bs-target="#pills-tls"
+                        type="button" role="tab"
+                        aria-controls="pills-tls" aria-selected="false">
+                    TLS <span class="fa fa-lock"></span>
+                </button>
+            </li>
+        </div>
     </ul>
 
-    <!-- CVC -->
     <div class="tab-content" id="pills-tabContent">
+        <!-- CVC -->
         <div class="tab-pane fade show active mb-2" id="pills-cvc" role="tabpanel" aria-labelledby="pills-cvc-tab">
             <div class="card js-remove-border">
                 <div class="card-body">
@@ -81,34 +91,45 @@
                                  class="alert alert-danger" role="alert">The CVC has expired. A new initial
                                 request must be made.
                             </div>
+                            <div th:if="${entity.getServiceProviderStatus().isAutomaticCvcRenewalFailed()} AND ${entity.serviceProviderStatus.isCvcValidity()}" class="alert alert-danger" role="alert">
+                                The automatic CVC renewal failed. Please start a manual renewal.
+                            </div>
                             <div class="row">
-                                <div class="col-12 col-xl-6">
+                                <div class="col-12 col-xl-4">
                                     <div class="row cvcInfoBox">
-                                        <div class="col-3 col-form-label">CHR:</div>
-                                        <pre class="col-9 col-form-label" th:text="${entity.getCHR()}"/>
-                                        <div class="col-3 col-form-label">Subject:</div>
-                                        <pre class="col-9 col-form-label" th:text="${entity.getSubjectName()}"/>
-                                        <div class="col-3 col-form-label">Subject URL:</div>
-                                        <pre class="col-9 col-form-label" th:text="${entity.getSubjectURL()}"/>
-                                        <div class="col-3 col-form-label">Redirect URL:</div>
-                                        <pre class="col-9 col-form-label" th:text="${entity.getRedirectURL()}"/>
-                                        <div class="col-3 col-form-label">Terms of usage:</div>
-                                        <pre class="col-9 col-form-label"
+                                        <div class="col-4 col-form-label">CHR:</div>
+                                        <pre class="col-8 col-form-label" th:text="${entity.getCHR()}"/>
+                                        <div class="col-4 col-form-label">Subject:</div>
+                                        <pre class="col-8 col-form-label" th:text="${entity.getSubjectName()}"/>
+                                        <div class="col-4 col-form-label">Subject URL:</div>
+                                        <pre class="col-8 col-form-label" th:text="${entity.getSubjectURL()}"/>
+                                        <div class="col-4 col-form-label">Redirect URL:</div>
+                                        <pre class="col-8 col-form-label" th:text="${entity.getRedirectURL()}"/>
+                                        <div class="col-4 col-form-label">Terms of usage:</div>
+                                        <pre class="col-8 col-form-label"
                                              th:text="${entity.getTermsOfUsagePlainText()}"/>
                                     </div>
                                 </div>
-                                <div class="col-12 col-xl-6">
+                                <div class="col-12 col-xl-4">
                                     <div class="row cvcInfoBox">
-                                        <div class="col-3 col-form-label">CAR:</div>
-                                        <pre class="col-9 col-form-label" th:text="${entity.getCAR()}"/>
-                                        <div class="col-3 col-form-label">Issuer:</div>
-                                        <pre class="col-9 col-form-label" th:text="${entity.getIssuerName()}"/>
-                                        <div class="col-3 col-form-label">Issuer URL:</div>
-                                        <pre class="col-9 col-form-label" th:text="${entity.getIssuerURL()}"/>
-                                        <div class="col-3 col-form-label">Valid from:</div>
-                                        <pre class="col-9 col-form-label" th:text="${entity.getValidFrom()}"/>
-                                        <div class="col-3 col-form-label">Valid until:</div>
-                                        <pre class="col-9 col-form-label" th:text="${entity.getValidUntil()}"/>
+                                        <div class="col-4 col-form-label">CAR:</div>
+                                        <pre class="col-8 col-form-label" th:text="${entity.getCAR()}"/>
+                                        <div class="col-4 col-form-label">Issuer:</div>
+                                        <pre class="col-8 col-form-label" th:text="${entity.getIssuerName()}"/>
+                                        <div class="col-4 col-form-label">Issuer URL:</div>
+                                        <pre class="col-8 col-form-label" th:text="${entity.getIssuerURL()}"/>
+                                        <div class="col-4 col-form-label">Valid from:</div>
+                                        <pre class="col-8 col-form-label" th:text="${entity.getValidFrom()}"/>
+                                        <div class="col-4 col-form-label">Valid until:</div>
+                                        <pre class="col-8 col-form-label" th:text="${entity.getValidUntil()}"/>
+                                    </div>
+                                </div>
+                                <div class="col-12 col-xl-4">
+                                    <div class="row cvcInfoBox">
+                                        <div class="col-4 col-form-label">Matches TLS:</div>
+                                        <pre class="col-8 col-form-label" th:text="${entity.serviceProviderStatus.isCvcTLSLinkStatus() ? '✔':'❌'}"/>
+                                        <div class="col-4 col-form-label">Matches URL:</div>
+                                        <pre class="col-8 col-form-label" th:text="${entity.serviceProviderStatus.isCvcUrlMatch() ? '✔':'❌'}"/>
                                     </div>
                                 </div>
                             </div>
@@ -180,8 +201,8 @@
                                                 <div class="col-9 col-form-label"
                                                      th:text="${entity.serviceProviderStatus.rscCurrentValidUntil}"/>
                                                 <div class="col-3 col-form-label">RSC pending</div>
-                                                <div class="col-9 col-form-label"
-                                                     th:text="${entity.serviceProviderStatus.rscPendingPresent ? '✔' : '❌'}"/>
+                                                <div class="col-9 col-form-label" th:classappend="${entity.serviceProviderStatus.rscRenewalError == null ? '' : 'bg-danger text-white'}"
+                                                     th:text="${entity.serviceProviderStatus.rscRenewalError != null ? ('⚠ Error in automatic RSC renewal: ' + entity.serviceProviderStatus.rscRenewalError) : entity.serviceProviderStatus.rscPendingPresent ? '✔' : '❌'}"/>
                                             </div>
                                         </div>
                                     </div>
@@ -191,7 +212,7 @@
                         <div class="col">
                             <div class="card shadow">
                                 <h4 class="card-header bg-light">RSC actions</h4>
-                                <div class="card-body">
+                                <div class="card-body d-grid gap-2">
                                     <form method="POST"
                                           th:action="@{'/admin-interface/details/generateRSC?entityid=' + ${#uris.escapeQueryParam(entityID)}}"
                                           th:object="${form}"
@@ -214,13 +235,21 @@
                                         </button>
                                     </form>
                                     <form action="#" method=get
+                                          th:action="@{'/admin-interface/details/generateAndSendRSC'}"
+                                          th:if="${entity.serviceProviderStatus.canGenerateAndSendRsc}">
+                                        <input hidden name="entityid" type="text" th:value="${entityID}">
+                                        <button type="submit" class="btn btn-primary w-100"
+                                                value="Generate And Send RSC" id="generate-send-rsc-button">Generate And Send RSC
+                                        </button>
+                                    </form>
+                                    <form action="#" method=get
                                           th:action="@{'/admin-interface/details/downloadRSC'}"
                                           th:if="${entity.serviceProviderStatus.rscAnyPresent}">
                                         <input hidden name="entityid" type="text" th:value="${entityID}">
                                         <button type="submit" class="btn btn-primary w-100"
                                                 value="Download RSC" id="download-rsc-button">Download RSC
                                         </button>
-                                        <div th:if="${entity.serviceProviderStatus.rscPendingPresent}">
+                                        <div th:unless="${entity.serviceProviderStatus.canGenerateAndSendRsc} or ${entity.serviceProviderStatus.canSendPendingRsc}">
                                             <p class="text-danger">There is a new request signer certificate.
                                                 Please
                                                 make sure
@@ -228,6 +257,22 @@
                                                 done
                                                 so.</p>
                                         </div>
+                                    </form>
+                                    <form action="#" method=get
+                                          th:action="@{'/admin-interface/details/sendPendingRSC'}"
+                                          th:if="${entity.serviceProviderStatus.canSendPendingRsc}">
+                                        <input hidden name="entityid" type="text" th:value="${entityID}">
+                                        <button type="submit" class="btn btn-primary w-100"
+                                                value="Send Pending RSC" id="send-pending-rsc-button">Send Pending RSC
+                                        </button>
+                                    </form>
+                                    <form action="#" method=get
+                                          th:action="@{'/admin-interface/details/deletePendingRSC'}"
+                                          th:if="${entity.serviceProviderStatus.rscPendingPresent}">
+                                        <input hidden name="entityid" type="text" th:value="${entityID}">
+                                        <button type="submit" class="btn btn-primary w-100"
+                                                value="Delete Pending RSC" id="delete-pending-rsc-button">Delete Pending RSC
+                                        </button>
                                     </form>
                                 </div>
                             </div>
@@ -243,12 +288,12 @@
             <div class="card js-remove-border">
                 <div class="card-body">
                     <h5 class="card-title">Lists</h5>
-                    <h6 class="card-subtitle mb-4 text-muted">Check status of the Black, Master and
+                    <h6 class="card-subtitle mb-4 text-muted">Check status of the Block, Master and
                         Defect List</h6>
                     <div class="row">
                         <div class="col">
                             <div class="card shadow mb-3">
-                                <h5 class="card-header bg-light">Black List</h5>
+                                <h5 class="card-header bg-light">Block List</h5>
                                 <div class="card-body">
                                     <div class="row" id="black-list-info">
                                         <div class="col-3">Available:</div>
@@ -308,7 +353,7 @@
                                               th:action="@{'/admin-interface/details/renewBlackList?entityid=' + ${#uris.escapeQueryParam(entityID)}}">
                                             <button type="submit" name="submit" value="value"
                                                     class="btn btn-primary w-100" id="renew-blacklist-button">
-                                                Renew Black List
+                                                Renew Block List
                                             </button>
                                         </form>
                                     </div>
@@ -329,6 +374,119 @@
                 </div>
             </div>
         </div>
+
+        <!--        TLS-->
+        <div class="tab-pane fade show active js-remove-class mb-2" id="pills-tls" role="tabpanel"
+             aria-labelledby="pills-tls-tab">
+            <div class="card js-remove-border">
+                <div class="card-body">
+                    <h5 class="card-title">TLS Client Authentication</h5>
+                    <h6 class="card-subtitle mb-4 text-muted">Create and send a new CSR to renew the TLS
+                        client key pair for this service provider. Poll a new client
+                        certificate or delete pending CSR</h6>
+                    <div class="row">
+                        <div class="col">
+                            <div class="card shadow">
+                                <h4 class="card-header bg-light">TLS client authentication info</h4>
+                                <div class="card-body">
+                                    <div class="row">
+                                        <div class="col">
+                                            <div class="row row-cols-2" id="mTLS-info-table">
+                                                <div class="col col-form-label">Current client authentication
+                                                    certificate valid until:
+                                                </div>
+                                                <div class="col col-form-label"
+                                                     th:text="${entity.serviceProviderStatus.getCurrentTlsCertValidUntil() == null ? '-' : entity.serviceProviderStatus.getCurrentTlsCertValidUntil()}"/>
+                                                <div class="col col-form-label">Is CSR pending:</div>
+                                                <div class="col col-form-label"
+                                                     th:text="${entity.serviceProviderStatus.isCsrPending() ? '✔' : '❌'}"/>
+                                                <div th:if="${entity.serviceProviderStatus.isCsrPending()}"
+                                                     th:remove="tag">
+                                                    <div class="col col-form-label">Not poll before:</div>
+                                                    <div class="col col-form-label"
+                                                         th:text="${entity.serviceProviderStatus.getNotPollBefore()}"/>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col" th:unless="${entity.getCHR() == null or entity.getCHR().isEmpty()}">
+                            <div class="card shadow mb-3">
+                                <h5 class="card-header bg-light">TLS Client Actions</h5>
+                                <div class="card-body">
+                                    <div th:if="${entity.getServiceProviderStatus().getRscCurrentValidUntil() == null and not entity.getServiceProviderStatus().isCsrPending()}">
+                                        This Service is only available when a valid RSC is in use
+                                    </div>
+                                    <div th:if="${not entity.getServiceProviderStatus().isCsrPending() and entity.getServiceProviderStatus().getRscCurrentValidUntil() != null}"
+                                         class="form-group mb-3">
+                                        <form method="POST"
+                                              th:object="${form}"
+                                              th:action="@{'/admin-interface/details/renewTLSClientCert?entityid=' + ${#uris.escapeQueryParam(entityID)}}"
+                                              class="row g-3">
+                                            <div th:if="${@environment.getProperty('hsm.type') == 'PKCS11'}">
+                                                <div class="form-check">
+                                                    <input class="form-check-input" type="radio"
+                                                           id="generateNewKey"
+                                                           th:value="true"
+                                                           th:field="*{generateNewKey}">
+                                                    <label class="form-check-label" for="generateNewKey">Generate
+                                                        a new key for CSR</label>
+                                                </div>
+                                                <div class="form-check">
+                                                    <input class="form-check-input" type="radio"
+                                                           id="keyIdentifier" th:field="*{generateNewKey}"
+                                                           value="false">
+                                                    <label class="form-check-label" for="keyIdentifier">
+                                                        Use present key for CSR</label>
+                                                </div>
+                                            </div>
+                                            <div th:unless="${@environment.getProperty('hsm.type') == 'PKCS11'}">
+                                                <div th:replace="~{fragments/configOptions :: keypairsRenewTlsClientKeyPair('mTLS Key Pair','tlsKeyPairNameToUseForNewCsr', 'The key pair to be used to generate a CSR. Select \'Generate New Key Pair\' to use a new key', ${entity.getCurrentTlsClientKeyPairName()})}"></div>
+                                            </div>
+                                            <div class="col-auto">
+                                                <button type="submit" name="submit" value="value"
+                                                        class="btn btn-primary w-100"
+                                                        id="renew-tls-client-button">
+                                                    Request new tls client key pair
+                                                </button>
+                                            </div>
+                                        </form>
+                                    </div>
+                                    <div th:if="${entity.getServiceProviderStatus().isCsrPending()}"
+                                         class="form-group d-grid gap-2">
+                                        <form method="GET"
+                                              th:action="@{'/admin-interface/details/pollTLSClientCert?entityid=' + ${#uris.escapeQueryParam(entityID)}}"
+                                              class="row g-3">
+                                            <input hidden name="entityid" type="text" th:value="${entityID}">
+                                            <button type="submit" name="submit"
+                                                    value="Poll Client Certificate"
+                                                    class="btn btn-primary w-100"
+                                                    id="poll-tls-client-button">
+                                                Poll Client Certificate
+                                            </button>
+                                        </form>
+                                        <form method="GET"
+                                              th:action="@{'/admin-interface/details/deletePendingCsr?entityid=' + ${#uris.escapeQueryParam(entityID)}}"
+                                              class="row g-3">
+                                            <input hidden name="entityid" type="text" th:value="${entityID}">
+                                            <button type="submit" name="submit" value="Delete Pending CSR"
+                                                    class="btn btn-primary w-100"
+                                                    id="delete-csr-button">
+                                                Delete Pending CSR
+                                            </button>
+                                        </form>
+                                    </div>
+
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
         <script th:src="@{/admin-interface/js/js-save-tabs.js}"></script>
 </section>
 

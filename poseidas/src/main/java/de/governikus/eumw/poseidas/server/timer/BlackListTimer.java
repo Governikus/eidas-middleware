@@ -13,6 +13,7 @@ import static de.governikus.eumw.poseidas.server.timer.TimerValues.HOUR;
 
 import java.time.Instant;
 import java.util.Date;
+import java.util.List;
 
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.scheduling.Trigger;
@@ -30,7 +31,7 @@ import lombok.extern.slf4j.Slf4j;
 
 /**
  * This class manages the timer for the delta Black List retrieval. The class implements the Runnable interface. The
- * {@link #run() run} method is used to retrieve the delta Black List. The {@link #getBlackListTrigger()
+ * {@link #run() run} method is used to retrieve the delta Black List. The {@link #getBlackListTrigger(List)
  * getBlackListTrigger} method determines how often the timer runs.
  *
  * @see ApplicationTimer
@@ -50,10 +51,10 @@ public class BlackListTimer implements Runnable
   public void run()
   {
     log.debug("Execute Black List timer");
-    permissionDataHandling.renewBlackList(true);
+    permissionDataHandling.renewBlackList(true, true);
   }
 
-  Trigger getBlackListTrigger()
+  Trigger getBlackListTrigger(List<Instant> nextExecutions)
   {
     return triggerContext -> {
       log.debug("Handle trigger for delta Black List timer");
@@ -66,9 +67,11 @@ public class BlackListTimer implements Runnable
         log.debug("First delta Black List timer task will be executed with an initial delay of {} milliseconds",
                   initialDelay);
         log.debug("Black List timer task will be executed at {}", date);
+        nextExecutions.add(date.toInstant());
         return date.toInstant();
       }
       Instant nextExecutiontime = lastCompletion.toInstant().plusMillis(getDeltaBlackListTimer());
+      nextExecutions.add(nextExecutiontime);
       Date date = Date.from(nextExecutiontime);
       log.debug("Black List timer task will be executed at {}", date);
       return date.toInstant();

@@ -9,6 +9,7 @@ import java.security.cert.Certificate;
 import java.security.cert.CertificateException;
 import java.security.cert.X509Certificate;
 import java.security.interfaces.ECPrivateKey;
+import java.security.interfaces.ECPublicKey;
 import java.security.spec.AlgorithmParameterSpec;
 import java.security.spec.ECParameterSpec;
 import java.util.Calendar;
@@ -49,10 +50,7 @@ public final class CertificateUtil
    * @param provider security provider to use
    * @return self-signed certificate or null when no certificate could created
    */
-  public static Certificate createSelfSignedCert(KeyPair keyPair,
-                                                 String subject,
-                                                 int lifespan,
-                                                 Provider provider)
+  public static Certificate createSelfSignedCert(KeyPair keyPair, String subject, int lifespan, Provider provider)
   {
     return createSignedCert(keyPair.getPublic(), keyPair.getPrivate(), subject, subject, lifespan, provider);
   }
@@ -86,9 +84,8 @@ public final class CertificateUtil
     try
     {
       ContentSigner contentSigner = new JcaContentSignerBuilder(algo).setProvider(provider).build(privateKey);
-      JcaX509v3CertificateBuilder certBuilder = new JcaX509v3CertificateBuilder(issuerDnName,
-                                                                                certSerialNumber, startDate,
-                                                                                endDate, subjectDnName,
+      JcaX509v3CertificateBuilder certBuilder = new JcaX509v3CertificateBuilder(issuerDnName, certSerialNumber,
+                                                                                startDate, endDate, subjectDnName,
                                                                                 publicKey);
       return new JcaX509CertificateConverter().setProvider(SecurityProvider.BOUNCY_CASTLE_PROVIDER)
                                               .getCertificate(certBuilder.build(contentSigner));
@@ -112,11 +109,24 @@ public final class CertificateUtil
     return calendar.getTime();
   }
 
-  private static String getAlgorithm(PrivateKey key)
+  public static String getAlgorithm(PublicKey key)
   {
-    if (key instanceof ECPrivateKey)
+    if (key instanceof ECPublicKey ecKey)
     {
-      return getAlgorithm(((ECPrivateKey)key).getParams());
+      return getAlgorithm(ecKey.getParams());
+    }
+    if ("EC".equals(key.getAlgorithm()))
+    {
+      return "SHA256withECDSA";
+    }
+    return "SHA256withRSA";
+  }
+
+  public static String getAlgorithm(PrivateKey key)
+  {
+    if (key instanceof ECPrivateKey ecKey)
+    {
+      return getAlgorithm(ecKey.getParams());
     }
     if ("EC".equals(key.getAlgorithm()))
     {
@@ -128,21 +138,18 @@ public final class CertificateUtil
   private static String getAlgorithm(AlgorithmParameterSpec spec)
   {
     String algo = "SHA256withRSA";
-    if (spec instanceof ECParameterSpec)
+    if (spec instanceof ECParameterSpec ecSpec)
     {
-      ECParameterSpec ecSpec = (ECParameterSpec)spec;
       int fieldSize = ecSpec.getCurve().getField().getFieldSize();
       switch (fieldSize)
       {
-        case 192:
-        case 224:
+        case 192, 224:
           algo = "SHA224withECDSA";
           break;
         case 256:
           algo = "SHA256withECDSA";
           break;
-        case 320:
-        case 384:
+        case 320, 384:
           algo = "SHA384withECDSA";
           break;
         case 512:
@@ -155,8 +162,8 @@ public final class CertificateUtil
   }
 
   /**
-   * This predicate takes a certificate <code>A</code> from the lambda function and the value of the X.509
-   * extension <code>Authority Key Identifier</code> of certificate <code>B</code>. It then checks, if the
+   * This predicate takes a certificate <code>A</code> from the lambda function and the value of the X.509 extension
+   * <code>Authority Key Identifier</code> of certificate <code>B</code>. It then checks, if the
    * <code>Authority Key Identifier</code> of certificate <code>B</code> is equal to the
    * <code>Subject Key Identifier</code> of certificate <code>A</code>.
    */

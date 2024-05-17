@@ -13,7 +13,7 @@ package de.governikus.eumw.poseidas.server.eidservice;
 import java.io.IOException;
 
 import de.governikus.eumw.poseidas.eidserver.ecardid.BlackListConnector;
-import de.governikus.eumw.poseidas.server.pki.TerminalPermissionAO;
+import de.governikus.eumw.poseidas.server.pki.blocklist.BlockListService;
 
 
 /**
@@ -26,18 +26,18 @@ public class BlackListConnectorImpl implements BlackListConnector
 
   private final byte[] sectorID;
 
-  private final TerminalPermissionAO cvcFacade;
+  private final BlockListService blockListService;
 
-  BlackListConnectorImpl(TerminalPermissionAO cvcFacade, byte[] sectorID)
+  BlackListConnectorImpl(BlockListService blockListService, byte[] sectorID)
   {
-    this.cvcFacade = cvcFacade;
+    this.blockListService = blockListService;
     this.sectorID = sectorID;
   }
 
   @Override
   public boolean contains(byte[] sectorSpecificID) throws IOException
   {
-    return cvcFacade.isOnBlackList(sectorID, sectorSpecificID);
+    return blockListService.isOnBlockList(sectorID, sectorSpecificID);
   }
 
   @Override

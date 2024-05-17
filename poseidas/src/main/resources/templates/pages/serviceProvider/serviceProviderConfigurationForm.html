@@ -35,7 +35,7 @@
         <input type="hidden"
                th:name="${_csrf.parameterName}"
                th:value="${_csrf.token}"/>
-        <div th:replace="fragments/form :: submitAndAbort('/admin-interface/serviceProvider')"></div>
+        <div th:replace="~{fragments/form :: submitAndAbort('/admin-interface/serviceProvider')}"></div>
     </form>
 </section>
 </html>

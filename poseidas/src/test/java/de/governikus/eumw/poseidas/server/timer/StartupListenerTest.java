@@ -18,7 +18,7 @@ import de.governikus.eumw.poseidas.server.idprovider.config.ConfigurationService
 import de.governikus.eumw.poseidas.server.idprovider.config.ConfigurationTestHelper;
 import de.governikus.eumw.poseidas.server.idprovider.config.CvcTlsCheck;
 import de.governikus.eumw.poseidas.server.pki.PermissionDataHandling;
-import de.governikus.eumw.poseidas.server.pki.TerminalPermission;
+import de.governikus.eumw.poseidas.server.pki.entities.TerminalPermission;
 import de.governikus.eumw.poseidas.server.pki.TerminalPermissionAO;
 import lombok.extern.slf4j.Slf4j;
 

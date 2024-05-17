@@ -27,6 +27,9 @@ public class ServiceProviderConfigModel
   @KeyPairNameExists
   private String clientKeyPairName;
 
+  @KeyPairNameExists
+  private String pendingClientKeyPairName;
+
   @NotBlank(message = "May not be empty")
   private String name;
 
@@ -34,13 +37,13 @@ public class ServiceProviderConfigModel
 
   public ServiceProviderType toServiceProviderType()
   {
-    return new ServiceProviderType(name, enabled, name, dvcaConfigurationName,
-                                   StringUtils.isBlank(clientKeyPairName) ? null : clientKeyPairName);
+    return toServiceProviderType(name);
   }
 
   public ServiceProviderType toServiceProviderType(String cvcRefID)
   {
     return new ServiceProviderType(name, enabled, cvcRefID, dvcaConfigurationName,
-                                   StringUtils.isBlank(clientKeyPairName) ? null : clientKeyPairName);
+                                   StringUtils.isBlank(clientKeyPairName) ? null : clientKeyPairName,
+                                   StringUtils.isBlank(pendingClientKeyPairName) ? null : pendingClientKeyPairName);
   }
 }

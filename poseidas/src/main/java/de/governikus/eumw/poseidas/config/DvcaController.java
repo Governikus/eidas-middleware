@@ -22,7 +22,6 @@ import org.springframework.validation.BindingResult;
 import org.springframework.validation.FieldError;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.ModelAttribute;
-import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -307,8 +306,7 @@ public class DvcaController
                                configurationType.getMasterListTrustAnchorCertificateName(), configurationType.getName(),
                                configurationType.getTerminalAuthServiceUrl(),
                                configurationType.getRestrictedIdServiceUrl(),
-                               configurationType.getPassiveAuthServiceUrl(),
-                               configurationType.getDvcaCertificateDescriptionServiceUrl(), false);
+                               configurationType.getPassiveAuthServiceUrl(), false);
   }
 
   private DvcaConfigurationType toConfigurationtype(DvcaConfigModel dvcaConfigModel)
@@ -316,7 +314,6 @@ public class DvcaController
     return new DvcaConfigurationType(dvcaConfigModel.getName(), dvcaConfigModel.getTerminalAuthServiceUrl(),
                                      dvcaConfigModel.getRestrictedIdServiceUrl(),
                                      dvcaConfigModel.getPassiveAuthServiceUrl(),
-                                     dvcaConfigModel.getDvcaCertificateDescrptionServiceUrl(),
                                      dvcaConfigModel.getServerSSLCertificateName(),
                                      dvcaConfigModel.getBlackListTrustAnchorCertificateName(),
                                      dvcaConfigModel.getMasterListTrustAnchorCertificateName());

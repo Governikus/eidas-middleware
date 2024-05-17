@@ -39,6 +39,8 @@ import de.governikus.eumw.poseidas.eidmodel.TerminalData;
 import de.governikus.eumw.poseidas.gov2server.constants.admin.AdminPoseidasConstants;
 import de.governikus.eumw.poseidas.gov2server.constants.admin.IDManagementCodes;
 import de.governikus.eumw.poseidas.gov2server.constants.admin.ManagementMessage;
+import de.governikus.eumw.poseidas.server.pki.blocklist.BlockListService;
+import de.governikus.eumw.poseidas.server.pki.entities.TerminalPermission;
 import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
 
@@ -62,6 +64,7 @@ public class InfoMapBuilder
    * @param withBlkNumber include the number of entries in the blacklist, this could take some more time.
    */
   static Map<String, Object> createInfoMap(TerminalPermissionAO facade,
+                                           BlockListService blockListService,
                                            String cvcRefID,
                                            boolean withBlkNumber)
   {
@@ -114,7 +117,7 @@ public class InfoMapBuilder
         if (cvc.getSectorPublicKeyHash() != null && withBlkNumber)
         {
           result.put(AdminPoseidasConstants.VALUE_PERMISSION_DATA_BLACKLIST_ENTRIES,
-                     facade.getNumberBlacklistEntries(cvc.getSectorPublicKeyHash()));
+                     blockListService.count(terminal.getSectorID()));
         }
       }
       catch (IOException e)

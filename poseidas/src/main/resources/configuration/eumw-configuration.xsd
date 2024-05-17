@@ -122,7 +122,6 @@
             <xs:element name="TerminalAuthServiceUrl" type="xs:anyURI"/>
             <xs:element name="RestrictedIdServiceUrl" type="xs:anyURI"/>
             <xs:element name="PassiveAuthServiceUrl" type="xs:anyURI"/>
-            <xs:element name="DvcaCertificateDescriptionServiceUrl" type="xs:anyURI" minOccurs="0"/>
         </xs:sequence>
         <xs:attribute name="ServerSSLCertificateName" type="xs:string"/>
         <xs:attribute name="BlackListTrustAnchorCertificateName" type="xs:string"/>
@@ -136,6 +135,9 @@
             <xs:element name="BlacklistRenewal" type="tns:TimerType"/>
             <xs:element name="MasterAndDefectListRenewal" type="tns:TimerType"/>
             <xs:element name="CrlRenewal" type="tns:TimerType"/>
+            <xs:element name="TlsEntangleRenewal" type="tns:EntanglementTimerType"/>
+            <xs:element name="DaysRefreshRSCBeforeExpires" type="xs:int" minOccurs="0"/>
+            <xs:element name="DaysRefreshTlsClientBeforeExpires" type="xs:int" minOccurs="0"/>
         </xs:sequence>
     </xs:complexType>
 
@@ -144,6 +146,16 @@
             <xs:extension base="tns:TimerType">
                 <xs:sequence>
                     <xs:element name="HoursRefreshCVCBeforeExpires" type="xs:int"/>
+                </xs:sequence>
+            </xs:extension>
+        </xs:complexContent>
+    </xs:complexType>
+
+    <xs:complexType name="EntanglementTimerType">
+        <xs:complexContent>
+            <xs:extension base="tns:TimerType">
+                <xs:sequence>
+                    <xs:element name="AutomaticTlsEntangleActive" type="xs:boolean" default="true"/>
                 </xs:sequence>
             </xs:extension>
         </xs:complexContent>
@@ -170,5 +182,6 @@
         </xs:sequence>
         <xs:attribute name="DvcaConfigurationName" type="xs:string"/>
         <xs:attribute name="ClientKeyPairName" type="xs:string"/>
+        <xs:attribute name="PendingClientKeyPairName" type="xs:string"/>
     </xs:complexType>
 </xs:schema>

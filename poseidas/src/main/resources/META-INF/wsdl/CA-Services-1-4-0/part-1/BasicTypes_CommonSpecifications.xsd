@@ -1,0 +1,201 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<xsd:schema xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:nsBT="uri:eacBT/1.4" targetNamespace="uri:eacBT/1.4"
+            elementFormDefault="qualified">
+    <!-- this scheme is based on the document
+    Protocols for the Management of Certificates and CRLs in Public-Key-Infrastructures (PKIs) Part 1
+    Version 1.40
+    -->
+
+    <!-- Definition of the type for a callbackIndicator -->
+    <xsd:simpleType name="callbackIndicatorType">
+        <xsd:restriction base="xsd:string">
+            <xsd:enumeration value="callback_possible"/>
+            <xsd:enumeration value="callback_not_possible"/>
+        </xsd:restriction>
+    </xsd:simpleType>
+
+    <!-- Definition of the type for a message -->
+    <xsd:simpleType name="messageType">
+        <xsd:restriction base="xsd:string">
+            <xsd:maxLength value="1024"/>
+        </xsd:restriction>
+    </xsd:simpleType>
+
+    <!-- Definition of the type for an optional message -->
+    <xsd:complexType name="optionalMessageType">
+        <xsd:sequence>
+            <xsd:element name="message" type="nsBT:messageType"/>
+        </xsd:sequence>
+    </xsd:complexType>
+
+    <!-- Definition of the type for a conditional messageID parameter -->
+    <xsd:complexType name="conditionalMessageIDType">
+        <xsd:sequence>
+            <xsd:element name="messageID" type="xsd:string"/>
+        </xsd:sequence>
+    </xsd:complexType>
+
+    <!-- Definition of the type for a deprecated conditional string parameter -->
+    <xsd:complexType name="deprecatedConditionalStringType">
+        <xsd:sequence>
+            <xsd:element name="string" type="xsd:string"/>
+        </xsd:sequence>
+    </xsd:complexType>
+
+    <!-- Definition of the complex type for a conditional sequence of certificates -->
+    <xsd:complexType name="conditionalCertificateSeqType">
+        <xsd:sequence>
+            <xsd:element name="certificate" type="xsd:base64Binary" maxOccurs="unbounded"/>
+        </xsd:sequence>
+    </xsd:complexType>
+
+    <!-- Definition of the complex type for a reference to a certificate -->
+    <xsd:complexType name="certificateReference">
+        <xsd:sequence>
+            <xsd:element name="value" type="xsd:base64Binary"/>
+        </xsd:sequence>
+    </xsd:complexType>
+
+    <!-- ==================== -->
+    <!-- Definition of the types of the return codes for the different messages -->
+    <xsd:simpleType name="getCertificatesReturnCodeType">
+        <xsd:restriction base="xsd:string">
+            <xsd:enumeration value="failure_cert_not_available"/>
+            <xsd:enumeration value="failure_internal_error"/>
+            <xsd:enumeration value="failure_other_error"/>
+            <xsd:enumeration value="failure_synchronous_processing_not_possible"/>
+            <xsd:enumeration value="failure_syntax"/>
+            <xsd:enumeration value="ok_cert_available"/>
+            <xsd:enumeration value="ok_syntax"/>
+        </xsd:restriction>
+    </xsd:simpleType>
+
+    <xsd:simpleType name="requestCertificateReturnCodeType">
+        <xsd:restriction base="xsd:string">
+            <xsd:enumeration value="failure_incorrect_request"/>
+            <xsd:enumeration value="failure_internal_error"/>
+            <xsd:enumeration value="failure_other_error"/>
+            <xsd:enumeration value="failure_synchronous_processing_not_possible"/>
+            <xsd:enumeration value="failure_syntax"/>
+            <xsd:enumeration value="ok_cert_available"/>
+            <xsd:enumeration value="ok_syntax"/>
+        </xsd:restriction>
+    </xsd:simpleType>
+
+    <xsd:simpleType name="sendCertificatesReturnCodeType">
+        <xsd:restriction base="xsd:string">
+            <xsd:enumeration value="failure_internal_error"/>
+            <xsd:enumeration value="failure_messageID_unknown"/>
+            <xsd:enumeration value="failure_other_error"/>
+            <xsd:enumeration value="failure_syntax"/>
+            <xsd:enumeration value="ok_received_correctly"/>
+        </xsd:restriction>
+    </xsd:simpleType>
+
+    <xsd:simpleType name="sendRSCCertReturnCodeType">
+        <xsd:restriction base="xsd:string">
+            <xsd:enumeration value="failure_eContentType"/>
+            <xsd:enumeration value="failure_expired"/>
+            <xsd:enumeration value="failure_inner_signature"/>
+            <xsd:enumeration value="failure_internal_error"/>
+            <xsd:enumeration value="failure_other_error"/>
+            <xsd:enumeration value="failure_outer_signature"/>
+            <xsd:enumeration value="failure_syntax"/>
+            <xsd:enumeration value="ok_received_correctly"/>
+        </xsd:restriction>
+    </xsd:simpleType>
+
+    <!-- Definition of the types of the status codes for the messages SendCertificates -->
+    <xsd:simpleType name="sendCertificatesStatusInfoType">
+        <xsd:restriction base="xsd:string">
+            <xsd:enumeration value="failure_incorrect_request"/>
+            <xsd:enumeration value="failure_internal_error"/>
+            <xsd:enumeration value="failure_other_error"/>
+            <xsd:enumeration value="failure_syntax"/>
+            <xsd:enumeration value="ok_cert_available"/>
+        </xsd:restriction>
+    </xsd:simpleType>
+
+    <!-- ==================== -->
+    <!-- Definition of the types of the different messages -->
+    <xsd:element name="getCertificatesRequest">
+        <xsd:complexType>
+            <xsd:sequence>
+                <xsd:element name="callbackIndicator" type="nsBT:callbackIndicatorType"/>
+                <xsd:element name="messageID" type="nsBT:conditionalMessageIDType" minOccurs="0"/>
+                <!--DEPRECATED-->
+                <xsd:element name="responseURL" type="nsBT:deprecatedConditionalStringType" minOccurs="0"/>
+                <xsd:element name="certReference" type="nsBT:certificateReference"/>
+            </xsd:sequence>
+        </xsd:complexType>
+    </xsd:element>
+
+    <xsd:element name="getCertificatesResult">
+        <xsd:complexType>
+            <xsd:sequence>
+                <xsd:element name="certificateSeq" type="nsBT:conditionalCertificateSeqType" minOccurs="0"/>
+                <xsd:element name="returnCode" type="nsBT:getCertificatesReturnCodeType"/>
+                <xsd:element name="returnCodeMessage" type="nsBT:optionalMessageType" minOccurs="0"/>
+            </xsd:sequence>
+        </xsd:complexType>
+    </xsd:element>
+
+    <xsd:element name="requestCertificateRequest">
+        <xsd:complexType>
+            <xsd:sequence>
+                <xsd:element name="callbackIndicator" type="nsBT:callbackIndicatorType"/>
+                <xsd:element name="messageID" type="nsBT:conditionalMessageIDType" minOccurs="0"/>
+                <!--DEPRECATED-->
+                <xsd:element name="responseURL" type="nsBT:deprecatedConditionalStringType" minOccurs="0"/>
+                <xsd:element name="certReq" type="xsd:base64Binary"/>
+            </xsd:sequence>
+        </xsd:complexType>
+    </xsd:element>
+
+    <xsd:element name="requestCertificateResult">
+        <xsd:complexType>
+            <xsd:sequence>
+                <xsd:element name="certificateSeq" type="nsBT:conditionalCertificateSeqType" minOccurs="0"/>
+                <xsd:element name="returnCode" type="nsBT:requestCertificateReturnCodeType"/>
+                <xsd:element name="returnCodeMessage" type="nsBT:optionalMessageType" minOccurs="0"/>
+            </xsd:sequence>
+        </xsd:complexType>
+    </xsd:element>
+
+    <xsd:element name="sendCertificatesRequest">
+        <xsd:complexType>
+            <xsd:sequence>
+                <xsd:element name="messageID" type="nsBT:conditionalMessageIDType" minOccurs="0"/>
+                <xsd:element name="statusInfo" type="nsBT:sendCertificatesStatusInfoType"/>
+                <xsd:element name="statusInfoMessage" type="nsBT:optionalMessageType" minOccurs="0"/>
+                <xsd:element name="certificateSeq" type="nsBT:conditionalCertificateSeqType" minOccurs="0"/>
+            </xsd:sequence>
+        </xsd:complexType>
+    </xsd:element>
+
+    <xsd:element name="sendCertificatesResult">
+        <xsd:complexType>
+            <xsd:sequence>
+                <xsd:element name="returnCode" type="nsBT:sendCertificatesReturnCodeType"/>
+                <xsd:element name="returnCodeMessage" type="nsBT:optionalMessageType" minOccurs="0"/>
+            </xsd:sequence>
+        </xsd:complexType>
+    </xsd:element>
+
+    <xsd:element name="sendRSCCertRequest">
+        <xsd:complexType>
+            <xsd:sequence>
+                <xsd:element name="cmsContainer" type="xsd:base64Binary"/>
+            </xsd:sequence>
+        </xsd:complexType>
+    </xsd:element>
+
+    <xsd:element name="sendRSCCertResult">
+        <xsd:complexType>
+            <xsd:sequence>
+                <xsd:element name="returnCode" type="nsBT:sendRSCCertReturnCodeType"/>
+                <xsd:element name="returnCodeMessage" type="nsBT:optionalMessageType" minOccurs="0"/>
+            </xsd:sequence>
+        </xsd:complexType>
+    </xsd:element>
+</xsd:schema>

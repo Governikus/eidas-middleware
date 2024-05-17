@@ -43,16 +43,19 @@ import de.governikus.eumw.config.ServiceProviderType;
 import de.governikus.eumw.poseidas.cardbase.ByteUtil;
 import de.governikus.eumw.poseidas.cardbase.crypto.DigestUtil;
 import de.governikus.eumw.poseidas.eidmodel.TerminalData;
-import de.governikus.eumw.poseidas.server.pki.TerminalPermission;
 import de.governikus.eumw.poseidas.server.pki.TerminalPermissionAO;
+import de.governikus.eumw.poseidas.server.pki.entities.TerminalPermission;
 import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 
 
-
+/**
+ * This class tests the CVC for specific conditions like an entangled TLS certificate or a matching server URL
+ */
 @Slf4j
 @AllArgsConstructor
 @Component
@@ -74,7 +77,7 @@ public class CvcTlsCheck
     Optional<EidasMiddlewareConfig> configuration = configurationService.getConfiguration();
     if (configuration.isEmpty())
     {
-      log.warn("No eidas middleware configuration present. Cannot perform cvc tls checks");
+      log.warn("No eidas middleware configuration present. Cannot perform CVC TLS checks");
       return Optional.empty();
     }
     EidasMiddlewareConfig config = configuration.get();
@@ -89,7 +92,7 @@ public class CvcTlsCheck
     }
     else
     {
-      log.warn("TLS certificate not found for url {} ", config.getServerUrl());
+      log.warn("TLS certificate not found for URL {} ", config.getServerUrl());
     }
 
     // Check CVCs
@@ -114,7 +117,7 @@ public class CvcTlsCheck
     Optional<EidasMiddlewareConfig> configuration = configurationService.getConfiguration();
     if (configuration.isEmpty())
     {
-      log.warn("No eidas middleware configuration present. Cannot perform cvc tls checks for service provider: {}",
+      log.warn("No eidas middleware configuration present. Cannot perform CVC TLS checks for service provider: {}",
                entityId);
       return null;
     }
@@ -134,9 +137,17 @@ public class CvcTlsCheck
     return cvcResults;
   }
 
-  private CvcCheckResults getCvcResultsForSp(ServiceProviderType sp,
-                                             EidasMiddlewareConfig config,
-                                             Optional<X509Certificate> certificate)
+  /**
+   * Tests the CVC of a service provider
+   *
+   * @param sp service provider to test
+   * @param config
+   * @param certificate server TLS certificate
+   * @return
+   */
+  public CvcCheckResults getCvcResultsForSp(ServiceProviderType sp,
+                                            EidasMiddlewareConfig config,
+                                            Optional<X509Certificate> certificate)
   {
     CvcCheckResults cvcResults = new CvcCheckResults();
     TerminalPermission tp = facade.getTerminalPermission(sp.getCVCRefID());
@@ -158,7 +169,14 @@ public class CvcTlsCheck
     return cvcResults;
   }
 
-  private static boolean testCvcTlsMatch(TerminalData data, Optional<X509Certificate> certificate)
+  /**
+   * Tests if a CVC is entangled with a given TLS certificated
+   *
+   * @param data Terminal data containing a CVC
+   * @param certificate The TLS server certificate
+   * @return
+   */
+  public static boolean testCvcTlsMatch(TerminalData data, Optional<X509Certificate> certificate)
   {
     if (certificate.isEmpty())
     {
@@ -181,13 +199,20 @@ public class CvcTlsCheck
 
     if (data.getCVCDescription().getCommunicationCertificateHashes().stream().anyMatch(h -> ByteUtil.equals(h, digest)))
     {
-      log.info("TLS certificate is referenced in CVC {}", data.getHolderReferenceString());
+      log.debug("TLS certificate is referenced in CVC {}", data.getHolderReferenceString());
       return true;
     }
     log.warn("TLS certificate is not referenced in CVC {}", data.getHolderReferenceString());
     return false;
   }
 
+  /**
+   * Tests if a given CVC is bound to the given server URL
+   *
+   * @param data Terminal data containing a CVC
+   * @param serverUrl The server URL to check for
+   * @return
+   */
   protected static boolean testCvcUrlMatch(TerminalData data, String serverUrl)
   {
     URI serverUri = UriComponentsBuilder.fromUriString(serverUrl).build().toUri();
@@ -212,7 +237,7 @@ public class CvcTlsCheck
     boolean result = serverUrlToCompare.equals(subjectUrlToCompare);
     if (result)
     {
-      log.info("Server URL from config and CVC {} match", data.getHolderReferenceString());
+      log.debug("Server URL from config and CVC {} match", data.getHolderReferenceString());
     }
     else
     {
@@ -231,7 +256,13 @@ public class CvcTlsCheck
     return port;
   }
 
-  private static Optional<X509Certificate> getOwnTlsCertificate(String url)
+  /**
+   * Tries to retrieve a TLS server certificate for a specific URL
+   *
+   * @param url The URL to get the TLS server certificate from
+   * @return
+   */
+  public Optional<X509Certificate> getOwnTlsCertificate(String url)
   {
     if (StringUtils.isBlank(url))
     {
@@ -305,7 +336,7 @@ public class CvcTlsCheck
     try
     {
       certificate.checkValidity();
-      log.info("TLS certificate valid");
+      log.debug("TLS certificate valid");
       return true;
     }
     catch (CertificateExpiredException e)
@@ -325,7 +356,7 @@ public class CvcTlsCheck
     boolean result = currentDate.before(data.getExpirationDate()) && currentDate.after(data.getEffectiveDate());
     if (result)
     {
-      log.info("CVC {} valid", data.getHolderReferenceString());
+      log.debug("CVC {} valid", data.getHolderReferenceString());
     }
     else
     {
@@ -334,6 +365,12 @@ public class CvcTlsCheck
     return result;
   }
 
+  /**
+   * Trys to retrieve the expiration date of the servers TLS certifiacte
+   *
+   * @return The Date of expiration or an exception is thrown
+   * @throws IOException
+   */
   public Date getTLSExpirationDate() throws IOException
   {
     Optional<X509Certificate> ownTlsCertificate = getOwnTlsCertificate(configurationService.getConfiguration()
@@ -360,6 +397,8 @@ public class CvcTlsCheck
   @Getter
   @Setter
   @NoArgsConstructor
+  @AllArgsConstructor
+  @Builder
   public static class CvcCheckResults
   {
 

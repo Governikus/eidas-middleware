@@ -18,6 +18,7 @@ import java.time.format.DateTimeFormatter;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 import org.junit.jupiter.api.Assertions;
@@ -33,6 +34,7 @@ import org.springframework.http.MediaType;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 
 import com.gargoylesoftware.htmlunit.UnexpectedPage;
+import com.gargoylesoftware.htmlunit.html.DomElement;
 import com.gargoylesoftware.htmlunit.html.DomNode;
 import com.gargoylesoftware.htmlunit.html.DomText;
 import com.gargoylesoftware.htmlunit.html.HtmlDivision;
@@ -43,6 +45,7 @@ import de.governikus.eumw.poseidas.config.model.ServiceProviderStatus;
 import de.governikus.eumw.poseidas.gov2server.constants.admin.GlobalManagementCodes;
 import de.governikus.eumw.poseidas.server.pki.RequestSignerCertificateService;
 import de.governikus.eumw.poseidas.server.pki.ServiceProviderStatusService;
+import de.governikus.eumw.poseidas.server.pki.TlsClientRenewalService;
 import de.governikus.eumw.utils.key.SecurityProvider;
 
 
@@ -58,6 +61,9 @@ class CVCControllerTest extends ServiceProviderTestBase
 
   @MockBean
   ServiceProviderStatusService serviceProviderStatusService;
+
+  @MockBean
+  TlsClientRenewalService tlsClientRenewalService;
 
   private ServiceProviderStatus serviceProviderStatus;
 
@@ -112,7 +118,7 @@ class CVCControllerTest extends ServiceProviderTestBase
     {
       getInfoFromTable(cvcInfo, htmlDivision);
     }
-    Assertions.assertEquals(10, cvcInfo.size());
+    Assertions.assertEquals(12, cvcInfo.size());
     Assertions.assertEquals(INFO_MAP.get(CHR), cvcInfo.get(CHR));
     Assertions.assertEquals(INFO_MAP.get(CAR), cvcInfo.get(CAR));
     Assertions.assertEquals(INFO_MAP.get(VALID_FROM), cvcInfo.get(VALID_FROM));
@@ -123,6 +129,8 @@ class CVCControllerTest extends ServiceProviderTestBase
     Assertions.assertEquals(INFO_MAP.get(SUBJECT_URL), cvcInfo.get(SUBJECT_URL));
     Assertions.assertEquals(INFO_MAP.get(ISSUER), cvcInfo.get(ISSUER));
     Assertions.assertEquals(INFO_MAP.get(ISSUER_URL), cvcInfo.get(ISSUER_URL));
+    Assertions.assertEquals(INFO_MAP.get(MATCH_URL), cvcInfo.get(MATCH_URL));
+    Assertions.assertEquals(INFO_MAP.get(MATCH_LINK), cvcInfo.get(MATCH_LINK));
   }
 
   private void getInfoFromTable(Map<String, String> infoMap, HtmlDivision infoDivCol)
@@ -221,7 +229,7 @@ class CVCControllerTest extends ServiceProviderTestBase
     Mockito.when(requestSignerCertificateService.generateNewPendingRequestSignerCertificate(Mockito.anyString(),
                                                                                             Mockito.isNull(),
                                                                                             Mockito.anyInt()))
-           .thenReturn(true);
+           .thenReturn(Optional.empty());
     ServiceProviderStatus serviceProviderStatus = ServiceProviderStatus.builder()
                                                                        .rscAnyPresent(true)
                                                                        .rscPendingPresent(true)
@@ -264,6 +272,10 @@ class CVCControllerTest extends ServiceProviderTestBase
   void testGenerateRSCFailed() throws Exception
   {
     HtmlPage serviceProviderPage = getServiceProviderPage();
+    Mockito.when(requestSignerCertificateService.generateNewPendingRequestSignerCertificate(Mockito.anyString(),
+                                                                                            Mockito.isNull(),
+                                                                                            Mockito.anyInt()))
+           .thenReturn(Optional.of("WURST"));
     // Generate RSC will throw an error
     HtmlPage generatedRSCPage = submitFormById(serviceProviderPage, "generate-rsc-form");
     assertErrorAlert(generatedRSCPage, "Creation of request signer certificate failed");
@@ -302,6 +314,143 @@ class CVCControllerTest extends ServiceProviderTestBase
                             downloadedRscPage.getWebResponse().getResponseHeaderValue("Content-Disposition"));
     Assertions.assertArrayEquals(requestSignerCertificate.getEncoded(),
                                  downloadedRscPage.getWebResponse().getContentAsStream().readAllBytes());
+  }
+
+  @Test
+  void testGenerateAndSendRscSuccess() throws Exception
+  {
+    LocalDate validUntil = LocalDate.now().minusYears(1);
+    ServiceProviderStatus serviceProviderStatus = ServiceProviderStatus.builder()
+                                                                       .rscAnyPresent(true)
+                                                                       .rscPendingPresent(false)
+                                                                       .canGenerateAndSendRsc(true)
+                                                                       .canSendPendingRsc(false)
+                                                                       .rscPendingPresent(false)
+                                                                       .rscCurrentValidUntil(validUntil)
+                                                                       .build();
+    Mockito.when(serviceProviderStatusService.getServiceProviderStatus(Mockito.any()))
+           .thenReturn(serviceProviderStatus);
+    HtmlPage serviceProviderPage = getServiceProviderPage();
+    // Check the data for no RSC
+    HtmlDivision rscInfoTable = (HtmlDivision)serviceProviderPage.getElementById("rsc-info-table");
+    Map<String, String> rscInfoMap = new HashMap<>();
+    getInfoFromTable(rscInfoMap, rscInfoTable);
+    Assertions.assertEquals(3, rscInfoMap.size());
+    Assertions.assertEquals("✔", rscInfoMap.get("Is RSC in use:"));
+    Assertions.assertEquals("❌", rscInfoMap.get("RSC pending"));
+    Assertions.assertEquals(validUntil.format(DateTimeFormatter.ISO_DATE), rscInfoMap.get("Valid until:"));
+
+    // Generate and send RSC and check data again
+    Mockito.when(requestSignerCertificateService.renewRSC(Mockito.anyString())).thenReturn(Optional.empty());
+    validUntil = LocalDate.now();
+    serviceProviderStatus = ServiceProviderStatus.builder()
+                                                 .rscAnyPresent(true)
+                                                 .rscPendingPresent(false)
+                                                 .canGenerateAndSendRsc(true)
+                                                 .canSendPendingRsc(false)
+                                                 .rscCurrentValidUntil(validUntil)
+                                                 .build();
+    Mockito.when(serviceProviderStatusService.getServiceProviderStatus(Mockito.any()))
+           .thenReturn(serviceProviderStatus);
+
+    DomElement htmlForm = serviceProviderPage.getElementById("generate-rsc-form");
+    Assertions.assertNull(htmlForm);
+    htmlForm = serviceProviderPage.getElementById("send-pending-rsc-button");
+    Assertions.assertNull(htmlForm);
+    htmlForm = serviceProviderPage.getElementById("delete-pending-rsc-button");
+    Assertions.assertNull(htmlForm);
+    htmlForm = serviceProviderPage.getElementById("download-rsc-button");
+    Assertions.assertNotNull(htmlForm);
+    HtmlPage generatedRSCPage = submitFormById(serviceProviderPage, "generate-send-rsc-button");
+    rscInfoTable = (HtmlDivision)generatedRSCPage.getElementById("rsc-info-table");
+    getInfoFromTable(rscInfoMap, rscInfoTable);
+    Assertions.assertEquals(3, rscInfoMap.size());
+    Assertions.assertEquals("✔", rscInfoMap.get("Is RSC in use:"));
+    Assertions.assertEquals("❌", rscInfoMap.get("RSC pending"));
+    Assertions.assertEquals(validUntil.format(DateTimeFormatter.ISO_DATE), rscInfoMap.get("Valid until:"));
+    assertMessageAlert(generatedRSCPage, "Request signer certificate successfully renewed");
+    Mockito.verify(requestSignerCertificateService, Mockito.atLeastOnce()).renewRSC(Mockito.anyString());
+  }
+
+  @Test
+  void testGenerateAndSendRscFailed() throws Exception
+  {
+    LocalDate validUntil = LocalDate.now().minusYears(1);
+    ServiceProviderStatus serviceProviderStatus = ServiceProviderStatus.builder()
+                                                                       .rscAnyPresent(true)
+                                                                       .rscPendingPresent(false)
+                                                                       .canGenerateAndSendRsc(true)
+                                                                       .canSendPendingRsc(false)
+                                                                       .rscPendingPresent(false)
+                                                                       .rscCurrentValidUntil(validUntil)
+                                                                       .build();
+    Mockito.when(serviceProviderStatusService.getServiceProviderStatus(Mockito.any()))
+           .thenReturn(serviceProviderStatus);
+    HtmlPage serviceProviderPage = getServiceProviderPage();
+    // Check the data for no RSC
+    HtmlDivision rscInfoTable = (HtmlDivision)serviceProviderPage.getElementById("rsc-info-table");
+    Map<String, String> rscInfoMap = new HashMap<>();
+    getInfoFromTable(rscInfoMap, rscInfoTable);
+    Assertions.assertEquals(3, rscInfoMap.size());
+    Assertions.assertEquals("✔", rscInfoMap.get("Is RSC in use:"));
+    Assertions.assertEquals("❌", rscInfoMap.get("RSC pending"));
+    Assertions.assertEquals(validUntil.format(DateTimeFormatter.ISO_DATE), rscInfoMap.get("Valid until:"));
+
+    // Generate and send RSC failed and check data again
+    Mockito.when(requestSignerCertificateService.renewRSC(Mockito.anyString())).thenReturn(Optional.of("WURST"));
+    serviceProviderStatus = ServiceProviderStatus.builder()
+                                                 .rscAnyPresent(true)
+                                                 .rscPendingPresent(true)
+                                                 .canGenerateAndSendRsc(false)
+                                                 .canSendPendingRsc(true)
+                                                 .rscCurrentValidUntil(validUntil)
+                                                 .build();
+    Mockito.when(serviceProviderStatusService.getServiceProviderStatus(Mockito.any()))
+           .thenReturn(serviceProviderStatus);
+
+    HtmlPage generatedRSCPage = submitFormById(serviceProviderPage, "generate-send-rsc-button");
+    rscInfoTable = (HtmlDivision)generatedRSCPage.getElementById("rsc-info-table");
+    getInfoFromTable(rscInfoMap, rscInfoTable);
+    Assertions.assertEquals(3, rscInfoMap.size());
+    Assertions.assertEquals("✔", rscInfoMap.get("Is RSC in use:"));
+    Assertions.assertEquals("✔", rscInfoMap.get("RSC pending"));
+    Assertions.assertEquals(validUntil.format(DateTimeFormatter.ISO_DATE), rscInfoMap.get("Valid until:"));
+    DomElement htmlForm = generatedRSCPage.getElementById("generate-rsc-form");
+    Assertions.assertNull(htmlForm);
+    htmlForm = generatedRSCPage.getElementById("send-pending-rsc-button");
+    Assertions.assertNotNull(htmlForm);
+    htmlForm = generatedRSCPage.getElementById("generate-send-rsc-button");
+    Assertions.assertNull(htmlForm);
+    htmlForm = generatedRSCPage.getElementById("delete-pending-rsc-button");
+    Assertions.assertNotNull(htmlForm);
+    htmlForm = generatedRSCPage.getElementById("download-rsc-button");
+    Assertions.assertNotNull(htmlForm);
+    assertErrorAlert(generatedRSCPage, "Sending of new request signer certificate failed");
+    Mockito.verify(requestSignerCertificateService, Mockito.atLeastOnce()).renewRSC(Mockito.anyString());
+    // Delete pending RSC
+    Mockito.when(requestSignerCertificateService.deletePendingRSC(Mockito.anyString())).thenReturn(Optional.empty());
+    serviceProviderStatus = ServiceProviderStatus.builder()
+                                                 .rscAnyPresent(true)
+                                                 .rscPendingPresent(false)
+                                                 .canGenerateAndSendRsc(true)
+                                                 .canSendPendingRsc(false)
+                                                 .rscCurrentValidUntil(validUntil)
+                                                 .build();
+    Mockito.when(serviceProviderStatusService.getServiceProviderStatus(Mockito.any()))
+           .thenReturn(serviceProviderStatus);
+    HtmlPage deletePendingRsc = submitFormById(generatedRSCPage, "delete-pending-rsc-button");
+    htmlForm = deletePendingRsc.getElementById("generate-rsc-form");
+    Assertions.assertNull(htmlForm);
+    htmlForm = deletePendingRsc.getElementById("generate-send-rsc-button");
+    Assertions.assertNotNull(htmlForm);
+    htmlForm = deletePendingRsc.getElementById("send-pending-rsc-button");
+    Assertions.assertNull(htmlForm);
+    htmlForm = deletePendingRsc.getElementById("delete-pending-rsc-button");
+    Assertions.assertNull(htmlForm);
+    htmlForm = deletePendingRsc.getElementById("download-rsc-button");
+    Assertions.assertNotNull(htmlForm);
+    assertMessageAlert(deletePendingRsc, "Pending request signer certificate successfully deleted");
+    Assertions.assertNotNull(htmlForm);
   }
 
   @Test
@@ -352,7 +501,7 @@ class CVCControllerTest extends ServiceProviderTestBase
 
     HtmlPage serviceProviderPage = getServiceProviderPage();
     HtmlPage renewedBlackListPage = (HtmlPage)click(serviceProviderPage, "renew-blacklist-button");
-    assertMessageAlert(renewedBlackListPage, "Renew black list succeeded");
+    assertMessageAlert(renewedBlackListPage, "Renew block list succeeded");
   }
 
   @Test
@@ -363,7 +512,7 @@ class CVCControllerTest extends ServiceProviderTestBase
 
     HtmlPage serviceProviderPage = getServiceProviderPage();
     HtmlPage renewedBlackListPage = (HtmlPage)click(serviceProviderPage, "renew-blacklist-button");
-    assertErrorAlert(renewedBlackListPage, "Renew black list failed: ");
+    assertErrorAlert(renewedBlackListPage, "Renew block list failed: ");
   }
 
   @Test
@@ -386,5 +535,73 @@ class CVCControllerTest extends ServiceProviderTestBase
     HtmlPage serviceProviderPage = getServiceProviderPage();
     HtmlPage renewedBlackListPage = (HtmlPage)click(serviceProviderPage, "renew-masterdefectlist-button");
     assertErrorAlert(renewedBlackListPage, "Renew Master and Defect List failed: ");
+  }
+
+  @Test
+  void testTlsRenewalSuccess() throws Exception
+  {
+    LocalDate validUntil = LocalDate.now().plusYears(1);
+    ServiceProviderStatus serviceProviderStatus = ServiceProviderStatus.builder()
+                                                                       .rscCurrentValidUntil(validUntil)
+                                                                       .currentTlsCertValidUntil("2042-02-21 09:47:18 CET")
+                                                                       .build();
+    Mockito.when(serviceProviderStatusService.getServiceProviderStatus(Mockito.any()))
+           .thenReturn(serviceProviderStatus);
+    HtmlPage serviceProviderPage = getServiceProviderPage();
+    // Check the data for no RSC
+    HtmlDivision mTLSInfoTable = (HtmlDivision)serviceProviderPage.getElementById("mTLS-info-table");
+    Map<String, String> mtlsInfoMap = new HashMap<>();
+    getInfoFromTable(mtlsInfoMap, mTLSInfoTable);
+    Assertions.assertEquals(2, mtlsInfoMap.size());
+    Assertions.assertEquals("2042-02-21 09:47:18 CET",
+                            mtlsInfoMap.get("Current client authentication certificate valid until:"));
+    Assertions.assertEquals("❌", mtlsInfoMap.get("Is CSR pending:"));
+
+    // Send CSR request and check data again
+    Mockito.when(tlsClientRenewalService.generateAndSendCsrWithNewKey(ServiceProviderTestBase.SERVICE_PROVIDER))
+           .thenReturn(Optional.empty());
+    validUntil = LocalDate.now();
+    serviceProviderStatus = ServiceProviderStatus.builder()
+                                                 .rscCurrentValidUntil(validUntil)
+                                                 .currentTlsCertValidUntil("2042-02-21 09:47:18 CET")
+                                                 .isCsrPending(true)
+                                                 .notPollBefore("2024-02-21 09:47:18 CET")
+                                                 .build();
+    Mockito.when(serviceProviderStatusService.getServiceProviderStatus(Mockito.any()))
+           .thenReturn(serviceProviderStatus);
+
+    DomElement htmlForm = serviceProviderPage.getElementById("renew-tls-client-button");
+    Assertions.assertNotNull(htmlForm);
+    htmlForm = serviceProviderPage.getElementById("tlsKeyPairNameToUseForNewCsr");
+    Assertions.assertNotNull(htmlForm);
+    htmlForm = serviceProviderPage.getElementById("poll-tls-client-button");
+    Assertions.assertNull(htmlForm);
+    htmlForm = serviceProviderPage.getElementById("delete-csr-button");
+    Assertions.assertNull(htmlForm);
+    // Submit CSR request
+    HtmlPage generateCsrPage = submitFormById(serviceProviderPage, "renew-tls-client-button");
+    mTLSInfoTable = (HtmlDivision)generateCsrPage.getElementById("mTLS-info-table");
+    getInfoFromTable(mtlsInfoMap, mTLSInfoTable);
+    Assertions.assertEquals(3, mtlsInfoMap.size());
+    Assertions.assertEquals("2042-02-21 09:47:18 CET",
+                            mtlsInfoMap.get("Current client authentication certificate valid until:"));
+    Assertions.assertEquals("✔", mtlsInfoMap.get("Is CSR pending:"));
+    Assertions.assertEquals("2024-02-21 09:47:18 CET", mtlsInfoMap.get("Not poll before:"));
+    assertMessageAlert(generateCsrPage, "Renewal of TLS client certificate was successfully sent");
+    // Check buttons
+    htmlForm = generateCsrPage.getElementById("renew-tls-client-button");
+    Assertions.assertNull(htmlForm);
+    htmlForm = generateCsrPage.getElementById("tlsKeyPairNameToUseForNewCsr");
+    Assertions.assertNull(htmlForm);
+    htmlForm = generateCsrPage.getElementById("poll-tls-client-button");
+    Assertions.assertNotNull(htmlForm);
+    htmlForm = generateCsrPage.getElementById("delete-csr-button");
+    Assertions.assertNotNull(htmlForm);
+    Mockito.verify(tlsClientRenewalService, Mockito.atLeastOnce()).generateAndSendCsrWithNewKey(SERVICE_PROVIDER);
+    // Poll Client Certifcate
+    Mockito.when(tlsClientRenewalService.fetchCertificate(SERVICE_PROVIDER)).thenReturn(Optional.empty());
+    HtmlPage pullCertificatePage = (HtmlPage)click(generateCsrPage, "poll-tls-client-button");
+    Mockito.verify(tlsClientRenewalService, Mockito.atLeastOnce()).fetchCertificate(SERVICE_PROVIDER);
+    assertMessageAlert(pullCertificatePage, "Poll of TLS client certificate was successful.");
   }
 }

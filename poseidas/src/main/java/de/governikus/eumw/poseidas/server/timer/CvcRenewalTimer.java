@@ -13,6 +13,7 @@ import static de.governikus.eumw.poseidas.server.timer.TimerValues.SECOND;
 
 import java.time.Instant;
 import java.util.Date;
+import java.util.List;
 
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.scheduling.Trigger;
@@ -30,8 +31,8 @@ import lombok.extern.slf4j.Slf4j;
 
 /**
  * This class manages the timer for the CVC renewal. The class implements the Runnable interface. The {@link #run() run}
- * method is used to renew CVCs. The {@link #getCvcRenewalTrigger() getCvcRenewalTrigger} method determines how often
- * the timer runs.
+ * method is used to renew CVCs. The {@link #getCvcRenewalTrigger(List) getCvcRenewalTrigger} method determines
+ * how often the timer runs.
  *
  * @see ApplicationTimer
  */
@@ -53,7 +54,7 @@ public class CvcRenewalTimer implements Runnable
     permissionDataHandling.renewOutdatedCVCs();
   }
 
-  Trigger getCvcRenewalTrigger()
+  Trigger getCvcRenewalTrigger(List<Instant> nextExecutions)
   {
     return triggerContext -> {
       log.debug("Handle trigger for CVC renewal timer");
@@ -65,9 +66,11 @@ public class CvcRenewalTimer implements Runnable
         Date date = new Date(triggerContext.getClock().millis() + initialDelay);
         log.debug("First CVC renewal timer task will executed with an initial delay of {} milliseconds", initialDelay);
         log.debug("CVC renewal timer task will be executed at {}", date);
+        nextExecutions.add(date.toInstant());
         return date.toInstant();
       }
       Instant nextExecutiontime = lastCompletion.toInstant().plusMillis(getCvcRenewalTimer());
+      nextExecutions.add(nextExecutiontime);
       Date date = Date.from(nextExecutiontime);
       log.debug("CVC renewal timer task will be executed at {}", date);
       return date.toInstant();

@@ -14,6 +14,7 @@ import java.io.IOException;
 import java.net.InetAddress;
 import java.util.List;
 
+import de.governikus.eumw.poseidas.server.pki.entities.ChangeKeyLock;
 import org.springframework.stereotype.Component;
 
 import de.governikus.eumw.poseidas.cardserver.service.hsm.impl.HSMException;

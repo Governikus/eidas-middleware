@@ -3,6 +3,7 @@ package de.governikus.eumw.poseidas.server.timer;
 import java.time.Clock;
 import java.time.Duration;
 import java.time.Instant;
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.Optional;
 
@@ -17,6 +18,7 @@ import org.springframework.scheduling.Trigger;
 import org.springframework.scheduling.TriggerContext;
 
 import de.governikus.eumw.config.EidasMiddlewareConfig;
+import de.governikus.eumw.config.EntanglementTimerType;
 import de.governikus.eumw.config.TimerConfigurationType;
 import de.governikus.eumw.config.TimerType;
 import de.governikus.eumw.config.TimerTypeCertRenewal;
@@ -56,7 +58,7 @@ class CvcRenewalTimerTest
   @Test
   void testCvcRenewalTriggerWithInitialDelay()
   {
-    Trigger cvcRenewalTrigger = cvcRenewalTimer.getCvcRenewalTrigger();
+    Trigger cvcRenewalTrigger = cvcRenewalTimer.getCvcRenewalTrigger(new ArrayList<>());
     Mockito.when(triggerContext.lastScheduledExecutionTime()).thenReturn(null);
     Mockito.when(triggerContext.lastCompletionTime()).thenReturn(null);
     Instant now = Instant.now();
@@ -69,7 +71,7 @@ class CvcRenewalTimerTest
   @Test
   void testCvcRenewalTriggerWithValuesFromConfig()
   {
-    Trigger cvcRenewalTrigger = cvcRenewalTimer.getCvcRenewalTrigger();
+    Trigger cvcRenewalTrigger = cvcRenewalTimer.getCvcRenewalTrigger(new ArrayList<>());
     Instant now = Instant.now();
     Mockito.when(triggerContext.lastScheduledExecutionTime()).thenReturn(Date.from(now));
     Mockito.when(triggerContext.lastCompletionTime()).thenReturn(Date.from(now));
@@ -82,7 +84,7 @@ class CvcRenewalTimerTest
   @Test
   void testCvcRenewalTriggerWithDefaultValues()
   {
-    Trigger cvcRenewalTrigger = cvcRenewalTimer.getCvcRenewalTrigger();
+    Trigger cvcRenewalTrigger = cvcRenewalTimer.getCvcRenewalTrigger(new ArrayList<>());
     Instant now = Instant.now();
     Mockito.when(triggerContext.lastScheduledExecutionTime()).thenReturn(Date.from(now));
     Mockito.when(triggerContext.lastCompletionTime()).thenReturn(Date.from(now));
@@ -99,7 +101,11 @@ class CvcRenewalTimerTest
     TimerTypeCertRenewal timerTypeCertRenewal = new TimerTypeCertRenewal(42, TimerUnit.HOURS, 20);
     TimerType timerType = new TimerType(36, TimerUnit.HOURS);
     TimerConfigurationType timerConfigurationType = new TimerConfigurationType(timerTypeCertRenewal, timerType,
-                                                                               timerType, timerType);
+                                                                               timerType, timerType,
+                                                                               new EntanglementTimerType(1,
+                                                                                                         TimerUnit.HOURS,
+                                                                                                         true),
+                                                                               null, null);
     eidConfiguration.setTimerConfiguration(timerConfigurationType);
     eidasMiddlewareConfig.setEidConfiguration(eidConfiguration);
     return eidasMiddlewareConfig;

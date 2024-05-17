@@ -1,0 +1,118 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!-- this WSDL-specification is based on the document
+    Protocols for the Management of Certificates and CRLs in Public-Key-Infrastructures (PKIs) Part 3
+    Version 1.40
+-->
+<!-- this specification contains the functions that have to be implemented as part of the Web-Service
+    of a DV. Currently, the following functions are part of this Web-Service:
+    - GetSectorPublicKey for a request of a terminal
+    - GetBlockList for a request of a terminal
+    - SendBlockList used for callback by the MBS
+    -->
+
+<definitions
+        name="EAC-PKI-DV"
+        targetNamespace="uri:EAC-PKI-DV-Protocol/1.4"
+        xmlns:tns="uri:EAC-PKI-DV-Protocol/1.4"
+        xmlns:ns="uri:eacBT/1.4"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://schemas.xmlsoap.org/wsdl/ http://schemas.xmlsoap.org/wsdl/2003-02-11.xsd"
+        xmlns:SOAP="http://schemas.xmlsoap.org/wsdl/soap/"
+        xmlns="http://schemas.xmlsoap.org/wsdl/"
+>
+
+    <types>
+        <schema xmlns="http://www.w3.org/2001/XMLSchema">
+            <import namespace="http://www.w3.org/2001/XMLSchema"/>
+            <import namespace="uri:eacBT/1.4" schemaLocation="BasicTypes_DV_RestrictedIdentification.xsd"/>
+        </schema>
+    </types>
+
+    <!-- Definition of the messages of the protocol -->
+    <!-- message GetSectorPublicKey -->
+    <message name="GetSectorPublicKeyReq">
+        <part name="Request" element="ns:getSectorPublicKeyRequest"/>
+    </message>
+    <message name="GetSectorPublicKeyRes">
+        <part name="Result" element="ns:getSectorPublicKeyResult"/>
+    </message>
+
+    <!-- message GetBlockList -->
+    <message name="GetBlockListReq">
+        <part name="Request" element="ns:getBlockListRequest"/>
+    </message>
+    <message name="GetBlockListRes">
+        <part name="Result" element="ns:getBlockListResult"/>
+    </message>
+
+    <!-- message SendBlockList -->
+    <message name="SendBlockListReq">
+        <part name="Request" element="ns:sendBlockListRequest"/>
+    </message>
+    <message name="SendBlockListRes">
+        <part name="Result" element="ns:sendBlockListResult"/>
+    </message>
+
+    <!-- Definition of the port types -->
+    <portType name="EAC-PKI-DV-ProtocolType">
+        <!-- port type for message GetSectorPublicKey -->
+        <operation name="GetSectorPublicKey">
+            <input message="tns:GetSectorPublicKeyReq"/>
+            <output message="tns:GetSectorPublicKeyRes"/>
+        </operation>
+
+        <!-- port type for message GetBlockList -->
+        <operation name="GetBlockList">
+            <input message="tns:GetBlockListReq"/>
+            <output message="tns:GetBlockListRes"/>
+        </operation>
+
+        <!-- port type for message SendBlockList -->
+        <operation name="SendBlockList">
+            <input message="tns:SendBlockListReq"/>
+            <output message="tns:SendBlockListRes"/>
+        </operation>
+    </portType>
+
+    <!-- Definition of the bindings -->
+    <binding name="EAC-DV" type="tns:EAC-PKI-DV-ProtocolType">
+        <SOAP:binding style="document" transport="http://schemas.xmlsoap.org/soap/http"/>
+        <operation name="GetSectorPublicKey">
+            <SOAP:operation style="document" soapAction=""/>
+            <input>
+                <SOAP:body use="literal"/>
+            </input>
+            <output>
+                <SOAP:body use="literal"/>
+            </output>
+        </operation>
+
+        <operation name="GetBlockList">
+            <SOAP:operation style="document" soapAction=""/>
+            <input>
+                <SOAP:body use="literal"/>
+            </input>
+            <output>
+                <SOAP:body use="literal"/>
+            </output>
+        </operation>
+
+        <operation name="SendBlockList">
+            <SOAP:operation style="document" soapAction=""/>
+            <input>
+                <SOAP:body use="literal"/>
+            </input>
+            <output>
+                <SOAP:body use="literal"/>
+            </output>
+        </operation>
+    </binding>
+
+    <!-- Definition of the service -->
+    <service name="EAC-DV-ProtocolService">
+        <port name="EAC-DV-ProtocolServicePort" binding="tns:EAC-DV">
+            <SOAP:address location="http://URL_NOT_SPECIFIED"/>
+        </port>
+    </service>
+</definitions>

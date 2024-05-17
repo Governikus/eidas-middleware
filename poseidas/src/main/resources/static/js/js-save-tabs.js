@@ -14,6 +14,9 @@ switch ($("#jumpToTab").val()) {
     case "Lists":
         $("#pills-lists-tab").click();
         break;
+    case "TLS":
+        $("#pills-tls-tab").click();
+        break;
     case "KeyStores":
         $("#pills-keyStores-tab").click();
         break;

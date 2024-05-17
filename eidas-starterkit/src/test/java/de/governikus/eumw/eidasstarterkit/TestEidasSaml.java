@@ -51,6 +51,7 @@ import org.opensaml.saml.saml2.core.impl.RequesterIDBuilder;
 import org.opensaml.saml.saml2.core.impl.ScopingBuilder;
 import org.opensaml.xmlsec.encryption.support.EncryptionException;
 import org.opensaml.xmlsec.signature.support.SignatureException;
+import org.xml.sax.SAXException;
 
 import de.governikus.eumw.eidascommon.ErrorCode;
 import de.governikus.eumw.eidascommon.ErrorCodeException;
@@ -184,7 +185,7 @@ class TestEidasSaml
   void createParseResponse() throws CertificateException, IOException, UnrecoverableKeyException, KeyStoreException,
     NoSuchAlgorithmException, NoSuchProviderException, KeyException, XMLParserException, UnmarshallingException,
     EncryptionException, MarshallingException, SignatureException, TransformerFactoryConfigurationError,
-    TransformerException, ErrorCodeException, InitializationException, ComponentInitializationException
+    TransformerException, ErrorCodeException, InitializationException, ComponentInitializationException, SAXException
   {
     BirthNameAttribute birthName = new BirthNameAttribute("Meyer");
     CurrentAddressAttribute currentAddress = new CurrentAddressAttribute("bla", "bla", "bla", "bla", "Am Fallturm 33",
@@ -209,7 +210,7 @@ class TestEidasSaml
     String recipient = "test_recipient";
     EidasNameId nameid = new EidasPersistentNameId("eidasnameidTest");
     String issuer = "test issuer";
-    String inResponseTo = "test inResponseTo";
+    String inResponseTo = "_inResponseTo";
     EidasLoaEnum loa = EidasLoaEnum.LOA_SUBSTANTIAL;
     X509Certificate[] cert = {Utils.readCert(TestEidasSaml.class.getResourceAsStream("/EidasSignerTest_x509.cer"))};
     X509KeyPair[] keypair = {Utils.readPKCS12(TestEidasSaml.class.getResourceAsStream(TEST_P12),
@@ -229,6 +230,9 @@ class TestEidasSaml
                                                signer);
     System.out.println("-->>Response-->>" + new String(response));
 
+    // This method can validate responses as well
+    EidasSaml.validateXMLRequest(new ByteArrayInputStream(response), false);
+
     EidasResponse result = EidasResponse.parse(new ByteArrayInputStream(response), keypair, cert);
 
     Assertions.assertEquals(destination, result.getDestination());
@@ -245,13 +249,13 @@ class TestEidasSaml
   void createParseErrorResponse() throws CertificateException, IOException, UnrecoverableKeyException,
     KeyStoreException, NoSuchAlgorithmException, NoSuchProviderException, KeyException, XMLParserException,
     UnmarshallingException, MarshallingException, SignatureException, TransformerFactoryConfigurationError,
-    TransformerException, ErrorCodeException, ComponentInitializationException
+    TransformerException, ErrorCodeException, ComponentInitializationException, SAXException
   {
     String destination = "test destination";
     String recipient = "test_recipient";
     EidasNameId nameid = new EidasPersistentNameId("eidasnameidTest");
     String issuer = "test issuer";
-    String inResponseTo = "test inResponseTo";
+    String inResponseTo = "_inResponseTo";
     EidasLoaEnum loa = EidasLoaEnum.LOA_SUBSTANTIAL;
     X509Certificate[] cert = {Utils.readCert(TestEidasSaml.class.getResourceAsStream("/EidasSignerTest_x509.cer"))};
     X509KeyPair[] keypair = {Utils.readPKCS12(TestEidasSaml.class.getResourceAsStream(TEST_P12),
@@ -262,6 +266,9 @@ class TestEidasSaml
 
     byte[] response = new EidasResponse(destination, recipient, nameid, inResponseTo, issuer, loa, signer,
                                         encrypter).generateErrorRsp(ErrorCode.AUTHORIZATION_FAILED, "Cancel!");
+
+    // This method can validate responses as well
+    EidasSaml.validateXMLRequest(new ByteArrayInputStream(response), false);
 
     EidasResponse result = EidasResponse.parse(new ByteArrayInputStream(response), keypair, cert);
 

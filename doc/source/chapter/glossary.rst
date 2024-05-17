@@ -6,7 +6,7 @@ Glossary
     :sorted:
 
     German eID PKI
-        PKI for the German ID card. See `Country Verifying Certificate Authority - electronic Identity
+        PKI for the German eID card. See `Country Verifying Certificate Authority - electronic Identity
         <https://www.bsi.bund.de/EN/Themen/Oeffentliche-Verwaltung/Elektronische-Identitaeten/Public-Key-Infrastrukturen/CVCA/Country-Verifying-Certificate-Authority-electronic-Identity/country-verifying-certificate-authority-electronic-identity_node.html>`_
 
     BerCA
@@ -20,7 +20,7 @@ Glossary
         :term:`PKCS#12` and :term:`Java Key Store`
 
     PKCS#12
-        Format for key stores. See `Wikipedia about PKCS12 <https://en.wikipedia.org/wiki/PKCS_12>`_
+        Format for key stores. See `RFC 7292 <https://datatracker.ietf.org/doc/html/rfc7292>`_
 
     Java Key Store
         Java Key Store. See `Wikipedia about JKS <https://en.wikipedia.org/wiki/Keystore>`_
@@ -57,9 +57,14 @@ Glossary
         eIDAS Connector or eIDAS Service Provider.
 
     Black List
+        See :term:`Block List`
+
+    Block List
         When a card holder reports the eID Card as lost or authorities become aware that an eID card is lost or stolen,
-        that eID will be revoked. The Black List contains all revoked eID. The list is :term:`eID Service Provider` specific
+        that eID will be revoked. The Block List contains all revoked eID. The list is :term:`eID Service Provider` specific
         and the eIDAS Middleware will check for every authorization request whether the eID Card is on that list.
+        Note: the terms `Black List` and `Block List` refer to the same thing. Older versions of the specifications have coined
+        the term `Black List` while newer versions have switched to `Block List`.
 
     Master List
         To verify the data from the eID Card is authenticated and has not been manipulated, digital signatures are used.

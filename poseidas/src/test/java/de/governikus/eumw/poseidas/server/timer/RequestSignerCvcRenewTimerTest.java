@@ -5,6 +5,7 @@ import static org.mockito.Mockito.lenient;
 import java.sql.Date;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
+import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
@@ -26,12 +27,13 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import de.governikus.eumw.config.EidasMiddlewareConfig;
 import de.governikus.eumw.config.ServiceProviderType;
 import de.governikus.eumw.poseidas.server.idprovider.config.ConfigurationService;
-import de.governikus.eumw.poseidas.server.pki.PendingCertificateRequest;
-import de.governikus.eumw.poseidas.server.pki.PendingCertificateRequestRepository;
 import de.governikus.eumw.poseidas.server.pki.PermissionDataHandling;
 import de.governikus.eumw.poseidas.server.pki.RequestSignerCertificateService;
-import de.governikus.eumw.poseidas.server.pki.TerminalPermission;
 import de.governikus.eumw.poseidas.server.pki.TerminalPermissionAO;
+import de.governikus.eumw.poseidas.server.pki.TimerHistoryService;
+import de.governikus.eumw.poseidas.server.pki.entities.PendingCertificateRequest;
+import de.governikus.eumw.poseidas.server.pki.entities.TerminalPermission;
+import de.governikus.eumw.poseidas.server.pki.repositories.PendingCertificateRequestRepository;
 
 
 @ExtendWith(MockitoExtension.class)
@@ -68,6 +70,9 @@ class RequestSignerCvcRenewTimerTest
 
   @Mock
   private PendingCertificateRequest pendingCertificateRequest;
+
+  @Mock
+  private TimerHistoryService timerHistoryService;
 
   @InjectMocks
   private RequestSignerCvcRenewTimer requestSignerCvcRenewTimer;
@@ -140,7 +145,7 @@ class RequestSignerCvcRenewTimerTest
 
     // Check
     Mockito.verify(permissionDataHandling, shouldRenew ? Mockito.atLeastOnce() : Mockito.never())
-           .triggerCertRenewal(serviceProviderType.getName());
+           .triggerCertRenewal(serviceProviderType.getName(), new ArrayList<>(), new ArrayList<>());
   }
 
   @Test

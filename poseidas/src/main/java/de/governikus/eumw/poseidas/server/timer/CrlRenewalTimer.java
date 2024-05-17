@@ -12,7 +12,9 @@ package de.governikus.eumw.poseidas.server.timer;
 import static de.governikus.eumw.poseidas.server.timer.TimerValues.HOUR;
 
 import java.time.Instant;
+import java.util.ArrayList;
 import java.util.Date;
+import java.util.List;
 
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.scheduling.Trigger;
@@ -24,13 +26,16 @@ import de.governikus.eumw.config.TimerType;
 import de.governikus.eumw.config.TimerUnit;
 import de.governikus.eumw.poseidas.eidserver.crl.CertificationRevocationListImpl;
 import de.governikus.eumw.poseidas.server.idprovider.config.ConfigurationService;
+import de.governikus.eumw.poseidas.server.pki.TimerHistoryService;
+import de.governikus.eumw.poseidas.server.pki.entities.TimerHistory;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 
 /**
  * This class manages the timer for the CRL renewal. The class implements the Runnable interface. The {@link #run() run}
- * method is used to renew CRLs. The {@link #getCrlTrigger() getCrlTrigger} method determines how often the timer runs.
+ * method is used to renew CRLs. The {@link #getCrlTrigger(List) getCrlTrigger} method determines how often the
+ * timer runs.
  *
  * @see ApplicationTimer
  */
@@ -42,21 +47,36 @@ public class CrlRenewalTimer implements Runnable
 
   private final ConfigurationService configurationService;
 
+  private final TimerHistoryService timerHistoryService;
+
   @Override
   public void run()
   {
     log.debug("Execute CRL renewal");
+    CertificationRevocationListImpl.RenewCrlsLists renewCrlsLists = new CertificationRevocationListImpl.RenewCrlsLists(new ArrayList<>(),
+                                                                                                                       new ArrayList<>());
+
     if (CertificationRevocationListImpl.isInitialized())
     {
-      CertificationRevocationListImpl.getInstance().renewCrls();
+      renewCrlsLists = CertificationRevocationListImpl.getInstance().renewCrls();
     }
     else
     {
+      renewCrlsLists.failed().add("Cannot execute CRL renewal timer task. CRL is not initialized");
       log.warn("Cannot execute CRL renewal timer task. CRL is not initialized");
+    }
+
+    if (null != renewCrlsLists && (!renewCrlsLists.succeeded().isEmpty() || !renewCrlsLists.failed().isEmpty()))
+    {
+      saveTimer(renewCrlsLists.succeeded(), renewCrlsLists.failed());
+    }
+    else
+    {
+      timerHistoryService.saveTimer(TimerHistory.TimerType.CRL_RENEWAL_TIMER, "CRL not required", true, true);
     }
   }
 
-  Trigger getCrlTrigger()
+  Trigger getCrlTrigger(List<Instant> nextExecutions)
   {
     return triggerContext -> {
       log.debug("Handle trigger for CRL timer");
@@ -68,9 +88,11 @@ public class CrlRenewalTimer implements Runnable
         Date date = new Date(triggerContext.getClock().millis() + initialDelay);
         log.debug("First CRL timer task will executed with an initial delay of {} milliseconds", initialDelay);
         log.debug("CRL renewal timer task will be executed at {}", date);
+        nextExecutions.add(date.toInstant());
         return date.toInstant();
       }
       Instant nextExecutiontime = lastCompletion.toInstant().plusMillis(getCrlRenewalTimer());
+      nextExecutions.add(nextExecutiontime);
       Date date = Date.from(nextExecutiontime);
       log.debug("CRL renewal timer task will be executed at {}", date);
       return date.toInstant();
@@ -108,5 +130,27 @@ public class CrlRenewalTimer implements Runnable
                 hour.value());
     }
     return ApplicationTimer.getUnitOfTime(hour) * length;
+  }
+
+  // Save timer execution results in database
+  private void saveTimer(List<String> succeeded, List<String> failed)
+  {
+    StringBuilder timerExecutionMessage = new StringBuilder();
+    if (!succeeded.isEmpty())
+    {
+      timerExecutionMessage.append("Succeeded: ").append(succeeded);
+    }
+    if (!failed.isEmpty())
+    {
+      if (!timerExecutionMessage.isEmpty())
+      {
+        timerExecutionMessage.append(System.lineSeparator()).append(System.lineSeparator());
+      }
+      timerExecutionMessage.append("Failed: ").append(failed);
+    }
+    timerHistoryService.saveTimer(TimerHistory.TimerType.CRL_RENEWAL_TIMER,
+                                  timerExecutionMessage.toString(),
+                                  failed.isEmpty(),
+                                  true);
   }
 }

@@ -87,10 +87,7 @@ public final class ContextPaths
   public static final String IMPORT_EXPORT_CONFIGURATION = "/importExportConfiguration";
 
   public static final String DASHBOARD = "/dashboard";
-
-
-
-
+  
   private ContextPaths()
   {
     // empty private constructor

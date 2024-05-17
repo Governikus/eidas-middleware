@@ -9,10 +9,10 @@ Software Requirements
 ---------------------
 
 The eIDAS Middleware is a Spring Boot Application. This means that you can start the application with a JRE and
-there is no need for an application server. We support the latest available Zulu JDK in Version 17,
-at the time of this release this is 17.0.9
+there is no need for an application server. We support the latest available Zulu JRE in Version 17,
+at the time of this release this is 17.0.10.
 
-For the operating system we support Debian 11 “Bullseye” (LTS).
+For the operating system we support Debian 12 “Bookworm” (LTS).
 
 Hardware Requirements
 ---------------------
@@ -36,24 +36,20 @@ The eIDAS Middleware communicates with different parties. Therefore a number of 
 
 For a **test system**, the following URLs need to be reachable::
 
-    https://dvca-r1.governikus-eid.de/gov_dvca/ta-service
+    https://dvca-r1.governikus-eid.de/gov_dvca/ta-service-140
     https://dvca-r1.governikus-eid.de/gov_dvca/ri-service
-    https://dvca-r1.governikus-eid.de/gov_dvca/pa-service
-    https://dvca-r1.governikus-eid.de/gov_dvca/certDesc-service
+    https://dvca-r1.governikus-eid.de/gov_dvca/pa-service-140
 
     http://www.bsi.bund.de/test_csca_crl
-    https://www.bsi.bund.de/test_csca_crl
     http://download.gsb.bund.de/BSI/crl/TEST_CSCA_CRL.crl
 
 For a **production system**, the following URLs need to be reachable::
 
-    https://berca-p1.d-trust.net/ps/dvca-at/v1_1
+    https://berca-p1.d-trust.net/ps/dvca-at/v1_4
     https://berca-p1.d-trust.net/ps/dvsd_v2/v1_1
-    https://berca-p1.d-trust.net/ps/scs
-    https://berca-p1.d-trust.net/ps/dvca-at-cert-desc
+    https://berca-p1.d-trust.net/ps/scs/v1_4
 
     http://www.bsi.bund.de/csca_crl
-    https://www.bsi.bund.de/csca_crl
     http://download.gsb.bund.de/BSI/crl/DE_CRL.crl
 
 Additionally, the eIDAS Middleware provides a port to listen for incoming eIDAS authentication requests

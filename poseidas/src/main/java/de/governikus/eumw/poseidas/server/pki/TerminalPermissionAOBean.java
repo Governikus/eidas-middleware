@@ -16,29 +16,18 @@ import java.security.cert.CertificateException;
 import java.security.cert.CertificateFactory;
 import java.security.cert.X509Certificate;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.LinkedHashSet;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.ForkJoinPool;
-import java.util.concurrent.atomic.AtomicLong;
-import java.util.concurrent.locks.ReentrantLock;
 import java.util.stream.Collectors;
-
-import jakarta.xml.bind.DatatypeConverter;
 
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Repository;
 import org.springframework.transaction.annotation.Transactional;
-
-import com.google.common.collect.Lists;
 
 import de.governikus.eumw.config.EidasMiddlewareConfig;
 import de.governikus.eumw.poseidas.cardbase.ArrayUtil;
@@ -49,10 +38,25 @@ import de.governikus.eumw.poseidas.eidmodel.TerminalData;
 import de.governikus.eumw.poseidas.server.idprovider.config.ConfigurationService;
 import de.governikus.eumw.poseidas.server.monitoring.SNMPConstants;
 import de.governikus.eumw.poseidas.server.monitoring.SNMPTrapSender;
-import de.governikus.eumw.poseidas.server.pki.PendingCertificateRequest.Status;
+import de.governikus.eumw.poseidas.server.pki.blocklist.BlockListService;
+import de.governikus.eumw.poseidas.server.pki.blocklist.BlockListStorageException;
+import de.governikus.eumw.poseidas.server.pki.entities.CVCUpdateLock;
+import de.governikus.eumw.poseidas.server.pki.entities.CertInChain;
+import de.governikus.eumw.poseidas.server.pki.entities.CertInChainPK;
+import de.governikus.eumw.poseidas.server.pki.entities.ChangeKeyLock;
+import de.governikus.eumw.poseidas.server.pki.entities.KeyArchive;
+import de.governikus.eumw.poseidas.server.pki.entities.PendingCertificateRequest;
+import de.governikus.eumw.poseidas.server.pki.entities.RequestSignerCertificate;
+import de.governikus.eumw.poseidas.server.pki.entities.TerminalPermission;
+import de.governikus.eumw.poseidas.server.pki.repositories.CVCUpdateLockRepository;
+import de.governikus.eumw.poseidas.server.pki.repositories.CertInChainRepository;
+import de.governikus.eumw.poseidas.server.pki.repositories.ChangeKeyLockRepository;
+import de.governikus.eumw.poseidas.server.pki.repositories.KeyArchiveRepository;
+import de.governikus.eumw.poseidas.server.pki.repositories.PendingCertificateRequestRepository;
+import de.governikus.eumw.poseidas.server.pki.repositories.RequestSignerCertificateRepository;
+import de.governikus.eumw.poseidas.server.pki.repositories.TerminalPermissionRepository;
 import de.governikus.eumw.utils.key.SecurityProvider;
 import lombok.RequiredArgsConstructor;
-import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 
 
@@ -71,14 +75,6 @@ public class TerminalPermissionAOBean implements TerminalPermissionAO
 
   private static final String TERMINAL_PERMISSION_FOR_NOT_FOUND = "TerminalPermission for {} not found";
 
-  private static final int MAX_DB_ARGS = 1_000;
-
-  private static final int BLACKLIST_FLUSH_COUNTER = 5_000;
-
-  private static final ReentrantLock BLACK_LIST_FLUSH_LOCK = new ReentrantLock();
-
-  private static int blacklistStoreCounter;
-
   private final TerminalPermissionRepository terminalPermissionRepository;
 
   private final RequestSignerCertificateRepository requestSignerCertificateRepository;
@@ -87,7 +83,7 @@ public class TerminalPermissionAOBean implements TerminalPermissionAO
 
   private final CVCUpdateLockRepository cvcUpdateLockRepository;
 
-  private final BlackListEntryRepository blackListEntryRepository;
+  private final BlockListService blockListService;
 
   private final PendingCertificateRequestRepository pendingCertificateRequestRepository;
 
@@ -250,267 +246,6 @@ public class TerminalPermissionAOBean implements TerminalPermissionAO
     return terminalPermission.orElse(null);
   }
 
-  /**
-   * {@inheritDoc}
-   */
-  @Override
-  public boolean isOnBlackList(byte[] sectorID, byte[] specificID)
-  {
-    String sectorIDBase64 = DatatypeConverter.printBase64Binary(sectorID);
-    String specificIDBase64 = DatatypeConverter.printBase64Binary(specificID);
-
-    return blackListEntryRepository.existsByKey_SectorIDAndKey_SpecificID(sectorIDBase64, specificIDBase64);
-  }
-
-  /**
-   * {@inheritDoc}
-   */
-  @Override
-  @Transactional
-  public void updateBlackListStoreDate(String refID, byte[] sectorID, Long blackListId)
-  {
-    log.debug("updateBlackListStoreDate called");
-    Optional<TerminalPermission> terminalPermissionOptional = terminalPermissionRepository.findById(refID);
-    if (!terminalPermissionOptional.isPresent())
-    {
-      log.warn(TERMINAL_PERMISSION_FOR_NOT_FOUND, refID);
-      return;
-    }
-
-    TerminalPermission terminalPermission = terminalPermissionOptional.get();
-    if (sectorID != null)
-    {
-      terminalPermission.setSectorID(sectorID);
-    }
-    terminalPermission.setBlackListStoreDate(new Date());
-    if (blackListId != null)
-    {
-      terminalPermission.setBlackListVersion(blackListId);
-    }
-    log.debug("Before saving BlackListStoreDate");
-    terminalPermissionRepository.save(terminalPermission);
-    log.debug("After saving BlackListStoreDate");
-  }
-
-  /**
-   * {@inheritDoc}
-   */
-  @Override
-  @Transactional
-  public boolean replaceBlackList(String refID, byte[] sectorID, List<byte[]> specificIDList)
-  {
-    Optional<TerminalPermission> terminalPermissionOptional = terminalPermissionRepository.findById(refID);
-    if (!terminalPermissionOptional.isPresent())
-    {
-      log.warn(TERMINAL_PERMISSION_FOR_NOT_FOUND, refID);
-      return false;
-    }
-
-    TerminalPermission tp = terminalPermissionOptional.get();
-    String oldSectorID = null;
-    boolean replaceRiKey1 = !Arrays.equals(tp.getSectorID(), sectorID);
-    if (tp.getSectorID() != null)
-    {
-      oldSectorID = DatatypeConverter.printBase64Binary(tp.getSectorID());
-    }
-
-    Set<String> uniqueSpecificIds = getUniqueSpecificIds(specificIDList);
-    String sectorIDBase64 = DatatypeConverter.printBase64Binary(sectorID);
-    List<String> blackListEntries = getBlackListEntries(sectorIDBase64);
-    // remove all blacklist entries in the database but not on the blacklist any more.
-    removeAllNotAnyMoreUsedBlacklistEntries(sectorIDBase64, blackListEntries, uniqueSpecificIds);
-    // add the new entries
-    addBlackListEntries(sectorIDBase64, blackListEntries, uniqueSpecificIds);
-
-    // if the sectorID changed remove all entries for the old sectorID
-    if (replaceRiKey1 && oldSectorID != null)
-    {
-      removeOldSectorID(oldSectorID, sectorIDBase64);
-    }
-    log.debug("Finished replaceBlackList()");
-    return replaceRiKey1;
-  }
-
-  private void removeOldSectorID(String oldSectorID, String sectorIDBase64)
-  {
-    log.debug("SectorID has changed, change all entries with the old SectorID");
-
-    blackListEntryRepository.updateToNewSectorId(oldSectorID, sectorIDBase64);
-  }
-
-  private void removeAllNotAnyMoreUsedBlacklistEntries(String sectorID,
-                                                       List<String> blackListEntries,
-                                                       Set<String> uniqueSpecificIds)
-  {
-    List<String> tmpBlackListEntries = new LinkedList<>(blackListEntries);
-    tmpBlackListEntries.removeAll(uniqueSpecificIds);
-
-    removeSpecificIDs(sectorID, tmpBlackListEntries);
-  }
-
-  private void removeBlackListEntries(String sectorID, Set<String> uniqueSpecificIds)
-  {
-    removeSpecificIDs(sectorID, new LinkedList<>(uniqueSpecificIds));
-  }
-
-  void removeSpecificIDs(String sectorID, List<String> specificIds)
-  {
-    if (specificIds.isEmpty())
-    {
-      return;
-    }
-
-    log.info("{} entries that are no longer blacklisted will be removed", specificIds.size());
-
-    long startTime = System.currentTimeMillis();
-
-    List<List<String>> partitions = Lists.partition(specificIds, MAX_DB_ARGS);
-    AtomicLong deletedCounter = new AtomicLong(0);
-    partitions.parallelStream().forEach(partition -> {
-      blackListEntryRepository.deleteAllByKey_SectorIDAndKey_SpecificIDIn(sectorID, partition);
-      blackListEntryRepository.flush();
-      if (log.isDebugEnabled())
-      {
-        deletedCounter.addAndGet(partition.size());
-        long progress = 100 * deletedCounter.get() / specificIds.size();
-        log.debug("Deleted already {} removed Blacklist Entrys. {} still left to delete. ({}% progress)",
-                  deletedCounter.get(),
-                  specificIds.size() - deletedCounter.get(),
-                  progress);
-      }
-    });
-
-    if (log.isInfoEnabled())
-    {
-      log.info("finished removing {} entries, that are no longer blacklisted. Took {} ms",
-               specificIds.size(),
-               System.currentTimeMillis() - startTime);
-    }
-  }
-
-
-  private List<String> getBlackListEntries(String sectorIDBase64)
-  {
-    List<BlackListEntry> blackListEntries = blackListEntryRepository.findAllByKey_SectorID(sectorIDBase64);
-    return blackListEntries.stream()
-                           .map(blackListEntry -> blackListEntry.getKey().getSpecificID())
-                           .collect(Collectors.toList());
-  }
-
-  /**
-   * {@inheritDoc}
-   */
-  @Override
-  public void addBlackListEntries(byte[] sectorID, List<byte[]> specificIDList)
-  {
-    String sectorIDBase64 = DatatypeConverter.printBase64Binary(sectorID);
-    // We have to ensure that every black listed id id just stored one time into the database.
-    Set<String> uniqueSpecificIds = getUniqueSpecificIds(specificIDList);
-    addBlackListEntries(sectorIDBase64, uniqueSpecificIds);
-  }
-
-  private void addBlackListEntries(String sectorIDBase64, Set<String> uniqueSpecificIds)
-  {
-    List<String> blackListEntries = getBlackListEntries(sectorIDBase64);
-    addBlackListEntries(sectorIDBase64, blackListEntries, uniqueSpecificIds);
-  }
-
-  @SneakyThrows
-  private void addBlackListEntries(String sectorIDBase64,
-                                   List<String> blackListEntries,
-                                   Set<String> inpUniqueSpecificIds)
-  {
-    Set<String> uniqueSpecificIds = new LinkedHashSet<>(inpUniqueSpecificIds);
-    uniqueSpecificIds.removeAll(new LinkedHashSet<>(blackListEntries));
-
-    log.info("{} new blacklist entries will be added", uniqueSpecificIds.size());
-
-    if (uniqueSpecificIds.isEmpty())
-    {
-      return;
-    }
-
-    long startTime = System.currentTimeMillis();
-    blacklistStoreCounter = 0;
-
-    // Limit the number of threads that are used in parallelStream to three. As the timers use one of these threads,
-    // actually only two threads are used for blacklist insertions. More than two threads do not substantially increase
-    // the performance, but increase massively the size of the h2 db.
-    ForkJoinPool forkJoinPool = new ForkJoinPool(3);
-    try
-    {
-      forkJoinPool.submit(() -> uniqueSpecificIds.parallelStream()
-                                                 .map(s -> new BlackListEntry(new BlackListEntryPK(sectorIDBase64, s)))
-                                                 .forEach(this::saveAndFlushIfNeeded))
-                  .get();
-    }
-    catch (InterruptedException | ExecutionException e)
-    {
-      log.debug("Exception during blacklist saving", e);
-      throw e;
-    }
-    finally
-    {
-      forkJoinPool.shutdown();
-    }
-    blackListEntryRepository.flush();
-
-    log.info("Took {} ms for saving {} entries into the database",
-             System.currentTimeMillis() - startTime,
-             uniqueSpecificIds.size());
-  }
-
-  /**
-   * Save a BlacklistEntry and flush after a specific amount.
-   *
-   * @param entry
-   */
-  private void saveAndFlushIfNeeded(BlackListEntry entry)
-  {
-    blackListEntryRepository.save(entry);
-    if (blacklistStoreCounter % BLACKLIST_FLUSH_COUNTER == 0 && BLACK_LIST_FLUSH_LOCK.tryLock())
-    {
-      blackListEntryRepository.flush();
-      log.info("Currently stored entries: {}", blacklistStoreCounter);
-      BLACK_LIST_FLUSH_LOCK.unlock();
-    }
-    blacklistStoreCounter++;
-  }
-
-  private Set<String> getUniqueSpecificIds(List<byte[]> specificIDList)
-  {
-    return specificIDList.stream().map(DatatypeConverter::printBase64Binary).collect(Collectors.toSet());
-  }
-
-  @Override
-  @Transactional
-  public void removeBlackListEntries(String refID, byte[] sectorID, List<byte[]> specificIDList)
-  {
-    Optional<TerminalPermission> tpOptional = terminalPermissionRepository.findById(refID);
-    if (!tpOptional.isPresent())
-    {
-      return;
-    }
-
-    TerminalPermission tp = tpOptional.get();
-    String sectorIDBase64 = DatatypeConverter.printBase64Binary(sectorID);
-    String oldSectorID = null;
-    boolean replaceRiKey1 = !Arrays.equals(tp.getSectorID(), sectorID);
-    if (tp.getSectorID() != null)
-    {
-      oldSectorID = DatatypeConverter.printBase64Binary(tp.getSectorID());
-    }
-
-    // if the sectorID changed change all entries for the old sectorID
-    if (replaceRiKey1 && oldSectorID != null)
-    {
-      removeOldSectorID(oldSectorID, sectorIDBase64);
-    }
-
-    Set<String> uniqueSpecificIds = getUniqueSpecificIds(specificIDList);
-    // Remove all entries still in the database
-    removeBlackListEntries(sectorIDBase64, uniqueSpecificIds);
-  }
 
   @Override
   @Transactional
@@ -546,7 +281,14 @@ public class TerminalPermissionAOBean implements TerminalPermissionAO
     }
     if (terminalPermission.getSectorID() != null)
     {
-      blackListEntryRepository.deleteAllByKey_SectorID(DatatypeConverter.printBase64Binary(terminalPermission.getSectorID()));
+      try
+      {
+        blockListService.removeBlockList(terminalPermission);
+      }
+      catch (BlockListStorageException e)
+      {
+        log.warn("Error while deleting Block List file for terminal permission {}", refId, e);
+      }
     }
     terminalPermissionRepository.delete(terminalPermission);
     return true;
@@ -616,11 +358,10 @@ public class TerminalPermissionAOBean implements TerminalPermissionAO
     if (pending == null)
     {
       pending = new PendingCertificateRequest(refID);
-      pendingCertificateRequestRepository.saveAndFlush(pending);
     }
     else
     {
-      pending.setStatus(Status.CREATED);
+      pending.setStatus(PendingCertificateRequest.Status.CREATED);
     }
     pending.setRequestData(request);
     pending.setPrivateKey(privKey);
@@ -631,14 +372,15 @@ public class TerminalPermissionAOBean implements TerminalPermissionAO
       storeCertInChain(chain, tp);
     }
 
-    tp.setPendingRequest(pending);
-    Integer usedSequenceNumber = ServiceProviderDetails.getNumberOfCHR(CVCRequestHandler.getHolderReferenceStringOfPendingRequest(pending));
+    PendingCertificateRequest savedPendingCertificateRequest = pendingCertificateRequestRepository.saveAndFlush(pending);
+
+    tp.setPendingRequest(savedPendingCertificateRequest);
+    Integer usedSequenceNumber = ServiceProviderDetails.getNumberOfCHR(CVCRequestHandler.getHolderReferenceStringOfPendingRequest(savedPendingCertificateRequest));
     if (usedSequenceNumber != null)
     {
       tp.setNextCvcSequenceNumber(usedSequenceNumber);
     }
 
-    pendingCertificateRequestRepository.saveAndFlush(pending);
     terminalPermissionRepository.saveAndFlush(tp);
   }
 
@@ -651,7 +393,7 @@ public class TerminalPermissionAOBean implements TerminalPermissionAO
       log.error("Could not find refID: {}", refID);
       return;
     }
-    tp.getPendingRequest().setStatus(Status.SENT);
+    tp.getPendingRequest().setStatus(PendingCertificateRequest.Status.SENT);
     terminalPermissionRepository.saveAndFlush(tp);
   }
 
@@ -732,7 +474,7 @@ public class TerminalPermissionAOBean implements TerminalPermissionAO
     }
 
     TerminalPermission tp = tpOptional.get();
-    tp.getPendingRequest().setStatus(Status.FAILURE);
+    tp.getPendingRequest().setStatus(PendingCertificateRequest.Status.FAILURE);
     tp.getPendingRequest().setAdditionalInfo(additionalInfo);
   }
 
@@ -941,13 +683,6 @@ public class TerminalPermissionAOBean implements TerminalPermissionAO
   }
 
   @Override
-  public Long getNumberBlacklistEntries(byte[] sectorID)
-  {
-    String sectorIDBase64 = DatatypeConverter.printBase64Binary(sectorID);
-    return blackListEntryRepository.countSpecifcIdWhereSectorId(sectorIDBase64);
-  }
-
-  @Override
   public List<String> getTerminalPermissionRefIDList()
   {
     return terminalPermissionRepository.findAll(Sort.by(Sort.Direction.ASC, "notOnOrAfter"))
@@ -991,14 +726,46 @@ public class TerminalPermissionAOBean implements TerminalPermissionAO
     return rsc.getKey().getPosInChain();
   }
 
+  public RequestSignerCertificate.Status getPendingRscStatus(String refID)
+  {
+    Optional<TerminalPermission> tpOptional = terminalPermissionRepository.findById(refID);
+    if (tpOptional.isEmpty())
+    {
+      log.error("RefID does not exist");
+      return null;
+    }
+    RequestSignerCertificate rsc = tpOptional.get().getPendingRequestSignerCertificate();
+    if (rsc == null)
+    {
+      return null;
+    }
+    return rsc.getStatus();
+  }
+
+  public void setPendingRscStatusFailed(String refID)
+  {
+    Optional<TerminalPermission> tpOptional = terminalPermissionRepository.findById(refID);
+    if (tpOptional.isEmpty())
+    {
+      log.error("RefID does not exist");
+      return;
+    }
+    RequestSignerCertificate rsc = tpOptional.get().getPendingRequestSignerCertificate();
+    if (rsc == null)
+    {
+      return;
+    }
+    rsc.setStatus(RequestSignerCertificate.Status.FAILURE);
+    requestSignerCertificateRepository.saveAndFlush(rsc);
+  }
+
   /**
    * {@inheritDoc}
    */
   @Override
   @Transactional
-  public void makePendingRscToCurrentRsc(String refID)
+  public void makePendingRscToCurrentRsc(String refID, boolean deletePendingCertificateRequest)
   {
-    String logText;
     Optional<TerminalPermission> terminalPermissionOptional = terminalPermissionRepository.findById(refID);
     if (!terminalPermissionOptional.isPresent())
     {
@@ -1024,6 +791,14 @@ public class TerminalPermissionAOBean implements TerminalPermissionAO
 
     terminalPermission.setCurrentRequestSignerCertificate(terminalPermission.getPendingRequestSignerCertificate());
     terminalPermission.setPendingRequestSignerCertificate(null);
+    // if there is a pending CVC request (signed by old RSC), the DVCA will no longer accept it, so it must be created
+    // again with new sequence number and signed by new RSC
+    if (terminalPermission.getPendingRequest() != null && deletePendingCertificateRequest)
+    {
+      terminalPermission.increaseSequenceNumber();
+      terminalPermission.setPendingRequest(null);
+    }
+    terminalPermission.setAutomaticRscRenewFailed(null);
 
     terminalPermissionRepository.saveAndFlush(terminalPermission);
     log.info("{}: Successfully set current request signer certificate", refID);
@@ -1039,7 +814,7 @@ public class TerminalPermissionAOBean implements TerminalPermissionAO
     throws TerminalPermissionNotFoundException
   {
     Optional<TerminalPermission> terminalPermissionOptional = terminalPermissionRepository.findById(refID);
-    if (!terminalPermissionOptional.isPresent())
+    if (terminalPermissionOptional.isEmpty())
     {
       log.error("Could not set pending RSC for {}. RefID does not exist.", refID);
       throw new TerminalPermissionNotFoundException();
@@ -1048,23 +823,39 @@ public class TerminalPermissionAOBean implements TerminalPermissionAO
     TerminalPermission terminalPermission = terminalPermissionOptional.get();
     RequestSignerCertificate oldRequestSignerCertificate = terminalPermission.getPendingRequestSignerCertificate();
     terminalPermission.setPendingRequestSignerCertificate(pendingRequestSignerCertificate);
+    terminalPermission.setAutomaticRscRenewFailed(null);
     if (oldRequestSignerCertificate != null)
     {
       requestSignerCertificateRepository.delete(oldRequestSignerCertificate);
     }
-    requestSignerCertificateRepository.save(pendingRequestSignerCertificate);
+    if (pendingRequestSignerCertificate != null)
+    {
+      requestSignerCertificateRepository.save(pendingRequestSignerCertificate);
+    }
     terminalPermissionRepository.saveAndFlush(terminalPermission);
   }
 
+  /**
+   * {@inheritDoc}
+   */
   @Override
-  public X509Certificate getRequestSignerCertificate(String refID)
+  public void deletePendingRequestSignerCertificate(String refID) throws TerminalPermissionNotFoundException
   {
-    X509Certificate pending = getRequestSignerCertificate(refID, false);
-    if (pending == null)
+    setPendingRequestSignerCertificate(refID, null);
+  }
+
+  @Override
+  public void setAutomaticCvcRenewFailed(String refID, boolean isCvcRenewalFailed)
+  {
+    Optional<TerminalPermission> terminalPermissionOptional = terminalPermissionRepository.findById(refID);
+    if (terminalPermissionOptional.isEmpty())
     {
-      return getRequestSignerCertificate(refID, true);
+      log.error("Could not set automatic cvc renewal failed for {}. RefID does not exist.", refID);
+      return;
     }
-    return pending;
+    TerminalPermission terminalPermission = terminalPermissionOptional.get();
+    terminalPermission.setAutomaticCvcRenewFailed(isCvcRenewalFailed);
+    terminalPermissionRepository.saveAndFlush(terminalPermission);
   }
 
   @Override
@@ -1188,24 +979,34 @@ public class TerminalPermissionAOBean implements TerminalPermissionAO
       return;
     }
     TerminalPermission permission = tp.get();
-    Integer counter = permission.getNextCvcSequenceNumber();
+    permission.increaseSequenceNumber();
+    terminalPermissionRepository.saveAndFlush(permission);
+  }
 
-    // should not happen because we store it on creating the CVC request
-    // and this method should only be called when receiving the response
-    if (counter == null)
+  @Override
+  public void setAutomaticRscRenewFailed(String refID, String cause)
+  {
+    Optional<TerminalPermission> terminalPermissionOptional = terminalPermissionRepository.findById(refID);
+    if (terminalPermissionOptional.isEmpty())
     {
+      log.error("Could not set automatic RSC renewal failed for {}. RefID does not exist.", refID);
       return;
     }
+    TerminalPermission terminalPermission = terminalPermissionOptional.get();
+    terminalPermission.setAutomaticRscRenewFailed(cause);
+    terminalPermissionRepository.saveAndFlush(terminalPermission);
+  }
 
-    if (counter == 99999)
+  @Override
+  public String getAutomaticRscRenewFailed(String refID)
+  {
+    Optional<TerminalPermission> terminalPermissionOptional = terminalPermissionRepository.findById(refID);
+    if (terminalPermissionOptional.isEmpty())
     {
-      counter = 1;
+      log.error("Could not get automatic RSC renewal failed for {}. RefID does not exist.", refID);
+      return null;
     }
-    else
-    {
-      counter++;
-    }
-    permission.setNextCvcSequenceNumber(counter);
-    terminalPermissionRepository.saveAndFlush(permission);
+    TerminalPermission terminalPermission = terminalPermissionOptional.get();
+    return terminalPermission.getAutomaticRscRenewFailed();
   }
 }

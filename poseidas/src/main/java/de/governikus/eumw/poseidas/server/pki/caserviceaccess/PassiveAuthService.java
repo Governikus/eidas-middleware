@@ -13,16 +13,15 @@ import java.net.URISyntaxException;
 
 import jakarta.xml.ws.BindingProvider;
 
+import de.governikus.eumw.poseidas.services.passive.auth.wsdl.v1_4_0.CallbackIndicatorType;
+import de.governikus.eumw.poseidas.services.passive.auth.wsdl.v1_4_0.GetDefectListRequest;
+import de.governikus.eumw.poseidas.services.passive.auth.wsdl.v1_4_0.GetDefectListResult;
+import de.governikus.eumw.poseidas.services.passive.auth.wsdl.v1_4_0.GetMasterListRequest;
+import de.governikus.eumw.poseidas.services.passive.auth.wsdl.v1_4_0.GetMasterListResult;
+import de.governikus.eumw.poseidas.services.passive.auth.wsdl.v1_4_0.GetReturnCodeType;
+import de.governikus.eumw.poseidas.services.passive.auth.wsdl.v1_4_0.PassiveAuthWebService_1_4_0;
+import de.governikus.eumw.poseidas.services.passive.auth.wsdl.v1_4_0.PassiveAuthWebserviceClient_1_4_0;
 import lombok.extern.slf4j.Slf4j;
-import uri.eac_pki_is_protocol._1.passiveAuth.dv.EACDVProtocolService;
-import uri.eac_pki_is_protocol._1.passiveAuth.dv.EACPKIDVProtocolType;
-import uri.eacbt._1.passiveAuth.dv.CallbackIndicatorType;
-import uri.eacbt._1.passiveAuth.dv.GetDefectListResult;
-import uri.eacbt._1.passiveAuth.dv.GetDefectListReturnCodeType;
-import uri.eacbt._1.passiveAuth.dv.GetMasterListResult;
-import uri.eacbt._1.passiveAuth.dv.GetMasterListReturnCodeType;
-import uri.eacbt._1.passiveAuth.dv.OptionalMessageIDType;
-import uri.eacbt._1.passiveAuth.dv.OptionalStringType;
 
 
 /**
@@ -35,26 +34,26 @@ import uri.eacbt._1.passiveAuth.dv.OptionalStringType;
 public class PassiveAuthService
 {
 
-  private static final OptionalMessageIDType EMPTY_MESSAGE_ID = new OptionalMessageIDType();
-  private static final OptionalStringType EMPTY_RESPONSE_URL = new OptionalStringType();
-  private final EACPKIDVProtocolType port;
+  private final PassiveAuthWebService_1_4_0 port;
 
 
-  public PassiveAuthService(PKIServiceConnector con, String uri) throws URISyntaxException
+  PassiveAuthService(PKIServiceConnector con, String uri) throws URISyntaxException
   {
-    EACDVProtocolService service = new EACDVProtocolService(getClass().getResource("/META-INF/wsdl/CA-Services/PassiveAuth/WS_DV_PassiveAuth.wsdl"));
-    EACPKIDVProtocolType tmpPort = service.getEACDVProtocolServicePort();
+    PassiveAuthWebserviceClient_1_4_0 service = new PassiveAuthWebserviceClient_1_4_0(getClass().getResource("META-INF/wsdl/CA-Services-1-4-0/part-3/passiveAuth/WS_DV_PassiveAuth.wsdl"));
+    PassiveAuthWebService_1_4_0 tmpPort = service.getEACDVProtocolServicePort();
     con.setHttpsConnectionSetting((BindingProvider)tmpPort, uri);
+    con.setMessageLogger((BindingProvider)tmpPort);
     port = tmpPort;
   }
 
 
   public byte[] getMasterList()
   {
-    GetMasterListResult mResult = port.getMasterList(CallbackIndicatorType.CALLBACK_NOT_POSSIBLE,
-                                                     EMPTY_MESSAGE_ID,
-                                                     EMPTY_RESPONSE_URL);
-    if (GetMasterListReturnCodeType.OK_LIST_AVAILABLE != mResult.getReturnCode())
+    GetMasterListRequest masterListRequest = new GetMasterListRequest();
+    masterListRequest.setCallbackIndicator(CallbackIndicatorType.CALLBACK_NOT_POSSIBLE);
+
+    GetMasterListResult mResult = port.getMasterList(masterListRequest);
+    if (GetReturnCodeType.OK_LIST_AVAILABLE != mResult.getReturnCode())
     {
       log.error("Could not receive master list. The return code from the server was: {}", mResult.getReturnCode());
       return null;
@@ -65,15 +64,16 @@ public class PassiveAuthService
 
   public byte[] getDefectList()
   {
-    GetDefectListResult mResult = port.getDefectList(CallbackIndicatorType.CALLBACK_NOT_POSSIBLE,
-                                                     EMPTY_MESSAGE_ID,
-                                                     EMPTY_RESPONSE_URL);
-    if (GetDefectListReturnCodeType.OK_LIST_AVAILABLE != mResult.getReturnCode())
+    GetDefectListRequest defectListRequest = new GetDefectListRequest();
+
+    defectListRequest.setCallbackIndicator(CallbackIndicatorType.CALLBACK_NOT_POSSIBLE);
+
+    GetDefectListResult mResult = port.getDefectList(defectListRequest);
+    if (GetReturnCodeType.OK_LIST_AVAILABLE != mResult.getReturnCode())
     {
       log.error("Could not receive defect list. The return code from the server was: {}", mResult.getReturnCode());
       return null;
     }
     return mResult.getDefectList().getBinary();
   }
-
 }

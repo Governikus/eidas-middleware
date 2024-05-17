@@ -262,7 +262,6 @@ class ConfigurationMigrationServiceTest
     Assertions.assertEquals(terminalAuthUrl, dvca.get(0).getTerminalAuthServiceUrl());
     Assertions.assertEquals(restrictedIdUrl, dvca.get(0).getRestrictedIdServiceUrl());
     Assertions.assertEquals(passiveAuthUrl, dvca.get(0).getPassiveAuthServiceUrl());
-    Assertions.assertEquals(certDescUrl, dvca.get(0).getDvcaCertificateDescriptionServiceUrl());
     Assertions.assertEquals(name + BLACK_LIST_TRUST_ANCHOR, dvca.get(0).getBlackListTrustAnchorCertificateName());
     Assertions.assertEquals(name + MASTER_LIST_TRUST_ANCHOR, dvca.get(0).getMasterListTrustAnchorCertificateName());
     Assertions.assertEquals(name + SERVER_CERTIFICATE, dvca.get(0).getServerSSLCertificateName());

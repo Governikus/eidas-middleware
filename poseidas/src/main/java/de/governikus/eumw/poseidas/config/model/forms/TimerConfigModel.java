@@ -51,4 +51,19 @@ public class TimerConfigModel
 
   @NotNull(message = "Has to be selected")
   private TimerUnit crlRenewalUnit;
+
+  @Positive
+  @NotNull(message = "May not be empty")
+  private Integer tlsEntangleRenewalLength;
+
+  @NotNull(message = "Has to be selected")
+  private TimerUnit tlsEntangleRenewalUnit;
+
+  private boolean automaticTlsEntangleActive;
+
+  @Positive
+  private Integer daysRefreshRscBeforeExpiration;
+
+  @Positive
+  private Integer daysRefreshTlsClientBeforeExpiration;
 }

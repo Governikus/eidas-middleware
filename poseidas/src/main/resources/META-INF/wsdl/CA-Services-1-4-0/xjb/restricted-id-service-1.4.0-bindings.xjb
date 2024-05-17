@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<jaxws:bindings xmlns:jaxws="https://jakarta.ee/xml/ns/jaxws" version="3.0">
+
+    <!-- this binding selects the service node from the WSDL file and tells JAXB to generate a class with name
+         RestrictedIdWebserviceClient from it. Without this binding the class would be named "EACDVProtocolService" -->
+    <jaxws:bindings node="/*[local-name()='definitions']/*[local-name()='service']">
+        <jaxws:class name="RestrictedIdWebserviceClient_1_4_0"/>
+    </jaxws:bindings>
+    <!-- this binding selects the portType node from the WSDL file and tells JAXB to generate a class with name
+         RestrictedIdWebService from it. Without this binding the class would be named "EACPKIDVProtocolType" -->
+    <jaxws:bindings node="/*[local-name()='definitions']/*[local-name()='portType']">
+        <jaxws:class name="RestrictedIdWebService_1_4_0"/>
+    </jaxws:bindings>
+
+</jaxws:bindings>

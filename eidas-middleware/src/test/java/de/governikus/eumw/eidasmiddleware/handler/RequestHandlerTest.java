@@ -131,22 +131,22 @@ class RequestHandlerTest
     RequestProcessingException requestProcessingException = Assertions.assertThrows(RequestProcessingException.class,
                                                                                     () -> requestHandler.handleSAMLPostRequest(null,
                                                                                                                                null));
-    Assertions.assertEquals(requestProcessingException.getCause().getClass(), ErrorCodeException.class);
+    Assertions.assertEquals(ErrorCodeException.class, requestProcessingException.getCause().getClass());
 
     // saml request null with POST
     requestProcessingException = Assertions.assertThrows(RequestProcessingException.class,
                                                          () -> requestHandler.handleSAMLPostRequest(RELAY_STATE, null));
-    Assertions.assertEquals(requestProcessingException.getCause().getClass(), ErrorCodeException.class);
+    Assertions.assertEquals(ErrorCodeException.class, requestProcessingException.getCause().getClass());
 
-    // both parameters emtpy String with POST
+    // both parameters empty String with POST
     requestProcessingException = Assertions.assertThrows(RequestProcessingException.class,
                                                          () -> requestHandler.handleSAMLPostRequest("", ""));
-    Assertions.assertEquals(requestProcessingException.getCause().getClass(), SAXParseException.class);
+    Assertions.assertEquals(IllegalArgumentException.class, requestProcessingException.getCause().getClass());
 
-    // saml request emtpy String with POST
+    // saml request empty String with POST
     requestProcessingException = Assertions.assertThrows(RequestProcessingException.class,
                                                          () -> requestHandler.handleSAMLPostRequest(RELAY_STATE, ""));
-    Assertions.assertEquals(requestProcessingException.getCause().getClass(), SAXParseException.class);
+    Assertions.assertEquals(IllegalArgumentException.class, requestProcessingException.getCause().getClass());
   }
 
   /**

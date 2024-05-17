@@ -23,9 +23,9 @@ import de.governikus.eumw.poseidas.cardbase.asn1.npa.ECCVCertificate;
 import de.governikus.eumw.poseidas.cardserver.certrequest.CvcRequestGenerator;
 import de.governikus.eumw.poseidas.gov2server.constants.admin.AdminPoseidasConstants;
 import de.governikus.eumw.poseidas.server.pki.CVCRequestHandler;
-import de.governikus.eumw.poseidas.server.pki.PendingCertificateRequest;
-import de.governikus.eumw.poseidas.server.pki.TerminalPermission;
 import de.governikus.eumw.poseidas.server.pki.TerminalPermissionAOBean;
+import de.governikus.eumw.poseidas.server.pki.entities.PendingCertificateRequest;
+import de.governikus.eumw.poseidas.server.pki.entities.TerminalPermission;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
@@ -415,5 +415,10 @@ public class ServiceProviderDetails
   public boolean isEnabled()
   {
     return this.entry.isEnabled();
+  }
+
+  public String getCurrentTlsClientKeyPairName()
+  {
+    return entry.getClientKeyPairName();
   }
 }

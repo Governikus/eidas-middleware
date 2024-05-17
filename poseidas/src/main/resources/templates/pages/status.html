@@ -2,14 +2,14 @@
 <html th:replace="~{base-template/main :: main(~{::title}, ~{::section})}"
       xmlns:th="http://www.thymeleaf.org">
 
-<title>Status - eIDAS Middleware configuration and administration</title>
+<title>eIDAS Middleware configuration and administration</title>
 
 <section>
     <div class="row">
         <div class="col-auto"><h1>Status of the eIDAS Middleware</h1></div>
         <div class="col row d-flex align-items-center" th:if="${valuesAvailable}">
             <div class="col-auto">
-                <form action="#" th:action="@{/admin-interface/status}" method=get>
+                <form action="#" th:action="@{/admin-interface/dashboard}" method=get>
                     <input type="submit" class="btn btn-primary" value="Start check"/>
                 </form>
             </div>
@@ -75,16 +75,28 @@
                         </div>
                         <div class="card-body">
                             <div class="row" th:id="${entity.key}">
-                                <div class="col text-wrap" id="cvc">
+                                <div class="col-auto text-wrap" id="cvc">
                                     <!-- CVC area -->
                                     <h6>CVC</h6>
                                     Present: <span th:text="${entity.value.cvcPresent ? '✔' : '❌'}"/><br>
-                                    Valid until: <br><span
+                                    Ref ID: <span
+                                        th:text="${entity.value.cvcPresent ? entity.value.cvcRefId : '-'}"/><br>
+                                    CHR: <span
+                                        th:text="${entity.value.cvcPresent ? entity.value.cvcChr : '-'}"/><br>
+                                    CAR: <span
+                                        th:text="${entity.value.cvcPresent ? entity.value.cvcCar : '-'}"/><br>
+                                    Valid from: <span
+                                        th:text="${entity.value.cvcPresent ? entity.value.cvcValidFrom : '-'}"/><br>
+                                    Valid until: <span
                                         th:text="${entity.value.cvcPresent ? entity.value.cvcValidUntil : '-'}"/><br>
                                     Matches TLS: <span
                                         th:text="${entity.value.cvcPresent ? (entity.value.cvcTLSLinkStatus ? '✔':'❌') : '-'}"/><br>
                                     Matches URL: <span
                                         th:text="${entity.value.cvcPresent ? (entity.value.cvcUrlMatch ? '✔':'❌') : '-'}"/>
+                                    <div th:if="${entity.value.isAutomaticCvcRenewalFailed()} AND ${entity.value.isCvcValidity()}"
+                                         class="bg-danger text-white">
+                                        The automatic CVC renewal failed. Please start a manual renewal.
+                                    </div>
                                 </div>
                                 <!-- RSC area -->
                                 <div class="col" id="rsc">
@@ -93,12 +105,12 @@
                                         th:text="${entity.value.rscCurrentValidUntil != null ? '✔' : '❌'}"/><br>
                                     Valid until:<br><span
                                         th:text="${entity.value.rscCurrentValidUntil == null ? '-' : entity.value.rscCurrentValidUntil}"/><br>
-                                    Pending available: <span
-                                        th:text="${entity.value.rscPendingPresent ? '✔' : '❌'}"/>
+                                    Pending available: <span th:classappend="${entity.value.rscRenewalError == null ? '' : 'bg-danger text-white'}"
+                                        th:utext="${entity.value.rscRenewalError != null ? ('⚠<br/>Error in automatic RSC renewal: ' + entity.value.rscRenewalError) : entity.value.rscPendingPresent ? '✔' : '❌'}"/>
                                 </div>
-                                <!-- Blacklist area -->
+                                <!-- BlockList area -->
                                 <div class="col border-left" id="blackList">
-                                    <h6>Black List</h6>
+                                    <h6>Block List</h6>
                                     Available: <span
                                         th:text="${entity.value.blackListPresent ? '✔' : '❌'}"/><br>
                                     Last renewal:<br><span

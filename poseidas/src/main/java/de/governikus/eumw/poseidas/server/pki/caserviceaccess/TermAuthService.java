@@ -19,42 +19,64 @@ import java.util.Map.Entry;
 
 import jakarta.xml.ws.BindingProvider;
 
+import org.apache.commons.lang3.ArrayUtils;
+
 import de.governikus.eumw.poseidas.eidmodel.TerminalData;
 import de.governikus.eumw.poseidas.gov2server.GovManagementException;
 import de.governikus.eumw.poseidas.gov2server.constants.admin.GlobalManagementCodes;
-import uri.eac_pki_is_protocol._1.termAuth.dv.EACDVProtocolService;
-import uri.eac_pki_is_protocol._1.termAuth.dv.EACPKIDVProtocolType;
-import uri.eacbt._1.termAuth.dv.CallbackIndicatorType;
-import uri.eacbt._1.termAuth.dv.GetCACertificatesResult;
-import uri.eacbt._1.termAuth.dv.GetCACertificatesReturnCodeType;
-import uri.eacbt._1.termAuth.dv.OptionalMessageIDType;
-import uri.eacbt._1.termAuth.dv.OptionalStringType;
-import uri.eacbt._1.termAuth.dv.RequestCertificateResult;
-import uri.eacbt._1.termAuth.dv.RequestCertificateReturnCodeType;
+import de.governikus.eumw.poseidas.services.terminal.auth.wsdl.v1_4_0.CallbackIndicatorType;
+import de.governikus.eumw.poseidas.services.terminal.auth.wsdl.v1_4_0.CertificateReference;
+import de.governikus.eumw.poseidas.services.terminal.auth.wsdl.v1_4_0.ConditionalCertificateSeqType;
+import de.governikus.eumw.poseidas.services.terminal.auth.wsdl.v1_4_0.GetCertificateDescriptionRequest;
+import de.governikus.eumw.poseidas.services.terminal.auth.wsdl.v1_4_0.GetCertificateDescriptionResult;
+import de.governikus.eumw.poseidas.services.terminal.auth.wsdl.v1_4_0.GetCertificatesDescriptionReturnCodeType;
+import de.governikus.eumw.poseidas.services.terminal.auth.wsdl.v1_4_0.GetCertificatesRequest;
+import de.governikus.eumw.poseidas.services.terminal.auth.wsdl.v1_4_0.GetCertificatesResult;
+import de.governikus.eumw.poseidas.services.terminal.auth.wsdl.v1_4_0.GetCertificatesReturnCodeType;
+import de.governikus.eumw.poseidas.services.terminal.auth.wsdl.v1_4_0.GetPKICommunicationCertRequest;
+import de.governikus.eumw.poseidas.services.terminal.auth.wsdl.v1_4_0.GetPKICommunicationCertResult;
+import de.governikus.eumw.poseidas.services.terminal.auth.wsdl.v1_4_0.GetPKICommunicationCertReturnCodeType;
+import de.governikus.eumw.poseidas.services.terminal.auth.wsdl.v1_4_0.OptionalNoPollBeforeType;
+import de.governikus.eumw.poseidas.services.terminal.auth.wsdl.v1_4_0.RequestCertificateRequest;
+import de.governikus.eumw.poseidas.services.terminal.auth.wsdl.v1_4_0.RequestCertificateResult;
+import de.governikus.eumw.poseidas.services.terminal.auth.wsdl.v1_4_0.RequestCertificateReturnCodeType;
+import de.governikus.eumw.poseidas.services.terminal.auth.wsdl.v1_4_0.RequestPKICommunicationCertRequest;
+import de.governikus.eumw.poseidas.services.terminal.auth.wsdl.v1_4_0.RequestPKICommunicationCertResult;
+import de.governikus.eumw.poseidas.services.terminal.auth.wsdl.v1_4_0.RequestPKICommunicationCertReturnCodeType;
+import de.governikus.eumw.poseidas.services.terminal.auth.wsdl.v1_4_0.SendRSCCertRequest;
+import de.governikus.eumw.poseidas.services.terminal.auth.wsdl.v1_4_0.SendRSCCertResult;
+import de.governikus.eumw.poseidas.services.terminal.auth.wsdl.v1_4_0.SendRSCCertReturnCodeType;
+import de.governikus.eumw.poseidas.services.terminal.auth.wsdl.v1_4_0.SendeIDServerCertsRequest;
+import de.governikus.eumw.poseidas.services.terminal.auth.wsdl.v1_4_0.SendeIDServerCertsReturnCodeType;
+import de.governikus.eumw.poseidas.services.terminal.auth.wsdl.v1_4_0.TerminalAuthWebService_1_4_0;
+import de.governikus.eumw.poseidas.services.terminal.auth.wsdl.v1_4_0.TerminalAuthWebserviceClient_1_4_0;
+import lombok.Getter;
+import lombok.RequiredArgsConstructor;
 
 
 /**
- * Wrapper around uri.eac_pki_is_protocol._1_1.termAuth.dv.EACDVProtocolService
+ * Wrapper around Terminal Auth for version 1.4.0
  *
  * @author tautenhahn
  */
 public class TermAuthService
 {
 
-  private final EACPKIDVProtocolType port;
+  private final TerminalAuthWebService_1_4_0 port;
 
   /**
    * create new instance
    *
-   * @param con
-   * @param uri
+   * @param con the PKI Service Connector
+   * @param uri the URI to send the calls
    * @throws URISyntaxException
    */
-  public TermAuthService(PKIServiceConnector con, String uri) throws URISyntaxException
+  TermAuthService(PKIServiceConnector con, String uri) throws URISyntaxException
   {
-    EACDVProtocolService service = new EACDVProtocolService(getClass().getResource("/META-INF/wsdl/CA-Services/TermAuth/WS_DV_TerminalAuth.wsdl"));
-    EACPKIDVProtocolType tmpPort = service.getEACDVProtocolServicePort();
+    TerminalAuthWebserviceClient_1_4_0 service = new TerminalAuthWebserviceClient_1_4_0(getClass().getResource("/META-INF/wsdl/CA-Services-1-4-0/part-3/termAuth/WS_DV_TerminalAuth.wsdl"));
+    TerminalAuthWebService_1_4_0 tmpPort = service.getEACDVProtocolServicePort();
     con.setHttpsConnectionSetting((BindingProvider)tmpPort, uri);
+    con.setMessageLogger((BindingProvider)tmpPort);
     port = tmpPort;
   }
 
@@ -64,7 +86,7 @@ public class TermAuthService
    *
    * @param certList list of certificates
    */
-  protected static byte[] getCertificate(List<byte[]> certList)
+  private static byte[] getCertificate(List<byte[]> certList)
   {
     Map<String, TerminalData> caRefMap = new HashMap<>();
     for ( byte[] cvcBytes : certList )
@@ -91,43 +113,156 @@ public class TermAuthService
 
   public byte[][] getCACertificates() throws GovManagementException
   {
-    OptionalMessageIDType id = new OptionalMessageIDType();
-    OptionalStringType responseURL = new OptionalStringType();
-    GetCACertificatesResult result = port.getCACertificates(CallbackIndicatorType.CALLBACK_NOT_POSSIBLE,
-                                                            id,
-                                                            responseURL);
-    GetCACertificatesReturnCodeType code = result.getReturnCode();
-    if (!GetCACertificatesReturnCodeType.OK_CERT_AVAILABLE.equals(code))
+    GetCertificatesRequest certificatesRequest = new GetCertificatesRequest();
+    certificatesRequest.setCallbackIndicator(CallbackIndicatorType.CALLBACK_NOT_POSSIBLE);
+    CertificateReference certificateReference = new CertificateReference();
+    // The DVCA ignores the certificate reference and always sends the whole chain. Therefore, we just send an empty
+    // byte array
+    certificateReference.setValue(ArrayUtils.EMPTY_BYTE_ARRAY);
+    certificatesRequest.setCertReference(certificateReference);
+
+    GetCertificatesResult result = port.getCertificates(certificatesRequest);
+    GetCertificatesReturnCodeType code = result.getReturnCode();
+    if (GetCertificatesReturnCodeType.OK_CERT_AVAILABLE != code)
     {
-      throw new GovManagementException(GlobalManagementCodes.EC_UNEXPECTED_ERROR, "getCACerts returned " + code);
+      throw new GovManagementException(GlobalManagementCodes.EC_UNEXPECTED_ERROR, "GetCertificates returned " + code);
     }
     List<byte[]> certSeq = result.getCertificateSeq().getCertificate();
     return certSeq.toArray(new byte[certSeq.size()][]);
   }
 
-  public byte[] requestCertificate(byte[] request, String messageId, String returnUrl) throws GovManagementException
+  /**
+   * Request a generation of a new certificate from the DVCA. This message is processed synchronously.
+   *
+   * @param request the certificate request as byte array
+   * @return the new certificate as byte array
+   * @throws GovManagementException when the return code is not ok_cert_available
+   */
+  public byte[] requestCertificate(byte[] request) throws GovManagementException
   {
-    boolean isAsync = returnUrl != null;
-    OptionalMessageIDType id = new OptionalMessageIDType();
-    OptionalStringType responseURL = new OptionalStringType();
-    if (isAsync)
-    {
-      id.setMessageID(messageId);
-      responseURL.setString(returnUrl);
-    }
-    CallbackIndicatorType callbackIndicator = isAsync ? CallbackIndicatorType.CALLBACK_POSSIBLE
-      : CallbackIndicatorType.CALLBACK_NOT_POSSIBLE;
-
-    RequestCertificateResult result = port.requestCertificate(callbackIndicator, id, responseURL, request);
+    RequestCertificateRequest certificateRequest = new RequestCertificateRequest();
+    certificateRequest.setCallbackIndicator(CallbackIndicatorType.CALLBACK_NOT_POSSIBLE);
+    certificateRequest.setCertReq(request);
+    RequestCertificateResult result = port.requestCertificate(certificateRequest);
 
     RequestCertificateReturnCodeType returnCode = result.getReturnCode();
-    RequestCertificateReturnCodeType expected = isAsync ? RequestCertificateReturnCodeType.OK_SYNTAX
-      : RequestCertificateReturnCodeType.OK_CERT_AVAILABLE;
-    if (returnCode != expected)
+    if (RequestCertificateReturnCodeType.OK_CERT_AVAILABLE != returnCode)
     {
       throw new GovManagementException(GlobalManagementCodes.EC_UNEXPECTED_ERROR,
                                        "send request returned " + returnCode);
     }
-    return isAsync ? null : getCertificate(result.getCertificateSeq().getCertificate());
+    return getCertificate(result.getCertificateSeq().getCertificate());
+  }
+
+  /**
+   * Returns a certificate Description for a given hash.
+   *
+   * @param hash the hash of the certificate description
+   */
+  public byte[] getCertificateDescription(byte[] hash) throws GovManagementException
+  {
+    GetCertificateDescriptionRequest request = new GetCertificateDescriptionRequest();
+    request.setHash(hash);
+    GetCertificateDescriptionResult result = port.getCertificateDescription(request);
+    GetCertificatesDescriptionReturnCodeType returnCode = result.getReturnCode();
+    if (GetCertificatesDescriptionReturnCodeType.OK_RECEIVED_CORRECTLY != returnCode)
+    {
+      throw new GovManagementException(GlobalManagementCodes.EC_UNEXPECTED_ERROR,
+                                       "send request returned " + returnCode);
+    }
+    return result.getCertificateDescription().getCertificateDescription();
+  }
+
+  /**
+   * Send a new TLS certificate to the DVCA for entanglement.
+   *
+   * @param cmsData CMS containing the new TLS certificated signed with a RSC
+   * @throws GovManagementException
+   */
+  public void sendeIDServerCerts(byte[] cmsData) throws GovManagementException
+  {
+    SendeIDServerCertsRequest request = new SendeIDServerCertsRequest();
+    request.setCmsContainer(cmsData);
+    var result = port.sendeIDServerCerts(request);
+    SendeIDServerCertsReturnCodeType returnCode = result.getReturnCode();
+    if (SendeIDServerCertsReturnCodeType.OK_ENTANGLEMENT_SUCCESSFUL != returnCode)
+    {
+      throw new GovManagementException(GlobalManagementCodes.EC_UNEXPECTED_ERROR,
+                                       "send request returned %s".formatted(returnCode));
+    }
+  }
+
+  /**
+   * Send a new RSC to the DVCA.
+   *
+   * @param cms CMS containing the new RSC
+   * @throws GovManagementException
+   */
+  public void updateRsc(byte[] cms) throws GovManagementException
+  {
+    SendRSCCertRequest request = new SendRSCCertRequest();
+    request.setCmsContainer(cms);
+    SendRSCCertResult result = port.sendRSCCert(request);
+    SendRSCCertReturnCodeType returnCode = result.getReturnCode();
+    if (SendRSCCertReturnCodeType.OK_RECEIVED_CORRECTLY != returnCode)
+    {
+      throw new GovManagementException(GlobalManagementCodes.EC_UNEXPECTED_ERROR, "sendRSCCert returned " + returnCode);
+    }
+  }
+
+  /**
+   * Send a CSR for a new TLS client certificate.
+   *
+   * @param cms CMS containing the CSR
+   * @param messageId a message ID
+   * @throws GovManagementException
+   */
+  public OptionalNoPollBeforeType requestNewTls(byte[] cms, String messageId) throws GovManagementException
+  {
+    RequestPKICommunicationCertRequest request = new RequestPKICommunicationCertRequest();
+    request.setCmsContainer(cms);
+    request.setMessageID(messageId);
+    RequestPKICommunicationCertResult result = port.requestPKICommunicationCert(request);
+    RequestPKICommunicationCertReturnCodeType returnCode = result.getReturnCode();
+    if (RequestPKICommunicationCertReturnCodeType.OK_RECEIVED_CORRECTLY != returnCode)
+    {
+      throw new GovManagementException(GlobalManagementCodes.EC_UNEXPECTED_ERROR,
+                                       "requestPKICommunicationCert returned " + returnCode);
+    }
+    return result.getNoPollBefore();
+  }
+
+  /**
+   * Try to retrieve new TLS client certificate.
+   *
+   * @param messageId message ID
+   * @throws GovManagementException
+   */
+  public ConditionalCertificateSeqType tryFetchNewTls(String messageId) throws GovManagementException, NoPollException
+  {
+    GetPKICommunicationCertRequest request = new GetPKICommunicationCertRequest();
+    request.setMessageID(messageId);
+    GetPKICommunicationCertResult result = port.getPKICommunicationCert(request);
+    GetPKICommunicationCertReturnCodeType returnCode = result.getReturnCode();
+    if (GetPKICommunicationCertReturnCodeType.FAILURE_CERT_NOT_AVAILABLE == returnCode)
+    {
+      throw new NoPollException(result.getNoPollBefore());
+    }
+    if (GetPKICommunicationCertReturnCodeType.OK_CERT_AVAILABLE != returnCode)
+    {
+      throw new GovManagementException(GlobalManagementCodes.EC_UNEXPECTED_ERROR,
+                                       "getPKICommunicationCert returned " + returnCode);
+    }
+    return result.getCertificateSeq();
+  }
+
+  @RequiredArgsConstructor
+  @Getter
+  public static class NoPollException extends Exception
+  {
+
+    private static final long serialVersionUID = 1L;
+
+    private final OptionalNoPollBeforeType noPollBefore;
   }
 }

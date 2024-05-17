@@ -18,7 +18,7 @@ import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.security.crypto.bcrypt.BCrypt;
 import org.springframework.test.context.ActiveProfiles;
 
-import de.governikus.eumw.poseidas.config.OverviewController;
+import de.governikus.eumw.poseidas.config.IndexController;
 
 
 @ActiveProfiles("test") // Use application-test.properties
@@ -32,7 +32,7 @@ class PasswordHandlerMigrationTest
   PasswordHandler passwordHandler;
 
   @MockBean
-  private OverviewController overviewController;
+  private IndexController overviewController;
 
   @TempDir
   static File tempDir;

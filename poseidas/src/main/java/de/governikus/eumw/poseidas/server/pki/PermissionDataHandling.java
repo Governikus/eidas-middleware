@@ -26,8 +26,6 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 
-import jakarta.annotation.PostConstruct;
-
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Component;
@@ -43,12 +41,16 @@ import de.governikus.eumw.poseidas.gov2server.constants.admin.AdminPoseidasConst
 import de.governikus.eumw.poseidas.gov2server.constants.admin.GlobalManagementCodes;
 import de.governikus.eumw.poseidas.gov2server.constants.admin.IDManagementCodes;
 import de.governikus.eumw.poseidas.gov2server.constants.admin.ManagementMessage;
-import de.governikus.eumw.poseidas.server.eidservice.EIDInternal;
 import de.governikus.eumw.poseidas.server.idprovider.config.ConfigurationService;
 import de.governikus.eumw.poseidas.server.idprovider.config.KeyPair;
 import de.governikus.eumw.poseidas.server.monitoring.SNMPConstants;
 import de.governikus.eumw.poseidas.server.monitoring.SNMPTrapSender;
+import de.governikus.eumw.poseidas.server.pki.blocklist.BlockListService;
+import de.governikus.eumw.poseidas.server.pki.caserviceaccess.DvcaServiceFactory;
 import de.governikus.eumw.poseidas.server.pki.caserviceaccess.PKIServiceConnector;
+import de.governikus.eumw.poseidas.server.pki.entities.CVCUpdateLock;
+import de.governikus.eumw.poseidas.server.pki.entities.TerminalPermission;
+import de.governikus.eumw.poseidas.server.pki.entities.TimerHistory;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
@@ -67,20 +69,26 @@ public class PermissionDataHandling implements PermissionDataHandlingMBean
 
   private static final String ID_CONNECTOR_CONFIGURATION = "ID.jsp.serviceProvider.nPaPkiConnectorConfiguration.";
 
+  private static final String RENEWAL_SUCCESSFUL = "renewal_successful";
+
   protected final HSMServiceHolder hsmServiceHolder;
 
   private final TerminalPermissionAO facade;
 
-  private final EIDInternal eidInternal;
+  private final BlockListService blockListService;
 
   private final ConfigurationService configurationService;
 
-  private final PendingCertificateRequestRepository pendingCertificateRequestRepository;
+  private final RequestSignerCertificateService requestSignerCertificateService;
+
+  private final TimerHistoryService timerHistoryService;
+
+  private final DvcaServiceFactory dvcaServiceFactory;
 
   private CVCRequestHandler getCvcRequestHandler(ServiceProviderType serviceProvider) throws GovManagementException
   {
     return new CVCRequestHandler(serviceProvider, facade, hsmServiceHolder.getKeyStore(), configurationService,
-                                 pendingCertificateRequestRepository);
+                                 requestSignerCertificateService, dvcaServiceFactory, blockListService);
   }
 
   private ServiceProviderType getServiceProvider(String entityID) throws GovManagementException
@@ -145,57 +153,107 @@ public class PermissionDataHandling implements PermissionDataHandlingMBean
   @Override
   public void renewMasterAndDefectList()
   {
+    renewMasterAndDefectList(false);
+  }
+
+  public void renewMasterAndDefectList(boolean timerExecution)
+  {
+    List<String> succeeded = new ArrayList<>();
+    List<String> failed = new ArrayList<>();
     try
     {
-      configurationService.getConfiguration()
-                          .map(EidasMiddlewareConfig::getEidConfiguration)
-                          .map(EidasMiddlewareConfig.EidConfiguration::getServiceProvider)
-                          .stream()
-                          .flatMap(List::stream)
-                          .filter(ServiceProviderType::isEnabled)
-                          .forEach(sp -> renewMasterAndDefectList(sp, configurationService.getDvcaConfiguration(sp)));
+      List<ServiceProviderType> activeServiceProviders = configurationService.getConfiguration()
+                                                                             .map(EidasMiddlewareConfig::getEidConfiguration)
+                                                                             .map(EidasMiddlewareConfig.EidConfiguration::getServiceProvider)
+                                                                             .stream()
+                                                                             .flatMap(List::stream)
+                                                                             .filter(ServiceProviderType::isEnabled)
+                                                                             .toList();
+      if (activeServiceProviders.isEmpty())
+      {
+        timerHistoryService.saveTimer(TimerHistory.TimerType.GLOBAL_LIST_TIMER,
+                                      "No active service provider found",
+                                      true,
+                                      true);
+      }
+      else
+      {
+        for ( ServiceProviderType sp : activeServiceProviders )
+        {
+          renewMasterAndDefectList(sp, configurationService.getDvcaConfiguration(sp), succeeded, failed);
+        }
+      }
     }
     catch (Exception e)
     {
+      failed.add("unable to renew any master and defect list: %s".formatted(e.getMessage()));
       log.error("unable to renew any master and defect list", e);
+    }
+
+    if (timerExecution)
+    {
+      if (succeeded.isEmpty() && failed.isEmpty())
+      {
+        log.warn("Unexpected empty data for storing in timer history database.");
+      }
+      else
+      {
+        saveTimer(succeeded, failed, TimerHistory.TimerType.GLOBAL_LIST_TIMER);
+      }
     }
   }
 
   private ManagementMessage renewMasterAndDefectList(ServiceProviderType prov, DvcaConfigurationType dvcaConfiguration)
   {
+    return renewMasterAndDefectList(prov, dvcaConfiguration, new ArrayList<>(), new ArrayList<>());
+  }
 
+  private ManagementMessage renewMasterAndDefectList(ServiceProviderType prov,
+                                                     DvcaConfigurationType dvcaConfiguration,
+                                                     List<String> succeeded,
+                                                     List<String> failed)
+  {
     String provName = prov.getName();
-    if (isConfigured(dvcaConfiguration.getPassiveAuthServiceUrl(), "master and defect list", prov.getName()))
+    if (!isConfigured(dvcaConfiguration.getPassiveAuthServiceUrl(), "master and defect list", prov.getName()))
     {
-      try
-      {
-        TerminalPermission tp = facade.getTerminalPermission(prov.getCVCRefID());
-        if (tp == null || tp.getCvc() == null)
-        {
-          log.debug(NO_TERMINAL_PERMISSION_ENTRY_AVAILABLE, provName);
-          return IDManagementCodes.MISSING_TERMINAL_CERTIFICATE.createMessage(prov.getCVCRefID());
-        }
-        MasterAndDefectListHandler handler = new MasterAndDefectListHandler(prov, facade,
-                                                                            hsmServiceHolder.getKeyStore(),
-                                                                            configurationService);
-        handler.updateLists();
-        return GlobalManagementCodes.OK.createMessage();
-      }
-      catch (GovManagementException e)
-      {
-        log.error("{}: unable to master and defect list: {}", provName, e.getMessage(), e);
-        return e.getManagementMessage();
-      }
-      catch (Exception e)
-      {
-        log.error("{}: unable to master and defect list: {}", provName, e.getMessage(), e);
-        return GlobalManagementCodes.EC_UNEXPECTED_ERROR.createMessage("unable to master and defect list: "
-                                                                       + e.getMessage());
-      }
+      failed.add("%s: passive auth url not configured".formatted(provName));
+      return IDManagementCodes.INVALID_OPTION_FOR_PROVIDER.createMessage(provName,
+                                                                         "ID.jsp.serviceProvider.nPaPkiConnectorConfiguration.passiveAuthService.title");
     }
-
-    return IDManagementCodes.INVALID_OPTION_FOR_PROVIDER.createMessage(provName,
-                                                                       "ID.jsp.serviceProvider.nPaPkiConnectorConfiguration.passiveAuthService.title");
+    try
+    {
+      TerminalPermission tp = facade.getTerminalPermission(prov.getCVCRefID());
+      if (tp == null || tp.getCvc() == null)
+      {
+        failed.add("%s: no terminal permission entry available".formatted(provName));
+        log.debug(NO_TERMINAL_PERMISSION_ENTRY_AVAILABLE, provName);
+        return IDManagementCodes.MISSING_TERMINAL_CERTIFICATE.createMessage(prov.getCVCRefID());
+      }
+      MasterAndDefectListHandler handler = new MasterAndDefectListHandler(prov, facade, hsmServiceHolder.getKeyStore(),
+                                                                          configurationService);
+      handler.updateLists();
+      succeeded.add(provName);
+      return GlobalManagementCodes.OK.createMessage();
+    }
+    catch (MasterAndDefectListException e)
+    {
+      failed.add("%s: unable to renew %s: %s".formatted(provName, e.getMasterOrDefectList(), e.getMessage()));
+      log.error("{}: unable to renew any master and defect list: {}", provName, e.getMessage(), e);
+      return e.getManagementMessage();
+    }
+    catch (GovManagementException e)
+    {
+      failed.add("%s: unable to renew any master and defect list: %s".formatted(provName, e.getMessage()));
+      log.error("{}: unable to renew any master and defect list: {}", provName, e.getMessage(), e);
+      return e.getManagementMessage();
+    }
+    catch (Exception e)
+    {
+      failed.add("%s: unable to renew any master and defect list: %s".formatted(provName, e.getMessage()));
+      log.error("{}: unable to renew any master and defect list: {}", provName, e.getMessage(), e);
+      return GlobalManagementCodes.EC_UNEXPECTED_ERROR.createMessage("unable to master and defect list: "
+                                                                     + e.getMessage());
+    }
   }
 
   /**
@@ -224,7 +282,13 @@ public class PermissionDataHandling implements PermissionDataHandlingMBean
     {
       ServiceProviderType provider = getServiceProvider(entityID);
       DvcaConfigurationType dvcaConfiguration = configurationService.getDvcaConfiguration(provider);
-      ManagementMessage result = renewBlackList(provider, dvcaConfiguration, false, new HashSet<>(), false);
+      ManagementMessage result = renewBlackList(provider,
+                                                dvcaConfiguration,
+                                                false,
+                                                new HashSet<>(),
+                                                false,
+                                                new ArrayList<>(),
+                                                new ArrayList<>());
       requestPublicSectorKeyIfNeeded(provider, dvcaConfiguration);
       return result;
     }
@@ -237,11 +301,19 @@ public class PermissionDataHandling implements PermissionDataHandlingMBean
   @Override
   public void renewBlackList(boolean delta)
   {
+    renewBlackList(delta, false);
+  }
+
+  public void renewBlackList(boolean delta, boolean timerExecution)
+  {
+    List<String> succeeded = new ArrayList<>();
+    List<String> failed = new ArrayList<>();
     try
     {
       Optional<EidasMiddlewareConfig> config = configurationService.getConfiguration();
       if (config.isEmpty())
       {
+        failed.add("Config is empty.");
         return;
       }
       Set<ByteBuffer> alreadyRenewed = new HashSet<>();
@@ -255,13 +327,30 @@ public class PermissionDataHandling implements PermissionDataHandlingMBean
           continue;
         }
         DvcaConfigurationType dvcaConfiguration = configurationService.getDvcaConfiguration(provider);
-        renewBlackList(provider, dvcaConfiguration, true, alreadyRenewed, delta);
+        renewBlackList(provider, dvcaConfiguration, true, alreadyRenewed, delta, succeeded, failed);
         requestPublicSectorKeyIfNeeded(provider, dvcaConfiguration);
       }
     }
     catch (Exception e)
     {
+      failed.add("unable to renew any blacklist: %s".formatted(e.getMessage()));
       log.error("unable to renew any blacklist", e);
+    }
+
+    if (timerExecution)
+    {
+      // if all lists are empty there should be no active service provider
+      if (succeeded.isEmpty() && failed.isEmpty())
+      {
+        timerHistoryService.saveTimer(TimerHistory.TimerType.BLACK_LIST_TIMER,
+                                      "No active service provider found",
+                                      true,
+                                      true);
+      }
+      else
+      {
+        saveTimer(succeeded, failed, TimerHistory.TimerType.BLACK_LIST_TIMER, delta);
+      }
     }
   }
 
@@ -269,19 +358,24 @@ public class PermissionDataHandling implements PermissionDataHandlingMBean
                                            DvcaConfigurationType dvcaConfiguration,
                                            boolean all,
                                            Set<ByteBuffer> alreadyRenewed,
-                                           boolean delta)
+                                           boolean delta,
+                                           List<String> succeededRenewals,
+                                           List<String> failedRenewals)
   {
     String providerName = prov.getName();
+    if (!isConfigured(dvcaConfiguration.getRestrictedIdServiceUrl(), "black list", providerName))
+    {
+      failedRenewals.add("%s: restricted id service url not configured".formatted(providerName));
+      return IDManagementCodes.INVALID_OPTION_FOR_PROVIDER.createMessage(providerName,
+                                                                         "ID.jsp.serviceProvider.nPaPkiConnectorConfiguration.restrictedIdService.title");
+    }
+
     try
     {
-      if (!isConfigured(dvcaConfiguration.getRestrictedIdServiceUrl(), "black list", providerName))
-      {
-        return IDManagementCodes.INVALID_OPTION_FOR_PROVIDER.createMessage(providerName,
-                                                                           "ID.jsp.serviceProvider.nPaPkiConnectorConfiguration.restrictedIdService.title");
-      }
       TerminalPermission tp = facade.getTerminalPermission(prov.getCVCRefID());
       if (tp == null || tp.getCvc() == null)
       {
+        failedRenewals.add("%s: no terminal permission entry available".formatted(providerName));
         log.debug(NO_TERMINAL_PERMISSION_ENTRY_AVAILABLE, providerName);
         return IDManagementCodes.MISSING_TERMINAL_CERTIFICATE.createMessage(prov.getCVCRefID());
       }
@@ -289,10 +383,11 @@ public class PermissionDataHandling implements PermissionDataHandlingMBean
       if (alreadyRenewed != null && tp.getSectorID() != null
           && alreadyRenewed.contains(ByteBuffer.wrap(tp.getSectorID())))
       {
+        succeededRenewals.add(providerName);
         return IDManagementCodes.DATABASE_ENTRY_EXISTS.createMessage(tp.getRefID());
       }
       RestrictedIdHandler riHandler = new RestrictedIdHandler(prov, facade, hsmServiceHolder.getKeyStore(),
-                                                              configurationService);
+                                                              configurationService, dvcaServiceFactory, blockListService);
       if (alreadyRenewed != null)
       {
         if (BlackListLock.getINSTANCE().getBlackListUpdateLock().tryLock())
@@ -308,21 +403,24 @@ public class PermissionDataHandling implements PermissionDataHandlingMBean
         }
         else
         {
+          failedRenewals.add("%s: Black list is currently being updated, skipping this execution.".formatted(providerName));
           log.debug("Black list is currently being updated, skipping this execution");
         }
       }
-
+      succeededRenewals.add(providerName);
       return GlobalManagementCodes.OK.createMessage();
     }
     catch (GovManagementException e)
     {
-      log.error("{}: unable to renew blacklist: {}", providerName, e.getMessage(), e);
+      failedRenewals.add("%s: unable to renew block lists: %s".formatted(providerName, e.getMessage()));
+      log.error("{}: unable to renew block lists: {}", providerName, e.getMessage(), e);
       return e.getManagementMessage();
     }
     catch (Exception e)
     {
-      log.error("{}: unable to renew blacklist: {}", providerName, e.getMessage(), e);
-      return GlobalManagementCodes.EC_UNEXPECTED_ERROR.createMessage("unable to renew blacklist: " + e.getMessage());
+      failedRenewals.add("%s: unable to renew block lists: %s".formatted(providerName, e.getMessage()));
+      log.error("{}: unable to renew block lists: {}", providerName, e.getMessage(), e);
+      return GlobalManagementCodes.EC_UNEXPECTED_ERROR.createMessage("unable to renew block lists: " + e.getMessage());
     }
   }
 
@@ -345,7 +443,7 @@ public class PermissionDataHandling implements PermissionDataHandlingMBean
       }
 
       RestrictedIdHandler riHandler = new RestrictedIdHandler(prov, facade, hsmServiceHolder.getKeyStore(),
-                                                              configurationService);
+                                                              configurationService, dvcaServiceFactory, blockListService);
       riHandler.requestPublicSectorKeyIfNeeded();
       return GlobalManagementCodes.OK.createMessage();
     }
@@ -365,57 +463,85 @@ public class PermissionDataHandling implements PermissionDataHandlingMBean
   @Override
   public void renewOutdatedCVCs()
   {
+    List<String> succeeded = new ArrayList<>();
+    List<String> failed = new ArrayList<>();
+    List<String> renewalNotNeeded = new ArrayList<>();
     try
     {
       Optional<EidasMiddlewareConfig> config = configurationService.getConfiguration();
       if (config.isEmpty())
       {
+        failed.add("Config is empty");
         return;
       }
       assertHsmAlive();
       Map<String, Date> expirationDateMap = facade.getExpirationDates();
-      if (expirationDateMap == null)
-      {
-        return;
-      }
       List<String> lockedServiceProviders = new ArrayList<>();
+      List<ServiceProviderType> serviceProvider = config.get().getEidConfiguration().getServiceProvider();
 
-      config.get()
-            .getEidConfiguration()
-            .getServiceProvider()
-            .forEach(sp -> renewCvcForProvider(sp, expirationDateMap, lockedServiceProviders));
+      for ( ServiceProviderType sp : serviceProvider )
+      {
+        if (!sp.isEnabled())
+        {
+          String m = "%s: skip check for renew of cvc for this provider, updateCVC is set to false, CVCRefID: %s".formatted(sp.getName(),
+                                                                                                                            sp.getCVCRefID());
+          log.debug(m);
+          continue;
+        }
+        Optional<String> message = renewCvcForProvider(sp, expirationDateMap, lockedServiceProviders);
+        if (message.isEmpty())
+        {
+          renewalNotNeeded.add(sp.getName());
+        }
+        else if (RENEWAL_SUCCESSFUL.equals(message.get()))
+        {
+          succeeded.add(sp.getName());
+        }
+        else
+        {
+          failed.add(message.get());
+        }
+      }
+
     }
     catch (Exception e)
     {
       SNMPTrapSender.sendSNMPTrap(SNMPConstants.TrapOID.CVC_TRAP_LAST_RENEWAL_STATUS, 1);
       log.error("unable to renew any CVCs", e);
     }
+
+    // if all lists are empty there should be no active service provider
+    if (succeeded.isEmpty() && renewalNotNeeded.isEmpty() && failed.isEmpty())
+    {
+      timerHistoryService.saveTimer(TimerHistory.TimerType.CVC_RENEWAL_TIMER,
+                                    "No active service provider found",
+                                    true,
+                                    true);
+    }
+    else
+    {
+      saveTimer(succeeded, failed, renewalNotNeeded, TimerHistory.TimerType.CVC_RENEWAL_TIMER, null);
+    }
   }
 
-  private void renewCvcForProvider(ServiceProviderType provider,
-                                   Map<String, Date> expirationDateMap,
-                                   List<String> lockedServiceProviders)
+  private Optional<String> renewCvcForProvider(ServiceProviderType provider,
+                                               Map<String, Date> expirationDateMap,
+                                               List<String> lockedServiceProviders)
   {
     CVCUpdateLock lock = null;
     String serviceProviderName = provider.getName();
     try
     {
-      if (!provider.isEnabled())
-      {
-        log.debug("{}: skip check for renew of cvc for this provider, updateCVC is set to false, CVCRefID: {}",
-                  serviceProviderName,
-                  provider.getCVCRefID());
-        return;
-      }
       if (!expirationDateMap.containsKey(provider.getCVCRefID()))
       {
-        return;
+        return Optional.empty();
       }
       DvcaConfigurationType dvcaConfiguration = configurationService.getDvcaConfiguration(provider);
       if (!isConfigured(dvcaConfiguration.getTerminalAuthServiceUrl(), "terminal certificate", serviceProviderName))
       {
-        log.info("{}: is not configurated for certificate renewal", serviceProviderName);
-        return;
+        String m = "%s is not configurated for certificate renewal.".formatted(serviceProviderName);
+        log.info(m);
+        return Optional.of(m);
       }
 
       Calendar refreshDate = new GregorianCalendar();
@@ -429,34 +555,49 @@ public class PermissionDataHandling implements PermissionDataHandlingMBean
       Date expirationDate = expirationDateMap.get(provider.getCVCRefID());
       if (refreshDate.getTime().before(expirationDate))
       {
-        return;
+        return Optional.empty();
       }
       TerminalPermission tp = getTerminalPermissionForRenewal(provider.getCVCRefID());
       if (containsExpiredCVC(tp))
       {
-        log.error("{}: Can not renew CVC because old CVC is already expired", serviceProviderName);
-        return;
+        String m = "%s: Can not renew CVC because old CVC is already expired".formatted(serviceProviderName);
+        log.error(m);
+        return Optional.of(m);
       }
 
       if (lockedServiceProviders.contains(serviceProviderName))
       {
-        return;
+        String m = "%s: Another service is currently running - skipping".formatted(serviceProviderName);
+        return Optional.of(m);
       }
 
       lock = facade.obtainCVCUpdateLock(serviceProviderName);
       if (lock == null)
       {
-        log.debug("{}: Some other server is renewing CVC right now - skipping", serviceProviderName);
+        String m = "%s: Some other server is renewing CVC right now - skipping".formatted(serviceProviderName);
+        log.debug(m);
         lockedServiceProviders.add(serviceProviderName);
-        return;
+        return Optional.of(m);
       }
 
-      getCvcRequestHandler(provider).makeSubsequentRequest(tp);
+      CVCRequestHandler cvcRequestHandler = getCvcRequestHandler(provider);
+      ManagementMessage managementMessage = cvcRequestHandler.makeSubsequentRequest(tp);
+      if (!GlobalManagementCodes.OK.equals(managementMessage.getCode()))
+      {
+        String m = "%s: unable to renew CVC automatically".formatted(serviceProviderName);
+        log.warn(m);
+        facade.setAutomaticCvcRenewFailed(provider.getCVCRefID(), true);
+        return Optional.of(m);
+      }
+      return Optional.of(RENEWAL_SUCCESSFUL);
     }
     catch (Exception e)
     {
+      String m = "%s: unable to renew CVC".formatted(serviceProviderName);
+      facade.setAutomaticCvcRenewFailed(provider.getCVCRefID(), true);
       SNMPTrapSender.sendSNMPTrap(SNMPConstants.TrapOID.CVC_TRAP_LAST_RENEWAL_STATUS, 1);
       log.error("{}: unable to renew CVC", serviceProviderName, e);
+      return Optional.of(m);
     }
     finally
     {
@@ -470,6 +611,11 @@ public class PermissionDataHandling implements PermissionDataHandlingMBean
   @Override
   public ManagementMessage triggerCertRenewal(String entityID)
   {
+    return triggerCertRenewal(entityID, new ArrayList<>(), new ArrayList<>());
+  }
+
+  public ManagementMessage triggerCertRenewal(String entityID, List<String> succeeded, List<String> failed)
+  {
     try
     {
       assertHsmAlive();
@@ -477,17 +623,28 @@ public class PermissionDataHandling implements PermissionDataHandlingMBean
 
       TerminalPermission tp = getTerminalPermissionForRenewal(serviceProvider.getCVCRefID());
       ManagementMessage message = getCvcRequestHandler(serviceProvider).makeSubsequentRequest(tp);
+      if (message == null)
+      {
+        succeeded.add(entityID);
+      }
+      else
+      {
+        failed.add("%s: %s".formatted(entityID, message));
+      }
       return message == null ? GlobalManagementCodes.OK.createMessage() : message;
     }
     catch (GovManagementException e)
     {
       log.error("{}: Problem while triggering a new subsequal cvc request {}", entityID, e.getManagementMessage());
+      failed.add("%s: Problem while triggering a new subsequal cvc request: %s".formatted(entityID,
+                                                                                          e.getManagementMessage()));
       return e.getManagementMessage();
     }
     catch (Exception e)
     {
       SNMPTrapSender.sendSNMPTrap(SNMPConstants.TrapOID.CVC_TRAP_LAST_RENEWAL_STATUS, 1);
       log.debug("unable to renew CVC", e);
+      failed.add("%s: unable to renew CVC: %s".formatted(entityID, e.getMessage()));
       return GlobalManagementCodes.EC_UNEXPECTED_ERROR.createMessage("unable to renew CVC: " + e.getMessage());
     }
   }
@@ -521,7 +678,7 @@ public class PermissionDataHandling implements PermissionDataHandlingMBean
     Map<String, Object> result = new HashMap<>();
     try
     {
-      result = InfoMapBuilder.createInfoMap(facade, cvcRefId, withBlkNumber);
+      result = InfoMapBuilder.createInfoMap(facade, blockListService, cvcRefId, withBlkNumber);
     }
     catch (IllegalArgumentException e)
     {
@@ -530,12 +687,6 @@ public class PermissionDataHandling implements PermissionDataHandlingMBean
                  new HashSet<>(Arrays.asList(IDManagementCodes.INCOMPLETE_TERMINAL_CERTIFICATE.createMessage(cvcRefId))));
     }
     return result;
-  }
-
-  @PostConstruct
-  public void registerInJMX()
-  {
-    eidInternal.setCVCFacade(facade);
   }
 
   @Override
@@ -621,11 +772,6 @@ public class PermissionDataHandling implements PermissionDataHandlingMBean
     checkService(dvcaConfigurationType, serviceProvider, dvcaConfigurationType.getRestrictedIdServiceUrl());
     checkUrl(dvcaConfigurationType.getPassiveAuthServiceUrl(), "passiveAuthService.title");
     checkService(dvcaConfigurationType, serviceProvider, dvcaConfigurationType.getPassiveAuthServiceUrl());
-    checkUrl(dvcaConfigurationType.getDvcaCertificateDescriptionServiceUrl(), "dvcaCertDescriptionService.title");
-    checkService(dvcaConfigurationType,
-                 serviceProvider,
-                 dvcaConfigurationType.getDvcaCertificateDescriptionServiceUrl());
-
   }
 
   private void checkValuePresent(X509Certificate value, String name) throws GovManagementException
@@ -755,4 +901,59 @@ public class PermissionDataHandling implements PermissionDataHandlingMBean
       return false;
     }
   }
+
+  private void saveTimer(List<String> succeeded, List<String> failed, TimerHistory.TimerType timerType)
+  {
+    saveTimer(succeeded, failed, new ArrayList<>(), timerType, null);
+  }
+
+  private void saveTimer(List<String> succeeded, List<String> failed, TimerHistory.TimerType timerType, Boolean delta)
+  {
+    saveTimer(succeeded, failed, new ArrayList<>(), timerType, delta);
+  }
+
+  // Save timer execution results in database
+  private void saveTimer(List<String> succeeded,
+                         List<String> failed,
+                         List<String> renewalNotNeeded,
+                         TimerHistory.TimerType timerType,
+                         Boolean delta)
+  {
+    StringBuilder timerExecutionMessage = new StringBuilder();
+    if (null != delta)
+    {
+      timerExecutionMessage.append("Delta: ").append(delta);
+    }
+
+    if (!succeeded.isEmpty())
+    {
+      timerExecutionMessage = appendList(succeeded, "Succeeded: ", timerExecutionMessage);
+    }
+
+
+    if (!renewalNotNeeded.isEmpty())
+    {
+      timerExecutionMessage = appendList(renewalNotNeeded, "No renewals needed: ", timerExecutionMessage);
+    }
+
+    for ( String f : failed )
+    {
+      if (!timerExecutionMessage.isEmpty())
+      {
+        timerExecutionMessage.append(System.lineSeparator()).append(System.lineSeparator());
+      }
+      timerExecutionMessage.append(f);
+    }
+    timerHistoryService.saveTimer(timerType, timerExecutionMessage.toString(), failed.isEmpty(), true);
+  }
+
+  private StringBuilder appendList(List<String> list, String prefix, StringBuilder stringBuilder)
+  {
+    if (!stringBuilder.isEmpty())
+    {
+      stringBuilder.append(System.lineSeparator());
+    }
+    return stringBuilder.append(prefix).append(list);
+  }
+
 }

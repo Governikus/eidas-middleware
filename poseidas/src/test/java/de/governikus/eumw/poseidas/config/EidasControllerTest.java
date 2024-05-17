@@ -157,7 +157,7 @@ class EidasControllerTest extends WebAdminTestBase
     keyData.getCertificate().add(new CertificateType("C1", null, "", ""));
 
     EidasMiddlewareConfig.EidConfiguration eidConfiguration = new EidasMiddlewareConfig.EidConfiguration();
-    eidConfiguration.getServiceProvider().add(new ServiceProviderType("TestSP", true, "KP", "NONE", "NONE"));
+    eidConfiguration.getServiceProvider().add(new ServiceProviderType("TestSP", true, "KP", "NONE", "NONE", null));
 
     EidasMiddlewareConfig eidasMiddlewareConfig = new EidasMiddlewareConfig();
     eidasMiddlewareConfig.setEidConfiguration(eidConfiguration);
@@ -247,7 +247,7 @@ class EidasControllerTest extends WebAdminTestBase
 
     // Add necessary data for the eidas page
     EidasMiddlewareConfig.EidConfiguration eidConfiguration = new EidasMiddlewareConfig.EidConfiguration();
-    eidConfiguration.getServiceProvider().add(new ServiceProviderType("TestSP", true, "KP", "NONE", "NONE"));
+    eidConfiguration.getServiceProvider().add(new ServiceProviderType("TestSP", true, "KP", "NONE", "NONE", null));
     eidasConfiguration.setCountryCode("DE");
     eidasConfiguration.setPublicServiceProviderName("TestSP");
     EidasMiddlewareConfig eidasMiddlewareConfig = new EidasMiddlewareConfig();
@@ -299,7 +299,7 @@ class EidasControllerTest extends WebAdminTestBase
     eidasConfiguration.setSignatureKeyPairName("pkcs12-keystore");
 
     EidasMiddlewareConfig.EidConfiguration eidConfiguration = new EidasMiddlewareConfig.EidConfiguration();
-    eidConfiguration.getServiceProvider().add(new ServiceProviderType("TestSP", true, "KP", "NONE", "NONE"));
+    eidConfiguration.getServiceProvider().add(new ServiceProviderType("TestSP", true, "KP", "NONE", "NONE", null));
     eidasConfiguration.setCountryCode("DE");
     eidasConfiguration.setPublicServiceProviderName("TestSP");
     EidasMiddlewareConfig eidasMiddlewareConfig = new EidasMiddlewareConfig();

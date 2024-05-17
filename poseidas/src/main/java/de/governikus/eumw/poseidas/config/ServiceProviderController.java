@@ -133,7 +133,8 @@ public class ServiceProviderController
 
     return new ServiceProviderViewModel(serviceProviderType.getDvcaConfigurationName(),
                                         keyPairTypeToInfoHolder(caKeyPair.orElse(null)), serviceProviderType.getName(),
-                                        serviceProviderType.isEnabled());
+                                        serviceProviderType.isEnabled(),
+                                        facade.getAutomaticRscRenewFailed(serviceProviderType.getCVCRefID()));
   }
 
   @GetMapping("/create")
@@ -423,7 +424,8 @@ public class ServiceProviderController
   private ServiceProviderConfigModel toConfigModel(ServiceProviderType configurationType)
   {
     return new ServiceProviderConfigModel(configurationType.getDvcaConfigurationName(),
-                                          configurationType.getClientKeyPairName(), configurationType.getName(),
+                                          configurationType.getClientKeyPairName(),
+                                          configurationType.getPendingClientKeyPairName(), configurationType.getName(),
                                           configurationType.isEnabled());
   }
 

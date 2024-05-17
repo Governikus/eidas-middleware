@@ -75,7 +75,7 @@ public final class KeyReader
     }
     catch (InvalidKeySpecException e)
     {
-      log.debug("could not read a private rsa key from the given byte-array", e);
+      log.trace("could not read a private rsa key from the given byte-array", e);
     }
 
     try
@@ -94,7 +94,7 @@ public final class KeyReader
     }
     catch (InvalidKeySpecException e)
     {
-      log.debug("could not read a private ec key from the given byte-array", e);
+      log.trace("could not read a private ec key from the given byte-array", e);
     }
     throw new KeyGenerationException("could not read a private rsa or ec key from the given byte-array");
   }

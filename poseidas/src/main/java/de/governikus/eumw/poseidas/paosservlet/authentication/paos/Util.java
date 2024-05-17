@@ -94,9 +94,9 @@ public final class Util
         SchemaFactory sf = Utils.getSchemaFactory();
         // we must permit file access for there are some schema files referenced in the catalog
         sf.setProperty(XMLConstants.ACCESS_EXTERNAL_SCHEMA, "file");
-        String catalogUrlString = Util.class.getResource("/ecard115/ecard115catalog.xml").toString();
+        String catalogUrlString = Util.class.getResource("/xsd/ecard115/ecard115catalog.xml").toString();
 
-        URL schemaUrl = Util.class.getResource("/ecard115/ISO24727-Protocols.xsd");
+        URL schemaUrl = Util.class.getResource("/xsd/ecard115/ISO24727-Protocols.xsd");
         CatalogFeatures catalogFeatures = CatalogFeatures.builder()
                                                          .with(CatalogFeatures.Feature.FILES, catalogUrlString)
                                                          .build();

@@ -11,6 +11,7 @@ package de.governikus.eumw.poseidas.server.timer;
 
 import java.time.Instant;
 import java.util.Date;
+import java.util.List;
 
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.scheduling.Trigger;
@@ -28,8 +29,8 @@ import lombok.extern.slf4j.Slf4j;
 
 /**
  * This class manages the timer for the global list retrieval. The class implements the Runnable interface. The
- * {@link #run() run} method is used to retrieve the Master List and Defect List. The {@link #getGlobalListTrigger()
- * getGlobalListTrigger} method determines how often the timer runs.
+ * {@link #run() run} method is used to retrieve the Master List and Defect List. The
+ * {@link #getGlobalListTrigger(List) getGlobalListTrigger} method determines how often the timer runs.
  *
  * @see ApplicationTimer
  */
@@ -48,10 +49,10 @@ public class GlobalListTimer implements Runnable
   public void run()
   {
     log.debug("Execute global list Timer");
-    permissionDataHandling.renewMasterAndDefectList();
+    permissionDataHandling.renewMasterAndDefectList(true);
   }
 
-  Trigger getGlobalListTrigger()
+  Trigger getGlobalListTrigger(List<Instant> nextExecutions)
   {
     return triggerContext -> {
       log.debug("Handle trigger for global list timer");
@@ -63,9 +64,11 @@ public class GlobalListTimer implements Runnable
         Date date = new Date(triggerContext.getClock().millis() + initialDelay);
         log.debug("First global list timer task will executed with an initial delay of {} milliseconds", initialDelay);
         log.debug("Global list timer task will be executed at {}", date);
+        nextExecutions.add(date.toInstant());
         return date.toInstant();
       }
       Instant nextExecutiontime = lastCompletion.toInstant().plusMillis(getGlobalListTimer());
+      nextExecutions.add(nextExecutiontime);
       Date date = Date.from(nextExecutiontime);
       log.debug("Global list timer task will be executed at {}", date);
       return date.toInstant();

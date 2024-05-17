@@ -5,6 +5,7 @@ import java.security.cert.CertificateFactory;
 import java.security.cert.X509Certificate;
 
 import de.governikus.eumw.poseidas.server.pki.caserviceaccess.PassiveAuthService;
+import de.governikus.eumw.poseidas.server.pki.entities.TerminalPermission;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;

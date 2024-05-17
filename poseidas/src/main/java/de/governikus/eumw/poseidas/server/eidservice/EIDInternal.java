@@ -36,10 +36,11 @@ import de.governikus.eumw.poseidas.eidserver.ecardid.ECardIDServerFactory;
 import de.governikus.eumw.poseidas.eidserver.ecardid.ECardIDServerI;
 import de.governikus.eumw.poseidas.eidserver.ecardid.SessionInput;
 import de.governikus.eumw.poseidas.server.idprovider.core.AuthenticationSessionManager;
-import de.governikus.eumw.poseidas.server.idprovider.exceptions.InvalidConfigurationException;
-import de.governikus.eumw.poseidas.server.pki.TerminalPermission;
 import de.governikus.eumw.poseidas.server.pki.TerminalPermissionAO;
+import de.governikus.eumw.poseidas.server.pki.blocklist.BlockListService;
+import de.governikus.eumw.poseidas.server.pki.entities.TerminalPermission;
 import de.governikus.eumw.utils.key.SecurityProvider;
+import lombok.RequiredArgsConstructor;
 import oasis.names.tc.dss._1_0.core.schema.Result;
 
 
@@ -52,6 +53,7 @@ import oasis.names.tc.dss._1_0.core.schema.Result;
  */
 
 @Component
+@RequiredArgsConstructor
 public class EIDInternal
 {
 
@@ -63,7 +65,9 @@ public class EIDInternal
 
   private boolean initDone = false;
 
-  private TerminalPermissionAO cvcFacade;
+  private final TerminalPermissionAO cvcFacade;
+
+  private final BlockListService blockListService;
 
   private static X509Certificate tryGenerateCertFromZip(String logPrefix,
                                                         CertificateFactory certFactory,
@@ -102,7 +106,6 @@ public class EIDInternal
    * @return {@link EIDRequestResponse} contains session id and pre-shared key
    */
   public EIDRequestResponse useID(EIDRequestInput request, ServiceProviderType client)
-    throws InvalidConfigurationException
   {
     if (client != null)
     {
@@ -189,7 +192,19 @@ public class EIDInternal
                                     "client is unknown in the configuration",
                                     "<unknown>: " + requestId + COLON_AND_SPACE);
     }
-    else if (sessionId == null || sessionId.length() < 16 || sessionId.length() > 10240)
+    if (!client.isEnabled())
+    {
+      return new EIDRequestResponse(sessionId, requestId, Constants.EID_MAJOR_ERROR,
+                                    Constants.EID_MINOR_COMMON_INTERNALERROR, "client is disabled",
+                                    client.getName() + COLON_AND_SPACE + requestId + COLON_AND_SPACE);
+    }
+    if (!blockListService.hasBlockList(client.getCVCRefID()))
+    {
+      return new EIDRequestResponse(sessionId, requestId, Constants.EID_MAJOR_ERROR,
+                                    Constants.EID_MINOR_COMMON_INTERNALERROR, "client has no blocklist",
+                                    client.getName() + COLON_AND_SPACE + requestId + COLON_AND_SPACE);
+    }
+    if (sessionId == null || sessionId.length() < 16 || sessionId.length() > 10240)
     {
       return new EIDRequestResponse(sessionId, requestId, Constants.EID_MAJOR_ERROR,
                                     Constants.EID_MINOR_USEID_MISSING_ARGUMENT,
@@ -197,7 +212,7 @@ public class EIDInternal
                                       : sessionId.length()) + " bytes",
                                     client.getName() + COLON_AND_SPACE + requestId + COLON_AND_SPACE);
     }
-    else if (requestId == null || requestId.length() < 16 || requestId.length() > 10240)
+    if (requestId == null || requestId.length() < 16 || requestId.length() > 10240)
     {
       return new EIDRequestResponse(sessionId, requestId, Constants.EID_MAJOR_ERROR,
                                     Constants.EID_MINOR_USEID_MISSING_ARGUMENT,
@@ -205,14 +220,14 @@ public class EIDInternal
                                       : requestId.length()) + " bytes",
                                     client.getName() + COLON_AND_SPACE + requestId + COLON_AND_SPACE);
     }
-    else if (ageVerificationRequestIncomplete(request))
+    if (ageVerificationRequestIncomplete(request))
     {
       return new EIDRequestResponse(sessionId, requestId, Constants.EID_MAJOR_ERROR,
                                     Constants.EID_MINOR_USEID_MISSING_ARGUMENT,
                                     "must specify required age to perform age verification",
                                     client.getName() + COLON_AND_SPACE + requestId + COLON_AND_SPACE);
     }
-    else if (placeVerificationRequestIncomplete(request))
+    if (placeVerificationRequestIncomplete(request))
     {
       return new EIDRequestResponse(sessionId, requestId, Constants.EID_MAJOR_ERROR,
                                     Constants.EID_MINOR_USEID_MISSING_ARGUMENT,
@@ -262,14 +277,14 @@ public class EIDInternal
                                                                         session.getLogPrefix());
       input = new SessionInputImpl(cvc, tp.getCvcChain(), session.getSessionId(),
 
-                                   new BlackListConnectorImpl(cvcFacade, tp.getSectorID()), masterListCerts,
+                                   new BlackListConnectorImpl(blockListService, tp.getSectorID()), masterListCerts,
                                    defectListData, request.getTransactionInfo(), session.getLogPrefix());
     }
     else
     {
       input = new SessionInputImpl(cvc, tp.getCvcChain(), session.getSessionId(),
 
-                                   new BlackListConnectorImpl(cvcFacade, tp.getSectorID()), masterListData,
+                                   new BlackListConnectorImpl(blockListService, tp.getSectorID()), masterListData,
                                    defectListData, request.getTransactionInfo(), session.getLogPrefix());
     }
     translateSelector(request, input, cvc.getAuthorizations());
@@ -433,11 +448,6 @@ public class EIDInternal
         break;
     }
     return false;
-  }
-
-  public void setCVCFacade(TerminalPermissionAO facade)
-  {
-    this.cvcFacade = facade;
   }
 
   /**

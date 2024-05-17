@@ -9,8 +9,11 @@ target$
 .rej$
 .log$
 .iml
+databasemigration/config$
+databasemigration/doc/build$
 doc/_build$
 eidas-demo/config$
+eidas-middleware/block-list-data
 eidas-middleware/config$
 .envrc
 

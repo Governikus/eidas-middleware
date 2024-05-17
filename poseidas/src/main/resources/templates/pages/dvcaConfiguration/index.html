@@ -37,7 +37,7 @@
                     </div>
                     <div class="row">
                         <div class="col-3">
-                            <p>Black List trust anchor: </p>
+                            <p>Block List trust anchor: </p>
                         </div>
                         <div class="col-9"
                              th:if="${certificateInfoHolderMap[config.blackListTrustAnchorCertificateName] != null}">
@@ -45,7 +45,7 @@
                         </div>
                         <div class="col-9"
                              th:if="${certificateInfoHolderMap[config.blackListTrustAnchorCertificateName] == null}">
-                            <p>Black List trust anchor is not stored in the config.</p></div>
+                            <p>Block List trust anchor is not stored in the config.</p></div>
                     </div>
                     <div class="row">
                         <div class="col-3">
@@ -87,13 +87,6 @@
                         </div>
                         <div class="col-9" th:text="*{passiveAuthServiceUrl}">
 
-                        </div>
-                    </div>
-                    <div class="row">
-                        <div class="col-3">
-                            <p>CVC Description service URL: </p>
-                        </div>
-                        <div class="col-9" th:text="*{dvcaCertificateDescriptionServiceUrl}">
                         </div>
                     </div>
                     <hr/>

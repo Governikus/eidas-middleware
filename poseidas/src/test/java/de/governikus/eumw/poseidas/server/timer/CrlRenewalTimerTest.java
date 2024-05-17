@@ -3,6 +3,7 @@ package de.governikus.eumw.poseidas.server.timer;
 import java.time.Clock;
 import java.time.Duration;
 import java.time.Instant;
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.Optional;
 
@@ -17,11 +18,13 @@ import org.springframework.scheduling.Trigger;
 import org.springframework.scheduling.TriggerContext;
 
 import de.governikus.eumw.config.EidasMiddlewareConfig;
+import de.governikus.eumw.config.EntanglementTimerType;
 import de.governikus.eumw.config.TimerConfigurationType;
 import de.governikus.eumw.config.TimerType;
 import de.governikus.eumw.config.TimerTypeCertRenewal;
 import de.governikus.eumw.config.TimerUnit;
 import de.governikus.eumw.poseidas.server.idprovider.config.ConfigurationService;
+import de.governikus.eumw.poseidas.server.pki.TimerHistoryService;
 
 
 @ExtendWith(MockitoExtension.class)
@@ -36,16 +39,19 @@ class CrlRenewalTimerTest
 
   private CrlRenewalTimer crlRenewalTimer;
 
+  @Mock
+  private TimerHistoryService timerHistoryService;
+
   @BeforeEach
   void setUp()
   {
-    crlRenewalTimer = new CrlRenewalTimer(configurationService);
+    crlRenewalTimer = new CrlRenewalTimer(configurationService, timerHistoryService);
   }
 
   @Test
   void testCrlTriggerWithInitialDelay()
   {
-    Trigger crlTrigger = crlRenewalTimer.getCrlTrigger();
+    Trigger crlTrigger = crlRenewalTimer.getCrlTrigger(new ArrayList<>());
     Mockito.when(triggerContext.lastScheduledExecutionTime()).thenReturn(null);
     Mockito.when(triggerContext.lastCompletionTime()).thenReturn(null);
     Instant now = Instant.now();
@@ -58,7 +64,7 @@ class CrlRenewalTimerTest
   @Test
   void testCrlTriggerWithValuesFromConfig()
   {
-    Trigger crlTrigger = crlRenewalTimer.getCrlTrigger();
+    Trigger crlTrigger = crlRenewalTimer.getCrlTrigger(new ArrayList<>());
     Instant now = Instant.now();
     Mockito.when(triggerContext.lastScheduledExecutionTime()).thenReturn(Date.from(now));
     Mockito.when(triggerContext.lastCompletionTime()).thenReturn(Date.from(now));
@@ -71,7 +77,7 @@ class CrlRenewalTimerTest
   @Test
   void testCrlTriggerWithDefaultValues()
   {
-    Trigger crlTrigger = crlRenewalTimer.getCrlTrigger();
+    Trigger crlTrigger = crlRenewalTimer.getCrlTrigger(new ArrayList<>());
     Instant now = Instant.now();
     Mockito.when(triggerContext.lastScheduledExecutionTime()).thenReturn(Date.from(now));
     Mockito.when(triggerContext.lastCompletionTime()).thenReturn(Date.from(now));
@@ -88,7 +94,11 @@ class CrlRenewalTimerTest
     TimerTypeCertRenewal timerTypeCertRenewal = new TimerTypeCertRenewal(42, TimerUnit.HOURS, 20);
     TimerType timerType = new TimerType(36, TimerUnit.HOURS);
     TimerConfigurationType timerConfigurationType = new TimerConfigurationType(timerTypeCertRenewal, timerType,
-                                                                               timerType, timerType);
+                                                                               timerType, timerType,
+                                                                               new EntanglementTimerType(1,
+                                                                                                         TimerUnit.HOURS,
+                                                                                                         true),
+                                                                               null, null);
     eidConfiguration.setTimerConfiguration(timerConfigurationType);
     eidasMiddlewareConfig.setEidConfiguration(eidConfiguration);
     return eidasMiddlewareConfig;

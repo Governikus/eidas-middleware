@@ -41,4 +41,10 @@ public class CVCRequestModel
 
   private String rscChr;
 
+  private String tlsKeyPairNameToUseForNewCsr;
+
+  private String currentTlsClientKeyPairName;
+
+  private boolean generateNewKey;
+
 }

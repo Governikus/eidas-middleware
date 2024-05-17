@@ -1,7 +1,7 @@
 ====================================
 Overview
 ====================================
-You have received the eIDAS Middleware in order to setup the infrastructure to support the German ID card via
+You have received the eIDAS Middleware in order to setup the infrastructure to support the German eID card via
 your eIDAS connector.
 
 The eIDAS Middleware is distributed in three different ways:

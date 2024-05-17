@@ -47,7 +47,7 @@ running the stand-alone Spring Boot application on your own server,
 we provide a Docker Image to run the middleware in a Docker container.
 
 In order to keep the container as stateless as possible,
-we use volumes to store the configuration and the H2 database outside of the container.
+we use volumes to store the configuration and the HSQL database outside of the container.
 
 Please note that it is not possible to run multiple middleware containers
 using the same configuration or database volume.
@@ -160,7 +160,8 @@ found in this file:
 Pre-configured Ports:
 
 * **ssh:** (TCP 22)
-* **https:** (TCP 443 and TCP 8443)
+* **http:** (TCP 8080)
+* **https:** (TCP 443, TCP 8443 and TCP 10000)
 * **dhcp:** (UDP 67 and UDP 68)
 * **snmp:** (UDP 161)
 

@@ -36,8 +36,8 @@ import de.governikus.eumw.poseidas.eidserver.model.signeddata.MasterList;
 import de.governikus.eumw.poseidas.server.idprovider.config.ConfigurationService;
 import de.governikus.eumw.poseidas.server.monitoring.SNMPConstants;
 import de.governikus.eumw.poseidas.server.monitoring.SNMPTrapSender;
-import de.governikus.eumw.poseidas.server.pki.TerminalPermission;
 import de.governikus.eumw.poseidas.server.pki.TerminalPermissionAO;
+import de.governikus.eumw.poseidas.server.pki.entities.TerminalPermission;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
@@ -286,18 +286,36 @@ public class CertificationRevocationListImpl implements CertificationRevocationL
     return urls;
   }
 
+  /**
+   * Holds succeeded and failed crl renewals.
+   * 
+   * @param succeeded
+   * @param failed
+   */
+  public record RenewCrlsLists(List<String> succeeded, List<String> failed) {
+  }
 
   /**
    * Renews all CRLs that are stored in the {@link CrlCache}.
    */
-  public void renewCrls()
+  public RenewCrlsLists renewCrls()
   {
+    RenewCrlsLists renewCrlsLists = new RenewCrlsLists(new ArrayList<>(), new ArrayList<>());
     Set<String> availableUrls = crlCache.getAvailableUrls();
     for ( String url : availableUrls )
     {
       log.debug("Renewing CRL for URL: {}", url);
-      fetchAndSaveCrl(url);
+      boolean fetchAndSaveCrl = fetchAndSaveCrl(url);
+      if (fetchAndSaveCrl)
+      {
+        renewCrlsLists.succeeded.add(url);
+      }
+      else
+      {
+        renewCrlsLists.failed.add(url);
+      }
     }
+    return renewCrlsLists;
   }
 
   /**
@@ -343,6 +361,7 @@ public class CertificationRevocationListImpl implements CertificationRevocationL
     // All checks completed, return the CRL
     return crlDao.getX509CRL();
   }
+
 
   /**
    * This method tries to fetch, validate, and store the CRL in the cache

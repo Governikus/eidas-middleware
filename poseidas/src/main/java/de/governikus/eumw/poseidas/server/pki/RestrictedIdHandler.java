@@ -12,19 +12,22 @@ package de.governikus.eumw.poseidas.server.pki;
 import java.io.IOException;
 import java.math.BigInteger;
 import java.net.SocketException;
-import java.net.URISyntaxException;
 import java.nio.ByteBuffer;
-import java.security.GeneralSecurityException;
 import java.security.KeyStore;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.security.SignatureException;
 import java.security.cert.X509Certificate;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
+import java.util.Map.Entry;
+import java.util.Optional;
 import java.util.Set;
 
+import org.apache.commons.lang3.ArrayUtils;
 import org.bouncycastle.cms.CMSException;
 
 import de.governikus.eumw.config.ServiceProviderType;
@@ -35,14 +38,19 @@ import de.governikus.eumw.poseidas.eidserver.model.signeddata.BlackList;
 import de.governikus.eumw.poseidas.eidserver.model.signeddata.BlackListDetails;
 import de.governikus.eumw.poseidas.gov2server.GovManagementException;
 import de.governikus.eumw.poseidas.gov2server.constants.admin.GlobalManagementCodes;
-import de.governikus.eumw.poseidas.gov2server.constants.admin.IDManagementCodes;
 import de.governikus.eumw.poseidas.server.idprovider.config.ConfigurationService;
-import de.governikus.eumw.poseidas.server.idprovider.config.KeyPair;
 import de.governikus.eumw.poseidas.server.monitoring.SNMPConstants;
 import de.governikus.eumw.poseidas.server.monitoring.SNMPTrapSender;
+import de.governikus.eumw.poseidas.server.pki.blocklist.BlockListService;
+import de.governikus.eumw.poseidas.server.pki.blocklist.BlockListStorageException;
+import de.governikus.eumw.poseidas.server.pki.caserviceaccess.DvcaServiceFactory;
 import de.governikus.eumw.poseidas.server.pki.caserviceaccess.PKIServiceConnector;
 import de.governikus.eumw.poseidas.server.pki.caserviceaccess.RestrictedIdService;
 import de.governikus.eumw.poseidas.server.pki.caserviceaccess.RestrictedIdService.BlackListResult;
+import de.governikus.eumw.poseidas.server.pki.caserviceaccess.RestrictedIdService140;
+import de.governikus.eumw.poseidas.server.pki.entities.TerminalPermission;
+import lombok.AllArgsConstructor;
+import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
 
@@ -57,7 +65,7 @@ public class RestrictedIdHandler extends BerCaRequestHandlerBase
 
   private static final String UNABLE_TO_PARSE_GIVEN_CVC = "unable to parse given cvc";
 
-  private PKIServiceConnector connector;
+  private final BlockListService blockListService;
 
   /**
    * Create instance for one-time use. May be re-used only for same configuration version.
@@ -69,10 +77,13 @@ public class RestrictedIdHandler extends BerCaRequestHandlerBase
   RestrictedIdHandler(ServiceProviderType nPaConf,
                       TerminalPermissionAO facade,
                       KeyStore hsmKeyStore,
-                      ConfigurationService configurationService)
+                      ConfigurationService configurationService,
+                      DvcaServiceFactory dvcaServiceFactory,
+                      BlockListService blockListService)
     throws GovManagementException
   {
-    super(nPaConf, facade, hsmKeyStore, configurationService);
+    super(nPaConf, facade, hsmKeyStore, configurationService, dvcaServiceFactory);
+    this.blockListService = blockListService;
   }
 
 
@@ -170,7 +181,7 @@ public class RestrictedIdHandler extends BerCaRequestHandlerBase
     {
       PKIServiceConnector.getContextLock();
       log.debug("{}: obtained lock on SSL context for downloading public sector key", cvcRefId);
-      RestrictedIdService wrapper = createService();
+      RestrictedIdService wrapper = dvcaServiceFactory.createRestrictedIdService(serviceProvider, hsmKeyStore);
       sectorPK = wrapper.getSectorPublicKey(sectorId);
     }
     finally
@@ -197,18 +208,24 @@ public class RestrictedIdHandler extends BerCaRequestHandlerBase
     {
       PKIServiceConnector.getContextLock();
       log.debug("{}: obtained lock on SSL context for downloading black list", cvcRefId);
-      RestrictedIdService wrapper = createService();
+      TerminalPermission tp = facade.getTerminalPermission(cvcRefId);
+      RestrictedIdService wrapper = dvcaServiceFactory.createRestrictedIdService(serviceProvider, hsmKeyStore);
 
       blackListStart = System.currentTimeMillis();
       byte[] deltaID = null;
       if (delta)
       {
         log.debug("{}: trying to request delta blacklist", cvcRefId);
-        TerminalPermission tp = facade.getTerminalPermission(cvcRefId);
+
         deltaID = tp.getBlackListVersion() == null ? null : BigInteger.valueOf(tp.getBlackListVersion()).toByteArray();
       }
 
-      blResult = wrapper.getBlacklistResult(deltaID);
+      byte[] sectorID = tp.getSectorID();
+      if (ArrayUtils.isEmpty(sectorID))
+      {
+        sectorID = getSectorID(tp);
+      }
+      blResult = wrapper.getBlacklistResult(deltaID, sectorID);
     }
     catch (GovManagementException e)
     {
@@ -236,11 +253,10 @@ public class RestrictedIdHandler extends BerCaRequestHandlerBase
                                   SNMPConstants.LIST_NOT_RECEIVED);
       return new HashSet<>();
     }
-    if (RestrictedIdService.NO_NEW_DATA.equals(blResult))
+    if (RestrictedIdService140.NO_NEW_DATA.equals(blResult))
     {
       log.info("{}: No newer delta blacklist from BerCa available", cvcRefId);
       SNMPTrapSender.sendSNMPTrap(SNMPConstants.TrapOID.BLACKLIST_TRAP_LAST_RENEWAL_STATUS, SNMPConstants.LIST_RENEWED);
-      facade.updateBlackListStoreDate(cvcRefId, null, null);
       SNMPTrapSender.sendSNMPTrap(SNMPConstants.TrapOID.BLACKLIST_TRAP_LAST_RENEWAL_PROCESSING_DURATION,
                                   System.currentTimeMillis() - blackListStart);
       return new HashSet<>();
@@ -277,9 +293,8 @@ public class RestrictedIdHandler extends BerCaRequestHandlerBase
     log.info("Received delta blacklist");
     if (all)
     {
-      Set<ByteBuffer> entityIDs = importBlacklistCollection(new BlackListContent(blResult.getDeltaRemoved()),
-                                                            BlackList.TYPE_REMOVED);
-      entityIDs.addAll(importBlacklistCollection(new BlackListContent(blResult.getDeltaAdded()), BlackList.TYPE_ADDED));
+      Set<ByteBuffer> entityIDs = importBlockListCollectionDelta(new BlackListContent(blResult.getDeltaAdded()),
+                                                                 new BlackListContent(blResult.getDeltaRemoved()));
       log.info("Successfully finished requestBlackList for {} terminals", entityIDs.size());
       SNMPTrapSender.sendSNMPTrap(SNMPConstants.TrapOID.BLACKLIST_TRAP_LAST_RENEWAL_STATUS, SNMPConstants.LIST_RENEWED);
       return entityIDs;
@@ -287,56 +302,53 @@ public class RestrictedIdHandler extends BerCaRequestHandlerBase
     else
     {
       TerminalPermission tp = facade.getTerminalPermission(cvcRefId);
+
+      ECCVCertificate cvc;
       try
       {
-        ECCVCertificate cvc = new ECCVCertificate(tp.getCvc());
-        importBlackList(new BlackListContent(blResult.getDeltaRemoved()),
-                        cvcRefId,
-                        cvc.getSectorPublicKeyHash(),
-                        BlackList.TYPE_REMOVED);
-        byte[] sectorID = importBlackList(new BlackListContent(blResult.getDeltaAdded()),
-                                          cvcRefId,
-                                          cvc.getSectorPublicKeyHash(),
-                                          BlackList.TYPE_ADDED);
-        log.info("{}: successfully finished requestBlackList", cvcRefId);
-
-        Set<ByteBuffer> result = new HashSet<>();
-        if (sectorID != null)
-        {
-          result.add(ByteBuffer.wrap(sectorID));
-        }
-        SNMPTrapSender.sendSNMPTrap(SNMPConstants.TrapOID.BLACKLIST_TRAP_LAST_RENEWAL_STATUS,
-                                    SNMPConstants.LIST_RENEWED);
-        return result;
+        cvc = new ECCVCertificate(tp.getCvc());
       }
       catch (IOException e)
       {
+        log.warn("Could not parse cvc.", e);
         SNMPTrapSender.sendSNMPTrap(SNMPConstants.TrapOID.BLACKLIST_TRAP_LAST_RENEWAL_STATUS,
                                     SNMPConstants.LIST_PROCESSING_ERROR);
-        throw new IllegalArgumentException(UNABLE_TO_PARSE_GIVEN_CVC, e);
+        throw new GovManagementException(GlobalManagementCodes.EC_UNEXPECTED_ERROR, e.getMessage());
       }
-    }
-  }
 
-  private Set<ByteBuffer> processFullBlackList(boolean all, BlackListResult blResult) throws GovManagementException
-  {
-    BlackListContent blackList;
-    blackList = downloadBlackList(blResult);
-    log.info("Received full blacklist");
-    if (all)
-    {
-      Set<ByteBuffer> updatedSectorIDs = importBlacklistCollection(blackList, BlackList.TYPE_COMPLETE);
-      log.info("Successfully finished requestBlackList for {} terminals", updatedSectorIDs.size());
-      SNMPTrapSender.sendSNMPTrap(SNMPConstants.TrapOID.BLACKLIST_TRAP_LAST_RENEWAL_STATUS, SNMPConstants.LIST_RENEWED);
-      return updatedSectorIDs;
-    }
-    TerminalPermission tp = facade.getTerminalPermission(cvcRefId);
-    try
-    {
-      ECCVCertificate cvc = new ECCVCertificate(tp.getCvc());
-      byte[] sectorID = importBlackList(blackList, cvcRefId, cvc.getSectorPublicKeyHash(), BlackList.TYPE_COMPLETE);
+      Optional<BlockListHolder> optionalAddList = getBlockListInformation(new BlackListContent(blResult.getDeltaAdded()),
+                                                                          cvc.getSectorPublicKeyHash());
+      Optional<BlockListHolder> optionalRemoveList = getBlockListInformation(new BlackListContent(blResult.getDeltaRemoved()),
+                                                                             cvc.getSectorPublicKeyHash());
+
+      if (optionalRemoveList.isEmpty() || optionalAddList.isEmpty())
+      {
+        log.warn("Could not parse delta block list parts.");
+        SNMPTrapSender.sendSNMPTrap(SNMPConstants.TrapOID.BLACKLIST_TRAP_LAST_RENEWAL_STATUS,
+                                    SNMPConstants.LIST_PROCESSING_ERROR);
+        throw new GovManagementException(GlobalManagementCodes.EC_UNEXPECTED_ERROR,
+                                         "Could not parse delta block list parts");
+      }
+
+      var blockListId = optionalAddList.get().listId;
+
+      try
+      {
+        blockListService.updateDeltaBlockList(tp,
+                                              blockListId,
+                                              optionalAddList.get().specificIDs,
+                                              optionalRemoveList.get().specificIDs);
+      }
+      catch (BlockListStorageException e)
+      {
+        log.warn("Could not update block list.", e);
+        SNMPTrapSender.sendSNMPTrap(SNMPConstants.TrapOID.BLACKLIST_TRAP_LAST_RENEWAL_STATUS,
+                                    SNMPConstants.LIST_PROCESSING_ERROR);
+        throw new GovManagementException(GlobalManagementCodes.EC_UNEXPECTED_ERROR, e.getMessage());
+      }
       log.info("{}: successfully finished requestBlackList", cvcRefId);
 
+      var sectorID = optionalAddList.get().sectorID;
       Set<ByteBuffer> result = new HashSet<>();
       if (sectorID != null)
       {
@@ -345,12 +357,94 @@ public class RestrictedIdHandler extends BerCaRequestHandlerBase
       SNMPTrapSender.sendSNMPTrap(SNMPConstants.TrapOID.BLACKLIST_TRAP_LAST_RENEWAL_STATUS, SNMPConstants.LIST_RENEWED);
       return result;
     }
+  }
+
+  private Optional<BlockListHolder> getBlockListInformation(BlackListContent blackListContent,
+                                                            byte[] sectorPublicKeyHash)
+  {
+    BlackList blackList = new BlackList(blackListContent.getContent());
+
+    var listID = new BigInteger(blackList.getListID()).longValue();
+    if (blackList.getBlacklistDetails().size() == 1)
+    {
+      BlackListDetails blackListDetails = blackList.getBlacklistDetails().get(0);
+      return Optional.of(new BlockListHolder(listID, blackListDetails.getSectorID(),
+                                             blackListDetails.getSectorSpecificIDs()));
+    }
+
+
+    return blackList.getBlacklistDetails()
+                    .stream()
+                    .filter(blackListDetails -> MessageDigest.isEqual(blackListDetails.getSectorID(),
+                                                                      sectorPublicKeyHash))
+                    .map(d -> new BlockListHolder(listID, d.getSectorID(), d.getSectorSpecificIDs()))
+                    .findAny();
+  }
+
+  private record BlockListHolder(long listId, byte[] sectorID, List<byte[]> specificIDs)
+  {}
+
+
+  private Set<ByteBuffer> processFullBlackList(boolean all, BlackListResult blResult) throws GovManagementException
+  {
+    BlackListContent blackList;
+    blackList = downloadBlackList(blResult);
+    log.info("Received full blacklist");
+    if (all)
+    {
+      Set<ByteBuffer> updatedSectorIDs = importBlockListCollection(blackList);
+      log.info("Successfully finished requestBlackList for {} terminals", updatedSectorIDs.size());
+      SNMPTrapSender.sendSNMPTrap(SNMPConstants.TrapOID.BLACKLIST_TRAP_LAST_RENEWAL_STATUS, SNMPConstants.LIST_RENEWED);
+      return updatedSectorIDs;
+    }
+    TerminalPermission tp = facade.getTerminalPermission(cvcRefId);
+    ECCVCertificate cvc;
+    try
+    {
+      cvc = new ECCVCertificate(tp.getCvc());
+    }
     catch (IOException e)
+    {
+      log.warn("Could not parse cvc.", e);
+      SNMPTrapSender.sendSNMPTrap(SNMPConstants.TrapOID.BLACKLIST_TRAP_LAST_RENEWAL_STATUS,
+                                  SNMPConstants.LIST_PROCESSING_ERROR);
+      throw new GovManagementException(GlobalManagementCodes.EC_UNEXPECTED_ERROR, e.getMessage());
+    }
+
+    Optional<BlockListHolder> optionalEntries = getBlockListInformation(blackList, cvc.getSectorPublicKeyHash());
+
+    if (optionalEntries.isEmpty())
     {
       SNMPTrapSender.sendSNMPTrap(SNMPConstants.TrapOID.BLACKLIST_TRAP_LAST_RENEWAL_STATUS,
                                   SNMPConstants.LIST_PROCESSING_ERROR);
-      throw new IllegalArgumentException(UNABLE_TO_PARSE_GIVEN_CVC, e);
+      throw new GovManagementException(GlobalManagementCodes.EC_UNEXPECTED_ERROR,
+                                       "Could not find corresponding block list entries for terminal %s".formatted(tp.getRefID()));
     }
+
+    BlockListHolder blockListHolder = optionalEntries.get();
+    var sectorID = blockListHolder.sectorID;
+
+    try
+    {
+      blockListService.updateCompleteBlockList(tp, blockListHolder.listId, sectorID, blockListHolder.specificIDs);
+    }
+    catch (BlockListStorageException e)
+    {
+      log.warn("Could not update block list.", e);
+      SNMPTrapSender.sendSNMPTrap(SNMPConstants.TrapOID.BLACKLIST_TRAP_LAST_RENEWAL_STATUS,
+                                  SNMPConstants.LIST_PROCESSING_ERROR);
+      throw new GovManagementException(GlobalManagementCodes.EC_UNEXPECTED_ERROR, e.getMessage());
+    }
+
+    log.info("{}: successfully finished requestBlackList", cvcRefId);
+
+    Set<ByteBuffer> result = new HashSet<>();
+    if (sectorID != null)
+    {
+      result.add(ByteBuffer.wrap(sectorID));
+    }
+    SNMPTrapSender.sendSNMPTrap(SNMPConstants.TrapOID.BLACKLIST_TRAP_LAST_RENEWAL_STATUS, SNMPConstants.LIST_RENEWED);
+    return result;
   }
 
   private BlackListContent downloadBlackList(BlackListResult blResult) throws GovManagementException
@@ -360,6 +454,10 @@ public class RestrictedIdHandler extends BerCaRequestHandlerBase
     {
       PKIServiceConnector.getContextLock();
       log.debug("{}: Blacklist file download started", cvcRefId);
+      PKIServiceConnector connector = dvcaServiceFactory.getPkiServiceConnector(serviceProvider,
+                                                                                hsmKeyStore,
+                                                                                configurationService.getDvcaConfiguration(serviceProvider),
+                                                                                180);
       blackList = new BlackListContent(connector.getFile(blResult.getUri()));
     }
     catch (SocketException e)
@@ -393,57 +491,154 @@ public class RestrictedIdHandler extends BerCaRequestHandlerBase
   }
 
   /**
-   * For a given blackListCollection, process every contained BlackListDetails which's sectorID matches to one of the
-   * terminals
+   * For a given collection of delta block lists, process every single list where the sectorID matches one of the
+   * terminals.
    *
-   * @param blacklistCollection The BlackListCollection that should be imported
-   * @param type The action that should be performed with the contained BlackListEntries
-   * @return A set containing the sectorIDs of the BlackListDetails that matched the refIDs.
+   * @param collectionAdded The collection of delta block lists that should be added
+   * @param collectionRemoved The collection of delta block lists that should be removed
+   * @return A set containing the sectorIDs of the BlackListDetails that matched the refIDs
    */
-  private Set<ByteBuffer> importBlacklistCollection(BlackListContent blacklistCollection, int type)
+  private Set<ByteBuffer> importBlockListCollectionDelta(BlackListContent collectionAdded,
+                                                         BlackListContent collectionRemoved)
   {
-    Set<ByteBuffer> result = new HashSet<>();
     log.debug("{}: Blacklist parsing for collection started", cvcRefId);
-    BlackList parsedBlacklist = new BlackList(blacklistCollection.getContent());
+    BlackList parsedBlacklistAdded = new BlackList(collectionAdded.getContent());
+    BlackList parsedBlacklistRemoved = new BlackList(collectionRemoved.getContent());
     log.debug("{}: Blacklist parsing for collection finished", cvcRefId);
 
     // allow gc
-    blacklistCollection.clear();
+    collectionAdded.clear();
+    collectionRemoved.clear();
+
+    long blackListIdAdded = new BigInteger(parsedBlacklistAdded.getListID()).longValue();
+    long blackListIdRemoved = new BigInteger(parsedBlacklistRemoved.getListID()).longValue();
+    if (blackListIdAdded != blackListIdRemoved)
+    {
+      log.warn("Received delta lists contain different IDs, refuse to process");
+      return Set.of();
+    }
+
+    List<String> allRefIDs = facade.getTerminalPermissionRefIDList();
+    Map<TerminalPermission, List<byte[]>> addedEntries = buildMapOfSpecificIds(parsedBlacklistAdded, allRefIDs);
+    Map<TerminalPermission, List<byte[]>> removedEntries = buildMapOfSpecificIds(parsedBlacklistRemoved, allRefIDs);
+
+    Set<ByteBuffer> result = new HashSet<>();
+    for ( Entry<TerminalPermission, List<byte[]>> entry : addedEntries.entrySet() )
+    {
+      TerminalPermission tp = entry.getKey();
+      try
+      {
+        blockListService.updateDeltaBlockList(tp,
+                                              blackListIdAdded,
+                                              entry.getValue(),
+                                              removedEntries.get(tp) == null ? List.of() : removedEntries.get(tp));
+        result.add(ByteBuffer.wrap(tp.getSectorID()));
+      }
+      catch (BlockListStorageException e)
+      {
+        log.warn("Could not store block list", e);
+      }
+      finally
+      {
+        removedEntries.remove(tp);
+      }
+    }
+
+    for ( Entry<TerminalPermission, List<byte[]>> entry : removedEntries.entrySet() )
+    {
+      TerminalPermission tp = entry.getKey();
+      try
+      {
+        blockListService.updateDeltaBlockList(tp, blackListIdAdded, List.of(), entry.getValue());
+        result.add(ByteBuffer.wrap(tp.getSectorID()));
+      }
+      catch (BlockListStorageException e)
+      {
+        log.warn("Could not store block list", e);
+      }
+    }
+
+    return result;
+  }
+
+
+  private Map<TerminalPermission, List<byte[]>> buildMapOfSpecificIds(BlackList parsedBlacklist, List<String> allRefIDs)
+  {
+    Map<TerminalPermission, List<byte[]>> map = new HashMap<>();
+    parsedBlacklist.getBlacklistDetails().forEach(blacklistDetails -> {
+      if (blackListDetailsSectorIDAvailable(blacklistDetails))
+      {
+        Optional<TerminalPermission> optTp = findSuitableTerminalPermission(blacklistDetails.getSectorID(), allRefIDs);
+        if (optTp.isEmpty())
+        {
+          return;
+        }
+        map.put(optTp.get(), blacklistDetails.getSectorSpecificIDs());
+      }
+    });
+    return map;
+  }
+
+  /**
+   * For a given collection of full block lists, process every single list where the sectorID matches one of the
+   * terminals.
+   *
+   * @param blockListCollection The collection of full block lists that should be imported
+   * @return A set containing the sectorIDs of the BlackListDetails that matched the refIDs
+   */
+  private Set<ByteBuffer> importBlockListCollection(BlackListContent blockListCollection)
+  {
+    Set<ByteBuffer> result = new HashSet<>();
+    log.debug("{}: Blacklist parsing for collection started", cvcRefId);
+    BlackList parsedBlacklist = new BlackList(blockListCollection.getContent());
+    log.debug("{}: Blacklist parsing for collection finished", cvcRefId);
+
+    // allow gc
+    blockListCollection.clear();
 
     List<String> allRefIDs = facade.getTerminalPermissionRefIDList();
     long blackListId = new BigInteger(parsedBlacklist.getListID()).longValue();
 
-    List<BlackListDetails> detailsList = parsedBlacklist.getBlacklistDetails();
-    while (!detailsList.isEmpty())
-    {
-      BlackListDetails blacklistDetails = detailsList.remove(0);
+    parsedBlacklist.getBlacklistDetails().forEach(blacklistDetails -> {
       if (blackListDetailsSectorIDAvailable(blacklistDetails))
       {
-        String refID = findSuitableRefID(blacklistDetails.getSectorID(), allRefIDs);
-        if (refID != null)
+        Optional<TerminalPermission> optTp = findSuitableTerminalPermission(blacklistDetails.getSectorID(), allRefIDs);
+        if (optTp.isEmpty())
         {
-          TerminalPermission tp = facade.getTerminalPermission(refID);
-          log.debug("{}: Writing blacklist from collection into DB started", tp.getRefID());
-          processBlacklistDetails(type, blacklistDetails, refID);
+          return;
+        }
+
+        TerminalPermission tp = optTp.get();
+        log.debug("{}: Writing blacklist from collection started", tp.getRefID());
+        try
+        {
+          blockListService.updateCompleteBlockList(tp,
+                                                   blackListId,
+                                                   blacklistDetails.getSectorID(),
+                                                   blacklistDetails.getSectorSpecificIDs());
           log.debug("Finished processBlacklistDetails");
-          facade.updateBlackListStoreDate(refID, blacklistDetails.getSectorID(), blackListId);
           log.debug("{}: Writing blacklist from collection into DB finished", tp.getRefID());
           result.add(ByteBuffer.wrap(blacklistDetails.getSectorID()));
         }
+        catch (BlockListStorageException e)
+        {
+          log.error("Could not renew block list for terminal %s".formatted(tp.getRefID()), e);
+        }
       }
-    }
+    });
     return result;
   }
 
   /**
-   * Find the refID that matches to the sectorID from the BlackListDetail
+   * Find the {@link TerminalPermission} that matches to the sectorID from the BlackListDetail
    *
    * @param blackListDetailsSectorID the sectorId from the BlackListDetail
    * @param allRefIDs the list of all terminals
-   * @return the refId of the terminal which sectorID matches with the sectorId from the BlackListDetails or null if the
+   * @return the terminal permission which sectorID matches with the sectorId from the BlackListDetails or empty if the
    *         sectorID from the BlackListDetails is not found
    */
-  private String findSuitableRefID(byte[] blackListDetailsSectorID, List<String> allRefIDs)
+  private Optional<TerminalPermission> findSuitableTerminalPermission(byte[] blackListDetailsSectorID,
+                                                                      List<String> allRefIDs)
   {
     // List all terminals
     for ( String refID : allRefIDs )
@@ -461,15 +656,15 @@ public class RestrictedIdHandler extends BerCaRequestHandlerBase
         // Compare the sectorID from the BlackList and given terminal
         if (Arrays.equals(blackListDetailsSectorID, cvc.getSectorPublicKeyHash()))
         {
-          return refID;
+          return Optional.of(tp);
         }
       }
       catch (IOException e)
       {
-        throw new IllegalArgumentException(UNABLE_TO_PARSE_GIVEN_CVC, e);
+        log.warn(UNABLE_TO_PARSE_GIVEN_CVC + " for terminal " + tp.getRefID());
       }
     }
-    return null;
+    return Optional.empty();
   }
 
   /**
@@ -481,124 +676,6 @@ public class RestrictedIdHandler extends BerCaRequestHandlerBase
   private boolean blackListDetailsSectorIDAvailable(BlackListDetails blacklistDetails)
   {
     return blacklistDetails.getSectorID() != null && blacklistDetails.getSectorID().length > 0;
-  }
-
-  private void processBlacklistDetails(int type, BlackListDetails blacklistDetails, String refID)
-  {
-    log.debug("blacklist contains {} entries.", blacklistDetails.getSectorSpecificIDs().size());
-    if (type == BlackList.TYPE_COMPLETE)
-    {
-      facade.replaceBlackList(refID, blacklistDetails.getSectorID(), blacklistDetails.getSectorSpecificIDs());
-    }
-    else if (type == BlackList.TYPE_ADDED)
-    {
-      facade.addBlackListEntries(blacklistDetails.getSectorID(), blacklistDetails.getSectorSpecificIDs());
-    }
-    else if (type == BlackList.TYPE_REMOVED)
-    {
-      facade.removeBlackListEntries(refID, blacklistDetails.getSectorID(), blacklistDetails.getSectorSpecificIDs());
-    }
-  }
-
-  /**
-   * put a given black list into data storage
-   *
-   * @param blackList
-   * @param cvcRefId
-   * @param sectorPublicKeyHash
-   * @return true if the riKey1 has to be replaced with a new one.
-   * @throws GovManagementException
-   */
-  private byte[] importBlackList(BlackListContent blackList, String cvcRefId, byte[] sectorPublicKeyHash, int type)
-  {
-    if (blackList == null)
-    {
-      log.error("{}:The blacklist did not contain a part suitable for this cvcRefId", cvcRefId);
-      return null;
-    }
-
-    log.debug("{}: Blacklist parsing started", cvcRefId);
-    BlackList parsedBlacklist = new BlackList(blackList.getContent());
-    log.debug("{}: Blacklist parsing finished", cvcRefId);
-
-    // the byte array is no longer needed, allow gc
-    blackList.clear();
-
-    long blackListId = new BigInteger(parsedBlacklist.getListID()).longValue();
-
-    List<BlackListDetails> detailsList = parsedBlacklist.getBlacklistDetails();
-
-    if (detailsList != null)
-    {
-      // if there is only one blacklist, it is assumed that this list belongs to this provider
-      if (detailsList.size() == 1)
-      {
-        BlackListDetails blackListDetails = detailsList.get(0);
-        log.debug("{}: Writing single blacklist into DB started", cvcRefId);
-        processBlacklistDetails(type, blackListDetails, cvcRefId);
-        log.debug("Finished processBlacklistDetails");
-        facade.updateBlackListStoreDate(cvcRefId, blackListDetails.getSectorID(), blackListId);
-        log.debug("{}: Writing single blacklist into DB finished", cvcRefId);
-        return blackListDetails.getSectorID();
-      }
-
-      // if there are more, we must search for the right one
-      while (!detailsList.isEmpty())
-      {
-        // while...remove allows for the gc to dispose of the blacklistdetails already passed
-        BlackListDetails blacklistDetails = detailsList.remove(0);
-        if (blackListDetailsSectorIDAvailable(blacklistDetails))
-        {
-          log.debug("{}: checking blacklist details", cvcRefId);
-          // Beware that theoretically the sectorID and the sectorPublicKeyHash of the same provider could
-          // differ in which case this would not work anymore!
-          if (MessageDigest.isEqual(blacklistDetails.getSectorID(), sectorPublicKeyHash))
-          {
-            log.debug("{}: Writing single blacklist from collection into DB started", cvcRefId);
-            processBlacklistDetails(type, blacklistDetails, cvcRefId);
-            facade.updateBlackListStoreDate(cvcRefId, blacklistDetails.getSectorID(), blackListId);
-            log.debug("{}: Writing single blacklist from collection into DB finished", cvcRefId);
-            return blacklistDetails.getSectorID();
-          }
-        }
-      }
-    }
-    log.error("{}:The blacklist did not contain a part suitable for this cvcRefId", cvcRefId);
-    SNMPTrapSender.sendSNMPTrap(SNMPConstants.TrapOID.BLACKLIST_TRAP_LAST_RENEWAL_STATUS,
-                                SNMPConstants.LIST_PROCESSING_ERROR);
-    return null;
-  }
-
-  private RestrictedIdService createService() throws GovManagementException
-  {
-    String serviceUrl = dvcaConfiguration.getRestrictedIdServiceUrl();
-    String serverSSLCertificateName = dvcaConfiguration.getServerSSLCertificateName();
-    X509Certificate dvcaServerCertificate = configurationService.getCertificate(serverSSLCertificateName);
-
-    try
-    {
-      if (hsmKeyStore == null)
-      {
-        KeyPair clientKeyPair = configurationService.getKeyPair(serviceProvider.getClientKeyPairName());
-        List<X509Certificate> clientCertificate = List.of(clientKeyPair.getCertificate());
-        connector = new PKIServiceConnector(180, dvcaServerCertificate, clientKeyPair.getKey(), clientCertificate,
-                                            cvcRefId);
-      }
-      else
-      {
-        connector = new PKIServiceConnector(180, dvcaServerCertificate, hsmKeyStore, null, cvcRefId);
-      }
-      return new RestrictedIdService(connector, serviceUrl);
-    }
-    catch (GeneralSecurityException | NullPointerException e)
-    {
-      log.error("{}: problem with crypto data of this SP", cvcRefId, e);
-      throw new GovManagementException(GlobalManagementCodes.EC_UNEXPECTED_ERROR, e.getMessage());
-    }
-    catch (URISyntaxException e)
-    {
-      throw new GovManagementException(IDManagementCodes.INVALID_URL, "ID.value.service.termAuth.url");
-    }
   }
 
   /**
@@ -622,29 +699,12 @@ public class RestrictedIdHandler extends BerCaRequestHandlerBase
    * This class should be the only place where the blacklist byte array is referenced for a longer time so it can be
    * gc'ed as soon as possible
    */
+  @AllArgsConstructor
   static final class BlackListContent
   {
 
+    @Getter
     private byte[] content;
-
-    /**
-     * Create a new instance to reference the blacklist byte array
-     *
-     * @param content the blacklist byte array
-     */
-    private BlackListContent(byte[] content)
-    {
-      super();
-      this.content = content;
-    }
-
-    /**
-     * Get the blacklist byte array
-     */
-    public byte[] getContent()
-    {
-      return content;
-    }
 
     /**
      * Call this method to allow garbage collection of the blacklist byte array

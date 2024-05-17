@@ -10,9 +10,11 @@
 package de.governikus.eumw.poseidas.server.idprovider.config;
 
 import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.security.KeyStore;
+import java.security.cert.Certificate;
 import java.security.cert.CertificateException;
 import java.security.cert.X509Certificate;
 import java.util.List;
@@ -211,6 +213,54 @@ public class ConfigurationService
     {
       throw new ConfigurationException("Cannot get the key pair from the configuration with the key pair name "
                                        + keyPairName, e);
+    }
+  }
+
+  /**
+   * Update a key pair with a new certificate.
+   * 
+   * @param keyPairName name of key pair to be updated
+   * @param cert new certificate to replace the old one
+   * @return updated configuration
+   */
+  public EidasMiddlewareConfig updateKeyPair(String keyPairName, X509Certificate cert)
+  {
+    var configuration = getConfiguration().orElseThrow(() -> new ConfigurationException("No configuration present"));
+
+    var keyPairType = configuration.getKeyData()
+                                   .getKeyPair()
+                                   .stream()
+                                   .filter(k -> k.getName().equals(keyPairName))
+                                   .findFirst()
+                                   .orElseThrow(() -> new ConfigurationException("No key pair available with name "
+                                                                                 + keyPairName));
+    var keyStoreType = configuration.getKeyData()
+                                    .getKeyStore()
+                                    .stream()
+                                    .filter(k -> k.getName().equals(keyPairType.getKeyStoreName()))
+                                    .findFirst()
+                                    .orElseThrow(() -> new ConfigurationException("No key store available with name "
+                                                                                  + keyPairType.getKeyStoreName()));
+    try (ByteArrayOutputStream bout = new ByteArrayOutputStream())
+    {
+      var keyStore = KeyStoreSupporter.readKeyStore(keyStoreType.getKeyStore(),
+                                                    KeyStoreSupporter.KeyStoreType.valueOf(keyStoreType.getType()
+                                                                                                       .value()),
+                                                    keyStoreType.getPassword());
+      var keyPassword = keyPairType.getPassword() == null ? new char[0] : keyPairType.getPassword().toCharArray();
+      keyStore.setKeyEntry(keyPairType.getAlias(),
+                           keyStore.getKey(keyPairType.getAlias(), keyPassword),
+                           keyPassword,
+                           new Certificate[]{cert});
+
+      keyStore.store(bout, keyStoreType.getPassword().toCharArray());
+      keyStoreType.setKeyStore(bout.toByteArray());
+
+      return saveConfiguration(configuration, false);
+    }
+    catch (Exception e)
+    {
+      throw new ConfigurationException("unable to update key store in configuration", e);
     }
   }
 

@@ -95,7 +95,8 @@ public class ImportExportConfigurationController
       EidasMiddlewareConfig eidasMiddlewareConfig = XmlHelper.unmarshal(new String(xml.getBytes(),
                                                                                    StandardCharsets.UTF_8),
                                                                         EidasMiddlewareConfig.class);
-      eidasMiddlewareConfig.getEidasConfiguration().setDecryptionKeyPairName(null);
+      Optional.ofNullable(eidasMiddlewareConfig.getEidasConfiguration())
+              .ifPresent(eidasConfiguration -> eidasConfiguration.setDecryptionKeyPairName(null));
 
       StringBuilder errors = new StringBuilder("Following errors occurred while importing configuration: <br>");
       boolean anyError = false;

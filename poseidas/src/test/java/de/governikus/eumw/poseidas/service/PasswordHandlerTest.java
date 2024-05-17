@@ -15,7 +15,7 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.security.crypto.bcrypt.BCrypt;
 
-import de.governikus.eumw.poseidas.config.OverviewController;
+import de.governikus.eumw.poseidas.config.IndexController;
 
 
 @SpringBootTest
@@ -25,7 +25,7 @@ class PasswordHandlerTest
   public static final String PASSWORD = "wurst";
 
   @MockBean
-  private OverviewController overviewController;
+  private IndexController overviewController;
 
   @Autowired
   PasswordHandler passwordHandler;

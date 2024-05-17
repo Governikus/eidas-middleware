@@ -14,55 +14,185 @@
         <input type="hidden"
                th:name="${_csrf.parameterName}"
                th:value="${_csrf.token}"/>
-        <div th:replace="~{this :: inputRow_timer('CVC renewal', 'CVC (Card Verifiable Certificate) renewal', 'cvcRenewalLength', '0', 'cvcRenewalUnit', 'true', 'hoursRefreshCvcBeforeExpiration')}"/>
-        <div th:replace="~{this :: inputRow_timer('Black list renewal', 'Black List renewal', 'blackListRenewalLength', '0', 'blackListRenewalUnit', 'false', '')}"/>
-        <div th:replace="~{this :: inputRow_timer('Master and defect list renewal', 'Master and Defect List renewal', 'masterDefectListRenewalLength', '0', 'masterDefectListRenewalUnit', 'false', '')}"/>
-        <div th:replace="~{this :: inputRow_timer('CRL renewal', 'CRL (Certificate Revocation List) renewal', 'crlRenewalLength', '0', 'crlRenewalUnit', 'false', '')}"/>
-        <div th:replace="fragments/form :: submit()"></div>
+
+        <div th:replace="~{this :: inputRow_timer('CVC renewal', 'CVC (Card Verifiable Certificate) renewal', 'cvcRenewalLength', '0', 'cvcRenewalUnit', 'true', 'hoursRefreshCvcBeforeExpiration' , 'false', ${timerHistories.get('CVC_RENEWAL_TIMER')}, ${nextTimerExecutions.get('CVC_RENEWAL_TIMER')})}"/>
+        <div th:replace="~{this :: inputRow_timer('Block List renewal', 'Block List renewal', 'blackListRenewalLength', '0', 'blackListRenewalUnit', 'false', '' , 'false', ${timerHistories.get('BLACK_LIST_TIMER')}, ${nextTimerExecutions.get('BLACK_LIST_TIMER')})}"/>
+        <div th:replace="~{this :: inputRow_timer('Master and defect list renewal', 'Master and Defect List renewal', 'masterDefectListRenewalLength', '0', 'masterDefectListRenewalUnit', 'false', '' , 'false', ${timerHistories.get('GLOBAL_LIST_TIMER')}, ${nextTimerExecutions.get('GLOBAL_LIST_TIMER')})}"/>
+        <div th:replace="~{this :: inputRow_timer('CRL renewal', 'CRL (Certificate Revocation List) renewal', 'crlRenewalLength', '0', 'crlRenewalUnit', 'false', '' , 'false', ${timerHistories.get('CRL_RENEWAL_TIMER')}, ${nextTimerExecutions.get('CRL_RENEWAL_TIMER')})}"/>
+        <div th:replace="~{this :: inputRow_timer('Entangle TLS server certificate', 'Entangle TLS server certificate', 'tlsEntangleRenewalLength', '0', 'tlsEntangleRenewalUnit', 'false', '', 'true', ${timerHistories.get('TLS_ENTANGLE_TIMER')}, ${nextTimerExecutions.get('TLS_ENTANGLE_TIMER')})}"/>
+        <div th:replace="~{this :: inputRow_rsc('daysRefreshRscBeforeExpiration', ${timerHistories.get('RSC_RENEWAL')}, ${nextTimerExecutions.get('RSC_RENEWAL')})}"/>
+        <div th:if="${@environment.getProperty('poseidas.tls.renewal.active')}">
+            <div th:replace="~{this :: inputRow_tls('daysRefreshTlsClientBeforeExpiration', ${timerHistories.get('TLS_CLIENT_RENEWAL')}, ${nextTimerExecutions.get('TLS_CLIENT_RENEWAL')})}"/>
+        </div>
+        <div th:replace="~{fragments/form :: submit()}"></div>
     </form>
 
-
+    <script th:src="@{/admin-interface/js/utils.js}"></script>
 </section>
 <div th:remove="all">
-    <div th:fragment="inputRow_timer(id, text, obj, min, objUnit, isCVC, hoursRefreshCvcBeforeExpiration)">
+    <div th:fragment="inputRow_timer(id, text, obj, min, objUnit, isCVC, hoursRefreshCvcBeforeExpiration, isAutomaticTlsEntangleActiveCheckBox, history, nextExecution)">
         <div class="shadow p-1  mb-4 rounded card">
             <div class="card-header bg-light">
                 <b th:text="${text}"/>
             </div>
             <div class="card-body">
-                <div th:if="${isCVC}">
-                    <p style="display: inline">
-                        Renew CVC when the validity is less than
-                    </p>
-                    <div class="col-sm-1" style="display: inline-block">
-                        <input class="form-control"
-                               th:classappend="${#fields.hasErrors(hoursRefreshCvcBeforeExpiration) ? 'border-danger' : ''}"
-                               th:field="*{__${hoursRefreshCvcBeforeExpiration}__}"
-                               type="number" min="1" pattern="[0-9]+"/>
-                        <p class="m-0 text-danger" th:errors="*{__${hoursRefreshCvcBeforeExpiration}__}"/>
+                <div class="row">
+                    <div class="col-4">
+                        <!-- Timer config-->
+                        <div th:if="${isAutomaticTlsEntangleActiveCheckBox}">
+                            <div class="form-group row mb-1" th:with="id=${'Automatic entanglement active:'}, obj=${'automaticTlsEntangleActive'}">
+                                <label class="col-auto text-left align-middle" th:for="${id.replace(' ','-')}" th:text="${id}"></label>
+                                <div class="col-auto align-baseline">
+                                    <input class="form-check-input" th:field="*{__${obj}__}" th:id="${id.replace(' ','-')}"
+                                           type="checkbox"/>
+                                    <p class="m-0 text-danger" th:errors="*{__${obj}__}"/>
+                                </div>
+                            </div>
+                        </div>
+                        <div th:if="${isCVC}">
+                            <p class="d-inline">
+                                Renew CVC when the validity is less than
+                            </p>
+                            <div class="col-sm-1 d-inline-block" style="min-width: 75px">
+                                <input class="form-control"
+                                       th:classappend="${#fields.hasErrors(hoursRefreshCvcBeforeExpiration) ? 'border-danger' : ''}"
+                                       th:field="*{__${hoursRefreshCvcBeforeExpiration}__}"
+                                       type="number" min="1" pattern="[0-9]+"/>
+                                <p class="m-0 text-danger" th:errors="*{__${hoursRefreshCvcBeforeExpiration}__}"/>
+                            </div>
+                            <p class="d-inline"> hours.</p>
+                        </div>
+                        <label th:unless="${isCVC}">Execute this operation every </label>
+                        <label th:if="${isCVC}">Perform check every </label>
+                        <div class="row ">
+                            <div class="col-3">
+                                <input class="form-control"
+                                       th:classappend="${#fields.hasErrors(obj) ? 'border-danger' : ''}"
+                                       th:field="*{__${obj}__}"
+                                       th:id="${id.replace(' ','-')}"
+                                       type="number" min="1" pattern="[0-9]+"/>
+                                <p class="m-0 text-danger" th:errors="*{__${obj}__}"/>
+                            </div>
+                            <div class="col">
+                                <select class="form-select" th:id="${objUnit}"
+                                        th:classappend="${#fields.hasErrors(objUnit) ? 'border-danger' : ''}"
+                                        th:field="*{__${objUnit}__}">
+                                    <option th:each="unit :  ${T(de.governikus.eumw.config.TimerUnit).values()}"
+                                            th:text="${#strings.toLowerCase(unit)}"
+                                            th:value="${unit}"></option>
+                                </select>
+                                <p class="m-0 text-danger" th:errors="*{__${objUnit}__}"/>
+                            </div>
+                        </div>
+                        <div class="row mt-1">
+                            <p>Next execution: <span th:text="${nextExecution}"/></p>
+                        </div>
                     </div>
-                    <p style="display: inline"> hours.</p>
+                    <div class="col-8">
+                        <!-- Timer History-->
+                        <div th:replace="~{this :: history(${history})}"/>
+                    </div>
                 </div>
-                <label th:unless="${isCVC}">Execute this operation every </label>
-                <label th:if="${isCVC}">Perform check every </label>
-                <div class="row ">
-                    <div class="col-3">
-                        <input class="form-control"
-                               th:classappend="${#fields.hasErrors(obj) ? 'border-danger' : ''}"
-                               th:field="*{__${obj}__}"
-                               th:id="${id.replace(' ','-')}"
-                               type="number" min="1" pattern="[0-9]+"/>
-                        <p class="m-0 text-danger" th:errors="*{__${obj}__}"/>
+            </div>
+        </div>
+    </div>
+
+    <div th:fragment="history(history)">
+        <div class="table-responsive scrolldown"
+             style="height: 30vh; min-height: 15vh; resize: vertical">
+            <table class="table table-striped">
+                <thead class="table-header sticky-top">
+                <tr>
+                    <th class="small-col">Log time</th>
+                    <th class="small-col">Success</th>
+                    <th style="width: 100%">Message</th>
+                </tr>
+                </thead>
+                <tbody>
+                <th:block th:if="${history.isEmpty}">
+                    <tr>
+                        <td colspan="3" class="text-center">There are no documented timer runs yet.</td>
+                    </tr>
+                </th:block>
+                <th:block th:each="hentry : ${history}">
+                    <tr>
+                        <td class="small-col text-nowrap"
+                            th:text="${hentry.formatTimestamp()}"></td>
+                        <td class="small-col text-center"><span class="fa"
+                                                                th:classappend="${hentry.success ? 'fa-check' : 'fa-x'}"/>
+                        </td>
+                        <td style="width: 100%; white-space: pre-line" th:text="${hentry.message}"></td>
+                    </tr>
+                </th:block>
+                </tbody>
+
+            </table>
+        </div>
+    </div>
+
+    <div th:fragment="inputRow_rsc(daysRefreshRscBeforeExpiration, history, nextExecution)">
+        <div class="shadow p-1  mb-4 rounded card">
+            <div class="card-header bg-light">
+                <b>RSC (Request Signer Certificate) renewal</b>
+            </div>
+            <div class="card-body">
+
+                <div class="row">
+                    <div class="col-4">
+                        <p class="d-inline">
+                            Renew RSC when the validity is less than
+                        </p>
+                        <div class="col-sm-1 d-inline-block" style="min-width: 70px">
+                            <input class="form-control"
+                                   th:classappend="${#fields.hasErrors(daysRefreshRscBeforeExpiration) ? 'border-danger' : ''}"
+                                   th:field="*{__${daysRefreshRscBeforeExpiration}__}"
+                                   type="number" min="1" pattern="[0-9]+"/>
+                            <p class="m-0 text-danger" th:errors="*{__${daysRefreshRscBeforeExpiration}__}"/>
+                        </div>
+                        <p class="d-inline"> days.</p>
+                        <p>The check will be performed once daily.</p>
+                        <div class="row  mt-1">
+                            <p>Next execution: <span th:text="${nextExecution}"/></p>
+                        </div>
                     </div>
-                    <div class="col">
-                        <select class="form-select" th:id="${objUnit}"
-                                th:classappend="${#fields.hasErrors(objUnit) ? 'border-danger' : ''}"
-                                th:field="*{__${objUnit}__}">
-                            <option th:each="unit :  ${T(de.governikus.eumw.config.TimerUnit).values()}"
-                                    th:text="${#strings.toLowerCase(unit)}"
-                                    th:value="${unit}"></option>
-                        </select>
-                        <p class="m-0 text-danger" th:errors="*{__${objUnit}__}"/>
+                    <div class="col-8">
+                        <!-- Timer History-->
+                        <div th:replace="~{this :: history(${history})}"/>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+
+    <div th:fragment="inputRow_tls(daysRefreshTlsClientBeforeExpiration, history, nextExecution)">
+        <div class="shadow p-1  mb-4 rounded card">
+            <div class="card-header bg-light">
+                <b>TLS Client Certificate renewal</b>
+            </div>
+            <div class="card-body">
+
+                <div class="row">
+                    <div class="col-4">
+                        <p class="d-inline">
+                            Renew TLS Client Certificate when the validity is less than
+                        </p>
+                        <div class="col-sm-1 d-inline-block" style="min-width: 70px">
+                            <input class="form-control"
+                                   th:classappend="${#fields.hasErrors(daysRefreshTlsClientBeforeExpiration) ? 'border-danger' : ''}"
+                                   th:field="*{__${daysRefreshTlsClientBeforeExpiration}__}"
+                                   type="number" min="1" pattern="[0-9]+"/>
+                            <p class="m-0 text-danger" th:errors="*{__${daysRefreshTlsClientBeforeExpiration}__}"/>
+                        </div>
+                        <p class="d-inline"> days.</p>
+                        <p>The check will be performed once daily.</p>
+                        <div class="row  mt-1">
+                            <p>Next execution: <span th:text="${nextExecution}"/></p>
+                        </div>
+                    </div>
+                    <div class="col-8">
+                        <!-- Timer History-->
+                        <div th:replace="~{this :: history(${history})}"/>
                     </div>
                 </div>
 

@@ -378,7 +378,6 @@ public class ConfigurationMigrationService
     UriComponents url = UriComponentsBuilder.fromHttpUrl(pkiConf.getPassiveAuthService().getUrl()).build();
     newDvcaConfiguration.setName(url.getHost());
     newDvcaConfiguration.setPassiveAuthServiceUrl(pkiConf.getPassiveAuthService().getUrl());
-    newDvcaConfiguration.setDvcaCertificateDescriptionServiceUrl(pkiConf.getDvcaCertDescriptionService().getUrl());
 
     String restrictedIdUrl = pkiConf.getRestrictedIdService().getUrl();
     if (StringUtils.startsWith(restrictedIdUrl, "https://berca-p1.d-trust.net/ps/dvsd_v2"))
@@ -452,9 +451,6 @@ public class ConfigurationMigrationService
   {
     return pkiConf.getPassiveAuthService().getUrl().equals(dvcaConfigurationType.getPassiveAuthServiceUrl())
            && pkiConf.getTerminalAuthService().getUrl().equals(dvcaConfigurationType.getTerminalAuthServiceUrl())
-           && pkiConf.getDvcaCertDescriptionService()
-                     .getUrl()
-                     .equals(dvcaConfigurationType.getDvcaCertificateDescriptionServiceUrl())
            && pkiConf.getRestrictedIdService().getUrl().equals(dvcaConfigurationType.getRestrictedIdServiceUrl());
   }
 

@@ -16,7 +16,6 @@ import static org.junit.jupiter.api.Assertions.fail;
 import java.io.IOException;
 import java.util.Optional;
 
-import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -26,6 +25,7 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.context.annotation.Import;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 
+import com.gargoylesoftware.htmlunit.html.HtmlCheckBoxInput;
 import com.gargoylesoftware.htmlunit.html.HtmlNumberInput;
 import com.gargoylesoftware.htmlunit.html.HtmlPage;
 
@@ -63,7 +63,7 @@ class TimerControllerTest extends WebAdminTestBase
 
   private final static String CVC_RENEWAL_UNIT_FIELD_ID = "cvcRenewalUnit";
 
-  private final static String BL_RENEWAL_VALUE_FIELD_ID = "Black-list-renewal";
+  private final static String BL_RENEWAL_VALUE_FIELD_ID = "Block-List-renewal";
 
   private final static String BL_RENEWAL_UNIT_FIELD_ID = "blackListRenewalUnit";
 
@@ -74,6 +74,12 @@ class TimerControllerTest extends WebAdminTestBase
   private final static String CRL_RENEWAL_VALUE_FIELD_ID = "CRL-renewal";
 
   private final static String CRL_RENEWAL_UNIT_FIELD_ID = "crlRenewalUnit";
+
+  private final static String TLS_ENTANGLE_RENEWAL_VALUE_FIELD_ID = "Entangle-TLS-server-certificate";
+
+  private final static String TLS_ENTANGLE_RENEWAL_UNIT_FIELD_ID = "tlsEntangleRenewalUnit";
+
+  private final static String AUTOMATIC_TLS_ENTANGLE_FIELD_ID = "Automatic-entanglement-active:";
 
   @Autowired
   public TimerControllerTest(ConfigurationService configurationService)
@@ -90,7 +96,9 @@ class TimerControllerTest extends WebAdminTestBase
     CVC_RENEWAL(CVC_RENEWAL_VALUE_FIELD_ID, CVC_RENEWAL_UNIT_FIELD_ID, CVC_RENEWAL_HOURS_BEFORE_FIELD_ID),
     BL_RENEWAL(BL_RENEWAL_VALUE_FIELD_ID, BL_RENEWAL_UNIT_FIELD_ID),
     ML_RENEWAL(ML_RENEWAL_VALUE_FIELD_ID, ML_RENEWAL_UNIT_FIELD_ID),
-    CRL_RENEWAL(CRL_RENEWAL_VALUE_FIELD_ID, CRL_RENEWAL_UNIT_FIELD_ID);
+    CRL_RENEWAL(CRL_RENEWAL_VALUE_FIELD_ID, CRL_RENEWAL_UNIT_FIELD_ID),
+    TLS_ENTANGLE_RENEWAL(TLS_ENTANGLE_RENEWAL_VALUE_FIELD_ID, TLS_ENTANGLE_RENEWAL_UNIT_FIELD_ID),
+    AUTOMATIC_TLS_ENTANGLE(AUTOMATIC_TLS_ENTANGLE_FIELD_ID, null);
 
     private final String valueID;
 
@@ -126,18 +134,28 @@ class TimerControllerTest extends WebAdminTestBase
     // Test no value
     for ( Timer value : Timer.values() )
     {
-      setEmptyValue(timerConfigPage, value);
+      if (AUTOMATIC_TLS_ENTANGLE_FIELD_ID.equals(value.valueID))
+      {
+        setAutoEntangleValue(timerConfigPage, value, false);
+      }
+      else
+      {
+        setEmptyValue(timerConfigPage, value);
+      }
     }
     timerConfigPage = submitAnyForm(timerConfigPage);
 
 
     for ( Timer value : Timer.values() )
     {
-      assertValidationMessagePresent(timerConfigPage, value.valueID, "May not be empty");
-      if (value == Timer.CVC_RENEWAL)
+      if (!AUTOMATIC_TLS_ENTANGLE_FIELD_ID.equals(value.valueID))
       {
-        assertValidationMessagePresent(timerConfigPage, value.hoursBeforeID, "May not be empty");
+        assertValidationMessagePresent(timerConfigPage, value.valueID, "May not be empty");
+        if (value == Timer.CVC_RENEWAL)
+        {
+          assertValidationMessagePresent(timerConfigPage, value.hoursBeforeID, "May not be empty");
 
+        }
       }
     }
 
@@ -146,6 +164,7 @@ class TimerControllerTest extends WebAdminTestBase
                                    .map(EidasMiddlewareConfig.EidConfiguration::getTimerConfiguration)
                                    .isEmpty());
   }
+
 
   @Test
   void testCorrectValue() throws IOException
@@ -174,6 +193,12 @@ class TimerControllerTest extends WebAdminTestBase
         case CRL_RENEWAL:
           setTimerValue(timerConfigPage, timer, 4, TimerUnit.MINUTES);
           break;
+        case TLS_ENTANGLE_RENEWAL:
+          setTimerValue(timerConfigPage, timer, 1, TimerUnit.HOURS);
+          break;
+        case AUTOMATIC_TLS_ENTANGLE:
+          setAutoEntangleValue(timerConfigPage, timer, true);
+          break;
         default:
           fail("Timer not represented in switch case: " + timer.name());
           break;
@@ -183,8 +208,18 @@ class TimerControllerTest extends WebAdminTestBase
     submitAnyForm(timerConfigPage);
 
     // Check values
-    checkValues(48, 1, TimerUnit.MINUTES, 2, TimerUnit.MINUTES, 3, TimerUnit.MINUTES, 4, TimerUnit.MINUTES);
-
+    checkValues(48,
+                1,
+                TimerUnit.MINUTES,
+                2,
+                TimerUnit.MINUTES,
+                3,
+                TimerUnit.MINUTES,
+                4,
+                TimerUnit.MINUTES,
+                1,
+                TimerUnit.HOURS,
+                true);
   }
 
   @Test
@@ -197,17 +232,22 @@ class TimerControllerTest extends WebAdminTestBase
                                    .map(EidasMiddlewareConfig.EidConfiguration::getTimerConfiguration)
                                    .isEmpty());
 
-    Assertions.assertEquals("20", timerConfigPage.getElementById(CVC_RENEWAL_HOURS_BEFORE_FIELD_ID).asNormalizedText());
-    Assertions.assertEquals("1", timerConfigPage.getElementById(CVC_RENEWAL_VALUE_FIELD_ID).asNormalizedText());
-    Assertions.assertEquals(HOURS, timerConfigPage.getElementById(CVC_RENEWAL_UNIT_FIELD_ID).asNormalizedText());
+    assertEquals("20", timerConfigPage.getElementById(CVC_RENEWAL_HOURS_BEFORE_FIELD_ID).asNormalizedText());
+    assertEquals("1", timerConfigPage.getElementById(CVC_RENEWAL_VALUE_FIELD_ID).asNormalizedText());
+    assertEquals(HOURS, timerConfigPage.getElementById(CVC_RENEWAL_UNIT_FIELD_ID).asNormalizedText());
 
-    Assertions.assertEquals("15", timerConfigPage.getElementById(BL_RENEWAL_VALUE_FIELD_ID).asNormalizedText());
-    Assertions.assertEquals("minutes", timerConfigPage.getElementById(BL_RENEWAL_UNIT_FIELD_ID).asNormalizedText());
-    Assertions.assertEquals("2", timerConfigPage.getElementById(ML_RENEWAL_VALUE_FIELD_ID).asNormalizedText());
-    Assertions.assertEquals(HOURS, timerConfigPage.getElementById(ML_RENEWAL_UNIT_FIELD_ID).asNormalizedText());
+    assertEquals("15", timerConfigPage.getElementById(BL_RENEWAL_VALUE_FIELD_ID).asNormalizedText());
+    assertEquals("minutes", timerConfigPage.getElementById(BL_RENEWAL_UNIT_FIELD_ID).asNormalizedText());
+    assertEquals("2", timerConfigPage.getElementById(ML_RENEWAL_VALUE_FIELD_ID).asNormalizedText());
+    assertEquals(HOURS, timerConfigPage.getElementById(ML_RENEWAL_UNIT_FIELD_ID).asNormalizedText());
 
-    Assertions.assertEquals("2", timerConfigPage.getElementById(CRL_RENEWAL_VALUE_FIELD_ID).asNormalizedText());
-    Assertions.assertEquals(HOURS, timerConfigPage.getElementById(CRL_RENEWAL_UNIT_FIELD_ID).asNormalizedText());
+    assertEquals("2", timerConfigPage.getElementById(CRL_RENEWAL_VALUE_FIELD_ID).asNormalizedText());
+    assertEquals(HOURS, timerConfigPage.getElementById(CRL_RENEWAL_UNIT_FIELD_ID).asNormalizedText());
+
+    assertEquals("1", timerConfigPage.getElementById(TLS_ENTANGLE_RENEWAL_VALUE_FIELD_ID).asNormalizedText());
+    assertEquals(HOURS, timerConfigPage.getElementById(TLS_ENTANGLE_RENEWAL_UNIT_FIELD_ID).asNormalizedText());
+
+    assertEquals("checked", timerConfigPage.getElementById(AUTOMATIC_TLS_ENTANGLE_FIELD_ID).asNormalizedText());
   }
 
   private void checkValues(int cvcHoursBefore,
@@ -218,7 +258,10 @@ class TimerControllerTest extends WebAdminTestBase
                            int mlRenewValue,
                            TimerUnit mlRenewUnit,
                            int crlRenewValue,
-                           TimerUnit crlRenewUnit)
+                           TimerUnit crlRenewUnit,
+                           int tlsEntangleValue,
+                           TimerUnit tlsEntangleUnit,
+                           boolean autoEntangle)
   {
 
     final Optional<TimerConfigurationType> timerConfigurationTypeOptional = configurationService.getConfiguration()
@@ -239,6 +282,10 @@ class TimerControllerTest extends WebAdminTestBase
 
     assertEquals(crlRenewValue, timerConfigurationType.getCrlRenewal().getLength());
     assertEquals(crlRenewUnit, timerConfigurationType.getCrlRenewal().getUnit());
+
+    assertEquals(tlsEntangleValue, timerConfigurationType.getTlsEntangleRenewal().getLength());
+    assertEquals(tlsEntangleUnit, timerConfigurationType.getTlsEntangleRenewal().getUnit());
+    assertEquals(autoEntangle, timerConfigurationType.getTlsEntangleRenewal().isAutomaticTlsEntangleActive());
   }
 
   private void setTimerValue(HtmlPage timerConfigPage, Timer timer, int value, TimerUnit unit)
@@ -256,6 +303,11 @@ class TimerControllerTest extends WebAdminTestBase
     }
   }
 
+  private void setAutoEntangleValue(HtmlPage timerConfigPage, Timer timer, boolean isActive)
+  {
+    HtmlCheckBoxInput htmlCheckBoxInput = timerConfigPage.getHtmlElementById(timer.getValueID());
+    htmlCheckBoxInput.setChecked(isActive);
+  }
   private void setEmptyValue(HtmlPage timerConfigPage, Timer timer)
   {
     HtmlNumberInput numberInput = (HtmlNumberInput)timerConfigPage.getElementById(timer.getValueID());

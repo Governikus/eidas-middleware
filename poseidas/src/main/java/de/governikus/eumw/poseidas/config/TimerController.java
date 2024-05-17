@@ -1,6 +1,10 @@
 package de.governikus.eumw.poseidas.config;
 
+import java.util.Arrays;
+import java.util.List;
+import java.util.Map;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 import jakarta.validation.Valid;
 
@@ -14,6 +18,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import de.governikus.eumw.config.EidasMiddlewareConfig;
+import de.governikus.eumw.config.EntanglementTimerType;
 import de.governikus.eumw.config.TimerConfigurationType;
 import de.governikus.eumw.config.TimerType;
 import de.governikus.eumw.config.TimerTypeCertRenewal;
@@ -21,6 +26,11 @@ import de.governikus.eumw.config.TimerUnit;
 import de.governikus.eumw.eidascommon.ContextPaths;
 import de.governikus.eumw.poseidas.config.model.forms.TimerConfigModel;
 import de.governikus.eumw.poseidas.server.idprovider.config.ConfigurationService;
+import de.governikus.eumw.poseidas.server.pki.RequestSignerCertificateService;
+import de.governikus.eumw.poseidas.server.pki.TimerHistoryService;
+import de.governikus.eumw.poseidas.server.pki.TlsClientRenewalService;
+import de.governikus.eumw.poseidas.server.pki.entities.TimerHistory;
+import de.governikus.eumw.poseidas.server.timer.ApplicationTimer;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
@@ -39,6 +49,10 @@ public class TimerController
 
   private final ConfigurationService configurationService;
 
+  private final TimerHistoryService timerHistoryService;
+
+  private final ApplicationTimer applicationTimer;
+
   @GetMapping("")
   public String index(Model model, @ModelAttribute String error, @ModelAttribute String msg)
   {
@@ -56,8 +70,30 @@ public class TimerController
                                                                         .map(EidasMiddlewareConfig.EidConfiguration::getTimerConfiguration)
                                                                         .orElse(new TimerConfigurationType());
     setDefaultTimerValues(timerConfigurationType);
+
+
+
     model.addAttribute("timerConfigModel", toConfigModel(timerConfigurationType));
+    model.addAttribute("timerHistories", prepareTimerHistory());
+    model.addAttribute("nextTimerExecutions", prepareTimerExecutions());
+
+
     return CONFIG_TEMPLATE;
+  }
+
+  private Map<String, String> prepareTimerExecutions()
+  {
+    return Arrays.stream(TimerHistory.TimerType.values())
+                 .collect(Collectors.toMap(Enum::name,
+                                           s -> applicationTimer.getNextTimerExecution(s)
+                                                                .map(TimerHistory.DATE_TIME_FORMATTER::format)
+                                                                .orElse("unknown")));
+  }
+
+  private Map<String, List<TimerHistory>> prepareTimerHistory()
+  {
+    return Arrays.stream(TimerHistory.TimerType.values())
+                 .collect(Collectors.toMap(Enum::name, timerHistoryService::getAllTimers));
   }
 
   @PostMapping("")
@@ -69,6 +105,9 @@ public class TimerController
 
     if (bindingResult.hasErrors())
     {
+
+      model.addAttribute("nextTimerExecutions", prepareTimerExecutions());
+      model.addAttribute("timerHistories", prepareTimerHistory());
       return CONFIG_TEMPLATE;
     }
 
@@ -112,6 +151,20 @@ public class TimerController
       timerConfigModelBuilder.crlRenewalLength(timerConfigurationType.getCrlRenewal().getLength());
       timerConfigModelBuilder.crlRenewalUnit(timerConfigurationType.getCrlRenewal().getUnit());
     }
+    if (timerConfigurationType.getTlsEntangleRenewal() != null)
+    {
+      timerConfigModelBuilder.tlsEntangleRenewalLength(timerConfigurationType.getTlsEntangleRenewal().getLength());
+      timerConfigModelBuilder.tlsEntangleRenewalUnit(timerConfigurationType.getTlsEntangleRenewal().getUnit());
+      timerConfigModelBuilder.automaticTlsEntangleActive(timerConfigurationType.getTlsEntangleRenewal()
+                                                                               .isAutomaticTlsEntangleActive());
+    }
+    timerConfigModelBuilder.daysRefreshRscBeforeExpiration(timerConfigurationType.getDaysRefreshRSCBeforeExpires() == null
+      ? RequestSignerCertificateService.DEFAULT_DAYS_BEFORE_EXPIRATION
+      : timerConfigurationType.getDaysRefreshRSCBeforeExpires());
+    timerConfigModelBuilder.daysRefreshTlsClientBeforeExpiration(timerConfigurationType.getDaysRefreshTlsClientBeforeExpires() == null
+      ? TlsClientRenewalService.DEFAULT_DAYS_BEFORE_EXPIRATION
+      : timerConfigurationType.getDaysRefreshTlsClientBeforeExpires());
+
     return timerConfigModelBuilder.build();
   }
 
@@ -125,7 +178,12 @@ public class TimerController
                                       new TimerType(timerConfigModel.getMasterDefectListRenewalLength(),
                                                     timerConfigModel.getMasterDefectListRenewalUnit()),
                                       new TimerType(timerConfigModel.getCrlRenewalLength(),
-                                                    timerConfigModel.getCrlRenewalUnit()));
+                                                    timerConfigModel.getCrlRenewalUnit()),
+                                      new EntanglementTimerType(timerConfigModel.getTlsEntangleRenewalLength(),
+                                                                timerConfigModel.getTlsEntangleRenewalUnit(),
+                                                                timerConfigModel.isAutomaticTlsEntangleActive()),
+                                      timerConfigModel.getDaysRefreshRscBeforeExpiration(),
+                                      timerConfigModel.getDaysRefreshTlsClientBeforeExpiration());
   }
 
   private void setDefaultTimerValues(TimerConfigurationType timerConfigurationType)
@@ -145,6 +203,18 @@ public class TimerController
     if (timerConfigurationType.getCrlRenewal() == null)
     {
       timerConfigurationType.setCrlRenewal(new TimerType(2, TimerUnit.HOURS));
+    }
+    if (timerConfigurationType.getTlsEntangleRenewal() == null)
+    {
+      timerConfigurationType.setTlsEntangleRenewal(new EntanglementTimerType(1, TimerUnit.HOURS, true));
+    }
+    if (timerConfigurationType.getDaysRefreshRSCBeforeExpires() == null)
+    {
+      timerConfigurationType.setDaysRefreshRSCBeforeExpires(RequestSignerCertificateService.DEFAULT_DAYS_BEFORE_EXPIRATION);
+    }
+    if (timerConfigurationType.getDaysRefreshTlsClientBeforeExpires() == null)
+    {
+      timerConfigurationType.setDaysRefreshTlsClientBeforeExpires(TlsClientRenewalService.DEFAULT_DAYS_BEFORE_EXPIRATION);
     }
   }
 }

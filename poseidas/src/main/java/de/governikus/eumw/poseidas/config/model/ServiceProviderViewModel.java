@@ -21,4 +21,6 @@ public class ServiceProviderViewModel
   private String name;
 
   private boolean enabled;
+
+  private String rscRenewalError;
 }

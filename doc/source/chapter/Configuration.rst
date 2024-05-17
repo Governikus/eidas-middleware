@@ -48,7 +48,7 @@ The following table describes the individual key stores and certificates:
     | Master List        | This certificate is needed to verify the signature of the :term:`Master List`.              | Admin-UI > DVCA > Master List Trust Anchor                                  |
     | Trust Anchor       |                                                                                             |                                                                             |
     +--------------------+---------------------------------------------------------------------------------------------+-----------------------------------------------------------------------------+
-    | Black List         | This certificate is needed to verify the signature of the :term:`Black List`.               | Admin-UI > DVCA > Black List Trust Anchor                                   |
+    | Block List         | This certificate is needed to verify the signature of the :term:`Block List`.               | Admin-UI > DVCA > Block List Trust Anchor                                   |
     | Trust Anchor       |                                                                                             |                                                                             |
     +--------------------+---------------------------------------------------------------------------------------------+-----------------------------------------------------------------------------+
 
@@ -69,7 +69,7 @@ E.g., if the middleware is running on ``https://your.eidas.domain.eu/eidas-middl
 
 For a test system, this TLS certificate may be self signed. However for a production system, this TLS certificate must
 meet the requirements of the `eIDAS Crypto Requirements, section 2.4 <https://ec.europa.eu/digital-building-blocks/wikis/display/DIGITAL/eIDAS+eID+Profile?preview=/467109280/467109282/eIDAS%20Cryptographic%20Requirement%20v.1.2%20Final.pdf>`_
-which states that qualified website certificates must be used.
+.
 
 For a successful connection of the eIDAS Middleware with your eIDAS Connector(s), their SAML Metadata must be exchanged.
 The metadata of eIDAS Nodes contain the certificates that should be used for encryption and signature verification,
@@ -109,7 +109,11 @@ This configuration file contains the following sections:
     To configure the TLS connection with your Server TLS Key Store, insert the appropriate values in this section.
 
     .. hint::
-        If you change the TLS key store for the eIDAS Middleware, you must inform the :term:`Authorization CA`
+        The TLS certificate is entangled with your :term:`CVC`. If the TLS certificate changes, the CVC becomes
+        unusable until a new :term:`CVC` with the correct entanglement is issued. The process of the entanglement and
+        requesting a new :term:`CVC` is automated if a :term:`Request Signer Certificate` is in use
+        (see :ref:`automatic entanglement <automatic_entanglement>`).
+        Otherwise if you change the TLS key store for the eIDAS Middleware, you must inform the :term:`Authorization CA`
         about the new TLS certificate. If you use a TLS key store that is not known to the :term:`Authorization CA`,
         the eIDAS Middleware may not work properly. If you change the TLS key store, please send an e-mail with the
         new TLS certificate and the CHR of your :term:`CVC` data to eidas-middleware@governikus.de. The CHR can be
@@ -131,7 +135,7 @@ This configuration file contains the following sections:
 
     You need to provide a configuration file for the Sun PKCS#11 provider.
     In this file, you need to configure the settings for your HSM model which is out of scope
-    of this documentation. You can find assistance for the settings in the `PKCS#11 Reference Guide
+    of this documentation. You can find assistance for the settings in the `PKCS11 Reference Guide
     <https://docs.oracle.com/en/java/javase/11/security/pkcs11-reference-guide1.html>`_.
     Then, the path to the configuration file must be given as ``pkcs11.config`` property
 
@@ -143,6 +147,26 @@ This configuration file contains the following sections:
     Use ``hsm.keys.delete``. If you do not enter a value, a default of 30 days is assumed.
     Also, you can set whether you want to backup these keys in the database before they are deleted
     from the HSM via the ``hsm.keys.archive`` property. This option might not work with every HSM however.
+
+#.  **Block List storage**
+
+    Beginning in version 3.3.0, the Block List is no longer stored in the database but as text files in the file system.
+    The folder can be configured using the property ``blocklist.storage-folder``. If it is not set,
+    the default folder is ``block-list-data`` (as a relative path to the eIDAS Middleware main folder).
+    The MW requires permission to write and read in that folder.
+
+#.  **TLS Client Certificate renewal**
+
+    This feature implements automatic renewal of TLS client certificates for communication with the Autothorization CA.
+
+#.  **RI service interface v1.4**
+
+    This feature allows for communication with the block list server according to TR-03129 v1.4.
+
+    .. note::
+        Attention: Please note: The features TLS Client Certificate renewal and RI service interface v1.4 are not
+        available in production yet. Please consult with eidas-middleware@governikus.de before changing these properties.
+
 
 
 Startup
@@ -219,7 +243,7 @@ matches the ``requesterId`` used in eIDAS SAML requests made by that SP. If no m
 
 The client authentication key pair is used for the communication to the :term:`Authorization CA`.
 The associated certificate must be given to the :term:`Authorization CA`.
-In case you use a PKCS11 HSM, this key must be stored in the HSM. It is required that the the label and the ID for the
+In case you use a PKCS#11 HSM, this key must be stored in the HSM. It is required that the the label and the ID for the
 certificate and key entry in the HSM are identical. As the ID is a hexadecimal value, use the hex-value of the ASCII
 string.
 
@@ -232,7 +256,8 @@ You can fill in the information that will be published in the metadata and selec
 will be used for requests from the public sector.
 Especially important are the server URL, which must have the value as the middleware is reachable from
 the internet, and the SAML key pair. In case you use a PKCS#11 HSM, the key for SAML signatures must be
-available in the HSM using label and ID ``samlsigning``.
+available in the HSM using label and ID ``samlsigning`` . As the ID is a hexadecimal value, use the hex-value of the
+ASCII string.
 
 
 eID means
@@ -245,6 +270,15 @@ Timer
 ^^^^^
 
 Here, you can set the frequency for several background jobs. Normally the default settings should suffice.
+
+History
+________
+
+There is a history for each timer.
+The history shows the time and result of the last 50 executions.
+This is used for traceability.
+If a timer performs an action for several service providers, the result is displayed individually for each service
+provider.
 
 
 DVCA
@@ -260,7 +294,7 @@ Master List signer certificate or its issuer. After a successful update of the M
 as an additional trust anchor for future Master List updates. Therefore, the Master List trust anchor does not need to
 be updated and it is fine to keep this certificate in the configuration, even if it expires.
 
-.. hint:: In case the Master List cannot be updated because no valid trust anchor is present, contact the German SPOC
+.. hint:: In case the Master List cannot be updated because no valid trust anchor is present, contact the German POSC
    or the Governikus eIDAS Middleware support to get the current Master List trust anchor.
 
 

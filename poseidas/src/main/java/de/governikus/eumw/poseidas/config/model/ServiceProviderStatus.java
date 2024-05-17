@@ -29,9 +29,20 @@ public class ServiceProviderStatus
 
   private String serviceProviderName;
 
+  private boolean enabled;
+
+  // CVC
   private boolean cvcPresent;
 
+  private String cvcRefId;
+
+  private String cvcChr;
+
+  private String cvcCar;
+
   private LocalDate cvcValidUntil;
+
+  private LocalDate cvcValidFrom;
 
   private boolean cvcValidity;
 
@@ -41,11 +52,16 @@ public class ServiceProviderStatus
 
   private boolean cvcUrlMatch;
 
+  private boolean automaticCvcRenewalFailed;
+
+  // BLock list
   private boolean blackListPresent;
 
   private LocalDateTime blackListLastRetrieval;
 
   private boolean blackListDVCAAvailability;
+
+  // Master list
 
   private boolean masterListPresent;
 
@@ -53,18 +69,34 @@ public class ServiceProviderStatus
 
   private boolean masterListDVCAAvailability;
 
+  // defect list
+
   private boolean defectListPresent;
 
   private LocalDateTime defectListLastRetrieval;
 
   private boolean defectListDVCAAvailability;
 
+  // rsc
+
   private boolean rscAnyPresent;
 
   private boolean rscPendingPresent;
 
+  private boolean canGenerateAndSendRsc;
+
+  private boolean canSendPendingRsc;
+
   private LocalDate rscCurrentValidUntil;
 
-  private boolean enabled;
+  private String rscRenewalError;
+
+  // mTLS
+
+  private String currentTlsCertValidUntil;
+
+  private boolean isCsrPending;
+
+  private String notPollBefore;
 
 }

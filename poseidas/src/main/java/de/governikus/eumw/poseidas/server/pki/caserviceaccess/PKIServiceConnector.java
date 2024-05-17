@@ -12,6 +12,7 @@ package de.governikus.eumw.poseidas.server.pki.caserviceaccess;
 
 import java.io.IOException;
 import java.net.Socket;
+import java.net.URI;
 import java.net.URISyntaxException;
 import java.security.GeneralSecurityException;
 import java.security.Key;
@@ -35,12 +36,15 @@ import javax.net.ssl.SSLContext;
 import javax.net.ssl.TrustManager;
 import javax.net.ssl.TrustManagerFactory;
 import javax.net.ssl.X509KeyManager;
+
+import de.governikus.eumw.poseidas.server.pki.caserviceaccess.logging.MessageLoggingInterceptor;
 import jakarta.xml.ws.BindingProvider;
 import jakarta.xml.ws.WebServiceException;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.cxf.configuration.jsse.TLSClientParameters;
+import org.apache.cxf.endpoint.Client;
 import org.apache.cxf.frontend.ClientProxy;
 import org.apache.cxf.transport.http.HTTPConduit;
 import org.apache.cxf.transports.http.configuration.HTTPClientPolicy;
@@ -50,6 +54,7 @@ import org.apache.http.conn.ssl.SSLConnectionSocketFactory;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClients;
 import org.apache.tomcat.util.net.Constants;
+import org.bouncycastle.jsse.util.SNISocketFactory;
 
 import de.governikus.eumw.eidascommon.Utils;
 import de.governikus.eumw.utils.key.SecurityProvider;
@@ -238,7 +243,7 @@ public class PKIServiceConnector
     final long twoMinutesInMillis = 2 * 60 * 1000L;
     lockStealTime = System.currentTimeMillis() + twoMinutesInMillis;
     sslContextLocked = true;
-    SSL_LOGGER.debug("Starting communication:");
+    SSL_LOGGER.debug("Starting communication");
   }
 
   /**
@@ -246,12 +251,7 @@ public class PKIServiceConnector
    */
   public static synchronized void releaseContextLock()
   {
-    if (SSL_LOGGER.isDebugEnabled())
-    {
-      SSL_LOGGER.debug("Communication finished\n\n"
-                       + "######################################################################################"
-                       + "\n");
-    }
+    SSL_LOGGER.debug("Communication finished");
     sslContextLocked = false;
     PKIServiceConnector.class.notifyAll();
   }
@@ -371,7 +371,14 @@ public class PKIServiceConnector
       policy.setReceiveTimeout(MILLISECOND_FACTOR * timeout);
       conduit.setClient(policy);
       TLSClientParameters tlsClientParameters = new TLSClientParameters();
-      tlsClientParameters.setSSLSocketFactory(createSSLContext().getSocketFactory());
+      SSLContext sslContext = createSSLContext();
+      URI serverURI = new URI(uri);
+      // CXF uses the SocketFactory from the TLSClientParamters for the HttpsURLConnection. The default
+      // ProvSSLContextSpi does not use an SNI (Server Name Indication) for the connection. This can lead to problems if
+      // the DVCA is running on a server on which several domains are accessible under the same IP address, but these
+      // have different TLS certificates. This can lead to the server displaying the wrong TLS certificate. The
+      // SNISocketFactory must be used for SNI to be used.
+      tlsClientParameters.setSSLSocketFactory(new SNISocketFactory(sslContext.getSocketFactory(), serverURI.toURL()));
       tlsClientParameters.setCipherSuites(Arrays.asList(ENABLED_CIPHER_SUITES));
       conduit.setTlsClientParameters(tlsClientParameters);
     }
@@ -391,6 +398,13 @@ public class PKIServiceConnector
     {
       LOG.error(entityID + ": should not have happened because no I/O is done", e);
     }
+  }
+
+  void setMessageLogger(BindingProvider port)
+  {
+    Client cxfClient = ClientProxy.getClient(port);
+    cxfClient.getOutInterceptors().add(new MessageLoggingInterceptor());
+    cxfClient.getInInterceptors().add(new MessageLoggingInterceptor());
   }
 
   /**

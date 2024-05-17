@@ -61,12 +61,14 @@ public class POSeIDASSecurityConfig
                                                                                                                 ContextPaths.ADMIN_CONTEXT_PATH
                                                                                                                               + "/setNewPassword"))
                                                                          .permitAll()
-                                                                         .requestMatchers(new MvcRequestMatcher(introspector, ContextPaths.ADMIN_CONTEXT_PATH
-                                                                                 + "/**"))
+                                                                         .requestMatchers(new MvcRequestMatcher(introspector,
+                                                                                                                ContextPaths.ADMIN_CONTEXT_PATH
+                                                                                                                              + "/**"))
                                                                          .authenticated());
 
     httpSecurity.formLogin(configurer -> configurer.loginPage(ContextPaths.ADMIN_CONTEXT_PATH + "/login")
-                                                   .defaultSuccessUrl(ContextPaths.ADMIN_CONTEXT_PATH + "/dashboard")
+                                                   .defaultSuccessUrl(ContextPaths.ADMIN_CONTEXT_PATH
+                                                                      + ContextPaths.DASHBOARD)
                                                    .permitAll());
     httpSecurity.logout(configurer -> configurer.logoutRequestMatcher(new AntPathRequestMatcher(ContextPaths.ADMIN_CONTEXT_PATH
                                                                                                 + "/logout",

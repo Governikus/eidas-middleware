@@ -11,8 +11,9 @@ package de.governikus.eumw.eidasmiddleware.repositories;
 
 import java.util.Properties;
 
-import jakarta.persistence.EntityManagerFactory;
 import javax.sql.DataSource;
+
+import jakarta.persistence.EntityManagerFactory;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -36,8 +37,8 @@ public class RequestSessionTestSetup
   protected DataSource datasource()
   {
     DriverManagerDataSource dataSource = new DriverManagerDataSource();
-    dataSource.setDriverClassName("org.h2.Driver");
-    dataSource.setUrl("jdbc:h2:mem:requestsession;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE");
+    dataSource.setDriverClassName("org.hsqldb.jdbc.JDBCDriver");
+    dataSource.setUrl("jdbc:hsqldb:mem:requestsession;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE");
     dataSource.setUsername("user");
     dataSource.setPassword("");
     return dataSource;
@@ -54,7 +55,7 @@ public class RequestSessionTestSetup
 
     var databaseProperties = new Properties();
     databaseProperties.setProperty("hibernate.hbm2ddl.auto", "update");
-    databaseProperties.setProperty("hibernate.dialect", "org.hibernate.dialect.H2Dialect");
+    databaseProperties.setProperty("hibernate.dialect", "org.hibernate.dialect.HSQLDialect");
     em.setJpaProperties(databaseProperties);
 
     em.afterPropertiesSet();

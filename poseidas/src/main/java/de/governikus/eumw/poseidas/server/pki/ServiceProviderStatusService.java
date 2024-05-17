@@ -14,7 +14,9 @@ import java.security.cert.X509Certificate;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
+import java.time.format.DateTimeFormatter;
 import java.util.Date;
+import java.util.Locale;
 import java.util.Optional;
 
 import org.springframework.stereotype.Service;
@@ -23,6 +25,7 @@ import de.governikus.eumw.config.ServiceProviderType;
 import de.governikus.eumw.poseidas.cardbase.asn1.npa.CertificateDescription;
 import de.governikus.eumw.poseidas.config.model.ServiceProviderStatus;
 import de.governikus.eumw.poseidas.server.idprovider.config.CvcTlsCheck;
+import de.governikus.eumw.poseidas.server.pki.entities.TerminalPermission;
 import lombok.extern.slf4j.Slf4j;
 
 
@@ -39,15 +42,19 @@ public class ServiceProviderStatusService
 
   private final RequestSignerCertificateService rscService;
 
+  private final TlsClientRenewalService tlsClientRenewalService;
+
   public ServiceProviderStatusService(TerminalPermissionAOBean facade,
                                       CvcTlsCheck cvcTlsCheck,
                                       PermissionDataHandlingMBean permissionDataHandling,
-                                      RequestSignerCertificateService rscService)
+                                      RequestSignerCertificateService rscService,
+                                      TlsClientRenewalService tlsClientRenewalService)
   {
     this.facade = facade;
     this.cvcTlsCheck = cvcTlsCheck;
     this.permissionDataHandling = permissionDataHandling;
     this.rscService = rscService;
+    this.tlsClientRenewalService = tlsClientRenewalService;
   }
 
   public ServiceProviderStatus getServiceProviderStatus(ServiceProviderType serviceProviderType)
@@ -72,9 +79,15 @@ public class ServiceProviderStatusService
              .cvcValidUntil(Optional.ofNullable(dateToLocalDate(terminalPermission.getNotOnOrAfter()))
                                     .map(d -> d.minusDays(1))
                                     .orElse(null))
+             .cvcValidFrom(Optional.ofNullable(dateToLocalDate(terminalPermission.getFullCvc().getEffectiveDate()))
+                                   .orElse(null))
              .cvcValidity(cvcCheckResults.isCvcValidity())
              .cvcTLSLinkStatus(cvcCheckResults.isCvcTlsMatch())
-             .cvcUrlMatch(cvcCheckResults.isCvcUrlMatch());
+             .cvcUrlMatch(cvcCheckResults.isCvcUrlMatch())
+             .cvcCar(terminalPermission.getFullCvc().getCAReferenceString())
+             .cvcChr(terminalPermission.getFullCvc().getHolderReferenceString())
+             .cvcRefId(terminalPermission.getRefID())
+             .automaticCvcRenewalFailed(terminalPermission.isAutomaticCvcRenewFailed());
       if (terminalPermission.getCvcDescription() != null)
       {
         try
@@ -98,16 +111,39 @@ public class ServiceProviderStatusService
            .defectListDVCAAvailability(permissionDataHandling.pingPAService(serviceProviderType.getName()));
 
     X509Certificate pendingRSC = rscService.getRequestSignerCertificate(serviceProviderType.getName(), false);
-    if (pendingRSC != null)
-    {
-      builder.rscPendingPresent(true).rscAnyPresent(true);
-    }
     X509Certificate currentRSC = rscService.getRequestSignerCertificate(serviceProviderType.getName(), true);
     if (currentRSC != null)
     {
       builder.rscCurrentValidUntil(dateToLocalDate(currentRSC.getNotAfter())).rscAnyPresent(true);
     }
+    if (pendingRSC != null)
+    {
+      builder.rscPendingPresent(true).rscAnyPresent(true);
+      builder.rscRenewalError(terminalPermission.getAutomaticRscRenewFailed());
+    }
+    if (currentRSC != null && pendingRSC != null)
+    {
+      builder.canSendPendingRsc(true);
+    }
+    if (currentRSC != null && pendingRSC == null)
+    {
+      builder.canGenerateAndSendRsc(true);
+    }
 
+    DateTimeFormatter dateTimeFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss z")
+                                                           .withLocale(Locale.ENGLISH)
+                                                           .withZone(ZoneId.systemDefault());
+    // mTLS
+    tlsClientRenewalService.currentTlsCertValidUntil(serviceProviderType.getName())
+                           .ifPresent(currentTlsCertValidUntil -> builder.currentTlsCertValidUntil(dateTimeFormatter.format(currentTlsCertValidUntil.toInstant())));
+    boolean pendingCsrPresent = tlsClientRenewalService.isPendingCsrPresent(serviceProviderType.getName());
+    builder.isCsrPending(pendingCsrPresent);
+
+    if (pendingCsrPresent)
+    {
+      tlsClientRenewalService.getNotPollBefore(serviceProviderType.getName())
+                             .ifPresent(notPullBefore -> builder.notPollBefore(dateTimeFormatter.format(notPullBefore.toInstant())));
+    }
     return builder.build();
   }
 

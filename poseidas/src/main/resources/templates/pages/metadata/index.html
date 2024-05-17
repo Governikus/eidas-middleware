@@ -20,7 +20,7 @@
                        th:name="${_csrf.parameterName}"
                        th:value="${_csrf.token}"/>
                 <div th:replace="~{fragments/configOptions :: certificates('Metadata signature verification certificate', 'metadataSignatureVerificationCertificateName', 'The certificate to verify signatures of connector metadata')}"/>
-                <div th:replace="fragments/form :: submit()"></div>
+                <div th:replace="~{fragments/form :: submit()}"></div>
             </form>
         </div>
     </div>
@@ -68,7 +68,7 @@
                         <div th:replace="~{fragments/form :: inputRow_upload('metadataFile', null, 'metadataFile', 'Metadata file')}"/>
                     </div>
                     <div class="col-2">
-                        <div th:replace="fragments/form :: submitTextUploadIcon('Upload')"/>
+                        <div th:replace="~{fragments/form :: submitTextUploadIcon('Upload')}"/>
                     </div>
                 </div>
             </form>

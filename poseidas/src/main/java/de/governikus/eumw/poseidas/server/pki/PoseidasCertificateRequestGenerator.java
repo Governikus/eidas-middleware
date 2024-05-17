@@ -12,6 +12,7 @@ package de.governikus.eumw.poseidas.server.pki;
 import java.io.IOException;
 import java.security.SignatureException;
 
+import de.governikus.eumw.poseidas.server.pki.entities.ChangeKeyLock;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 

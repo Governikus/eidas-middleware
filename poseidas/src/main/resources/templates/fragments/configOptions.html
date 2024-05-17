@@ -34,3 +34,27 @@
     </div>
 </div>
 
+<div th:fragment="keypairsRenewTlsClientKeyPair(name, field, desc, value)">
+    <div class="col-auto">
+        <label class="col-form-label text-left" th:for="${name.replace(' ','-')}"
+               th:text="${name}"></label>
+    </div>
+
+    <div class="col-auto">
+        <select class="form-select" th:id="${field}"
+                th:classappend="${#fields.hasErrors(field) ? 'border-danger' : ''}"
+                th:name="${field}">
+            <th:block th:each="keypair : ${#keypairs}">
+                <option
+                        th:text="${keypair.name}"
+                        th:value="${keypair.name}"
+                        th:selected="${keypair.name == value}"></option>
+            </th:block>
+            <option value="generateNewKeyPair">Generate New Key Pair</option>
+
+        </select>
+        <p class="m-0 text-danger" th:errors="*{__${field}__}"/>
+        <p class="text-secondary col-auto" th:text="${desc}"/>
+    </div>
+</div>
+

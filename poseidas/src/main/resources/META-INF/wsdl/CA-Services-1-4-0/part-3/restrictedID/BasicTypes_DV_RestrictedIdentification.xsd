@@ -1,0 +1,207 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<xsd:schema xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:nsBT="uri:eacBT/1.4" targetNamespace="uri:eacBT/1.4"
+            elementFormDefault="qualified">
+    <!-- this scheme is based on the document
+    Protocols for the Management of Certificates and CRLs in Public-Key-Infrastructures (PKIs) Part 3
+    Version 1.40
+    -->
+
+    <!-- Definition of the type for a callbackIndicator -->
+    <xsd:simpleType name="callbackIndicatorType">
+        <xsd:restriction base="xsd:string">
+            <xsd:enumeration value="callback_possible"/>
+            <xsd:enumeration value="callback_not_possible"/>
+        </xsd:restriction>
+    </xsd:simpleType>
+
+    <!-- Definition of the type for a deltaIndicator -->
+    <xsd:simpleType name="deltaIndicatorType">
+        <xsd:restriction base="xsd:string">
+            <xsd:enumeration value="complete_list"/>
+            <xsd:enumeration value="delta_list"/>
+        </xsd:restriction>
+    </xsd:simpleType>
+
+    <!-- Definition of the type for a message -->
+    <xsd:simpleType name="messageType">
+        <xsd:restriction base="xsd:string">
+            <xsd:maxLength value="1024"/>
+        </xsd:restriction>
+    </xsd:simpleType>
+
+    <!-- Definition of the type for a conditional messageID parameter -->
+    <xsd:complexType name="conditionalMessageIDType">
+        <xsd:sequence>
+            <xsd:element name="messageID" type="xsd:string"/>
+        </xsd:sequence>
+    </xsd:complexType>
+
+    <!-- Definition of the type for a conditional binary parameter -->
+    <xsd:complexType name="conditionalBinaryType">
+        <xsd:sequence>
+            <xsd:element name="binary" type="xsd:base64Binary"/>
+        </xsd:sequence>
+    </xsd:complexType>
+
+    <!-- Definition of the type for an optional string parameter -->
+    <xsd:complexType name="optionalStringType">
+        <xsd:sequence>
+            <xsd:element name="string" type="xsd:string"/>
+        </xsd:sequence>
+    </xsd:complexType>
+
+    <!-- Definition of the type for a deprecated optional string parameter -->
+    <xsd:complexType name="deprecatedOptionalStringType">
+        <xsd:sequence>
+            <xsd:element name="string" type="xsd:string"/>
+        </xsd:sequence>
+    </xsd:complexType>
+
+    <!-- Definition of the type for a conditional string parameter -->
+    <xsd:complexType name="conditionalStringType">
+        <xsd:sequence>
+            <xsd:element name="string" type="xsd:string"/>
+        </xsd:sequence>
+    </xsd:complexType>
+
+    <!-- Definition of the type for a conditional delta base parameter -->
+    <xsd:complexType name="conditionalDeltaBaseType">
+        <xsd:sequence>
+            <xsd:element name="deltaBase" type="xsd:base64Binary"/>
+        </xsd:sequence>
+    </xsd:complexType>
+
+    <!-- Definition of the type for a conditional sectorPK -->
+    <xsd:complexType name="conditionalSectorPK">
+        <xsd:sequence>
+            <xsd:element name="sectorPK" type="xsd:base64Binary"/>
+        </xsd:sequence>
+    </xsd:complexType>
+
+    <!-- Definition of the type for an optional message -->
+    <xsd:complexType name="optionalMessageType">
+        <xsd:sequence>
+            <xsd:element name="message" type="nsBT:messageType"/>
+        </xsd:sequence>
+    </xsd:complexType>
+
+    <!-- ==================== -->
+    <!-- Definition of the types of the return codes for the different messages -->
+    <xsd:simpleType name="getSectorPublicKeyReturnCodeType">
+        <xsd:restriction base="xsd:string">
+            <xsd:enumeration value="failure_internal_error"/>
+            <xsd:enumeration value="failure_other_error"/>
+            <xsd:enumeration value="failure_sectorID_unknown"/>
+            <xsd:enumeration value="failure_syntax"/>
+            <xsd:enumeration value="ok_PK_available"/>
+        </xsd:restriction>
+    </xsd:simpleType>
+
+    <xsd:simpleType name="getBlockListReturnCodeType">
+        <xsd:restriction base="xsd:string">
+            <xsd:enumeration value="failure_deltaBase_unknown"/>
+            <xsd:enumeration value="failure_sectorID_unknown"/>
+            <xsd:enumeration value="failure_internal_error"/>
+            <xsd:enumeration value="failure_other_error"/>
+            <xsd:enumeration value="failure_synchronous_processing_not_possible"/>
+            <xsd:enumeration value="failure_syntax"/>
+            <xsd:enumeration value="ok_complete_list"/>
+            <xsd:enumeration value="ok_list_available"/>
+            <xsd:enumeration value="ok_no_update_needed"/>
+            <xsd:enumeration value="ok_syntax"/>
+            <!--DEPRECATED-->
+            <xsd:enumeration value="ok_reception_ack"/>
+        </xsd:restriction>
+    </xsd:simpleType>
+
+    <xsd:simpleType name="sendBlockListStatusInfoType">
+        <xsd:restriction base="xsd:string">
+            <xsd:enumeration value="failure_deltaBase_unknown"/>
+            <xsd:enumeration value="failure_sectorID_unknown"/>
+            <xsd:enumeration value="failure_internal_error"/>
+            <xsd:enumeration value="failure_other_error"/>
+            <xsd:enumeration value="failure_syntax"/>
+            <xsd:enumeration value="ok_complete_list"/>
+            <xsd:enumeration value="ok_list_available"/>
+            <xsd:enumeration value="ok_no_update_needed"/>
+        </xsd:restriction>
+    </xsd:simpleType>
+
+    <xsd:simpleType name="sendBlockListReturnCodeType">
+        <xsd:restriction base="xsd:string">
+            <xsd:enumeration value="ok_received_correctly"/>
+            <xsd:enumeration value="failure_messageID_unknown"/>
+            <xsd:enumeration value="failure_syntax"/>
+            <xsd:enumeration value="failure_internal_error"/>
+            <xsd:enumeration value="failure_other_error"/>
+        </xsd:restriction>
+    </xsd:simpleType>
+
+    <!-- ==================== -->
+    <!-- Definition of the different messages -->
+    <xsd:element name="getSectorPublicKeyRequest">
+        <xsd:complexType>
+            <xsd:sequence>
+                <xsd:element name="sectorID" type="xsd:base64Binary"/>
+            </xsd:sequence>
+        </xsd:complexType>
+    </xsd:element>
+
+    <xsd:element name="getSectorPublicKeyResult">
+        <xsd:complexType>
+            <xsd:sequence>
+                <xsd:element name="sectorPK" type="nsBT:conditionalSectorPK" minOccurs="0"/>
+                <xsd:element name="returnCode" type="nsBT:getSectorPublicKeyReturnCodeType"/>
+                <xsd:element name="returnCodeMessage" type="nsBT:optionalMessageType" minOccurs="0"/>
+            </xsd:sequence>
+        </xsd:complexType>
+    </xsd:element>
+
+    <xsd:element name="getBlockListRequest">
+        <xsd:complexType>
+            <xsd:sequence>
+                <xsd:element name="callbackIndicator" type="nsBT:callbackIndicatorType"/>
+                <xsd:element name="messageID" type="nsBT:conditionalMessageIDType" minOccurs="0"/>
+                <!--DEPRECATED-->
+                <xsd:element name="responseURL" type="nsBT:deprecatedOptionalStringType" minOccurs="0"/>
+                <xsd:element name="deltaIndicator" type="nsBT:deltaIndicatorType"/>
+                <xsd:element name="deltaBase" type="nsBT:conditionalDeltaBaseType" minOccurs="0"/>
+                <xsd:element name="sectorID" type="nsBT:optionalStringType" minOccurs="0"/>
+            </xsd:sequence>
+        </xsd:complexType>
+    </xsd:element>
+
+    <xsd:element name="getBlockListResult">
+        <xsd:complexType>
+            <xsd:sequence>
+                <xsd:element name="deltaListAddedItems" type="nsBT:conditionalBinaryType" minOccurs="0"/>
+                <xsd:element name="deltaListRemovedItems" type="nsBT:conditionalBinaryType" minOccurs="0"/>
+                <xsd:element name="completeListURL" type="nsBT:conditionalStringType" minOccurs="0"/>
+                <xsd:element name="returnCode" type="nsBT:getBlockListReturnCodeType"/>
+                <xsd:element name="returnCodeMessage" type="nsBT:optionalMessageType" minOccurs="0"/>
+            </xsd:sequence>
+        </xsd:complexType>
+    </xsd:element>
+
+    <xsd:element name="sendBlockListRequest">
+        <xsd:complexType>
+            <xsd:sequence>
+                <xsd:element name="messageID" type="nsBT:conditionalMessageIDType" minOccurs="0"/>
+                <xsd:element name="statusInfo" type="nsBT:sendBlockListStatusInfoType"/>
+                <xsd:element name="statusInfoMessage" type="nsBT:optionalMessageType" minOccurs="0"/>
+                <xsd:element name="deltaListAddedItems" type="nsBT:conditionalBinaryType" minOccurs="0"/>
+                <xsd:element name="deltaListRemovedItems" type="nsBT:conditionalBinaryType" minOccurs="0"/>
+                <xsd:element name="completeListURL" type="nsBT:conditionalStringType" minOccurs="0"/>
+            </xsd:sequence>
+        </xsd:complexType>
+    </xsd:element>
+
+    <xsd:element name="sendBlockListResult">
+        <xsd:complexType>
+            <xsd:sequence>
+                <xsd:element name="returnCode" type="nsBT:sendBlockListReturnCodeType"/>
+                <xsd:element name="returnCodeMessage" type="nsBT:optionalMessageType" minOccurs="0"/>
+            </xsd:sequence>
+        </xsd:complexType>
+    </xsd:element>
+</xsd:schema>

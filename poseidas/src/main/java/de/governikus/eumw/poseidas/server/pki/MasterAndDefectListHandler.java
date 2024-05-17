@@ -10,14 +10,11 @@
 package de.governikus.eumw.poseidas.server.pki;
 
 import java.net.MalformedURLException;
-import java.net.URISyntaxException;
 import java.net.URL;
-import java.security.GeneralSecurityException;
 import java.security.KeyStore;
 import java.security.SignatureException;
 import java.security.cert.X509Certificate;
 import java.util.Base64;
-import java.util.List;
 
 import org.bouncycastle.cms.CMSException;
 
@@ -26,9 +23,7 @@ import de.governikus.eumw.poseidas.cardbase.ArrayUtil;
 import de.governikus.eumw.poseidas.eidserver.model.signeddata.MasterList;
 import de.governikus.eumw.poseidas.gov2server.GovManagementException;
 import de.governikus.eumw.poseidas.gov2server.constants.admin.GlobalManagementCodes;
-import de.governikus.eumw.poseidas.gov2server.constants.admin.IDManagementCodes;
 import de.governikus.eumw.poseidas.server.idprovider.config.ConfigurationService;
-import de.governikus.eumw.poseidas.server.idprovider.config.KeyPair;
 import de.governikus.eumw.poseidas.server.monitoring.SNMPConstants;
 import de.governikus.eumw.poseidas.server.monitoring.SNMPConstants.TrapOID;
 import de.governikus.eumw.poseidas.server.monitoring.SNMPTrapSender;
@@ -67,39 +62,28 @@ public class MasterAndDefectListHandler extends BerCaRequestHandlerBase
    */
   void updateLists() throws GovManagementException
   {
-    byte[] masterList = null;
-    byte[] defectList = null;
-
-    long masterListStart;
-    long defectListStart;
-
+    PassiveAuthService service = dvcaServiceFactory.passiveAuthService(serviceProvider, hsmKeyStore);
+    MasterList masterList;
+    byte[] defectList;
 
     try
     {
-      PKIServiceConnector.getContextLock();
-      log.debug("{}: obtained lock on SSL context for downloading master and defect list", cvcRefId);
-      PassiveAuthService service = createService();
+      masterList = updateMasterList(service);
+    }
+    catch (MalformedURLException e)
+    {
+      log.error("{}: Can not parse service URL", cvcRefId, e);
+      throw new MasterAndDefectListException(GlobalManagementCodes.INTERNAL_ERROR,
+                                             MasterAndDefectListException.MasterOrDefectList.MASTER_LIST);
+    }
 
-      masterListStart = System.currentTimeMillis();
-      masterList = getMasterList(service);
-      MasterList ml;
-      if (masterList == null)
+    try
+    {
+      defectList = updateDefectList(service, masterList);
+      if (defectList == null)
       {
-        // if we do not get a new master list from CA, at least try to use old stored version for defect
-        // list check
-        ml = new MasterList(facade.getTerminalPermission(cvcRefId).getMasterList());
-      }
-      else
-      {
-        log.trace("MasterList:\n{}", Base64.getMimeEncoder().encodeToString(masterList));
-        ml = new MasterList(masterList);
-      }
-
-      defectListStart = System.currentTimeMillis();
-      defectList = getDefectList(service, ml);
-      if (defectList != null)
-      {
-        log.trace("DefectList:\n{}", Base64.getMimeEncoder().encodeToString(defectList));
+        throw new MasterAndDefectListException(GlobalManagementCodes.INTERNAL_ERROR,
+                                               MasterAndDefectListException.MasterOrDefectList.DEFECT_LIST);
       }
     }
     catch (MalformedURLException e)
@@ -107,90 +91,83 @@ public class MasterAndDefectListHandler extends BerCaRequestHandlerBase
       log.error("{}: Can not parse service URL", cvcRefId, e);
       throw new GovManagementException(GlobalManagementCodes.INTERNAL_ERROR);
     }
-    catch (GovManagementException e)
+  }
+
+  private byte[] updateDefectList(PassiveAuthService service, MasterList ml) throws MalformedURLException
+  {
+    PKIServiceConnector.getContextLock();
+    log.debug("{}: obtained lock on SSL context for downloading defect list", cvcRefId);
+
+    try
     {
-      throw e;
-    }
-    catch (Exception e)
-    {
-      log.error("{}: cannot renew master and defect list", cvcRefId, e);
-      throw new GovManagementException(GlobalManagementCodes.INTERNAL_ERROR);
+      long defectListStart = System.currentTimeMillis();
+      byte[] defectList = getDefectList(service, ml);
+      if (defectList != null)
+      {
+        log.trace("DefectList:\n{}", Base64.getMimeEncoder().encodeToString(defectList));
+        facade.storeDefectList(cvcRefId, defectList);
+        SNMPTrapSender.sendSNMPTrap(TrapOID.DEFECTLIST_TRAP_LAST_RENEWAL_PROCESSING_DURATION,
+                                    System.currentTimeMillis() - defectListStart);
+      }
+      return defectList;
     }
     finally
     {
       PKIServiceConnector.releaseContextLock();
     }
-
-    if (masterList != null)
-    {
-      facade.storeMasterList(cvcRefId, masterList);
-      SNMPTrapSender.sendSNMPTrap(TrapOID.MASTERLIST_TRAP_LAST_RENEWAL_PROCESSING_DURATION,
-                                  System.currentTimeMillis() - masterListStart);
-    }
-    if (defectList != null)
-    {
-      facade.storeDefectList(cvcRefId, defectList);
-      SNMPTrapSender.sendSNMPTrap(TrapOID.DEFECTLIST_TRAP_LAST_RENEWAL_PROCESSING_DURATION,
-                                  System.currentTimeMillis() - defectListStart);
-    }
-    if (masterList == null || defectList == null)
-    {
-      throw new GovManagementException(GlobalManagementCodes.INTERNAL_ERROR);
-    }
   }
 
-  private PassiveAuthService createService() throws GovManagementException
+  private MasterList updateMasterList(PassiveAuthService service) throws MalformedURLException
   {
-    String serviceUrl = dvcaConfiguration.getPassiveAuthServiceUrl();
-    String serverSSLCertificateName = dvcaConfiguration.getServerSSLCertificateName();
-    X509Certificate dvcaServerCertificate = configurationService.getCertificate(serverSSLCertificateName);
+    PKIServiceConnector.getContextLock();
+    log.debug("{}: obtained lock on SSL context for downloading master list", cvcRefId);
 
     try
     {
-      PKIServiceConnector connector;
-      if (hsmKeyStore == null)
+      long masterListStart = System.currentTimeMillis();
+      byte[] masterListBytes = getMasterList(service);
+      MasterList masterList;
+      if (masterListBytes == null)
       {
-        KeyPair clientKeyPair = configurationService.getKeyPair(serviceProvider.getClientKeyPairName());
-        List<X509Certificate> clientCertificate = List.of(clientKeyPair.getCertificate());
-        connector = new PKIServiceConnector(60, dvcaServerCertificate, clientKeyPair.getKey(), clientCertificate,
-                                            cvcRefId);
+        // if we do not get a new master list from CA, at least try to use old stored version for defect
+        // list check
+        masterList = new MasterList(facade.getTerminalPermission(cvcRefId).getMasterList());
       }
       else
       {
-        connector = new PKIServiceConnector(60, dvcaServerCertificate, hsmKeyStore, null, cvcRefId);
+        log.trace("MasterList:\n{}", Base64.getMimeEncoder().encodeToString(masterListBytes));
+        masterList = new MasterList(masterListBytes);
+        facade.storeMasterList(cvcRefId, masterListBytes);
+        SNMPTrapSender.sendSNMPTrap(TrapOID.MASTERLIST_TRAP_LAST_RENEWAL_PROCESSING_DURATION,
+                                    System.currentTimeMillis() - masterListStart);
       }
-      return new PassiveAuthService(connector, serviceUrl);
+      return masterList;
     }
-    catch (GeneralSecurityException | NullPointerException e)
+    finally
     {
-      log.error("{}: problem with crypto data of SP", cvcRefId, e);
-      throw new GovManagementException(GlobalManagementCodes.EC_UNEXPECTED_ERROR, e.getMessage());
-    }
-    catch (URISyntaxException e)
-    {
-      throw new GovManagementException(IDManagementCodes.INVALID_URL, "ID.value.service.termAuth.url");
+      PKIServiceConnector.releaseContextLock();
     }
   }
 
   byte[] getMasterList(PassiveAuthService service) throws MalformedURLException
   {
-    byte[] masterList = service.getMasterList();
-    if (masterList == null)
+    byte[] masterListBytes = service.getMasterList();
+    if (masterListBytes == null)
     {
       SNMPTrapSender.sendSNMPTrap(TrapOID.MASTERLIST_TRAP_LAST_RENEWAL_STATUS, SNMPConstants.LIST_NOT_RECEIVED);
       return null;
     }
-    else if (!isLocalZip(masterList))
+    else if (!isLocalZip(masterListBytes))
     {
       byte[] masterListFromTerminalPermission = facade.getTerminalPermission(cvcRefId).getMasterList();
       if (ArrayUtil.isNullOrEmpty(masterListFromTerminalPermission)
-          || !checkWithMasterListAsTrustAnchorSuccessful(masterList, masterListFromTerminalPermission))
+          || !checkWithMasterListAsTrustAnchorSuccessful(masterListBytes, masterListFromTerminalPermission))
       {
         try
         {
           X509Certificate masterListTrustAnchor = configurationService.getCertificate(dvcaConfiguration.getMasterListTrustAnchorCertificateName());
           CmsSignatureChecker checker = new CmsSignatureChecker(masterListTrustAnchor);
-          checker.checkEnvelopedSignature(masterList);
+          checker.checkEnvelopedSignature(masterListBytes);
         }
         catch (SignatureException | CMSException e)
         {
@@ -203,7 +180,7 @@ public class MasterAndDefectListHandler extends BerCaRequestHandlerBase
       SNMPTrapSender.sendSNMPTrap(TrapOID.MASTERLIST_TRAP_LAST_RENEWAL_STATUS, SNMPConstants.LIST_RENEWED);
     }
     log.debug("Successfully received master list");
-    return masterList;
+    return masterListBytes;
   }
 
   private boolean checkWithMasterListAsTrustAnchorSuccessful(byte[] masterList, byte[] masterListFromTerminalPermission)

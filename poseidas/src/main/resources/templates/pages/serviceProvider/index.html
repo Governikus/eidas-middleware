@@ -21,6 +21,9 @@
                 </h4>
 
                 <div class="card-body" th:object="${serviceprovider}">
+                    <div th:if="${serviceprovider.rscRenewalError}" class="alert alert-danger" role="alert">
+                        <p th:text="'Error in automatic RSC renewal: ' + ${serviceprovider.rscRenewalError}" />
+                    </div>
                     <div class="row">
                         <div class="col-2">
                             <p>Active: </p>

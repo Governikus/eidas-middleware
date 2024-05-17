@@ -14,7 +14,7 @@
     <parent>
         <groupId>de.governikus.eumw</groupId>
         <artifactId>eumw</artifactId>
-        <version>3.2.0</version>
+        <version>3.3.0</version>
     </parent>
     <artifactId>poseidas</artifactId>
 
@@ -51,6 +51,10 @@
             <groupId>org.apache.cxf</groupId>
             <artifactId>cxf-rt-transports-http</artifactId>
         </dependency>
+        <dependency>
+            <groupId>org.apache.cxf</groupId>
+            <artifactId>cxf-rt-features-logging</artifactId>
+        </dependency>
 
         <dependency>
             <groupId>org.bouncycastle</groupId>
@@ -65,8 +69,8 @@
             <artifactId>jaxb2-basics-runtime</artifactId>
         </dependency>
         <dependency>
-            <groupId>com.h2database</groupId>
-            <artifactId>h2</artifactId>
+            <groupId>org.hsqldb</groupId>
+            <artifactId>hsqldb</artifactId>
         </dependency>
         <!-- https://mvnrepository.com/artifact/org.webjars/bootstrap -->
         <dependency>
@@ -190,7 +194,7 @@
                                 <schemaInclude>ecard115/ISO24727-Protocols.xsd</schemaInclude>
                             </schemaIncludes>
                             <strict>false</strict>
-                            <catalog>src/main/resources/ecard115/catalog.cat</catalog>
+                            <catalog>src/main/resources/xsd/ecard115/catalog.cat</catalog>
                         </configuration>
                     </execution>
                     <execution>
@@ -220,8 +224,8 @@
                     </execution>
                 </executions>
                 <configuration>
-                    <schemaDirectory>src/main/xsd</schemaDirectory>
-                    <bindingDirectory>src/main/xjb</bindingDirectory>
+                    <schemaDirectory>src/main/resources/xsd</schemaDirectory>
+                    <bindingDirectory>src/main/resources/xjb</bindingDirectory>
                     <extension>true</extension>
                     <plugins>
                         <plugin>
@@ -292,45 +296,100 @@
                     <sourceDestDir>target/generated-sources/wsimport</sourceDestDir>
                     <encoding>${project.build.sourceEncoding}</encoding>
                 </configuration>
+
                 <executions>
+                    <!--1.40-->
                     <execution>
-                        <id>wsimport terminal auth version 1.1</id>
+                        <id>wsimport terminal auth version 1.40</id>
                         <phase>generate-sources</phase>
                         <goals>
                             <goal>wsimport</goal>
                         </goals>
                         <configuration>
-                            <!-- CAUTION! linebreaks will prevent the schemata from being parsed correctly -->
                             <wsdlFiles>
-                                <wsdlFile>CA-Services/TermAuth/WS_DV_TerminalAuth.wsdl</wsdlFile>
+                                <wsdlFile>CA-Services-1-4-0/part-3/termAuth/WS_DV_TerminalAuth.wsdl</wsdlFile>
                             </wsdlFiles>
-                            <bindingDirectory>src/main/resources/META-INF/wsdl</bindingDirectory>
+                            <bindingDirectory>src/main/resources/META-INF/wsdl/CA-Services-1-4-0/xjb
+                            </bindingDirectory>
                             <bindingFiles>
-                                <bindingFile>CA-Services/termAuth.dv.jxb</bindingFile>
-                                <bindingFile>CA-Services/termAuth.dv.wsb</bindingFile>
+                                <bindingFile>terminal-auth-1.4.0-bindings.xjb</bindingFile>
                             </bindingFiles>
+                            <packageName>de.governikus.eumw.poseidas.services.terminal.auth.wsdl.v1_4_0
+                            </packageName>
                         </configuration>
                     </execution>
+
+                    <!--1.40-->
                     <execution>
-                        <id>wsimport passive auth version 1.1</id>
+                        <id>wsimport passive auth version 1.40</id>
                         <phase>generate-sources</phase>
                         <goals>
                             <goal>wsimport</goal>
                         </goals>
                         <configuration>
-                            <!-- CAUTION! linebreaks will prevent the schemata from being parsed correctly -->
                             <wsdlFiles>
-                                <wsdlFile>CA-Services/PassiveAuth/WS_DV_PassiveAuth.wsdl</wsdlFile>
+                                <wsdlFile>CA-Services-1-4-0/part-3/passiveAuth/WS_DV_PassiveAuth.wsdl
+                                </wsdlFile>
                             </wsdlFiles>
-                            <bindingDirectory>src/main/resources/META-INF/wsdl</bindingDirectory>
+                            <bindingDirectory>src/main/resources/META-INF/wsdl/CA-Services-1-4-0/xjb
+                            </bindingDirectory>
                             <bindingFiles>
-                                <bindingFile>CA-Services/passiveAuth.dv.jxb</bindingFile>
-                                <bindingFile>CA-Services/passiveAuth.dv.wsb</bindingFile>
+                                <bindingFile>passive-auth-1.4.0-bindings.xjb</bindingFile>
                             </bindingFiles>
+                            <packageName>de.governikus.eumw.poseidas.services.passive.auth.wsdl.v1_4_0
+                            </packageName>
                         </configuration>
                     </execution>
+
+                    <!--1.40-->
                     <execution>
-                        <id>wsimport restricted id service version 1.1</id>
+                        <id>wsimport restricted id version 1.40</id>
+                        <phase>generate-sources</phase>
+                        <goals>
+                            <goal>wsimport</goal>
+                        </goals>
+                        <configuration>
+                            <wsdlFiles>
+                                <wsdlFile>
+                                    CA-Services-1-4-0/part-3/restrictedID/WS_DV_RestrictedIdentification.wsdl
+                                </wsdlFile>
+                            </wsdlFiles>
+                            <bindingDirectory>src/main/resources/META-INF/wsdl/CA-Services-1-4-0/xjb
+                            </bindingDirectory>
+                            <bindingFiles>
+                                <bindingFile>restricted-id-service-1.4.0-bindings.xjb</bindingFile>
+                            </bindingFiles>
+                            <packageName>de.governikus.eumw.poseidas.services.restricted.id.wsdl.v1_4_0
+                            </packageName>
+                        </configuration>
+                    </execution>
+
+                    <!--1.40-->
+                    <execution>
+                        <id>wsimport common service version 1.40</id>
+                        <phase>generate-sources</phase>
+                        <goals>
+                            <goal>wsimport</goal>
+                        </goals>
+                        <configuration>
+                            <wsdlFiles>
+                                <wsdlFile>
+                                    CA-Services-1-4-0/part-1/WS_CommonSpecifications.wsdl
+                                </wsdlFile>
+                            </wsdlFiles>
+                            <bindingDirectory>src/main/resources/META-INF/wsdl/CA-Services-1-4-0/xjb
+                            </bindingDirectory>
+                            <bindingFiles>
+                                <bindingFile>common-specs-1.4.0-bindings.xjb</bindingFile>
+                            </bindingFiles>
+                            <packageName>de.governikus.eumw.poseidas.services.common.wsdl.v1_4_0
+                            </packageName>
+                        </configuration>
+                    </execution>
+
+                    <!--1.10-->
+                    <execution>
+                        <id>wsimport restricted id service version 1.10</id>
                         <phase>generate-sources</phase>
                         <goals>
                             <goal>wsimport</goal>
@@ -347,20 +406,7 @@
                             </bindingFiles>
                         </configuration>
                     </execution>
-                    <execution>
-                        <id>wsimport certificate description service version 2.0</id>
-                        <phase>generate-sources</phase>
-                        <goals>
-                            <goal>wsimport</goal>
-                        </goals>
-                        <configuration>
-                            <!-- CAUTION! linebreaks will prevent the schemata from being parsed correctly -->
-                            <wsdlFiles>
-                                <wsdlFile>CA-Services/CertDesc/WS_DV_CertDesc.wsdl</wsdlFile>
-                            </wsdlFiles>
-                            <extension>true</extension>
-                        </configuration>
-                    </execution>
+
                 </executions>
             </plugin>
 

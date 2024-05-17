@@ -11,13 +11,10 @@ package de.governikus.eumw.poseidas.server.pki;
 
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
-import java.net.URISyntaxException;
 import java.nio.charset.StandardCharsets;
-import java.security.GeneralSecurityException;
 import java.security.KeyStore;
 import java.security.SignatureException;
 import java.security.cert.CertificateException;
-import java.security.cert.X509Certificate;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Base64;
@@ -49,17 +46,19 @@ import de.governikus.eumw.poseidas.eidmodel.TerminalData;
 import de.governikus.eumw.poseidas.eidserver.crl.CertificationRevocationListImpl;
 import de.governikus.eumw.poseidas.gov2server.GovManagementException;
 import de.governikus.eumw.poseidas.gov2server.constants.admin.GlobalManagementCodes;
-import de.governikus.eumw.poseidas.gov2server.constants.admin.IDManagementCodes;
 import de.governikus.eumw.poseidas.gov2server.constants.admin.ManagementMessage;
 import de.governikus.eumw.poseidas.server.idprovider.config.ConfigurationService;
-import de.governikus.eumw.poseidas.server.idprovider.config.KeyPair;
 import de.governikus.eumw.poseidas.server.monitoring.SNMPConstants;
 import de.governikus.eumw.poseidas.server.monitoring.SNMPTrapSender;
-import de.governikus.eumw.poseidas.server.pki.caserviceaccess.DvcaCertDescriptionService;
+import de.governikus.eumw.poseidas.server.pki.blocklist.BlockListService;
+import de.governikus.eumw.poseidas.server.pki.caserviceaccess.DvcaServiceFactory;
 import de.governikus.eumw.poseidas.server.pki.caserviceaccess.PKIServiceConnector;
 import de.governikus.eumw.poseidas.server.pki.caserviceaccess.TermAuthService;
+import de.governikus.eumw.poseidas.server.pki.entities.CertInChain;
+import de.governikus.eumw.poseidas.server.pki.entities.PendingCertificateRequest;
+import de.governikus.eumw.poseidas.server.pki.entities.TerminalPermission;
+import de.governikus.eumw.poseidas.services.terminal.auth.wsdl.v1_4_0.RequestCertificateReturnCodeType;
 import lombok.extern.slf4j.Slf4j;
-import uri.eacbt._1.termAuth.dv.RequestCertificateReturnCodeType;
 
 
 /**
@@ -72,6 +71,10 @@ public class CVCRequestHandler extends BerCaRequestHandlerBase
 {
 
   private static final Map<String, TerminalData> KNOWN_ROOT_CERTS = new HashMap<>();
+
+  private final TermAuthService termAuthService;
+
+  private final BlockListService blockListService;
 
   private static final String DETEST_EID00001 = "fyGCAbZ/ToIBbl8pAQBCDkRFVEVTVGVJRDAwMDAxf0mCAR0GCgQAfwAHAgICAgOBIKn7V9uh7qm8PmYKkJ2DjXJuO/Yj1SYgKCATSB0fblN3giB9Wgl1/CwwV+72dTBBev/n+4BVwSbcXGzpSktE8zC12YMgJtxcbOlKS0TzMLXZu9d8v5WEFilc9+HOa8zcGP+MB7aEQQSL0q65y35XyyxLSC/8gbevud4n4eO9I8I6RFO9ms4yYlR++DXD2sT9l/hGGhRhHcnCd0UTLe2OVFwdVMcvBGmXhSCp+1fboe6pvD5mCpCdg41xjDl6o7VhpveQHg6Cl0hWp4ZBBBhLtRn8Ko9S3A3HMRL6z+kU8qSbZ43VeZorHf6V4aZjWQFOIvqNZkOEE866bPDiFVdrZzN2v2F69N/pdh0ikBSHAQFfIA5ERVRFU1RlSUQwMDAwMX9MEgYJBAB/AAcDAQICUwX+DwH//18lBgEAAAgBA18kBgEDAAgBA183QJ8l6/r0uR5MYKFoN1TF3AdqMXl1Pvl9n4ywH+Hc07jIPnomYCqx80S+VwYAbXmp/2qXFkBNyDufMOEhOzkxKKI=";
 
@@ -93,21 +96,28 @@ public class CVCRequestHandler extends BerCaRequestHandlerBase
     addKnowRootCert(DECVCA_EID00103);
   }
 
+  private final RequestSignerCertificateService rscService;
+
   /**
    * Create new Object which can be used for one service provider only as long as configuration is not changed.
    *
-   * @param epaConfig The connection configuration for the terminal
+   * @param serviceProvider The connection configuration for the terminal
    * @param facade The terminal configuration
    * @param hsmKeyStore HSM keystore
    */
-  CVCRequestHandler(ServiceProviderType epaConfig,
+  CVCRequestHandler(ServiceProviderType serviceProvider,
                     TerminalPermissionAO facade,
                     KeyStore hsmKeyStore,
                     ConfigurationService configurationService,
-                    PendingCertificateRequestRepository pendingCertificateRequestRepository)
+                    RequestSignerCertificateService rscService,
+                    DvcaServiceFactory dvcaServiceFactory,
+                    BlockListService blockListService)
     throws GovManagementException
   {
-    super(epaConfig, facade, hsmKeyStore, configurationService);
+    super(serviceProvider, facade, hsmKeyStore, configurationService, dvcaServiceFactory);
+    this.rscService = rscService;
+    termAuthService = dvcaServiceFactory.createTermAuthService(serviceProvider, hsmKeyStore);
+    this.blockListService = blockListService;
   }
 
   private static void addKnowRootCert(String base64)
@@ -388,7 +398,7 @@ public class CVCRequestHandler extends BerCaRequestHandlerBase
                                        sequenceNumber);
       boolean withPendingRsc = false;
       if (facade.getPendingRscChrId(cvcRefId) != null
-          && facade.getRequestSignerCertificate(cvcRefId, false).getNotAfter().after(new Date()))
+          && rscService.getRequestSignerCertificate(cvcRefId, false).getNotAfter().after(new Date()))
       {
         log.info("{}: Make an initial request with the pending request signer certificate.", cvcRefId);
         withPendingRsc = true;
@@ -396,7 +406,7 @@ public class CVCRequestHandler extends BerCaRequestHandlerBase
         generator.setRscPrivateKey(tp.getPendingRequestSignerCertificate().getPrivateKey());
       }
       else if (facade.getCurrentRscChrId(cvcRefId) != null
-               && facade.getRequestSignerCertificate(cvcRefId, true).getNotAfter().after(new Date()))
+               && rscService.getRequestSignerCertificate(cvcRefId, true).getNotAfter().after(new Date()))
       {
         log.info("{}: Make an initial request with the current request signer certificate.", cvcRefId);
         generator.setRscAlias(buildAlias(cvcRefId, facade, true));
@@ -418,9 +428,10 @@ public class CVCRequestHandler extends BerCaRequestHandlerBase
         cert = sendCertificateRequest(requestData.getCertificateRequest().getEncoded());
         if (withPendingRsc)
         {
-          facade.makePendingRscToCurrentRsc(cvcRefId);
+          facade.makePendingRscToCurrentRsc(cvcRefId, false);
         }
         installNewCertificate(cert);
+        facade.setAutomaticCvcRenewFailed(cvcRefId, false);
       }
       catch (GovManagementException e)
       {
@@ -451,6 +462,7 @@ public class CVCRequestHandler extends BerCaRequestHandlerBase
                    requestData.getCertificateRequest());
           cert = sendCertificateRequest(requestData.getCertificateRequest().getEncoded());
           installNewCertificate(cert);
+          facade.setAutomaticCvcRenewFailed(cvcRefId, false);
         }
         else
         {
@@ -559,10 +571,11 @@ public class CVCRequestHandler extends BerCaRequestHandlerBase
       byte[] newCert = sendCertificateRequest(cvcRequestData);
       if (usePendingRsc)
       {
-        facade.makePendingRscToCurrentRsc(cvcRefId);
+        facade.makePendingRscToCurrentRsc(cvcRefId, false);
       }
       installNewCertificate(newCert);
-      log.debug("{}: successfully finished makeSubsequentRequest", cvcRefId);
+      facade.setAutomaticCvcRenewFailed(cvcRefId, false);
+      log.info("{}: successfully finished makeSubsequentRequest", cvcRefId);
       SNMPTrapSender.sendSNMPTrap(SNMPConstants.TrapOID.CVC_TRAP_LAST_RENEWAL_STATUS, 0);
     }
     catch (Exception e)
@@ -584,7 +597,7 @@ public class CVCRequestHandler extends BerCaRequestHandlerBase
       }
       return GlobalManagementCodes.EC_UNEXPECTED_ERROR.createMessage(e.getMessage());
     }
-    return null;
+    return GlobalManagementCodes.OK.createMessage();
   }
 
   public static String getHolderReferenceStringOfPendingRequest(PendingCertificateRequest pendingCertificateRequest)
@@ -632,7 +645,7 @@ public class CVCRequestHandler extends BerCaRequestHandlerBase
       generator.setRscAlias(buildAlias(cvcRefId, facade, false));
     }
     else if (tp.getCurrentRequestSignerCertificate() != null
-             && facade.getRequestSignerCertificate(cvcRefId, true).getNotAfter().after(new Date()))
+             && rscService.getRequestSignerCertificate(cvcRefId, true).getNotAfter().after(new Date()))
     {
       log.info("{}: Make a subsequent request with the current request signer certificate.", cvcRefId);
       generator.setRscPrivateKey(tp.getCurrentRequestSignerCertificate().getPrivateKey());
@@ -732,7 +745,8 @@ public class CVCRequestHandler extends BerCaRequestHandlerBase
 
   private void requestBlackListAndPublicSectorKey(TerminalPermission tp) throws GovManagementException
   {
-    RestrictedIdHandler riHandler = new RestrictedIdHandler(serviceProvider, facade, hsmKeyStore, configurationService);
+    RestrictedIdHandler riHandler = new RestrictedIdHandler(serviceProvider, facade, hsmKeyStore, configurationService,
+                                                            dvcaServiceFactory, blockListService);
 
     if (tp.getSectorID() == null)
     {
@@ -814,8 +828,8 @@ public class CVCRequestHandler extends BerCaRequestHandlerBase
     try
     {
       PKIServiceConnector.getContextLock();
-      TermAuthService service = createService();
-      obtainedCert = service.requestCertificate(certReq, null, null);
+      TermAuthService service = termAuthService;
+      obtainedCert = service.requestCertificate(certReq);
       increaseCounter = true;
     }
     catch (GovManagementException e)
@@ -850,7 +864,7 @@ public class CVCRequestHandler extends BerCaRequestHandlerBase
     try
     {
       PKIServiceConnector.getContextLock();
-      DvcaCertDescriptionService wrapper = createCertDescriptionService();
+      TermAuthService wrapper = termAuthService;
       obtainedCert = wrapper.getCertificateDescription(certificateDescriptionHash);
     }
     finally
@@ -860,69 +874,7 @@ public class CVCRequestHandler extends BerCaRequestHandlerBase
     return obtainedCert;
   }
 
-  private TermAuthService createService() throws GovManagementException
-  {
-    String serviceUrl = dvcaConfiguration.getTerminalAuthServiceUrl();
-    X509Certificate dvcaCertificate = configurationService.getCertificate(dvcaConfiguration.getServerSSLCertificateName());
 
-    try
-    {
-      PKIServiceConnector connector;
-      if (hsmKeyStore == null)
-      {
-        KeyPair clientKeyPair = configurationService.getKeyPair(serviceProvider.getClientKeyPairName());
-        List<X509Certificate> clientCertificate = List.of(clientKeyPair.getCertificate());
-        connector = new PKIServiceConnector(600, dvcaCertificate, clientKeyPair.getKey(), clientCertificate, cvcRefId);
-
-      }
-      else
-      {
-        connector = new PKIServiceConnector(600, dvcaCertificate, hsmKeyStore, null, cvcRefId);
-      }
-      return new TermAuthService(connector, serviceUrl);
-    }
-    catch (GeneralSecurityException | NullPointerException e)
-    {
-      log.error("{}: problem with crypto data", cvcRefId, e);
-      throw new GovManagementException(GlobalManagementCodes.EC_UNEXPECTED_ERROR, e.getMessage());
-    }
-    catch (URISyntaxException e)
-    {
-      log.error("{}: problem with crypto data", cvcRefId, e);
-      throw new GovManagementException(IDManagementCodes.INVALID_URL, "ID.value.service.termAuth.url");
-    }
-  }
-
-  private DvcaCertDescriptionService createCertDescriptionService() throws GovManagementException
-  {
-    String serviceUrl = dvcaConfiguration.getDvcaCertificateDescriptionServiceUrl();
-    X509Certificate dvcaCertificate = configurationService.getCertificate(dvcaConfiguration.getServerSSLCertificateName());
-    try
-    {
-      PKIServiceConnector connector;
-      if (hsmKeyStore == null)
-      {
-        KeyPair clientKeyPair = configurationService.getKeyPair(serviceProvider.getClientKeyPairName());
-        List<X509Certificate> clientCertificate = List.of(clientKeyPair.getCertificate());
-        connector = new PKIServiceConnector(600, dvcaCertificate, clientKeyPair.getKey(), clientCertificate, cvcRefId);
-      }
-      else
-      {
-        connector = new PKIServiceConnector(600, dvcaCertificate, hsmKeyStore, null, cvcRefId);
-      }
-      return new DvcaCertDescriptionService(connector, serviceUrl);
-    }
-    catch (GeneralSecurityException | NullPointerException e)
-    {
-      log.error("{}: problem with crypto data", cvcRefId, e);
-      throw new GovManagementException(GlobalManagementCodes.EC_UNEXPECTED_ERROR, e.getMessage());
-    }
-    catch (URISyntaxException e)
-    {
-      log.error("{}: problem with crypto data", cvcRefId, e);
-      throw new GovManagementException(IDManagementCodes.INVALID_URL, "ID.value.service.termAuth.url");
-    }
-  }
 
   /**
    * This method returns an ordered chain with the DVCA certificate at position 0 and then the chain to the first root
@@ -940,7 +892,7 @@ public class CVCRequestHandler extends BerCaRequestHandlerBase
     {
       PKIServiceConnector.getContextLock();
       log.debug("{}: obtained lock on SSL context for downloading CACerts", cvcRefId);
-      TermAuthService service = createService();
+      TermAuthService service = termAuthService;
       result = service.getCACertificates();
     }
     catch (WebServiceException e)

@@ -163,7 +163,6 @@ class MetadataServiceImplTest
     dvcaConfiguration.setTerminalAuthServiceUrl("taurl");
     dvcaConfiguration.setRestrictedIdServiceUrl("riurl");
     dvcaConfiguration.setPassiveAuthServiceUrl("paurl");
-    dvcaConfiguration.setDvcaCertificateDescriptionServiceUrl("cdurl");
     eidConfiguration.getDvcaConfiguration().add(dvcaConfiguration);
     TimerConfigurationType timerConfigurationType = new TimerConfigurationType();
     timerConfigurationType.setCertRenewal(new TimerTypeCertRenewal(1, TimerUnit.MINUTES, 1));

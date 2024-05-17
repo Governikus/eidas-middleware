@@ -28,11 +28,13 @@ import de.governikus.eumw.config.EidasMiddlewareConfig;
 import de.governikus.eumw.config.ServiceProviderType;
 import de.governikus.eumw.poseidas.cardserver.certrequest.CertificateRequest;
 import de.governikus.eumw.poseidas.server.idprovider.config.ConfigurationService;
-import de.governikus.eumw.poseidas.server.pki.PendingCertificateRequest;
-import de.governikus.eumw.poseidas.server.pki.PendingCertificateRequestRepository;
 import de.governikus.eumw.poseidas.server.pki.PermissionDataHandling;
 import de.governikus.eumw.poseidas.server.pki.RequestSignerCertificateService;
 import de.governikus.eumw.poseidas.server.pki.TerminalPermissionAO;
+import de.governikus.eumw.poseidas.server.pki.TimerHistoryService;
+import de.governikus.eumw.poseidas.server.pki.entities.PendingCertificateRequest;
+import de.governikus.eumw.poseidas.server.pki.entities.TimerHistory;
+import de.governikus.eumw.poseidas.server.pki.repositories.PendingCertificateRequestRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
@@ -56,6 +58,8 @@ public class RequestSignerCvcRenewTimer
   private final PendingCertificateRequestRepository pendingCertificateRequestRepository;
 
   private final PermissionDataHandling permissionDataHandling;
+
+  private final TimerHistoryService timerHistoryService;
 
   @Value("${#{@getCvcRscRenewDelay}:120}")
   int timerRateInSeconds;
@@ -116,6 +120,8 @@ public class RequestSignerCvcRenewTimer
 
   private void renewCvcWithRscIfLastTryWasMinimumSixHoursAgo(ServiceProviderType serviceProvider)
   {
+    List<String> succeeded = new ArrayList<>();
+    List<String> failed = new ArrayList<>();
     if (log.isTraceEnabled())
     {
       log.trace("Checking cvc renewal with rsc for service provider {}", serviceProvider.getName());
@@ -132,6 +138,7 @@ public class RequestSignerCvcRenewTimer
         log.debug("Skipped cvc renewal with rsc for service provider {}, because pending requests exists and is not older than six hours.",
                   serviceProvider.getName());
       }
+      failed.add(": Skipped cvc renewal with rsc for service provider %s, because pending requests exists and is not older than six hours.".formatted(serviceProvider.getName()));
       return;
     }
 
@@ -152,7 +159,8 @@ public class RequestSignerCvcRenewTimer
       log.debug("Triggering cvc renewal for service provider {}.", serviceProvider.getName());
     }
 
-    permissionDataHandling.triggerCertRenewal(serviceProvider.getName());
+    permissionDataHandling.triggerCertRenewal(serviceProvider.getName(), succeeded, failed);
+    saveTimer(succeeded, failed);
   }
 
 
@@ -204,5 +212,30 @@ public class RequestSignerCvcRenewTimer
                                .flatMap(List::stream)
                                .filter(s -> terminalPermissionCvcRefId.equals(s.getCVCRefID()))
                                .findFirst();
+  }
+
+  private void saveTimer(List<String> succeeded, List<String> failed)
+  {
+    StringBuilder timerExecutionMessage = new StringBuilder();
+    if (!succeeded.isEmpty())
+    {
+      if (!timerExecutionMessage.isEmpty())
+      {
+        timerExecutionMessage.append(System.lineSeparator());
+      }
+      timerExecutionMessage.append("Succeeded: ").append(succeeded);
+    }
+    for ( String f : failed )
+    {
+      if (!timerExecutionMessage.isEmpty())
+      {
+        timerExecutionMessage.append(System.lineSeparator()).append(System.lineSeparator());
+      }
+      timerExecutionMessage.append(f);
+    }
+    timerHistoryService.saveTimer(TimerHistory.TimerType.CVC_RENEWAL_TIMER,
+                                  timerExecutionMessage.toString(),
+                                  failed.isEmpty(),
+                                  true);
   }
 }

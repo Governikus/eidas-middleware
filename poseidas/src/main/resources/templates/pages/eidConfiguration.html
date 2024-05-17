@@ -16,7 +16,7 @@
                 th:value="${_csrf.token}"/>
 
         <div th:replace="~{fragments/form :: inputRow_text('Allowed eID means', 'allowedEidMeans', 'Allowed eID means comma separated. This value may only be changed if required by the German Federal Government. The following means are always allowed: A,ID,UB.')}"/>
-        <div th:replace="fragments/form :: submit()"></div>
+        <div th:replace="~{fragments/form :: submit()}"></div>
     </form>
 
 

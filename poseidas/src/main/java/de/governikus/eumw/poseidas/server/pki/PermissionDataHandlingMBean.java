@@ -127,7 +127,7 @@ public interface PermissionDataHandlingMBean
 
   /**
    * Checks if the PA service for a given entityID is reachable.
-   * 
+   *
    * @param entityID
    * @return <code>true</code> if reachable, <code>false</code> if not
    */
@@ -135,9 +135,10 @@ public interface PermissionDataHandlingMBean
 
   /**
    * Checks if the RI service for a given entityID is reachable.
-   * 
+   *
    * @param entityID
    * @return <code>true</code> if reachable, <code>false</code> if not
    */
   boolean pingRIService(String entityID);
+
 }

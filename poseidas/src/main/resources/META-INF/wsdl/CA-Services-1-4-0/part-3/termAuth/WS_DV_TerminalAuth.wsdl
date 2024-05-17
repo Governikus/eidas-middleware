@@ -1,0 +1,243 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!-- this WSDL-specification is based on the document
+    Protocols for the Management of Certificates and CRLs in Public-Key-Infrastructures (PKIs) Part 3
+    Version 1.40
+    -->
+<!-- this specification contains the functions that have to be implemented as part of the Web-Service
+    of a DV/BerCa. Currently, the following functions are part of this Web-Service:
+    - RequestCertificate used for requests by an Inspection System
+    - GetCertificates used for requests by an Inspection System
+    - SendCertificates for a callback by a CVCA
+    - GetCertificateDescription to get the CertificateDescription
+    - SendeIDServerCerts used to submit the (TLS) certificates
+    - RequestPKICommunicationCert used to submit the Certificate Signing Request for renewing the TLS client certificate
+    - GetPKICommunicationCert used to poll the TLS client certificate issued by the BerCA
+    - SendRSCCert used to submit the new Request Signer Certificate to replace the previously submitted RSC
+    -->
+
+<definitions
+        name="EAC-PKI-DV"
+        targetNamespace="uri:EAC-PKI-DV-Protocol/1.4"
+        xmlns:tns="uri:EAC-PKI-DV-Protocol/1.4"
+        xmlns:ns="uri:eacBT/1.4"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://schemas.xmlsoap.org/wsdl/ http://schemas.xmlsoap.org/wsdl/2003-02-11.xsd"
+        xmlns:SOAP="http://schemas.xmlsoap.org/wsdl/soap/"
+        xmlns="http://schemas.xmlsoap.org/wsdl/"
+>
+
+    <types>
+        <schema xmlns="http://www.w3.org/2001/XMLSchema">
+            <import namespace="http://www.w3.org/2001/XMLSchema"/>
+            <import namespace="uri:eacBT/1.4" schemaLocation="BasicTypes_DV_TerminalAuth.xsd"/>
+        </schema>
+    </types>
+
+    <!-- Definition of the messages of the protocol -->
+    <!-- message RequestCertificate -->
+    <message name="RequestCertificateReq">
+        <part name="Request" element="ns:requestCertificateRequest"/>
+    </message>
+    <message name="RequestCertificateRes">
+        <part name="Result" element="ns:requestCertificateResult"/>
+    </message>
+
+    <!-- message GetCertificates -->
+    <message name="GetCertificatesReq">
+        <part name="Request" element="ns:getCertificatesRequest"/>
+    </message>
+    <message name="GetCertificatesRes">
+        <part name="Result" element="ns:getCertificatesResult"/>
+    </message>
+
+    <!-- message SendCertificates -->
+    <message name="SendCertificatesReq">
+        <part name="Request" element="ns:sendCertificatesRequest"/>
+    </message>
+    <message name="SendCertificatesRes">
+        <part name="Result" element="ns:sendCertificatesResult"/>
+    </message>
+
+    <!-- message GetCertificateDescription -->
+    <message name="GetCertificateDescriptionReq">
+        <part name="Request" element="ns:getCertificateDescriptionRequest"/>
+    </message>
+    <message name="GetCertificateDescriptionRes">
+        <part name="Result" element="ns:getCertificateDescriptionResult"/>
+    </message>
+
+    <!-- message SendeIDServerCerts -->
+    <message name="SendeIDServerCertsReq">
+        <part name="Request" element="ns:sendeIDServerCertsRequest"/>
+    </message>
+    <message name="SendeIDServerCertsRes">
+        <part name="Result" element="ns:sendeIDServerCertsResult"/>
+    </message>
+
+    <!-- message RequestPKICommunicationCert -->
+    <message name="RequestPKICommunicationCertReq">
+        <part name="Request" element="ns:requestPKICommunicationCertRequest"/>
+    </message>
+    <message name="RequestPKICommunicationCertRes">
+        <part name="Result" element="ns:requestPKICommunicationCertResult"/>
+    </message>
+
+    <!-- message GetPKICommunicationCert -->
+    <message name="GetPKICommunicationCertReq">
+        <part name="Request" element="ns:getPKICommunicationCertRequest"/>
+    </message>
+    <message name="GetPKICommunicationCertRes">
+        <part name="Result" element="ns:getPKICommunicationCertResult"/>
+    </message>
+
+    <!-- message SendRSCCert -->
+    <message name="SendRSCCertReq">
+        <part name="Request" element="ns:sendRSCCertRequest"/>
+    </message>
+    <message name="SendRSCCertRes">
+        <part name="Result" element="ns:sendRSCCertResult"/>
+    </message>
+
+    <!-- Definition of the port types -->
+    <portType name="EAC-PKI-DV-ProtocolType">
+        <!-- port type for message RequestCertificate -->
+        <operation name="RequestCertificate">
+            <input message="tns:RequestCertificateReq"/>
+            <output message="tns:RequestCertificateRes"/>
+        </operation>
+
+        <!-- port type for message GetCertificates -->
+        <operation name="GetCertificates">
+            <input message="tns:GetCertificatesReq"/>
+            <output message="tns:GetCertificatesRes"/>
+        </operation>
+
+        <!-- port type for message SendCertificates -->
+        <operation name="SendCertificates">
+            <input message="tns:SendCertificatesReq"/>
+            <output message="tns:SendCertificatesRes"/>
+        </operation>
+
+        <!-- port type for message GetCertificateDescription -->
+        <operation name="GetCertificateDescription">
+            <input message="tns:GetCertificateDescriptionReq"/>
+            <output message="tns:GetCertificateDescriptionRes"/>
+        </operation>
+
+        <!-- port type for message SendeIDServerCerts -->
+        <operation name="SendeIDServerCerts">
+            <input message="tns:SendeIDServerCertsReq"/>
+            <output message="tns:SendeIDServerCertsRes"/>
+        </operation>
+
+        <!-- port type for message RequestPKICommunicationCert -->
+        <operation name="RequestPKICommunicationCert">
+            <input message="tns:RequestPKICommunicationCertReq"/>
+            <output message="tns:RequestPKICommunicationCertRes"/>
+        </operation>
+
+        <!-- port type for message GetPKICommunicationCert -->
+        <operation name="GetPKICommunicationCert">
+            <input message="tns:GetPKICommunicationCertReq"/>
+            <output message="tns:GetPKICommunicationCertRes"/>
+        </operation>
+
+        <!-- port type for message SendRSCCert -->
+        <operation name="SendRSCCert">
+            <input message="tns:SendRSCCertReq"/>
+            <output message="tns:SendRSCCertRes"/>
+        </operation>
+    </portType>
+
+    <!-- Definition of the bindings -->
+    <binding name="EAC-DV" type="tns:EAC-PKI-DV-ProtocolType">
+        <SOAP:binding style="document" transport="http://schemas.xmlsoap.org/soap/http"/>
+        <operation name="RequestCertificate">
+            <SOAP:operation style="document" soapAction=""/>
+            <input>
+                <SOAP:body use="literal"/>
+            </input>
+            <output>
+                <SOAP:body use="literal"/>
+            </output>
+        </operation>
+
+        <operation name="GetCertificates">
+            <SOAP:operation style="document" soapAction=""/>
+            <input>
+                <SOAP:body use="literal"/>
+            </input>
+            <output>
+                <SOAP:body use="literal"/>
+            </output>
+        </operation>
+
+        <operation name="SendCertificates">
+            <SOAP:operation style="document" soapAction=""/>
+            <input>
+                <SOAP:body use="literal"/>
+            </input>
+            <output>
+                <SOAP:body use="literal"/>
+            </output>
+        </operation>
+
+        <operation name="GetCertificateDescription">
+            <SOAP:operation style="document" soapAction=""/>
+            <input>
+                <SOAP:body use="literal"/>
+            </input>
+            <output>
+                <SOAP:body use="literal"/>
+            </output>
+        </operation>
+
+        <operation name="SendeIDServerCerts">
+            <SOAP:operation style="document" soapAction=""/>
+            <input>
+                <SOAP:body use="literal"/>
+            </input>
+            <output>
+                <SOAP:body use="literal"/>
+            </output>
+        </operation>
+
+        <operation name="RequestPKICommunicationCert">
+            <SOAP:operation style="document" soapAction=""/>
+            <input>
+                <SOAP:body use="literal"/>
+            </input>
+            <output>
+                <SOAP:body use="literal"/>
+            </output>
+        </operation>
+
+        <operation name="GetPKICommunicationCert">
+            <SOAP:operation style="document" soapAction=""/>
+            <input>
+                <SOAP:body use="literal"/>
+            </input>
+            <output>
+                <SOAP:body use="literal"/>
+            </output>
+        </operation>
+
+        <operation name="SendRSCCert">
+            <SOAP:operation style="document" soapAction=""/>
+            <input>
+                <SOAP:body use="literal"/>
+            </input>
+            <output>
+                <SOAP:body use="literal"/>
+            </output>
+        </operation>
+    </binding>
+
+    <!-- Definition of the service -->
+    <service name="EAC-DV-ProtocolService">
+        <port name="EAC-DV-ProtocolServicePort" binding="tns:EAC-DV">
+            <SOAP:address location="http://URL_NOT_SPECIFIED"/>
+        </port>
+    </service>
+</definitions>

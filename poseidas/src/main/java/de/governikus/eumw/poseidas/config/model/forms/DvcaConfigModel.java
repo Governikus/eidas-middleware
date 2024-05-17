@@ -46,9 +46,5 @@ public class DvcaConfigModel
   @NotBlank(message = "May not be empty")
   private String passiveAuthServiceUrl;
 
-  @URL
-  @NotBlank(message = "May not be empty")
-  private String dvcaCertificateDescrptionServiceUrl;
-
   private boolean newconfig = true;
 }

@@ -155,9 +155,9 @@ class RequestHandlerMatrixTest
     EidasMiddlewareConfig config = new EidasMiddlewareConfig();
     EidasMiddlewareConfig.EidConfiguration eidConfiguration = new EidasMiddlewareConfig.EidConfiguration();
     eidConfiguration.getServiceProvider()
-                    .add(new ServiceProviderType(PROVIDER_NAME, true, "CVCRefID", "DVCAConf", "ClientKey"));
+                    .add(new ServiceProviderType(PROVIDER_NAME, true, "CVCRefID", "DVCAConf", "ClientKey", null));
     eidConfiguration.getServiceProvider()
-                    .add(new ServiceProviderType(SERVICE_PROVIDER, true, "CVCRefID", "DVCAConf", "ClientKey"));
+                    .add(new ServiceProviderType(SERVICE_PROVIDER, true, "CVCRefID", "DVCAConf", "ClientKey", null));
     config.setEidConfiguration(eidConfiguration);
     Mockito.when(mockConfigurationService.getConfiguration()).thenReturn(Optional.of(config));
   }

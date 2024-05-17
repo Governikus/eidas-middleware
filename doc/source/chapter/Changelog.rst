@@ -13,7 +13,7 @@ Changelog
 * 1.0.3
 
     - Improvement of the :term:`Black List` handling with database changes.
-      NOTE: When upgrading from 1.0.1 or 1.0.2 to 1.0.3 or later, you must execute the database migration application (see :ref:`database_migration`).
+      NOTE: When upgrading from 1.0.1 or 1.0.2 to 1.0.3 or later, you must execute the database migration application.
     - Introduction of the configuration wizard.
     - Improvements for Docker integration.
     - Various bug fixes.
@@ -59,7 +59,7 @@ Changelog
     - eIDAS Middleware: Implement the recommendations from the latest pen test.
     - eIDAS Middleware: The admin interface can listen on a different port than the actual application endpoints. The admin interface is now available on a different context path, e.g. ``https://[host]:[port]/admin-interface/list``
     - eIDAS Middleware: New HTML designs for starting the AusweisApp2 and error messages.
-    - eIDAS Middleware: A HSM Module can be used via the PKCS11 interface for different cryptographic actions.
+    - eIDAS Middleware: A HSM Module can be used via the PKCS#11 interface for different cryptographic actions.
     - Configuration Wizard: Support HSM configuration.
     - eIDAS Middleware: Fix padding and OID identifier in case ECDH encryption is used.
     - eIDAS Middleware: Add whitelist for allowed document signer types which can be extended using the configuration.
@@ -183,7 +183,7 @@ Changelog
       and update other third party libraries for security fixes.
 
   Known Issue for all versions before 3.0.0:
-  The SUN PKCS11 security provider that is shipped with Java 8 does not support RSA-PSS signatures.
+  The SUN PKCS#11 security provider that is shipped with Java 8 does not support RSA-PSS signatures.
   In order to use an HSM and stay in line with the eIDAS cryptographic requirements,
   the use of EC cryptography for the SAML signature is mandatory.
 
@@ -194,9 +194,9 @@ Changelog
 * 3.0.0
 
     - All components: Now supporting Java 11. Support for Java 8 is discontinued.
-    - eIDAS Middleware: With Java 11, the PKCS11 provider now supports RSA-PSS signatures.
+    - eIDAS Middleware: With Java 11, the PKCS#11 provider now supports RSA-PSS signatures.
     - eIDAS Middleware: Remove support of cryptographic algorithms not following eIDAS requirements
-      which had been kept for the Java 8 SUN PKCS11 provider.
+      which had been kept for the Java 8 SUN PKCS#11 provider.
     - eIDAS Middleware: Remove support of older DVCA service versions, thus removing the need of different policies.
     - eIDAS Middleware: Restructure configuration.
     - eIDAS Middleware: Extend admin interface to be a configuration interface as well.
@@ -247,3 +247,19 @@ Changelog
     - eIDAS Middleware: Fix generation of sequence number after an initial CVC request.
     - eIDAS Middleware: Improve form validation for initial CVC request.
     - eIDAS Middleware & Demo: Update new references to the German eID client.
+
+* 3.3.0
+
+    - eIDAS Middleware: Database change from H2 to HSQL - breaking change
+    - Database Migration Tool: Tool for migration between H2 and HSQL
+    - eIDAS Middleware: Add functionality of TR-03129-1.40 - breaking change
+    - eIDAS Middleware: Store Block Lists in file system instead of database, use copy in memory for fast access.
+    - eIDAS Middleware: Add automatic entanglement of the TLS server certificate with the CVC
+    - eIDAS Middleware: Add automatic renewal of :term:`Request Signer Certificate<Request Signer Certificate>`
+    - eIDAS Middleware: Add automatic renewal of the TLS client certificate (at the time of publication only available in the test environment)
+    - eIDAS Middleware: Remove dashboard page and set status page as landing page
+    - eIDAS Middleware: Add timer history
+    - eIDAS Middleware: Improved logging
+    - eIDAS Middleware: Updated VM image to Debian 12 and Java 17.0.10
+
+

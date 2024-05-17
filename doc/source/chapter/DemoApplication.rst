@@ -27,6 +27,15 @@ It must contain the following content. Adapt all the values to match your setup.
     # The pin of the keystore and key of the demo_signature_keystore
     demo.signature.pin=123456
 
+    # The path to the key store that will be used to decrypt the eIDAS response, jks or p12
+    demo.decryption.keystore=/path/to/your/demo_decryption_keystore.p12
+
+    # The alias for the demo_decryption_keystore
+    demo.decryption.alias=alias
+
+    # The pin of the keystore and key of the demo_decryption_keystore
+    demo.decryption.pin=123456
+
     # Optional: Add a context path to the eIDAS Demo Application
     #server.contextPath=/eIDASDemoApplication
 
@@ -42,8 +51,8 @@ Using the eIDAS Demo Application
 To use the eIDAS Demo Application, start by running the eIDAS Demo Application.
 
 #. Change to the correct directory where the aforementioned configuration is present.
-#. If not present, copy the ``eidas-demo-3.2.0.jar`` file in this directory.
-#. Start the application by executing ``java -jar eidas-demo-3.2.0.jar``.
+#. If not present, copy the ``eidas-demo-3.3.0.jar`` file in this directory.
+#. Start the application by executing ``java -jar eidas-demo-3.3.0.jar``.
 
 Now you must configure your eIDAS Middleware to communicate with the eIDAS Demo Application.
 
@@ -81,7 +90,7 @@ Also bear in mind that you must use the path of the container file system in the
 
 To run the middleware, execute the following command after you have prepared the configuration, certificate and key stores::
 
-    docker run --rm -it -v /path/to/your/config-directory:/opt/eidas-middleware/config -p 8080:8080 governikus/eidas-demo-application:3.2.0
+    docker run --rm -it -v /path/to/your/config-directory:/opt/eidas-middleware/config -p 8080:8080 governikus/eidas-demo-application:3.3.0
 
 Now you can follow the steps above to configure and test the eIDAS Middleware.
 

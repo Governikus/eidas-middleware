@@ -50,6 +50,13 @@ public class ManagementMessage implements Serializable
   }
 
   /**
+   * Return the details of this message.
+   */
+  public String getDetails() {
+    return details;
+  }
+
+  /**
    * Return the String representation as given to the WebAdmin
    */
   @Override

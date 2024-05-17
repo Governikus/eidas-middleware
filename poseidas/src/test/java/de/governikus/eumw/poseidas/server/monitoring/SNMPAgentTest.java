@@ -41,18 +41,23 @@ import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.DynamicPropertyRegistry;
 import org.springframework.test.context.DynamicPropertySource;
+import org.springframework.test.util.TestSocketUtils;
 
 import de.governikus.eumw.config.EidasMiddlewareConfig;
 import de.governikus.eumw.config.ServiceProviderType;
-import de.governikus.eumw.poseidas.config.OverviewController;
+import de.governikus.eumw.poseidas.config.IndexController;
 import de.governikus.eumw.poseidas.eidserver.crl.CertificationRevocationListImpl;
 import de.governikus.eumw.poseidas.eidserver.model.signeddata.MasterList;
 import de.governikus.eumw.poseidas.server.idprovider.config.ConfigurationService;
 import de.governikus.eumw.poseidas.server.idprovider.config.ConfigurationTestHelper;
-import de.governikus.eumw.poseidas.server.pki.TerminalPermission;
 import de.governikus.eumw.poseidas.server.pki.TerminalPermissionAO;
+import de.governikus.eumw.poseidas.server.pki.entities.TerminalPermission;
+import de.governikus.eumw.poseidas.server.pki.repositories.CertInChainRepository;
+import de.governikus.eumw.poseidas.server.pki.repositories.KeyArchiveRepository;
+import de.governikus.eumw.poseidas.server.pki.repositories.RequestSignerCertificateRepository;
+import de.governikus.eumw.poseidas.server.pki.repositories.TerminalPermissionRepository;
 import de.governikus.eumw.poseidas.service.MetadataService;
-import org.springframework.test.util.TestSocketUtils;
+
 
 @ActiveProfiles("db") // Use application-db.properties
 @SpringBootTest
@@ -68,13 +73,25 @@ class SNMPAgentTest
   private MetadataService metadataService;
 
   @MockBean
-  private OverviewController overviewController;
+  private IndexController overviewController;
 
   @MockBean
   private ConfigurationService configurationService;
 
   @Autowired
   private TerminalPermissionAO facade;
+
+  @Autowired
+  private RequestSignerCertificateRepository requestSignerCertificateRepository;
+
+  @Autowired
+  private TerminalPermissionRepository terminalPermissionRepository;
+
+  @Autowired
+  private CertInChainRepository certInChainRepository;
+
+  @Autowired
+  private KeyArchiveRepository keyArchiveRepository;
 
   private Snmp snmp;
 
@@ -115,6 +132,10 @@ class SNMPAgentTest
     userTarget.setSecurityName(new OctetString("test"));
     userTarget.setVersion(SnmpConstants.version3);
     Mockito.when(configurationService.getConfiguration()).thenReturn(Optional.of(prepareConfiguration()));
+    DatabaseInit databaseInit = new DatabaseInit(requestSignerCertificateRepository,
+                                                 terminalPermissionRepository, certInChainRepository,
+                                                 keyArchiveRepository);
+    databaseInit.initializeSNMPDatabase();
   }
 
   @Test
@@ -620,31 +641,31 @@ class SNMPAgentTest
     sp.setCVCRefID("F");
     configuration.getEidConfiguration()
                  .getServiceProvider()
-                 .add(new ServiceProviderType("TestbedA", true, "A", DVCA_CONF, CLIENT_KEY));
+                 .add(new ServiceProviderType("TestbedA", true, "A", DVCA_CONF, CLIENT_KEY, null));
     configuration.getEidConfiguration()
                  .getServiceProvider()
-                 .add(new ServiceProviderType("TestbedB", true, "B", DVCA_CONF, CLIENT_KEY));
+                 .add(new ServiceProviderType("TestbedB", true, "B", DVCA_CONF, CLIENT_KEY, null));
     configuration.getEidConfiguration()
                  .getServiceProvider()
-                 .add(new ServiceProviderType("TestbedC", true, "C", DVCA_CONF, CLIENT_KEY));
+                 .add(new ServiceProviderType("TestbedC", true, "C", DVCA_CONF, CLIENT_KEY, null));
     configuration.getEidConfiguration()
                  .getServiceProvider()
-                 .add(new ServiceProviderType("TestbedD", true, "D", DVCA_CONF, CLIENT_KEY));
+                 .add(new ServiceProviderType("TestbedD", true, "D", DVCA_CONF, CLIENT_KEY, null));
     configuration.getEidConfiguration()
                  .getServiceProvider()
-                 .add(new ServiceProviderType("TestbedERSA", true, "ERSA", DVCA_CONF, CLIENT_KEY));
+                 .add(new ServiceProviderType("TestbedERSA", true, "ERSA", DVCA_CONF, CLIENT_KEY, null));
     configuration.getEidConfiguration()
                  .getServiceProvider()
-                 .add(new ServiceProviderType("TestbedEDSA", true, "EDSA", DVCA_CONF, CLIENT_KEY));
+                 .add(new ServiceProviderType("TestbedEDSA", true, "EDSA", DVCA_CONF, CLIENT_KEY, null));
     configuration.getEidConfiguration()
                  .getServiceProvider()
-                 .add(new ServiceProviderType("TestbedECDSA", true, "ECDSA", DVCA_CONF, CLIENT_KEY));
+                 .add(new ServiceProviderType("TestbedECDSA", true, "ECDSA", DVCA_CONF, CLIENT_KEY, null));
     configuration.getEidConfiguration()
                  .getServiceProvider()
-                 .add(new ServiceProviderType("TestbedF", true, "F", DVCA_CONF, CLIENT_KEY));
+                 .add(new ServiceProviderType("TestbedF", true, "F", DVCA_CONF, CLIENT_KEY, null));
     configuration.getEidConfiguration()
                  .getServiceProvider()
-                 .add(new ServiceProviderType("TestbedG", true, "G", DVCA_CONF, CLIENT_KEY));
+                 .add(new ServiceProviderType("TestbedG", true, "G", DVCA_CONF, CLIENT_KEY, null));
     return configuration;
   }
 }

@@ -129,7 +129,7 @@
 
                                             <div th:replace="~{fragments/form :: inputRow_upload('keystore-upload', null, 'keystoreFile', 'Key store file')}"/>
                                             <hr/>
-                                            <div th:replace="fragments/form :: submitTextUploadIcon('Upload')"/>
+                                            <div th:replace="~{fragments/form :: submitTextUploadIcon('Upload')}"/>
                                         </div>
                                     </form>
                                 </div>
@@ -177,7 +177,7 @@
                                             <div th:replace="~{fragments/form :: inputRow_text_with_id('certificateName','Certificate name', 'name', 'Name to identify the certificate')}"/>
                                             <div th:replace="~{fragments/form :: inputRow_upload('certificate-upload', null, 'certificateFile', 'Certificate file')}"/>
                                             <hr/>
-                                            <div th:replace="fragments/form :: submitTextUploadIcon('Upload')"/>
+                                            <div th:replace="~{fragments/form :: submitTextUploadIcon('Upload')}"/>
 
 
                                         </div>

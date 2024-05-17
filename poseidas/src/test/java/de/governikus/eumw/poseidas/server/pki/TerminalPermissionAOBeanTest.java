@@ -1,24 +1,19 @@
 /*
- * Copyright (c) 2020 Governikus KG. Licensed under the EUPL, Version 1.2 or as soon they will be approved by
- * the European Commission - subsequent versions of the EUPL (the "Licence"); You may not use this work except
- * in compliance with the Licence. You may obtain a copy of the Licence at:
- * http://joinup.ec.europa.eu/software/page/eupl Unless required by applicable law or agreed to in writing,
- * software distributed under the Licence is distributed on an "AS IS" basis, WITHOUT WARRANTIES OR CONDITIONS
- * OF ANY KIND, either express or implied. See the Licence for the specific language governing permissions and
- * limitations under the Licence.
+ * Copyright (c) 2020 Governikus KG. Licensed under the EUPL, Version 1.2 or as soon they will be approved by the
+ * European Commission - subsequent versions of the EUPL (the "Licence"); You may not use this work except in compliance
+ * with the Licence. You may obtain a copy of the Licence at: http://joinup.ec.europa.eu/software/page/eupl Unless
+ * required by applicable law or agreed to in writing, software distributed under the Licence is distributed on an
+ * "AS IS" basis, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the Licence for the
+ * specific language governing permissions and limitations under the Licence.
  */
 
 package de.governikus.eumw.poseidas.server.pki;
 
 import java.io.InputStream;
-import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
-import java.util.concurrent.locks.ReentrantLock;
-
-import jakarta.xml.bind.DatatypeConverter;
 
 import org.apache.commons.lang3.ArrayUtils;
 import org.hamcrest.MatcherAssert;
@@ -27,7 +22,6 @@ import org.joda.time.DateTime;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
-import org.mockito.stubbing.Answer;
 import org.springframework.data.domain.Sort;
 
 import com.google.common.io.ByteStreams;
@@ -35,6 +29,19 @@ import com.google.common.io.ByteStreams;
 import de.governikus.eumw.config.EidasMiddlewareConfig;
 import de.governikus.eumw.poseidas.server.idprovider.config.ConfigurationService;
 import de.governikus.eumw.poseidas.server.idprovider.config.ConfigurationTestHelper;
+import de.governikus.eumw.poseidas.server.pki.blocklist.BlockListService;
+import de.governikus.eumw.poseidas.server.pki.entities.CVCUpdateLock;
+import de.governikus.eumw.poseidas.server.pki.entities.CertInChain;
+import de.governikus.eumw.poseidas.server.pki.entities.CertInChainPK;
+import de.governikus.eumw.poseidas.server.pki.entities.ChangeKeyLock;
+import de.governikus.eumw.poseidas.server.pki.entities.PendingCertificateRequest;
+import de.governikus.eumw.poseidas.server.pki.entities.TerminalPermission;
+import de.governikus.eumw.poseidas.server.pki.repositories.CVCUpdateLockRepository;
+import de.governikus.eumw.poseidas.server.pki.repositories.CertInChainRepository;
+import de.governikus.eumw.poseidas.server.pki.repositories.ChangeKeyLockRepository;
+import de.governikus.eumw.poseidas.server.pki.repositories.PendingCertificateRequestRepository;
+import de.governikus.eumw.poseidas.server.pki.repositories.TerminalPermissionRepository;
+import lombok.SneakyThrows;
 
 
 class TerminalPermissionAOBeanTest
@@ -48,9 +55,9 @@ class TerminalPermissionAOBeanTest
   void getTerminalPermission()
   {
     TerminalPermissionRepository terminalPermissionRepository = Mockito.mock(TerminalPermissionRepository.class);
-    TerminalPermissionAOBean terminalPermissionAOBean = new TerminalPermissionAOBean(terminalPermissionRepository,
-                                                                                     null, null, null, null,
-                                                                                     null, null, null, null);
+    TerminalPermissionAOBean terminalPermissionAOBean = new TerminalPermissionAOBean(terminalPermissionRepository, null,
+                                                                                     null, null, null, null, null, null,
+                                                                                     null);
 
     String refID = "refID";
     Assertions.assertNull(terminalPermissionAOBean.getTerminalPermission(null));
@@ -65,9 +72,9 @@ class TerminalPermissionAOBeanTest
   void getExpirationDates()
   {
     TerminalPermissionRepository terminalPermissionRepository = Mockito.mock(TerminalPermissionRepository.class);
-    TerminalPermissionAOBean terminalPermissionAOBean = new TerminalPermissionAOBean(terminalPermissionRepository,
-                                                                                     null, null, null, null,
-                                                                                     null, null, null, null);
+    TerminalPermissionAOBean terminalPermissionAOBean = new TerminalPermissionAOBean(terminalPermissionRepository, null,
+                                                                                     null, null, null, null, null, null,
+                                                                                     null);
 
     Assertions.assertEquals(0, terminalPermissionAOBean.getExpirationDates().size());
 
@@ -80,10 +87,8 @@ class TerminalPermissionAOBeanTest
     Mockito.when(terminalPermissionRepository.findAll(Mockito.any(Sort.class))).thenReturn(terminals);
 
     MatcherAssert.assertThat(terminalPermissionAOBean.getExpirationDates(), Matchers.aMapWithSize(2));
-    MatcherAssert.assertThat(terminalPermissionAOBean.getExpirationDates(),
-                             Matchers.hasKey(first.getRefID()));
-    MatcherAssert.assertThat(terminalPermissionAOBean.getExpirationDates(),
-                             Matchers.hasKey(second.getRefID()));
+    MatcherAssert.assertThat(terminalPermissionAOBean.getExpirationDates(), Matchers.hasKey(first.getRefID()));
+    MatcherAssert.assertThat(terminalPermissionAOBean.getExpirationDates(), Matchers.hasKey(second.getRefID()));
   }
 
   @Test
@@ -91,9 +96,8 @@ class TerminalPermissionAOBeanTest
   {
     CVCUpdateLockRepository cvcUpdateLockRepository = Mockito.mock(CVCUpdateLockRepository.class);
     TerminalPermissionAOBean terminalPermissionAOBean = new TerminalPermissionAOBean(null, null, null,
-                                                                                     cvcUpdateLockRepository,
-                                                                                     null, null, null, null,
-                                                                                     null);
+                                                                                     cvcUpdateLockRepository, null,
+                                                                                     null, null, null, null);
 
     // No lock
     CVCUpdateLock obtainedLock = terminalPermissionAOBean.obtainCVCUpdateLock(SERVICE_PROVIDER);
@@ -124,13 +128,11 @@ class TerminalPermissionAOBeanTest
   {
     CVCUpdateLockRepository cvcUpdateLockRepository = Mockito.mock(CVCUpdateLockRepository.class);
     TerminalPermissionAOBean terminalPermissionAOBean = new TerminalPermissionAOBean(null, null, null,
-                                                                                     cvcUpdateLockRepository,
-                                                                                     null, null, null, null,
-                                                                                     null);
+                                                                                     cvcUpdateLockRepository, null,
+                                                                                     null, null, null, null);
 
 
-    Assertions.assertThrows(IllegalArgumentException.class,
-                            () -> terminalPermissionAOBean.releaseCVCUpdateLock(null));
+    Assertions.assertThrows(IllegalArgumentException.class, () -> terminalPermissionAOBean.releaseCVCUpdateLock(null));
 
     // Unknown lock
     CVCUpdateLock cvcUpdateLock = new CVCUpdateLock(SERVICE_PROVIDER, System.currentTimeMillis());
@@ -150,90 +152,12 @@ class TerminalPermissionAOBeanTest
   }
 
   @Test
-  void updateBlackListStoreDate()
-  {
-    TerminalPermissionRepository terminalPermissionRepository = Mockito.mock(TerminalPermissionRepository.class);
-    TerminalPermissionAOBean terminalPermissionAOBean = new TerminalPermissionAOBean(terminalPermissionRepository,
-                                                                                     null, null, null, null,
-                                                                                     null, null, null, null);
-
-    // Null and unknown refID
-    terminalPermissionAOBean.updateBlackListStoreDate(null, null, 0L);
-    terminalPermissionAOBean.updateBlackListStoreDate(SERVICE_PROVIDER, null, 0L);
-    Mockito.verify(terminalPermissionRepository, Mockito.never()).save(Mockito.any());
-
-    // Mock the TerminalPermission entry
-    Mockito.when(terminalPermissionRepository.findById(Mockito.anyString()))
-           .thenReturn(Optional.of(new TerminalPermission(SERVICE_PROVIDER)));
-    // Mock save method to assert that the object to be saved was correctly created by
-    // TerminalPermissionAOBean
-    Mockito.when(terminalPermissionRepository.save(Mockito.any()))
-           .thenAnswer((Answer<TerminalPermission>)invocation -> {
-             Object[] args = invocation.getArguments();
-             TerminalPermission terminalPermission = (TerminalPermission)args[0];
-             Assertions.assertEquals(SERVICE_PROVIDER, terminalPermission.getRefID());
-             Assertions.assertArrayEquals(SERVICE_PROVIDER.getBytes(StandardCharsets.UTF_8),
-                                          terminalPermission.getSectorID());
-             Assertions.assertEquals(1L, terminalPermission.getBlackListVersion());
-             Assertions.assertTrue(terminalPermission.getBlackListStoreDate()
-                                                     .after(DateTime.now().minus(MINUTE).toDate()));
-             return terminalPermission;
-           });
-    // Actual update
-    terminalPermissionAOBean.updateBlackListStoreDate(SERVICE_PROVIDER,
-                                                      SERVICE_PROVIDER.getBytes(StandardCharsets.UTF_8),
-                                                      1L);
-    Mockito.verify(terminalPermissionRepository).save(Mockito.any());
-  }
-
-  @Test
-  void removeSpecificIDs()
-  {
-    List<String> fakeBlackListRepoContent = new ArrayList<>();
-    for ( int i = 0 ; i < 3000 ; i++ )
-    {
-      fakeBlackListRepoContent.add(String.valueOf(i));
-    }
-    List<String> entriesToBeDeleted = new ArrayList<>();
-    for ( int i = 0 ; i < 2000 ; i++ )
-    {
-      entriesToBeDeleted.add(String.valueOf(i));
-    }
-    String sectorId = "sectorId";
-
-    BlackListEntryRepository blackListEntryRepository = Mockito.mock(BlackListEntryRepository.class);
-    TerminalPermissionAOBean terminalPermissionAOBean = new TerminalPermissionAOBean(null, null, null, null,
-                                                                                     blackListEntryRepository,
-                                                                                     null, null, null, null);
-    // A lock must be used because parallelStream()... is leading to non-deterministic behaviour while
-    // removing from the same list
-    ReentrantLock deletionLock = new ReentrantLock();
-    Mockito.doAnswer(invocation -> {
-      String sectorIdDeleted = invocation.getArgument(0);
-      List<String> toBeDeleted = invocation.getArgument(1);
-      Assertions.assertEquals(sectorId, sectorIdDeleted);
-      deletionLock.lock();
-      for ( String entry : toBeDeleted )
-      {
-        Assertions.assertTrue(fakeBlackListRepoContent.remove(entry));
-      }
-      deletionLock.unlock();
-      return null;
-    })
-           .when(blackListEntryRepository)
-           .deleteAllByKey_SectorIDAndKey_SpecificIDIn(Mockito.anyString(), Mockito.anyList());
-
-    terminalPermissionAOBean.removeSpecificIDs(sectorId, entriesToBeDeleted);
-    Assertions.assertEquals(1000, fakeBlackListRepoContent.size());
-  }
-
-  @Test
   void storeCVCRequestSent()
   {
     TerminalPermissionRepository terminalPermissionRepository = Mockito.mock(TerminalPermissionRepository.class);
-    TerminalPermissionAOBean terminalPermissionAOBean = new TerminalPermissionAOBean(terminalPermissionRepository,
-                                                                                     null, null, null, null,
-                                                                                     null, null, null, null);
+    TerminalPermissionAOBean terminalPermissionAOBean = new TerminalPermissionAOBean(terminalPermissionRepository, null,
+                                                                                     null, null, null, null, null, null,
+                                                                                     null);
 
     terminalPermissionAOBean.storeCVCRequestSent(null);
     terminalPermissionAOBean.storeCVCRequestSent(SERVICE_PROVIDER);
@@ -261,8 +185,8 @@ class TerminalPermissionAOBeanTest
   {
     TerminalPermissionRepository terminalPermissionRepository = Mockito.mock(TerminalPermissionRepository.class);
     PendingCertificateRequestRepository pendingCertificateRequestRepository = Mockito.mock(PendingCertificateRequestRepository.class);
-    TerminalPermissionAOBean terminalPermissionAOBean = new TerminalPermissionAOBean(terminalPermissionRepository,
-                                                                                     null, null, null, null,
+    TerminalPermissionAOBean terminalPermissionAOBean = new TerminalPermissionAOBean(terminalPermissionRepository, null,
+                                                                                     null, null, null,
                                                                                      pendingCertificateRequestRepository,
                                                                                      null, null, null);
 
@@ -303,20 +227,21 @@ class TerminalPermissionAOBeanTest
   }
 
 
+  @SneakyThrows
   @Test
   void removeTerminalPermission()
   {
     TerminalPermissionRepository terminalPermissionRepository = Mockito.mock(TerminalPermissionRepository.class);
+
+
     CertInChainRepository certInChainRepository = Mockito.mock(CertInChainRepository.class);
     PendingCertificateRequestRepository pendingCertificateRequestRepository = Mockito.mock(PendingCertificateRequestRepository.class);
-    BlackListEntryRepository blackListEntryRepository = Mockito.mock(BlackListEntryRepository.class);
     CertInChain certInChain = Mockito.mock(CertInChain.class);
     PendingCertificateRequest pendingCertificateRequest = Mockito.mock(PendingCertificateRequest.class);
-    TerminalPermissionAOBean terminalPermissionAOBean = new TerminalPermissionAOBean(terminalPermissionRepository,
-                                                                                     null,
-                                                                                     certInChainRepository,
-                                                                                     null,
-                                                                                     blackListEntryRepository,
+    BlockListService blockListService = Mockito.mock(BlockListService.class);
+    TerminalPermissionAOBean terminalPermissionAOBean = new TerminalPermissionAOBean(terminalPermissionRepository, null,
+                                                                                     certInChainRepository, null,
+                                                                                     blockListService,
                                                                                      pendingCertificateRequestRepository,
                                                                                      null, null, null);
     // No Terminal Permission
@@ -325,17 +250,16 @@ class TerminalPermissionAOBeanTest
     Assertions.assertFalse(terminalPermissionAOBean.remove(SERVICE_PROVIDER));
     Mockito.verify(certInChainRepository, Mockito.never()).delete(certInChain);
     Mockito.verify(pendingCertificateRequestRepository, Mockito.never()).delete(pendingCertificateRequest);
-    Mockito.verify(blackListEntryRepository, Mockito.never()).deleteAllByKey_SectorID(Mockito.anyString());
+    Mockito.verify(blockListService, Mockito.never()).removeBlockList(Mockito.any(TerminalPermission.class));
 
     // Without certs in chain, pending request and sector id
     TerminalPermission terminalPermission = new TerminalPermission(SERVICE_PROVIDER);
-    Mockito.when(terminalPermissionRepository.findById(SERVICE_PROVIDER))
-           .thenReturn(Optional.of(terminalPermission));
+    Mockito.when(terminalPermissionRepository.findById(SERVICE_PROVIDER)).thenReturn(Optional.of(terminalPermission));
 
     Assertions.assertTrue(terminalPermissionAOBean.remove(SERVICE_PROVIDER));
     Mockito.verify(certInChainRepository, Mockito.never()).delete(certInChain);
     Mockito.verify(pendingCertificateRequestRepository, Mockito.never()).delete(pendingCertificateRequest);
-    Mockito.verify(blackListEntryRepository, Mockito.never()).deleteAllByKey_SectorID(Mockito.anyString());
+    Mockito.verify(blockListService, Mockito.never()).removeBlockList(terminalPermission);
 
     // With certs in chain, pending request and sector id
     terminalPermission.getChain().add(certInChain);
@@ -345,18 +269,16 @@ class TerminalPermissionAOBeanTest
     Assertions.assertTrue(terminalPermissionAOBean.remove(SERVICE_PROVIDER));
     Mockito.verify(certInChainRepository).delete(certInChain);
     Mockito.verify(pendingCertificateRequestRepository).delete(pendingCertificateRequest);
-    Mockito.verify(blackListEntryRepository)
-           .deleteAllByKey_SectorID(DatatypeConverter.printBase64Binary("sectorId".getBytes()));
+    Mockito.verify(blockListService).removeBlockList(terminalPermission);
   }
 
   @Test
   void releaseChangeKeyLock() throws Exception
   {
     ChangeKeyLockRepository changeKeyLockRepository = Mockito.mock(ChangeKeyLockRepository.class);
-    TerminalPermissionAOBean terminalPermissionAOBean = new TerminalPermissionAOBean(null, null, null, null,
-                                                                                     null, null,
-                                                                                     changeKeyLockRepository,
-                                                                                     null, null);
+    TerminalPermissionAOBean terminalPermissionAOBean = new TerminalPermissionAOBean(null, null, null, null, null, null,
+                                                                                     changeKeyLockRepository, null,
+                                                                                     null);
     long now = System.currentTimeMillis();
     String myAddress = "localhost";
     ChangeKeyLock changeKeyLock = new ChangeKeyLock("keyName", myAddress, now, 0);
@@ -369,8 +291,7 @@ class TerminalPermissionAOBeanTest
     Mockito.verify(changeKeyLockRepository, Mockito.never()).delete(changeKeyLockMock);
 
     // With terminal permission
-    Mockito.when(changeKeyLockRepository.findById(Mockito.anyString()))
-           .thenReturn(Optional.of(changeKeyLockMock));
+    Mockito.when(changeKeyLockRepository.findById(Mockito.anyString())).thenReturn(Optional.of(changeKeyLockMock));
 
     Assertions.assertTrue(terminalPermissionAOBean.releaseChangeKeyLock(changeKeyLock));
     Mockito.verify(changeKeyLockRepository).delete(changeKeyLockMock);
@@ -380,10 +301,9 @@ class TerminalPermissionAOBeanTest
   void releaseChangeLockOwner() throws Exception
   {
     ChangeKeyLockRepository changeKeyLockRepository = Mockito.mock(ChangeKeyLockRepository.class);
-    TerminalPermissionAOBean terminalPermissionAOBean = new TerminalPermissionAOBean(null, null, null, null,
-                                                                                     null, null,
-                                                                                     changeKeyLockRepository,
-                                                                                     null, null);
+    TerminalPermissionAOBean terminalPermissionAOBean = new TerminalPermissionAOBean(null, null, null, null, null, null,
+                                                                                     changeKeyLockRepository, null,
+                                                                                     null);
     long now = System.currentTimeMillis();
     String myAddress = "localhost";
     ChangeKeyLock changeKeyLock = new ChangeKeyLock("keyName", myAddress, now, 0);
@@ -396,8 +316,7 @@ class TerminalPermissionAOBeanTest
     Mockito.verify(changeKeyLockRepository, Mockito.never()).save(changeKeyLockMock);
 
     // With terminal permission
-    Mockito.when(changeKeyLockRepository.findById(Mockito.anyString()))
-           .thenReturn(Optional.of(changeKeyLockMock));
+    Mockito.when(changeKeyLockRepository.findById(Mockito.anyString())).thenReturn(Optional.of(changeKeyLockMock));
 
     Assertions.assertTrue(terminalPermissionAOBean.releaseChangeKeyLockOwner(changeKeyLock));
     Mockito.doAnswer(invocation -> {
@@ -415,10 +334,8 @@ class TerminalPermissionAOBeanTest
     PendingCertificateRequestRepository pendingCertificateRequestRepository = Mockito.mock(PendingCertificateRequestRepository.class);
     CertInChainRepository certInChainRepository = Mockito.mock(CertInChainRepository.class);
     PendingCertificateRequest pendingCertificateRequest = Mockito.mock(PendingCertificateRequest.class);
-    TerminalPermissionAOBean terminalPermissionAOBean = new TerminalPermissionAOBean(terminalPermissionRepository,
-                                                                                     null,
-                                                                                     certInChainRepository,
-                                                                                     null, null,
+    TerminalPermissionAOBean terminalPermissionAOBean = new TerminalPermissionAOBean(terminalPermissionRepository, null,
+                                                                                     certInChainRepository, null, null,
                                                                                      pendingCertificateRequestRepository,
                                                                                      null, null, null);
     byte[] cvc = getResourceAsByteArray("/terminalCertificates/terminalCert.cvc");
@@ -456,10 +373,8 @@ class TerminalPermissionAOBeanTest
     PendingCertificateRequestRepository pendingCertificateRequestRepository = Mockito.mock(PendingCertificateRequestRepository.class);
     CertInChainRepository certInChainRepository = Mockito.mock(CertInChainRepository.class);
     PendingCertificateRequest pendingCertificateRequest = Mockito.mock(PendingCertificateRequest.class);
-    TerminalPermissionAOBean terminalPermissionAOBean = new TerminalPermissionAOBean(terminalPermissionRepository,
-                                                                                     null,
-                                                                                     certInChainRepository,
-                                                                                     null, null,
+    TerminalPermissionAOBean terminalPermissionAOBean = new TerminalPermissionAOBean(terminalPermissionRepository, null,
+                                                                                     certInChainRepository, null, null,
                                                                                      pendingCertificateRequestRepository,
                                                                                      null, null, null);
     byte[] cvc = getResourceAsByteArray("/terminalCertificates/terminalCert.cvc");
@@ -488,10 +403,8 @@ class TerminalPermissionAOBeanTest
     PendingCertificateRequestRepository pendingCertificateRequestRepository = Mockito.mock(PendingCertificateRequestRepository.class);
     CertInChainRepository certInChainRepository = Mockito.mock(CertInChainRepository.class);
     PendingCertificateRequest pendingCertificateRequest = Mockito.mock(PendingCertificateRequest.class);
-    TerminalPermissionAOBean terminalPermissionAOBean = new TerminalPermissionAOBean(terminalPermissionRepository,
-                                                                                     null,
-                                                                                     certInChainRepository,
-                                                                                     null, null,
+    TerminalPermissionAOBean terminalPermissionAOBean = new TerminalPermissionAOBean(terminalPermissionRepository, null,
+                                                                                     certInChainRepository, null, null,
                                                                                      pendingCertificateRequestRepository,
                                                                                      null, null, null);
     byte[] cvc = getResourceAsByteArray("/terminalCertificates/terminalCert.cvc");
@@ -522,10 +435,8 @@ class TerminalPermissionAOBeanTest
     PendingCertificateRequestRepository pendingCertificateRequestRepository = Mockito.mock(PendingCertificateRequestRepository.class);
     CertInChainRepository certInChainRepository = Mockito.mock(CertInChainRepository.class);
     PendingCertificateRequest pendingCertificateRequest = Mockito.mock(PendingCertificateRequest.class);
-    TerminalPermissionAOBean terminalPermissionAOBean = new TerminalPermissionAOBean(terminalPermissionRepository,
-                                                                                     null,
-                                                                                     certInChainRepository,
-                                                                                     null, null,
+    TerminalPermissionAOBean terminalPermissionAOBean = new TerminalPermissionAOBean(terminalPermissionRepository, null,
+                                                                                     certInChainRepository, null, null,
                                                                                      pendingCertificateRequestRepository,
                                                                                      null, null, null);
     byte[] cvc = getResourceAsByteArray("/terminalCertificates/terminalCert.cvc");
@@ -537,8 +448,7 @@ class TerminalPermissionAOBeanTest
     byte[][] chain = chainList.toArray(new byte[0][]);
     TerminalPermission terminalPermission = new TerminalPermission(SERVICE_PROVIDER);
     CertInChain certInChainPresent = new CertInChain(terminalPermission,
-                                                     new CertInChainPK(terminalPermission.getRefID(), 0),
-                                                     chain0);
+                                                     new CertInChainPK(terminalPermission.getRefID(), 0), chain0);
     CertInChain certInChainOld = new CertInChain(terminalPermission,
                                                  new CertInChainPK(terminalPermission.getRefID(), 4),
                                                  ArrayUtils.EMPTY_BYTE_ARRAY);
@@ -568,10 +478,8 @@ class TerminalPermissionAOBeanTest
     PendingCertificateRequestRepository pendingCertificateRequestRepository = Mockito.mock(PendingCertificateRequestRepository.class);
     CertInChainRepository certInChainRepository = Mockito.mock(CertInChainRepository.class);
     PendingCertificateRequest pendingCertificateRequest = Mockito.mock(PendingCertificateRequest.class);
-    TerminalPermissionAOBean terminalPermissionAOBean = new TerminalPermissionAOBean(terminalPermissionRepository,
-                                                                                     null,
-                                                                                     certInChainRepository,
-                                                                                     null, null,
+    TerminalPermissionAOBean terminalPermissionAOBean = new TerminalPermissionAOBean(terminalPermissionRepository, null,
+                                                                                     certInChainRepository, null, null,
                                                                                      pendingCertificateRequestRepository,
                                                                                      null, null, null);
     byte[] cvc = ArrayUtils.EMPTY_BYTE_ARRAY;
@@ -594,11 +502,12 @@ class TerminalPermissionAOBeanTest
   {
     TerminalPermissionRepository terminalPermissionRepository = Mockito.mock(TerminalPermissionRepository.class);
     PendingCertificateRequestRepository pendingCertificateRequestRepository = Mockito.mock(PendingCertificateRequestRepository.class);
+    // Return the saved object, like the repo would do
+    Mockito.when(pendingCertificateRequestRepository.saveAndFlush(Mockito.any(PendingCertificateRequest.class)))
+           .thenAnswer(invocation -> invocation.getArgument(0, PendingCertificateRequest.class));
     CertInChainRepository certInChainRepository = Mockito.mock(CertInChainRepository.class);
-    TerminalPermissionAOBean terminalPermissionAOBean = new TerminalPermissionAOBean(terminalPermissionRepository,
-                                                                                     null,
-                                                                                     certInChainRepository,
-                                                                                     null, null,
+    TerminalPermissionAOBean terminalPermissionAOBean = new TerminalPermissionAOBean(terminalPermissionRepository, null,
+                                                                                     certInChainRepository, null, null,
                                                                                      pendingCertificateRequestRepository,
                                                                                      null, null, null);
     byte[] request = ArrayUtils.EMPTY_BYTE_ARRAY;
@@ -632,7 +541,7 @@ class TerminalPermissionAOBeanTest
     Assertions.assertEquals(cvcDescription, terminalPermission.getPendingRequest().getNewCvcDescription());
     Assertions.assertEquals(privateKey, terminalPermission.getPendingRequest().getPrivateKey());
     Assertions.assertEquals("messageId", terminalPermission.getPendingRequest().getMessageID());
-    Mockito.verify(pendingCertificateRequestRepository, Mockito.times(2)).saveAndFlush(Mockito.any());
+    Mockito.verify(pendingCertificateRequestRepository, Mockito.times(1)).saveAndFlush(Mockito.any());
     Mockito.verify(terminalPermissionRepository).saveAndFlush(terminalPermission);
   }
 
@@ -643,10 +552,8 @@ class TerminalPermissionAOBeanTest
     PendingCertificateRequestRepository pendingCertificateRequestRepository = Mockito.mock(PendingCertificateRequestRepository.class);
     CertInChainRepository certInChainRepository = Mockito.mock(CertInChainRepository.class);
     PendingCertificateRequest pendingCertificateRequest = Mockito.mock(PendingCertificateRequest.class);
-    TerminalPermissionAOBean terminalPermissionAOBean = new TerminalPermissionAOBean(terminalPermissionRepository,
-                                                                                     null,
-                                                                                     certInChainRepository,
-                                                                                     null, null,
+    TerminalPermissionAOBean terminalPermissionAOBean = new TerminalPermissionAOBean(terminalPermissionRepository, null,
+                                                                                     certInChainRepository, null, null,
                                                                                      pendingCertificateRequestRepository,
                                                                                      null, null, null);
     byte[] request = ArrayUtils.EMPTY_BYTE_ARRAY;
@@ -680,10 +587,8 @@ class TerminalPermissionAOBeanTest
     PendingCertificateRequestRepository pendingCertificateRequestRepository = Mockito.mock(PendingCertificateRequestRepository.class);
     CertInChainRepository certInChainRepository = Mockito.mock(CertInChainRepository.class);
     PendingCertificateRequest pendingCertificateRequest = Mockito.mock(PendingCertificateRequest.class);
-    TerminalPermissionAOBean terminalPermissionAOBean = new TerminalPermissionAOBean(terminalPermissionRepository,
-                                                                                     null,
-                                                                                     certInChainRepository,
-                                                                                     null, null,
+    TerminalPermissionAOBean terminalPermissionAOBean = new TerminalPermissionAOBean(terminalPermissionRepository, null,
+                                                                                     certInChainRepository, null, null,
                                                                                      pendingCertificateRequestRepository,
                                                                                      null, null, null);
     byte[] chain0 = getResourceAsByteArray("/terminalCertificates/chain0.crt");
@@ -695,16 +600,14 @@ class TerminalPermissionAOBeanTest
     byte[][] chain = chainList.toArray(new byte[0][]);
     TerminalPermission terminalPermission = new TerminalPermission(SERVICE_PROVIDER);
     CertInChain certInChainPresent = new CertInChain(terminalPermission,
-                                                     new CertInChainPK(terminalPermission.getRefID(), 0),
-                                                     chain0);
+                                                     new CertInChainPK(terminalPermission.getRefID(), 0), chain0);
     CertInChain certInChainOld = new CertInChain(terminalPermission,
                                                  new CertInChainPK(terminalPermission.getRefID(), 4),
                                                  ArrayUtils.EMPTY_BYTE_ARRAY);
     terminalPermission.setPendingRequest(pendingCertificateRequest);
     terminalPermission.getChain().add(certInChainPresent);
     terminalPermission.getChain().add(certInChainOld);
-    Mockito.when(terminalPermissionRepository.findById(SERVICE_PROVIDER))
-           .thenReturn(Optional.of(terminalPermission));
+    Mockito.when(terminalPermissionRepository.findById(SERVICE_PROVIDER)).thenReturn(Optional.of(terminalPermission));
 
     terminalPermissionAOBean.storeCVCRequestCreated(SERVICE_PROVIDER,
                                                     "messageId",
@@ -733,44 +636,6 @@ class TerminalPermissionAOBeanTest
   }
 
   @Test
-  void addBlackListEntries()
-  {
-    BlackListEntryRepository blackListEntryRepository = Mockito.mock(BlackListEntryRepository.class);
-    TerminalPermissionAOBean terminalPermissionAOBean = new TerminalPermissionAOBean(null, null, null, null,
-                                                                                     blackListEntryRepository,
-                                                                                     null, null, null, null);
-
-    // Use Lock because of non-deterministic errors with parallelStream
-    ReentrantLock reentrantLock = new ReentrantLock();
-    List<BlackListEntry> mockedBlackListRepo = new ArrayList<>();
-    Mockito.doAnswer(invocation -> {
-      BlackListEntry blackListEntry = invocation.getArgument(0);
-      reentrantLock.lock();
-      mockedBlackListRepo.add(blackListEntry);
-      reentrantLock.unlock();
-      return null;
-    }).when(blackListEntryRepository).save(Mockito.any());
-
-    ByteArrayList specificIDList = new ByteArrayList();
-    for ( int i = 0 ; i < 10000 ; i++ )
-    {
-      specificIDList.add(SERVICE_PROVIDER.concat(String.valueOf(i)).getBytes(StandardCharsets.UTF_8));
-    }
-
-    byte[] serviceProviderBytes = SERVICE_PROVIDER.getBytes(StandardCharsets.UTF_8);
-    terminalPermissionAOBean.addBlackListEntries(serviceProviderBytes, specificIDList);
-    Assertions.assertEquals(10000, mockedBlackListRepo.size());
-    String serviceProviderBytesString = DatatypeConverter.printBase64Binary(serviceProviderBytes);
-    for ( BlackListEntry entry : mockedBlackListRepo )
-    {
-      Assertions.assertEquals(serviceProviderBytesString, entry.getKey().getSectorID());
-      Assertions.assertTrue(specificIDList.remove(DatatypeConverter.parseBase64Binary(entry.getKey()
-                                                                                           .getSpecificID())));
-    }
-    Assertions.assertTrue(specificIDList.isEmpty());
-  }
-
-  @Test
   void testIsPublicClient() throws Exception
   {
     ConfigurationService configurationService = Mockito.mock(ConfigurationService.class);
@@ -779,17 +644,17 @@ class TerminalPermissionAOBeanTest
     Mockito.when(configurationService.getConfiguration()).thenReturn(Optional.of(validConfiguration));
     TerminalPermissionAOBean terminalPermissionAOBean = new TerminalPermissionAOBean(null, null, null, null, null, null,
                                                                                      null, null, configurationService);
-    //Correct name and cvcRefId
+    // Correct name and cvcRefId
     Assertions.assertTrue(terminalPermissionAOBean.isPublicClient("cvcRefId"));
 
-    //Wrong cvcRefId
+    // Wrong cvcRefId
     Assertions.assertFalse(terminalPermissionAOBean.isPublicClient("wrongCvcRefId"));
 
-    //Wrong name
+    // Wrong name
     validConfiguration.getEidasConfiguration().setPublicServiceProviderName("otherName");
     Assertions.assertFalse(terminalPermissionAOBean.isPublicClient("cvcRefId"));
 
-    //No public SP in config
+    // No public SP in config
     validConfiguration.getEidasConfiguration().setPublicServiceProviderName(null);
     Assertions.assertFalse(terminalPermissionAOBean.isPublicClient("cvcRefId"));
   }
