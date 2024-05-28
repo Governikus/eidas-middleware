@@ -253,26 +253,6 @@ public final class CipherUtil
   }
 
   /**
-   * Perform simple checks for data to be ciphered: data not <code>null</code> or empty array and length of
-   * data is multiple of key size.
-   *
-   * @param data data to be ciphered and checked, <code>null</code> or empty array not permitted, length of
-   *          data must be multiple of key size
-   * @param algorithm algorithm of key
-   * @param keyLength size of key
-   * @throws IllegalArgumentException if check of data fails
-   */
-  private static void checkCipherData(byte[] data, String algorithm, int keyLength)
-  {
-    AssertUtil.notNullOrEmpty(data, "data");
-    if (data.length % keyLength != 0)
-    {
-      throw new IllegalArgumentException("only padded data to multiple of " + algorithm + " key size "
-                                         + keyLength + " permitted, length of data: " + data.length);
-    }
-  }
-
-  /**
    * Constant of separator String for algorithm, block mode and padding at transformation: <tt>/</tt>.
    *
    * @see #getTransformationParts(String)
@@ -436,7 +416,6 @@ public final class CipherUtil
   {
     checkCipherKey(key, ALGORITHM_AES, KEY_SIZES_LIST_AES);
     checkCipherMode(mode);
-    checkCipherData(data, ALGORITHM_AES, key.getEncoded().length);
     Cipher cipher = getCipher(algorithm, key, mode, iv, provider);
     return cipher.doFinal(data);
   }
