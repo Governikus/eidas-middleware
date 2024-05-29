@@ -141,12 +141,12 @@ class RequestHandlerTest
     // both parameters emtpy String with POST
     requestProcessingException = Assertions.assertThrows(RequestProcessingException.class,
                                                          () -> requestHandler.handleSAMLPostRequest("", ""));
-    Assertions.assertEquals(requestProcessingException.getCause().getClass(), SAXParseException.class);
+    Assertions.assertEquals(requestProcessingException.getCause().getClass(), IllegalArgumentException.class);
 
     // saml request emtpy String with POST
     requestProcessingException = Assertions.assertThrows(RequestProcessingException.class,
                                                          () -> requestHandler.handleSAMLPostRequest(RELAY_STATE, ""));
-    Assertions.assertEquals(requestProcessingException.getCause().getClass(), SAXParseException.class);
+    Assertions.assertEquals(requestProcessingException.getCause().getClass(), IllegalArgumentException.class);
   }
 
   /**

@@ -107,20 +107,19 @@ public class AESSecureMessaging implements SecureMessaging
 
   private byte[] createLe(CommandAPDU command, boolean extended)
   {
-    byte[] le = null;
+    if (command.getNe() == 0)
+    {
+      return null;
+    }
     if (command.getNe() == CommandAPDUConstants.SHORT_MAX_LE && !extended)
     {
-      le = new byte[1];
+      return new byte[1];
     }
-    else if (command.getNe() == CommandAPDUConstants.EXTENDED_MAX_LE)
+    if (command.getNe() == CommandAPDUConstants.EXTENDED_MAX_LE)
     {
-      le = new byte[2];
+      return new byte[2];
     }
-    else
-    {
-      le = ByteUtil.removeLeadingZero(BigInteger.valueOf(command.getNe()).toByteArray());
-    }
-    return le;
+    return ByteUtil.trimByteArray(BigInteger.valueOf(command.getNe()).toByteArray(), extended ? 2 : 1);
   }
 
   /**

@@ -10,11 +10,12 @@
 
 package de.governikus.eumw.eidasdemo;
 
-import org.bouncycastle.jce.provider.BouncyCastleProvider;
+import java.security.Security;
+
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 
-import java.security.Security;
+import de.governikus.eumw.utils.key.SecurityProvider;
 
 
 /**
@@ -29,7 +30,7 @@ public class EidasDemoApplication
    */
   public static void main(String[] args)
   {
-    Security.addProvider(new BouncyCastleProvider());
+    Security.insertProviderAt(SecurityProvider.BOUNCY_CASTLE_PROVIDER, 1);
     SpringApplication.run(EidasDemoApplication.class, args);
   }
 }

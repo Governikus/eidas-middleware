@@ -247,3 +247,7 @@ Changelog
     - eIDAS Middleware: Fix generation of sequence number after an initial CVC request.
     - eIDAS Middleware: Improve form validation for initial CVC request.
     - eIDAS Middleware & Demo: Update new references to the German eID client.
+
+* 3.2.1
+
+    - eIDAS Middleware: Fix to support new generation of eID cards

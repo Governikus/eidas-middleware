@@ -15,7 +15,7 @@
 
     <groupId>de.governikus.eumw</groupId>
     <artifactId>eumw</artifactId>
-    <version>3.2.0</version>
+    <version>3.2.1</version>
     <packaging>pom</packaging>
 
     <name>EU Middleware</name>
@@ -38,7 +38,7 @@
     <scm>
         <url>https://hg.govkg.de/Autent/eumw</url>
         <connection>scm:hg:https://hg.govkg.de/Autent/eumw</connection>
-        <tag>eumw-3.2.0</tag>
+        <tag>eumw-3.2.1</tag>
     </scm>
 
     <repositories>
@@ -87,16 +87,16 @@
         <maven.compiler.target>17</maven.compiler.target>
 
         <!-- crypto -->
-        <version.bouncycastle>1.77</version.bouncycastle>
+        <version.bouncycastle>1.78.1</version.bouncycastle>
         <version.javasupport>8.4.0</version.javasupport>
         <version.opensaml>5.0.0</version.opensaml>
         <version.opensaml-eidas>3.0.0</version.opensaml-eidas>
-        <version.opensaml-security-ext>4.0.0</version.opensaml-security-ext>
+        <version.opensaml-security-ext>4.0.1</version.opensaml-security-ext>
         <version.xmlsec>4.0.0</version.xmlsec>
 
         <version.cxf>4.0.3</version.cxf>
         <!-- Spring Boot 3.2.x only supports H2 from version 2.2 -->
-        <version.springboot>3.1.6</version.springboot>
+        <version.springboot>3.1.12</version.springboot>
         <version.thymeleaf-layout-dialect>3.3.0</version.thymeleaf-layout-dialect>
 
         <version.woodstox>6.5.1</version.woodstox>

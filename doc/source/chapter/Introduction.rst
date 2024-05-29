@@ -34,7 +34,7 @@ or the currently valid :term:`Authorization Certificate`.
 Therefore, the public certificates of the :term:`Authorization CA` and your eIDAS Middleware must be exchanged before the eIDAS Middleware requests the first Authorization Certificate.
 If you decide to use a :term:`Request Signer Certificate` (which is highly recommended as it will become mandatory
 at some point), this certificate must be given to the :term:`Authorization CA` as well.
-For more information on how to get in contact with the :term:`Authorization CA`, see the document `Three Steps to integrate the German eIDAS Middleware on the German Country Page <https://ec.europa.eu/cefdigital/wiki/display/EIDIMPL/Germany#Germany-GermaneIDAS-Middleware>`_.
+For more information on how to get in contact with the :term:`Authorization CA`, see the `German eIDAS Middleware on the German Country Page <https://eidas.ec.europa.eu/efda/browse/notification/eid-chapter-contacts/DE>`_.
 The :term:`Authorization Certificate` is presented to the German eID Card to ensure the authenticity of the :term:`eID Service Provider` and to verify that the :term:`eID Service Provider` only requests attributes allowed by the :term:`Authorization CA`.
 
 There are two different Authorization CAs available. The Bundesdruckerei provides Authorization Certificates for productive environments with real eID cards.

@@ -14,7 +14,7 @@
     <parent>
         <artifactId>eumw</artifactId>
         <groupId>de.governikus.eumw</groupId>
-        <version>3.2.0</version>
+        <version>3.2.1</version>
     </parent>
 
     <artifactId>eidas-base-container</artifactId>
@@ -30,9 +30,6 @@
                         <image>
                             <name>governikus/eidas-base-container:${project.version}</name>
                             <build>
-                                <tags>
-                                    <tag>latest</tag>
-                                </tags>
                                 <contextDir>.</contextDir>
                             </build>
                         </image>
