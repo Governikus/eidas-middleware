@@ -53,7 +53,7 @@ class DateOfBirthAttributeTest
     ByteArrayOutputStream bout = new ByteArrayOutputStream();
     trans.transform(new DOMSource(all), new StreamResult(bout));
 
-    String attrString = new String(bout.toByteArray(), StandardCharsets.UTF_8.name());
+    String attrString = bout.toString(StandardCharsets.UTF_8);
     assertTrue(attrString.contains(testDate));
   }
 }
