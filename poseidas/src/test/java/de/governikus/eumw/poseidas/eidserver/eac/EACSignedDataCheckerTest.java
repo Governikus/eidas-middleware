@@ -27,8 +27,7 @@ import de.governikus.eumw.poseidas.server.idprovider.config.ConfigurationService
 import de.governikus.eumw.poseidas.server.idprovider.config.ConfigurationTestHelper;
 import de.governikus.eumw.utils.key.SecurityProvider;
 
-
-@SpringBootTest
+@SpringBootTest(properties = {"poseidas.snmp.agentport=10161"})
 class EACSignedDataCheckerTest
 {
 
