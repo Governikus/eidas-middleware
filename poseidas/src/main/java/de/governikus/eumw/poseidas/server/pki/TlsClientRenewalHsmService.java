@@ -7,10 +7,12 @@ import java.security.KeyStoreException;
 import java.security.NoSuchAlgorithmException;
 import java.security.NoSuchProviderException;
 import java.security.PrivateKey;
+import java.security.PublicKey;
 import java.security.UnrecoverableKeyException;
 import java.security.cert.Certificate;
+import java.security.cert.CertificateException;
 import java.security.cert.X509Certificate;
-import java.security.spec.ECParameterSpec;
+import java.security.spec.RSAKeyGenParameterSpec;
 import java.util.Date;
 import java.util.List;
 import java.util.Optional;
@@ -28,7 +30,6 @@ import org.springframework.stereotype.Service;
 
 import de.governikus.eumw.config.EidasMiddlewareConfig;
 import de.governikus.eumw.config.ServiceProviderType;
-import de.governikus.eumw.poseidas.cardbase.asn1.npa.SecurityInfos;
 import de.governikus.eumw.poseidas.cardserver.CertificateUtil;
 import de.governikus.eumw.poseidas.cardserver.service.ServiceRegistry;
 import de.governikus.eumw.poseidas.cardserver.service.hsm.HSMServiceFactory;
@@ -154,27 +155,34 @@ public class TlsClientRenewalHsmService extends TlsClientRenewalService
       return;
     }
 
-    String keyNameToUse;
-    String pendingName = defaultName + HSM_PENDING_SUFFIX;
+    String keyNameToUse = defaultName + HSM_PENDING_SUFFIX;
 
     try
     {
-      if (hsm.containsKey(pendingName))
+      if (hsm.containsKey(keyNameToUse))
       {
-        keyNameToUse = pendingName;
-      }
-      else
-      {
-        keyNameToUse = defaultName;
+        log.info("HSM contains already a key with name {}", keyNameToUse);
+        PublicKey keyToUse = hsm.getPublicKey(keyNameToUse);
+        if (canUseKeyAlg(keyToUse) && canUseKeySize(keyToUse))
+        {
+          generateAndSendCsrUnchecked(sp.getName(), keyNameToUse);
+          return;
+        }
+        String message = String.format("Key with name %s can not be used for TLS client key renewal. Please delete the "
+                                       + "key and create a new %s key with at least %d bits, or allow the eIDAS middleware"
+                                       + " to generate a new key.",
+                                       keyNameToUse,
+                                       KEY_ALGO,
+                                       MINIMAL_KEY_SIZE_RSA);
+        log.warn(message);
+        failed.add(sp.getName() + ": " + message);
+        return;
       }
 
-      // if not usable, generate new pending key
-      if (!canUseKey(hsm.getPublicKey(keyNameToUse)))
-      {
-        log.info("TLS client key can not be used, generating a new pending key");
-        generateAndStoreKeyPair(pendingName);
-        keyNameToUse = pendingName;
-      }
+      // key not yet in HSM
+      log.info("Generating new key with name {} for the renewal of mTLS key for the communication with the DVCA.",
+               keyNameToUse);
+      generateAndStoreKeyPair(keyNameToUse);
     }
     catch (Exception e)
     {
@@ -183,7 +191,6 @@ public class TlsClientRenewalHsmService extends TlsClientRenewalService
       failed.add(sp.getName() + ": " + message);
       return;
     }
-
     generateAndSendCsrUnchecked(sp.getName(), keyNameToUse);
   }
 
@@ -214,11 +221,12 @@ public class TlsClientRenewalHsmService extends TlsClientRenewalService
   }
 
   private void generateAndStoreKeyPair(String keyName) throws NoSuchAlgorithmException, NoSuchProviderException,
-    InvalidAlgorithmParameterException, IOException, HSMException
+    InvalidAlgorithmParameterException, IOException, HSMException, CertificateException
   {
-    // secp384
-    ECParameterSpec ecParameterSpec = SecurityInfos.getDomainParameterMap().get(15);
-    hsm.generateKeyPair("EC", ecParameterSpec, keyName, null, true, 360);
+    // RSA 4096 bits
+    RSAKeyGenParameterSpec rsaKeyGenParameterSpec = new RSAKeyGenParameterSpec(DEFAULT_KEY_SIZE_RSA,
+                                                                               RSAKeyGenParameterSpec.F4);
+    hsm.generateKeyPair(KEY_ALGO, rsaKeyGenParameterSpec, keyName, null, true, 360);
   }
 
   @Override
@@ -251,29 +259,29 @@ public class TlsClientRenewalHsmService extends TlsClientRenewalService
         return Optional.of(message);
       }
 
-      String defaultName = spOpt.get().getCVCRefID();
-      String pendingName = defaultName + HSM_PENDING_SUFFIX;
-      String selectedName;
+      String pendingName = spOpt.get().getCVCRefID() + HSM_PENDING_SUFFIX;
       try
       {
-        if (hsm.containsKey(pendingName))
+        if (!hsm.containsKey(pendingName))
         {
-          selectedName = pendingName;
-        }
-        else if (hsm.containsKey(defaultName))
-        {
-          selectedName = defaultName;
-        }
-        else
-        {
-          String message = "TLS client renewal not possible, no key present";
+          String message = "TLS client renewal not possible, no key present with name '%s'".formatted(pendingName);
           log.warn(message);
           return Optional.of(message);
         }
-
-        if (!canUseKey(hsm.getPublicKey(selectedName)))
+        PublicKey pubKey = hsm.getPublicKey(pendingName);
+        if (!canUseKeyAlg(pubKey))
         {
-          String message = "TLS client renewal not possible, key strength not sufficient";
+          String message = "TLS client renewal not possible, key algorithm for key '%s' not supported. Currently only %s keys with at least %d bits supported.".formatted(pendingName,
+                                                                                                                                                                          KEY_ALGO,
+                                                                                                                                                                          MINIMAL_KEY_SIZE_RSA);
+          log.warn(message);
+          return Optional.of(message);
+        }
+        if (!canUseKeySize(pubKey))
+        {
+          String message = "TLS client renewal not possible, key strength for key '%s' not sufficient. Currently only %s keys with at least %d bits supported".formatted(pendingName,
+                                                                                                                                                                         KEY_ALGO,
+                                                                                                                                                                         MINIMAL_KEY_SIZE_RSA);
           log.warn(message);
           return Optional.of(message);
         }
@@ -284,7 +292,7 @@ public class TlsClientRenewalHsmService extends TlsClientRenewalService
         log.warn(message, e);
         return Optional.of(message);
       }
-      return generateAndSendCsrUnchecked(spName, selectedName);
+      return generateAndSendCsrUnchecked(spName, pendingName);
     }
   }
 
@@ -368,7 +376,17 @@ public class TlsClientRenewalHsmService extends TlsClientRenewalService
     }
     catch (KeyStoreException e)
     {
+      if (log.isDebugEnabled())
+      {
+        log.debug("Unable to get certificate for serviceprovider {} ", spName, e);
+      }
       return Optional.empty();
     }
+  }
+
+  // Only for tests
+  void setHsm(HSMService hsm)
+  {
+    this.hsm = hsm;
   }
 }

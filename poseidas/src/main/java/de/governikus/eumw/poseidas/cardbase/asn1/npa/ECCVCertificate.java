@@ -167,6 +167,10 @@ public class ECCVCertificate extends AbstractASN1Encoder
     }
     catch (IOException e)
     {
+      if (LOGGER.isDebugEnabled())
+      {
+        LOGGER.debug("Failed to get cvc: " + e.getMessage());
+      }
       // nothing
     }
     try
@@ -175,6 +179,10 @@ public class ECCVCertificate extends AbstractASN1Encoder
     }
     catch (IOException e)
     {
+      if (LOGGER.isDebugEnabled())
+      {
+        LOGGER.debug("Failed to get cvc: " + e.getMessage());
+      }
       // nothing
     }
     ASN1[] values = new ASN1[]{tsH1, tsH2};

@@ -51,11 +51,13 @@
         <br/><br/>
         <div class="alert alert-danger" role="alert">
             <h4 class="alert-heading" th:text="#{error.title}">An error occurred</h4>
-            <p th:utext="#{error.general}">There was an error during the processing of your request. Please
+            <p> <span th:remove="tag" th:text="#{error.general1}">There was an error during the processing of your request. Please
                 try
-                again.<br>In case this error persists contact your local service provider with the information
+                again.</span><br>
+                <span th:remove="tag" th:text="#{error.general2}">
+                In case this error persists contact your local service provider with the information
                 provided
-                below.</p>
+                below.</span></p>
             <hr>
             <p class="mb-0" th:if="${errorMessage}" th:text="${errorMessage}"></p>
             <p class="mb-0" th:text="#{error.noinfo}" th:unless="${errorMessage}"></p>

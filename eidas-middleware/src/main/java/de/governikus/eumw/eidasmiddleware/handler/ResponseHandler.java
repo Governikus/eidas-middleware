@@ -39,6 +39,7 @@ import de.governikus.eumw.eidasstarterkit.EidasResponse;
 import de.governikus.eumw.eidasstarterkit.EidasSaml;
 import de.governikus.eumw.eidasstarterkit.EidasSigner;
 import de.governikus.eumw.eidasstarterkit.EidasTransientNameId;
+import de.governikus.eumw.eidasstarterkit.EidasUnspecifiedNameId;
 import de.governikus.eumw.eidasstarterkit.TestCaseEnum;
 import de.governikus.eumw.eidasstarterkit.person_attributes.natural_persons_attribute.BirthNameAttribute;
 import de.governikus.eumw.eidasstarterkit.person_attributes.natural_persons_attribute.CurrentAddressAttribute;
@@ -141,6 +142,10 @@ public class ResponseHandler
       }
       catch (RequestProcessingException e)
       {
+        if (log.isDebugEnabled())
+        {
+          log.debug("Failed to prepare saml response", e);
+        }
         response = prepareSAMLErrorResponse(reqSP, samlReqSession.getReqId(), ErrorCode.INTERNAL_ERROR, e.getMessage());
       }
       return response;
@@ -321,7 +326,7 @@ public class ResponseHandler
                                                                    + Hex.encodeHexString(restrID.getID1())
                                                                         .toUpperCase(Locale.GERMANY));
       attributes.add(pi);
-      nameId = new EidasTransientNameId(pi.getValue());
+      nameId = new EidasUnspecifiedNameId(pi.getValue());
     }
 
     EIDInfoResult nationality = eidResponse.getEIDInfo(EIDKeys.NATIONALITY);
@@ -636,6 +641,19 @@ public class ResponseHandler
     }
     RequestingServiceProvider reqSP = configurationService.getProviderByEntityID(samlReqSession.getReqProviderEntityId());
     return reqSP.getAssertionConsumerURL();
+  }
+
+  /**
+   * Gets the AuthnRequestID for the refID, throws {@link RequestProcessingException} for an unknown redId
+   */
+  public String getAuthnRequestIdForRefId(String refId)
+  {
+    RequestSession samlReqSession = getSAMLReqSession(refId);
+    if (samlReqSession == null)
+    {
+      throw new RequestProcessingException(UNKNOWN_REF_ID);
+    }
+    return samlReqSession.getReqId();
   }
 
 }

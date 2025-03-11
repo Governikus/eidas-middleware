@@ -27,16 +27,19 @@ import de.governikus.eumw.eidascommon.Constants;
 import de.governikus.eumw.eidascommon.ContextPaths;
 import de.governikus.eumw.eidascommon.ErrorCodeException;
 import de.governikus.eumw.eidascommon.Utils;
-import de.governikus.eumw.eidasmiddleware.WebServiceHelper;
 import de.governikus.eumw.eidasmiddleware.entities.RequestSession;
 import de.governikus.eumw.eidasmiddleware.repositories.RequestSessionRepository;
 import de.governikus.eumw.eidasstarterkit.EidasNaturalPersonAttributes;
 import de.governikus.eumw.poseidas.eidmodel.data.EIDKeys;
+import de.governikus.eumw.poseidas.paosservlet.authentication.AuthenticationConstants;
 import de.governikus.eumw.poseidas.server.eidservice.EIDInternal;
 import de.governikus.eumw.poseidas.server.eidservice.EIDRequestInput;
 import de.governikus.eumw.poseidas.server.eidservice.EIDRequestResponse;
 import de.governikus.eumw.poseidas.server.idprovider.config.ConfigurationService;
 import de.governikus.eumw.poseidas.server.idprovider.exceptions.InvalidConfigurationException;
+import de.governikus.eumw.poseidas.tctoken.ObjectFactory;
+import de.governikus.eumw.poseidas.tctoken.TCTokenType;
+import de.governikus.eumw.utils.xml.XmlHelper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
@@ -92,11 +95,12 @@ public class TcToken
     RequestSession samlReqSession = null;
     try
     {
-      samlReqSession = requestSessionRepository.getById(sessionID);
+      samlReqSession = requestSessionRepository.getReferenceById(sessionID);
     }
     catch (Exception e)
     {
-      log.error("can not access DB for entry " + sessionID, e);
+      log.error("can not access DB for entry {}", sessionID, e);
+      resp.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
     }
 
     if (samlReqSession == null)
@@ -116,10 +120,12 @@ public class TcToken
     catch (IOException e)
     {
       log.error("cannot create tc token response", e);
+      resp.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
     }
     catch (ResultMajorException | InvalidConfigurationException e)
     {
       log.error(e.getMessage(), e);
+      resp.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
     }
   }
 
@@ -220,16 +226,25 @@ public class TcToken
 
     String eIDPSKId = eidResult.getSessionId();
 
+    String tcToken = getTcToken(eIDPSKId, refID);
+
     response.setContentType("text/xml");
     response.setCharacterEncoding("utf-8");
+
     response.getWriter()
-            .write(Utils.readFromStream(WebServiceHelper.class.getResourceAsStream("tcTokenAttached.xml"))
-                        .replace("#{PAOS_RECEIVER_URL}",
-                                 configurationService.getServerURLWithEidasContextPath() + ContextPaths.PAOS_SERVLET)
-                        .replace("#{SESSIONID}", eIDPSKId)
-                        .replace("#{REFRESH_ADDRESS}",
-                                 configurationService.getServerURLWithEidasContextPath() + ContextPaths.RESPONSE_SENDER
-                                                       + "?refID=" + refID));
+            .write(tcToken);
+  }
+
+  private String getTcToken(String eIDPSKId, String refID)
+  {
+    ObjectFactory objectFactory = new ObjectFactory();
+    TCTokenType tcTokenType = objectFactory.createTCTokenType();
+    tcTokenType.setServerAddress(configurationService.getServerURLWithEidasContextPath() + ContextPaths.PAOS_SERVLET);
+    tcTokenType.setSessionIdentifier(eIDPSKId);
+    tcTokenType.setRefreshAddress(configurationService.getServerURLWithEidasContextPath() + ContextPaths.RESPONSE_SENDER
+                                  + "?refID=" + refID);
+    tcTokenType.setBinding(AuthenticationConstants.PAOS_2_0_URN);
+    return XmlHelper.marshalObject(tcTokenType);
   }
 
   private static class ResultMajorException extends RuntimeException

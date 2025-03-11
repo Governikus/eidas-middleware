@@ -127,7 +127,7 @@ import se.swedenconnect.opensaml.eidas.ext.impl.NodeCountryBuilder;
 class EidasMetadataService
 {
 
-  private static final String SUPPORTED_PROTOCOL_VERSION = "1.2";
+  private static final String SUPPORTED_PROTOCOL_VERSION = "1.4.1";
 
   private String id;
 

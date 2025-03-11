@@ -25,7 +25,7 @@ must specify the location of the configuration directory. Note that the path mus
     java -jar eidas-middleware.jar --spring.config.additional-location=file:/path/to/your/configuration-directory/
 
 To stop the eIDAS Middleware execute ``CTRL+C``.
-Alternatively you can also send ``SIGTERM`` with ``kill [PID of the middleware]``.
+Alternatively you can also send ``SIGTERM`` with ``kill [PID of the Middleware]``.
 
 Based on these commands you can write your own scripts for starting and stopping.
 
@@ -34,7 +34,7 @@ VirtualBox Image
 In the image you can execute the same commands as for the plain eIDAS Middleware JAR.
 The JAR file is located in ``/opt/eidas-middleware``.
 
-In addition to starting the middleware directly, you can use systemd to start and stop the application.
+In addition to starting the Middleware directly, you can use systemd to start and stop the application.
 
 .. code-block:: none
 
@@ -53,27 +53,27 @@ To start the application on boot, execute the following line.
 
 Docker
 ^^^^^^
-The configuration and database of the middleware are located in named volumes.
-This way you can stop and remove the middleware Docker container and create a new one to restart the application.
+The configuration and database of the Middleware are located in named volumes.
+This way you can stop and remove the Middleware Docker container and create a new one to restart the application.
 
 To run the eIDAS Middleware, execute the following command.
 It will mount the named volumes containing the database and configuration in the container
 and the application will be available on port 8443. ::
 
-    docker run --rm -it -v eidas-configuration:/opt/eidas-middleware/configuration -v eidas-database:/opt/eidas-middleware/database -p 8443:8443 --name eidas-middleware-application governikus/eidas-middleware-application:3.3.0
+    docker run --rm -it -v eidas-configuration:/opt/eidas-middleware/configuration -v eidas-database:/opt/eidas-middleware/database -p 8443:8443 --name eidas-middleware-application governikus/eidas-middleware-application:3.4.0
 
 To stop and remove the container, just hit ``CTRL+C``.
 
 To keep the container running longer without being attached to the STDOUT and STDERR, change the command to
 the following::
 
-    docker run -d -v eidas-configuration:/opt/eidas-middleware/configuration -v eidas-database:/opt/eidas-middleware/database -p 8443:8443 --name eidas-middleware-application governikus/eidas-middleware-application:3.3.0
+    docker run -d -v eidas-configuration:/opt/eidas-middleware/configuration -v eidas-database:/opt/eidas-middleware/database -p 8443:8443 --name eidas-middleware-application governikus/eidas-middleware-application:3.4.0
 
 For more information on starting and stopping containers and viewing the logs,
 see the `Docker Docs <https://docs.docker.com/engine/reference/run/>`_.
 
 As mentioned before, the eIDAS Middleware application configuration is located in the named volume.
-If you want to change the TLS key store or disable https because you are using a reverse proxy,
+If you want to change the TLS key store or disable HTTPS because you are using a reverse proxy,
 you should use the admin interface to modify the configuration
 instead of adding environment variables to the Docker run command.
 
@@ -89,7 +89,7 @@ To stop the container, hit ``CTRL+C``. To remove the container afterwards, execu
 Obtain authorization certificate
 --------------------------------
 
-When the middleware is running, direct your browser to the admin interface at
+When the Middleware is running, direct your browser to the admin interface at
 ``https://<YOUR_SERVERURL>:<YOUR_ADMIN_PORT>/admin-interface``.
 
 After logging in, you will see your :term:`eID Service Providers<eID Service Provider>` in the dashboard
@@ -145,7 +145,7 @@ The log level can be changed by adding properties to the ``application.propertie
 
     # change the root level:
     logging.level.root=DEBUG
-    # change the logging level only of the middleware specific classes:
+    # change the logging level only of the Middleware specific classes:
     logging.level.de.governikus=DEBUG
 
 For more information, see the `Spring Boot documentation <https://docs.spring.io/spring-boot/docs/current/reference/html/boot-features-logging.html#boot-features-logging>`_.
@@ -156,7 +156,7 @@ For more information, see the `Spring Boot documentation <https://docs.spring.io
 
 Startup checks
 ^^^^^^^^^^^^^^
-The middleware performs some checks when it is started. In detail, these are:
+The Middleware performs some checks when it is started. In detail, these are:
 
 * Is the TLS server certificate valid?
 * Is the :term:`Authorization Certificate` valid?
@@ -175,7 +175,7 @@ and trigger a rerun of the checks there.
 
 VirtualBox Image
 ^^^^^^^^^^^^^^^^
-The operating system is configured to use the official debian sources for updates. Please make sure that updates are
+The operating system is configured to use the official Debian sources for updates. Please make sure that updates are
 installed on a regular basis. To update the operating system issue the following commands:
 ``apt-get update && apt-get upgrade``
 
@@ -187,19 +187,19 @@ Scalability
 The performance of the eIDAS Middleware improves by adding more memory (RAM) and using a faster CPU.
 In case the memory configuration has changed, the server needs to be restarted.
 To start the JVM with more memory, add ``-Xmx`` with the new maximum memory size to the start command,
-e.g. ``java -Xmx8g -jar eidas-middleware-3.3.0.jar`` for 8 GB.
+e.g. ``java -Xmx8g -jar eidas-middleware-3.4.0.jar`` for 8 GB.
 
 
 Request Signer Certificate
 ^^^^^^^^^^^^^^^^^^^^^^^^^^
-The middleware supports :term:`Request Signer Certificates<Request Signer Certificate>`.
+The Middleware supports :term:`Request Signer Certificates<Request Signer Certificate>`.
 These are long-term certificates used to sign requests for
 :term:`Authorization Certificates<Authorization Certificate>`, both initial and subsequent.
 When you have not yet generated one, you can do so by clicking `Generate RSC`.
 After that, the new request signer certificate will automatically be used for any
 :term:`Authorization Certificate` request.
 
-This is especially helpful to middleware operators in case the :term:`Authorization Certificate`
+This is especially helpful to Middleware operators in case the :term:`Authorization Certificate`
 expires before it has been renewed, as they can simply sign a new initial request using the
 :term:`Request Signer Certificate` and do not need support by the :term:`Authorization CA`
 
@@ -212,18 +212,18 @@ As a fallback, the :term:`Authorization Certificate` requests are still signed u
 
 A :term:`Request Signer Certificate` is always valid for 3 years.
 
-The current :term:`Request Signer Certificate` can be downloaded at any time by clicking the "Download RSC" button.
+The current :term:`Request Signer Certificate` can be downloaded anytime by clicking the "Download RSC" button.
 
 Automatic renewal of the request signer certificate
 """""""""""""""""""""""""""""""""""""""""""""""""""
 
-The middleware can automatically send new :term:`Request Signer Certificate` to the
+The Middleware can automatically send new :term:`Request Signer Certificate` to the
 :term:`Authorization CA`.
 For security reasons, automatic renewal can only be performed if a :term:`Request Signer Certificate` is
 already registered with the :term:`Authorization CA`.
 
 A message is displayed in the admin interface if the :term:`Request Signer Certificate` must be sent manually
-to the :term:`Authorization CA`. As soon as a :term:`Request Signer Certificate` is used by the middleware, a
+to the :term:`Authorization CA`. As soon as a :term:`Request Signer Certificate` is used by the Middleware, a
 green tick "Is RSC in use:" is displayed in the Admin interface under the "RSC" tab in the "RSC Info" tile in
 the eID Service Provider segment.
 
@@ -254,7 +254,7 @@ If you want to delete the pending RSC, click on the "Delete Pending RSC" button.
 Automatic renewal of expired authorization certificates
 """""""""""""""""""""""""""""""""""""""""""""""""""""""
 
-In case a :term:`Authorization Certificate` has expired,
+In case an :term:`Authorization Certificate` has expired,
 a new :term:`Authorization Certificate` can be requested automatically with a request signer certificate.
 As long as the expiration date of the :term:`Authorization Certificate` is not more than two days ago,
 an attempt is made every six hours to request a new :term:`Authorization Certificate` with the request signer
@@ -263,6 +263,7 @@ a manual initial request can be performed"* will be visible in that timespan.
 
 
 .. _automatic_entanglement:
+
 Automatic entanglement after TLS server certificate change
 """"""""""""""""""""""""""""""""""""""""""""""""""""""""""
 
@@ -271,7 +272,7 @@ Middleware in its description.
 This link between the :term:`Authorization Certificate` and the TLS server certificate is called entanglement.
 The eIDAS Middleware checks in a configurable interval the entanglement of the servers TLS server certificate with the
 :term:`Authorization Certificate` of each service provider.
-If the following preconditions are met, the eIDAS middleware entangles a new TLS server certificate and renews the
+If the following preconditions are met, the eIDAS Middleware entangles a new TLS server certificate and renews the
 :term:`Authorization Certificate` automatically:
 
 * The timer for automatic entanglement is activated.
@@ -304,10 +305,9 @@ CSR has already been sent, the system checks whether the new TLS client certific
 :term:`Authorization CA`. If it is successfully retrieved, the new TLS client certificate is automatically
 stored in the configuration and used for future connections to the :term:`Authorization CA`.
 
-The current key pair is used to sign the CSR. Only if this key no longer meets the security requirements a
-new key pair will be generated by the eIDAS Middleware and used for the CSR. As soon as the new certificate has
-been successfully retrieved from the :term:`Authorization CA`, the certificate will automatically stored
-in the configuration and will be used for the connection to the :term:`Authorization CA`.
+A new key pair must be used to sign the CSR which will be generated by the eIDAS Middleware and used for the CSR.
+As soon as the new certificate has been successfully retrieved from the :term:`Authorization CA`, the certificate
+will automatically be stored in the configuration and used for the connection to the :term:`Authorization CA`.
 The value for when a TLS client certificate should be renewed can be configured via the Admin UI under Timer
 Configuration. The default value is 30 days.
 
@@ -317,17 +317,18 @@ certificate and, if a CSR already exists, the date from which the new TLS client
 :term:`Authorization CA`.
 On the right-hand side, a button is available to generate a new CSR and send it to the :term:`Authorization CA`.
 If no HSM is used, a drop-down menu is shown above the "Generate and Send CSR" button in which the key to be
-used for signing the CSR can be selected. The currently used key pair is preset. If the eIDAS Middleware should
+used for signing the CSR can be selected. The 'Generate New Key Pair' is preset. If the eIDAS Middleware should
 generate a new key pair, 'Generate New Key Pair' must be selected in the drop-down menu. It is recommended to
-continue using the current key pair as long as the security requirements are met.
+select 'Generate New Key Pair' so the security requirements are met. It is also possible to upload a key via the
+Key Management. The key must a be an RSA key with at least 3072 bits length.
 
 If an HSM is used, two radio buttons are available. You can select whether a new key pair should be generated
-or a present key should be used. If a present key should be used, the eIDAS Middleware either takes the existing
-key that is currently being used or, if a pending key is already present, then the pending key will be used.
-This allows the operator to generate a key in the HSM that should be used. The pending key must have the "CVCRefID" of
-the service provider plus the suffix "-PendingTLS" as a label. For example "providerA-PendingTLS".
-The CVCRefID of the service provider can be found in the XML configuration of the eIDAS Middleware, which can
-be downloaded via the Admin UI on the import/export configuration page.
+or a present key should be used. If a present key should be used, it must be generated by the operator beforehand,
+using the "CVCRefID" of the service provider plus the suffix "-PendingTLS" as a label, for example
+"providerA-PendingTLS". The CVCRefID of the service provider can be found in the XML configuration of the
+eIDAS Middleware, which can be downloaded via the Admin UI on the import/export configuration page.
+This allows the operator to generate a key in the HSM that should be used. Please be aware that currenty only
+RSA keys with at least 3072 bits are supported.
 
 As soon as a CSR has been created and successfully received by the :term:`Authorization CA`, the new
 TLS client certificate can be pulled via the Admin UI. The information on when the new TLS client certificate
@@ -341,10 +342,6 @@ It is also possible to delete a pending CSR by clicking the button 'Delete Pendi
 .. attention::
    Please note that a manual renewal should only be performed after careful consideration or at the request of
    the support team.
-
-.. attention::
-   Please note: This feature is not available in production yet. In order to activate it, please set
-   poseidas.tls.renewal.active=true in application.properties.
 
 
 Monitoring
@@ -378,10 +375,10 @@ The following example will show the total RAM usage:
 SNMP Agent (application)
 ^^^^^^^^^^^^^^^^^^^^^^^^
 
-The middleware application itself also has an internal SNMP agent which can be used to query various data
+The Middleware application itself also has an internal SNMP agent which can be used to query various data
 directly from the application (see below for what is available).
 Please note this is a different agent than the one for the system. The system agent is only preconfigured
-in the virtual machine, the internal agent is available directly in the middleware application. If you intend
+in the virtual machine, the internal agent is available directly in the Middleware application. If you intend
 to use both in parallel, you have to make sure that they run on different ports.
 
 To activate the internal SNMP agent it is necessary to set ``poseidas.snmp.username``, ``poseidas.snmp.authpwd``
@@ -407,7 +404,7 @@ Optional property for ``TRAP`` is ``poseidas.snmp.managementport`` (port 162 is 
 set).
 
 All existing SNMP GET values are explained in detail in the MIB located at
-``https://github.com/Governikus/eidas-middleware/blob/3.3.0/poseidas/snmp/EIDASMW-SNMP-MIB.mib``.
+``https://github.com/Governikus/eidas-middleware/blob/3.4.0/poseidas/snmp/EIDASMW-SNMP-MIB.mib``.
 
 Global GET
 ''''''''''
@@ -480,7 +477,7 @@ Trap prefix = |TRAP_PREFIX|
 Test mode
 ---------
 
-The eIDAS middleware includes a test mode to demonstrate handling various errors. To do this, a RequestedAuthnContext
+The eIDAS Middleware includes a test mode to demonstrate handling various errors. To do this, a RequestedAuthnContext
 must be added to the SAML request, e.g. ::
 
     <saml2p:RequestedAuthnContext Comparison="minimum">

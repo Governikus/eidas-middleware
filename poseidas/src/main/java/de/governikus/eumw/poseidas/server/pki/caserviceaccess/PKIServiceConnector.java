@@ -37,7 +37,6 @@ import javax.net.ssl.TrustManager;
 import javax.net.ssl.TrustManagerFactory;
 import javax.net.ssl.X509KeyManager;
 
-import de.governikus.eumw.poseidas.server.pki.caserviceaccess.logging.MessageLoggingInterceptor;
 import jakarta.xml.ws.BindingProvider;
 import jakarta.xml.ws.WebServiceException;
 
@@ -57,6 +56,7 @@ import org.apache.tomcat.util.net.Constants;
 import org.bouncycastle.jsse.util.SNISocketFactory;
 
 import de.governikus.eumw.eidascommon.Utils;
+import de.governikus.eumw.poseidas.server.pki.caserviceaccess.logging.MessageLoggingInterceptor;
 import de.governikus.eumw.utils.key.SecurityProvider;
 import lombok.RequiredArgsConstructor;
 
@@ -335,7 +335,9 @@ public class PKIServiceConnector
     return kmf.getKeyManagers();
   }
 
-  void setHttpsConnectionSetting(BindingProvider port, String uri) throws URISyntaxException
+  void setHttpsConnectionSetting(BindingProvider port, String uri)
+    throws URISyntaxException, IOException, UnrecoverableKeyException, CertificateException, NoSuchAlgorithmException,
+    KeyStoreException, NoSuchProviderException, KeyManagementException
   {
     try
     {
@@ -393,10 +395,12 @@ public class PKIServiceConnector
     catch (GeneralSecurityException e)
     {
       LOG.error(entityID + ": should not have happened because certs and keys were already parsed", e);
+      throw e;
     }
     catch (IOException e)
     {
       LOG.error(entityID + ": should not have happened because no I/O is done", e);
+      throw e;
     }
   }
 

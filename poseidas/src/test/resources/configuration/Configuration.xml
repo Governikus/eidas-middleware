@@ -30,11 +30,11 @@
                            BlackListTrustAnchorCertificateName="blackListTrustAnchor"
                            MasterListTrustAnchorCertificateName="masterListTrustAnchor">
             <Name>govDvca</Name>
-            <TerminalAuthServiceUrl>https://dvca-r1.governikus-eid.de:8444/gov_dvca/ta-service
+            <TerminalAuthServiceUrl>https://dvca-r1.governikus-eid.de:8444/gov_dvca/ta-service-140
             </TerminalAuthServiceUrl>
             <RestrictedIdServiceUrl>https://dvca-r1.governikus-eid.de:8444/gov_dvca/ri-service
             </RestrictedIdServiceUrl>
-            <PassiveAuthServiceUrl>https://dvca-r1.governikus-eid.de:8444/gov_dvca/pa-service
+            <PassiveAuthServiceUrl>https://dvca-r1.governikus-eid.de:8444/gov_dvca/pa-service-140
             </PassiveAuthServiceUrl>
             <DvcaCertificateDescriptionServiceUrl>
                 https://dvca-r1.governikus-eid.de:8444/gov_dvca/certDesc-service

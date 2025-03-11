@@ -21,9 +21,7 @@
         <div th:replace="~{this :: inputRow_timer('CRL renewal', 'CRL (Certificate Revocation List) renewal', 'crlRenewalLength', '0', 'crlRenewalUnit', 'false', '' , 'false', ${timerHistories.get('CRL_RENEWAL_TIMER')}, ${nextTimerExecutions.get('CRL_RENEWAL_TIMER')})}"/>
         <div th:replace="~{this :: inputRow_timer('Entangle TLS server certificate', 'Entangle TLS server certificate', 'tlsEntangleRenewalLength', '0', 'tlsEntangleRenewalUnit', 'false', '', 'true', ${timerHistories.get('TLS_ENTANGLE_TIMER')}, ${nextTimerExecutions.get('TLS_ENTANGLE_TIMER')})}"/>
         <div th:replace="~{this :: inputRow_rsc('daysRefreshRscBeforeExpiration', ${timerHistories.get('RSC_RENEWAL')}, ${nextTimerExecutions.get('RSC_RENEWAL')})}"/>
-        <div th:if="${@environment.getProperty('poseidas.tls.renewal.active')}">
-            <div th:replace="~{this :: inputRow_tls('daysRefreshTlsClientBeforeExpiration', ${timerHistories.get('TLS_CLIENT_RENEWAL')}, ${nextTimerExecutions.get('TLS_CLIENT_RENEWAL')})}"/>
-        </div>
+        <div th:replace="~{this :: inputRow_tls('daysRefreshTlsClientBeforeExpiration', ${timerHistories.get('TLS_CLIENT_RENEWAL')}, ${nextTimerExecutions.get('TLS_CLIENT_RENEWAL')})}"/>
         <div th:replace="~{fragments/form :: submit()}"></div>
     </form>
 

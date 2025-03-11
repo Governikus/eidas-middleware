@@ -14,10 +14,12 @@ import java.security.cert.CertificateException;
 import java.security.cert.X509CRL;
 import java.security.cert.X509Certificate;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 import org.bouncycastle.asn1.DERIA5String;
 import org.bouncycastle.asn1.x509.CRLDistPoint;
@@ -27,6 +29,8 @@ import org.bouncycastle.asn1.x509.Extension;
 import org.bouncycastle.asn1.x509.GeneralName;
 import org.bouncycastle.asn1.x509.GeneralNames;
 import org.bouncycastle.cert.jcajce.JcaX509ExtensionUtils;
+
+import com.sun.istack.NotNull;
 
 import de.governikus.eumw.config.EidasMiddlewareConfig;
 import de.governikus.eumw.config.ServiceProviderType;
@@ -38,6 +42,7 @@ import de.governikus.eumw.poseidas.server.monitoring.SNMPConstants;
 import de.governikus.eumw.poseidas.server.monitoring.SNMPTrapSender;
 import de.governikus.eumw.poseidas.server.pki.TerminalPermissionAO;
 import de.governikus.eumw.poseidas.server.pki.entities.TerminalPermission;
+
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
@@ -53,7 +58,7 @@ public class CertificationRevocationListImpl implements CertificationRevocationL
 
   private final X509Certificate cscaRootCertificate;
 
-  private final CrlFetcher crlFetcher;
+  private CrlFetcher crlFetcher;
 
   @Getter
   private static boolean isInitialized;
@@ -75,15 +80,7 @@ public class CertificationRevocationListImpl implements CertificationRevocationL
                                           ConfigurationService configurationService)
     throws CertificateException
   {
-    Set<X509Certificate> trustSet;
-    if (masterList == null)
-    {
-      trustSet = new HashSet<>();
-    }
-    else
-    {
-      trustSet = masterList;
-    }
+
 
     if (cscaRootCertificate == null)
     {
@@ -108,7 +105,7 @@ public class CertificationRevocationListImpl implements CertificationRevocationL
 
     if (crlFetcher == null)
     {
-      this.crlFetcher = new HttpCrlFetcher(trustSet);
+      this.crlFetcher = new HttpCrlFetcher(masterList == null ? new HashSet<>() : masterList);
     }
     else
     {
@@ -117,6 +114,26 @@ public class CertificationRevocationListImpl implements CertificationRevocationL
 
     this.crlCache = new SimpleCrlCache();
   }
+
+  /**
+   * Allows to update the trust anchors to validate the CRL.
+   * 
+   * @param masterList
+   */
+  public void updateMasterlist(@NotNull Collection<X509Certificate> masterList)
+  {
+    if (!isInitialized())
+    {
+      log.debug("Not updating master list because certification revocation list is not initialized yet");
+      return;
+    }
+    log.debug("Updating trust anchors for crl fetching to {} certificates from the master list", masterList.size());
+    HashSet<X509Certificate> certificates = new HashSet<>(masterList);
+    this.crlFetcher = new HttpCrlFetcher(certificates);
+    log.trace("Updated trust anchors for crl fetching to: \n{}",
+              certificates.stream().map(X509Certificate::toString).collect(Collectors.joining("\n ===============")));
+  }
+
 
   /**
    * Try to initialize CRL if not already done.

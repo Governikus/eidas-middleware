@@ -19,7 +19,6 @@ public class Code0 extends ManagementCode
   private static final long serialVersionUID = 5095551331546131042L;
 
   /**
-   * FIXME: the sole purpose of this class is that it is not possible just to create instances somewhere!
    * Creates a new Code0 object.
    *
    * @param code unique identifier of the message code

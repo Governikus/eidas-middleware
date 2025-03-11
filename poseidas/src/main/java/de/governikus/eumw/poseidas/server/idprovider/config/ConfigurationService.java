@@ -12,6 +12,7 @@ package de.governikus.eumw.poseidas.server.idprovider.config;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.net.URL;
 import java.nio.charset.StandardCharsets;
 import java.security.KeyStore;
 import java.security.cert.Certificate;
@@ -160,7 +161,10 @@ public class ConfigurationService
 
     try
     {
-      var uriComponentsBuilder = UriComponentsBuilder.fromHttpUrl(configuration.get().getServerUrl());
+      // Throws an exception if the server url is not valid.
+      new URL(configuration.get().getServerUrl());
+
+      var uriComponentsBuilder = UriComponentsBuilder.fromUriString(configuration.get().getServerUrl());
       return uriComponentsBuilder.path(ContextPaths.EIDAS_CONTEXT_PATH).build().toUriString();
     }
     catch (Exception e)

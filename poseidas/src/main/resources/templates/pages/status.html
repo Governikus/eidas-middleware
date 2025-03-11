@@ -20,6 +20,16 @@
 
     <hr class="text-primary" style="height: 4px"/>
 
+    <!--     warning alert if at least one tls rsa certificate is lower than 3000 bits -->
+    <div th:if="${globalResultModel != null} ? ${!globalResultModel.getTlsRSACertsWithLengthLowerThan3000().isEmpty()} : false"
+         class="alert alert-warning" role="alert">
+        The following TLS RSA certificates have a bit length lower than 3000: <span
+            th:text="${globalResultModel.getTlsRSACertsWithLengthLowerThan3000()}"/><br>
+        RSA certificates with a length lower than 3000 bits are only supported until end of 2025. Please make sure to
+        change
+        the certificates.
+    </div>
+
     <th:block th:if="${valuesAvailable}">
         <div class="row">
             <div class="col-12">
@@ -105,8 +115,10 @@
                                         th:text="${entity.value.rscCurrentValidUntil != null ? '✔' : '❌'}"/><br>
                                     Valid until:<br><span
                                         th:text="${entity.value.rscCurrentValidUntil == null ? '-' : entity.value.rscCurrentValidUntil}"/><br>
-                                    Pending available: <span th:classappend="${entity.value.rscRenewalError == null ? '' : 'bg-danger text-white'}"
-                                        th:utext="${entity.value.rscRenewalError != null ? ('⚠<br/>Error in automatic RSC renewal: ' + entity.value.rscRenewalError) : entity.value.rscPendingPresent ? '✔' : '❌'}"/>
+                                    Pending available:<span th:remove="tag"
+                                                            th:if="${entity.value.rscRenewalError != null}">⚠<br></span>
+                                    <span th:classappend="${entity.value.rscRenewalError == null ? '' : 'bg-danger text-white'}"
+                                          th:text="${entity.value.rscRenewalError != null ? ('Error in automatic RSC renewal: ' + entity.value.rscRenewalError) : (entity.value.rscPendingPresent ? '✔' : '❌')}"/>
                                 </div>
                                 <!-- BlockList area -->
                                 <div class="col border-left" id="blackList">

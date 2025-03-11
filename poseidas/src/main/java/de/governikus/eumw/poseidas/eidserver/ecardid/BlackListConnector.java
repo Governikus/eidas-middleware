@@ -10,9 +10,6 @@
 
 package de.governikus.eumw.poseidas.eidserver.ecardid;
 
-import java.io.IOException;
-
-
 /**
  * Access object for black list. The complete black list cannot be loaded into memory because it may be too
  * large.
@@ -34,6 +31,6 @@ public interface BlackListConnector
    *
    * @param sectorSpecificID must belong the the sector specified by {@link #getSectorID()}
    */
-  public boolean contains(byte[] sectorSpecificID) throws IOException;
+  public boolean contains(byte[] sectorSpecificID);
 
 }

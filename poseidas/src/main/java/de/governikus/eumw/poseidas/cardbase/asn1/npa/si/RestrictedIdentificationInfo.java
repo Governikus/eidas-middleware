@@ -86,7 +86,7 @@ public class RestrictedIdentificationInfo extends SecurityInfo
     }
     catch (IOException e)
     {
-      throw new IllegalStateException(MESSAGE_CAN_NOT_CONVERT_TO_STRING);
+      throw new IllegalStateException(MESSAGE_CAN_NOT_CONVERT_TO_STRING, e);
     }
     result.append("\n-- maxKeyLen ");
     result.append(maxKeyLen != null ? maxKeyLen : STRING_NOT_GIVEN);

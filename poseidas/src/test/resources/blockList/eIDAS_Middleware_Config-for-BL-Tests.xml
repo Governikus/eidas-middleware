@@ -29,11 +29,11 @@
                            BlackListTrustAnchorCertificateName="Black list trust anchor"
                            MasterListTrustAnchorCertificateName="Master list trust anchor">
             <Name>Governikus DVCA</Name>
-            <TerminalAuthServiceUrl>https://dvca-r1.governikus-eid.de:8444/gov_dvca/ta-service
+            <TerminalAuthServiceUrl>https://dvca-r1.governikus-eid.de:8444/gov_dvca/ta-service-140
             </TerminalAuthServiceUrl>
             <RestrictedIdServiceUrl>https://dvca-r1.governikus-eid.de:8444/gov_dvca/ri-service
             </RestrictedIdServiceUrl>
-            <PassiveAuthServiceUrl>https://dvca-r1.governikus-eid.de:8444/gov_dvca/pa-service
+            <PassiveAuthServiceUrl>https://dvca-r1.governikus-eid.de:8444/gov_dvca/pa-service-140
             </PassiveAuthServiceUrl>
         </DvcaConfiguration>
         <TimerConfiguration>
@@ -63,7 +63,7 @@
         <Certificate>
             <Name>Black list trust anchor</Name>
             <Certificate>
-                MIIEcTCCA1mgAwIBAgIIDI0LEBD/wRIwDQYJKoZIhvcNAQELBQAwVzEnMCUGA1UEAwweYm9zIENBIGVJRCBDb21tdW5pY2F0aW9uIENlcnRzMR8wHQYDVQQKDBZicmVtZW4gb25saW5lIHNlcnZpY2VzMQswCQYDVQQGEwJERTAeFw0xMzA1MDcwNzQ5MjRaFw0xNjA1MDYwNzQ5MjRaMGgxHjAcBgNVBAMMFWRldi5nb3Zlcm5pa3VzLWVpZC5kZTEYMBYGA1UECwwPdGVzdGNlcnRpZmljYXRlMR8wHQYDVQQKDBZicmVtZW4gb25saW5lIHNlcnZpY2VzMQswCQYDVQQGEwJkZTCCASIwDQYJKoZIhvcNAQEBBQADggEPADCCAQoCggEBAL9ea6dQveXgc23F7jteqN9L023MpOI7BnqD4YxsrOMfEhHBj1tcr1VpZgxtamhHKEJEqptN5ObotyA/wKqeIBEzLgfLGqMyPqnSyejELRql1KYi+moCgMWNiU5FAfhd29Rgr8rPhPtBSgkO7DQdXzaTQxDxQssUTlK5AifIl/f0+/emGZUknAIfXxgXlNmuSCijAt1qoNkd+VS05unQFYKqb3BfxFQDgHqdmg0caPDvb5KHYuTMGFhmRe3B8lt5ffM+QaIK8q+qTy2rU/4jS331tauGdxDv/JniOV2z5gzut4H42Naek9SPjgotk0ON8B4ZuSZf23pJ9GqRH1v9u+MCAwEAAaOCAS4wggEqMAwGA1UdEwEB/wQCMAAwPwYDVR0lBDgwNgYIKwYBBQUHAwEGCCsGAQUFBwMCBggrBgEFBQcDBAYKKwYBBAGCNxQCAgYKKwYBBAGCNwoDDDAfBgNVHSMEGDAWgBQFIqk8+KQR/Sta43Lw85czVJlxjzAOBgNVHQ8BAf8EBAMCBLAwHQYDVR0OBBYEFFdqnSDAvZJe8F6/4VbhECPNIZf/MEsGCCsGAQUFBwEBBD8wPTA7BggrBgEFBQcwAYYvaHR0cDovL29jc3AuYm9zLWJyZW1lbi5kZS9wdWJsaWN3ZWIvc3RhdHVzL29jc3AwPAYDVR0RBDUwM4IVZGV2LmdvdmVybmlrdXMtZWlkLmRlghpkZXYtZGVtby5nb3Zlcm5pa3VzLWVpZC5kZTANBgkqhkiG9w0BAQsFAAOCAQEAMZaY6wFGQTrb7Ke2cST6ZJrUhs1H70awcWO5abMmFWipwqhaW95oUmZvMFxEZcehKgDej1ltHhwkvcCbhM97+pxNLJWnmwn8fpDn28xkkG1pcnKfz7Nj+Nn66NMFeSU4LCKjmfqhmiqaxk6JHOqHwoG8c2b6X5krVLhhhbTAW4oojmJUhrjeeglPpD60JneVRy1w8qoRaDd5UFaMgwRgi0Nom8qaIcYTZuJYhIRb5sTR2SAVjbpEMwZq3NqczOFTafB6HFsLiHB/6RSBtqAC9KMC9m4LPEQvAWN8+sTltYPio/IoTIUVrU13uzOmxTGmubQx2St/7IBy5m7dlk0WUQ==
+                MIICPjCCAcSgAwIBAgIUWv4P4N/f1TuL3b8vxicBjOkwnecwCgYIKoZIzj0EAwMwdzELMAkGA1UEBhMCREUxDzANBgNVBAgMBkJyZW1lbjEPMA0GA1UEBwwGQnJlbWVuMRMwEQYDVQQKDApHb3Zlcm5pa3VzMREwDwYDVQQLDAhBdXRlbnQgQTEeMBwGA1UEAwwVRFZDQSBCbG9ja2xpc3QgU2lnbmVyMCAXDTI0MDEwODEzMDg0NloYDzIwNTkxMjMxMjI1OTU5WjB3MQswCQYDVQQGEwJERTEPMA0GA1UECAwGQnJlbWVuMQ8wDQYDVQQHDAZCcmVtZW4xEzARBgNVBAoMCkdvdmVybmlrdXMxETAPBgNVBAsMCEF1dGVudCBBMR4wHAYDVQQDDBVEVkNBIEJsb2NrbGlzdCBTaWduZXIwdjAQBgcqhkjOPQIBBgUrgQQAIgNiAATgdNG6WHbY36CaiEyc0BfLSazVHYNM2ko06nB+2z4n8EC1b8NXjsjaS7bwXXEZMA0KGEFuIAoOd4SKE/xxtrua9Atxfw/C58Vic9UXCiAYfvrpv1aeszQCJcdi4E1WV6CjDzANMAsGA1UdDwQEAwIHgDAKBggqhkjOPQQDAwNoADBlAjAhFaGsuDW3hOufEbyqug1dTAZPQAnjJLof1q3UwdpibCZizp3XTPph5NyongUHkEUCMQD78NLnYUnydknRgAibTsdacovTIbIbuisuIvakiE1+j5pBFKCrj42ZWvwI88E4ZZg=
             </Certificate>
         </Certificate>
         <Certificate>

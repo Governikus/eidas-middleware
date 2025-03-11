@@ -28,9 +28,9 @@
         <DvcaConfiguration ServerSSLCertificateName="DvcaServerSSL" BlackListTrustAnchorCertificateName="BlTrustAnchor"
                            MasterListTrustAnchorCertificateName="MlTrustAnchor">
             <Name>gov</Name>
-            <TerminalAuthServiceUrl>https://dvca-r1.governikus-eid.de:8444/gov_dvca/ta-service</TerminalAuthServiceUrl>
+            <TerminalAuthServiceUrl>https://dvca-r1.governikus-eid.de:8444/gov_dvca/ta-service-140</TerminalAuthServiceUrl>
             <RestrictedIdServiceUrl>https://dvca-r1.governikus-eid.de:8444/gov_dvca/ri-service</RestrictedIdServiceUrl>
-            <PassiveAuthServiceUrl>https://dvca-r1.governikus-eid.de:8444/gov_dvca/pa-service</PassiveAuthServiceUrl>
+            <PassiveAuthServiceUrl>https://dvca-r1.governikus-eid.de:8444/gov_dvca/pa-service-140</PassiveAuthServiceUrl>
             <DvcaCertificateDescriptionServiceUrl>https://dvca-r1.governikus-eid.de:8444/gov_dvca/certDesc-service
             </DvcaCertificateDescriptionServiceUrl>
             <PolicyImplementationId>govDvca</PolicyImplementationId>

@@ -21,6 +21,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import de.governikus.eumw.poseidas.cardbase.Hex;
+import lombok.extern.slf4j.Slf4j;
 
 
 /**
@@ -28,6 +29,7 @@ import de.governikus.eumw.poseidas.cardbase.Hex;
  *
  * @author Jens Wothe, jw@bos-bremen.de
  */
+@Slf4j
 final class ASN1ChildUtil
 {
 
@@ -138,6 +140,10 @@ final class ASN1ChildUtil
       }
       catch (IOException e)
       {
+        if (log.isDebugEnabled())
+        {
+          log.debug("Error reading stream", e);
+        }
         resultList.clear();
       }
       finally

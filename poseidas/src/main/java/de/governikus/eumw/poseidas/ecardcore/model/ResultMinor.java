@@ -1195,7 +1195,6 @@ public enum ResultMinor
     {
       if (item.toString().endsWith(uri))
       {
-        // FIXME: ECA-351 This is a temporary workaround for an error in the BuergerClient
         // TesVersion 3 (Look in EnumeratonTemplate.vm)
         LOGGER.debug("BC quircks mode. identify " + uri + " as " + item.toString());
         return item;

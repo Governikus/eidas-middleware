@@ -26,12 +26,15 @@ import de.governikus.eumw.poseidas.cardbase.ByteUtil;
 import de.governikus.eumw.poseidas.cardbase.Hex;
 import de.governikus.eumw.poseidas.cardbase.constants.ByteConstants;
 
+import lombok.extern.slf4j.Slf4j;
+
 
 /**
  * Implementation of convenience methods for basic processing of ASN.1.
  *
  * @author Jens Wothe, jw@bos-bremen.de
  */
+@Slf4j
 final class ASN1BaseUtil
 {
 
@@ -273,6 +276,10 @@ final class ASN1BaseUtil
       }
       catch (Exception e)
       {
+        if (log.isDebugEnabled())
+        {
+          log.debug("Error encoding ASN1", e);
+        }
         result = new byte[0];
       }
     }
@@ -498,7 +505,6 @@ final class ASN1BaseUtil
       {
         throw new IllegalArgumentException("only 1 byte expected as tag descriptor bytes (leading null-byte ignored)");
       }
-      // FIXME: doing & TAG_BITS_MASK is wrong here the first bit is also important and part of the tag class
       result = BigInteger.valueOf(firstTagByte & ASN1Constants.TAG_BITS_MASK);
     }
     return result;

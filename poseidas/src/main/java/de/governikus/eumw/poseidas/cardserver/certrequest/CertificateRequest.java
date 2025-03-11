@@ -34,6 +34,7 @@ import de.governikus.eumw.poseidas.cardserver.service.hsm.HSMServiceFactory;
 import de.governikus.eumw.poseidas.cardserver.service.hsm.impl.BOSHSMSimulatorService;
 import de.governikus.eumw.poseidas.cardserver.service.hsm.impl.HSMException;
 import de.governikus.eumw.poseidas.cardserver.service.hsm.impl.HSMService;
+import lombok.extern.slf4j.Slf4j;
 
 
 /**
@@ -43,6 +44,7 @@ import de.governikus.eumw.poseidas.cardserver.service.hsm.impl.HSMService;
  * @author Jens Wothe, jw@bos-bremen.de
  * @author Arne Stahlbock, ast@bos-bremen.de
  */
+@Slf4j
 public class CertificateRequest extends AbstractASN1Encoder
 {
 
@@ -267,6 +269,10 @@ public class CertificateRequest extends AbstractASN1Encoder
     }
     catch (NullPointerException e)
     {
+      if (log.isDebugEnabled())
+      {
+        log.debug("Failed to create ECPublicKey", e);
+      }
       return null;
     }
   }
@@ -287,6 +293,10 @@ public class CertificateRequest extends AbstractASN1Encoder
     }
     catch (NullPointerException e)
     {
+      if (log.isDebugEnabled())
+      {
+        log.debug("Failed to get holder reference string", e);
+      }
       return null;
     }
   }
@@ -305,6 +315,10 @@ public class CertificateRequest extends AbstractASN1Encoder
     }
     catch (NullPointerException e)
     {
+      if (log.isDebugEnabled())
+      {
+        log.debug("Failed to get outer authority reference string", e);
+      }
       return null;
     }
   }

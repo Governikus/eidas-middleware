@@ -119,7 +119,7 @@ public class Read extends AbstractFunctionStep<ReadParameter, ReadResult> implem
       return new ReadResult(resp.getData());
     }
     if (resp.getSW() == SmartCardCodeConstants.FILE_NOT_FOUND
-        || resp.getSW() == SmartCardCodeConstants.FILE_NOT_FOUND_2)
+        || resp.getSW() == SmartCardCodeConstants.COMMAND_NOT_ALLOWED)
     {
       return new ReadResult(new FileNotFoundException("file not found on card"));
     }

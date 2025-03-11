@@ -37,13 +37,10 @@
         </div>
         <div th:text="#{content.language}">Choose your language</div>
         <form enctype="application/x-www-form-urlencoded" method="post"
-              th:action="${linkToSelf}" th:object="${responseModel}">
+              th:action="${linkToSelf}">
             <p>
                 <input name="lang" type="hidden" value="en"/>
-                <input id="samlResponse" name="samlResponse" th:value="${SAML}" type="hidden"/>
-                <input id="consumerURL" name="consumerURL" th:value="${consumerURL}" type="hidden"/>
-                <input id="relayState" name="relayState" th:if="${relayState}" th:value="${relayState}"
-                       type="hidden"/>
+                <input id="authnRequestId" name="authnRequestId" type="hidden" th:value="${authnRequestId}"/>
                 <input alt="Switch to English" name="submit" th:src="@{/eidas-middleware/img/english.jpg}"
                        style="float: left; height: 25px; margin-right:10px; margin-top: 0px; margin-bottom: 5px; position: relative;"
                        th:attr="src=@{/eidas-middleware/img/english.jpg}"
@@ -51,13 +48,10 @@
             </p>
         </form>
         <form enctype="application/x-www-form-urlencoded" method="post"
-              th:action="${linkToSelf}" th:object="${responseModel}">
+              th:action="${linkToSelf}">
             <p>
                 <input name="lang" type="hidden" value="de"/>
-                <input id="samlResponse" name="samlResponse" th:value="${SAML}" type="hidden"/>
-                <input id="consumerURL" name="consumerURL" th:value="${consumerURL}" type="hidden"/>
-                <input id="relayState" name="relayState" th:if="${relayState}" th:value="${relayState}"
-                       type="hidden"/>
+                <input id="authnRequestId" name="authnRequestId" type="hidden" th:value="${authnRequestId}"/>
                 <input alt="Nach Deutsch wechseln" name="submit" src="/eidas-middleware/img/german.png"
                        style="float: left; height: 25px; margin-top: 0px; margin-bottom: 5px; position: relative;"
                        th:attr="src=@{/eidas-middleware/img/german.png}"
@@ -73,7 +67,7 @@
         <div class="row brdr">
             <div class="col-md-12"
                  style="margin-top: 8px; margin-bottom: 8px; font-weight:300; font-size: 15px;">
-                <div th:utext="#{response.info}">
+                <div th:text="#{response.info}">
                 </div>
             </div>
         </div>

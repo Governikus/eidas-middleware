@@ -1,6 +1,0 @@
-<TCTokenType>
-<ServerAddress>#{PAOS_RECEIVER_URL}</ServerAddress>
-<SessionIdentifier>#{SESSIONID}</SessionIdentifier>
-<RefreshAddress>#{REFRESH_ADDRESS}</RefreshAddress>
-<Binding>urn:liberty:paos:2006-08</Binding>
-</TCTokenType>

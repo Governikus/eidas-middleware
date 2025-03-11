@@ -12,6 +12,7 @@ package de.governikus.eumw.poseidas.config.model;
 import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
+import java.util.List;
 import java.util.TimeZone;
 
 import de.governikus.eumw.poseidas.eidserver.crl.CertificationRevocationListImpl;
@@ -35,6 +36,8 @@ public class GlobalResultModel
 
   private LocalDateTime lastCrlRenewal;
 
+  private List<String> tlsRSACertsWithLengthLowerThan3000;
+
   /**
    * Create the global result model based on the
    * {@link de.governikus.eumw.poseidas.server.idprovider.config.CvcTlsCheck.CvcTlsCheckResult} and data from
@@ -46,6 +49,7 @@ public class GlobalResultModel
   {
     this.serverTlsValid = cvcTlsCheckResult.isServerTlsValid();
     this.crlAvailable = CertificationRevocationListImpl.isInitialized();
+    this.tlsRSACertsWithLengthLowerThan3000 = cvcTlsCheckResult.getTlsRSACertsWithLengthLowerThan3000();
 
     if (cvcTlsCheckResult.getServerTlsExpirationDate() != null)
     {

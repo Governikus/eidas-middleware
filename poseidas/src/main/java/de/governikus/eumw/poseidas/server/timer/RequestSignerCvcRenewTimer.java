@@ -76,6 +76,10 @@ public class RequestSignerCvcRenewTimer
     }
     catch (CertificateEncodingException e)
     {
+      if (log.isDebugEnabled())
+      {
+        log.debug("Failed to encode certificate", e);
+      }
       return null;
     }
   }

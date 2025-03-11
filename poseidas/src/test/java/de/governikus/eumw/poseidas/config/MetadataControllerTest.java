@@ -79,9 +79,9 @@ import org.opensaml.xmlsec.signature.impl.X509DataBuilder;
 import org.opensaml.xmlsec.signature.support.SignatureConstants;
 import org.opensaml.xmlsec.signature.support.Signer;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.context.annotation.Import;
 import org.springframework.http.MediaType;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 import org.w3c.dom.Element;
 
@@ -122,7 +122,7 @@ class MetadataControllerTest extends ServiceProviderTestBase
 
   public static final String INVALID_METADATA_VERIFICATION_CERTIFICATE_NAME = "invalidMetadataVerificationCertificate";
 
-  @MockBean
+  @MockitoBean
   MetadataService metadataService;
 
   @SneakyThrows
@@ -419,8 +419,7 @@ class MetadataControllerTest extends ServiceProviderTestBase
     configuration.getKeyData()
                  .getCertificate()
                  .add(new CertificateType(INVALID_METADATA_VERIFICATION_CERTIFICATE_NAME, ArrayUtils.EMPTY_BYTE_ARRAY,
-                                          null,
-                                          null));
+                                          null, null));
     // Override mock calls from setUp method, otherwise a configuration without the dummy certificate type will be
     // returned
     Mockito.when(configurationService.getConfiguration()).thenReturn(Optional.of(configuration));
@@ -438,8 +437,7 @@ class MetadataControllerTest extends ServiceProviderTestBase
                    INVALID_METADATA_VERIFICATION_CERTIFICATE_NAME);
     HtmlPage changedCertificatePage = submitFormById(metadataPage, "metadataSignatureVerificationCertificate");
     // Verify that the expected error message is displayed and the config is not changed
-    assertErrorAlert(changedCertificatePage,
-                     "Cannot save the selected metadata verification certificate: ");
+    assertErrorAlert(changedCertificatePage, "Cannot save the selected metadata verification certificate: ");
     Mockito.verify(configurationService, Mockito.never()).saveConfiguration(configuration, false);
 
     // Verify that the metadata are still present and the signature is valid

@@ -81,7 +81,7 @@ public class TerminalAuthenticationInfo extends SecurityInfo
     }
     catch (IOException e)
     {
-      throw new IllegalStateException(MESSAGE_CAN_NOT_CONVERT_TO_STRING);
+      throw new IllegalStateException(MESSAGE_CAN_NOT_CONVERT_TO_STRING, e);
     }
     result.append("\n-- efCVCA ");
     result.append(efCVCA != null ? Hex.hexify(efCVCA.getValue()) : STRING_NOT_GIVEN);

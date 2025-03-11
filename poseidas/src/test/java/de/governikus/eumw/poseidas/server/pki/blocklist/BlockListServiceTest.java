@@ -78,7 +78,7 @@ class BlockListServiceTest
 
     List<byte[]> entriesToAdd = generateRandomBlockListEntries(2);
     List<byte[]> entriesToRemove = blockListEntries.subList(0, 3);
-    blockListService.updateDeltaBlockList(terminalPermission, 43, entriesToAdd, entriesToRemove);
+    blockListService.updateDeltaBlockList(terminalPermission, 43, entriesToAdd, entriesToRemove, null);
     long count = blockListService.count(SECTOR_ID);
     Assertions.assertEquals(9, count);
     Assertions.assertTrue(Files.exists(Path.of(tempDir.getPath(), ConfigurationTestHelper.CVC_REF_ID + ".version-43")));

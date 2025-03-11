@@ -146,6 +146,10 @@ public class PermissionDataHandling implements PermissionDataHandlingMBean
     }
     catch (GovManagementException e)
     {
+      if (log.isDebugEnabled())
+      {
+        log.debug("Failed to get service provider: {}", entityID, e);
+      }
       return e.getManagementMessage();
     }
   }
@@ -294,6 +298,10 @@ public class PermissionDataHandling implements PermissionDataHandlingMBean
     }
     catch (GovManagementException e)
     {
+      if (log.isDebugEnabled())
+      {
+        log.debug("Failed to get service provider: {}", entityID, e);
+      }
       return e.getManagementMessage();
     }
   }
@@ -387,7 +395,8 @@ public class PermissionDataHandling implements PermissionDataHandlingMBean
         return IDManagementCodes.DATABASE_ENTRY_EXISTS.createMessage(tp.getRefID());
       }
       RestrictedIdHandler riHandler = new RestrictedIdHandler(prov, facade, hsmServiceHolder.getKeyStore(),
-                                                              configurationService, dvcaServiceFactory, blockListService);
+                                                              configurationService, dvcaServiceFactory,
+                                                              blockListService);
       if (alreadyRenewed != null)
       {
         if (BlackListLock.getINSTANCE().getBlackListUpdateLock().tryLock())
@@ -407,8 +416,13 @@ public class PermissionDataHandling implements PermissionDataHandlingMBean
           log.debug("Black list is currently being updated, skipping this execution");
         }
       }
-      succeededRenewals.add(providerName);
-      return GlobalManagementCodes.OK.createMessage();
+      if (alreadyRenewed.contains(ByteBuffer.wrap(tp.getSectorID())))
+      {
+        succeededRenewals.add(providerName);
+        return GlobalManagementCodes.OK.createMessage();
+      }
+      failedRenewals.add(providerName);
+      return GlobalManagementCodes.EC_UNEXPECTED_ERROR.createMessage("unable to renew block lists");
     }
     catch (GovManagementException e)
     {
@@ -443,7 +457,8 @@ public class PermissionDataHandling implements PermissionDataHandlingMBean
       }
 
       RestrictedIdHandler riHandler = new RestrictedIdHandler(prov, facade, hsmServiceHolder.getKeyStore(),
-                                                              configurationService, dvcaServiceFactory, blockListService);
+                                                              configurationService, dvcaServiceFactory,
+                                                              blockListService);
       riHandler.requestPublicSectorKeyIfNeeded();
       return GlobalManagementCodes.OK.createMessage();
     }
@@ -753,6 +768,10 @@ public class PermissionDataHandling implements PermissionDataHandlingMBean
     }
     catch (GovManagementException e)
     {
+      if (log.isDebugEnabled())
+      {
+        log.debug("Check readiness for first request for service provider {}", entityID, e);
+      }
       return e.getManagementMessage();
     }
   }
@@ -882,6 +901,10 @@ public class PermissionDataHandling implements PermissionDataHandlingMBean
     }
     catch (Exception e)
     {
+      if (log.isDebugEnabled())
+      {
+        log.debug("Failed to ping pa service for service provider {}", entityID, e);
+      }
       return false;
     }
   }
@@ -898,6 +921,10 @@ public class PermissionDataHandling implements PermissionDataHandlingMBean
     }
     catch (Exception e)
     {
+      if (log.isDebugEnabled())
+      {
+        log.debug("Failed to ping ri service for service provider {}", entityID, e);
+      }
       return false;
     }
   }

@@ -448,6 +448,29 @@ public class EIDSequence extends ECardConvenienceSequenceAdapter
     return eidInfoContainer;
   }
 
+  public Object getNextRequest(StartPAOS startPaos)
+  {
+    // Reset the return object for every request
+    returnObject = null;
+    try
+    {
+      setStart(startPaos);
+      return handleStart();
+    }
+    catch (ECardException e)
+    {
+      // Already logged in setStart method
+      return handleException(e);
+    }
+    // ==============================
+    // Stop Session
+    // ==============================
+    finally
+    {
+      finishSession();
+    }
+  }
+
   @Override
   public Object getNextRequest(ResponseType response)
   {
@@ -467,25 +490,19 @@ public class EIDSequence extends ECardConvenienceSequenceAdapter
         throw new ECardException(response.getResult());
       }
 
-      // as response to StartPAOS, send DIDAuthenticate(EAC1Input)
-      if (response == null)
-      {
-        return handleStart();
-      }
-
       // ===================================
       // DIDAuthenticate Response
       // ===================================
-      if (response instanceof DIDAuthenticateResponse)
+      if (response instanceof DIDAuthenticateResponse didAuthResp)
       {
-        return handleDIDAuthenticate((DIDAuthenticateResponse)response);
+        return handleDIDAuthenticate(didAuthResp);
       }
       // ==============================
       // Transmit Response
       // ==============================
-      if (response instanceof TransmitResponse)
+      if (response instanceof TransmitResponse transmitResp)
       {
-        return handleTransmit((TransmitResponse)response);
+        return handleTransmit(transmitResp);
       }
       // ==============================
       // UNKNOWN Response
@@ -497,61 +514,73 @@ public class EIDSequence extends ECardConvenienceSequenceAdapter
     // ==============================
     catch (ECardException e)
     {
-      LOG.debug(logPrefix + e.toString(), e);
-      Result resultFromException = e.getResult();
-      Result handle = resultFromException;
-      if (ResultMajor.OK.toString().equals(resultFromException.getResultMajor()))
+      if (LOG.isDebugEnabled())
       {
-        handle.setResultMessage(ECardCoreUtil.generateInternationalStringType("Unexpected Error state (ResultMajor:OK) while: "
-                                                                              + resultFromException.getResultMessage()));
+        LOG.debug("Failed to get next request", e);
       }
-      if (resultFromException.getResultMinor() == null)
-      {
-        handle.setResultMinor(ResultMinor.COMMON_INTERNAL_ERROR.toString());
-      }
-      if (resultFromException.getResultMessage() == null)
-      {
-        handle.setResultMessage(ECardCoreUtil.generateInternationalStringType(e.getLocalizedMessage()));
-      }
-
-      ResultMinor rm;
-      try
-      {
-        rm = ResultMinor.valueOfEnum(handle.getResultMinor());
-      }
-      catch (IllegalArgumentException | NullPointerException e2)
-      {
-        rm = ResultMinor.COMMON_INTERNAL_ERROR;
-      }
-      return handleError(rm,
-                         handle.getResultMessage() == null || handle.getResultMessage().getValue() == null
-                           ? "no message" : handle.getResultMessage().getValue());
+      return handleException(e);
     }
     // ==============================
     // Stop Session
     // ==============================
     finally
     {
-      if (returnObject instanceof JAXBElement<?>
-          && "StartPAOSResponse".equals(((JAXBElement<?>)returnObject).getName().getLocalPart()))
-      {
-        LOG.debug(logPrefix + LOG_PRE_END + "Session will be closed");
-        LOG.debug(logPrefix + LOG_PRE_END + "Send StartPAOSResponse");
+      finishSession();
+    }
+  }
 
-        ECardIDServerI currentServer = ECardIDServerFactory.getInstance().getCurrentServer();
-        if (currentServer instanceof SessionManager)
-        {
-          ((SessionManager)currentServer).stopSession(this.sessionInput.getSessionID(), eidInfoContainer);
-          LOG.debug(logPrefix + LOG_PRE_END + "Session '" + this.sessionInput.getSessionID()
-                    + "' stopped by Manager >>> ");
-        }
-        else
-        {
-          LOG.debug(logPrefix + LOG_PRE_END
-                    + "Session could not be stopped, because no session manager received from factory");
-        }
-        finished = true;
+  private Object handleException(ECardException e)
+  {
+    LOG.debug(logPrefix + e.toString(), e);
+    Result result = e.getResult();
+    if (ResultMajor.OK.toString().equals(result.getResultMajor()))
+    {
+      result.setResultMessage(ECardCoreUtil.generateInternationalStringType("Unexpected Error state (ResultMajor:OK) while: "
+                                                                            + result.getResultMessage()));
+    }
+    if (result.getResultMinor() == null)
+    {
+      result.setResultMinor(ResultMinor.COMMON_INTERNAL_ERROR.toString());
+    }
+    if (result.getResultMessage() == null)
+    {
+      result.setResultMessage(ECardCoreUtil.generateInternationalStringType(e.getLocalizedMessage()));
+    }
+
+    ResultMinor rm;
+    try
+    {
+      rm = ResultMinor.valueOfEnum(result.getResultMinor());
+    }
+    catch (IllegalArgumentException | NullPointerException e2)
+    {
+      rm = ResultMinor.COMMON_INTERNAL_ERROR;
+    }
+    return handleError(rm,
+                       result.getResultMessage() == null || result.getResultMessage().getValue() == null ? "no message"
+                         : result.getResultMessage().getValue());
+  }
+
+  private void finishSession()
+  {
+    if (returnObject instanceof JAXBElement<?> jaxb && "StartPAOSResponse".equals(jaxb.getName().getLocalPart()))
+    {
+      LOG.debug(logPrefix + LOG_PRE_END + "Session will be closed");
+      LOG.debug(logPrefix + LOG_PRE_END + "Send StartPAOSResponse");
+
+      ECardIDServerI currentServer = ECardIDServerFactory.getInstance().getCurrentServer();
+      if (currentServer instanceof SessionManager sessionManager)
+      {
+        sessionManager.stopSession(this.sessionInput.getSessionID(), eidInfoContainer);
+        LOG.debug(logPrefix + LOG_PRE_END + "Session '" + this.sessionInput.getSessionID()
+                  + "' stopped by Manager >>> ");
       }
+      else
+      {
+        LOG.debug(logPrefix + LOG_PRE_END
+                  + "Session could not be stopped, because no session manager received from factory");
+      }
+      finished = true;
     }
   }
 
@@ -637,19 +666,14 @@ public class EIDSequence extends ECardConvenienceSequenceAdapter
    * To start communication by PAOS a start message is required
    *
    * @param startPAOS to begin process
-   * @throws IOException
+   * @throws ECardException
    */
-  public void setStart(StartPAOS startPAOS)
+  private void setStart(StartPAOS startPAOS) throws ECardException
   {
-    if (startPAOS == null)
-    {
-      LOG.error(LOG_PRE_START + "StartPAOS is null");
-      return;
-    }
     if (startPAOSReceived)
     {
       LOG.error(LOG_PRE_START + "StartPAOS already set");
-      return;
+      throw new ECardException(ResultMinor.COMMON_NO_PERMISSION, "StartPAOS already handled");
     }
     String waitForConnectionHandle = "No connection handle for card reader available in StartPAOS. "
                                      + "Connection handle must be set later in process";
@@ -658,6 +682,11 @@ public class EIDSequence extends ECardConvenienceSequenceAdapter
     {
       int handlesCount = connectionHandleList.size();
       LOG.debug(logPrefix + LOG_PRE_START + "Connection handles available: " + handlesCount);
+      if (handlesCount > 1)
+      {
+        LOG.error(LOG_PRE_START + "More than one ConnectionHandle is not allowed for process");
+        throw new ECardException(ResultMinor.COMMON_NO_PERMISSION, "More than one ConnectionHandle");
+      }
       // This should be the default case
       if (handlesCount == 1)
       {
@@ -665,12 +694,7 @@ public class EIDSequence extends ECardConvenienceSequenceAdapter
         mIFDName = mConnectionHandle.getIFDName();
         LOG.debug(logPrefix + LOG_PRE_START + "IFD name taken from StartPAOS connection handle: " + mIFDName);
       }
-      else if (handlesCount > 1)
-      {
-        LOG.error(LOG_PRE_START + "More than one ConnectionHandle is not allowed for process");
-        return;
-      }
-      else if (handlesCount < 1)
+      else
       {
         LOG.debug(logPrefix + LOG_PRE_START + waitForConnectionHandle);
       }
@@ -1089,6 +1113,10 @@ public class EIDSequence extends ECardConvenienceSequenceAdapter
     }
     catch (IOException | UnsupportedOperationException | IllegalArgumentException e)
     {
+      if (LOG.isDebugEnabled())
+      {
+        LOG.debug("Cannot construct CHAT with selected options", e);
+      }
       throw new ChatOptionNotAllowedException("Cannot construct CHAT with selected options");
     }
     LOG.debug(input.getLogPrefix() + "CHAT created:\n" + chat);

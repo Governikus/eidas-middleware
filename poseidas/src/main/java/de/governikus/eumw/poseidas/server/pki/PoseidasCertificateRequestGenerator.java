@@ -12,7 +12,6 @@ package de.governikus.eumw.poseidas.server.pki;
 import java.io.IOException;
 import java.security.SignatureException;
 
-import de.governikus.eumw.poseidas.server.pki.entities.ChangeKeyLock;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
@@ -27,6 +26,7 @@ import de.governikus.eumw.poseidas.cardserver.service.ServiceRegistry;
 import de.governikus.eumw.poseidas.cardserver.service.hsm.HSMServiceFactory;
 import de.governikus.eumw.poseidas.cardserver.service.hsm.impl.HSMException;
 import de.governikus.eumw.poseidas.cardserver.service.hsm.impl.HSMService;
+import de.governikus.eumw.poseidas.server.pki.entities.ChangeKeyLock;
 import lombok.Setter;
 
 
@@ -161,6 +161,10 @@ class PoseidasCertificateRequestGenerator
     }
     catch (UnsupportedOperationException e)
     {
+      if (LOG.isDebugEnabled())
+      {
+        LOG.debug(e.getMessage());
+      }
       // in this case we assume key is not there (BOS simulator)
     }
 

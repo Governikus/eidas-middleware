@@ -12,19 +12,21 @@ import java.util.Base64;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.boot.test.mock.mockito.SpyBean;
 import org.springframework.boot.test.util.TestPropertyValues;
 import org.springframework.context.ApplicationContextInitializer;
 import org.springframework.context.ConfigurableApplicationContext;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.ContextConfiguration;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
+import org.springframework.test.context.bean.override.mockito.MockitoSpyBean;
 
 import de.governikus.eumw.config.DvcaConfigurationType;
 import de.governikus.eumw.config.ServiceProviderType;
@@ -68,7 +70,7 @@ class PermissionDataHandlingTest
   private static File tempDir;
 
   // Mock ApplicationTimer so no Timer will be executed
-  @MockBean
+  @MockitoBean
   ApplicationTimer applicationTimer;
 
   @Autowired
@@ -77,7 +79,7 @@ class PermissionDataHandlingTest
   @Autowired
   ConfigurationService configurationService;
 
-  @SpyBean
+  @MockitoSpyBean
   BlockListService blockListService;
 
   @Autowired
@@ -111,8 +113,9 @@ class PermissionDataHandlingTest
     terminalPermissionRepository.deleteAll();
   }
 
-  @Test
-  void testBlockListWithTwoSectorIdsFullApplication() throws Exception
+  @ParameterizedTest
+  @ValueSource(ints = {1, 2})
+  void testBlockListWithTwoSectorIdsFullApplication(int version) throws Exception
   {
     saveConfiguration();
     // SP1
@@ -120,7 +123,7 @@ class PermissionDataHandlingTest
     // SP2
     saveTerminal(SECOND_SP_CVC_REF_ID, SECTOR_ID2_B64, CVC_SP_2);
 
-    processCompleteBlockList();
+    processCompleteBlockList(version);
 
     TerminalPermission terminalPermission1AfterBlRenewal = assertTerminalPermission(ConfigurationTestHelper.CVC_REF_ID,
                                                                                     BL_VERSION_COMPLETE);
@@ -151,8 +154,9 @@ class PermissionDataHandlingTest
     Mockito.verify(restrictedIdService).getSectorPublicKey(Base64.getDecoder().decode(SECTOR_ID2_B64));
   }
 
-  @Test
-  void testDeltaBlForAllSP() throws Exception
+  @ParameterizedTest
+  @ValueSource(ints = {1, 2})
+  void testDeltaBlForAllSP(int version) throws Exception
   {
     saveConfiguration();
     // SP1
@@ -161,18 +165,24 @@ class PermissionDataHandlingTest
     saveTerminal(SECOND_SP_CVC_REF_ID, SECTOR_ID2_B64, CVC_SP_2);
 
     // First insert complete BL
-    processCompleteBlockList();
+    processCompleteBlockList(version);
 
     // Mock RIService
     Mockito.doReturn(restrictedIdService)
            .when(dvcaServiceFactory)
            .createRestrictedIdService(Mockito.any(), Mockito.any());
     // Mock BLResult from DVCA
-    byte[] deltaAdded = PermissionDataHandlingTest.class.getResourceAsStream("/blockList/blacklist-delta+10x2")
+    byte[] deltaAdded = PermissionDataHandlingTest.class.getResourceAsStream("/blockList/blacklist"
+                                                                             + (version == 2 ? "v2" : "")
+                                                                             + "-delta+10x2")
                                                         .readAllBytes();
-    byte[] deltaRemoved = PermissionDataHandlingTest.class.getResourceAsStream("/blockList/blacklist-delta-5x2")
+    byte[] deltaRemoved = PermissionDataHandlingTest.class.getResourceAsStream("/blockList/blacklist"
+                                                                               + (version == 2 ? "v2" : "")
+                                                                               + "-delta-5x2")
                                                           .readAllBytes();
-    Mockito.when(restrictedIdService.getBlacklistResult(Mockito.eq(BigInteger.valueOf(BL_VERSION_COMPLETE).toByteArray()), Mockito.any()))
+    Mockito.when(restrictedIdService.getBlacklistResult(Mockito.eq(BigInteger.valueOf(BL_VERSION_COMPLETE)
+                                                                             .toByteArray()),
+                                                        Mockito.any()))
            .thenReturn(new RestrictedIdService.BlackListResult(deltaAdded, deltaRemoved));
 
 
@@ -202,12 +212,83 @@ class PermissionDataHandlingTest
     Assertions.assertFalse(blockListService.isOnBlockList(terminalPermission2AfterBlRenewal.getSectorID(),
                                                           Base64.getDecoder()
                                                                 .decode("60hdZU5/6geFS6yvMlJD4iptJWFQEnoVv8kCO3DGI/k=")));
-    Mockito.verify(restrictedIdService).getBlacklistResult(Mockito.eq(BigInteger.valueOf(BL_VERSION_COMPLETE).toByteArray()), Mockito.any());
+    Mockito.verify(restrictedIdService)
+           .getBlacklistResult(Mockito.eq(BigInteger.valueOf(BL_VERSION_COMPLETE).toByteArray()), Mockito.any());
     Mockito.verify(blockListService, Mockito.times(2))
            .updateDeltaBlockList(Mockito.any(TerminalPermission.class),
                                  Mockito.eq(BL_VERSION_DELTA),
                                  Mockito.any(),
+                                 Mockito.any(),
                                  Mockito.any());
+  }
+
+  // first error is that the delta lists have different finalEntries values
+  // second error is that the delta lists have the same finalEntries value but one that is wrong
+  @ParameterizedTest
+  @ValueSource(booleans = {false, true})
+  void testDeltaBlForAllSPError(boolean secondError) throws Exception
+  {
+    saveConfiguration();
+    // SP1
+    saveTerminal(ConfigurationTestHelper.CVC_REF_ID, SECTOR_ID_B64, CVC_SP_1);
+    // SP2
+    saveTerminal(SECOND_SP_CVC_REF_ID, SECTOR_ID2_B64, CVC_SP_2);
+
+    // First insert complete BL
+    processCompleteBlockList(2);
+
+    // Mock RIService
+    Mockito.doReturn(restrictedIdService)
+           .when(dvcaServiceFactory)
+           .createRestrictedIdService(Mockito.any(), Mockito.any());
+    // Mock BLResult from DVCA
+    byte[] deltaAdded = PermissionDataHandlingTest.class.getResourceAsStream("/blockList/blacklistv2-delta+10x2-error")
+                                                        .readAllBytes();
+    byte[] deltaRemoved = PermissionDataHandlingTest.class.getResourceAsStream("/blockList/blacklistv2-delta-5x2"
+                                                                               + (secondError ? "-error" : ""))
+                                                          .readAllBytes();
+    Mockito.when(restrictedIdService.getBlacklistResult(Mockito.eq(BigInteger.valueOf(BL_VERSION_COMPLETE)
+                                                                             .toByteArray()),
+                                                        Mockito.any()))
+           .thenReturn(new RestrictedIdService.BlackListResult(deltaAdded, deltaRemoved));
+
+
+    // Renew Delta BL for all SP
+    permissionDataHandling.renewBlackList(true, false);
+    TerminalPermission terminalPermission1AfterBlRenewal = assertTerminalPermission(ConfigurationTestHelper.CVC_REF_ID,
+                                                                                    BL_VERSION_COMPLETE);
+    TerminalPermission terminalPermission2AfterBlRenewal = assertTerminalPermission(SECOND_SP_CVC_REF_ID,
+                                                                                    BL_VERSION_COMPLETE);
+
+    Assertions.assertFalse(Files.exists(Path.of(tempDir.getPath(),
+                                                ConfigurationTestHelper.CVC_REF_ID + ".version-" + BL_VERSION_DELTA)));
+    Assertions.assertFalse(Files.exists(Path.of(tempDir.getPath(),
+                                                SECOND_SP_CVC_REF_ID + ".version-" + BL_VERSION_DELTA)));
+    Assertions.assertTrue(Files.exists(Path.of(tempDir.getPath(),
+                                               ConfigurationTestHelper.CVC_REF_ID + ".version-"
+                                                                  + BL_VERSION_COMPLETE)));
+    Assertions.assertTrue(Files.exists(Path.of(tempDir.getPath(),
+                                               SECOND_SP_CVC_REF_ID + ".version-" + BL_VERSION_COMPLETE)));
+    Assertions.assertEquals(30, blockListService.count(terminalPermission1AfterBlRenewal.getSectorID()));
+    Assertions.assertEquals(30, blockListService.count(terminalPermission2AfterBlRenewal.getSectorID()));
+    Assertions.assertTrue(blockListService.isOnBlockList(terminalPermission1AfterBlRenewal.getSectorID(),
+                                                         Base64.getDecoder()
+                                                               .decode("HYWtKfHlS/BXWFT9ka18skgJkzFX0GzvU/uMhxjMKwA=")));
+    Assertions.assertTrue(blockListService.isOnBlockList(terminalPermission2AfterBlRenewal.getSectorID(),
+                                                         Base64.getDecoder()
+                                                               .decode("9SiiGOPZvVhl4lpycXLVApzlXq1dHRZklJ96Ufl6fFc=")));
+    Assertions.assertFalse(blockListService.isOnBlockList(terminalPermission1AfterBlRenewal.getSectorID(),
+                                                          Base64.getDecoder()
+                                                                .decode("60hdZU5/6geFS6yvMlJD4iptJWFQEnoVv8kCO3DGI/k=")));
+    Assertions.assertFalse(blockListService.isOnBlockList(terminalPermission2AfterBlRenewal.getSectorID(),
+                                                          Base64.getDecoder()
+                                                                .decode("60hdZU5/6geFS6yvMlJD4iptJWFQEnoVv8kCO3DGI/k=")));
+    Assertions.assertFalse(blockListService.isOnBlockList(terminalPermission1AfterBlRenewal.getSectorID(),
+                                                          Base64.getDecoder()
+                                                                .decode("vP09IDiihg4bK7Zh3qBE/EaZi84+ZmZYZs+PVD78rV4=")));
+    Assertions.assertFalse(blockListService.isOnBlockList(terminalPermission2AfterBlRenewal.getSectorID(),
+                                                          Base64.getDecoder()
+                                                                .decode("N6gtmN8CT7C+dhcld80AAUW1T1uFVbKNjhooonUlzo8=")));
   }
 
   private void saveConfiguration() throws IOException
@@ -227,7 +308,7 @@ class PermissionDataHandlingTest
     terminalPermissionRepository.save(terminalPermission);
   }
 
-  private void processCompleteBlockList() throws Exception
+  private void processCompleteBlockList(int version) throws Exception
   {
     // Mock RIService
     Mockito.doReturn(restrictedIdService)
@@ -253,7 +334,9 @@ class PermissionDataHandlingTest
                                    Mockito.eq(180));
 
     // Mock BL download
-    byte[] blockListBytes = PermissionDataHandlingTest.class.getResourceAsStream("/blockList/blacklist-complete30x2")
+    byte[] blockListBytes = PermissionDataHandlingTest.class.getResourceAsStream("/blockList/blacklist"
+                                                                                 + (version == 2 ? "v2" : "")
+                                                                                 + "-complete30x2")
                                                             .readAllBytes();
     Mockito.when(pkiServiceConnector.getFile("https://downloadBLHere.de")).thenReturn(blockListBytes);
 
@@ -263,8 +346,7 @@ class PermissionDataHandlingTest
 
   private TerminalPermission assertTerminalPermission(String cvcRefId, long blVersion)
   {
-    TerminalPermission terminalPermission = terminalPermissionRepository.findById(cvcRefId)
-                                                                                       .orElseThrow();
+    TerminalPermission terminalPermission = terminalPermissionRepository.findById(cvcRefId).orElseThrow();
     Assertions.assertEquals(blVersion, terminalPermission.getBlackListVersion());
     Assertions.assertTrue(new java.util.Date().after(terminalPermission.getBlackListStoreDate()));
     return terminalPermission;

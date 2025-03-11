@@ -526,9 +526,11 @@ public class EidasRequest
     }
     catch (ErrorCodeException e)
     {
-
+      if (log.isDebugEnabled())
+      {
+        log.debug("Failed to parse EidasNaturalPersonAttributes.", e);
+      }
       // nothing
-
     }
     return eidasPersonAttributes;
   }

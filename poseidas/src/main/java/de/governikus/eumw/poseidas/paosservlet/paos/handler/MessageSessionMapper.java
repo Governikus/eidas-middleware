@@ -10,8 +10,8 @@
 
 package de.governikus.eumw.poseidas.paosservlet.paos.handler;
 
-import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 
 public class MessageSessionMapper
@@ -19,13 +19,11 @@ public class MessageSessionMapper
 
   private static final MessageSessionMapper SINGLETON = new MessageSessionMapper();
 
-  private final Map<String, String> msgId2sessId;
+  private final Map<String, String> msgId2sessId = new ConcurrentHashMap<>();
 
 
   private MessageSessionMapper()
-  {
-    msgId2sessId = new HashMap<>();
-  }
+  {}
 
 
   static MessageSessionMapper getInstance()

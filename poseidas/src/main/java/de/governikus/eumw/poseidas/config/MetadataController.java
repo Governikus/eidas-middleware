@@ -108,6 +108,11 @@ public class MetadataController
       {
         String errorMessage = error + "The currently selected metadata verification certificate is not valid: "
                               + e.getMessage();
+
+        if (log.isDebugEnabled())
+        {
+          log.debug(errorMessage, e);
+        }
         model.addAttribute(REDIRECT_ATTRIBUTE_ERROR, errorMessage);
       }
     }

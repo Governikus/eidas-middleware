@@ -292,8 +292,7 @@ class ConfigurationServiceTest
     configurationService.saveConfiguration(configuration, true);
     X509Certificate metadataVerificationCertificate = configurationService.getSamlCertificate("certificateName");
     // Get the certificate
-    Assertions.assertEquals(new BigInteger(serialNumber),
-                            metadataVerificationCertificate.getSerialNumber());
+    Assertions.assertEquals(new BigInteger(serialNumber), metadataVerificationCertificate.getSerialNumber());
   }
 
   @Test

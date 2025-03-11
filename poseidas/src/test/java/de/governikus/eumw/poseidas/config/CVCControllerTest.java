@@ -28,9 +28,9 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mockito;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.context.annotation.Import;
 import org.springframework.http.MediaType;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 
 import com.gargoylesoftware.htmlunit.UnexpectedPage;
@@ -56,13 +56,13 @@ import de.governikus.eumw.utils.key.SecurityProvider;
 class CVCControllerTest extends ServiceProviderTestBase
 {
 
-  @MockBean
+  @MockitoBean
   RequestSignerCertificateService requestSignerCertificateService;
 
-  @MockBean
+  @MockitoBean
   ServiceProviderStatusService serviceProviderStatusService;
 
-  @MockBean
+  @MockitoBean
   TlsClientRenewalService tlsClientRenewalService;
 
   private ServiceProviderStatus serviceProviderStatus;

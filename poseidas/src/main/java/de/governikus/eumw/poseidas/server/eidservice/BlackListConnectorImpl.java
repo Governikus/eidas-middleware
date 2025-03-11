@@ -35,7 +35,7 @@ public class BlackListConnectorImpl implements BlackListConnector
   }
 
   @Override
-  public boolean contains(byte[] sectorSpecificID) throws IOException
+  public boolean contains(byte[] sectorSpecificID)
   {
     return blockListService.isOnBlockList(sectorID, sectorSpecificID);
   }

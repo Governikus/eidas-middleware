@@ -121,6 +121,10 @@ public class EACSignedDataChecker extends EACSignedDataParser implements SignedD
     }
     catch (IOException e)
     {
+      if (log.isDebugEnabled())
+      {
+        log.debug("Failed to check for allowed document types.", e);
+      }
       return false;
     }
     return true;

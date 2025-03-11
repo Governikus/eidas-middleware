@@ -10,12 +10,14 @@
 
 package de.governikus.eumw.poseidas.cardbase.card;
 
+import lombok.experimental.UtilityClass;
 
 /**
  * Class defines some default constants for smartcard related status codes.
  *
  * @author Jens Wothe, jw@bos-bremen.de
  */
+@UtilityClass
 public final class SmartCardCodeConstants
 {
 
@@ -30,15 +32,23 @@ public final class SmartCardCodeConstants
   public static final int EOF_READ = 0x6282;
 
   /**
+   * Constant indicating security status not satisfied / access not permitted: <code>0x6982</code>.
+   */
+  public static final int SECURITY_STATUS_NOT_SATISFIED = 0x6982;
+
+  /**
+   * Constant indicating command not allowed (can occur when reading directly without prior select):
+   * <code>0x6986</code>.
+   */
+  public static final int COMMAND_NOT_ALLOWED = 0x6986;
+
+  /**
    * Constant indicating file not present: <code>0x6A82</code>.
    */
   public static final int FILE_NOT_FOUND = 0x6A82;
 
   /**
-   * Constant indicating file not present when reading directly without prior select: <code>0x6986</code>.
+   * Constant indicating referenced data not present: <code>0x6A88</code>.
    */
-  public static final int FILE_NOT_FOUND_2 = 0x6986;
-
-  private SmartCardCodeConstants()
-  {}
+  public static final int REFERENCED_DATA_NOT_FOUND = 0x6A88;
 }

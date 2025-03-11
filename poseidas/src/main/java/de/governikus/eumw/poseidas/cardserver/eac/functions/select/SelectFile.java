@@ -17,6 +17,7 @@ import javax.smartcardio.ResponseAPDU;
 import de.governikus.eumw.poseidas.cardbase.AssertUtil;
 import de.governikus.eumw.poseidas.cardbase.ByteUtil;
 import de.governikus.eumw.poseidas.cardbase.Hex;
+import de.governikus.eumw.poseidas.cardbase.card.SmartCardCodeConstants;
 import de.governikus.eumw.poseidas.cardserver.eac.InputAPDUInfoTypeUtil;
 import de.governikus.eumw.poseidas.cardserver.eac.functions.FunctionStep;
 import de.governikus.eumw.poseidas.cardserver.eac.functions.TransmitCommandCreator;
@@ -111,7 +112,8 @@ public class SelectFile extends AbstractFunctionStep<FileParameter, SelectResult
     }
     responseIndices = TransmitResultEvaluator.Util.checkArguments(transmitResult, responseIndices);
     ResponseAPDU resp = new ResponseAPDU(transmitResult.getData().getOutputAPDU().get(responseIndices[0]));
-    return new SelectResult(resp.getSW() == 0x9000 ? Boolean.TRUE : Boolean.FALSE, resp.getData());
+    return new SelectResult(resp.getSW() == SmartCardCodeConstants.SUCCESSFULLY_PROCESSED ? Boolean.TRUE
+      : Boolean.FALSE, resp.getData());
   }
 
   /** {@inheritDoc} */

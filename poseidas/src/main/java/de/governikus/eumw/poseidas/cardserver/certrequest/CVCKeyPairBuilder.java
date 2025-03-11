@@ -15,6 +15,7 @@ import java.security.InvalidAlgorithmParameterException;
 import java.security.KeyPair;
 import java.security.NoSuchAlgorithmException;
 import java.security.NoSuchProviderException;
+import java.security.cert.CertificateException;
 import java.security.spec.ECParameterSpec;
 
 import de.governikus.eumw.poseidas.cardbase.AssertUtil;
@@ -29,6 +30,7 @@ import de.governikus.eumw.poseidas.cardserver.service.ServiceRegistry;
 import de.governikus.eumw.poseidas.cardserver.service.hsm.HSMServiceFactory;
 import de.governikus.eumw.poseidas.cardserver.service.hsm.impl.HSMException;
 import de.governikus.eumw.poseidas.cardserver.service.hsm.impl.HSMService;
+import lombok.extern.slf4j.Slf4j;
 
 
 /**
@@ -37,6 +39,7 @@ import de.governikus.eumw.poseidas.cardserver.service.hsm.impl.HSMService;
  *
  * @author Arne Stahlbock, ast@bos-bremen.de
  */
+@Slf4j
 public class CVCKeyPairBuilder
 {
 
@@ -87,7 +90,7 @@ public class CVCKeyPairBuilder
    */
   static KeyPair getKeyPair(ECCVCertificate cert, String alias, KeyDisposition disposition)
     throws IOException, HSMException, NoSuchAlgorithmException, NoSuchProviderException,
-    InvalidAlgorithmParameterException
+    InvalidAlgorithmParameterException, CertificateException
   {
     AssertUtil.notNull(cert, "CVC");
     AssertUtil.notNullOrEmpty(alias, "key alias");
@@ -124,6 +127,10 @@ public class CVCKeyPairBuilder
     }
     catch (UnsupportedOperationException e)
     {
+      if (log.isDebugEnabled())
+      {
+        log.debug("Unable to retrieve public key.", e);
+      }
       // BOS simulator is unable to retrieve public key, therefore generate new
       KeyPair kp = hsm.generateKeyPair(algorithm, spec, alias, null, true, LIFESPAN);
       return new KeyPair(new OIDPublicKeyImpl(kp.getPublic(), kh, oid), kp.getPrivate());

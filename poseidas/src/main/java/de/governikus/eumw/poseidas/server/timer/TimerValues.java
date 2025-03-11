@@ -79,20 +79,14 @@ public class TimerValues
   }
 
   @Bean
-  // The value can be removed when the execution of the timer is not configurable anymore.
-  public String getTLSClientRate(@Value("${poseidas.tls.renewal.active:false}") boolean automaticTlsRenewal)
+  public String getTLSClientRate()
   {
     String timerName = "TLS client renewal check";
 
     // Set default value to every day
     String rate = String.valueOf(24 * HOUR);
 
-    // Only log rate for timer when automatic tls renewal is enabled
-    // This if-statement can be removed when the execution of the timer is not configurable anymore.
-    if (automaticTlsRenewal)
-    {
-      logRateForTimer(timerName, rate);
-    }
+    logRateForTimer(timerName, rate);
     return rate;
   }
 

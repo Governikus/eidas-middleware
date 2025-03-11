@@ -246,7 +246,7 @@ public class NPAUtil
     }
     catch (IOException e)
     {
-      throw new IOException("Could not get information about certificate file");
+      throw new IOException("Could not get information about certificate file", e);
     }
   }
 }

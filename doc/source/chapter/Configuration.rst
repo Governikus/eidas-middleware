@@ -6,7 +6,7 @@ Configuration of the eIDAS Middleware application
 Necessary keys and certificates
 -------------------------------
 
-In order to setup the middleware you will need to provide some key stores and certificates.
+In order to setup the Middleware you will need to provide some key stores and certificates.
 The following overview illustrates the required certificates and key stores.
 
 .. image:: ../images/Certs_and_Interfaces.png
@@ -23,16 +23,16 @@ The following table describes the individual key stores and certificates:
     | Server TLS         | This key store is used to setup the HTTPS port of the server.                               | application.properties > server.ssl.key-store                               |
     | Key Store          |                                                                                             |                                                                             |
     +--------------------+---------------------------------------------------------------------------------------------+-----------------------------------------------------------------------------+
-    | eIDAS Middleware   | This key store is used for the SAML communication with the eIDAS Connector.                 | Key Store:                                                                  |
-    | SAML Key Store     | Especially to sign the outgoing SAML responses.                                             | Admin-UI > eIDAS > Signature key pair                                       |
+    | eIDAS Middleware   | This key store is used for the SAML communication with the eIDAS Connector,                 | Key Store:                                                                  |
+    | SAML Key Store     | especially to sign the outgoing SAML responses.                                             | Admin-UI > eIDAS > Signature key pair                                       |
     | and Signature      |                                                                                             | Certificate:                                                                |
     | Certificate        | In addition this key store is used to sign the SAML metadata of the eIDAS Middleware.       | In eIDAS Connector                                                          |
     |                    |                                                                                             |                                                                             |
     |                    | The corresponding certificate must be available to the remote party (eIDAS Connector)       |                                                                             |
     |                    | so that the SAML metadata can be verified.                                                  |                                                                             |
     +--------------------+---------------------------------------------------------------------------------------------+-----------------------------------------------------------------------------+
-    | eIDAS Connector    | This key store is used for the SAML communication with the eIDAS-Middleware.                | Key Store:                                                                  |
-    | SAML Key Store     | Especially to sign the outgoing SAML requests.                                              | In eIDAS Connector                                                          |
+    | eIDAS Connector    | This key store is used for the SAML communication with the eIDAS Middleware,                | Key Store:                                                                  |
+    | SAML Key Store     | especially to sign the outgoing SAML requests.                                              | In eIDAS Connector                                                          |
     | and Signature      |                                                                                             | Certificate:                                                                |
     | Certificate        | In addition this key store is used to sign the SAML metadata of the eIDAS Connector.        | Admin-UI > Connector metadata > Metadata signature verification certificate |
     |                    |                                                                                             |                                                                             |
@@ -60,31 +60,32 @@ might have additional requirements for the key.
 They will also provide you with their TLS server certificate which needs to be entered into the configuration as well.
 
 Be advised that the Common Name or Subject Alternative Name of the TLS Certificate must match with the URL of the
-middleware as it is reachable from the Internet.
+Middleware as it is reachable from the internet.
 This is important as the AusweisApp will check the URL in the authorization certificate against the URL that is
 received from the eIDAS Middleware.
-E.g., if the middleware is running on ``https://your.eidas.domain.eu/eidas-middleware/`` or
+E.g., if the Middleware is running on ``https://your.eidas.domain.eu/eidas-middleware/`` or
 ``https://your.eidas.domain.eu:8443/eidas-middleware/``, the CN or SAN of the TLS certificate must include
 ``your.eidas.domain.eu``.
 
 For a test system, this TLS certificate may be self signed. However for a production system, this TLS certificate must
-meet the requirements of the `eIDAS Crypto Requirements, section 2.4 <https://ec.europa.eu/digital-building-blocks/wikis/display/DIGITAL/eIDAS+eID+Profile?preview=/467109280/467109282/eIDAS%20Cryptographic%20Requirement%20v.1.2%20Final.pdf>`_
+meet the requirements of the `eIDAS Crypto Requirements, section 2.4 <https://ec.europa.eu/digital-building-blocks/sites/download/attachments/467109280/eIDAS%20Cryptographic%20Requirement%20v.1.4.1_final.pdf?version=2&modificationDate=1729176493701&api=v2>`_
 .
 
-For a successful connection of the eIDAS Middleware with your eIDAS Connector(s), their SAML Metadata must be exchanged.
+For a successful connection of the eIDAS Middleware with your eIDAS Connector(s), their SAML metadata must be exchanged.
 The metadata of eIDAS Nodes contain the certificates that should be used for encryption and signature verification,
 the URLs for receiving SAML requests and responses and other SAML and eIDAS related data.
-While it is also possible to get the eIDAS Middleware's Metadata without a signature, you must use the certificate of
-eIDAS Middleware SAML Signature Key Store to validate the eIDAS Middleware's Metadata.
+While it is also possible to get the metadata of the eIDAS Middleware without a signature, you must use the certificate
+of eIDAS Middleware SAML Signature Key Store to validate the metadata of the eIDAS Middleware.
 Additionally, you must provide the certificate of the eIDAS Connector SAML Signature Key Store so that the Middleware can
-validate your Connector's Metadata.
+validate the metadata of your Connector.
 
 
 Setup the application.properties
 --------------------------------
 
 The ``application.properties`` file is the main configuration file for a Spring Boot application.
-It must be setup prior to the first start of the application.
+It must be setup prior to the first start of the application and placed in a ``config`` directory. The ``config``
+directory must be in the same directory as the eidas-middleware.jar file, For example ``/opt/eidas-middleware/config``.
 
 Adjust the template located in ``/opt/eidas-middleware/config``:
 (If there is no template, copy the following one)
@@ -93,12 +94,12 @@ Adjust the template located in ``/opt/eidas-middleware/config``:
 
 This configuration file contains the following sections:
 
-#.  **server settings**
+#.  **Server settings**
 
-    You need to provide two ports on which the middleware will be accessed. The first (``server.port``) is the port
+    You need to provide two ports on which the Middleware will be accessed. The first (``server.port``) is the port
     for the eID functionality, the second (``server.adminInterfacePort``) facilitates access
     to the administration interface. Both ports must be given and must not contain the same value.
-    The TLS settings are used for both ports, e.g. both ports use https or both ports use http.
+    The TLS settings are used for both ports, e.g. both ports use HTTPS or both ports use HTTP.
 
     .. note::
         The eID port must be reachable by the users' eID clients from the internet while you can
@@ -120,11 +121,11 @@ This configuration file contains the following sections:
         found in the admin interface on the detail page of your provider. Once the new TLS certificate is stored in the
         :term:`Authorization CA`, you will receive a reply and you can renew your :term:`CVC`.
 
-#.  **database connection**
+#.  **Database connection**
 
     The default settings in this connection should be sufficient for most users. However you can change the database location, user name and password.
 
-#.  **logging**
+#.  **Logging**
 
     The default location for the log files is ``/var/log/eidas-middleware/eidas-middleware.log``.
 
@@ -140,7 +141,7 @@ This configuration file contains the following sections:
     Then, the path to the configuration file must be given as ``pkcs11.config`` property
 
     You must also provide the login password for the HSM (default user, not SO) as ``pkcs11.passwd``.
-    It is assumed that this account already exists when you start the middleware, so you need to
+    It is assumed that this account already exists when you start the Middleware, so you need to
     initialize the HSM beforehand.
 
     You can optionally enter a period (in days) after which expired keys are deleted from the HSM.
@@ -163,9 +164,9 @@ This configuration file contains the following sections:
 
     This feature allows for communication with the block list server according to TR-03129 v1.4.
 
-    .. note::
-        Attention: Please note: The features TLS Client Certificate renewal and RI service interface v1.4 are not
-        available in production yet. Please consult with eidas-middleware@governikus.de before changing these properties.
+    .. attention::
+        The feature RI service interface v1.4 is not available in production yet.
+        Please consult with eidas-middleware@governikus.de before changing this property.
 
 
 
@@ -173,7 +174,7 @@ Startup
 -------
 
 Once you have the ``application.properties`` configured and the HSM up and running (the latter only applicable
-if you configured the use of an HSM), you can start the middleware application.
+if you configured the use of an HSM), you can start the Middleware application.
 (see :ref:`startup_and_shutdown`)
 
 Using the admin interface
@@ -185,10 +186,17 @@ After the application has started, the admin interface is reachable with a web b
 ``https://<YOUR_SERVERURL>:<YOUR_ADMIN_PORT>/admin-interface``.
 
 If it is the first time the application is started, you will be asked to set a password to protect access
-to the admin interface. If you ever forget this password, you can reset by deleting the file ``password.properties``.
+to the admin interface. The eIDAS Middleware will create a ``password.properties`` file in the config directory.
+In order for the eIDAS Middleware to be able to create the file, there must be a config directory within the
+working directory. The working directory is the directory from which the eIDAS Middleware .jar is started,
+for example ``/opt/eidas-middleware/config``.
+If you ever forget this password, you can reset it by deleting the file ``password.properties`` in the config
+directory.
 
 
 The admin interface offers the following configuration options:
+
+.. _Import-Export-Config-label:
 
 Import/Export configuration
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -208,7 +216,7 @@ The XML samples for the production environment is available for download here:
 `Samples Production Environment <https://github.com/Governikus/eidas-middleware/blob/master/doc/source/chapter/eIDAS_Middleware_configuration_prod.xml>`_
 
 .. attention::
-    The upload function is not designed to handle POSeIDAS.xml from older middleware versions
+    The upload function is not designed to handle POSeIDAS.xml from older Middleware versions
     due to changed data structures. It can deal with exports from version 3.0.0+ only.
 
 
@@ -251,10 +259,10 @@ string.
 eIDAS
 ^^^^^
 
-In this area, the settings for the middleware as an eIDAS node are made.
+In this area, the settings for the Middleware as an eIDAS node are made.
 You can fill in the information that will be published in the metadata and select the service provider that
 will be used for requests from the public sector.
-Especially important are the server URL, which must have the value as the middleware is reachable from
+Especially important are the server URL, which must have the value as the Middleware is reachable from
 the internet, and the SAML key pair. In case you use a PKCS#11 HSM, the key for SAML signatures must be
 available in the HSM using label and ID ``samlsigning`` . As the ID is a hexadecimal value, use the hex-value of the
 ASCII string.
@@ -263,7 +271,7 @@ ASCII string.
 eID means
 ^^^^^^^^^
 
-This section allows to change the eID means accepted by the middleware. Please do not change this unless asked to do so.
+This section allows to change the eID means accepted by the Middleware. Please do not change this unless asked to do so.
 
 
 Timer
@@ -301,5 +309,5 @@ be updated and it is fine to keep this certificate in the configuration, even if
 Connector metadata
 ^^^^^^^^^^^^^^^^^^
 
-In this area, you can configure the metadata files of eIDAS nodes which will connect to the middleware, as well as the
+In this area, you can configure the metadata files of eIDAS nodes which will connect to the Middleware, as well as the
 certificate to check the metadata signatures.

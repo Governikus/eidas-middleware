@@ -358,19 +358,22 @@ public class ASN1Path
       }
       catch (SecurityException e)
       {
-        throw new IllegalArgumentException("Class of encoder not permitted, expected empty constructor does not exist or not accessible");
+        throw new IllegalArgumentException("Class of encoder not permitted, expected empty constructor does not exist or not accessible",
+                                           e);
       }
       catch (NoSuchMethodException e)
       {
-        throw new IllegalArgumentException("Class of encoder not permitted, expected empty constructor does not exist");
+        throw new IllegalArgumentException("Class of encoder not permitted, expected empty constructor does not exist",
+                                           e);
       }
       catch (InstantiationException e)
       {
-        throw new IllegalArgumentException("instance of encoder Class can not be instantiated");
+        throw new IllegalArgumentException("instance of encoder Class can not be instantiated", e);
       }
       catch (IllegalAccessException e)
       {
-        throw new IllegalArgumentException("Class of encoder not permitted, expected empty constructor does not accessible");
+        throw new IllegalArgumentException("Class of encoder not permitted, expected empty constructor does not accessible",
+                                           e);
       }
       catch (Exception e)
       {

@@ -6,6 +6,7 @@ import java.security.KeyPairGenerator;
 import java.security.KeyStore;
 import java.security.KeyStoreException;
 import java.security.NoSuchAlgorithmException;
+import java.security.PublicKey;
 import java.security.cert.Certificate;
 import java.security.cert.CertificateException;
 import java.security.cert.X509Certificate;
@@ -52,6 +53,8 @@ import lombok.extern.slf4j.Slf4j;
 public class TlsClientRenewalDbService extends TlsClientRenewalService
 {
 
+
+
   public TlsClientRenewalDbService(ConfigurationService configurationService,
                                    RequestSignerCertificateService requestSignerCertificateService,
                                    PendingCsrRepository pendingCsrRepository,
@@ -65,10 +68,7 @@ public class TlsClientRenewalDbService extends TlsClientRenewalService
   @Override
   Optional<String> storeCertificate(EidasMiddlewareConfig config, ServiceProviderType sp, List<byte[]> certificates)
   {
-    // determine key pair to use
-    String keyPairName = sp.getPendingClientKeyPairName() == null ? sp.getClientKeyPairName()
-      : sp.getPendingClientKeyPairName();
-
+    String keyPairName = sp.getPendingClientKeyPairName();
     KeyPair keyPair;
     try
     {
@@ -148,41 +148,31 @@ public class TlsClientRenewalDbService extends TlsClientRenewalService
     }
 
     KeyPair kpToUse;
-    // if pending present, use it
-    if (sp.getPendingClientKeyPairName() != null)
+    try
     {
-      try
-      {
-        kpToUse = configurationService.getKeyPair(sp.getPendingClientKeyPairName());
-      }
-      catch (ConfigurationException e)
-      {
-        log.warn("Cannot find pending TLS key pair for SP {} although there seems to be one", sp.getName());
-        failed.add(sp.getName() + ": Cannot find pending TLS key pair although there seems to be one");
-        return;
-      }
-    }
-    // else current
-    else
-    {
-      kpToUse = kp;
-    }
-
-    // if not usable, generate new pending
-    if (!canUseKey(kpToUse.getCertificate().getPublicKey()))
-    {
-      log.info("TLS client key can not be used, generating a new pending key");
-      try
+      // if no pending present, generate new key
+      if (sp.getPendingClientKeyPairName() == null)
       {
         kpToUse = generateAndStoreKeyPair(sp.getName());
       }
-      catch (Exception e)
+      // else check if pending key can be used, otherwise generate a new key
+      else
       {
-        String message = String.format("Unable to generate new key pair for SP %s", sp.getName());
-        log.warn(message, e);
-        failed.add(sp.getName() + ": " + message);
-        return;
+        kpToUse = checkPendingKey(sp);
       }
+    }
+    catch (ConfigurationException e)
+    {
+      log.warn("Cannot find pending TLS key pair for SP {} although there seems to be one", sp.getName(), e);
+      failed.add(sp.getName() + ": Cannot find pending TLS key pair although there seems to be one");
+      return;
+    }
+    catch (Exception e)
+    {
+      String message = String.format("Unable to generate new key pair for SP %s", sp.getName());
+      log.warn(message, e);
+      failed.add(sp.getName() + ": " + message);
+      return;
     }
 
     generateAndSendCsrUnchecked(sp.getName(), kpToUse);
@@ -212,7 +202,7 @@ public class TlsClientRenewalDbService extends TlsClientRenewalService
     }
   }
 
-  private KeyPair generateAndStoreKeyPair(String spName)
+  KeyPair generateAndStoreKeyPair(String spName)
     throws IOException, NoSuchAlgorithmException, KeyStoreException, CertificateException
   {
     EidasMiddlewareConfig eidasMiddlewareConfig = configurationService.getConfiguration().orElseThrow();
@@ -223,13 +213,18 @@ public class TlsClientRenewalDbService extends TlsClientRenewalService
                                              .findFirst()
                                              .orElseThrow();
 
-    KeyPairGenerator kpg = KeyPairGenerator.getInstance("EC", SecurityProvider.BOUNCY_CASTLE_PROVIDER);
-    kpg.initialize(384);
+    KeyPairGenerator kpg = KeyPairGenerator.getInstance(KEY_ALGO, SecurityProvider.BOUNCY_CASTLE_PROVIDER);
+    kpg.initialize(DEFAULT_KEY_SIZE_RSA);
     java.security.KeyPair kp = kpg.generateKeyPair();
-    Certificate tempCert = CertificateUtil.createSelfSignedCert(kp,
-                                                                "CN=DUMMY",
-                                                                100,
-                                                                SecurityProvider.BOUNCY_CASTLE_PROVIDER);
+    Certificate tempCert;
+    try
+    {
+      tempCert = CertificateUtil.createSelfSignedCert(kp, "CN=DUMMY", 100, SecurityProvider.BOUNCY_CASTLE_PROVIDER);
+    }
+    catch (OperatorCreationException e)
+    {
+      throw new CertificateException("Failed to create certificate.", e);
+    }
     String alias = UUID.randomUUID().toString();
     String password = UUID.randomUUID().toString();
     KeyStore keyStore = KeyStoreSupporter.toKeyStore(kp.getPrivate(),
@@ -286,6 +281,14 @@ public class TlsClientRenewalDbService extends TlsClientRenewalService
       }
 
       ServiceProviderType sp = spOpt.get();
+
+      if (keyName.equals(sp.getClientKeyPairName()))
+      {
+        String message = "TLS client renewal not possible, with the client key which is already in use.";
+        log.warn(message);
+        return Optional.of(message);
+      }
+
       if (sp.getPendingClientKeyPairName() != null && pendingCsrRepository.existsById(spName))
       {
         String message = "TLS client renewal not possible, there is already a pending key";
@@ -296,9 +299,19 @@ public class TlsClientRenewalDbService extends TlsClientRenewalService
       try
       {
         KeyPair kp = configurationService.getKeyPair(keyName);
-        if (!canUseKey(kp.getCertificate().getPublicKey()))
+        if (!canUseKeyAlg(kp.getCertificate().getPublicKey()))
         {
-          String message = "TLS client renewal not possible, key strength not sufficient";
+          String message = "TLS client renewal not possible, key algorithm for key '%s' not supported. Currently only %s keys with at least %d bits supported.".formatted(keyName,
+                                                                                                                                                                          KEY_ALGO,
+                                                                                                                                                                          MINIMAL_KEY_SIZE_RSA);
+          log.warn(message);
+          return Optional.of(message);
+        }
+        if (!canUseKeySize(kp.getCertificate().getPublicKey()))
+        {
+          String message = "TLS client renewal not possible, key strength for key '%s' not sufficient. Currently only %s keys with at least %d bits supported".formatted(keyName,
+                                                                                                                                                                         KEY_ALGO,
+                                                                                                                                                                         MINIMAL_KEY_SIZE_RSA);
           log.warn(message);
           return Optional.of(message);
         }
@@ -394,7 +407,26 @@ public class TlsClientRenewalDbService extends TlsClientRenewalService
     }
     catch (ConfigurationException e)
     {
+      if (log.isDebugEnabled())
+      {
+        log.debug("Unable to get tsl cert validation date for serviceprovider {} ", spName, e);
+      }
       return Optional.empty();
     }
+  }
+
+  private KeyPair checkPendingKey(ServiceProviderType sp)
+    throws IOException, NoSuchAlgorithmException, KeyStoreException, CertificateException
+  {
+    KeyPair kpToUse = configurationService.getKeyPair(sp.getPendingClientKeyPairName());
+    PublicKey pk = kpToUse.getCertificate().getPublicKey();
+    if (canUseKeyAlg(pk) && canUseKeySize(pk))
+    {
+      return kpToUse;
+    }
+
+    // if not usable, generate new pending
+    log.info("TLS client key can not be used, generating a new pending key");
+    return generateAndStoreKeyPair(sp.getName());
   }
 }

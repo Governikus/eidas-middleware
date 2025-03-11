@@ -10,6 +10,7 @@ import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.http.HttpStatus;
+import org.springframework.mock.web.MockHttpSession;
 import org.springframework.ui.ModelMap;
 import org.springframework.web.servlet.ModelAndView;
 
@@ -63,13 +64,13 @@ class RequestReceiverTest
     prepareMocks();
     Mockito.when(requestHandler.getTcTokenURL(REQUEST_ID)).thenReturn(TC_TOKEN_URL + REQUEST_ID);
     RequestReceiver requestReceiver = new RequestReceiver(requestHandler, responseHandler, configurationService);
-    ModelAndView landingPage = requestReceiver.doGet(RELAY_STATE, SAML_REQUEST_BASE_64_MOCK, null, null, null, null);
+    ModelAndView landingPage = requestReceiver.doGet(RELAY_STATE, SAML_REQUEST_BASE_64_MOCK, null, null, null, null, new MockHttpSession());
 
     Assertions.assertEquals("middleware", landingPage.getViewName());
     ModelMap modelMap = landingPage.getModelMap();
     Assertions.assertEquals(3, modelMap.size());
     Assertions.assertEquals(EID_CLIENT_URL
-                            + URLEncoder.encode(TC_TOKEN_URL + REQUEST_ID, StandardCharsets.UTF_8.name()),
+                            + URLEncoder.encode(TC_TOKEN_URL + REQUEST_ID, StandardCharsets.UTF_8),
                             modelMap.getAttribute("ausweisapp"));
     Assertions.assertEquals(ContextPaths.EIDAS_CONTEXT_PATH + ContextPaths.REQUEST_RECEIVER + "?sessionId="
                             + REQUEST_ID,
@@ -81,14 +82,14 @@ class RequestReceiverTest
   {
     Mockito.when(requestHandler.getTcTokenURL(REQUEST_ID)).thenReturn(TC_TOKEN_URL + REQUEST_ID);
     RequestReceiver requestReceiver = new RequestReceiver(requestHandler, responseHandler, configurationService);
-    ModelAndView landingPage = requestReceiver.doGet(null, null, null, null, REQUEST_ID, null);
+    ModelAndView landingPage = requestReceiver.doGet(null, null, null, null, REQUEST_ID, null, null);
 
     Mockito.verify(requestHandler, Mockito.never()).handleSAMLPostRequest(Mockito.anyString(), Mockito.anyString());
     Assertions.assertEquals("middleware", landingPage.getViewName());
     ModelMap modelMap = landingPage.getModelMap();
     Assertions.assertEquals(3, modelMap.size());
     Assertions.assertEquals(EID_CLIENT_URL
-                            + URLEncoder.encode(TC_TOKEN_URL + REQUEST_ID, StandardCharsets.UTF_8.name()),
+                            + URLEncoder.encode(TC_TOKEN_URL + REQUEST_ID, StandardCharsets.UTF_8),
                             modelMap.getAttribute("ausweisapp"));
     Assertions.assertEquals(ContextPaths.EIDAS_CONTEXT_PATH + ContextPaths.REQUEST_RECEIVER + "?sessionId="
                             + REQUEST_ID,
@@ -105,7 +106,7 @@ class RequestReceiverTest
     Mockito.when(responseHandler.prepareDummyResponse(REQUEST_ID, null)).thenReturn(SAML_RESPONSE);
     Mockito.when(responseHandler.getConsumerURLForRequestID(REQUEST_ID)).thenReturn(CONSUMER_URL);
     RequestReceiver requestReceiver = new RequestReceiver(requestHandler, responseHandler, configurationService);
-    ModelAndView responsePage = requestReceiver.doGet(RELAY_STATE, SAML_REQUEST_BASE_64_MOCK, null, null, null, null);
+    ModelAndView responsePage = requestReceiver.doGet(RELAY_STATE, SAML_REQUEST_BASE_64_MOCK, null, null, null, null, new MockHttpSession());
 
     Assertions.assertEquals("response", responsePage.getViewName());
     ModelMap modelMap = responsePage.getModelMap();
@@ -113,16 +114,16 @@ class RequestReceiverTest
     Assertions.assertEquals(SAML_RESPONSE, modelMap.getAttribute("SAML"));
     Assertions.assertEquals(CONSUMER_URL, modelMap.getAttribute("consumerURL"));
     Assertions.assertEquals(RELAY_STATE, modelMap.getAttribute("relayState"));
+    Assertions.assertEquals(REQUEST_ID, modelMap.getAttribute("authnRequestId"));
     Assertions.assertEquals(ContextPaths.EIDAS_CONTEXT_PATH + ContextPaths.RESPONSE_SENDER,
                             modelMap.getAttribute("linkToSelf"));
-    Assertions.assertNotNull(modelMap.getAttribute("responseModel"));
   }
 
   @Test
   void testDoGetShouldReturnErrorPageWhenSamlRequestAndSessionIdNotPresent() throws Exception
   {
     RequestReceiver requestReceiver = new RequestReceiver(requestHandler, responseHandler, configurationService);
-    ModelAndView errorPage = requestReceiver.doGet(null, null, null, null, null, null);
+    ModelAndView errorPage = requestReceiver.doGet(null, null, null, null, null, null, null);
     Mockito.verify(requestHandler, Mockito.never()).handleSAMLPostRequest(Mockito.anyString(), Mockito.anyString());
     Assertions.assertEquals("error", errorPage.getViewName());
     Assertions.assertEquals("Either parameter SAMLRequest or sessionId must be present",
@@ -153,7 +154,8 @@ class RequestReceiverTest
                                                                null,
                                                                null,
                                                                null,
-                                                               null);
+                                                               null,
+                                                               new MockHttpSession());
 
     Assertions.assertEquals("response", errorPageWithResponse.getViewName());
     ModelMap modelMap = errorPageWithResponse.getModelMap();
@@ -161,9 +163,9 @@ class RequestReceiverTest
     Assertions.assertEquals(SAML_RESPONSE, modelMap.getAttribute("SAML"));
     Assertions.assertEquals(CONSUMER_URL, modelMap.getAttribute("consumerURL"));
     Assertions.assertEquals(RELAY_STATE, modelMap.getAttribute("relayState"));
+    Assertions.assertEquals(REQUEST_ID, modelMap.getAttribute("authnRequestId"));
     Assertions.assertEquals(ContextPaths.EIDAS_CONTEXT_PATH + ContextPaths.RESPONSE_SENDER,
                             modelMap.getAttribute("linkToSelf"));
-    Assertions.assertNotNull(modelMap.getAttribute("responseModel"));
   }
 
   @Test
@@ -176,7 +178,13 @@ class RequestReceiverTest
                                                           Mockito.isNull()))
            .thenThrow(new RequestProcessingException(errorMessage));
     RequestReceiver requestReceiver = new RequestReceiver(requestHandler, responseHandler, configurationService);
-    ModelAndView errorPage = requestReceiver.doGet(RELAY_STATE, SAML_REQUEST_BASE_64_MOCK, null, null, null, null);
+    ModelAndView errorPage = requestReceiver.doGet(RELAY_STATE,
+                                                   SAML_REQUEST_BASE_64_MOCK,
+                                                   null,
+                                                   null,
+                                                   null,
+                                                   null,
+                                                   null);
 
     Assertions.assertEquals("error", errorPage.getViewName());
     ModelMap modelMap = errorPage.getModelMap();
@@ -191,13 +199,16 @@ class RequestReceiverTest
     prepareMocks();
     Mockito.when(requestHandler.getTcTokenURL(REQUEST_ID)).thenReturn(TC_TOKEN_URL + REQUEST_ID);
     RequestReceiver requestReceiver = new RequestReceiver(requestHandler, responseHandler, configurationService);
-    ModelAndView landingPage = requestReceiver.doPost(RELAY_STATE, SAML_REQUEST_BASE_64_MOCK, "iPhone");
+    ModelAndView landingPage = requestReceiver.doPost(RELAY_STATE,
+                                                      SAML_REQUEST_BASE_64_MOCK,
+                                                      "iPhone",
+                                                      new MockHttpSession());
 
     Assertions.assertEquals("middleware", landingPage.getViewName());
     ModelMap modelMap = landingPage.getModelMap();
     Assertions.assertEquals(3, modelMap.size());
     Assertions.assertEquals(EID_CLIENT_MOBIL_URL
-                            + URLEncoder.encode(TC_TOKEN_URL + REQUEST_ID, StandardCharsets.UTF_8.name()),
+                            + URLEncoder.encode(TC_TOKEN_URL + REQUEST_ID, StandardCharsets.UTF_8),
                             modelMap.getAttribute("ausweisapp"));
     Assertions.assertEquals(ContextPaths.EIDAS_CONTEXT_PATH + ContextPaths.REQUEST_RECEIVER + "?sessionId="
                             + REQUEST_ID,
@@ -220,7 +231,10 @@ class RequestReceiverTest
                                                           "error Message"))
            .thenReturn(SAML_RESPONSE);
     RequestReceiver requestReceiver = new RequestReceiver(requestHandler, responseHandler, configurationService);
-    ModelAndView errorPageWithResponse = requestReceiver.doPost(RELAY_STATE, SAML_REQUEST_BASE_64_MOCK, null);
+    ModelAndView errorPageWithResponse = requestReceiver.doPost(RELAY_STATE,
+                                                                SAML_REQUEST_BASE_64_MOCK,
+                                                                null,
+                                                                new MockHttpSession());
 
     Assertions.assertEquals("response", errorPageWithResponse.getViewName());
     ModelMap modelMap = errorPageWithResponse.getModelMap();
@@ -228,9 +242,9 @@ class RequestReceiverTest
     Assertions.assertEquals(SAML_RESPONSE, modelMap.getAttribute("SAML"));
     Assertions.assertEquals(CONSUMER_URL, modelMap.getAttribute("consumerURL"));
     Assertions.assertEquals(RELAY_STATE, modelMap.getAttribute("relayState"));
+    Assertions.assertEquals(REQUEST_ID, modelMap.getAttribute("authnRequestId"));
     Assertions.assertEquals(ContextPaths.EIDAS_CONTEXT_PATH + ContextPaths.RESPONSE_SENDER,
                             modelMap.getAttribute("linkToSelf"));
-    Assertions.assertNotNull(modelMap.getAttribute("responseModel"));
   }
 
   @Test
@@ -240,7 +254,10 @@ class RequestReceiverTest
     Mockito.when(requestHandler.handleSAMLPostRequest(Mockito.anyString(), Mockito.anyString()))
            .thenThrow(new RequestProcessingException(errorMessage));
     RequestReceiver requestReceiver = new RequestReceiver(requestHandler, responseHandler, configurationService);
-    ModelAndView errorPage = requestReceiver.doPost(RELAY_STATE, SAML_REQUEST_BASE_64_MOCK, null);
+    ModelAndView errorPage = requestReceiver.doPost(RELAY_STATE,
+                                                    SAML_REQUEST_BASE_64_MOCK,
+                                                    null,
+                                                    new MockHttpSession());
 
     Assertions.assertEquals("error", errorPage.getViewName());
     ModelMap modelMap = errorPage.getModelMap();

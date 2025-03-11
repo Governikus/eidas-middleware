@@ -171,10 +171,13 @@ public class PortCreator
 
     SSLHostConfig sslHostConfig = new SSLHostConfig();
 
+    sslHostConfig.setProtocols(serverSslProtocols);
     sslHostConfig.setEnabledProtocols(serverSslProtocols.split(","));
-    // sslHostConfig.setCiphers(serverSslCiphers);
+    sslHostConfig.setCiphers(serverSslCiphers);
     sslHostConfig.setEnabledCiphers(serverSslCiphers.split(","));
     sslHostConfig.setHonorCipherOrder(true);
+    sslHostConfig.setTls13RenegotiationAvailable(false);
+
 
     SSLHostConfigCertificate sslHostConfigCertificate = new SSLHostConfigCertificate(sslHostConfig,
                                                                                      SSLHostConfigCertificate.Type.UNDEFINED);
@@ -188,7 +191,6 @@ public class PortCreator
 
     protocol.addSslHostConfig(sslHostConfig);
     protocol.setMaxHttpHeaderSize(maxHeaderSize);
-
   }
 
   /**

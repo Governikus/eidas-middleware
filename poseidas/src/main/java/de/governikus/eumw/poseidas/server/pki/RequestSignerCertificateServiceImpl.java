@@ -28,6 +28,7 @@ import org.bouncycastle.cms.SignerInfoGenerator;
 import org.bouncycastle.cms.jcajce.JcaSignerInfoGeneratorBuilder;
 import org.bouncycastle.operator.ContentSigner;
 import org.bouncycastle.operator.DigestCalculatorProvider;
+import org.bouncycastle.operator.OperatorCreationException;
 import org.bouncycastle.operator.jcajce.JcaContentSignerBuilder;
 import org.bouncycastle.operator.jcajce.JcaDigestCalculatorProviderBuilder;
 import org.springframework.stereotype.Service;
@@ -210,6 +211,10 @@ public class RequestSignerCertificateServiceImpl implements RequestSignerCertifi
         }
         catch (TerminalPermissionNotFoundException e)
         {
+          if (log.isDebugEnabled())
+          {
+            log.debug("Failed to set rsc holder", e);
+          }
           // Nothing to do here because we checked for a Terminal Permission and created one if necessary.
         }
       }
@@ -226,6 +231,10 @@ public class RequestSignerCertificateServiceImpl implements RequestSignerCertifi
         }
         catch (TerminalPermissionNotFoundException e)
         {
+          if (log.isDebugEnabled())
+          {
+            log.debug("Failed to set rsc holder", e);
+          }
           // Nothing to do here because we checked for a Terminal Permission and created one if necessary.
         }
       }
@@ -245,12 +254,20 @@ public class RequestSignerCertificateServiceImpl implements RequestSignerCertifi
     {
       PrivateKey signer = keyPair.getPrivate();
       String fullAlias = "CN=" + alias + OU_REQUEST_SIGNER_CERTIFICATE;
-      X509Certificate certificate = (X509Certificate)CertificateUtil.createSignedCert(keyPair.getPublic(),
-                                                                                      signer,
-                                                                                      fullAlias,
-                                                                                      fullAlias,
-                                                                                      lifespan,
-                                                                                      SecurityProvider.BOUNCY_CASTLE_PROVIDER);
+      X509Certificate certificate;
+      try
+      {
+        certificate = (X509Certificate)CertificateUtil.createSignedCert(keyPair.getPublic(),
+                                                                        signer,
+                                                                        fullAlias,
+                                                                        fullAlias,
+                                                                        lifespan,
+                                                                        SecurityProvider.BOUNCY_CASTLE_PROVIDER);
+      }
+      catch (CertificateException | OperatorCreationException e)
+      {
+        throw new CertificateException("Failed to create certificate.", e);
+      }
       if (certificate == null)
       {
         log.error("Certificate is null.");
@@ -277,6 +294,10 @@ public class RequestSignerCertificateServiceImpl implements RequestSignerCertifi
     }
     catch (TerminalPermissionNotFoundException e)
     {
+      if (log.isDebugEnabled())
+      {
+        log.debug("Failed to set pending rsc holder", e);
+      }
       // Nothing to do here because we checked for a Terminal Permission and created one if necessary.
     }
   }

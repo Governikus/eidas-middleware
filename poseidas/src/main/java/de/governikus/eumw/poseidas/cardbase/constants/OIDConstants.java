@@ -710,4 +710,11 @@ public final class OIDConstants
    * @see #OID_PASSWORD_TYPE
    */
   public static final OID OID_PASSWORD_TYPE_PUK = new OID(OID_PASSWORD_TYPE.getOIDString() + ".4");
+
+  /**
+   * OID of Blocklist: <code>0.4.0.127.0.7.3.2.2</code>
+   * 
+   * @see #OID_BSI
+   */
+  public static final OID OID_BLOCKLIST = new OID(OID_BSI.getOIDString() + ".3.2.2");
 }

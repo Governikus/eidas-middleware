@@ -9,15 +9,22 @@
 
 package de.governikus.eumw.poseidas.server.idprovider.config;
 
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertThrows;
 import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
+import java.io.FileInputStream;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.security.cert.CertificateFactory;
+import java.security.cert.X509Certificate;
 import java.util.Optional;
 
+import org.bouncycastle.jce.provider.BouncyCastleProvider;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -35,8 +42,10 @@ import de.governikus.eumw.poseidas.cardbase.asn1.npa.CertificateDescription;
 import de.governikus.eumw.poseidas.eidmodel.TerminalData;
 import de.governikus.eumw.poseidas.server.idprovider.config.CvcTlsCheck.CvcCheckResults;
 import de.governikus.eumw.poseidas.server.idprovider.config.CvcTlsCheck.CvcTlsCheckResult;
+import de.governikus.eumw.poseidas.server.pki.HSMServiceHolder;
 import de.governikus.eumw.poseidas.server.pki.TerminalPermissionAO;
 import de.governikus.eumw.poseidas.server.pki.entities.TerminalPermission;
+import de.governikus.eumw.utils.key.exceptions.UnsupportedECCertificateException;
 import lombok.extern.slf4j.Slf4j;
 
 
@@ -46,6 +55,8 @@ class CvcTlsCheckTest
 {
 
   private static final String CERTIFICATE_VALID = "certificate valid";
+
+  private static final HSMServiceHolder HSM_SERVICE_DUMMY = new HSMServiceHolder(null, null, null);
 
   public static final String DVCA_CONFIGURATION_NAME = "dvcaConfig";
 
@@ -58,9 +69,8 @@ class CvcTlsCheckTest
   {
     TerminalPermissionAO terminalPermission = mock(TerminalPermissionAO.class);
     configurationService = mock(ConfigurationService.class);
-    Mockito.when(configurationService.getConfiguration())
-           .thenReturn(Optional.of(ConfigurationTestHelper.createValidConfiguration()));
-    CvcTlsCheck check = new CvcTlsCheck(terminalPermission, this.configurationService);
+    when(configurationService.getConfiguration()).thenReturn(Optional.of(ConfigurationTestHelper.createValidConfiguration()));
+    CvcTlsCheck check = new CvcTlsCheck(terminalPermission, this.configurationService, HSM_SERVICE_DUMMY);
     CvcTlsCheckResult result = check.check().get();
     assertFalse(CERTIFICATE_VALID, result.isServerTlsValid());
   }
@@ -117,7 +127,7 @@ class CvcTlsCheckTest
     when(terminalPermission.getTerminalPermission("provider_e")).thenReturn(null);
 
     // no server running
-    CvcTlsCheck check = new CvcTlsCheck(terminalPermission, configurationService);
+    CvcTlsCheck check = new CvcTlsCheck(terminalPermission, configurationService, HSM_SERVICE_DUMMY);
     CvcTlsCheckResult result = check.check().get();
     assertFalse(CERTIFICATE_VALID, result.isServerTlsValid());
 
@@ -190,7 +200,7 @@ class CvcTlsCheckTest
                  .getServiceProvider()
                  .add(new ServiceProviderType("providerB", true, "provider_b", DVCA_CONFIGURATION_NAME, CLIENT_KEY_NAME,
                                               null));
-    Mockito.when(configurationService.getConfiguration()).thenReturn(Optional.of(configuration));
+    when(configurationService.getConfiguration()).thenReturn(Optional.of(configuration));
     when(terminalPermission.getTerminalPermission("provider_b")).thenReturn(tpB);
     when(tpB.getFullCvc()).thenReturn(new TerminalData(Hex.parse("7f218201487f4e8201005f290100420e44454553544456314130303030317f494f060a04007f0007020202020386410457dcc1d8e2564196999e929499445cd41d4b98fd4c9cad27c3c8415cf12cddff9a6511410ce0844ad857d227408b509fec6687ab93bdcfc8d6e917baf6eda8d25f201044454553545445524d314130303030317f4c12060904007f00070301020253053c0ff3ffff5f25060106010000045f2406060000060103655e732d060904007f00070301030180203f8185d7c732cdcc2326a005a3d9188de01629cf0da3eacb380feaf54176c5b2732d060904007f0007030103028020144969238b6ae406c90f22f1092bb83cc834020128d70b70fca6ca43bdc1d50f5f37403a9f4294b21c6ed37732853da4a538b1b55f68caf70b9b5f74b144869c1818b42f48d281af0963b5e49faa18c9935bf775d0b3e214fd71615d037efcd6af6522"),
                                                        Hex.parse("3081a4060a04007f00070301030101a1090c07736563756e6574a3140c126549442d5365727665722054657374626564a418131668747470733A2F2F6C6F63616C686F73743A38343530a5130c114356205465726d73206f66205573616765a746314404205c6fcac6857d69b469b8e8e523b656338bdda1ac43dea739e0510c862901d06d0420f4bcf457aad98b6e53824d0f8afffe588472bb2f472115aee278717fa619a845")));
@@ -199,7 +209,7 @@ class CvcTlsCheckTest
     ConfigurationProperties.certificateAuthorityCertificate(resourceDirectory + "/localhost_notyetvalid.pem");
     ConfigurationProperties.certificateAuthorityPrivateKey(resourceDirectory + "/localhost_notyetvalid.pkcs8");
     ClientAndServer clientAndServer = ClientAndServer.startClientAndServer(8450);
-    CvcTlsCheck check = new CvcTlsCheck(terminalPermission, configurationService);
+    CvcTlsCheck check = new CvcTlsCheck(terminalPermission, configurationService, HSM_SERVICE_DUMMY);
     CvcCheckResults results = check.checkCvcProvider("providerB");
     clientAndServer.stop();
     assertTrue("CVC not present", results.isCvcPresent());
@@ -209,16 +219,98 @@ class CvcTlsCheckTest
   }
 
   @ParameterizedTest
-  @ValueSource(strings = {"https://example.com/eumw", "https://example.com/eumw/", "https://example.com:/eumw/",
-                          "https://example.com:443/eumw"})
-
+  // see https://datatracker.ietf.org/doc/html/rfc3986#section-6.2.3 and
+  // https://datatracker.ietf.org/doc/html/rfc3986#section-3.2.3
+  @ValueSource(strings = {"https://example.com/eumw", "https://example.com/eumw/", "https://example.com:443/eumw"})
   void testStartsWith(String subjcetUrl)
   {
     TerminalData terminalData = mock(TerminalData.class);
     CertificateDescription certificateDescription = mock(CertificateDescription.class);
-    Mockito.when(terminalData.getCVCDescription()).thenReturn(certificateDescription);
-    Mockito.when(certificateDescription.getSubjectUrl()).thenReturn(subjcetUrl);
+    when(terminalData.getCVCDescription()).thenReturn(certificateDescription);
+    when(certificateDescription.getSubjectUrl()).thenReturn(subjcetUrl);
 
     Assertions.assertTrue(CvcTlsCheck.testCvcUrlMatch(terminalData, "https://example.com/eumw"));
+  }
+
+  @Test
+  void testUnsupportedECCertificate() throws Exception
+  {
+    Path resourceDirectory = Paths.get("src", "test", "resources");
+
+    TerminalPermissionAO terminalPermission = mock(TerminalPermissionAO.class);
+    configurationService = mock(ConfigurationService.class);
+    EidasMiddlewareConfig configuration = ConfigurationTestHelper.createValidConfiguration();
+    configuration.setServerUrl("https://localhost:8450");
+
+
+    when(configurationService.getConfiguration()).thenReturn(Optional.of(configuration));
+
+
+    CvcTlsCheck check = new CvcTlsCheck(terminalPermission, configurationService, HSM_SERVICE_DUMMY);
+
+    CvcTlsCheck spyCheck = Mockito.spy(check);
+    CertificateFactory fact = CertificateFactory.getInstance("X.509", new BouncyCastleProvider());
+    FileInputStream is = new FileInputStream(resourceDirectory + "/localhost_notSupportedEC.pem");
+    X509Certificate cer = (X509Certificate)fact.generateCertificate(is);
+    is.close();
+    Mockito.doReturn(Optional.of(cer)).when(spyCheck).getOwnTlsCertificate("https://localhost:8450");
+    UnsupportedECCertificateException unsupportedECCertificateException = assertThrows(UnsupportedECCertificateException.class,
+                                                                                       () -> spyCheck.check());
+    assertEquals("The used EC certificate for TLS is not supported. The eIDAS Middleware will be shutdown.",
+                 unsupportedECCertificateException.getMessage());
+  }
+
+  @Test
+  void testPrime256v1Certificate() throws Exception
+  {
+    Path resourceDirectory = Paths.get("src", "test", "resources");
+
+    TerminalPermissionAO terminalPermission = mock(TerminalPermissionAO.class);
+    configurationService = mock(ConfigurationService.class);
+    EidasMiddlewareConfig configuration = ConfigurationTestHelper.createValidConfiguration();
+    configuration.setServerUrl("https://localhost:8450");
+
+
+    when(configurationService.getConfiguration()).thenReturn(Optional.of(configuration));
+
+
+    CvcTlsCheck check = new CvcTlsCheck(terminalPermission, configurationService, HSM_SERVICE_DUMMY);
+
+    CvcTlsCheck spyCheck = Mockito.spy(check);
+    CertificateFactory fact = CertificateFactory.getInstance("X.509", new BouncyCastleProvider());
+    FileInputStream is = new FileInputStream(resourceDirectory + "/localhost_prime256v1.pem");
+    X509Certificate cer = (X509Certificate)fact.generateCertificate(is);
+    is.close();
+    Mockito.doReturn(Optional.of(cer)).when(spyCheck).getOwnTlsCertificate("https://localhost:8450");
+    assertDoesNotThrow(() -> spyCheck.check());
+  }
+
+  @Test
+  void testTlsCertificateWith2048Bits() throws Exception
+  {
+    Path resourceDirectory = Paths.get("src", "test", "resources");
+
+    TerminalPermissionAO terminalPermission = mock(TerminalPermissionAO.class);
+    configurationService = mock(ConfigurationService.class);
+    EidasMiddlewareConfig configuration = ConfigurationTestHelper.createValidConfiguration();
+    configuration.setServerUrl("https://localhost:8450");
+
+    when(configurationService.getConfiguration()).thenReturn(Optional.of(configuration));
+
+    CvcTlsCheck check = new CvcTlsCheck(terminalPermission, configurationService, HSM_SERVICE_DUMMY);
+
+    CvcTlsCheck spyCheck = Mockito.spy(check);
+    CertificateFactory fact = CertificateFactory.getInstance("X.509", new BouncyCastleProvider());
+    FileInputStream is = new FileInputStream(resourceDirectory + "/localhost_2048.pem");
+    X509Certificate cer = (X509Certificate)fact.generateCertificate(is);
+    is.close();
+    Mockito.doReturn(Optional.of(cer)).when(spyCheck).getOwnTlsCertificate("https://localhost:8450");
+
+    Optional<CvcTlsCheckResult> cvcTlsCheckResult = spyCheck.check();
+    Assertions.assertTrue(cvcTlsCheckResult.isPresent());
+    Assertions.assertFalse(cvcTlsCheckResult.get().getTlsRSACertsWithLengthLowerThan3000().isEmpty());
+    Assertions.assertTrue(cvcTlsCheckResult.get()
+                                           .getTlsRSACertsWithLengthLowerThan3000()
+                                           .contains("TLS server certificate"));
   }
 }

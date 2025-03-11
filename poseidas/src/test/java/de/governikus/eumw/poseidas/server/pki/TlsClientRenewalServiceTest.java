@@ -1,5 +1,6 @@
 package de.governikus.eumw.poseidas.server.pki;
 
+import java.io.IOException;
 import java.util.Optional;
 
 import org.bouncycastle.asn1.x500.X500Name;
@@ -8,11 +9,29 @@ import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 
 import de.governikus.eumw.config.EidasMiddlewareConfig;
+import de.governikus.eumw.config.ServiceProviderType;
 import de.governikus.eumw.poseidas.server.idprovider.config.ConfigurationService;
 
 
 class TlsClientRenewalServiceTest
 {
+
+  // This is the signed certificate for the csr which was signed by private key in the dummy-key.jks key store.
+  // The public key in the certificate matches the public key from the dummy-key.jks key store.
+  private static final String SIGNED_CSR_CERTIFICATE = "/keys/signed-csr.cer";
+
+  public static final String DUMMY_KEY_PAIR_NAME = "dummy-key-pair-name";
+
+  static byte[] getSignedCsrCertificateAsByteArray() throws IOException
+  {
+    return TlsClientRenewalDbServiceTest.class.getResourceAsStream(SIGNED_CSR_CERTIFICATE).readAllBytes();
+  }
+
+  public static ServiceProviderType getServiceProviderType()
+  {
+    return new ServiceProviderType(TlsClientRenewalDbServiceTest.SERVICE_PROVIDER_NAME, true, "CVCRefID", "DVCAConf",
+                                   DUMMY_KEY_PAIR_NAME, null);
+  }
 
   @Test
   void getSubject() throws InvalidCsrException

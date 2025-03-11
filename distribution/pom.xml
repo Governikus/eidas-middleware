@@ -15,11 +15,11 @@
     <parent>
         <groupId>de.governikus.eumw</groupId>
         <artifactId>eumw</artifactId>
-        <version>3.3.0</version>
+        <version>3.4.0</version>
     </parent>
 
     <artifactId>distribution</artifactId>
-    <version>3.3.0</version>
+    <version>3.4.0</version>
     <packaging>pom</packaging>
 
     <dependencies>
@@ -35,10 +35,6 @@
         <dependency>
             <groupId>de.governikus.eumw</groupId>
             <artifactId>eidas-common</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>de.governikus.eumw</groupId>
-            <artifactId>eidas-demo</artifactId>
         </dependency>
         <dependency>
             <groupId>de.governikus.eumw</groupId>

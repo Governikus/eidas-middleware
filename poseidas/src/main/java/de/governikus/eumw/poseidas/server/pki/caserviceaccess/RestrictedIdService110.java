@@ -1,8 +1,11 @@
 package de.governikus.eumw.poseidas.server.pki.caserviceaccess;
 
+import java.io.IOException;
 import java.net.URISyntaxException;
+import java.security.GeneralSecurityException;
 
 import jakarta.xml.ws.BindingProvider;
+import jakarta.xml.ws.soap.SOAPFaultException;
 
 import de.governikus.eumw.poseidas.gov2server.GovManagementException;
 import de.governikus.eumw.poseidas.gov2server.constants.admin.GlobalManagementCodes;
@@ -32,7 +35,8 @@ public class RestrictedIdService110 implements RestrictedIdService
    * @param uri
    * @throws URISyntaxException
    */
-  RestrictedIdService110(PKIServiceConnector con, String uri) throws URISyntaxException
+  RestrictedIdService110(PKIServiceConnector con, String uri)
+    throws URISyntaxException, GeneralSecurityException, IOException
   {
     EACDVProtocolService service = new EACDVProtocolService(getClass().getResource("/META-INF/wsdl/CA-Services/Restricted_ID/WS_DV_RestrictedID.wsdl"));
     EACPKIDVProtocolType tmpPort = service.getEACDVProtocolServicePort();
@@ -77,7 +81,16 @@ public class RestrictedIdService110 implements RestrictedIdService
   @Override
   public byte[] getSectorPublicKey(byte[] sectorId) throws GovManagementException
   {
-    GetSectorPublicKeyResult result = port.getSectorPublicKey(sectorId);
+    GetSectorPublicKeyResult result;
+    try
+    {
+      result = port.getSectorPublicKey(sectorId);
+    }
+    catch (SOAPFaultException e)
+    {
+      throw new GovManagementException(GlobalManagementCodes.EC_UNEXPECTED_ERROR,
+                                       "getSectorPublicKey failed because " + e.getMessage());
+    }
     if (GetSectorPublicKeyReturnCodeType.OK_PK_AVAILABLE != result.getReturnCode())
     {
       throw new GovManagementException(GlobalManagementCodes.EC_UNEXPECTED_ERROR,

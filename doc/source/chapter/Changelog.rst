@@ -123,12 +123,13 @@ Changelog
     - eIDAS Middleware: Perform some certificate checks on startup.
     - eIDAS Middleware: Option to have unsigned metadata, including download button in admin interface.
     - eIDAS Middleware: Overhaul admin interface.
-    - eIDAS Middleware: Display status of AusweisApp2 on middleware landing page.
+    - eIDAS Middleware: Display status of AusweisApp2 on Middleware landing page.
     - eIDAS Middleware: Load resources (css, js, ...) with context path.
     - eIDAS Middleware: Add support for a second test CA.
     - Configuration Wizard: Option to configure second test CA.
 
-  Note: The new test CA is introduced to slowly replace the old one. Do not change CA settings on your own.
+.. note::
+  The new test CA is introduced to slowly replace the old one. Do not change CA settings on your own.
   The process of phasing out the old and migrating to the new will be initiated and guided by Governikus.
 
 * 2.0.1
@@ -182,14 +183,15 @@ Changelog
     - eIDAS Middleware: Update eidas-opensaml to fix a bug with the CurrentAddress
       and update other third party libraries for security fixes.
 
+* 2.2.8
+
+    - eIDAS Middleware: Security Patch
+
+.. attention::
   Known Issue for all versions before 3.0.0:
   The SUN PKCS#11 security provider that is shipped with Java 8 does not support RSA-PSS signatures.
   In order to use an HSM and stay in line with the eIDAS cryptographic requirements,
   the use of EC cryptography for the SAML signature is mandatory.
-
-* 2.2.8
-
-    - eIDAS Middleware: Security Patch
 
 * 3.0.0
 
@@ -262,4 +264,15 @@ Changelog
     - eIDAS Middleware: Improved logging
     - eIDAS Middleware: Updated VM image to Debian 12 and Java 17.0.10
 
+* 3.4.0
 
+    - eIDAS Middleware: Add support for TLS 1.3
+    - | eIDAS Middleware: Change minimal key length for TLS EC certificates to 250.
+      | Also add a check for recommended named curves.
+    - eIDAS Middleware: Change minimal key length for TLS DHE certificates to 3072.
+    - eIDAS Middleware: Change SAML method for key transport to RSA-OAEP.
+    - eIDAS Middleware: Remove SHA-1 cipher suites.
+    - eIDAS Middleware: Add warning and log if an RSA certificate with less than 3000 bits is used for TLS.
+    - | eIDAS Middleware: CSR renewal will not use the current keypair.
+      | Also use RSA 4096 instead of ECC.
+    - eIDAS Middleware: Support only 'unspecified' as NameIdentifier.

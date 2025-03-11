@@ -19,12 +19,15 @@ import java.util.List;
 import java.util.zip.DataFormatException;
 import java.util.zip.Inflater;
 
+import javax.smartcardio.ResponseAPDU;
+
 import de.governikus.eumw.poseidas.cardbase.ArrayUtil;
 import de.governikus.eumw.poseidas.cardbase.Hex;
 import de.governikus.eumw.poseidas.cardbase.asn1.ASN1;
 import de.governikus.eumw.poseidas.cardbase.asn1.npa.SecurityInfos;
 import de.governikus.eumw.poseidas.cardbase.asn1.npa.si.RestrictedIdentificationInfo;
 import de.governikus.eumw.poseidas.cardbase.card.SecureMessagingException;
+import de.governikus.eumw.poseidas.cardbase.card.SmartCardCodeConstants;
 import de.governikus.eumw.poseidas.cardbase.constants.EIDConstants;
 import de.governikus.eumw.poseidas.cardbase.npa.CVCPermission;
 import de.governikus.eumw.poseidas.cardbase.npa.NPAUtil;
@@ -226,6 +229,10 @@ public class EIDSequenceTransmit
     {
       parent.getEIDInfoContainer().setStatus(EIDStatus.NOT_AUTHENTIC);
       throw new ECardException(ResultMinor.COMMON_INTERNAL_ERROR, transmitResult.getThrowable());
+    }
+    else if (transmitResult.getThrowable() != null)
+    {
+      log.warn("Got unexpected exception: {}", transmitResult.getThrowable());
     }
 
     switch (state)
@@ -605,6 +612,8 @@ public class EIDSequenceTransmit
           case BLOCKING_IDENTIFICATION:
             // Restricted identifications return two result. First is only that result is OK
             log.debug("{}{}Start: {}", parent.getLogPrefix(), LOG_COMMAND, verification.name());
+            // Check select blocking identification was successful
+            checkSWCode(transmitResult, additionalResults);
             additionalResults++;
             handleBatchCommandBlockingIdentification(transmitResult, additionalResults);
             if (parent.getEIDInfoContainer().getStatus() == EIDStatus.REVOKED)
@@ -628,6 +637,8 @@ public class EIDSequenceTransmit
             additionalResults++;
             break;
           case RESTRICTED_IDENTIFICATION:
+            // Restricted identifications return two result. First is only that result is OK
+            checkSWCode(transmitResult, additionalResults);
             additionalResults++;
             handleBatchCommandRestrictedIdentification(transmitResult, additionalResults);
             additionalResults++;
@@ -668,6 +679,10 @@ public class EIDSequenceTransmit
               {
                 setParentPut(EIDKeys.valueOf(field.getDataFieldName()), new EIDInfoResultNotOnChip());
               }
+              else
+              {
+                log.warn("Other exception as FileNotFoundException was thrown: {}", result.getThrowable());
+              }
               log.debug("{}{}Could not read file for {}", parent.getLogPrefix(), LOG_DATA, field.getDataFieldName());
             }
             else if (ArrayUtil.isNullOrEmpty(result.getFileContent()) || result.getFileContent()[0] == 0x00)
@@ -691,6 +706,17 @@ public class EIDSequenceTransmit
 
     state = SequenceState.BATCH_DATA;
     return getTransmitRequest();
+  }
+
+  private static void checkSWCode(TransmitAPDUResult transmitResult, int additionalResults) throws ECardException
+  {
+    ResponseAPDU r = new ResponseAPDU(transmitResult.getData().getOutputAPDU().get(additionalResults));
+    if (r.getSW() != SmartCardCodeConstants.SUCCESSFULLY_PROCESSED)
+    {
+      throw new ECardException(ResultMinor.SAL_FILE_NOT_FOUND,
+                               "Selecting card application failed. TransmitResult contains no success code but "
+                                                               + r.getSW());
+    }
   }
 
   private void handleBatchCommandAgeVerification(TransmitAPDUResult transmitResult, int index) throws ECardException
@@ -765,6 +791,10 @@ public class EIDSequenceTransmit
             {
               setParentPut(EIDKeys.valueOf(field.getDataFieldName()), new EIDInfoResultNotOnChip());
             }
+            else
+            {
+              log.warn("Other exception as FileNotFoundException was thrown: {}", result.getThrowable());
+            }
             log.debug("{}{}Could not read file for {}", parent.getLogPrefix(), LOG_DATA, field.getDataFieldName());
           }
           else if (!ArrayUtil.isNullOrEmpty(result.getFileContent()) && result.getFileContent()[0] != 0x00)
@@ -812,8 +842,7 @@ public class EIDSequenceTransmit
     }
 
     log.debug("{}{}Try check...", parent.getLogPrefix(), LOG_COMMAND);
-    try
-    {
+
       boolean documentValidityVerificationFailed = connector.contains(id);
       log.debug("{}{}Check done", parent.getLogPrefix(), LOG_COMMAND);
       if (documentValidityVerificationFailed)
@@ -822,19 +851,11 @@ public class EIDSequenceTransmit
         setParentClear();
         parent.getEIDInfoContainer().setStatus(EIDStatus.REVOKED);
       }
-      log.debug("{}{}Card not found on BlackList", parent.getLogPrefix(), LOG_COMMAND);
-    }
-    catch (IOException e)
-    {
-      if (log.isErrorEnabled())
+      else
       {
-        log.error(parent.getLogPrefix() + LOG_COMMAND + "BlackList defect: " + e, e);
+        log.debug("{}{}Card not found on BlackList", parent.getLogPrefix(), LOG_COMMAND);
       }
-    }
-    finally
-    {
       log.debug("{}{}Leave Blacklist connector usage", parent.getLogPrefix(), LOG_COMMAND);
-    }
   }
 
   private void checkBlockingIdentification(RestrictedIdentificationResult result) throws ECardException

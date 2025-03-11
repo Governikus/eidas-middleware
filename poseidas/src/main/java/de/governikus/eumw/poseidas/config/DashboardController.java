@@ -17,6 +17,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -31,6 +32,7 @@ import de.governikus.eumw.poseidas.server.idprovider.config.ConfigurationService
 import de.governikus.eumw.poseidas.server.idprovider.config.CvcTlsCheck;
 import de.governikus.eumw.poseidas.server.idprovider.config.CvcTlsCheck.CvcTlsCheckResult;
 import de.governikus.eumw.poseidas.server.pki.ServiceProviderStatusService;
+import de.governikus.eumw.utils.key.exceptions.UnsupportedECCertificateException;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
@@ -60,30 +62,40 @@ public class DashboardController
   public String status(Model model)
   {
 
-    Optional<CvcTlsCheckResult> cvcTlsCheckResult = cvcTlsCheck.check();
-
-    if (cvcTlsCheckResult.isEmpty())
+    // TLS EC only performed on startup, not needed here
+    Optional<CvcTlsCheckResult> cvcTlsCheckResult;
+    try
     {
-      model.addAttribute("msg", "No status available because configuration is not valid.");
-      model.addAttribute("valuesAvailable", false);
+      cvcTlsCheckResult = cvcTlsCheck.check(false);
+      if (cvcTlsCheckResult.isEmpty())
+      {
+        model.addAttribute("msg", "No status available because configuration is not valid.");
+        model.addAttribute("valuesAvailable", false);
+        return "pages/status";
+      }
+      GlobalResultModel globalResultModel = new GlobalResultModel(cvcTlsCheckResult.get());
+      model.addAttribute(globalResultModel);
+
+      Map<String, ServiceProviderStatus> serviceProviderResultModelMap;
+      serviceProviderResultModelMap = configurationService.getConfiguration()
+                                                          .map(EidasMiddlewareConfig::getEidConfiguration)
+                                                          .map(EidasMiddlewareConfig.EidConfiguration::getServiceProvider)
+                                                          .stream()
+                                                          .flatMap(List::stream)
+                                                          .collect(Collectors.toMap(ServiceProviderType::getName,
+                                                                                    serviceProviderStatusService::getServiceProviderStatus));
+      model.addAttribute("valuesAvailable", true);
+      model.addAttribute("globalResultModel", globalResultModel);
+      model.addAttribute("serviceProviderResultModelMap", serviceProviderResultModelMap);
+      SimpleDateFormat formatter = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault());
+      model.addAttribute("lastCheck", formatter.format(new Date()));
       return "pages/status";
     }
-    GlobalResultModel globalResultModel = new GlobalResultModel(cvcTlsCheckResult.get());
-    model.addAttribute(globalResultModel);
-
-    Map<String, ServiceProviderStatus> serviceProviderResultModelMap;
-    serviceProviderResultModelMap = configurationService.getConfiguration()
-                                                        .map(EidasMiddlewareConfig::getEidConfiguration)
-                                                        .map(EidasMiddlewareConfig.EidConfiguration::getServiceProvider)
-                                                        .stream()
-                                                        .flatMap(List::stream)
-                                                        .collect(Collectors.toMap(ServiceProviderType::getName,
-                                                                                  serviceProviderStatusService::getServiceProviderStatus));
-    model.addAttribute("valuesAvailable", true);
-    model.addAttribute("globalResultModel", globalResultModel);
-    model.addAttribute("serviceProviderResultModelMap", serviceProviderResultModelMap);
-    SimpleDateFormat formatter = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault());
-    model.addAttribute("lastCheck", formatter.format(new Date()));
-    return "pages/status";
+    catch (UnsupportedECCertificateException e)
+    {
+      // Should never be thrown here
+      log.error(e.getMessage());
+    }
+    return StringUtils.EMPTY;
   }
 }

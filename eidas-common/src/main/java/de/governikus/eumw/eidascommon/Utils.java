@@ -86,7 +86,16 @@ public final class Utils
   /**
    * Minimal size for EC keys (TLS).
    */
-  public static final int MIN_KEY_SIZE_EC_TLS = 224;
+  public static final int MIN_KEY_SIZE_EC_TLS = 250;
+
+  /**
+   * Minimal size for ephemeral DH keys (TLS).
+   * 
+   * @see <a href=
+   *      "https://docs.oracle.com/javase/8/docs/technotes/guides/security/jsse/JSSERefGuide.html#customizing_dh_keys">JAVA
+   *      JSSE DOC</a>
+   */
+  public static final int MIN_EPHEMERAL_DH_KEY_SIZE = 3072;
 
   /**
    * default encoding used by the eID-Server
@@ -119,6 +128,10 @@ public final class Utils
     }
     catch (IOException e)
     {
+      if (log.isDebugEnabled())
+      {
+        log.debug("Failed to read error.html", e);
+      }
       // OK, no nice page then
       return "${MESSAGE}";
     }
@@ -331,6 +344,10 @@ public final class Utils
     }
     catch (GeneralSecurityException e)
     {
+      if (log.isDebugEnabled())
+      {
+        log.debug("Failed to load key store", e);
+      }
       keyStore = KeyStore.getInstance(type);
     }
     keyStore.load(ins, pin);

@@ -1,13 +1,17 @@
 package de.governikus.eumw.poseidas.config;
 
 
+import static org.mockito.Mockito.when;
+
 import java.io.InputStream;
 import java.security.cert.CertificateFactory;
 import java.security.cert.X509Certificate;
 import java.time.Instant;
 import java.time.ZoneId;
+import java.util.ArrayList;
 import java.util.Base64;
 import java.util.Date;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
@@ -25,6 +29,7 @@ import org.w3c.dom.NodeList;
 
 import com.gargoylesoftware.htmlunit.html.DomElement;
 import com.gargoylesoftware.htmlunit.html.DomNodeList;
+import com.gargoylesoftware.htmlunit.html.HtmlDivision;
 import com.gargoylesoftware.htmlunit.html.HtmlElement;
 import com.gargoylesoftware.htmlunit.html.HtmlPage;
 
@@ -125,7 +130,7 @@ class DashboardControllerTest extends WebAdminTestBase
     Mockito.when(configurationService.getConfiguration()).thenReturn(getConfiguration());
     Mockito.when(tlsClientRenewalService.currentTlsCertValidUntil(Mockito.anyString()))
            .thenReturn(Optional.of(new Date()));
-    Mockito.when(cvcTlsCheck.check()).thenReturn(Optional.of(cvcTlsCheckResult));
+    Mockito.when(cvcTlsCheck.check(Mockito.anyBoolean())).thenReturn(Optional.of(cvcTlsCheckResult));
     Mockito.when(cvcTlsCheck.checkCvcProvider(firstSp))
            .thenReturn(cvcTlsCheckResult.getProviderCvcChecks().get(firstSp));
     Mockito.when(cvcTlsCheck.checkCvcProvider(secondSp))
@@ -158,6 +163,56 @@ class DashboardControllerTest extends WebAdminTestBase
     Assertions.assertEquals("Available: ❌\n Last successful retrieval:\n-", crlAvailable);
     assertFirstServiceProvider(statusPage.getElementById(firstSp), expectedDate);
     assertSecondServiceProvider(statusPage.getElementById(secondSp));
+  }
+
+  @Test
+  void testWhenCvcTlsCheckResultHasRSACertWithLengthLowerThan3000Bits() throws Exception
+  {
+    String firstSp = "ServiceProviderTestA";
+    CvcTlsCheck.CvcTlsCheckResult cvcTlsCheckResult = new CvcTlsCheck.CvcTlsCheckResult();
+    cvcTlsCheckResult.setServerTlsValid(true);
+    cvcTlsCheckResult.getTlsRSACertsWithLengthLowerThan3000().add("TLS server certificate");
+    Date expectedDate = Date.from(Instant.now());
+    cvcTlsCheckResult.setServerTlsExpirationDate(expectedDate);
+    CvcTlsCheck.CvcCheckResults cvcCheckResultsFirstSp = new CvcTlsCheck.CvcCheckResults();
+    cvcCheckResultsFirstSp.setCvcPresent(true);
+    cvcCheckResultsFirstSp.setCvcTlsMatch(true);
+    cvcCheckResultsFirstSp.setCvcValidity(true);
+    cvcCheckResultsFirstSp.setCvcUrlMatch(true);
+    Map<String, CvcTlsCheck.CvcCheckResults> providerCvcChecks = cvcTlsCheckResult.getProviderCvcChecks();
+    providerCvcChecks.put(firstSp, cvcCheckResultsFirstSp);
+
+    Optional<EidasMiddlewareConfig> configuration = getConfiguration();
+
+    when(configurationService.getConfiguration()).thenReturn(configuration);
+    when(tlsClientRenewalService.currentTlsCertValidUntil(Mockito.anyString())).thenReturn(Optional.of(new Date()));
+    when(cvcTlsCheck.check(Mockito.anyBoolean())).thenReturn(Optional.of(cvcTlsCheckResult));
+    when(cvcTlsCheck.checkCvcProvider(firstSp)).thenReturn(cvcTlsCheckResult.getProviderCvcChecks().get(firstSp));
+    prepareFirstSp(firstSp, expectedDate);
+
+    when(permissionDataHandling.pingRIService(firstSp)).thenReturn(true);
+    when(permissionDataHandling.pingPAService(firstSp)).thenReturn(true);
+
+    when(rscService.getRequestSignerCertificate(firstSp, true)).thenReturn(getRsc());
+    when(rscService.getRequestSignerCertificate(firstSp, false)).thenReturn(null);
+
+    HtmlPage loginPage = getWebClient().getPage(getRequestUrl(ContextPaths.DASHBOARD));
+    HtmlPage dashboardPage = login(loginPage);
+
+    if (dashboardPage.getByXPath("//div[contains(@class, 'alert-warning')]").isEmpty())
+    {
+      Assertions.fail("Expected at least one alert-warning div but got 0.");
+    }
+    else
+    {
+      List<String> dashboardAlertWarningChieldNodeFirstString = new ArrayList<>();
+      List<HtmlDivision> dashboardAlertWarningHtmlDivision = dashboardPage.getByXPath("//div[contains(@class, 'alert-warning')]");
+      for ( HtmlDivision htmlDivision : dashboardAlertWarningHtmlDivision )
+      {
+        dashboardAlertWarningChieldNodeFirstString.add(htmlDivision.getChildNodes().get(0).toString());
+      }
+      Assertions.assertTrue(dashboardAlertWarningChieldNodeFirstString.contains("The following TLS RSA certificates have a bit length lower than 3000:"));
+    }
   }
 
   private void assertFirstServiceProvider(DomElement domElement, Date expectedDate)

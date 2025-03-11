@@ -142,9 +142,9 @@ class ConfigurationMigrationServiceTest
                "https://dvca-r1.governikus-eid.de:8444/gov_dvca/certDesc-service");
     assertDvca(dvcaConfigurationTypeList,
                BERCA_PS_1_1,
-               "https://berca-p1.d-trust.net/ps/dvca-at/v1_1",
+               "https://berca-p1.d-trust.net/ps/dvca-at/v1_4",
                "https://berca-p1.d-trust.net/ps/dvsd_v2/v1_1",
-               "https://berca-p1.d-trust.net/ps/scs",
+               "https://berca-p1.d-trust.net/ps/scs/v1_4",
                "https://berca-p1.d-trust.net/ps/dvca-at-cert-desc");
     Assertions.assertEquals("A,ID,UB", eidasMiddlewareConfig.getEidConfiguration().getAllowedEidMeans());
     Assertions.assertEquals("providerA", eidasMiddlewareConfig.getEidasConfiguration().getPublicServiceProviderName());

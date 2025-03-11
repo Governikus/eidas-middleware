@@ -19,7 +19,7 @@ public class PaosHandlerException extends Exception
   private final int status;
 
 
-  PaosHandlerException(String reason, int status)
+  public PaosHandlerException(String reason, int status)
   {
     super(reason);
     this.status = status;

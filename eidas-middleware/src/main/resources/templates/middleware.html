@@ -124,7 +124,7 @@
                         </p>
                         <div id="status">
                             <div hidden id="eid-install-app-hint">
-                                <p th:utext="#{content.requirements.app.hint.mobile}"></p>
+                                <p th:text="#{content.requirements.app.hint.mobile}"></p>
                                 <a href="https://apps.apple.com/us/app/ausweisapp2/id948660805?l=de&ls=1"
                                    target="_blank">
                                     <img th:src="@{/eidas-middleware/img/AppStore.svg}" style="height: 50px;">
@@ -140,13 +140,13 @@
                                      class="eid-status-image" th:alt="#{image.icon.accept}"
                                      th:title="#{image.icon.accept}">
                                 <span id="status-eid-client-active"
-                                      th:utext="#{content.eid.status.active}"></span>
+                                      th:text="#{content.eid.status.active}"></span>
                             </p>
                             <p hidden id="client-inactive">
                                 <img th:src="@{/eidas-middleware/img/icon_decline1.png}"
                                      class="eid-status-image" th:alt="#{image.icon.decline}"
                                      th:title="#{image.icon.decline}">
-                                <span id="status-eid-client-inactive" th:utext="#{content.eid.status.inactive}"></span>
+                                <span id="status-eid-client-inactive" th:text="#{content.eid.status.inactive}"></span>
                             </p>
                             <p hidden>
                                 <span id="tcTokenURL" th:utext="${tcTokenURL}">eIDLink</span>
@@ -190,6 +190,7 @@
 
 
 <footer>
+    <div class="text-center mb-3" th:text="#{footer.cookie}"></div>
     <div class="text-center" th:text="#{footer.footer}"></div>
 </footer>
 

@@ -16,7 +16,6 @@ import java.util.Map;
 import de.governikus.eumw.poseidas.ecardcore.utilities.ECardCoreUtil;
 import de.governikus.eumw.poseidas.eidmodel.data.EIDKeys;
 import de.governikus.eumw.poseidas.eidserver.convenience.EIDInfoResult;
-import de.governikus.eumw.poseidas.eidserver.ecardid.EIDInfoContainer.EIDStatus;
 
 import oasis.names.tc.dss._1_0.core.schema.Result;
 
@@ -36,28 +35,23 @@ public class EIDResultResponse
 
   private String resultMessage;
 
-  private final EIDStatus status;
-
   private final String logPrefix;
 
   private final Map<EIDKeys, EIDInfoResult> infoMap = new EnumMap<>(EIDKeys.class);
 
-  EIDResultResponse(EIDStatus status,
-                    String resultMajor,
+  EIDResultResponse(String resultMajor,
                     String resultMinor,
                     String resultMessage,
                     String logPrefix)
   {
-    this.status = status;
     this.resultMajor = resultMajor;
     this.resultMinor = resultMinor;
     this.resultMessage = resultMessage;
     this.logPrefix = logPrefix;
   }
 
-  EIDResultResponse(EIDStatus status, Result result, Map<EIDKeys, EIDInfoResult> infoMap, String logPrefix)
+  EIDResultResponse(Result result, Map<EIDKeys, EIDInfoResult> infoMap, String logPrefix)
   {
-    this.status = status;
     this.resultMajor = result.getResultMajor();
     this.resultMinor = result.getResultMinor();
     if (result.getResultMessage() != null)
@@ -110,10 +104,6 @@ public class EIDResultResponse
     return infoMap.get(key);
   }
 
-  public EIDStatus getStatus()
-  {
-    return status;
-  }
 
   public String getLogPrefix()
   {

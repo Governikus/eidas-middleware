@@ -308,6 +308,7 @@ class TimerControllerTest extends WebAdminTestBase
     HtmlCheckBoxInput htmlCheckBoxInput = timerConfigPage.getHtmlElementById(timer.getValueID());
     htmlCheckBoxInput.setChecked(isActive);
   }
+
   private void setEmptyValue(HtmlPage timerConfigPage, Timer timer)
   {
     HtmlNumberInput numberInput = (HtmlNumberInput)timerConfigPage.getElementById(timer.getValueID());

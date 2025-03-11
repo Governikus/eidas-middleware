@@ -14,14 +14,19 @@ import java.net.URI;
 import java.net.URL;
 import java.net.URLConnection;
 import java.security.KeyManagementException;
+import java.security.KeyStoreException;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
+import java.security.PublicKey;
 import java.security.SecureRandom;
 import java.security.cert.Certificate;
 import java.security.cert.CertificateEncodingException;
 import java.security.cert.CertificateExpiredException;
 import java.security.cert.CertificateNotYetValidException;
 import java.security.cert.X509Certificate;
+import java.security.interfaces.RSAPublicKey;
+import java.security.spec.ECParameterSpec;
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
@@ -35,6 +40,9 @@ import javax.net.ssl.TrustManager;
 import javax.net.ssl.X509TrustManager;
 
 import org.apache.commons.lang3.StringUtils;
+import org.bouncycastle.asn1.x9.ECNamedCurveTable;
+import org.bouncycastle.asn1.x9.X9ECParameters;
+import org.bouncycastle.jcajce.provider.asymmetric.util.EC5Util;
 import org.springframework.stereotype.Component;
 import org.springframework.web.util.UriComponentsBuilder;
 
@@ -43,8 +51,11 @@ import de.governikus.eumw.config.ServiceProviderType;
 import de.governikus.eumw.poseidas.cardbase.ByteUtil;
 import de.governikus.eumw.poseidas.cardbase.crypto.DigestUtil;
 import de.governikus.eumw.poseidas.eidmodel.TerminalData;
+import de.governikus.eumw.poseidas.server.pki.HSMServiceHolder;
 import de.governikus.eumw.poseidas.server.pki.TerminalPermissionAO;
 import de.governikus.eumw.poseidas.server.pki.entities.TerminalPermission;
+import de.governikus.eumw.utils.key.exceptions.UnsupportedECCertificateException;
+
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
@@ -62,9 +73,13 @@ import lombok.extern.slf4j.Slf4j;
 public class CvcTlsCheck
 {
 
+  private static final String MESSAGE_NO_TLS_CLIENT_CERTIFICATE = "No TLS client certificate found for service provider {}";
+
   private TerminalPermissionAO facade;
 
   private final ConfigurationService configurationService;
+
+  private final HSMServiceHolder hsmServiceHolder;
 
   /**
    * Performs the following checks: - TLS server certificate valid? - CVC valid? - server URL matches the one in CVC? -
@@ -72,7 +87,20 @@ public class CvcTlsCheck
    *
    * @return object holding the results
    */
-  public Optional<CvcTlsCheckResult> check()
+  public Optional<CvcTlsCheckResult> check() throws UnsupportedECCertificateException
+  {
+    return check(true);
+  }
+
+  /**
+   * Performs the following checks: - TLS server certificate valid? - CVC valid? - server URL matches the one in CVC? -
+   * TLS server certificate referenced in CVC?
+   *
+   * @param checkECCertificate boolean. If true this method checks if the TLS certificate is a supported EC certificate,
+   *          if an EC certificate is configured. If false, the check will not be performed.
+   * @return object holding the results
+   */
+  public Optional<CvcTlsCheckResult> check(boolean checkECCertificate) throws UnsupportedECCertificateException
   {
     Optional<EidasMiddlewareConfig> configuration = configurationService.getConfiguration();
     if (configuration.isEmpty())
@@ -87,8 +115,37 @@ public class CvcTlsCheck
     // Test TLS Certificates
     if (certificate.isPresent())
     {
-      resultHolder.setServerTlsValid(testTlsValidity(certificate.get()));
-      resultHolder.setServerTlsExpirationDate(certificate.get().getNotAfter());
+      X509Certificate cert = certificate.get();
+      resultHolder.setServerTlsValid(testTlsValidity(cert));
+      resultHolder.setServerTlsExpirationDate(cert.getNotAfter());
+
+      if ("RSA".equals(cert.getPublicKey().getAlgorithm())
+          && ((RSAPublicKey)cert.getPublicKey()).getModulus().bitLength() < 3000)
+      {
+        resultHolder.getTlsRSACertsWithLengthLowerThan3000().add("TLS server certificate");
+        log.warn("The TLS RSA server certificate has a bit length is lower than 3000. RSA certificates with a length lower than 3000 bits are only supported until end of 2025. Please make sure to change the certificate.");
+      }
+
+
+      if (checkECCertificate && "EC".equals(cert.getPublicKey().getAlgorithm()))
+      {
+        PublicKey publicKey = cert.getPublicKey();
+        boolean isSupportedEC = false;
+        if (publicKey instanceof java.security.interfaces.ECPublicKey pk)
+        {
+          final ECParameterSpec params = pk.getParams();
+          isSupportedEC = isSupportedEC(EC5Util.convertSpec(params));
+        }
+        else if (publicKey instanceof org.bouncycastle.jce.interfaces.ECPublicKey pk)
+        {
+          isSupportedEC = isSupportedEC(pk.getParameters());
+        }
+
+        if (!isSupportedEC)
+        {
+          throw new UnsupportedECCertificateException("The used EC certificate for TLS is not supported. The eIDAS Middleware will be shutdown.");
+        }
+      }
     }
     else
     {
@@ -102,6 +159,12 @@ public class CvcTlsCheck
                  .flatMap(List::stream)
                  .forEach(sp -> resultHolder.getProviderCvcChecks()
                                             .put(sp.getName(), getCvcResultsForSp(sp, config, certificate)));
+    configuration.map(EidasMiddlewareConfig::getEidConfiguration)
+                 .map(EidasMiddlewareConfig.EidConfiguration::getServiceProvider)
+                 .stream()
+                 .flatMap(List::stream)
+                 .forEach(sp -> resultHolder.getTlsRSACertsWithLengthLowerThan3000()
+                                            .addAll(getServiceProviderWithRSATlsCertificateLowerThan3000Bits(sp)));
     return Optional.of(resultHolder);
   }
 
@@ -295,13 +358,26 @@ public class CvcTlsCheck
       return Optional.empty();
     }
 
-    // TODO determine which certificate to use
-    // --> there is no guaranteed order
     if (certs[0] instanceof X509Certificate)
     {
       return Optional.of((X509Certificate)certs[0]);
     }
     return Optional.empty();
+  }
+
+  /**
+   * Trys to retrieve the expiration date of the servers TLS certifiacte
+   *
+   * @return The Date of expiration or an exception is thrown
+   * @throws IOException
+   */
+  public Date getTLSExpirationDate() throws IOException
+  {
+    Optional<X509Certificate> ownTlsCertificate = getOwnTlsCertificate(configurationService.getConfiguration()
+                                                                                           .orElseThrow(() -> new ConfigurationException("Cannot retrieve own TLS certificate. No eumw configuration present"))
+                                                                                           .getServerUrl());
+    return ownTlsCertificate.map(X509Certificate::getNotAfter)
+                            .orElseThrow(() -> new IOException("Cannot retrieve own TLS certificate"));
   }
 
   // get an SSLSocketFactory trusting all certificates
@@ -365,19 +441,83 @@ public class CvcTlsCheck
     return result;
   }
 
-  /**
-   * Trys to retrieve the expiration date of the servers TLS certifiacte
-   *
-   * @return The Date of expiration or an exception is thrown
-   * @throws IOException
-   */
-  public Date getTLSExpirationDate() throws IOException
+  private boolean isSupportedEC(org.bouncycastle.jce.spec.ECParameterSpec ecParameterSpec)
   {
-    Optional<X509Certificate> ownTlsCertificate = getOwnTlsCertificate(configurationService.getConfiguration()
-                                                                                           .orElseThrow(() -> new ConfigurationException("Cannot retrieve own TLS certificate. No eumw configuration present"))
-                                                                                           .getServerUrl());
-    return ownTlsCertificate.map(X509Certificate::getNotAfter)
-                            .orElseThrow(() -> new IOException("Cannot retrieve own TLS certificate"));
+    List<String> supportedECs = List.of("brainpoolP256r1",
+                                        "brainpoolP384r1",
+                                        "brainpoolP512r1",
+                                        "P-256",
+                                        "P-384",
+                                        "P-521");
+
+    for ( String supportedEC : supportedECs )
+    {
+      final X9ECParameters params = ECNamedCurveTable.getByName(supportedEC);
+      if (params.getN().equals(ecParameterSpec.getN()) && params.getH().equals(ecParameterSpec.getH())
+          && params.getCurve().equals(ecParameterSpec.getCurve()) && params.getG().equals(ecParameterSpec.getG()))
+      {
+        return true;
+      }
+    }
+    return false;
+  }
+
+  private List<String> getServiceProviderWithRSATlsCertificateLowerThan3000Bits(ServiceProviderType sp)
+  {
+    List<String> spCertWithLengthLowerThan3000 = new ArrayList<>();
+
+    X509Certificate certificate;
+
+    // no HSM
+    if (hsmServiceHolder.getKeyStore() == null)
+    {
+      String clientKeyPairName = sp.getClientKeyPairName();
+      if (clientKeyPairName == null)
+      {
+        log.warn(MESSAGE_NO_TLS_CLIENT_CERTIFICATE, sp.getName());
+        return spCertWithLengthLowerThan3000;
+      }
+      KeyPair clientKeyPair = configurationService.getKeyPair(clientKeyPairName);
+      if (clientKeyPair == null)
+      {
+        log.warn(MESSAGE_NO_TLS_CLIENT_CERTIFICATE, sp.getName());
+        return spCertWithLengthLowerThan3000;
+      }
+      certificate = clientKeyPair.getCertificate();
+    }
+    else
+    // HSM
+    {
+      try
+      {
+        certificate = (X509Certificate)hsmServiceHolder.getKeyStore().getCertificate(sp.getCVCRefID());
+      }
+      catch (KeyStoreException e)
+      {
+        log.warn(MESSAGE_NO_TLS_CLIENT_CERTIFICATE, sp.getName());
+        return spCertWithLengthLowerThan3000;
+      }
+    }
+
+    if (certificate == null)
+    {
+      log.warn(MESSAGE_NO_TLS_CLIENT_CERTIFICATE, sp.getName());
+      return spCertWithLengthLowerThan3000;
+    }
+
+    if ("RSA".equals(certificate.getPublicKey().getAlgorithm())
+        && ((RSAPublicKey)certificate.getPublicKey()).getModulus().bitLength() < 3000)
+    {
+      spCertWithLengthLowerThan3000.add(sp.getName());
+    }
+
+    if (!spCertWithLengthLowerThan3000.isEmpty())
+    {
+      log.warn("The TLS RSA certificates for the following service provider have a bit length lower than 3000: "
+               + spCertWithLengthLowerThan3000
+               + ".\n RSA certificates with a length lower than 3000 bits are only supported until end of 2025. Please make sure to change the certificate.");
+    }
+    return spCertWithLengthLowerThan3000;
   }
 
   @Getter
@@ -390,6 +530,9 @@ public class CvcTlsCheck
 
     @Setter
     Date serverTlsExpirationDate;
+
+    @Setter
+    List<String> tlsRSACertsWithLengthLowerThan3000 = new ArrayList<>();
 
     Map<String, CvcCheckResults> providerCvcChecks = new HashMap<>();
   }

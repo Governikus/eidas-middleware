@@ -17,6 +17,7 @@ import de.governikus.eumw.poseidas.eidserver.convenience.EIDInfoResult;
 import de.governikus.eumw.poseidas.eidserver.ecardid.EIDInfoContainer.EIDStatus;
 import de.governikus.eumw.poseidas.eidserver.ecardid.SessionInput;
 import de.governikus.eumw.poseidas.server.idprovider.core.StoreableSession;
+
 import oasis.names.tc.dss._1_0.core.schema.Result;
 
 
@@ -44,8 +45,8 @@ public class EIDSession implements StoreableSession
 
   private SessionInput sessionInput;
 
-
-  private EIDStatus status;
+  // Set to failed on default to only indicate success explicitly
+  private EIDStatus status = EIDStatus.FAILED;
 
   private final String logPrefix;
 

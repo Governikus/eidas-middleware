@@ -199,7 +199,7 @@ public class SecurityInfos extends AbstractASN1Encoder implements ASN1Encoder
         this.chipAuthenticationPublicKeyInfoList = null;
         this.terminalAuthenticationList = null;
         this.restrictedIdentificationInfoList = null;
-        throw new IllegalArgumentException("incompatible ASN.1 object");
+        throw new IllegalArgumentException("incompatible ASN.1 object", e);
       }
     }
   }

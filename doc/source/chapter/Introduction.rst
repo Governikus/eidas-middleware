@@ -9,12 +9,15 @@ In contrast to an eIDAS Proxy Service which is operated by the Sending MS, the e
 is provided by the Sending MS and every Receiving MS operates its own eIDAS Middleware instance.
 
 The eIDAS Middleware consists of two parts:
-Firstly, the middleware contains an eID server to communicate with German eID backend systems and with the user's browser and eID client.
-Secondly, the middleware contains a SAML adapter to communicate with the eIDAS connector of the Member State.
+Firstly, the Middleware contains an eID server to communicate with German eID backend systems
+and with the user's browser and eID client.
+Secondly, the Middleware contains a SAML adapter to communicate with the eIDAS connector of the Member State.
 
 It should also be mentioned that the term `service provider` is ambiguous in this specific scenario:
-In terms of the eIDAS environment, the service provider receives the authorization data from the eIDAS connector to authenticate the user.
-However, in terms of the German eID system the service provider is the SAML adapter of the middleware, because this is the instance to which the eID server sends the data from the eID card.
+In terms of the eIDAS environment, the service provider receives the authorization data from the
+eIDAS connector to authenticate the user. However, in terms of the German eID system the service provider is
+the SAML adapter of the Middleware, because this is the instance to which the eID server sends
+the data from the eID card.
 
 The German eID scheme fulfills all requirements of the eIDAS Level of Assurance **high**.
 One of the major security-by-design feature is strong and mutual authentication between the relying party and the user.
@@ -34,7 +37,7 @@ or the currently valid :term:`Authorization Certificate`.
 Therefore, the public certificates of the :term:`Authorization CA` and your eIDAS Middleware must be exchanged before the eIDAS Middleware requests the first Authorization Certificate.
 If you decide to use a :term:`Request Signer Certificate` (which is highly recommended as it will become mandatory
 at some point), this certificate must be given to the :term:`Authorization CA` as well.
-For more information on how to get in contact with the :term:`Authorization CA`, see the document `Three Steps to integrate the German eIDAS Middleware on the German Country Page <https://ec.europa.eu/cefdigital/wiki/display/EIDIMPL/Germany#Germany-GermaneIDAS-Middleware>`_.
+For more information on how to get in contact with the :term:`Authorization CA`, see the `German eIDAS Middleware on the German Country Page <https://eidas.ec.europa.eu/efda/browse/notification/eid-chapter-contacts/DE>`_.
 The :term:`Authorization Certificate` is presented to the German eID Card to ensure the authenticity of the :term:`eID Service Provider` and to verify that the :term:`eID Service Provider` only requests attributes allowed by the :term:`Authorization CA`.
 
 There are two different Authorization CAs available. The Bundesdruckerei provides Authorization Certificates for productive environments with real eID cards.
@@ -42,14 +45,14 @@ Governikus provides Authorization Certificates for test environments with test e
 
 Introduction to Docker
 ======================
-In addition to running the middleware in the provided virtual machine or
+In addition to running the Middleware in the provided virtual machine or
 running the stand-alone Spring Boot application on your own server,
-we provide a Docker Image to run the middleware in a Docker container.
+we provide a Docker Image to run the Middleware in a Docker container.
 
 In order to keep the container as stateless as possible,
 we use volumes to store the configuration and the HSQL database outside of the container.
 
-Please note that it is not possible to run multiple middleware containers
+Please note that it is not possible to run multiple Middleware containers
 using the same configuration or database volume.
 
 For information on running Docker containers, see the `Docker Docs <https://docs.docker.com/engine/reference/run/>`_.
@@ -58,7 +61,7 @@ We provide the Docker Image:
 
 #. governikus/eidas-middleware-application (`Docker Hub <https://hub.docker.com/r/governikus/eidas-middleware-application>`_)
 
-Two volumes are necessary to run the middleware:
+Two volumes are necessary to run the Middleware:
 
 #. eidas-configuration
 #. eidas-database
@@ -71,7 +74,7 @@ You can create these named volumes with the following command::
 To reduce the hassle of executing long commands in the terminal,
 we also provide Docker Compose files in addition to the Docker Images.
 This way the configuration for running the containers can be stored in configuration files.
-For more information on Docker Compose, see the `Docker Compose Docs <https://docs.docker.com/compose/overview/>`_.
+For more information on Docker Compose, see the `Docker Compose Docs <https://docs.docker.com/compose>`_.
 
 
 Introduction to the VirtualBox Image

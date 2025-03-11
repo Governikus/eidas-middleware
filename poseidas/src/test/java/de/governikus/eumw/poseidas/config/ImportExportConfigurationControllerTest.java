@@ -40,6 +40,7 @@ import de.governikus.eumw.poseidas.config.base.TestConfiguration;
 import de.governikus.eumw.poseidas.config.base.WebAdminTestBase;
 import de.governikus.eumw.poseidas.server.idprovider.config.ConfigurationRepository;
 import de.governikus.eumw.poseidas.server.idprovider.config.ConfigurationService;
+
 import lombok.extern.slf4j.Slf4j;
 
 
@@ -158,6 +159,4 @@ class ImportExportConfigurationControllerTest extends WebAdminTestBase
     assertTrue(configurationPage.getUrl().getPath().endsWith(ContextPaths.IMPORT_EXPORT_CONFIGURATION));
     return configurationPage;
   }
-
-  // TODO: Test Download configuration
 }

@@ -9,11 +9,14 @@ import de.governikus.eumw.poseidas.server.idprovider.config.ConfigurationService
 import de.governikus.eumw.poseidas.server.idprovider.config.CvcTlsCheck;
 import de.governikus.eumw.poseidas.server.pki.PermissionDataHandling;
 import de.governikus.eumw.poseidas.server.pki.TerminalPermissionAO;
+import de.governikus.eumw.utils.key.exceptions.UnsupportedECCertificateException;
 import lombok.AllArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
 
 @Component
 @AllArgsConstructor
+@Slf4j
 public class StartupListener
 {
 
@@ -29,7 +32,15 @@ public class StartupListener
   public void onApplicationEvent(WebServerInitializedEvent event)
   {
     initCRL();
-    cvcTlsCheck.check();
+    try
+    {
+      cvcTlsCheck.check();
+    }
+    catch (UnsupportedECCertificateException e)
+    {
+      log.error(e.getMessage());
+      System.exit(1);
+    }
   }
 
   private void initCRL()

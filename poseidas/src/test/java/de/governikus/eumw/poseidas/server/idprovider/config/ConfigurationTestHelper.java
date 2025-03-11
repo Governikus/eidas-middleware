@@ -48,6 +48,7 @@ public final class ConfigurationTestHelper
                       .add(new ConnectorMetadataType("metadata".getBytes(StandardCharsets.UTF_8), null));
     eidasConfiguration.setDoSign(true);
     eidasConfiguration.setCountryCode("DE");
+    eidasConfiguration.setPublicServiceProviderName(SP_NAME);
     config.setEidasConfiguration(eidasConfiguration);
     EidasMiddlewareConfig.EidConfiguration eidConfiguration = new EidasMiddlewareConfig.EidConfiguration();
     DvcaConfigurationType dvcaConfiguration = new DvcaConfigurationType();

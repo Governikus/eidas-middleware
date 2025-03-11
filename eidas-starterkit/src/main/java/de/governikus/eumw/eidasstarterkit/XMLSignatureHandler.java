@@ -42,6 +42,7 @@ import de.governikus.eumw.eidascommon.ErrorCode;
 import de.governikus.eumw.eidascommon.ErrorCodeException;
 import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
 
 /**
@@ -60,6 +61,7 @@ import lombok.NoArgsConstructor;
  *
  * @author TT / AHO
  */
+@Slf4j
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
 final class XMLSignatureHandler
 {
@@ -196,6 +198,10 @@ final class XMLSignatureHandler
       }
       catch (SignatureException e)
       {
+        if (log.isDebugEnabled())
+        {
+          log.debug("Failed to validate signature", e);
+        }
         /* Nothing to do */
       }
       catch (Exception e)

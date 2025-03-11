@@ -9,28 +9,29 @@
 
 package de.governikus.eumw.poseidas.paosservlet.paos.handler;
 
-import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
-import java.io.PrintWriter;
+
+import javax.xml.namespace.QName;
 
 import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 import jakarta.xml.bind.JAXBContext;
 import jakarta.xml.bind.JAXBException;
 import jakarta.xml.bind.Marshaller;
-import javax.xml.parsers.ParserConfigurationException;
-import javax.xml.transform.TransformerException;
+import jakarta.xml.soap.MessageFactory;
+import jakarta.xml.soap.SOAPEnvelope;
+import jakarta.xml.soap.SOAPException;
+import jakarta.xml.soap.SOAPHeader;
+import jakarta.xml.soap.SOAPMessage;
 
-import org.w3c.dom.Document;
-import org.w3c.dom.Node;
-import org.xml.sax.SAXException;
-
-import de.governikus.eumw.poseidas.ecardcore.utilities.XMLTransformer;
-import de.governikus.eumw.poseidas.eidserver.convenience.session.Session;
 import de.governikus.eumw.poseidas.paosservlet.authentication.paos.Util;
+
 import iso.std.iso_iec._24727.tech.schema.StartPAOS;
+import lombok.extern.slf4j.Slf4j;
 
 
+@Slf4j
 public class DefaultPaosHandler extends AbstractPaosHandler
 {
 
@@ -60,17 +61,22 @@ public class DefaultPaosHandler extends AbstractPaosHandler
     super(request, requestBody);
 
     // conversationObject == null --> parsing failed, will result in StartPAOSResponse
-    if (conversationObject != null)
+    if (conversationObject != null && !getSessionManager().sessionIdExistsOrCanBeCreated(sessionId))
     {
-      Session session = getSessionManager().getSession(sessionId);
-      if (session == null)
-      {
-        throw new PaosHandlerException("Cannot find session for ID : " + sessionId, 403);
-      }
+      throw new PaosHandlerException("Cannot find session for ID : " + sessionId, 403);
     }
+
     relatesTo = Util.getHeaderValue(soapMessage, HTTP_WWW_W3_ORG_2005_03_ADDRESSING, "MessageID");
-    String oldMessageID = Util.getHeaderValue(soapMessage, HTTP_WWW_W3_ORG_2005_03_ADDRESSING, "RelatesTo");
     messageId = Util.generateUUID();
+
+  }
+
+  /**
+   * Must be called <b>after</b> the session lock was obtained.
+   */
+  void updateMessageID()
+  {
+    String oldMessageID = Util.getHeaderValue(soapMessage, HTTP_WWW_W3_ORG_2005_03_ADDRESSING, "RelatesTo");
 
     if (oldMessageID == null)
     {
@@ -83,11 +89,11 @@ public class DefaultPaosHandler extends AbstractPaosHandler
   }
 
   @Override
-  protected String getSessionId()
+  public String getSessionId()
   {
-    if (conversationObject instanceof StartPAOS)
+    if (conversationObject instanceof StartPAOS startPAOS)
     {
-      return ((StartPAOS)conversationObject).getSessionIdentifier();
+      return startPAOS.getSessionIdentifier();
     }
 
     String oldMessageID = Util.getHeaderValue(soapMessage, HTTP_WWW_W3_ORG_2005_03_ADDRESSING, "RelatesTo");
@@ -106,47 +112,50 @@ public class DefaultPaosHandler extends AbstractPaosHandler
     MessageSessionMapper.getInstance().remove(messageId);
   }
 
+  /**
+   * Overwritten to update the message id after the session lock was obtained.
+   *
+   * @param servletResponse the HTTP servlet response to write the PAOS message.
+   * @throws IOException
+   */
+  @Override
+  public void writeResponse(HttpServletResponse servletResponse) throws IOException, PaosHandlerException
+  {
+    updateMessageID();
+    super.writeResponse(servletResponse);
+  }
+
   @Override
   protected String createPAOSMessage(Object object)
-    throws SAXException, IOException, TransformerException, ParserConfigurationException
+    throws IOException, SOAPException
   {
-    ByteArrayOutputStream out = new ByteArrayOutputStream();
-    try (PrintWriter writer = new PrintWriter(out))
+
+    MessageFactory messageFactory = MessageFactory.newInstance();
+    SOAPMessage soapResponse = messageFactory.createMessage();
+    SOAPEnvelope soapEnvelope = soapResponse.getSOAPPart().getEnvelope();
+    SOAPHeader soapHeader = soapEnvelope.getHeader();
+
+    if (relatesTo != null)
     {
-      writer.println("<soap:Envelope xmlns:soap=\"http://schemas.xmlsoap.org/soap/envelope/\">");
-      writer.println("   <soap:Header>");
-      writer.println("      <sb:Correlation xmlns:sb=\"http://urn:liberty:sb:2003-08\"");
-      writer.println("         messageID=\"" + generateUniqueID() + "\"");
-      writer.println("         refToMessageID=\"" + sessionId + "\"/>");
-
-      if (relatesTo != null)
-      {
-        writer.print("      <RelatesTo xmlns=\"http://www.w3.org/2005/03/addressing\"" + " mustUnderstand=\"1\" "
-                     + "actor=\"http://schemas.xmlsoap.org/soap/actor/next\"" + ">");
-        writer.println(relatesTo + "</RelatesTo>");
-      }
-      writer.print("      <MessageID xmlns=\"http://www.w3.org/2005/03/addressing\">");
-      writer.println(messageId + "</MessageID>");
-
-      writer.println("   </soap:Header>");
-      writer.println("   <soap:Body>");
-      writer.println("   </soap:Body>");
-      writer.println("</soap:Envelope>");
+      soapHeader.addHeaderElement(new QName(HTTP_WWW_W3_ORG_2005_03_ADDRESSING, "RelatesTo")).setTextContent(relatesTo);
     }
-
-    Document paosEnvelope = Util.xml2document(new ByteArrayInputStream(out.toByteArray()));
-    Node soapBody = paosEnvelope.getElementsByTagName("soap:Body").item(0);
+    soapHeader.addHeaderElement(new QName(HTTP_WWW_W3_ORG_2005_03_ADDRESSING, "MessageID")).setTextContent(messageId);
 
     try
     {
       Marshaller m = JAXB_CONTEXT.createMarshaller();
-      m.marshal(object, soapBody);
+      m.marshal(object, soapEnvelope.getBody());
     }
     catch (JAXBException e)
     {
-      e.getCause();
+      log.warn("Could not marshal object into SOAP message. Error Message: {}", e.getMessage());
+      log.debug("Stack trace:", e);
     }
 
-    return XMLTransformer.xmlToString(paosEnvelope);
+    try (ByteArrayOutputStream baos = new ByteArrayOutputStream())
+    {
+      soapResponse.writeTo(baos);
+      return baos.toString();
+    }
   }
 }

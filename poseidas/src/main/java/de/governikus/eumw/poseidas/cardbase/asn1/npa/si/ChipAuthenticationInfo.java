@@ -80,7 +80,7 @@ public class ChipAuthenticationInfo extends SecurityInfo
     }
     catch (IOException e)
     {
-      throw new IllegalStateException(MESSAGE_CAN_NOT_CONVERT_TO_STRING);
+      throw new IllegalStateException(MESSAGE_CAN_NOT_CONVERT_TO_STRING, e);
     }
     result.append(STRING_KEY_ID);
     result.append(keyID != null ? keyID : STRING_NOT_GIVEN);

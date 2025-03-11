@@ -41,6 +41,7 @@ import de.governikus.eumw.poseidas.gov2server.constants.admin.IDManagementCodes;
 import de.governikus.eumw.poseidas.gov2server.constants.admin.ManagementMessage;
 import de.governikus.eumw.poseidas.server.pki.blocklist.BlockListService;
 import de.governikus.eumw.poseidas.server.pki.entities.TerminalPermission;
+
 import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
 
@@ -113,7 +114,6 @@ public class InfoMapBuilder
       {
         TerminalData cvc = new TerminalData(terminal.getCvc());
         getInfoFromCvc(result, cvc, terminal.getRefID(), terminal.getSectorID());
-        // TODO: The number of BlackListEntries is never shown anywhere but this query can be expensive
         if (cvc.getSectorPublicKeyHash() != null && withBlkNumber)
         {
           result.put(AdminPoseidasConstants.VALUE_PERMISSION_DATA_BLACKLIST_ENTRIES,

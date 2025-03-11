@@ -14,7 +14,7 @@
     <parent>
         <groupId>de.governikus.eumw</groupId>
         <artifactId>eumw</artifactId>
-        <version>3.3.0</version>
+        <version>3.4.0</version>
     </parent>
     <artifactId>poseidas</artifactId>
 
@@ -222,6 +222,29 @@
                             <generatePackage>de.governikus.eumw.config</generatePackage>
                         </configuration>
                     </execution>
+                    <execution>
+                        <id>tc-token</id>
+                        <goals>
+                            <goal>generate</goal>
+                        </goals>
+                        <configuration>
+                            <schemaDirectory>${project.basedir}/src/main/resources/tcToken</schemaDirectory>
+                            <schemaIncludes>
+                                <schemaInclude>TcToken.xsd</schemaInclude>
+                            </schemaIncludes>
+                            <bindingDirectory>
+                                ${project.basedir}/src/main/resources/tcToken
+                            </bindingDirectory>
+                            <bindingIncludes>
+                                <bindingInclude>
+                                    TcToken.xjb
+                                </bindingInclude>
+                            </bindingIncludes>
+                            <extension>true</extension>
+                            <generateDirectory>${project.build.directory}/generated-sources/tcToken
+                            </generateDirectory>
+                        </configuration>
+                    </execution>
                 </executions>
                 <configuration>
                     <schemaDirectory>src/main/resources/xsd</schemaDirectory>
@@ -407,6 +430,18 @@
                         </configuration>
                     </execution>
 
+                </executions>
+            </plugin>
+            <!-- test-jar is used for other modules -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-jar-plugin</artifactId>
+                <executions>
+                    <execution>
+                        <goals>
+                            <goal>test-jar</goal>
+                        </goals>
+                    </execution>
                 </executions>
             </plugin>
 

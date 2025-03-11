@@ -26,6 +26,7 @@ import de.governikus.eumw.poseidas.server.pki.CVCRequestHandler;
 import de.governikus.eumw.poseidas.server.pki.TerminalPermissionAOBean;
 import de.governikus.eumw.poseidas.server.pki.entities.PendingCertificateRequest;
 import de.governikus.eumw.poseidas.server.pki.entities.TerminalPermission;
+
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
@@ -97,6 +98,10 @@ public class ServiceProviderDetails
     }
     catch (NullPointerException e)
     {
+      if (log.isDebugEnabled())
+      {
+        log.debug("Failed to get chr", e);
+      }
       return "";
     }
   }
@@ -114,6 +119,10 @@ public class ServiceProviderDetails
     }
     catch (NullPointerException e)
     {
+      if (log.isDebugEnabled())
+      {
+        log.debug("Failed to get subject name", e);
+      }
       return "";
     }
   }
@@ -131,6 +140,10 @@ public class ServiceProviderDetails
     }
     catch (NullPointerException e)
     {
+      if (log.isDebugEnabled())
+      {
+        log.debug("Failed to get subject url", e);
+      }
       return "";
     }
   }
@@ -148,6 +161,10 @@ public class ServiceProviderDetails
     }
     catch (NullPointerException e)
     {
+      if (log.isDebugEnabled())
+      {
+        log.debug("Failed to get car", e);
+      }
       return "";
     }
   }
@@ -324,7 +341,6 @@ public class ServiceProviderDetails
     {
       return null;
     }
-    // TODO: Consider support for alphanumeric sequence numbers if the eumw supports these.
     return Integer.parseInt(currentHolderReference.substring(currentHolderReference.length() - 5));
   }
 
@@ -342,6 +358,10 @@ public class ServiceProviderDetails
     }
     catch (NullPointerException e)
     {
+      if (log.isDebugEnabled())
+      {
+        log.debug("Failed to get issuer name", e);
+      }
       return "";
     }
   }
@@ -359,6 +379,10 @@ public class ServiceProviderDetails
     }
     catch (NullPointerException e)
     {
+      if (log.isDebugEnabled())
+      {
+        log.debug("Failed to get issuer url", e);
+      }
       return "";
     }
   }
@@ -376,6 +400,10 @@ public class ServiceProviderDetails
     }
     catch (NullPointerException e)
     {
+      if (log.isDebugEnabled())
+      {
+        log.debug("Failed to get redirect url", e);
+      }
       return "";
     }
   }
@@ -393,6 +421,10 @@ public class ServiceProviderDetails
     }
     catch (NullPointerException e)
     {
+      if (log.isDebugEnabled())
+      {
+        log.debug("Failed to get terms of usage from cvc", e);
+      }
       return "";
     }
   }

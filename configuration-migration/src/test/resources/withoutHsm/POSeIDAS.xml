@@ -460,7 +460,7 @@ wgFIjYW32BFTxtM7dtWBAqzrfUrC3mMowQ==</masterListTrustAnchor>
               </clientKey>
           </sslKeys>
           <terminalAuthService sslKeysId="d-trust">
-              <url>https://berca-p1.d-trust.net/ps/dvca-at/</url>
+              <url>https://berca-p1.d-trust.net/ps/dvca-at</url>
           </terminalAuthService>
           <restrictedIdService sslKeysId="d-trust">
               <url>https://berca-p1.d-trust.net/ps/dvsd_v2</url>

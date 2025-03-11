@@ -9,11 +9,12 @@
 
 package de.governikus.eumw.eidasmiddleware.controller;
 
-import java.io.UnsupportedEncodingException;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 import java.util.Locale;
+
+import jakarta.servlet.http.HttpSession;
 
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.http.HttpStatus;
@@ -32,7 +33,6 @@ import de.governikus.eumw.eidasmiddleware.RequestProcessingException;
 import de.governikus.eumw.eidasmiddleware.eid.RequestingServiceProvider;
 import de.governikus.eumw.eidasmiddleware.handler.RequestHandler;
 import de.governikus.eumw.eidasmiddleware.handler.ResponseHandler;
-import de.governikus.eumw.eidasmiddleware.model.ResponseModel;
 import de.governikus.eumw.eidasstarterkit.EidasLoaEnum;
 import de.governikus.eumw.eidasstarterkit.EidasRequest;
 import de.governikus.eumw.poseidas.cardbase.StringUtil;
@@ -67,7 +67,8 @@ public class RequestReceiver
                             @RequestParam(required = false, name = HttpRedirectUtils.SIGALG_PARAMNAME) String sigAlg,
                             @RequestParam(required = false, name = HttpRedirectUtils.SIGVALUE_PARAMNAME) String signature,
                             @RequestParam(required = false, name = "sessionId") String sessionId,
-                            @RequestHeader(required = false, name = "User-Agent") String userAgent)
+                            @RequestHeader(required = false, name = "User-Agent") String userAgent,
+                            HttpSession httpSession)
   {
     // in case this parameter is present this is a SAML authn request
     if (StringUtil.notNullOrEmpty(samlRequestBase64))
@@ -78,13 +79,15 @@ public class RequestReceiver
                                                                              relayState,
                                                                              sigAlg,
                                                                              signature);
-        return handleEIDASRequest(eidasRequest, relayState, userAgent);
+        httpSession.setAttribute(eidasRequest.getId(), new ResponseSender.SamlResponseRecord(null, null, null));
+        // httpSession.setAttribute(SESSION_ID, eidasRequest.getId());
+        return handleEIDASRequest(eidasRequest, relayState, userAgent, httpSession);
       }
       catch (ErrorCodeWithResponseException e)
       {
         Arrays.stream(e.getDetails()).forEach(log::warn);
         log.debug(e.getMessage(), e);
-        return showSamlErrorPage(e, relayState);
+        return showSamlErrorPage(e, relayState, httpSession);
       }
       catch (RequestProcessingException e)
       {
@@ -111,18 +114,20 @@ public class RequestReceiver
   @PostMapping
   public ModelAndView doPost(@RequestParam(required = false, name = HttpRedirectUtils.RELAYSTATE_PARAMNAME) String relayState,
                              @RequestParam(HttpRedirectUtils.REQUEST_PARAMNAME) String samlRequestBase64,
-                             @RequestHeader(required = false, name = "User-Agent") String userAgent)
+                             @RequestHeader(required = false, name = "User-Agent") String userAgent,
+                             HttpSession httpSession)
   {
     try
     {
       EidasRequest eidasRequest = requestHandler.handleSAMLPostRequest(relayState, samlRequestBase64);
-      return handleEIDASRequest(eidasRequest, relayState, userAgent);
+      httpSession.setAttribute(eidasRequest.getId(), new ResponseSender.SamlResponseRecord(null, null, null));
+      return handleEIDASRequest(eidasRequest, relayState, userAgent, httpSession);
     }
     catch (ErrorCodeWithResponseException e)
     {
       Arrays.stream(e.getDetails()).forEach(log::warn);
       log.debug(e.getMessage(), e);
-      return showSamlErrorPage(e, relayState);
+      return showSamlErrorPage(e, relayState, httpSession);
     }
     catch (RequestProcessingException e)
     {
@@ -131,29 +136,44 @@ public class RequestReceiver
     }
   }
 
-  private ModelAndView handleEIDASRequest(EidasRequest request, String relayState, String userAgent)
+  private ModelAndView handleEIDASRequest(EidasRequest request,
+                                          String relayState,
+                                          String userAgent,
+                                          HttpSession httpSession)
   {
     if (EidasLoaEnum.LOA_TEST.equals(request.getAuthClassRef()))
     {
       String samlResponse = responseHandler.prepareDummyResponse(request.getId(), request.getTestCase());
-      return createResponseView(relayState, samlResponse, responseHandler.getConsumerURLForRequestID(request.getId()));
+      // To ensure that the language can be changed on the response view we have to override the samlResponseRecord
+      // object in the http session
+      ResponseSender.SamlResponseRecord samlResponseRecord = new ResponseSender.SamlResponseRecord(samlResponse,
+                                                                                                   responseHandler.getConsumerURLForRequestID(request.getId()),
+                                                                                                   relayState);
+      httpSession.setAttribute(request.getId(), samlResponseRecord);
+      return createResponseView(samlResponseRecord.relayState(),
+                                samlResponse,
+                                samlResponseRecord.consumerURL(),
+                                request.getId());
     }
     return showMiddlewarePage(request.getId(), userAgent);
   }
 
-  private ModelAndView createResponseView(String relayState, String samlResponse, String consumerURLForRequestID)
+  private ModelAndView createResponseView(String relayState,
+                                          String samlResponse,
+                                          String consumerURLForRequestID,
+                                          String authnRequestId)
   {
     ModelAndView response = new ModelAndView("response");
     response.addObject("SAML", samlResponse);
     response.addObject("consumerURL", consumerURLForRequestID);
     response.addObject("relayState", relayState);
+    response.addObject("authnRequestId", authnRequestId);
     response.addObject("linkToSelf", ContextPaths.EIDAS_CONTEXT_PATH + ContextPaths.RESPONSE_SENDER);
-    response.addObject("responseModel", new ResponseModel());
     return response;
   }
 
   /**
-   * Return thymeleaf error view in case the were any errors
+   * Return thymeleaf error view in case there were any errors
    */
   private ModelAndView showErrorPage(String errorMessage)
   {
@@ -169,15 +189,13 @@ public class RequestReceiver
   /**
    * Show the middleware page where the user can start the AusweisApp.
    *
-   * @param sessionId The sessionId that is returned by
-   *          {@link RequestHandler#handleSAMLRequest(String, String, boolean)}
+   * @param sessionId The sessionId that is returned by {@link RequestHandler#handleSAMLPostRequest(String, String)} or
+   *          {@link RequestHandler#handleSAMLRedirectRequest(String, String, String, String)}
    * @param userAgent to redirect the user the correct way to AusweisApp
    * @return The ModelAndView object that represents the thymeleaf view
    */
   private ModelAndView showMiddlewarePage(String sessionId, String userAgent)
   {
-    try
-    {
       String ausweisappLink;
       if (isMobileDevice(userAgent))
       {
@@ -192,28 +210,26 @@ public class RequestReceiver
       String tcTokenURL = requestHandler.getTcTokenURL(sessionId);
       modelAndView.addObject("tcTokenURL", tcTokenURL);
 
-      ausweisappLink = ausweisappLink.concat(URLEncoder.encode(tcTokenURL, StandardCharsets.UTF_8.name()));
+      ausweisappLink = ausweisappLink.concat(URLEncoder.encode(tcTokenURL, StandardCharsets.UTF_8));
       modelAndView.addObject("ausweisapp", ausweisappLink);
 
       String linkToSelf = ContextPaths.EIDAS_CONTEXT_PATH + ContextPaths.REQUEST_RECEIVER + "?sessionId=" + sessionId;
       modelAndView.addObject("linkToSelf", linkToSelf);
       return modelAndView;
     }
-    catch (UnsupportedEncodingException e)
-    {
-      return showErrorPage(e.getMessage());
-    }
-  }
 
-  private ModelAndView showSamlErrorPage(ErrorCodeWithResponseException e, String relayState)
+    private ModelAndView showSamlErrorPage(ErrorCodeWithResponseException e, String relayState, HttpSession httpSession)
   {
     RequestingServiceProvider reqSP = configurationService.getProviderByEntityID(e.getIssuer());
     String samlResponse = responseHandler.prepareSAMLErrorResponse(reqSP,
                                                                    e.getRequestId(),
                                                                    e.getCode(),
                                                                    e.getDetails());
-
-    return createResponseView(relayState, samlResponse, reqSP.getAssertionConsumerURL());
+    ResponseSender.SamlResponseRecord samlResponseRecord = new ResponseSender.SamlResponseRecord(samlResponse,
+                                                                                                 reqSP.getAssertionConsumerURL(),
+                                                                                                 relayState);
+    httpSession.setAttribute(e.getRequestId(), samlResponseRecord);
+    return createResponseView(relayState, samlResponse, reqSP.getAssertionConsumerURL(), e.getRequestId());
   }
 
   private boolean isMobileDevice(String userAgentHeader)

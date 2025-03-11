@@ -26,12 +26,12 @@ Glossary
         Java Key Store. See `Wikipedia about JKS <https://en.wikipedia.org/wiki/Keystore>`_
 
     SNMP
-        Simple Network Management Protocol (SNMP) is an Internet-standard protocol for collecting and
+        Simple Network Management Protocol (SNMP) is an internet standard protocol for collecting and
         organizing information about managed devices on IP networks and for modifying that information to change
         device behavior.
 
     eIDAS Middleware
-        The middleware as described in the eIDAS Technical Specification. See `collaborative platform created by
+        The Middleware as described in the eIDAS Technical Specification. See `collaborative platform created by
         the European Commission
         <https://ec.europa.eu/digital-building-blocks/wikis/display/DIGITAL/eIDAS+eID+Profile>`_
 
@@ -75,7 +75,7 @@ Glossary
         will be added to the Defect List.
 
     CVC
-        CVC (Card Verifiable Certificate) is the technical term for the :term:`Authorization Certificate`.
+        Card Verifiable Certificate is the technical term for the :term:`Authorization Certificate`.
 
     Request Signer Certificate
         This is a long-term certificate used to sign requests for :term:`Authorization Certificates<Authorization Certificate>`.

@@ -12,6 +12,7 @@ package de.governikus.eumw.poseidas.server.pki.caserviceaccess;
 import java.io.IOException;
 import java.net.URISyntaxException;
 import java.nio.charset.StandardCharsets;
+import java.security.GeneralSecurityException;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -71,7 +72,7 @@ public class TermAuthService
    * @param uri the URI to send the calls
    * @throws URISyntaxException
    */
-  TermAuthService(PKIServiceConnector con, String uri) throws URISyntaxException
+  TermAuthService(PKIServiceConnector con, String uri) throws URISyntaxException, GeneralSecurityException, IOException
   {
     TerminalAuthWebserviceClient_1_4_0 service = new TerminalAuthWebserviceClient_1_4_0(getClass().getResource("/META-INF/wsdl/CA-Services-1-4-0/part-3/termAuth/WS_DV_TerminalAuth.wsdl"));
     TerminalAuthWebService_1_4_0 tmpPort = service.getEACDVProtocolServicePort();

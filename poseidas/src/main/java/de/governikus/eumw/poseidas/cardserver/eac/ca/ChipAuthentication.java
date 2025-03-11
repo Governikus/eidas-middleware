@@ -136,7 +136,7 @@ public class ChipAuthentication
     }
     catch (IOException e)
     {
-      throw new IllegalArgumentException("Unable to construct CA: cannot read version");
+      throw new IllegalArgumentException("Unable to construct CA: cannot read version", e);
     }
     if (this.caVersion < 1 || this.caVersion > 3)
     {
@@ -199,29 +199,6 @@ public class ChipAuthentication
   }
 
   /**
-   * Processes final response from card (CA version 3).
-   *
-   * @param tacaKeyPair key pair, <code>null</code> not permitted
-   * @param cardKeyBytes public key of card, <code>null</code> or empty not permitted
-   * @return
-   * @throws IOException
-   * @throws InvalidKeyException
-   * @throws IllegalArgumentException if any parameter <code>null</code> or empty
-   * @throws NoSuchAlgorithmException
-   * @throws NoSuchProviderException
-   * @throws InvalidKeySpecException
-   * @throws InvalidEidException
-   */
-  public boolean processResponse(KeyPair tacaKeyPair, byte[] cardKeyBytes)
-    throws InvalidKeyException, NoSuchAlgorithmException, NoSuchProviderException, InvalidKeySpecException,
-    IOException, InvalidEidException
-  {
-    AssertUtil.notNull(tacaKeyPair, "key pair");
-    AssertUtil.notNullOrEmpty(cardKeyBytes, "card key bytes");
-    return this.processResponse(tacaKeyPair, null, null, cardKeyBytes);
-  }
-
-  /**
    * Processes final response from card (CA version 2).
    *
    * @param tacaKeyPair key pair, <code>null</code> not permitted
@@ -243,7 +220,7 @@ public class ChipAuthentication
     AssertUtil.notNull(tacaKeyPair, "key pair");
     AssertUtil.notNullOrEmpty(nonce, "nonce");
     AssertUtil.notNullOrEmpty(authToken, "authentication token");
-    return this.processResponse(tacaKeyPair, nonce, authToken, null);
+    return this.processCA2Response(tacaKeyPair, nonce, authToken);
   }
 
   /**
@@ -262,19 +239,16 @@ public class ChipAuthentication
    * @throws InvalidKeySpecException
    * @throws InvalidEidException
    */
-  private boolean processResponse(KeyPair tacaKeyPair, byte[] nonce, byte[] authToken, byte[] cardKeyBytes)
+  private boolean processCA2Response(KeyPair tacaKeyPair, byte[] nonce, byte[] authToken)
     throws IOException, InvalidKeyException, NoSuchAlgorithmException, NoSuchProviderException,
     InvalidKeySpecException, InvalidEidException
   {
+    byte[] cardKeyBytes;
     if (this.caVersion == 2 && nonce != null && nonce.length > 0 && authToken != null && authToken.length > 0)
     {
       SubjectPublicKeyInfo keyInfo = this.caPubKeyInfo.getChipAuthenticationPublicKey();
       // remove leading zero is ok here for current card generation, may be different for future cards
       cardKeyBytes = ByteUtil.removeLeadingZero(keyInfo.getSubjectPublicKey().getValue());
-    }
-    else if (this.caVersion == 3 && cardKeyBytes != null && cardKeyBytes.length > 0)
-    {
-      nonce = null;
     }
     else
     {
@@ -300,29 +274,22 @@ public class ChipAuthentication
     LOG.debug("Derived Encryption key: " + Hex.hexify(this.encKey.getEncoded()));
     LOG.debug("Derived MAC key: " + Hex.hexify(this.macKey.getEncoded()));
 
-    if (this.caVersion == 2)
+    int paceVersion = 2;
+    if (this.paceInfo != null)
     {
-      int paceVersion = 2;
-      if (this.paceInfo != null)
-      {
-        paceVersion = this.paceInfo.getVersion();
-      }
+      paceVersion = this.paceInfo.getVersion();
+    }
 
-      byte[] structure = this.kh.convertPublicKey(tacaKeyPair.getPublic(), this.oid, paceVersion == 1);
-      byte[] mac = CipherUtil.cMAC(structure, macKey, CipherUtil.AES_CMAC_DEFAULT_LENGTH);
-      if (!Arrays.equals(authToken, mac))
-      {
-        LOG.debug("CA not successful: could not verify MAC");
-        this.success = false;
-      }
-      else
-      {
-        LOG.debug("CA successful: MAC ok");
-        this.success = true;
-      }
+    byte[] structure = this.kh.convertPublicKey(tacaKeyPair.getPublic(), this.oid, paceVersion == 1);
+    byte[] mac = CipherUtil.cMAC(structure, macKey, CipherUtil.AES_CMAC_DEFAULT_LENGTH);
+    if (!Arrays.equals(authToken, mac))
+    {
+      LOG.debug("CA not successful: could not verify MAC");
+      this.success = false;
     }
     else
     {
+      LOG.debug("CA successful: MAC ok");
       this.success = true;
     }
     return this.success;

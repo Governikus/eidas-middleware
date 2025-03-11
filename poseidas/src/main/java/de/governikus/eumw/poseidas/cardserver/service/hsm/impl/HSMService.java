@@ -94,7 +94,7 @@ public interface HSMService extends Service
                                           boolean replace,
                                           int lifespan)
     throws IOException, NoSuchAlgorithmException, NoSuchProviderException, HSMException,
-    InvalidAlgorithmParameterException;
+    InvalidAlgorithmParameterException, CertificateException;
 
   /**
    * Signs given data with requested key and algorithm.

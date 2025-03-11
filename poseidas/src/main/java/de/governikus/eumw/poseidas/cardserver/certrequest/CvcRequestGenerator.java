@@ -38,6 +38,7 @@ import de.governikus.eumw.utils.key.SecurityProvider;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.UtilityClass;
+import lombok.extern.slf4j.Slf4j;
 
 
 /**
@@ -47,6 +48,7 @@ import lombok.experimental.UtilityClass;
  * @author Arne Stahlbock, ast@bos-bremen.de
  */
 @UtilityClass
+@Slf4j
 public class CvcRequestGenerator
 {
 
@@ -116,10 +118,7 @@ public class CvcRequestGenerator
     }
     catch (Exception e)
     {
-      IOException ioe = new IOException("Error in reading CHR from old certificate, possibly corrupted");
-
-      ioe.initCause(e);
-      throw ioe;
+      throw new IOException("Error in reading CHR from old certificate, possibly corrupted", e);
     }
 
     if (nextCvcSequenceNumber != null)
@@ -202,9 +201,7 @@ public class CvcRequestGenerator
       }
       catch (Exception e)
       {
-        IOException ioe = new IOException("Error in reading CHAT from old certificate, possibly corrupted");
-        ioe.initCause(e);
-        throw ioe;
+        throw new IOException("Error in reading CHAT from old certificate, possibly corrupted", e);
       }
     }
 
@@ -228,10 +225,7 @@ public class CvcRequestGenerator
       }
       catch (Exception e)
       {
-        IOException ioe = new IOException("Error in reading CHR from old certificate, possibly corrupted");
-
-        ioe.initCause(e);
-        throw ioe;
+        throw new IOException("Error in reading CHR from old certificate, possibly corrupted", e);
       }
       byte[] oldCHRBytes = oldCHR.getBytes(StandardCharsets.UTF_8);
       ASN1 outerCAR = new ASN1(CertificateRequestPath.OUTER_CA_REFERENCE.getTag().toByteArray(), oldCHRBytes);
@@ -289,9 +283,7 @@ public class CvcRequestGenerator
     }
     catch (IOException e)
     {
-      IOException ioe = new IOException("copying extensions from old certificate to request failed");
-      ioe.initCause(e);
-      throw ioe;
+      throw new IOException("copying extensions from old certificate to request failed", e);
     }
   }
 
@@ -353,9 +345,7 @@ public class CvcRequestGenerator
     }
     catch (Exception e)
     {
-      IOException ioe = new IOException("Creating clean request failed - probably given root certificate corrupted");
-      ioe.initCause(e);
-      throw ioe;
+      throw new IOException("Creating clean request failed - probably given root certificate corrupted", e);
     }
   }
 
@@ -375,9 +365,7 @@ public class CvcRequestGenerator
     }
     catch (Exception e)
     {
-      IOException ioe = new IOException("Setting holder reference failed");
-      ioe.initCause(e);
-      throw ioe;
+      throw new IOException("Setting holder reference failed", e);
     }
   }
 
@@ -407,9 +395,7 @@ public class CvcRequestGenerator
     }
     catch (Exception e)
     {
-      IOException ioe = new IOException("setting signature failed");
-      ioe.initCause(e);
-      throw ioe;
+      throw new IOException("setting signature failed", e);
     }
   }
 
@@ -549,9 +535,7 @@ public class CvcRequestGenerator
     }
     catch (Exception e)
     {
-      IOException ioe = new IOException("setting certificate description failed");
-      ioe.initCause(e);
-      throw ioe;
+      throw new IOException("setting certificate description failed", e);
     }
   }
 
@@ -579,6 +563,10 @@ public class CvcRequestGenerator
     }
     catch (Exception e)
     {
+      if (log.isDebugEnabled())
+      {
+        log.debug("could not create signature", e);
+      }
       s = Signature.getInstance("SHA256withCVC-ECDSA", SecurityProvider.BOUNCY_CASTLE_PROVIDER);
     }
     s.initVerify(pk);

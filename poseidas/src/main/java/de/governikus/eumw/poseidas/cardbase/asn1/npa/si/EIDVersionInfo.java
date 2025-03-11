@@ -68,7 +68,7 @@ public class EIDVersionInfo extends AbstractASN1Encoder
     }
     catch (IOException e)
     {
-      throw new IllegalStateException(MESSAGE_CAN_NOT_CONVERT_TO_STRING);
+      throw new IllegalStateException(MESSAGE_CAN_NOT_CONVERT_TO_STRING, e);
     }
     return result.toString();
   }

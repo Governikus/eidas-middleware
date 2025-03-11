@@ -161,6 +161,7 @@ public class EidasRoundTrip
                                                                   new Utils.X509KeyPair[]{keyPair2},
                                                                   new X509Certificate[]{keyPair.getCert()});
             Assert.assertTrue(eidasResponse != null);
+            Assert.assertEquals(EidasNameIdType.TRANSIENT, eidasResponse.getNameId().getType());
 
             for ( EidasAttribute atr : eidasResponse.getAttributes() )
             {

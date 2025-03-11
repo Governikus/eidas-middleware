@@ -19,8 +19,10 @@ import javax.smartcardio.ResponseAPDU;
 import de.governikus.eumw.poseidas.cardbase.crypto.sm.AESEncSSCIvParameterSpec;
 import de.governikus.eumw.poseidas.cardbase.crypto.sm.AESKeyMaterial;
 import de.governikus.eumw.poseidas.cardbase.crypto.sm.AESSecureMessaging;
+import lombok.extern.slf4j.Slf4j;
 
 
+@Slf4j
 public class AESBatchSecureMessaging extends AESSecureMessaging implements BatchSecureMessaging
 {
 
@@ -51,7 +53,7 @@ public class AESBatchSecureMessaging extends AESSecureMessaging implements Batch
     }
     else
     {
-      return;
+      throw new IllegalStateException("BatchAESEncSSCIvParameterSpec is not supported");
     }
 
     CommandAPDU[] commands = cardCommunication.getPlaintextCommands();
@@ -76,6 +78,10 @@ public class AESBatchSecureMessaging extends AESSecureMessaging implements Batch
       }
       catch (Exception e)
       {
+        if (log.isDebugEnabled())
+        {
+          log.debug("Failed to encrypt command", e);
+        }
         throwable = e;
         break;
       }
@@ -104,7 +110,7 @@ public class AESBatchSecureMessaging extends AESSecureMessaging implements Batch
     }
     else
     {
-      return;
+      throw new IllegalStateException("AESEncSSCIvParameterSpec is not supported");
     }
 
     // decrypt response
@@ -126,6 +132,10 @@ public class AESBatchSecureMessaging extends AESSecureMessaging implements Batch
         }
         catch (Exception e)
         {
+          if (log.isDebugEnabled())
+          {
+            log.debug("Failed to decrypt response", e);
+          }
           throwable = e;
           break;
         }

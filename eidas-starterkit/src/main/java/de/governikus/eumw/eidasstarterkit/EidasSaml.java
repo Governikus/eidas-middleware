@@ -42,6 +42,7 @@ import de.governikus.eumw.eidascommon.ErrorCodeException;
 import de.governikus.eumw.eidascommon.Utils;
 import de.governikus.eumw.eidascommon.Utils.X509KeyPair;
 import de.governikus.eumw.eidasstarterkit.person_attributes.EidasPersonAttributes;
+
 import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
 import net.shibboleth.utilities.java.support.component.ComponentInitializationException;
@@ -466,8 +467,10 @@ public class EidasSaml
     StreamSource s3 = new StreamSource(EidasSaml.class.getResourceAsStream("xenc-schema.xsd"));
     StreamSource s4 = new StreamSource(EidasSaml.class.getResourceAsStream("xmldsig-core-schema.xsd"));
     StreamSource s5 = new StreamSource(EidasSaml.class.getResourceAsStream("NaturalPersonShema.xsd"));
+    StreamSource s6 = new StreamSource(EidasSaml.class.getResourceAsStream("xenc-schema-11.xsd"));
 
-    Schema schema = sf.newSchema(new StreamSource[]{s5, s4, s3, s1, s2});
+
+    Schema schema = sf.newSchema(new StreamSource[]{s5, s4, s3, s6, s1, s2,});
     Validator validator = Utils.getValidator(schema);
     validator.validate(new StreamSource(is));
     if (resetStreamAfterValidation)

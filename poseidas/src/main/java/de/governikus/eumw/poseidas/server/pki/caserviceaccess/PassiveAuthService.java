@@ -9,7 +9,9 @@
 
 package de.governikus.eumw.poseidas.server.pki.caserviceaccess;
 
+import java.io.IOException;
 import java.net.URISyntaxException;
+import java.security.GeneralSecurityException;
 
 import jakarta.xml.ws.BindingProvider;
 
@@ -37,7 +39,8 @@ public class PassiveAuthService
   private final PassiveAuthWebService_1_4_0 port;
 
 
-  PassiveAuthService(PKIServiceConnector con, String uri) throws URISyntaxException
+  PassiveAuthService(PKIServiceConnector con, String uri)
+    throws URISyntaxException, GeneralSecurityException, IOException
   {
     PassiveAuthWebserviceClient_1_4_0 service = new PassiveAuthWebserviceClient_1_4_0(getClass().getResource("META-INF/wsdl/CA-Services-1-4-0/part-3/passiveAuth/WS_DV_PassiveAuth.wsdl"));
     PassiveAuthWebService_1_4_0 tmpPort = service.getEACDVProtocolServicePort();

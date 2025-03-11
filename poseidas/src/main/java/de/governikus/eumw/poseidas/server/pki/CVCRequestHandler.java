@@ -58,6 +58,7 @@ import de.governikus.eumw.poseidas.server.pki.entities.CertInChain;
 import de.governikus.eumw.poseidas.server.pki.entities.PendingCertificateRequest;
 import de.governikus.eumw.poseidas.server.pki.entities.TerminalPermission;
 import de.governikus.eumw.poseidas.services.terminal.auth.wsdl.v1_4_0.RequestCertificateReturnCodeType;
+
 import lombok.extern.slf4j.Slf4j;
 
 
@@ -303,7 +304,6 @@ public class CVCRequestHandler extends BerCaRequestHandlerBase
     // Check the terminal CVC and add it to the list as first element
     if (terminalCertificate.isSelfSigned())
     {
-      // FIXME: throw appropriate Exception
       throw new IllegalArgumentException("First CVC in list is self signed and not the terminal CVC");
     }
     TerminalData check = terminalCertificate;
@@ -366,6 +366,10 @@ public class CVCRequestHandler extends BerCaRequestHandlerBase
     }
     catch (IOException e)
     {
+      if (log.isDebugEnabled())
+      {
+        log.debug("Can not parse given cvc bytes", e);
+      }
       return false;
     }
   }
@@ -777,6 +781,7 @@ public class CVCRequestHandler extends BerCaRequestHandlerBase
     catch (GovManagementException e)
     {
       log.error("{}: cannot fetch public sector key", cvcRefId, e);
+      throw e;
     }
   }
 

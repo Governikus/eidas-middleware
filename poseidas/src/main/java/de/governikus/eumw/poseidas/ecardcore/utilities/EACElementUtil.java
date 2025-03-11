@@ -19,8 +19,10 @@ import de.governikus.eumw.eidascommon.Utils;
 import iso.std.iso_iec._24727.tech.schema.DIDAuthenticationDataType;
 import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
 
+@Slf4j
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
 public final class EACElementUtil
 {
@@ -55,6 +57,10 @@ public final class EACElementUtil
     }
     catch (ParserConfigurationException e)
     {
+      if (log.isDebugEnabled())
+      {
+        log.debug("Failed to get document builder", e);
+      }
       // nothing
     }
   }

@@ -52,16 +52,14 @@
                 Lists <span class="fa fa-list"></span>
             </button>
         </li>
-        <div th:if="${@environment.getProperty('poseidas.tls.renewal.active')}">
-            <li class="nav-item btn-lg text-center" role="presentation" style="padding-bottom: 0;">
-                <button class="nav-link toggleTabChange" id="pills-tls-tab" data-bs-toggle="pill"
-                        data-bs-target="#pills-tls"
-                        type="button" role="tab"
-                        aria-controls="pills-tls" aria-selected="false">
-                    TLS <span class="fa fa-lock"></span>
-                </button>
-            </li>
-        </div>
+        <li class="nav-item btn-lg text-center" role="presentation" style="padding-bottom: 0;">
+            <button class="nav-link toggleTabChange" id="pills-tls-tab" data-bs-toggle="pill"
+                    data-bs-target="#pills-tls"
+                    type="button" role="tab"
+                    aria-controls="pills-tls" aria-selected="false">
+                TLS <span class="fa fa-lock"></span>
+            </button>
+        </li>
     </ul>
 
     <div class="tab-content" id="pills-tabContent">
@@ -443,7 +441,7 @@
                                                 </div>
                                             </div>
                                             <div th:unless="${@environment.getProperty('hsm.type') == 'PKCS11'}">
-                                                <div th:replace="~{fragments/configOptions :: keypairsRenewTlsClientKeyPair('mTLS Key Pair','tlsKeyPairNameToUseForNewCsr', 'The key pair to be used to generate a CSR. Select \'Generate New Key Pair\' to use a new key', ${entity.getCurrentTlsClientKeyPairName()})}"></div>
+                                                <div th:replace="~{fragments/configOptions :: keypairsRenewTlsClientKeyPair('mTLS Key Pair','tlsKeyPairNameToUseForNewCsr', 'The key pair to be used to generate a CSR. The current Key Pair and Key Pairs used as in the past may not be used. Select \'Generate New Key Pair\' to use a new key.', ${entity.getCurrentTlsClientKeyPairName()})}"></div>
                                             </div>
                                             <div class="col-auto">
                                                 <button type="submit" name="submit" value="value"

@@ -67,7 +67,7 @@ public class PACEDomainParameterInfo extends DomainParameterInfo
     }
     catch (IOException e)
     {
-      throw new IllegalStateException(MESSAGE_CAN_NOT_CONVERT_TO_STRING);
+      throw new IllegalStateException(MESSAGE_CAN_NOT_CONVERT_TO_STRING, e);
     }
     result.append(STRING_PARAMETER_ID);
     result.append(parameterID != null ? parameterID : STRING_NOT_GIVEN);

@@ -1,5 +1,6 @@
 package de.governikus.eumw.poseidas.server.pki.caserviceaccess;
 
+import java.io.IOException;
 import java.net.URISyntaxException;
 import java.security.GeneralSecurityException;
 import java.security.KeyStore;
@@ -52,7 +53,7 @@ public class DvcaServiceFactory
       String serviceUrl = dvcaConfiguration.getPassiveAuthServiceUrl();
       return new PassiveAuthService(connector, serviceUrl);
     }
-    catch (GeneralSecurityException | NullPointerException e)
+    catch (GeneralSecurityException | IOException | NullPointerException e)
     {
       log.error("{}: problem with crypto data of SP", serviceProvider.getCVCRefID(), e);
       throw new GovManagementException(GlobalManagementCodes.EC_UNEXPECTED_ERROR, e.getMessage());
@@ -81,7 +82,7 @@ public class DvcaServiceFactory
       String serviceUrl = dvcaConfiguration.getTerminalAuthServiceUrl();
       return new TermAuthService(connector, serviceUrl);
     }
-    catch (GeneralSecurityException | NullPointerException e)
+    catch (GeneralSecurityException | IOException | NullPointerException e)
     {
       log.error("{}: problem with crypto data", serviceProvider.getCVCRefID(), e);
       throw new GovManagementException(GlobalManagementCodes.EC_UNEXPECTED_ERROR, e.getMessage());
@@ -114,12 +115,9 @@ public class DvcaServiceFactory
       {
         return new RestrictedIdService140(connector, serviceUrl);
       }
-      else
-      {
-        return new RestrictedIdService110(connector, serviceUrl);
-      }
+      return new RestrictedIdService110(connector, serviceUrl);
     }
-    catch (GeneralSecurityException | NullPointerException e)
+    catch (GeneralSecurityException | IOException | NullPointerException e)
     {
       log.error("{}: problem with crypto data of this SP", serviceProvider.getCVCRefID(), e);
       throw new GovManagementException(GlobalManagementCodes.EC_UNEXPECTED_ERROR, e.getMessage());

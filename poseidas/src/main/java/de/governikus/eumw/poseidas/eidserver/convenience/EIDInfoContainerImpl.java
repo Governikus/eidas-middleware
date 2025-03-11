@@ -18,6 +18,7 @@ import de.governikus.eumw.poseidas.ecardcore.model.ResultMinor;
 import de.governikus.eumw.poseidas.ecardcore.utilities.ECardCoreUtil;
 import de.governikus.eumw.poseidas.eidmodel.data.EIDKeys;
 import de.governikus.eumw.poseidas.eidserver.ecardid.EIDInfoContainer;
+
 import oasis.names.tc.dss._1_0.core.schema.ObjectFactory;
 import oasis.names.tc.dss._1_0.core.schema.Result;
 
@@ -36,7 +37,8 @@ public class EIDInfoContainerImpl implements EIDInfoContainer
 
   private Result result;
 
-  private EIDStatus status;
+  // Set to failed on default to only indicate success explicitly
+  private EIDStatus status = EIDStatus.FAILED;
 
   public EIDInfoContainerImpl()
   {

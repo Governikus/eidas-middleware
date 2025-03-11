@@ -96,6 +96,10 @@ public class SessionStoreAOBean implements SessionStoreAO
     }
     catch (NoResultException e)
     {
+      if (LOG.isDebugEnabled())
+      {
+        LOG.debug("No session found for requestId: " + requestId, e);
+      }
       return null;
     }
   }
@@ -188,7 +192,7 @@ public class SessionStoreAOBean implements SessionStoreAO
   public long getNumberSessions()
   {
     TypedQuery<Long> query = entityManager.createNamedQuery("getNumberEntries", Long.class);
-    return query.getSingleResult().longValue();
+    return query.getSingleResult();
   }
 
   private synchronized void cleanup() throws ErrorCodeException

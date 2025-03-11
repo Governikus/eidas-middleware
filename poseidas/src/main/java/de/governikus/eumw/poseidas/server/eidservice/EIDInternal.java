@@ -151,6 +151,10 @@ public class EIDInternal
     }
     catch (ErrorCodeException e)
     {
+      if (LOG.isDebugEnabled())
+      {
+        LOG.debug("Failed to store session", e);
+      }
       String minorCode;
       switch (e.getCode())
       {
@@ -306,6 +310,10 @@ public class EIDInternal
     }
     catch (CertificateException e)
     {
+      if (LOG.isDebugEnabled())
+      {
+        LOG.debug("Failed to get certificate factory", e);
+      }
       // without certificate factory the is little we can do
       return Collections.emptyList();
     }
@@ -466,14 +474,14 @@ public class EIDInternal
     }
     if (session == null)
     {
-      return new EIDResultResponse(null, Constants.EID_MAJOR_ERROR,
+      return new EIDResultResponse(Constants.EID_MAJOR_ERROR,
                                    Constants.EID_MINOR_GETRESULT_INVALID_SESSION, null,
                                    "<unknown>: " + requestId + COLON_AND_SPACE);
     }
     if (session.getSequenceNumber() != null && requestCounter != session.getSequenceNumber() + 1)
     {
       sessionManager.remove(session);
-      return new EIDResultResponse(null, Constants.EID_MAJOR_ERROR,
+      return new EIDResultResponse(Constants.EID_MAJOR_ERROR,
                                    Constants.EID_MINOR_GETRESULT_INVALID_COUNTER, null,
                                    session.getLogPrefix());
     }
@@ -488,13 +496,13 @@ public class EIDInternal
       catch (ErrorCodeException e)
       {
         LOG.error(session.getLogPrefix() + "Can not store session", e);
-        return new EIDResultResponse(null, Constants.EID_MAJOR_ERROR,
+        return new EIDResultResponse(Constants.EID_MAJOR_ERROR,
                                      Constants.EID_MINOR_COMMON_INTERNALERROR, null, session.getLogPrefix());
       }
-      return new EIDResultResponse(null, Constants.EID_MAJOR_ERROR,
+      return new EIDResultResponse(Constants.EID_MAJOR_ERROR,
                                    Constants.EID_MINOR_GETRESULT_NO_RESULT_YET, null, session.getLogPrefix());
     }
-    EIDResultResponse response = new EIDResultResponse(session.getStatus(), session.getResult(),
+    EIDResultResponse response = new EIDResultResponse(session.getResult(),
                                                        session.getInfoMap(), session.getLogPrefix());
     sessionManager.remove(session);
     return response;

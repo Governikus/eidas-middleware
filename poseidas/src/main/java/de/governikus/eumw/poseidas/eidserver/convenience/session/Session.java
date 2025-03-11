@@ -76,23 +76,10 @@ public class Session implements Serializable
 
   /**
    * @param sessionInput Data provided by the EIDServer about the Session to be handled
-   * @param framework to handle the EID sequence
    * @throws ChatOptionNotAllowedException if required or optional field is not allowed to be active
    * @throws IllegalArgumentException if the SessionInput contains invalid or missing data
    */
   Session(SessionInput sessionInput) throws ChatOptionNotAllowedException
-  {
-    this(sessionInput, SESSION_TIMEOUT);
-  }
-
-  /**
-   * @param sessionInput Data provided by the EIDServer about the Session to be handled
-   * @param timeout to be set for session
-   * @param framework to handle the EID sequence
-   * @throws ChatOptionNotAllowedException if required or optional field is not allowed to be active
-   * @throws IllegalArgumentException if the SessionInput contains invalid or missing data
-   */
-  Session(SessionInput sessionInput, Long timeout) throws ChatOptionNotAllowedException
   {
     if (sessionInput == null)
     {
@@ -167,11 +154,8 @@ public class Session implements Serializable
                                          + "CVC in SessionInput is not wellformed. "
                                          + "Terminal CVC not added: ", e);
     }
-    if (timeout == null)
-    {
-      timeout = SESSION_TIMEOUT;
-    }
-    validTo = System.currentTimeMillis() + timeout;
+
+    validTo = System.currentTimeMillis() + SESSION_TIMEOUT;
     LOG.debug(sessionInput.getLogPrefix() + "Session timout set to: " + validTo);
   }
 

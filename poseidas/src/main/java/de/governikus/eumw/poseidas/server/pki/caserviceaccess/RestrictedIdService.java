@@ -10,10 +10,10 @@ public interface RestrictedIdService
 
   /**
    * Requests a new block list.
-   * @param deltabase The base from where the delta should be generated.
-   * @param sectorID The identifier of this sector. E.g the {@link TerminalPermission#getSectorID()}.
-   * @return
    *
+   * @param deltabase The base from where the delta should be generated.
+   * @param sectorID The identifier of this sector. E.g. the {@link TerminalPermission#getSectorID()}.
+   * @return block list
    * @throws GovManagementException
    */
   BlackListResult getBlacklistResult(byte[] deltabase, byte[] sectorID) throws GovManagementException;
@@ -21,7 +21,7 @@ public interface RestrictedIdService
   byte[] getSectorPublicKey(byte[] sectorId) throws GovManagementException;
 
   /**
-   * Data object to hold the result of a blacklist request, either two delta lists or an URI to download the complete
+   * Data object to hold the result of a blacklist request, either two delta lists or a URI to download the complete
    * list.
    */
   @Getter

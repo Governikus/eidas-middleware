@@ -493,6 +493,10 @@ public class TerminalPermissionAOBean implements TerminalPermissionAO
     }
     catch (UnknownHostException e)
     {
+      if (log.isDebugEnabled())
+      {
+        log.debug("Could not get local host address", e);
+      }
       // unable to identify myself, locking not possible
       return null;
     }
@@ -577,6 +581,10 @@ public class TerminalPermissionAOBean implements TerminalPermissionAO
     }
     catch (UnknownHostException e)
     {
+      if (log.isDebugEnabled())
+      {
+        log.debug("Could not get local host address", e);
+      }
       return new ArrayList<>();
     }
 
@@ -622,6 +630,10 @@ public class TerminalPermissionAOBean implements TerminalPermissionAO
     }
     catch (UnknownHostException e)
     {
+      if (log.isDebugEnabled())
+      {
+        log.debug("Could not get local host address", e);
+      }
       // false anyway
     }
     return false;

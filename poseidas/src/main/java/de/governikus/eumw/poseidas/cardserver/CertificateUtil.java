@@ -29,6 +29,7 @@ import org.bouncycastle.operator.OperatorCreationException;
 import org.bouncycastle.operator.jcajce.JcaContentSignerBuilder;
 
 import de.governikus.eumw.utils.key.SecurityProvider;
+
 import lombok.extern.slf4j.Slf4j;
 
 
@@ -51,6 +52,7 @@ public final class CertificateUtil
    * @return self-signed certificate or null when no certificate could created
    */
   public static Certificate createSelfSignedCert(KeyPair keyPair, String subject, int lifespan, Provider provider)
+    throws CertificateException, OperatorCreationException
   {
     return createSignedCert(keyPair.getPublic(), keyPair.getPrivate(), subject, subject, lifespan, provider);
   }
@@ -72,11 +74,60 @@ public final class CertificateUtil
                                              String issuer,
                                              int lifespan,
                                              Provider provider)
+    throws OperatorCreationException, CertificateException
+  {
+    Date startDate = new Date();
+    Date endDate = getExpirationDate(lifespan, startDate);
+
+    return createSignedCert(publicKey, privateKey, subject, issuer, startDate, endDate, provider);
+  }
+
+  /**
+   * Creates a signed certificate from given keys.
+   *
+   * @param publicKey key to be included in certificate
+   * @param privateKey key to sign the certificate
+   * @param subject subject for the certificate as X.500 name
+   * @param startDate the start of the certificates validity
+   * @param endDate the end of the certificates validity
+   * @param provider security provider to use
+   * @return signed certificate or null when no certificate could be created
+   */
+  public static Certificate createSelfSignedCert(PublicKey publicKey,
+                                                 PrivateKey privateKey,
+                                                 String subject,
+                                                 Date startDate,
+                                                 Date endDate,
+                                                 Provider provider)
+    throws OperatorCreationException, CertificateException
+  {
+    return createSignedCert(publicKey, privateKey, subject, subject, startDate, endDate, provider);
+  }
+
+  /**
+   * Creates a signed certificate from given keys.
+   *
+   * @param publicKey key to be included in certificate
+   * @param privateKey key to sign the certificate
+   * @param subject subject for the certificate as X.500 name
+   * @param issuer issuer for the certificate as X.500 name
+   * @param startDate the start of the certificates validity
+   * @param endDate the end of the certificates validity
+   * @param provider security provider to use
+   * @return signed certificate or null when no certificate could created
+   */
+  public static Certificate createSignedCert(PublicKey publicKey,
+                                             PrivateKey privateKey,
+                                             String subject,
+                                             String issuer,
+                                             Date startDate,
+                                             Date endDate,
+                                             Provider provider)
+    throws OperatorCreationException, CertificateException
   {
     String algo = getAlgorithm(privateKey);
 
-    Date startDate = new Date();
-    Date endDate = getExpirationDate(lifespan, startDate);
+
     X500Name subjectDnName = new X500Name(subject);
     X500Name issuerDnName = new X500Name(issuer);
     BigInteger certSerialNumber = new BigInteger(Long.toString(startDate.getTime()));
@@ -93,12 +144,13 @@ public final class CertificateUtil
     catch (OperatorCreationException e)
     {
       log.error("Can not build Content Signer. No Certificate was created.", e);
+      throw e;
     }
     catch (CertificateException e)
     {
       log.error("Can not create certificate", e);
+      throw e;
     }
-    return null;
   }
 
   private static Date getExpirationDate(int lifespan, Date startDate)

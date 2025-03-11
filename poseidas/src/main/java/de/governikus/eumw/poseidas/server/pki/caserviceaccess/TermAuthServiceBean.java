@@ -1,5 +1,6 @@
 package de.governikus.eumw.poseidas.server.pki.caserviceaccess;
 
+import java.io.IOException;
 import java.net.URISyntaxException;
 import java.security.GeneralSecurityException;
 import java.security.KeyStore;
@@ -66,7 +67,7 @@ public class TermAuthServiceBean
       }
       return new TermAuthService(connector, serviceUrl);
     }
-    catch (GeneralSecurityException | NullPointerException e)
+    catch (GeneralSecurityException | IOException | NullPointerException e)
     {
       log.error("{}: problem with crypto data", serviceProviderType.getCVCRefID(), e);
       throw new GovManagementException(GlobalManagementCodes.EC_UNEXPECTED_ERROR, e.getMessage());

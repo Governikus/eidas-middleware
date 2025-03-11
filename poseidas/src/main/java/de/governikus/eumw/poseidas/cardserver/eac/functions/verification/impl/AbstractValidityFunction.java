@@ -16,6 +16,7 @@ import javax.smartcardio.CommandAPDU;
 import javax.smartcardio.ResponseAPDU;
 
 import de.governikus.eumw.poseidas.cardbase.AssertUtil;
+import de.governikus.eumw.poseidas.cardbase.card.SmartCardCodeConstants;
 import de.governikus.eumw.poseidas.cardserver.eac.InputAPDUInfoTypeUtil;
 import de.governikus.eumw.poseidas.cardserver.eac.functions.FunctionParameter;
 import de.governikus.eumw.poseidas.cardserver.eac.functions.FunctionStep;
@@ -117,15 +118,15 @@ public abstract class AbstractValidityFunction<T extends FunctionParameter>
 
     int returnCode = new ResponseAPDU(transmitResult.getData().getOutputAPDU().get(responseIndices[0])).getSW();
     ValidityVerificationResult vvResult;
-    if (returnCode == 0x9000)
+    if (returnCode == SmartCardCodeConstants.SUCCESSFULLY_PROCESSED)
     {
       vvResult = new ValidityVerificationResult(true);
     }
-    else if (returnCode == 0x6a88)
+    else if (returnCode == SmartCardCodeConstants.REFERENCED_DATA_NOT_FOUND)
     {
       vvResult = new ValidityVerificationResult(new IllegalStateException("referenced data not found"));
     }
-    else if (returnCode == 0x6982)
+    else if (returnCode == SmartCardCodeConstants.SECURITY_STATUS_NOT_SATISFIED)
     {
       vvResult = new ValidityVerificationResult(new IllegalStateException("terminal not authorized to perform verification"));
     }

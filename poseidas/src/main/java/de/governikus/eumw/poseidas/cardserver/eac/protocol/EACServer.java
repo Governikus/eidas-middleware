@@ -1,11 +1,10 @@
 /*
- * Copyright (c) 2020 Governikus KG. Licensed under the EUPL, Version 1.2 or as soon they will be approved by
- * the European Commission - subsequent versions of the EUPL (the "Licence"); You may not use this work except
- * in compliance with the Licence. You may obtain a copy of the Licence at:
- * http://joinup.ec.europa.eu/software/page/eupl Unless required by applicable law or agreed to in writing,
- * software distributed under the Licence is distributed on an "AS IS" basis, WITHOUT WARRANTIES OR CONDITIONS
- * OF ANY KIND, either express or implied. See the Licence for the specific language governing permissions and
- * limitations under the Licence.
+ * Copyright (c) 2020 Governikus KG. Licensed under the EUPL, Version 1.2 or as soon they will be approved by the
+ * European Commission - subsequent versions of the EUPL (the "Licence"); You may not use this work except in compliance
+ * with the Licence. You may obtain a copy of the Licence at: http://joinup.ec.europa.eu/software/page/eupl Unless
+ * required by applicable law or agreed to in writing, software distributed under the Licence is distributed on an
+ * "AS IS" basis, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the Licence for the
+ * specific language governing permissions and limitations under the Licence.
  */
 
 package de.governikus.eumw.poseidas.cardserver.eac.protocol;
@@ -136,8 +135,7 @@ public class EACServer
    * @param additionalParameters additional data: array of two or three elements required, first must be
    *          {@link EAC1InputType}, second {@link CertAndKeyProvider}, third element ( {@link Boolean})
    * @return {@link EAC2InputType} for TACA
-   * @throws IllegalArgumentException if firstOutput <code>null</code> or additionalParameters not matching
-   *           requirement
+   * @throws IllegalArgumentException if firstOutput <code>null</code> or additionalParameters not matching requirement
    * @throws IOException
    * @throws InvalidAlgorithmParameterException
    * @throws NoSuchAlgorithmException
@@ -146,8 +144,7 @@ public class EACServer
    * @throws InvalidKeySpecException
    * @throws SignatureException
    */
-  private EAC2InputTypeWrapper produceSecondInput(EAC1OutputTypeWrapper firstOutput,
-                                                  Object[] additionalParameters)
+  private EAC2InputTypeWrapper produceSecondInput(EAC1OutputTypeWrapper firstOutput, Object[] additionalParameters)
     throws IOException, InvalidAlgorithmParameterException, NoSuchAlgorithmException, NoSuchProviderException,
     InvalidKeyException, InvalidKeySpecException, SignatureException, UnrecoverableKeyException, KeyStoreException,
     CertificateException, HSMException, InvalidEidException
@@ -211,8 +208,7 @@ public class EACServer
 
     // generate key pair
     this.ephemeralTACAKeys = kh.generateKeyPair(this.caData.getCaDomParamInfo());
-    LOG.debug("Generated key pair, public part: "
-              + Hex.hexify(this.ephemeralTACAKeys.getPublic().getEncoded()));
+    LOG.debug("Generated key pair, public part: " + Hex.hexify(this.ephemeralTACAKeys.getPublic().getEncoded()));
     byte[] compressedKey = kh.compressKey(this.ephemeralTACAKeys.getPublic());
     byte[] ephemeralPublicKey = kh.ephemeralKeyBytes(this.ephemeralTACAKeys.getPublic());
 
@@ -232,6 +228,7 @@ public class EACServer
     if (cl.isEmpty() && !firstOutput.getCertificationAuthorityReference().isEmpty())
     {
       // certificate chain not available but requested
+      LOG.warn("Client requested all certificates, but we already sent all.");
       return null;
     }
 
@@ -288,8 +285,7 @@ public class EACServer
                                          byte[] rPicc,
                                          byte[] compressedKey)
     throws InvalidKeyException, UnrecoverableKeyException, InvalidKeySpecException, NoSuchAlgorithmException,
-    NoSuchProviderException, SignatureException, KeyStoreException, CertificateException, IOException,
-    HSMException
+    NoSuchProviderException, SignatureException, KeyStoreException, CertificateException, IOException, HSMException
   {
     AssertUtil.notNull(termCert, "terminal certificate");
     AssertUtil.notNullOrEmpty(idPicc, "ID of PICC");
@@ -309,8 +305,7 @@ public class EACServer
    * @param secondOutput {@link EAC2OutputType} from TACA, <code>null</code> not permitted
    * @param additionalParameters additional data: array of one element required - {@link SignedDataChecker}
    * @return {@link EACFinal} object holding relevant data for following procedures outside of EAC
-   * @throws IllegalArgumentException if secondOutput <code>null</code> or additionalParameters not matching
-   *           requirement
+   * @throws IllegalArgumentException if secondOutput <code>null</code> or additionalParameters not matching requirement
    * @throws IOException
    * @throws NoSuchAlgorithmException
    * @throws NoSuchPaddingException
@@ -322,10 +317,9 @@ public class EACServer
    * @throws IllegalBlockSizeException
    * @throws InvalidEidException
    */
-  private EACFinal processCompleteTACAOutput(EAC2OutputTypeWrapper secondOutput,
-                                             Object[] additionalParameters)
-    throws IOException, NoSuchAlgorithmException, InvalidKeyException, NoSuchProviderException,
-    InvalidKeySpecException, InvalidEidException
+  private EACFinal processCompleteTACAOutput(EAC2OutputTypeWrapper secondOutput, Object[] additionalParameters)
+    throws IOException, NoSuchAlgorithmException, InvalidKeyException, NoSuchProviderException, InvalidKeySpecException,
+    InvalidEidException
   {
     AssertUtil.notNull(secondOutput, "second output");
     AssertUtil.notNullOrEmpty(additionalParameters, "additional parameters");
@@ -345,15 +339,8 @@ public class EACServer
     byte[] nonce = secondOutput.getNonce();
     byte[] authToken = secondOutput.getAuthenticationToken();
     byte[] cardKeyBytes = secondOutput.getEphemeralPublicKey();
-    if (this.caData.getCaInfo().getVersion() == 3)
-    {
-      AssertUtil.notNull(cardKeyBytes, "ephemeral public key");
-    }
-    else
-    {
-      AssertUtil.notNull(nonce, "nonce from card");
-      AssertUtil.notNull(authToken, "authentication token from card");
-    }
+    AssertUtil.notNull(nonce, "nonce from card");
+    AssertUtil.notNull(authToken, "authentication token from card");
 
     // check signature on EF.CardSecurity
     Certificate signerCert = checker.checkSignedData(cardSecurityBytes);
@@ -379,15 +366,7 @@ public class EACServer
     }
     ChipAuthentication ca = new ChipAuthentication(this.caData, caPubKeyInfo, this.paceInfo);
 
-    boolean success;
-    if (this.caData.getCaInfo().getVersion() == 3)
-    {
-      success = ca.processResponse(this.ephemeralTACAKeys, cardKeyBytes);
-    }
-    else
-    {
-      success = ca.processResponse(this.ephemeralTACAKeys, nonce, authToken);
-    }
+    boolean success = ca.processResponse(this.ephemeralTACAKeys, nonce, authToken);
 
     if (success)
     {
@@ -400,6 +379,10 @@ public class EACServer
         AESKeyMaterial smKeyMaterial = new AESKeyMaterial(encKey, macKey, ssc);
         sm = new AESBatchSecureMessaging(smKeyMaterial);
       }
+      else
+      {
+        throw new IllegalArgumentException("secure messaging is not supported");
+      }
       return new EACFinal(sm, cardSecurityBytes, this.caData, cardKeyBytes);
     }
     return null;
@@ -410,25 +393,23 @@ public class EACServer
    *
    * @param <P> type of next input to client or final result of EAC
    * @param <Q> type of result from client
-   * @param stepSelect step to perform, only {@link #STEP_PACE_OUTPUT_TO_TACA_INPUT}, {@link #STEP_OPTIONAL}
-   *          or {@link #STEP_TACA_RESULT} accepted
-   * @param resultClass class of result from client, for {@link #STEP_PACE_OUTPUT_TO_TACA_INPUT}
-   *          {@link EAC1OutputType} required, for {@link #STEP_OPTIONAL} {@link EAC2OutputType}, for
-   *          {@link #STEP_TACA_RESULT} {@link EAC2OutputType}
+   * @param stepSelect step to perform, only {@link #STEP_PACE_OUTPUT_TO_TACA_INPUT}, {@link #STEP_OPTIONAL} or
+   *          {@link #STEP_TACA_RESULT} accepted
+   * @param resultClass class of result from client, for {@link #STEP_PACE_OUTPUT_TO_TACA_INPUT} {@link EAC1OutputType}
+   *          required, for {@link #STEP_OPTIONAL} {@link EAC2OutputType}, for {@link #STEP_TACA_RESULT}
+   *          {@link EAC2OutputType}
    * @param result result from client, <code>null</code> not permitted
    * @param parameterClass class of next input to client or final result of EAC, for
-   *          {@link #STEP_PACE_OUTPUT_TO_TACA_INPUT} {@link EAC2InputType} required, for
-   *          {@link #STEP_OPTIONAL} {@link EACAdditionalInputType}, for {@link #STEP_TACA_RESULT}
-   *          {@link EACFinal}
-   * @param additionalParameters additional input data, for {@link #STEP_PACE_OUTPUT_TO_TACA_INPUT} array of
-   *          three elements required: first must be {@link EAC1InputType}, second {@link CertAndKeyProvider},
-   *          third element ({@link Boolean}); for {@link #STEP_OPTIONAL} array of two elements required:
-   *          first must be {@link EAC1InputType}, second {@link EAC1OutputType}; for
-   *          {@link #STEP_TACA_RESULT} array of one element required: {@link SignedDataChecker}
+   *          {@link #STEP_PACE_OUTPUT_TO_TACA_INPUT} {@link EAC2InputType} required, for {@link #STEP_OPTIONAL}
+   *          {@link EACAdditionalInputType}, for {@link #STEP_TACA_RESULT} {@link EACFinal}
+   * @param additionalParameters additional input data, for {@link #STEP_PACE_OUTPUT_TO_TACA_INPUT} array of three
+   *          elements required: first must be {@link EAC1InputType}, second {@link CertAndKeyProvider}, third element
+   *          ({@link Boolean}); for {@link #STEP_OPTIONAL} array of two elements required: first must be
+   *          {@link EAC1InputType}, second {@link EAC1OutputType}; for {@link #STEP_TACA_RESULT} array of one element
+   *          required: {@link SignedDataChecker}
    * @return next input to client or final result of EAC
-   * @throws IllegalArgumentException if unknown step selected, if resultClass / parameterClass not matching
-   *           selected step, if result <code>null</code>, if additionalParameters not matching requirement of
-   *           selected step
+   * @throws IllegalArgumentException if unknown step selected, if resultClass / parameterClass not matching selected
+   *           step, if result <code>null</code>, if additionalParameters not matching requirement of selected step
    * @throws InternalError if anything during production of step output fails
    */
   public <P extends Object, Q extends DIDAuthenticationDataType> P executeStep(int stepSelect,
@@ -450,8 +431,7 @@ public class EACServer
       }
       try
       {
-        return parameterClass.cast(this.produceSecondInput((EAC1OutputTypeWrapper)result,
-                                                           additionalParameters));
+        return parameterClass.cast(this.produceSecondInput((EAC1OutputTypeWrapper)result, additionalParameters));
       }
       catch (IllegalArgumentException | InvalidEidException e)
       {
@@ -475,8 +455,7 @@ public class EACServer
       }
       try
       {
-        return parameterClass.cast(this.processCompleteTACAOutput((EAC2OutputTypeWrapper)result,
-                                                                  additionalParameters));
+        return parameterClass.cast(this.processCompleteTACAOutput((EAC2OutputTypeWrapper)result, additionalParameters));
       }
       catch (IllegalArgumentException | InvalidEidException e)
       {
@@ -506,8 +485,7 @@ public class EACServer
       AssertUtil.notNullOrEmpty(certBytes, "bytes of certificate (input for PACE)");
       ECCVCertificate testCert = new ECCVCertificate(certBytes);
       CertificateHolderAuthorizationTemplate chat = testCert.getChat();
-      if (chat.getAccessRoleAndRights()
-              .isRole(AuthenticationTerminals.AccessRoleEnum.AUTHENTICATION_TERMINAL))
+      if (chat.getAccessRoleAndRights().isRole(AuthenticationTerminals.AccessRoleEnum.AUTHENTICATION_TERMINAL))
       {
         return testCert;
       }
@@ -526,16 +504,14 @@ public class EACServer
                                             SecurityInfos efCardSecurity,
                                             Integer serialNumber)
   {
-    if (efCardSecurity.getPACEInfo() == null
-        || !efCardSecurity.getPACEInfo().containsAll(efCardAccess.getPACEInfo()))
+    if (efCardSecurity.getPACEInfo() == null || !efCardSecurity.getPACEInfo().containsAll(efCardAccess.getPACEInfo()))
     {
       return false;
     }
 
     if (efCardAccess.getPACEDomainParameterInfo() != null
         && (efCardSecurity.getPACEDomainParameterInfo() == null
-            || !efCardSecurity.getPACEDomainParameterInfo()
-                              .containsAll(efCardAccess.getPACEDomainParameterInfo())))
+            || !efCardSecurity.getPACEDomainParameterInfo().containsAll(efCardAccess.getPACEDomainParameterInfo())))
     {
       return false;
     }
@@ -546,8 +522,7 @@ public class EACServer
     {
       if (efCardAccess.getChipAuthenticationInfo() != null
           && (efCardSecurity.getChipAuthenticationInfo() == null
-              || !efCardSecurity.getChipAuthenticationInfo()
-                                .containsAll(efCardAccess.getChipAuthenticationInfo())))
+              || !efCardSecurity.getChipAuthenticationInfo().containsAll(efCardAccess.getChipAuthenticationInfo())))
       {
         return false;
       }
@@ -566,8 +541,7 @@ public class EACServer
     {
       if (efCardAccess.getChipAuthenticationInfo() != null
           && (efCardSecurity.getChipAuthenticationInfo() == null
-              || !efCardSecurity.getChipAuthenticationInfo()
-                                .contains(efCardAccess.getChipAuthenticationInfo().get(0))))
+              || !efCardSecurity.getChipAuthenticationInfo().contains(efCardAccess.getChipAuthenticationInfo().get(0))))
       {
         return false;
       }
@@ -594,13 +568,16 @@ public class EACServer
     try
     {
       org.bouncycastle.asn1.x509.Certificate certStructure = org.bouncycastle.asn1.x509.Certificate.getInstance(signerCert.getEncoded());
-      return Integer.valueOf(certStructure.getSubject()
-                                          .getRDNs(new ASN1ObjectIdentifier("2.5.4.5"))[0].getFirst()
-                                                                                          .getValue()
-                                                                                          .toString());
+      return Integer.valueOf(certStructure.getSubject().getRDNs(new ASN1ObjectIdentifier("2.5.4.5"))[0].getFirst()
+                                                                                                       .getValue()
+                                                                                                       .toString());
     }
     catch (Exception e)
     {
+      if (LOG.isDebugEnabled())
+      {
+        LOG.debug("unable to extract serial number", e);
+      }
       return null;
     }
   }

@@ -10,7 +10,6 @@
 package de.governikus.eumw.poseidas.server.pki;
 
 import java.net.MalformedURLException;
-import java.net.URL;
 import java.security.KeyStore;
 import java.security.SignatureException;
 import java.security.cert.X509Certificate;
@@ -20,6 +19,7 @@ import org.bouncycastle.cms.CMSException;
 
 import de.governikus.eumw.config.ServiceProviderType;
 import de.governikus.eumw.poseidas.cardbase.ArrayUtil;
+import de.governikus.eumw.poseidas.eidserver.crl.CertificationRevocationListImpl;
 import de.governikus.eumw.poseidas.eidserver.model.signeddata.MasterList;
 import de.governikus.eumw.poseidas.gov2server.GovManagementException;
 import de.governikus.eumw.poseidas.gov2server.constants.admin.GlobalManagementCodes;
@@ -69,6 +69,10 @@ public class MasterAndDefectListHandler extends BerCaRequestHandlerBase
     try
     {
       masterList = updateMasterList(service);
+      if (CertificationRevocationListImpl.isInitialized())
+      {
+        CertificationRevocationListImpl.getInstance().updateMasterlist(masterList.getCertificates());
+      }
     }
     catch (MalformedURLException e)
     {
@@ -157,28 +161,26 @@ public class MasterAndDefectListHandler extends BerCaRequestHandlerBase
       SNMPTrapSender.sendSNMPTrap(TrapOID.MASTERLIST_TRAP_LAST_RENEWAL_STATUS, SNMPConstants.LIST_NOT_RECEIVED);
       return null;
     }
-    else if (!isLocalZip(masterListBytes))
+
+    byte[] masterListFromTerminalPermission = facade.getTerminalPermission(cvcRefId).getMasterList();
+    if (ArrayUtil.isNullOrEmpty(masterListFromTerminalPermission)
+        || !checkWithMasterListAsTrustAnchorSuccessful(masterListBytes, masterListFromTerminalPermission))
     {
-      byte[] masterListFromTerminalPermission = facade.getTerminalPermission(cvcRefId).getMasterList();
-      if (ArrayUtil.isNullOrEmpty(masterListFromTerminalPermission)
-          || !checkWithMasterListAsTrustAnchorSuccessful(masterListBytes, masterListFromTerminalPermission))
+      try
       {
-        try
-        {
-          X509Certificate masterListTrustAnchor = configurationService.getCertificate(dvcaConfiguration.getMasterListTrustAnchorCertificateName());
-          CmsSignatureChecker checker = new CmsSignatureChecker(masterListTrustAnchor);
-          checker.checkEnvelopedSignature(masterListBytes);
-        }
-        catch (SignatureException | CMSException e)
-        {
-          SNMPTrapSender.sendSNMPTrap(TrapOID.MASTERLIST_TRAP_LAST_RENEWAL_STATUS,
-                                      SNMPConstants.LIST_SIGNATURE_CHECK_FAILED);
-          log.debug("Signature check on master list with trust anchor from configuration not successful", e);
-          return null;
-        }
+        X509Certificate masterListTrustAnchor = configurationService.getCertificate(dvcaConfiguration.getMasterListTrustAnchorCertificateName());
+        CmsSignatureChecker checker = new CmsSignatureChecker(masterListTrustAnchor);
+        checker.checkEnvelopedSignature(masterListBytes);
       }
-      SNMPTrapSender.sendSNMPTrap(TrapOID.MASTERLIST_TRAP_LAST_RENEWAL_STATUS, SNMPConstants.LIST_RENEWED);
+      catch (SignatureException | CMSException e)
+      {
+        SNMPTrapSender.sendSNMPTrap(TrapOID.MASTERLIST_TRAP_LAST_RENEWAL_STATUS,
+                                    SNMPConstants.LIST_SIGNATURE_CHECK_FAILED);
+        log.debug("Signature check on master list with trust anchor from configuration not successful", e);
+        return null;
+      }
     }
+    SNMPTrapSender.sendSNMPTrap(TrapOID.MASTERLIST_TRAP_LAST_RENEWAL_STATUS, SNMPConstants.LIST_RENEWED);
     log.debug("Successfully received master list");
     return masterListBytes;
   }
@@ -207,34 +209,21 @@ public class MasterAndDefectListHandler extends BerCaRequestHandlerBase
       SNMPTrapSender.sendSNMPTrap(TrapOID.DEFECTLIST_TRAP_LAST_RENEWAL_STATUS, SNMPConstants.LIST_NOT_RECEIVED);
       return null;
     }
-    else if (!isLocalZip(defectList))
+
+    CmsSignatureChecker checker = new CmsSignatureChecker(ml.getCertificates());
+    try
     {
-      CmsSignatureChecker checker = new CmsSignatureChecker(ml.getCertificates());
-      try
-      {
-        checker.checkEnvelopedSignature(defectList);
-      }
-      catch (SignatureException | CMSException e)
-      {
-        SNMPTrapSender.sendSNMPTrap(TrapOID.DEFECTLIST_TRAP_LAST_RENEWAL_STATUS,
-                                    SNMPConstants.LIST_SIGNATURE_CHECK_FAILED);
-        log.debug("Signature check on defect list not successful", e);
-        return null;
-      }
-      SNMPTrapSender.sendSNMPTrap(TrapOID.DEFECTLIST_TRAP_LAST_RENEWAL_STATUS, SNMPConstants.LIST_RENEWED);
+      checker.checkEnvelopedSignature(defectList);
     }
+    catch (SignatureException | CMSException e)
+    {
+      SNMPTrapSender.sendSNMPTrap(TrapOID.DEFECTLIST_TRAP_LAST_RENEWAL_STATUS,
+                                  SNMPConstants.LIST_SIGNATURE_CHECK_FAILED);
+      log.debug("Signature check on defect list not successful", e);
+      return null;
+    }
+    SNMPTrapSender.sendSNMPTrap(TrapOID.DEFECTLIST_TRAP_LAST_RENEWAL_STATUS, SNMPConstants.LIST_RENEWED);
     log.debug("Successfully received defect list");
     return defectList;
-  }
-
-  private boolean isLocalZip(byte[] data) throws MalformedURLException
-  {
-    if (data == null || data.length <= 0)
-    {
-      return false;
-    }
-    String host = new URL(dvcaConfiguration.getPassiveAuthServiceUrl()).getHost();
-    return data.length >= 2 && data[0] == 0x50 && data[1] == 0X4b
-           && ("localhost".equals(host) || "127.0.0.1".equals(host));
   }
 }

@@ -1,11 +1,10 @@
 /*
- * Copyright (c) 2020 Governikus KG. Licensed under the EUPL, Version 1.2 or as soon they will be approved by
- * the European Commission - subsequent versions of the EUPL (the "Licence"); You may not use this work except
- * in compliance with the Licence. You may obtain a copy of the Licence at:
- * http://joinup.ec.europa.eu/software/page/eupl Unless required by applicable law or agreed to in writing,
- * software distributed under the Licence is distributed on an "AS IS" basis, WITHOUT WARRANTIES OR CONDITIONS
- * OF ANY KIND, either express or implied. See the Licence for the specific language governing permissions and
- * limitations under the Licence.
+ * Copyright (c) 2020 Governikus KG. Licensed under the EUPL, Version 1.2 or as soon they will be approved by the
+ * European Commission - subsequent versions of the EUPL (the "Licence"); You may not use this work except in compliance
+ * with the Licence. You may obtain a copy of the Licence at: http://joinup.ec.europa.eu/software/page/eupl Unless
+ * required by applicable law or agreed to in writing, software distributed under the Licence is distributed on an
+ * "AS IS" basis, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the Licence for the
+ * specific language governing permissions and limitations under the Licence.
  */
 
 package de.governikus.eumw.poseidas.paosservlet.paos.handler;
@@ -14,14 +13,15 @@ import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 
+import javax.xml.parsers.ParserConfigurationException;
+import javax.xml.transform.TransformerException;
+
 import jakarta.servlet.ServletOutputStream;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.xml.bind.JAXBException;
-import javax.xml.parsers.ParserConfigurationException;
 import jakarta.xml.soap.SOAPException;
 import jakarta.xml.soap.SOAPMessage;
-import javax.xml.transform.TransformerException;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -29,6 +29,7 @@ import org.xml.sax.SAXException;
 
 import de.governikus.eumw.poseidas.ecardcore.utilities.ECardCoreUtil;
 import de.governikus.eumw.poseidas.eidserver.convenience.EIDSequence;
+import de.governikus.eumw.poseidas.eidserver.convenience.session.Session;
 import de.governikus.eumw.poseidas.eidserver.convenience.session.SessionManager;
 import de.governikus.eumw.poseidas.paosservlet.authentication.AuthenticationConstants;
 import de.governikus.eumw.poseidas.paosservlet.authentication.paos.Util;
@@ -60,8 +61,8 @@ public abstract class AbstractPaosHandler
    * @param requestBody the request body as byte array <br/>
    *          <b>Do not read the body from request, the stream is already closed!</b>
    * @throws IllegalArgumentException if the message cannot be handled due to special characteristics
-   * @throws PaosHandlerException if the message cannot be handled due to wrong PAOS process. (E. g. no
-   *           appropriate session exists.)
+   * @throws PaosHandlerException if the message cannot be handled due to wrong PAOS process. (E. g. no appropriate
+   *           session exists.)
    * @throws IOException if the request cannot be read
    */
   protected AbstractPaosHandler(HttpServletRequest servletRequest, byte[] requestBody)
@@ -72,23 +73,16 @@ public abstract class AbstractPaosHandler
       throw new IllegalArgumentException("PAOS Conversation stopped: No PAOS received");
     }
 
-    try
+    if (LOG.isDebugEnabled())
     {
-      String body = new String(requestBody);
-      LOG.debug("Received a PAOS-request from client:\n" + body);
-      ByteArrayInputStream bodyStream = new ByteArrayInputStream(body.getBytes());
-      conversationObject = Util.unmarshalFirstSoapBodyElement(bodyStream);
+      LOG.debug("Received a PAOS-request from client:\n" + new String(requestBody));
     }
-    catch (JAXBException | SAXException | ParserConfigurationException | IOException e)
-    {
-      conversationObject = null;
-    }
-
     try
     {
       soapMessage = Util.unmarshalSOAPMessage(new ByteArrayInputStream(requestBody));
+      conversationObject = Util.unmarshalFirstSoapBodyElement(soapMessage.getSOAPBody());
     }
-    catch (SOAPException e)
+    catch (SOAPException | JAXBException e)
     {
       throw new IllegalArgumentException("Cannot unmarshal soap message", e);
     }
@@ -167,7 +161,7 @@ public abstract class AbstractPaosHandler
    * @param servletResponse the HTTP servlet response to write the PAOS message.
    * @throws IOException
    */
-  public void writeResponse(HttpServletResponse servletResponse) throws IOException
+  public void writeResponse(HttpServletResponse servletResponse) throws IOException, PaosHandlerException
   {
     Object nextConversationObject;
     // input not matching schema
@@ -207,25 +201,34 @@ public abstract class AbstractPaosHandler
    * @param obj
    * @return
    */
-  private Object performConversation(Object obj)
+  private Object performConversation(Object obj) throws PaosHandlerException
   {
-    EIDSequence eidSequence = getSessionManager().getSession(sessionId).getEIDSequence();
-
+    SessionManager sessionManager = getSessionManager();
+    Session session = sessionManager.getSession(sessionId);
+    EIDSequence eidSequence = session.getEIDSequence();
     Object nextObj = null;
-    if (obj instanceof StartPAOS)
+
+    try
     {
-      eidSequence.setStart((StartPAOS)obj);
-      nextObj = eidSequence.getNextRequest(null);
+      if (obj instanceof StartPAOS startPaos)
+      {
+        nextObj = eidSequence.getNextRequest(startPaos);
+      }
+      else if (obj instanceof ResponseType responseType)
+      {
+        nextObj = eidSequence.getNextRequest(responseType);
+      }
+
+      if (ECardCoreUtil.isStartPAOSResponse(nextObj))
+      {
+        removeSession();
+      }
     }
-    else if (obj instanceof ResponseType)
+    finally
     {
-      nextObj = eidSequence.getNextRequest((ResponseType)obj);
+      sessionManager.unlockSession(session);
     }
 
-    if (ECardCoreUtil.isStartPAOSResponse(nextObj))
-    {
-      removeSession();
-    }
     return nextObj;
   }
 
@@ -245,7 +248,7 @@ public abstract class AbstractPaosHandler
    * @throws ParserConfigurationException
    */
   protected abstract String createPAOSMessage(Object object)
-    throws SAXException, IOException, TransformerException, ParserConfigurationException;
+    throws IOException, SOAPException;
 
   /**
    * Sets up the HTTP servlet response and writes the body.

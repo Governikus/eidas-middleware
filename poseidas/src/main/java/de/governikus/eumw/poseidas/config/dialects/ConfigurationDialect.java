@@ -11,6 +11,8 @@ import org.thymeleaf.expression.IExpressionObjectFactory;
 
 import de.governikus.eumw.config.EidasMiddlewareConfig;
 import de.governikus.eumw.poseidas.server.idprovider.config.ConfigurationService;
+import de.governikus.eumw.poseidas.server.pki.KeyChecker;
+
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
@@ -28,6 +30,8 @@ public class ConfigurationDialect implements IExpressionObjectDialect
 
   private final BuildProperties buildProperties;
 
+  private final KeyChecker keyChecker;
+
   @Override
   public IExpressionObjectFactory getExpressionObjectFactory()
   {
@@ -37,28 +41,24 @@ public class ConfigurationDialect implements IExpressionObjectDialect
       @Override
       public Set<String> getAllExpressionObjectNames()
       {
-        return Set.of("certificates", "keypairs", "serviceProvider", "projectversion");
+        return Set.of("certificates", "keypairs", "serviceProvider", "projectversion", "KeyChecker");
       }
 
       @Override
       public Object buildObject(IExpressionContext context, String expressionObjectName)
       {
-        switch (expressionObjectName)
+        return switch (expressionObjectName)
         {
-          case "certificates":
-            return configurationService.getCertificateTypes();
-          case "keypairs":
-            return configurationService.getKeyPairTypes();
-          case "serviceProvider":
-            return configurationService.getConfiguration()
-                                       .map(EidasMiddlewareConfig::getEidConfiguration)
-                                       .map(EidasMiddlewareConfig.EidConfiguration::getServiceProvider)
-                                       .orElse(List.of());
-          case "projectversion":
-            return buildProperties.getVersion();
-          default:
-            return null;
-        }
+          case "certificates" -> configurationService.getCertificateTypes();
+          case "keypairs" -> configurationService.getKeyPairTypes();
+          case "serviceProvider" -> configurationService.getConfiguration()
+                                                        .map(EidasMiddlewareConfig::getEidConfiguration)
+                                                        .map(EidasMiddlewareConfig.EidConfiguration::getServiceProvider)
+                                                        .orElse(List.of());
+          case "projectversion" -> buildProperties.getVersion();
+          case "KeyChecker" -> keyChecker;
+          default -> null;
+        };
       }
 
       @Override

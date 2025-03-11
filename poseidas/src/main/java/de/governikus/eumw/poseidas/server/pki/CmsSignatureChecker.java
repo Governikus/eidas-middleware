@@ -44,7 +44,9 @@ import de.governikus.eumw.poseidas.cardserver.CertificateUtil;
 import de.governikus.eumw.poseidas.eidserver.crl.CertificationRevocationListImpl;
 import de.governikus.eumw.utils.key.KeyReader;
 import de.governikus.eumw.utils.key.SecurityProvider;
+
 import lombok.Getter;
+import lombok.extern.slf4j.Slf4j;
 
 
 /**
@@ -56,6 +58,7 @@ import lombok.Getter;
  * @author Pascal Knüppel
  * @since 02.06.2021
  */
+@Slf4j
 public class CmsSignatureChecker
 {
 
@@ -210,6 +213,10 @@ public class CmsSignatureChecker
           }
           catch (IOException e)
           {
+            if (log.isDebugEnabled())
+            {
+              log.debug("Failed to get EC curve from certificate", e);
+            }
             return null;
           }
         }).anyMatch(b -> ByteUtil.equals(b, paramsFromCert));
@@ -288,7 +295,6 @@ public class CmsSignatureChecker
   {
     if (crl != null)
     {
-      // TODO crl.addCertsToTrustStore(trustAnchors)
       if (crl.isOnCRL(verificationCertificate))
       {
         throw new SignatureException("verification certificate found on CRL");

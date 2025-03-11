@@ -12,6 +12,7 @@ package de.governikus.eumw.eidasstarterkit;
 import java.security.KeyException;
 import java.security.NoSuchAlgorithmException;
 import java.security.cert.X509Certificate;
+import java.security.interfaces.RSAKey;
 import java.util.Collection;
 
 import org.apache.xml.security.algorithms.MessageDigestAlgorithm;
@@ -36,9 +37,23 @@ import org.opensaml.xmlsec.encryption.support.RSAOAEPParameters;
 import org.opensaml.xmlsec.keyinfo.KeyInfoGeneratorFactory;
 import org.opensaml.xmlsec.keyinfo.impl.KeyAgreementKeyInfoGeneratorFactory;
 
+import lombok.extern.slf4j.Slf4j;
 
+
+@Slf4j
 public class EidasEncrypter
 {
+
+  private static final String KEYTRANSPORT_ALGO = EncryptionConstants.ALGO_ID_KEYTRANSPORT_RSAOAEP11;
+
+  private static final String KEYTRANSPORT_HASH_ALGO = EncryptionConstants.ALGO_ID_DIGEST_SHA256;
+
+  private static final String KEYTRANSPORT_MGF_ALGO = EncryptionConstants.ALGO_ID_MGF1_SHA256;
+
+  /**
+   * Defined in eIDAS Cryptographic Requirement (v1.4.1) chapter 3.2.2.1
+   */
+  private static final int MINIMAL_RSA_KEY_LENGTH = 3072;
 
   /**
    * Completely configured encryption handler, null if encryption is not set.
@@ -83,15 +98,30 @@ public class EidasEncrypter
     }
     else
     {
+      // Check key size -
+      if (receiverCredential.getPublicKey() instanceof RSAKey key)
+      {
+        int keyLength = key.getModulus().bitLength();
+        if (keyLength < MINIMAL_RSA_KEY_LENGTH)
+        {
+          log.debug("Found invalid key length: {}. Key must be at least {}. Cert: {}",
+                    keyLength,
+                    MINIMAL_RSA_KEY_LENGTH,
+                    cert);
+          throw new KeyException("Key length is less than %s bit: %s".formatted(MINIMAL_RSA_KEY_LENGTH, keyLength));
+        }
+      }
+
       /**
        * key encryption parameters used to set up the {@link #encrypter}, null if encryption is not set. Note that the
        * encrypter will ignore these values given to it in the constructor when it encrypts an XMLObject. In that case,
        * you have to give these values again to the encrypt method.
        */
       KeyEncryptionParameters kek = new KeyEncryptionParameters();
-      kek.setAlgorithm(EncryptionConstants.ALGO_ID_KEYTRANSPORT_RSAOAEP);
+      kek.setAlgorithm(KEYTRANSPORT_ALGO);
       kek.setEncryptionCredential(receiverCredential);
-      kek.setRSAOAEPParameters(new RSAOAEPParameters(MessageDigestAlgorithm.ALGO_ID_DIGEST_SHA256, null, null));
+      kek.setRSAOAEPParameters(new RSAOAEPParameters(MessageDigestAlgorithm.ALGO_ID_DIGEST_SHA256,
+                                                     KEYTRANSPORT_MGF_ALGO, null));
       encrypter = new Encrypter(encParams, kek);
       if (includeCert)
       {
@@ -133,9 +163,9 @@ public class EidasEncrypter
                                     boolean includeCert,
                                     KeyEncryptionParameters kekParameters)
   {
-    kekParameters.setAlgorithm(EncryptionConstants.ALGO_ID_KEYTRANSPORT_RSAOAEP);
+    kekParameters.setAlgorithm(KEYTRANSPORT_ALGO);
     kekParameters.setEncryptionCredential(CredentialSupport.getSimpleCredential(encryptionCertificate, null));
-    kekParameters.setRSAOAEPParameters(new RSAOAEPParameters(EncryptionConstants.ALGO_ID_DIGEST_SHA256, null, null));
+    kekParameters.setRSAOAEPParameters(new RSAOAEPParameters(KEYTRANSPORT_HASH_ALGO, KEYTRANSPORT_MGF_ALGO, null));
     if (includeCert)
     {
       KeyInfoGeneratorFactory kigf = ConfigurationService.get(EncryptionConfiguration.class)

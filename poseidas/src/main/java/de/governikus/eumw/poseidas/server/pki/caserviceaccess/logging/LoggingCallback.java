@@ -71,6 +71,10 @@ class LoggingCallback implements CachedOutputStreamCallback
     }
     catch (Exception ex)
     {
+      if (log.isDebugEnabled())
+      {
+        log.debug(ex.getMessage());
+      }
       // ignore
     }
     message.setContent(OutputStream.class, origStream);

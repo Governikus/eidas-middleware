@@ -148,7 +148,7 @@ public class CertificateHolderAuthorizationTemplate extends AbstractASN1Encoder 
     }
     catch (IOException e)
     {
-      throw new IllegalArgumentException("incompatible ASN.1 object");
+      throw new IllegalArgumentException("incompatible ASN.1 object", e);
     }
   }
 

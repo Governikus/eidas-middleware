@@ -24,6 +24,7 @@ import de.governikus.eumw.poseidas.cardbase.asn1.npa.si.PACEDomainParameterInfo;
 import de.governikus.eumw.poseidas.cardbase.asn1.npa.si.PACEInfo;
 import de.governikus.eumw.poseidas.cardbase.asn1.npa.si.TerminalAuthenticationInfo;
 import de.governikus.eumw.poseidas.cardbase.constants.OIDConstants;
+import lombok.extern.slf4j.Slf4j;
 
 
 /**
@@ -33,6 +34,7 @@ import de.governikus.eumw.poseidas.cardbase.constants.OIDConstants;
  * @author Arne Stahlbock, ast@bos-bremen.de
  * @author Jens Wothe, jw@bos-bremen.de
  */
+@Slf4j
 public final class InfoSelector
 {
 
@@ -64,6 +66,10 @@ public final class InfoSelector
       }
       catch (IOException e)
       {
+        if (log.isDebugEnabled())
+        {
+          log.debug("Could not parse domain parameter info", e);
+        }
         // nothing
       }
     }
@@ -134,6 +140,10 @@ public final class InfoSelector
       }
       catch (IOException e)
       {
+        if (log.isDebugEnabled())
+        {
+          log.debug("Could not parse parameter ID", e);
+        }
         continue;
       }
 
@@ -178,6 +188,10 @@ public final class InfoSelector
           }
           catch (IOException e)
           {
+            if (log.isDebugEnabled())
+            {
+              log.debug("Could not parse key ID", e);
+            }
             // nothing
           }
         }
@@ -187,6 +201,10 @@ public final class InfoSelector
     }
     catch (IOException e)
     {
+      if (log.isDebugEnabled())
+      {
+        log.debug("Could not parse key ID", e);
+      }
       // nothing to do
     }
 

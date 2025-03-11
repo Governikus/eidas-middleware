@@ -389,9 +389,16 @@ public class ConfigurationMigrationService
     String terminalAuthenticationUrl = pkiConf.getTerminalAuthService().getUrl();
     if (StringUtils.startsWith(terminalAuthenticationUrl, "https://berca-p1.d-trust.net/ps/dvca-at"))
     {
-      terminalAuthenticationUrl = "https://berca-p1.d-trust.net/ps/dvca-at/v1_1";
+      terminalAuthenticationUrl = "https://berca-p1.d-trust.net/ps/dvca-at/v1_4";
     }
     newDvcaConfiguration.setTerminalAuthServiceUrl(terminalAuthenticationUrl);
+
+    String passiveAuthenticationUrl = pkiConf.getPassiveAuthService().getUrl();
+    if (StringUtils.startsWith(passiveAuthenticationUrl, "https://berca-p1.d-trust.net/ps/scs"))
+    {
+      passiveAuthenticationUrl = "https://berca-p1.d-trust.net/ps/scs/v1_4";
+    }
+    newDvcaConfiguration.setPassiveAuthServiceUrl(passiveAuthenticationUrl);
 
     try
     {

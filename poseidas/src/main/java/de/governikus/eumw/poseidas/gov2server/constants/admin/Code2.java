@@ -19,7 +19,6 @@ public class Code2 extends ManagementCode
   private static final long serialVersionUID = 1L;
 
   /**
-   * FIXME: the sole purpose of this class is that it is not possible just to create instances somewhere!
    * Creates a new Code2 object.
    *
    * @param code DOCUMENT ME!

@@ -1,21 +1,23 @@
 /*
- * Copyright (c) 2020 Governikus KG. Licensed under the EUPL, Version 1.2 or as soon they will be approved by
- * the European Commission - subsequent versions of the EUPL (the "Licence"); You may not use this work except
- * in compliance with the Licence. You may obtain a copy of the Licence at:
- * http://joinup.ec.europa.eu/software/page/eupl Unless required by applicable law or agreed to in writing,
- * software distributed under the Licence is distributed on an "AS IS" basis, WITHOUT WARRANTIES OR CONDITIONS
- * OF ANY KIND, either express or implied. See the Licence for the specific language governing permissions and
- * limitations under the Licence.
+ * Copyright (c) 2020 Governikus KG. Licensed under the EUPL, Version 1.2 or as soon they will be approved by the
+ * European Commission - subsequent versions of the EUPL (the "Licence"); You may not use this work except in compliance
+ * with the Licence. You may obtain a copy of the Licence at: http://joinup.ec.europa.eu/software/page/eupl Unless
+ * required by applicable law or agreed to in writing, software distributed under the Licence is distributed on an
+ * "AS IS" basis, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the Licence for the
+ * specific language governing permissions and limitations under the Licence.
  */
 
 package de.governikus.eumw.poseidas.eidserver.convenience.session;
 
-import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
-import java.util.TreeMap;
+import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.springframework.http.HttpStatus;
 
 import de.governikus.eumw.poseidas.ecardcore.model.ResultMajor;
 import de.governikus.eumw.poseidas.ecardcore.model.ResultMinor;
@@ -25,12 +27,13 @@ import de.governikus.eumw.poseidas.eidserver.ecardid.ECardIDCallback;
 import de.governikus.eumw.poseidas.eidserver.ecardid.ECardIDServerI;
 import de.governikus.eumw.poseidas.eidserver.ecardid.EIDInfoContainer;
 import de.governikus.eumw.poseidas.eidserver.ecardid.SessionInput;
+import de.governikus.eumw.poseidas.paosservlet.paos.handler.PaosHandlerException;
 
 
 /**
  * Holds the sessions for ECardServlet. <br>
- * Warning: Current implementation will not work within a cluster! For clustered server, storage of session
- * must be changed (make sessions EJBs, keep links in JNDI or database?).
+ * Warning: Current implementation will not work within a cluster! For clustered server, storage of session must be
+ * changed (make sessions EJBs, keep links in JNDI or database?).
  *
  * @author Alexander Funk
  * @author <a href="mail:hme@bos-bremen.de">Hauke Mehrtens</a>
@@ -43,12 +46,10 @@ public class SessionManager implements ECardIDServerI
   /**
    * Session container for all reported sessions
    */
-  private Map<String, Session> sessionMap = new HashMap<>();
+  private final Map<String, Session> sessionMap = new ConcurrentHashMap<>();
 
-  /**
-   * Timeout to be set for started sessions
-   */
-  private Long timeout;
+  private final Set<Session> sessionLock = new HashSet<>();
+
 
   /**
    * Listener used by the poseidas server
@@ -59,8 +60,7 @@ public class SessionManager implements ECardIDServerI
    * Private instance creation
    */
   private SessionManager()
-  {
-  }
+  {}
 
   @SuppressWarnings("synthetic-access")
   private static final class InstanceHolder
@@ -72,39 +72,71 @@ public class SessionManager implements ECardIDServerI
   /**
    * Return one and only instance of this class
    */
+
   public static SessionManager getInstance()
   {
     return InstanceHolder.INSTANCE;
   }
 
+  private boolean requestSessionLock(Session session)
+  {
+    // Lock is currently on the whole session lock map. Putting the lock to the session object could improve performance
+    synchronized (sessionLock)
+    {
+      return sessionLock.add(session);
+    }
+  }
 
-  private synchronized void startSession(SessionInput input)
+  public void unlockSession(Session session)
+  {
+    synchronized (sessionLock)
+    {
+      sessionLock.remove(session);
+      LOG.trace("Unlocked session: " + session);
+    }
+  }
+
+  private void startSession(SessionInput input)
   {
     // To start a session create one
     Session session = null;
     try
     {
-      // If a timeout was set for this manager it will be used for the intern session timeout
-      if (timeout == null)
-      {
-        // Session created with default timeout
-        session = new Session(input);
-      }
-      else
-      {
-        // Session created with specific timeout
-        session = new Session(input, timeout);
-      }
+
+      // Session created with default timeout
+      session = new Session(input);
+
       // Session is registered to the server
 
       sessionPut(input, session);
     }
     catch (ChatOptionNotAllowedException e)
     {
+      if (LOG.isDebugEnabled())
+      {
+        LOG.debug("Failed to create session", e);
+      }
       EIDInfoContainerImpl container = new EIDInfoContainerImpl();
       container.setResult(ResultMajor.ERROR, ResultMinor.SAL_SECURITY_CONDITION_NOT_SATISFIED, e.getMessage());
       listener.seteIDSessionComplete(input.getSessionID(), container);
     }
+    synchronized (sessionLock)
+    {
+      sessionLock.remove(session);
+    }
+
+
+  }
+
+  /**
+   * Checks if a session id exists.
+   *
+   * @param sessionID
+   * @return true or false
+   */
+  public boolean sessionIdExistsOrCanBeCreated(String sessionID)
+  {
+    return sessionMap.containsKey(sessionID) || listener.getSessionInput(sessionID) != null;
   }
 
   /**
@@ -113,24 +145,36 @@ public class SessionManager implements ECardIDServerI
    * @param sessionId identifier from session
    * @return the searched session
    */
-  public Session getSession(String sessionId)
+  public Session getSession(String sessionId) throws PaosHandlerException
   {
-    if (sessionMap == null || sessionId == null)
+
+    if (sessionId == null)
     {
       return null;
     }
-    Session result = sessionMap.get(sessionId);
-    if (result == null)
+
+    Session session = sessionMap.get(sessionId);
+    if (session == null)
     {
-      SessionInput sessionInput = listener.getSessionInput(sessionId);
+      SessionInput sessionInput = getSessionInput(sessionId);
       if (sessionInput == null)
       {
         return null;
       }
       startSession(sessionInput);
-      result = sessionMap.get(sessionId);
+      session = sessionMap.get(sessionId);
     }
-    return result;
+
+    if (requestSessionLock(session))
+    {
+      LOG.trace("Successfully locked session: " + sessionId);
+    }
+    else
+    {
+      throw new PaosHandlerException("Session locked: " + sessionId, HttpStatus.FORBIDDEN.value());
+    }
+
+    return session;
   }
 
   /**
@@ -149,64 +193,32 @@ public class SessionManager implements ECardIDServerI
   }
 
   /**
-   * Returns the session timeout if set otherwise null is returned
-   *
-   * @return the session timeout for this manager
-   */
-  public Long getSessionTimeout()
-  {
-    return this.timeout;
-  }
-
-  /**
-   * Indicates how many sessions are in use
-   *
-   * @return number of active sessions
-   */
-  public int getSessionsCount()
-  {
-    if (sessionMap == null)
-    {
-      return 0;
-    }
-    else
-    {
-      return sessionMap.size();
-    }
-  }
-
-  /**
    * Stops a session
    *
    * @param sessionId
    * @param eidInfoContainer
    */
-  public synchronized Session stopSession(String sessionId, EIDInfoContainer eidInfoContainer)
+  public void stopSession(String sessionId, EIDInfoContainer eidInfoContainer)
   {
     Session removedSession = sessionMap.get(sessionId);
-    if (removedSession != null)
-    {
-      listener.seteIDSessionComplete(removedSession.getSessionInput().getSessionID(), eidInfoContainer);
-      sessionMap.remove(sessionId);
-      LOG.debug(removedSession.getSessionInput().getLogPrefix() + "Session: " + removedSession + " stopped");
-      return removedSession;
-    }
-    else
+    if (removedSession == null)
     {
       LOG.debug("Session not stopped: Session '" + sessionId + "'to be stopped is not an active session");
+      return;
     }
 
-    return null;
-  }
+    listener.seteIDSessionComplete(removedSession.getSessionInput().getSessionID(), eidInfoContainer);
 
-  /**
-   * Sets the timeout for sessions provided by this manager
-   *
-   * @param timeout to be set
-   */
-  public void setSessionTimeouts(Long timeout)
-  {
-    this.timeout = timeout;
+    sessionMap.remove(sessionId);
+    synchronized (sessionLock)
+    {
+      if (sessionLock.remove(removedSession))
+      {
+        LOG.trace("Removed session lock: " + sessionId);
+      }
+    }
+
+    LOG.debug(removedSession.getSessionInput().getLogPrefix() + "Session: " + removedSession + " stopped");
   }
 
 
@@ -218,37 +230,34 @@ public class SessionManager implements ECardIDServerI
    */
   private void sessionPut(SessionInput input, Session session)
   {
-    // Indicates if session map was used already or must be initiated
-    if (sessionMap == null)
-    {
-      sessionMap = new HashMap<>();
-    }
     // Put the session to the manager
     sessionMap.put(input.getSessionID(), session);
-    // Optimize map only with more than one session
-    if (sessionMap.size() > 1)
-    {
-      // Get the eCard Comparator to be able to compare sessions by there timeout
-      SessionComparator comparator = new SessionComparator(sessionMap, System.currentTimeMillis());
-      // Create a sorted map for all sessions
-      TreeMap<String, Session> sort = new TreeMap<>(comparator);
-      // Put all sessions to be sorted
-      sort.putAll(sessionMap);
-      // Get the latest invalid session. This is the point where the map could be cut
-      String sessionId = comparator.getLatestInvalidSessionId();
-      // Invalid session as anchor
-      if (sessionId != null)
+  }
+
+  void removeInvalidSessions()
+  {
+    long currentTimeMillis = System.currentTimeMillis();
+    List<String> invalidSessionIds = sessionMap.entrySet()
+                                               .parallelStream()
+                                               // Check if session is invalid
+                                               .filter(s -> currentTimeMillis > s.getValue().getValidTo())
+                                               .map(Map.Entry::getKey)
+                                               .toList();
+
+    LOG.trace("Removing %s invalid sessions".formatted(invalidSessionIds.size()));
+
+    // Remove invalid sessions
+    invalidSessionIds.forEach(sessionId -> {
+      Session sessionToRemove = sessionMap.get(sessionId);
+      if (sessionToRemove != null)
       {
-        // Cut map and receive only valid sessions in the server list
-        sessionMap = new HashMap<>(sort.subMap(sessionId, false, sort.lastKey(), true));
+        sessionMap.remove(sessionId);
+        synchronized (sessionLock)
+        {
+          sessionLock.remove(sessionToRemove);
+        }
       }
-      else
-      {
-        // All session are valid so put them back to server list
-        // NOTE: do not use a TreeMap, otherwise the comparator will be used again and throw overflow
-        sessionMap = new HashMap<>(sort);
-      }
-    }
+    });
   }
 
   @Override

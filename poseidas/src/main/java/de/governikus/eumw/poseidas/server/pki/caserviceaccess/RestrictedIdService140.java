@@ -9,7 +9,9 @@
 
 package de.governikus.eumw.poseidas.server.pki.caserviceaccess;
 
+import java.io.IOException;
 import java.net.URISyntaxException;
+import java.security.GeneralSecurityException;
 
 import jakarta.xml.ws.BindingProvider;
 
@@ -45,7 +47,8 @@ public class RestrictedIdService140 implements RestrictedIdService
    * @param uri
    * @throws URISyntaxException
    */
-  RestrictedIdService140(PKIServiceConnector con, String uri) throws URISyntaxException
+  RestrictedIdService140(PKIServiceConnector con, String uri)
+    throws URISyntaxException, GeneralSecurityException, IOException
   {
     RestrictedIdWebserviceClient_1_4_0 service = new RestrictedIdWebserviceClient_1_4_0(getClass().getResource("META-INF/wsdl/CA-Services-1-4-0/part-3/restrictedID/WS_DV_RestrictedIdentification.wsdl"));
     RestrictedIdWebService_1_4_0 tmpPort = service.getEACDVProtocolServicePort();

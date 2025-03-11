@@ -138,7 +138,7 @@ public class OID extends AbstractASN1Encoder implements ASN1Encoder
       }
       catch (NumberFormatException nfe)
       {
-        throw new IllegalArgumentException("illegal characters at OID String");
+        throw new IllegalArgumentException("illegal characters at OID String", nfe);
       }
     }
     for ( int i = 0 ; i < digits.length ; i++ )

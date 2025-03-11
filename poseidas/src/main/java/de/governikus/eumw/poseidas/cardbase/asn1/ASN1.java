@@ -808,6 +808,10 @@ public class ASN1
       }
       catch (IOException e)
       {
+        if (LOG.isDebugEnabled())
+        {
+          LOG.debug("Failed to read child list: " + e.getMessage());
+        }
         return false;
       }
       if (!CollectionUtil.isNullOrEmpty(this.childElementList))

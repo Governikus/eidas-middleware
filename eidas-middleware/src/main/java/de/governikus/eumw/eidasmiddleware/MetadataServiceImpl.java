@@ -67,10 +67,9 @@ public class MetadataServiceImpl implements MetadataService
     list.add(EidasNaturalPersonAttributes.BIRTH_NAME);
     list.add(EidasNaturalPersonAttributes.PLACE_OF_BIRTH);
     list.add(EidasNaturalPersonAttributes.DATE_OF_BIRTH);
+    list.add(EidasNaturalPersonAttributes.NATIONALITY);
 
     List<EidasNameIdType> supportedNameIdTypes = new ArrayList<>();
-    supportedNameIdTypes.add(EidasNameIdType.TRANSIENT);
-    supportedNameIdTypes.add(EidasNameIdType.PERSISTENT);
     supportedNameIdTypes.add(EidasNameIdType.UNSPECIFIED);
     try
     {

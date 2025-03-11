@@ -24,9 +24,13 @@ import org.bouncycastle.asn1.ASN1SequenceParser;
 import org.bouncycastle.cms.CMSException;
 import org.bouncycastle.cms.CMSSignedData;
 
+import de.governikus.eumw.poseidas.cardbase.constants.OIDConstants;
+import lombok.Getter;
+import lombok.extern.slf4j.Slf4j;
+
 
 /**
- * BlackList The Blacklist as defined in TR-03129, Appendix B.
+ * The Block List as defined in TR-03129, Appendix B.
  * <p>
  * Will parse a ASN1 structure and provide access to the parsed values.
  *
@@ -34,30 +38,35 @@ import org.bouncycastle.cms.CMSSignedData;
  * @author Alexander Funk
  * @author Hauke Mehrtens
  */
+@Getter
+@Slf4j
 public class BlackList
 {
 
-  private static final String OID_BSI_DE = "0.4.0.127.0.7";
-
-  private static final String OID_APPLICATION_EID = OID_BSI_DE + ".3" + ".2";
-
-  private static final String OID_BLACK_LIST = OID_APPLICATION_EID + ".2";
-
-  // Types that are returned from getType()
   /**
-   * This type of blacklist contain the whole blacklist
+   * This type of block list contains the complete block list.
    */
   public static final int TYPE_COMPLETE = 0;
 
   /**
-   * This type of blacklist contain additional blacklist entries
+   * This type of block list is a delta list containing the added entries.
    */
   public static final int TYPE_ADDED = 1;
 
   /**
-   * This type of blacklist contains entries that might be remove
+   * This type of block list is a delta list containing the removed entries.
    */
   public static final int TYPE_REMOVED = 2;
+
+  /**
+   * Version 1 of block list as per TR-03129 v1.10
+   */
+  public static final int VERSION_V1 = 0;
+
+  /**
+   * Version 2 of block list as per TR-03129 v1.40
+   */
+  public static final int VERSION_V2 = 1;
 
   private int version;
 
@@ -65,12 +74,18 @@ public class BlackList
 
   private byte[] listID;
 
+  // used only in delta list, null in complete list
+  private byte[] deltaBase;
+
+  // used only in delta list, null in complete list
+  private Integer finalEntries;
+
   private List<BlackListDetails> blacklistDetails;
 
   /**
-   * BlackList asn1 parser.
+   * Block list asn1 parser.
    * <p>
-   * Parse the given asn1 structure and extract the BlackList informations.
+   * Parse the given asn1 structure and extract the block list informations.
    *
    * @param bytes is the asn1 structure
    * @throws IllegalArgumentException if the asn1 structure can't be parse.
@@ -83,23 +98,10 @@ public class BlackList
       // classes generated in these methods, otherwise the GC only throws away the classes in methods we left.
       parseBlkDetails(parseList((ASN1Sequence)getASN1InputStream(getSignedContent(bytes))));
     }
-    catch (CMSException | IOException e)
+    catch (CMSException | IOException | ClassCastException e)
     {
-      throw new IllegalArgumentException(
-                                         "Some problem occurred while parsing the blacklist. Is the list CMS signed?",
+      throw new IllegalArgumentException("Some problem occurred while parsing the block list. Is the list CMS signed?",
                                          e);
-    }
-    // Finished parsing the black list data. Check if informations are available
-
-    if (getListID() == null)
-    {
-      throw new IllegalArgumentException("Could not find the List identifier in the asn1 structure."
-                                         + "\n(Was the right asn1 structure used?)");
-    }
-    if (blacklistDetails == null)
-    {
-      throw new IllegalArgumentException("Could not create any black list details."
-                                         + "\n(Was the right asn1 structure used?)");
     }
   }
 
@@ -107,10 +109,10 @@ public class BlackList
   {
     CMSSignedData s = new CMSSignedData(bytes);
 
-    if (!OID_BLACK_LIST.equals(s.getSignedContentTypeOID()))
+    if (!OIDConstants.OID_BLOCKLIST.getOIDString().equals(s.getSignedContentTypeOID()))
     {
-      throw new IllegalArgumentException("Found no single match for list object identifier: "
-                                         + OID_BLACK_LIST);
+      throw new IllegalArgumentException("Found no match for list object identifier: "
+                                         + OIDConstants.OID_BLOCKLIST.getOIDString());
     }
     return (byte[])s.getSignedContent().getContent();
   }
@@ -127,25 +129,79 @@ public class BlackList
   {
     int size = sequence.size();
 
-    // if our sequence don't have 4 or 5 objects, we could not parse the list.
-    if (size < 4 || size > 5)
+    // if our sequence does not have 4 to 6 objects, it is no block list (see TR-03129 - v1 block list has 4 to 5
+    // objects, v2 has 4 to 6).
+    if (size < 4 || size > 6)
     {
-      throw new IOException("Invalid structure. We expect 4 or 5 elements, but we got " + size);
+      throw new IOException("Invalid structure. We expect 4 to 6 elements, but we got " + size);
     }
 
+    // index 0 is always version
     version = ((ASN1Integer)sequence.getObjectAt(0)).getValue().intValue();
-    type = ((ASN1Integer)sequence.getObjectAt(1)).getValue().intValue();
-    listID = ((ASN1OctetString)sequence.getObjectAt(2)).getOctets();
-    ASN1Sequence seq;
-    if (size == 5)
+    if (version != VERSION_V1 && version != VERSION_V2)
     {
-      seq = (ASN1Sequence)sequence.getObjectAt(4);
+      throw new IOException("Unsupported block list version. Supported versions are " + VERSION_V1 + " and "
+                            + VERSION_V2
+                            + " but received " + version);
     }
+    log.trace("Found block list version {}", version);
+
+    // index 1 is always type
+    type = ((ASN1Integer)sequence.getObjectAt(1)).getValue().intValue();
+    if (type != TYPE_COMPLETE && type != TYPE_ADDED && type != TYPE_REMOVED)
+    {
+      throw new IOException("Unsupported block list type. Supported types are " + TYPE_COMPLETE + ", " + TYPE_ADDED
+                            + " and " + TYPE_REMOVED + " but received " + type);
+    }
+    log.trace("Found block list type {}", type);
+
+    // index 2 is always list ID
+    listID = ((ASN1OctetString)sequence.getObjectAt(2)).getOctets();
+    log.trace("Found block list ID {}", listID);
+
+    // complete
+    if (type == TYPE_COMPLETE)
+    {
+      ASN1Encodable object = sequence.getObjectAt(3);
+      // in complete list, index 3 can be the list content...
+      if (object instanceof ASN1Sequence seq)
+      {
+        return seq.parser();
+      }
+      // ...or the number of entries...
+      finalEntries = ((ASN1Integer)object).getValue().intValue();
+      log.trace("Found block list final number of entries {}", finalEntries);
+      // ...followed by the list content at index 4
+      return ((ASN1Sequence)sequence.getObjectAt(4)).parser();
+    }
+
+    // delta
+    // in delta, index 3 is always delta base but Governikus DVCA has a defect causing this field to be missing...
+    ASN1Encodable object = sequence.getObjectAt(3);
+    int indexCorrection = 0;
+    if (object instanceof ASN1OctetString os)
+    {
+      deltaBase = os.getOctets();
+      log.trace("Found block list delta base {}", deltaBase);
+    }
+    // ...which is why we must work around this issue for the time being
     else
     {
-      seq = (ASN1Sequence)sequence.getObjectAt(3);
+      indexCorrection = -1;
     }
-    return seq.parser();
+
+    if (version == VERSION_V1)
+    {
+      // in delta v1, index 4 is always list content
+      return ((ASN1Sequence)sequence.getObjectAt(4 + indexCorrection)).parser();
+    }
+
+    // VERSION_V2
+    // in delta v2, index 4 is always number of final entries
+    finalEntries = ((ASN1Integer)sequence.getObjectAt(4 + indexCorrection)).getValue().intValue();
+    log.trace("Found block list final number of entries {}", finalEntries);
+    // in delta v2, index 5 is always list content
+    return ((ASN1Sequence)sequence.getObjectAt(5 + indexCorrection)).parser();
   }
 
   private void parseBlkDetails(ASN1SequenceParser parser) throws IOException
@@ -154,65 +210,6 @@ public class BlackList
     for ( ASN1Encodable blacklistDetailObj = parser.readObject() ; blacklistDetailObj != null ; blacklistDetailObj = parser.readObject() )
     {
       blacklistDetails.add(new BlackListDetails(blacklistDetailObj.toASN1Primitive().getEncoded()));
-    }
-  }
-
-  /**
-   * Will return a list with BlackListDetails which provides the SectorID and the related SectorSpecificIDs.
-   * Note this list is not a copy.
-   *
-   * @return A List with BlackListDetails.
-   */
-  public List<BlackListDetails> getBlacklistDetails()
-  {
-    if (blacklistDetails == null)
-    {
-      return new LinkedList<>();
-    }
-    else
-    {
-      return blacklistDetails;
-    }
-  }
-
-  /**
-   * Return the Blacklist version.
-   * <p>
-   * For more version details take a look at the static fields starting with VERSION.
-   *
-   * @return the version as int. Use the static fields to compare different versions.
-   */
-  public int getVersion()
-  {
-    return version;
-  }
-
-  /**
-   * Return the Blacklist type
-   * <p>
-   * For more type details take a look at the static fields starting with TYPE.
-   *
-   * @return the type as int. Use the static fields to compare different types.
-   */
-  public int getType()
-  {
-    return type;
-  }
-
-  /**
-   * Return the Blacklist ID.
-   *
-   * @return a byte[] with the Blacklist ID information.
-   */
-  public byte[] getListID()
-  {
-    if (listID == null)
-    {
-      return null;
-    }
-    else
-    {
-      return listID.clone();
     }
   }
 }

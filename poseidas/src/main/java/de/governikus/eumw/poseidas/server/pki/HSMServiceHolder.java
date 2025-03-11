@@ -16,7 +16,6 @@ import java.util.Calendar;
 import java.util.Date;
 import java.util.List;
 
-import de.governikus.eumw.poseidas.server.pki.entities.ChangeKeyLock;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
@@ -29,6 +28,7 @@ import de.governikus.eumw.poseidas.cardserver.service.hsm.impl.PKCS11HSMConfigur
 import de.governikus.eumw.poseidas.gov2server.constants.admin.GlobalManagementCodes;
 import de.governikus.eumw.poseidas.gov2server.constants.admin.ManagementMessage;
 import de.governikus.eumw.poseidas.server.idprovider.core.WarmupListener;
+import de.governikus.eumw.poseidas.server.pki.entities.ChangeKeyLock;
 import lombok.extern.slf4j.Slf4j;
 
 
@@ -100,6 +100,10 @@ public class HSMServiceHolder implements WarmupListener
       }
       catch (HSMException e)
       {
+        if (log.isDebugEnabled())
+        {
+          log.debug("HSM init failed", e);
+        }
         return GlobalManagementCodes.EC_UNEXPECTED_ERROR.createMessage("HSM init failed: " + e);
       }
     }
@@ -122,6 +126,10 @@ public class HSMServiceHolder implements WarmupListener
     }
     catch (IllegalStateException e)
     {
+      if (log.isDebugEnabled())
+      {
+        log.debug("HSM stop failed", e);
+      }
       if ("HSM service not initialized".equals(e.getMessage()))
       {
         return GlobalManagementCodes.OK.createMessage();
@@ -130,10 +138,18 @@ public class HSMServiceHolder implements WarmupListener
     }
     catch (HSMException | IOException e)
     {
+      if (log.isDebugEnabled())
+      {
+        log.debug("HSM stop failed", e);
+      }
       return GlobalManagementCodes.EC_UNEXPECTED_ERROR.createMessage(e.getMessage());
     }
     catch (UnsupportedOperationException e)
     {
+      if (log.isDebugEnabled())
+      {
+        log.debug("HSM stop failed", e);
+      }
       // expected for operation without HSM, continue
       service = null;
       return GlobalManagementCodes.OK.createMessage();
@@ -155,6 +171,10 @@ public class HSMServiceHolder implements WarmupListener
     }
     catch (HSMException | IOException e)
     {
+      if (log.isDebugEnabled())
+      {
+        log.debug("HSM service not available", e);
+      }
       return false;
     }
   }
@@ -196,12 +216,20 @@ public class HSMServiceHolder implements WarmupListener
       }
       catch (UnsupportedOperationException e)
       {
+        if (log.isDebugEnabled())
+        {
+          log.debug("Failed to get expiration date for alias: " + alias, e);
+        }
         try
         {
           reference = service.getGenerationDate(alias);
         }
         catch (UnsupportedOperationException e2)
         {
+          if (log.isDebugEnabled())
+          {
+            log.debug("Failed to get generation date for alias: " + alias, e2);
+          }
           // do not delete if no date is known
           return;
         }
@@ -226,11 +254,7 @@ public class HSMServiceHolder implements WarmupListener
           }
           catch (UnsupportedOperationException e)
           {
-            // possible until implemented for every HSM
-            if (log.isDebugEnabled())
-            {
-              log.debug("key " + alias + " not archived due to exception", e);
-            }
+            log.warn("key " + alias + " not archived due to exception", e);
           }
         }
         service.deleteKey(alias);

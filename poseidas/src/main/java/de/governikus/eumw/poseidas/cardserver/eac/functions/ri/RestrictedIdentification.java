@@ -34,6 +34,7 @@ import de.governikus.eumw.poseidas.cardserver.eac.functions.transmitAPDU.Transmi
 import iso.std.iso_iec._24727.tech.schema.InputAPDUInfoType;
 import iso.std.iso_iec._24727.tech.schema.Transmit;
 import iso.std.iso_iec._24727.tech.schema.TransmitResponse;
+import lombok.extern.slf4j.Slf4j;
 
 
 /**
@@ -43,6 +44,7 @@ import iso.std.iso_iec._24727.tech.schema.TransmitResponse;
  * @see RetrictedIdentificationResult
  * @author Jens Wothe, jw@bos-bremen.de
  */
+@Slf4j
 public class RestrictedIdentification
   extends AbstractFunctionStep<RestrictedIdentificationParameter, RestrictedIdentificationResult>
   implements FunctionStep<RestrictedIdentificationParameter, RestrictedIdentificationResult>,
@@ -232,6 +234,10 @@ public class RestrictedIdentification
     }
     catch (Exception e)
     {
+      if (log.isDebugEnabled())
+      {
+        log.debug("Error while evaluating transmit APDU", e);
+      }
       riResult = new RestrictedIdentificationResult(e);
     }
     return riResult;

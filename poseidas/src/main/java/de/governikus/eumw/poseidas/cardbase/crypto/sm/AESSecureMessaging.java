@@ -151,7 +151,13 @@ public class AESSecureMessaging implements SecureMessaging
 
     for ( ASN1 child : childs )
     {
-      int tag = (int)child.getDTag().longValue();
+      BigInteger dTag = child.getDTag();
+      if (dTag.longValueExact() > Integer.MAX_VALUE)
+      {
+        throw new SecureMessagingException(SecureMessagingException.CODE_SOFTWARE,
+                                           "The value of the dTag is greater than Integer.MaxValue", null);
+      }
+      int tag = dTag.intValueExact();
       if (SMConstants.TAG_BYTE_DO_CRYPTOGRAM == tag || SMConstants.TAG_BYTE_DO_CRYPTOGRAM_85 == tag)
       {
         if (encDataDOBytes == null)
@@ -336,7 +342,7 @@ public class AESSecureMessaging implements SecureMessaging
 
   private static byte[] createSecureHeader(byte[] header)
   {
-    byte[] result = header;
+    byte[] result = header.clone();
     ByteUtil.setBits(result, 0, (byte)0x0c);
     return result;
   }

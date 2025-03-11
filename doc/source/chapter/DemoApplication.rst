@@ -3,7 +3,7 @@
 eIDAS Demo Application
 ======================
 Starting with version 1.0.4, we provide a simple eIDAS Demo Application to test the eIDAS Middleware.
-The eIDAS Demo Application is an eIDAS Connector that sends an eIDAS request to the middleware and
+The eIDAS Demo Application is an eIDAS Connector that sends an eIDAS request to the Middleware and
 displays the returned eIDAS response.
 This way you can verify that the eIDAS Middleware is working correctly.
 
@@ -43,7 +43,8 @@ It must contain the following content. Adapt all the values to match your setup.
     server.port=8080
 
 The ``application.properties`` file must be present in your working directory or in a subdirectory called ``config`` of your working directory.
-Similarly to the eIDAS middleware you can use https as well. The configuration is according to the application.properties of the eIDAS Middleware.
+Similarly to the eIDAS Middleware you can use HTTPS as well. The configuration is according to the
+application.properties of the eIDAS Middleware.
 
 
 Using the eIDAS Demo Application
@@ -51,8 +52,8 @@ Using the eIDAS Demo Application
 To use the eIDAS Demo Application, start by running the eIDAS Demo Application.
 
 #. Change to the correct directory where the aforementioned configuration is present.
-#. If not present, copy the ``eidas-demo-3.3.0.jar`` file in this directory.
-#. Start the application by executing ``java -jar eidas-demo-3.3.0.jar``.
+#. If not present, copy the ``eidas-demo-3.4.0.jar`` file in this directory.
+#. Start the application by executing ``java -jar eidas-demo-3.4.0.jar``.
 
 Now you must configure your eIDAS Middleware to communicate with the eIDAS Demo Application.
 
@@ -82,15 +83,15 @@ check was successful the eIDAS Middleware is configured properly.
 
 Using the eIDAS Demo Application in Docker
 ------------------------------------------
-We provide an Docker Image for the eIDAS Demo Application as well.
+We provide a Docker Image for the eIDAS Demo Application as well.
 It can be found at `DockerHub <https://hub.docker.com/r/governikus/eidas-demo-application/>`_ .
 
 Because the ``application.properties`` file and the referenced key stores must be mounted into the container, it is recommended to place the configuration file and the key stores and certificates in a single directory.
 Also bear in mind that you must use the path of the container file system in the configuration when setting the key stores and certificates, e.g. ``middleware.signature.certificate=/opt/eidas-middleware/config/middleware_signature.crt``
 
-To run the middleware, execute the following command after you have prepared the configuration, certificate and key stores::
+To run the Middleware, execute the following command after you have prepared the configuration, certificate and key stores::
 
-    docker run --rm -it -v /path/to/your/config-directory:/opt/eidas-middleware/config -p 8080:8080 governikus/eidas-demo-application:3.3.0
+    docker run --rm -it -v /path/to/your/config-directory:/opt/eidas-middleware/config -p 8080:8080 governikus/eidas-demo-application:3.4.0
 
 Now you can follow the steps above to configure and test the eIDAS Middleware.
 

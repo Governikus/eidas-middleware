@@ -136,7 +136,7 @@ class KeymanagementControllerTest extends WebAdminTestBase
 
   @Test
   @SneakyThrows
-  void testUploadCertifiacte()
+  void testUploadCertificate()
   {
     assertFalse(getKeyDataOptional().isPresent());
 

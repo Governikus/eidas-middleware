@@ -59,6 +59,7 @@ import de.governikus.eumw.poseidas.service.ConfigKeyDataService;
 import de.governikus.eumw.utils.key.KeyStoreSupporter;
 import de.governikus.eumw.utils.key.SecurityProvider;
 import de.governikus.eumw.utils.key.exceptions.KeyStoreCreationFailedException;
+
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
@@ -218,7 +219,10 @@ public class KeymanagementController
     }
     catch (KeyStoreException e)
     {
-      log.debug("Exception while working with certificate", e);
+      if (log.isDebugEnabled())
+      {
+        log.debug("Exception while working with certificate", e);
+      }
       return Optional.empty();
     }
   }
@@ -309,7 +313,6 @@ public class KeymanagementController
       {
         log.warn("Could not read alias from stored key store " + keyStoreType.getName(), e);
       }
-      // TODO: Handle exception
     }
     return new KeystoreInfoHolder(keyStoreType.getName(), keyStoreType.getType().value(), certificateAlias,
                                   keypairAlias);
@@ -378,10 +381,18 @@ public class KeymanagementController
       }
       catch (IOException e)
       {
+        if (log.isDebugEnabled())
+        {
+          log.debug("Could not read uploaded file", e);
+        }
         bindingResult.addError(new ObjectError(KEY_STORE_UPLOAD_MODEL, "Could not read uploaded file"));
       }
       catch (KeyStoreCreationFailedException e)
       {
+        if (log.isDebugEnabled())
+        {
+          log.debug("Problem while loading the key store", e);
+        }
         bindingResult.addError(new ObjectError(KEY_STORE_UPLOAD_MODEL,
                                                "Problem while loading the key store. " + e.getCause().getMessage()));
       }
@@ -450,11 +461,19 @@ public class KeymanagementController
     }
     catch (CertificateException e)
     {
+      if (log.isDebugEnabled())
+      {
+        log.debug("Could not parse uploaded certificate into X.509", e);
+      }
       bindingResult.addError(new ObjectError(CERTIFICATE_UPLOAD_MODEL,
                                              "Could not parse uploaded certificate into X.509"));
     }
     catch (IOException e)
     {
+      if (log.isDebugEnabled())
+      {
+        log.debug("Could not read uploaded certificate", e);
+      }
       bindingResult.addError(new ObjectError(CERTIFICATE_UPLOAD_MODEL, "Could not read uploaded certificate"));
     }
 
@@ -550,17 +569,26 @@ public class KeymanagementController
     }
     catch (KeyStoreException e)
     {
-      log.debug(COULD_NOT_LOAD_KEY, e);
+      if (log.isDebugEnabled())
+      {
+        log.debug(COULD_NOT_LOAD_KEY, e);
+      }
       bindingResult.addError(new ObjectError(CREATE_KEY_PAIR_FROM_KEY_STORE_MODEL, COULD_NOT_READ_KEY_STORE));
     }
     catch (NoSuchAlgorithmException e)
     {
-      log.debug(COULD_NOT_LOAD_KEY, e);
+      if (log.isDebugEnabled())
+      {
+        log.debug(COULD_NOT_LOAD_KEY, e);
+      }
       bindingResult.addError(new ObjectError(CREATE_KEY_PAIR_FROM_KEY_STORE_MODEL, "Could not read key pair"));
     }
     catch (UnrecoverableKeyException e)
     {
-      log.debug(COULD_NOT_LOAD_KEY, e);
+      if (log.isDebugEnabled())
+      {
+        log.debug(COULD_NOT_LOAD_KEY, e);
+      }
       bindingResult.addError(new FieldError(CREATE_KEY_PAIR_FROM_KEY_STORE_MODEL, "password",
                                             "Password could be wrong"));
     }
@@ -671,12 +699,18 @@ public class KeymanagementController
     }
     catch (KeyStoreException e)
     {
-      log.debug(COULD_NOT_LOAD_KEY, e);
+      if (log.isDebugEnabled())
+      {
+        log.debug(COULD_NOT_LOAD_KEY, e);
+      }
       bindingResult.addError(new ObjectError(CREATE_CERTIFICATE_FROM_KEYSTORE_MODEL, COULD_NOT_READ_KEY_STORE));
     }
     catch (CertificateEncodingException e)
     {
-      log.debug("Could not encode certificate", e);
+      if (log.isDebugEnabled())
+      {
+        log.debug("Could not encode certificate", e);
+      }
       bindingResult.addError(new ObjectError(CREATE_CERTIFICATE_FROM_KEYSTORE_MODEL, "Could not read certificate"));
     }
 

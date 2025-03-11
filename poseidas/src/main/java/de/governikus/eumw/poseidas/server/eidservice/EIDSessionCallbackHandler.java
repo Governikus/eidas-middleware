@@ -10,6 +10,8 @@
 
 package de.governikus.eumw.poseidas.server.eidservice;
 
+import java.util.Optional;
+
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
@@ -21,6 +23,8 @@ import de.governikus.eumw.poseidas.eidserver.ecardid.EIDInfoContainer;
 import de.governikus.eumw.poseidas.eidserver.ecardid.EIDInfoContainer.EIDStatus;
 import de.governikus.eumw.poseidas.eidserver.ecardid.SessionInput;
 import de.governikus.eumw.poseidas.server.idprovider.core.AuthenticationSessionManager;
+
+import oasis.names.tc.dss._1_0.core.schema.InternationalStringType;
 import oasis.names.tc.dss._1_0.core.schema.Result;
 
 
@@ -104,21 +108,29 @@ public final class EIDSessionCallbackHandler implements ECardIDCallback
       LOG.info(session.getLogPrefix() + "received response from eCardAPI");
       // Personal Data
       LOG.debug(session.getLogPrefix() + "received response from eCardAPI: " + container.getInfoMap());
-      if (container.getStatus() == EIDStatus.EXPIRED || container.getStatus() == EIDStatus.REVOKED
-          || container.getStatus() == EIDStatus.NOT_AUTHENTIC)
+      if (container.getStatus() == null)
+      {
+        session.setResult(createResult(Constants.EID_MAJOR_ERROR,
+                                       Constants.EID_MINOR_COMMON_INTERNALERROR,
+                                       Optional.ofNullable(container.getResult())
+                                               .map(Result::getResultMessage)
+                                               .map(InternationalStringType::getValue)
+                                               .orElse(null)));
+      }
+      else if (container.getStatus() == EIDStatus.EXPIRED || container.getStatus() == EIDStatus.REVOKED
+               || container.getStatus() == EIDStatus.NOT_AUTHENTIC)
       {
         session.setResult(createResult(Constants.EID_MAJOR_ERROR,
                                        Constants.EID_MINOR_GETRESULT_INVALID_DOCUMENT,
-                                       (container.getResult() == null
-                                        || container.getResult().getResultMessage() == null) ? null
-                                          : container.getResult().getResultMessage().getValue()));
+                                       Optional.ofNullable(container.getResult())
+                                               .map(Result::getResultMessage)
+                                               .map(InternationalStringType::getValue)
+                                               .orElse(null)));
       }
       else if (container.hasErrors())
       {
-        LOG.warn(session.getLogPrefix() + "result major from eCardAPI: "
-                 + container.getResult().getResultMajor());
-        LOG.warn(session.getLogPrefix() + "result minor from eCardAPI: "
-                 + container.getResult().getResultMinor());
+        LOG.warn(session.getLogPrefix() + "result major from eCardAPI: " + container.getResult().getResultMajor());
+        LOG.warn(session.getLogPrefix() + "result minor from eCardAPI: " + container.getResult().getResultMinor());
         LOG.warn(session.getLogPrefix() + "result message from eCardAPI: "
                  + (container.getResult().getResultMessage() == null ? "null"
                    : container.getResult().getResultMessage().getValue()));

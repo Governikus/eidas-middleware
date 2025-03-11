@@ -11,7 +11,6 @@ package de.governikus.eumw.poseidas.server.pki;
 import java.security.PublicKey;
 import java.security.cert.CertificateException;
 import java.security.cert.X509Certificate;
-import java.security.interfaces.ECPublicKey;
 import java.security.interfaces.RSAPublicKey;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
@@ -56,6 +55,12 @@ public abstract class TlsClientRenewalService
   public static final int DEFAULT_DAYS_BEFORE_EXPIRATION = 30;
 
   static final String LOG_MESSAGE_DEFAULT_FORMAT = "{}: {}";
+
+  static final String KEY_ALGO = "RSA";
+
+  static final int MINIMAL_KEY_SIZE_RSA = 3072;
+
+  static final int DEFAULT_KEY_SIZE_RSA = 4096;
 
   final ConfigurationService configurationService;
 
@@ -271,6 +276,10 @@ public abstract class TlsClientRenewalService
       }
       catch (CertificateException e)
       {
+        if (log.isDebugEnabled())
+        {
+          log.debug("Failed to read certificate", e);
+        }
         // next
         continue;
       }
@@ -284,23 +293,39 @@ public abstract class TlsClientRenewalService
   }
 
   /**
-   * Check if a key fulfils algorithm and strength requirements.
+   * Check if a key fulfills algorithm requirements.
    *
    * @param pk key
    * @return <code>true</code> if requirement fulfilled, <code>false</code> otherwise
    */
-  static boolean canUseKey(PublicKey pk)
+  static boolean canUseKeyAlg(PublicKey pk)
   {
-    // ATTENTION this needs to be updated in case the TR-03116 changes the requirements
-    switch (pk.getAlgorithm())
+    // Currently (February 2025) the d-trust DVCA only support RSA keys.
+    if (!KEY_ALGO.equals(pk.getAlgorithm()))
     {
-      case "EC":
-        return ((ECPublicKey)pk).getParams().getCurve().getField().getFieldSize() >= 256;
-      case "RSA":
-        return ((RSAPublicKey)pk).getModulus().bitLength() >= 3072;
-      default:
-        return false;
+      log.warn("Unsupported key algorithm {}. Only {} keys are allowed", pk.getAlgorithm(), KEY_ALGO);
+      return false;
     }
+    return true;
+  }
+
+  /**
+   * Check if a key fulfills strength requirements. Only to be called after {@link #canUseKeyAlg(PublicKey)} check is
+   * passed, may throw {@link ClassCastException} otherwise.
+   *
+   * @param pk key
+   * @return <code>true</code> if requirement fulfilled, <code>false</code> otherwise
+   */
+  static boolean canUseKeySize(PublicKey pk)
+  {
+    // Currently (February 2025) the d-trust DVCA only support RSA keys.
+    // ATTENTION this needs to be updated in case the TR-03116 changes the requirements
+    boolean isKeyLengthSufficient = ((RSAPublicKey)pk).getModulus().bitLength() >= MINIMAL_KEY_SIZE_RSA;
+    if (!isKeyLengthSufficient)
+    {
+      log.warn("RSA key length is too short. At least " + MINIMAL_KEY_SIZE_RSA + " bits required.");
+    }
+    return isKeyLengthSufficient;
   }
 
   /**

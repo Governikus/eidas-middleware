@@ -33,6 +33,7 @@ import de.governikus.eumw.poseidas.cardbase.AssertUtil;
 import de.governikus.eumw.poseidas.cardbase.asn1.OID;
 import de.governikus.eumw.poseidas.cardserver.SignatureUtil;
 import de.governikus.eumw.utils.key.SecurityProvider;
+import lombok.extern.slf4j.Slf4j;
 
 
 /**
@@ -40,6 +41,7 @@ import de.governikus.eumw.utils.key.SecurityProvider;
  *
  * @author Arne Stahlbock, ast@bos-bremen.de
  */
+@Slf4j
 public class BOSHSMSimulatorService implements HSMService
 {
 
@@ -133,6 +135,10 @@ public class BOSHSMSimulatorService implements HSMService
     }
     catch (InvalidKeySpecException e)
     {
+      if (log.isDebugEnabled())
+      {
+        log.debug("Failed to generate EC private key", e);
+      }
       privSignKey = KeyFactory.getInstance("RSA", SecurityProvider.BOUNCY_CASTLE_PROVIDER)
                               .generatePrivate(keySpec);
     }

@@ -3,10 +3,10 @@
 
 <div th:fragment="msg">
     <div th:if="${msg != null}" class="alert alert-info" role="alert" style="z-index: 1000">
-        <b>Info:</b> <span id="alertMSG" th:utext="${msg}"></span>
+        <b>Info:</b> <span id="alertMSG" th:text="${msg}"></span>
     </div>
     <div th:if="${error != null}" class="alert alert-danger" role="alert" style="z-index: 1000">
-        <b>Error:</b> <span id="alertERROR" th:utext="${error}"></span>
+        <b>Error:</b> <span id="alertERROR" th:text="${error}"></span>
     </div>
     <div sec:authorize="hasAuthority('hasPasswordInApplicationProperties')" class="alert alert-warning" role="alert" style="z-index: 1000">
         <span id="alertPASSWORD">Password is still located in application.properties. Please remove 'poseidas.admin.hashed.password' from the application.properties.</span>

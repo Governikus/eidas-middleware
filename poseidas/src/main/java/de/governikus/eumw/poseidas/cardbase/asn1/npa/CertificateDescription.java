@@ -24,6 +24,7 @@ import de.governikus.eumw.poseidas.cardbase.asn1.ASN1Path;
 import de.governikus.eumw.poseidas.cardbase.asn1.AbstractASN1Encoder;
 import de.governikus.eumw.poseidas.cardbase.asn1.OID;
 import de.governikus.eumw.poseidas.cardbase.crypto.DigestUtil;
+import lombok.extern.slf4j.Slf4j;
 
 
 /**
@@ -31,10 +32,9 @@ import de.governikus.eumw.poseidas.cardbase.crypto.DigestUtil;
  *
  * @author Jens Wothe, jw@bos-bremen.de
  */
+@Slf4j
 public class CertificateDescription extends AbstractASN1Encoder
 {
-
-
 
   /**
    * Sets OID.
@@ -327,6 +327,10 @@ public class CertificateDescription extends AbstractASN1Encoder
     }
     catch (IOException e)
     {
+      if (log.isDebugEnabled())
+      {
+        log.debug("Can not read certificate description", e);
+      }
       // nothing
     }
     return result;

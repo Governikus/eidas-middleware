@@ -378,7 +378,7 @@ public class EidasResponse
     }
     catch (ErrorCodeException e1)
     {
-      throw new IllegalArgumentException("No attribute known with name: " + att.getName());
+      throw new IllegalArgumentException("No attribute known with name: " + att.getName(), e1);
     }
   }
 

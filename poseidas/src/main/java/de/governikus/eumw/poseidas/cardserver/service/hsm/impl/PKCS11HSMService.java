@@ -1,11 +1,10 @@
 /*
- * Copyright (c) 2020 Governikus KG. Licensed under the EUPL, Version 1.2 or as soon they will be approved by
- * the European Commission - subsequent versions of the EUPL (the "Licence"); You may not use this work except
- * in compliance with the Licence. You may obtain a copy of the Licence at:
- * http://joinup.ec.europa.eu/software/page/eupl Unless required by applicable law or agreed to in writing,
- * software distributed under the Licence is distributed on an "AS IS" basis, WITHOUT WARRANTIES OR CONDITIONS
- * OF ANY KIND, either express or implied. See the Licence for the specific language governing permissions and
- * limitations under the Licence.
+ * Copyright (c) 2020 Governikus KG. Licensed under the EUPL, Version 1.2 or as soon they will be approved by the
+ * European Commission - subsequent versions of the EUPL (the "Licence"); You may not use this work except in compliance
+ * with the Licence. You may obtain a copy of the Licence at: http://joinup.ec.europa.eu/software/page/eupl Unless
+ * required by applicable law or agreed to in writing, software distributed under the Licence is distributed on an
+ * "AS IS" basis, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the Licence for the
+ * specific language governing permissions and limitations under the Licence.
  */
 
 package de.governikus.eumw.poseidas.cardserver.service.hsm.impl;
@@ -36,6 +35,8 @@ import java.util.Date;
 import java.util.Enumeration;
 import java.util.List;
 
+import org.bouncycastle.operator.OperatorCreationException;
+
 import de.governikus.eumw.poseidas.cardbase.AssertUtil;
 import de.governikus.eumw.poseidas.cardbase.ByteUtil;
 import de.governikus.eumw.poseidas.cardbase.StringUtil;
@@ -45,6 +46,7 @@ import de.governikus.eumw.poseidas.cardbase.constants.OIDConstants;
 import de.governikus.eumw.poseidas.cardserver.CertificateUtil;
 import de.governikus.eumw.poseidas.server.pki.RequestSignerCertificateServiceImpl;
 import lombok.Getter;
+import lombok.extern.slf4j.Slf4j;
 
 
 /**
@@ -52,6 +54,7 @@ import lombok.Getter;
  *
  * @author ast
  */
+@Slf4j
 public final class PKCS11HSMService implements HSMService
 {
 
@@ -108,8 +111,8 @@ public final class PKCS11HSMService implements HSMService
                                  String issuerAlias,
                                  boolean replace,
                                  int lifespan)
-    throws NoSuchAlgorithmException, IllegalArgumentException, HSMException,
-    InvalidAlgorithmParameterException, IllegalStateException
+    throws NoSuchAlgorithmException, IllegalArgumentException, HSMException, InvalidAlgorithmParameterException,
+    IllegalStateException, CertificateException
   {
     if (keyStore == null)
     {
@@ -145,6 +148,10 @@ public final class PKCS11HSMService implements HSMService
       }
       catch (UnrecoverableKeyException | KeyStoreException e)
       {
+        if (log.isDebugEnabled())
+        {
+          log.debug("Failed to get key from keystore", e);
+        }
         // nothing, use self sign
       }
     }
@@ -166,6 +173,10 @@ public final class PKCS11HSMService implements HSMService
     catch (KeyStoreException e)
     {
       throw new HSMException(e);
+    }
+    catch (CertificateException | OperatorCreationException e)
+    {
+      throw new CertificateException("Failed to create certificate.", e);
     }
     return kp;
   }
@@ -214,10 +225,8 @@ public final class PKCS11HSMService implements HSMService
       return true;
     }
     else if (oid.equals(OIDConstants.OID_TA_RSA_PSS_SHA_1) || oid.equals(OIDConstants.OID_TA_RSA_PSS_SHA_256)
-             || oid.equals(OIDConstants.OID_TA_RSA_PSS_SHA_512)
-             || oid.equals(OIDConstants.OID_TA_RSA_V1_5_SHA_1)
-             || oid.equals(OIDConstants.OID_TA_RSA_V1_5_SHA_256)
-             || oid.equals(OIDConstants.OID_TA_RSA_V1_5_SHA_512))
+             || oid.equals(OIDConstants.OID_TA_RSA_PSS_SHA_512) || oid.equals(OIDConstants.OID_TA_RSA_V1_5_SHA_1)
+             || oid.equals(OIDConstants.OID_TA_RSA_V1_5_SHA_256) || oid.equals(OIDConstants.OID_TA_RSA_V1_5_SHA_512))
     {
       return false;
     }
@@ -332,8 +341,7 @@ public final class PKCS11HSMService implements HSMService
 
   /** {@inheritDoc} */
   @Override
-  public boolean containsKey(String alias)
-    throws IllegalArgumentException, HSMException, IllegalStateException
+  public boolean containsKey(String alias) throws IllegalArgumentException, HSMException, IllegalStateException
   {
     if (keyStore == null)
     {
@@ -394,8 +402,7 @@ public final class PKCS11HSMService implements HSMService
 
   /** {@inheritDoc} */
   @Override
-  public Date getGenerationDate(String alias)
-    throws IllegalArgumentException, IllegalStateException, HSMException
+  public Date getGenerationDate(String alias) throws IllegalArgumentException, IllegalStateException, HSMException
   {
     if (keyStore == null)
     {

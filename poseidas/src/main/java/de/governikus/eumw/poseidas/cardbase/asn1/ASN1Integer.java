@@ -12,8 +12,10 @@ package de.governikus.eumw.poseidas.cardbase.asn1;
 
 import java.math.BigInteger;
 
+import lombok.extern.slf4j.Slf4j;
 
 
+@Slf4j
 public class ASN1Integer extends AbstractASN1Encoder
 {
 
@@ -33,10 +35,14 @@ public class ASN1Integer extends AbstractASN1Encoder
     {
       try
       {
-        this.intValue = new BigInteger(this.getValue()).intValue();
+        this.intValue = new BigInteger(this.getValue()).intValueExact();
       }
       catch (NullPointerException | NumberFormatException e)
       {
+        if (log.isDebugEnabled())
+        {
+          log.debug("Failed to parse integer value", e);
+        }
         this.intValue = null;
       }
     }

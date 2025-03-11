@@ -147,14 +147,16 @@ public class BlockListService
    * @param blockListID the new id of the blocklist
    * @param entriesToAdd entries that shall be added
    * @param entriesToRemove entries that shall be removed
+   * @param expectedSize expected size of complete list after operation
    * @throws BlockListStorageException
+   * @throws BlockListConsistencyException
    */
   public synchronized void updateDeltaBlockList(TerminalPermission terminalPermission,
                                                 Number blockListID,
                                                 List<byte[]> entriesToAdd,
-                                                List<byte[]> entriesToRemove
-
-  ) throws BlockListStorageException
+                                                List<byte[]> entriesToRemove,
+                                                Integer expectedSize)
+    throws BlockListStorageException, BlockListConsistencyException
   {
     var newBlockList = new ArrayList<>(blockListStorage.get(encodeSectorIdToBase64String(terminalPermission.getSectorID())));
 
@@ -162,6 +164,10 @@ public class BlockListService
     List<String> entriesToAddAsBase64 = entriesToAdd.parallelStream().map(Base64::encodeBase64String).toList();
     newBlockList.removeAll(entriesToRemoveAsBase64);
     newBlockList.addAll(entriesToAddAsBase64);
+    if (expectedSize != null && expectedSize != newBlockList.size())
+    {
+      throw new BlockListConsistencyException();
+    }
 
     updateBlockList(terminalPermission, blockListID, newBlockList, terminalPermission.getSectorID());
   }
