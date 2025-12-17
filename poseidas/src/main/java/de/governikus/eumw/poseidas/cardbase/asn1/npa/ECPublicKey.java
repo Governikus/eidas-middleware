@@ -1,11 +1,10 @@
 /*
- * Copyright (c) 2020 Governikus KG. Licensed under the EUPL, Version 1.2 or as soon they will be approved by
- * the European Commission - subsequent versions of the EUPL (the "Licence"); You may not use this work except
- * in compliance with the Licence. You may obtain a copy of the Licence at:
- * http://joinup.ec.europa.eu/software/page/eupl Unless required by applicable law or agreed to in writing,
- * software distributed under the Licence is distributed on an "AS IS" basis, WITHOUT WARRANTIES OR CONDITIONS
- * OF ANY KIND, either express or implied. See the Licence for the specific language governing permissions and
- * limitations under the Licence.
+ * Copyright (c) 2020 Governikus KG. Licensed under the EUPL, Version 1.2 or as soon they will be approved by the
+ * European Commission - subsequent versions of the EUPL (the "Licence"); You may not use this work except in compliance
+ * with the Licence. You may obtain a copy of the Licence at: http://joinup.ec.europa.eu/software/page/eupl Unless
+ * required by applicable law or agreed to in writing, software distributed under the Licence is distributed on an
+ * "AS IS" basis, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the Licence for the
+ * specific language governing permissions and limitations under the Licence.
  */
 
 package de.governikus.eumw.poseidas.cardbase.asn1.npa;
@@ -118,8 +117,8 @@ public class ECPublicKey extends AbstractASN1Encoder
    *
    * @param bytes bytes of complete key, <code>null</code> or empty not permitted
    * @throws IOException if reading of stream fails
-   * @throws IllegalArgumentException if bytes <code>null</code> or empty or if bytes contain structure not
-   *           complying with key structure.
+   * @throws IllegalArgumentException if bytes <code>null</code> or empty or if bytes contain structure not complying
+   *           with key structure.
    * @see ASN1#ASN1(byte[])
    */
   public ECPublicKey(byte[] bytes) throws IOException
@@ -143,8 +142,7 @@ public class ECPublicKey extends AbstractASN1Encoder
     {
       List<ASN1> childList = this.getChildElementList();
       // first element is always oid
-      if (!Arrays.equals(ECPublicKeyPath.OID.getTag().toByteArray(), childList.get(IDX_CHILD_OID)
-                                                                              .getDTagBytes()))
+      if (!Arrays.equals(ECPublicKeyPath.OID.getTag().toByteArray(), childList.get(IDX_CHILD_OID).getDTagBytes()))
       {
         throw new IllegalArgumentException(ERROR_MESSAGE_NO_EC_PUBLIC_KEY);
       }
@@ -210,9 +208,8 @@ public class ECPublicKey extends AbstractASN1Encoder
     {
       throw new IllegalArgumentException(ERROR_MESSAGE_NO_EC_PUBLIC_KEY);
     }
-    if (size == 8
-        && !Arrays.equals(ECPublicKeyPath.CO_FACTOR_F.getTag().toByteArray(),
-                          childList.get(IDX_FULL_CO_FACTOR_F).getDTagBytes()))
+    if (size == 8 && !Arrays.equals(ECPublicKeyPath.CO_FACTOR_F.getTag().toByteArray(),
+                                    childList.get(IDX_FULL_CO_FACTOR_F).getDTagBytes()))
     {
       throw new IllegalArgumentException(ERROR_MESSAGE_NO_EC_PUBLIC_KEY);
     }
@@ -231,9 +228,8 @@ public class ECPublicKey extends AbstractASN1Encoder
     {
       throw new IllegalArgumentException(ERROR_MESSAGE_NO_EC_PUBLIC_KEY);
     }
-    if (size == 3
-        && !Arrays.equals(ECPublicKeyPath.CO_FACTOR_F.getTag().toByteArray(),
-                          childList.get(IDX_SHORT_CO_FACTOR_F).getDTagBytes()))
+    if (size == 3 && !Arrays.equals(ECPublicKeyPath.CO_FACTOR_F.getTag().toByteArray(),
+                                    childList.get(IDX_SHORT_CO_FACTOR_F).getDTagBytes()))
     {
       throw new IllegalArgumentException(ERROR_MESSAGE_NO_EC_PUBLIC_KEY);
     }
@@ -252,8 +248,7 @@ public class ECPublicKey extends AbstractASN1Encoder
 
   /** {@inheritDoc} */
   @Override
-  public ASN1 decode(byte[] bytes) throws
-    IOException
+  public ASN1 decode(byte[] bytes) throws IOException
   {
     ECPublicKey key = new ECPublicKey(bytes);
     super.decode(key);

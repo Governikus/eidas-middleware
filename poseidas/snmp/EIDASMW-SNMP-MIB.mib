@@ -73,7 +73,8 @@ eidasmwObjectsGroup OBJECT-GROUP
                rscCurrentValidUntil,
                tlsCertificateExpirationDate,
                crlAvailable,
-               lastSuccessfulCRLRetrieval
+               lastSuccessfulCRLRetrieval,
+               tlsClientCertificateValidUntil
               }
        STATUS  current
        DESCRIPTION
@@ -115,22 +116,23 @@ serviceProviderEntry OBJECT-TYPE
 
 ServiceProviderEntry ::=
     SEQUENCE {
-        serviceProviderName      OCTET STRING,
-        cvcPresent               Integer32,
-        cvcExpirationDate        DateAndTime,
-        cvcSubjectUrl            OCTET STRING,
-        cvcAndTlsLinked          Integer32,
-        blackListAvailable       Integer32,
-        lastBlackListRenewal     DateAndTime,
-        blackListCAAvailable     Integer32,
-        masterListAvailable      Integer32,
-        lastMasterListRenewal    DateAndTime,
-        masterListCAAvailable    Integer32,
-        defectListAvailable      Integer32,
-        lastDefectListRenewal    DateAndTime,
-        defectListCAAvailable    Integer32,
-        rscPendingAvailable      Integer32,
-        rscCurrentValidUntil     DateAndTime
+        serviceProviderName                 OCTET STRING,
+        cvcPresent                          Integer32,
+        cvcExpirationDate                   DateAndTime,
+        cvcSubjectUrl                       OCTET STRING,
+        cvcAndTlsLinked                     Integer32,
+        blackListAvailable                  Integer32,
+        lastBlackListRenewal                DateAndTime,
+        blackListCAAvailable                Integer32,
+        masterListAvailable                 Integer32,
+        lastMasterListRenewal               DateAndTime,
+        masterListCAAvailable               Integer32,
+        defectListAvailable                 Integer32,
+        lastDefectListRenewal               DateAndTime,
+        defectListCAAvailable               Integer32,
+        rscPendingAvailable                 Integer32,
+        rscCurrentValidUntil                DateAndTime,
+        tlsClientCertificateValidUntil      DateAndTime
     }
 
 message                  OBJECT-TYPE
@@ -268,6 +270,13 @@ rscCurrentValidUntil             OBJECT-TYPE
     STATUS      current
     DESCRIPTION	"Last date of validity"
     ::= { serviceProviderEntry 62 }
+
+tlsClientCertificateValidUntil             OBJECT-TYPE
+    SYNTAX      DateAndTime
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION	"Last date of validity of tls client certificate"
+    ::= { serviceProviderEntry 71 }
 
 --
 -- GLOBAL

@@ -81,7 +81,8 @@ class RestrictedIdService140Test
     blockListResult.setReturnCode(GetBlockListReturnCodeType.FAILURE_INTERNAL_ERROR);
     Mockito.when(port.getBlockList(Mockito.any(GetBlockListRequest.class))).thenReturn(blockListResult);
     GovManagementException govManagementException = Assertions.assertThrows(GovManagementException.class,
-                                                                            () -> restrictedIdService140.getBlacklistResult(null, null));
+                                                                            () -> restrictedIdService140.getBlacklistResult(null,
+                                                                                                                            null));
     Assertions.assertEquals(GlobalManagementCodes.EC_UNEXPECTED_ERROR,
                             govManagementException.getManagementMessage().getCode());
     Assertions.assertEquals("getBlackList for returned " + GetBlockListReturnCodeType.FAILURE_INTERNAL_ERROR,

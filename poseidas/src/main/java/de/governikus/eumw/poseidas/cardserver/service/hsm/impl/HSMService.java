@@ -1,11 +1,10 @@
 /*
- * Copyright (c) 2020 Governikus KG. Licensed under the EUPL, Version 1.2 or as soon they will be approved by
- * the European Commission - subsequent versions of the EUPL (the "Licence"); You may not use this work except
- * in compliance with the Licence. You may obtain a copy of the Licence at:
- * http://joinup.ec.europa.eu/software/page/eupl Unless required by applicable law or agreed to in writing,
- * software distributed under the Licence is distributed on an "AS IS" basis, WITHOUT WARRANTIES OR CONDITIONS
- * OF ANY KIND, either express or implied. See the Licence for the specific language governing permissions and
- * limitations under the Licence.
+ * Copyright (c) 2020 Governikus KG. Licensed under the EUPL, Version 1.2 or as soon they will be approved by the
+ * European Commission - subsequent versions of the EUPL (the "Licence"); You may not use this work except in compliance
+ * with the Licence. You may obtain a copy of the Licence at: http://joinup.ec.europa.eu/software/page/eupl Unless
+ * required by applicable law or agreed to in writing, software distributed under the Licence is distributed on an
+ * "AS IS" basis, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the Licence for the
+ * specific language governing permissions and limitations under the Licence.
  */
 
 package de.governikus.eumw.poseidas.cardserver.service.hsm.impl;
@@ -65,17 +64,15 @@ public interface HSMService extends Service
   public static final int PKCS11_HSM = 5;
 
   /**
-   * Generates a new key pair with given algorithm and parameter spec. Warning: If used on a cluster where a
-   * key with same alias is already existing and option replace is chosen, the machine running this MUST
-   * complete the key distribution at all cost, otherwise there will be keys with same name but different
-   * content on the HSM instances!
+   * Generates a new key pair with given algorithm and parameter spec. Warning: If used on a cluster where a key with
+   * same alias is already existing and option replace is chosen, the machine running this MUST complete the key
+   * distribution at all cost, otherwise there will be keys with same name but different content on the HSM instances!
    *
    * @param algorithm algorithm to use, <code>null</code> or empty not permitted
    * @param spec parameter spec to use, <code>null</code> not permitted
-   * @param alias alias for storing the new private key, WITHOUT prefix, <code>null</code> or empty not
-   *          permitted
-   * @param issuerAlias alias for signing the new key, WITHOUT prefix, <code>null</code> or empty permitted
-   *          for self-signing
+   * @param alias alias for storing the new private key, WITHOUT prefix, <code>null</code> or empty not permitted
+   * @param issuerAlias alias for signing the new key, WITHOUT prefix, <code>null</code> or empty permitted for
+   *          self-signing
    * @param replace flag indicating if (possibly existing) key with same alias should be replaced
    * @param lifespan key validity in months
    * @return generated key pair
@@ -116,9 +113,9 @@ public interface HSMService extends Service
    * @throws HSMException
    * @throws IllegalStateException if called when not initialized
    */
-  public abstract byte[] sign(String alias, OID sigAlgOID, byte[] data) throws NoSuchAlgorithmException,
-    NoSuchProviderException, IOException, UnrecoverableKeyException, KeyStoreException, CertificateException,
-    InvalidKeyException, SignatureException, InvalidKeySpecException, HSMException;
+  public abstract byte[] sign(String alias, OID sigAlgOID, byte[] data)
+    throws NoSuchAlgorithmException, NoSuchProviderException, IOException, UnrecoverableKeyException, KeyStoreException,
+    CertificateException, InvalidKeyException, SignatureException, InvalidKeySpecException, HSMException;
 
   /**
    * Gets associated public key for given alias of private key.
@@ -157,8 +154,8 @@ public interface HSMService extends Service
    * Checks if a key is contained in the HSM.
    *
    * @param alias alias of key, WITHOUT prefix, <code>null</code> or empty not permitted
-   * @return <code>true</code> if key is found in at least one working HSM, <code>false</code> if not found on
-   *         any working HSM
+   * @return <code>true</code> if key is found in at least one working HSM, <code>false</code> if not found on any
+   *         working HSM
    * @throws IllegalArgumentException if alias <code>null</code> or empty
    * @throws HSMException
    * @throws IOException
@@ -169,8 +166,8 @@ public interface HSMService extends Service
   /**
    * Initializes HSM and performs login. Must be called before using any other method.
    *
-   * @param config configuration data, <code>null</code> not permitted, must be instance of class matching
-   *          specific HSM implementation (ex: {@link PKCS11HSMConfiguration} for {@link PKCS11HSMService})
+   * @param config configuration data, <code>null</code> not permitted, must be instance of class matching specific HSM
+   *          implementation (ex: {@link PKCS11HSMConfiguration} for {@link PKCS11HSMService})
    * @throws IllegalArgumentException if config <code>null</code> or of wrong type
    * @throws HSMException if login fails
    */
@@ -228,21 +225,18 @@ public interface HSMService extends Service
   public abstract Date getExpirationDate(String alias) throws HSMException, IOException;
 
   /**
-   * Gets information whether key with given name is currently being modified (important for HSM clusters as
-   * data distribution over all HSM instances may take some time). For single HSMs, this always returns
-   * <code>false</code>.
+   * Gets information whether key with given name is currently being modified (important for HSM clusters as data
+   * distribution over all HSM instances may take some time). For single HSMs, this always returns <code>false</code>.
    *
    * @param alias alias of key, WITHOUT prefix, <code>null</code> or empty not permitted
-   * @return <code>true</code> if key undergoing modifications, <code>false</code> if not or if no HSM cluster
-   *         used
+   * @return <code>true</code> if key undergoing modifications, <code>false</code> if not or if no HSM cluster used
    * @throws IllegalArgumentException if alias <code>null</code> or empty
    * @throws IllegalStateException if called when not initialized
    */
   public abstract boolean isKeyBeingModified(String alias);
 
   /**
-   * Distributes a key to all HSM instances by trying to find the key on one instance and spreading it to the
-   * others.
+   * Distributes a key to all HSM instances by trying to find the key on one instance and spreading it to the others.
    *
    * @param alias alias of key to be distributed, WITHOUT prefix, <code>null</code> or empty not permitted
    * @throws IllegalArgumentException if alias <code>null</code> or empty

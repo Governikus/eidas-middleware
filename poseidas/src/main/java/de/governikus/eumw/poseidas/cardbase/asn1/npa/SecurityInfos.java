@@ -1,11 +1,10 @@
 /*
- * Copyright (c) 2020 Governikus KG. Licensed under the EUPL, Version 1.2 or as soon they will be approved by
- * the European Commission - subsequent versions of the EUPL (the "Licence"); You may not use this work except
- * in compliance with the Licence. You may obtain a copy of the Licence at:
- * http://joinup.ec.europa.eu/software/page/eupl Unless required by applicable law or agreed to in writing,
- * software distributed under the Licence is distributed on an "AS IS" basis, WITHOUT WARRANTIES OR CONDITIONS
- * OF ANY KIND, either express or implied. See the Licence for the specific language governing permissions and
- * limitations under the Licence.
+ * Copyright (c) 2020 Governikus KG. Licensed under the EUPL, Version 1.2 or as soon they will be approved by the
+ * European Commission - subsequent versions of the EUPL (the "Licence"); You may not use this work except in compliance
+ * with the Licence. You may obtain a copy of the Licence at: http://joinup.ec.europa.eu/software/page/eupl Unless
+ * required by applicable law or agreed to in writing, software distributed under the Licence is distributed on an
+ * "AS IS" basis, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the Licence for the
+ * specific language governing permissions and limitations under the Licence.
  */
 
 package de.governikus.eumw.poseidas.cardbase.asn1.npa;
@@ -43,8 +42,8 @@ import de.governikus.eumw.poseidas.cardbase.constants.OIDConstants;
 
 
 /**
- * Implementation of ASN.1 structure for SecurityInfos, contained in EF.CardAccess, EF.CardSecurity and
- * EF.ChipSecurity files.
+ * Implementation of ASN.1 structure for SecurityInfos, contained in EF.CardAccess, EF.CardSecurity and EF.ChipSecurity
+ * files.
  *
  * @author Arne Stahlbock, ast@bos-bremen.de
  */
@@ -274,8 +273,7 @@ public class SecurityInfos extends AbstractASN1Encoder implements ASN1Encoder
   }
 
   /**
-   * Adds {@link RestrictedIdentificationDomainParameterInfo} for related {@link ASN1} identified by
-   * {@link OID}.
+   * Adds {@link RestrictedIdentificationDomainParameterInfo} for related {@link ASN1} identified by {@link OID}.
    *
    * @param a asn1
    * @param oid oid
@@ -363,10 +361,8 @@ public class SecurityInfos extends AbstractASN1Encoder implements ASN1Encoder
   private void addChipAuthenticationInfo(ASN1 a, OID oid) throws IOException
   {
     if (oid.equals(OIDConstants.OID_CA_DH_3DES_CBC_CBC) || oid.equals(OIDConstants.OID_CA_DH_AES_CBC_CMAC_128)
-        || oid.equals(OIDConstants.OID_CA_DH_AES_CBC_CMAC_192)
-        || oid.equals(OIDConstants.OID_CA_DH_AES_CBC_CMAC_256)
-        || oid.equals(OIDConstants.OID_CA_ECDH_3DES_CBC_CBC)
-        || oid.equals(OIDConstants.OID_CA_ECDH_AES_CBC_CMAC_128)
+        || oid.equals(OIDConstants.OID_CA_DH_AES_CBC_CMAC_192) || oid.equals(OIDConstants.OID_CA_DH_AES_CBC_CMAC_256)
+        || oid.equals(OIDConstants.OID_CA_ECDH_3DES_CBC_CBC) || oid.equals(OIDConstants.OID_CA_ECDH_AES_CBC_CMAC_128)
         || oid.equals(OIDConstants.OID_CA_ECDH_AES_CBC_CMAC_192)
         || oid.equals(OIDConstants.OID_CA_ECDH_AES_CBC_CMAC_256))
     {
@@ -415,8 +411,7 @@ public class SecurityInfos extends AbstractASN1Encoder implements ASN1Encoder
    */
   private void addPACEInfo(ASN1 a, OID oid) throws IOException
   {
-    if (oid.equals(OIDConstants.OID_PACE_DH_GM_3DES_CBC_CBC)
-        || oid.equals(OIDConstants.OID_PACE_DH_GM_AES_CBC_CMAC_128)
+    if (oid.equals(OIDConstants.OID_PACE_DH_GM_3DES_CBC_CBC) || oid.equals(OIDConstants.OID_PACE_DH_GM_AES_CBC_CMAC_128)
         || oid.equals(OIDConstants.OID_PACE_DH_GM_AES_CBC_CMAC_192)
         || oid.equals(OIDConstants.OID_PACE_DH_GM_AES_CBC_CMAC_256)
         || oid.equals(OIDConstants.OID_PACE_ECDH_GM_3DES_CBC_CBC)
@@ -477,8 +472,7 @@ public class SecurityInfos extends AbstractASN1Encoder implements ASN1Encoder
   }
 
   /**
-   * Gets a list of all {@link ChipAuthenticationDomainParameterInfo} structures in this {@link SecurityInfos}
-   * .
+   * Gets a list of all {@link ChipAuthenticationDomainParameterInfo} structures in this {@link SecurityInfos} .
    *
    * @return list of {@link ChipAuthenticationDomainParameterInfo}, can be <code>null</code> or empty
    */

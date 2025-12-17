@@ -1,11 +1,10 @@
 /*
- * Copyright (c) 2020 Governikus KG. Licensed under the EUPL, Version 1.2 or as soon they will be approved by
- * the European Commission - subsequent versions of the EUPL (the "Licence"); You may not use this work except
- * in compliance with the Licence. You may obtain a copy of the Licence at:
- * http://joinup.ec.europa.eu/software/page/eupl Unless required by applicable law or agreed to in writing,
- * software distributed under the Licence is distributed on an "AS IS" basis, WITHOUT WARRANTIES OR CONDITIONS
- * OF ANY KIND, either express or implied. See the Licence for the specific language governing permissions and
- * limitations under the Licence.
+ * Copyright (c) 2020 Governikus KG. Licensed under the EUPL, Version 1.2 or as soon they will be approved by the
+ * European Commission - subsequent versions of the EUPL (the "Licence"); You may not use this work except in compliance
+ * with the Licence. You may obtain a copy of the Licence at: http://joinup.ec.europa.eu/software/page/eupl Unless
+ * required by applicable law or agreed to in writing, software distributed under the Licence is distributed on an
+ * "AS IS" basis, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the Licence for the
+ * specific language governing permissions and limitations under the Licence.
  */
 
 package de.governikus.eumw.poseidas.cardbase.asn1;
@@ -86,8 +85,8 @@ final class ASN1BaseUtil
    *
    * @param bytesOfLength bytes of length, <code>null</code> or empty array not permitted
    * @return length
-   * @throws IllegalArgumentException if length <code>null</code> or content of length of bytes does fits
-   *           requirements of ASN.1 length encoding
+   * @throws IllegalArgumentException if length <code>null</code> or content of length of bytes does fits requirements
+   *           of ASN.1 length encoding
    */
   static BigInteger toLength(byte[] bytesOfLength)
   {
@@ -291,8 +290,8 @@ final class ASN1BaseUtil
   }
 
   /**
-   * Gets bytes of description and tag from stream - bytes of description and tag includes bit encoded
-   * informations about ASN.1 object.
+   * Gets bytes of description and tag from stream - bytes of description and tag includes bit encoded informations
+   * about ASN.1 object.
    *
    * @param stream stream, <code>null</code> not permitted
    * @return byte[]-array of description and tag
@@ -419,12 +418,11 @@ final class ASN1BaseUtil
   /**
    * Checks tag bytes are valid
    *
-   * @param dTagBytes tag descriptor bytes (class and tag bits, etc.), <code>null</code> or empty not
-   *          permitted, if all bits of {@link ASN1Constants#TAG_BITS_FIRST_BYTE_MASK} set at first byte, the
-   *          following bytes building tag are only valid, if second byte up to next to last most significant
-   *          bit set and not set at last byte, if not all bits of
-   *          {@link ASN1Constants#TAG_BITS_FIRST_BYTE_MASK} tag bytes expected to consist out of exactly one
-   *          byte
+   * @param dTagBytes tag descriptor bytes (class and tag bits, etc.), <code>null</code> or empty not permitted, if all
+   *          bits of {@link ASN1Constants#TAG_BITS_FIRST_BYTE_MASK} set at first byte, the following bytes building tag
+   *          are only valid, if second byte up to next to last most significant bit set and not set at last byte, if
+   *          not all bits of {@link ASN1Constants#TAG_BITS_FIRST_BYTE_MASK} tag bytes expected to consist out of
+   *          exactly one byte
    * @return valid tag bytes, otherwise exception expected to be thrown
    * @throws IllegalArgumentException if tag bytes not valid, <code>null</code>, empty or tag bytes content
    */
@@ -463,8 +461,8 @@ final class ASN1BaseUtil
 
 
   /**
-   * Extracts clean tag from bytes with description and tag of ASN.1 - including ASN.1 bit coded informations
-   * about class and content.
+   * Extracts clean tag from bytes with description and tag of ASN.1 - including ASN.1 bit coded informations about
+   * class and content.
    *
    * @param dTagBytes bytes of Description and Tag, <code>null</code> or empty array not permitted
    * @return tag

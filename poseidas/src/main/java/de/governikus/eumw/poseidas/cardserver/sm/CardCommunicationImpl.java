@@ -48,7 +48,7 @@ public class CardCommunicationImpl implements CardCommunication
 
   /**
    * Constructor with plaintext commands.
-   * 
+   *
    * @param commands plaintext commands, <code>null</code> or empty array not permitted, <code>null</code> or too short
    *          array elements (at least 4 bytes) not permitted
    */

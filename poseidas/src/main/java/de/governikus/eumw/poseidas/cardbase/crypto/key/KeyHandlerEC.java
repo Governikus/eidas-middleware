@@ -1,11 +1,10 @@
 /*
- * Copyright (c) 2020 Governikus KG. Licensed under the EUPL, Version 1.2 or as soon they will be approved by
- * the European Commission - subsequent versions of the EUPL (the "Licence"); You may not use this work except
- * in compliance with the Licence. You may obtain a copy of the Licence at:
- * http://joinup.ec.europa.eu/software/page/eupl Unless required by applicable law or agreed to in writing,
- * software distributed under the Licence is distributed on an "AS IS" basis, WITHOUT WARRANTIES OR CONDITIONS
- * OF ANY KIND, either express or implied. See the Licence for the specific language governing permissions and
- * limitations under the Licence.
+ * Copyright (c) 2020 Governikus KG. Licensed under the EUPL, Version 1.2 or as soon they will be approved by the
+ * European Commission - subsequent versions of the EUPL (the "Licence"); You may not use this work except in compliance
+ * with the Licence. You may obtain a copy of the Licence at: http://joinup.ec.europa.eu/software/page/eupl Unless
+ * required by applicable law or agreed to in writing, software distributed under the Licence is distributed on an
+ * "AS IS" basis, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the Licence for the
+ * specific language governing permissions and limitations under the Licence.
  */
 
 package de.governikus.eumw.poseidas.cardbase.crypto.key;
@@ -190,23 +189,13 @@ public class KeyHandlerEC implements KeyHandler
       ASN1 primeModulus = new ASN1(0x81,
                                    ByteUtil.removeLeadingZero(((ECFieldFp)sunKey.getParams()
                                                                                 .getCurve()
-                                                                                .getField()).getP()
-                                                                                            .toByteArray()));
+                                                                                .getField()).getP().toByteArray()));
       ASN1 firstCoefficient = new ASN1(0x82,
-                                       ByteUtil.removeLeadingZero(sunKey.getParams()
-                                                                        .getCurve()
-                                                                        .getA()
-                                                                        .toByteArray()));
+                                       ByteUtil.removeLeadingZero(sunKey.getParams().getCurve().getA().toByteArray()));
       ASN1 secondCoefficient = new ASN1(0x83,
-                                        ByteUtil.removeLeadingZero(sunKey.getParams()
-                                                                         .getCurve()
-                                                                         .getB()
-                                                                         .toByteArray()));
+                                        ByteUtil.removeLeadingZero(sunKey.getParams().getCurve().getB().toByteArray()));
       ASN1 basePoint = new ASN1(0x84, this.getEncoded(sunKey.getParams().getGenerator()));
-      ASN1 orderOfBasePoint = new ASN1(0x85,
-                                       ByteUtil.removeLeadingZero(sunKey.getParams()
-                                                                        .getOrder()
-                                                                        .toByteArray()));
+      ASN1 orderOfBasePoint = new ASN1(0x85, ByteUtil.removeLeadingZero(sunKey.getParams().getOrder().toByteArray()));
       baos.write(primeModulus.getEncoded());
       baos.write(firstCoefficient.getEncoded());
       baos.write(secondCoefficient.getEncoded());
@@ -217,9 +206,8 @@ public class KeyHandlerEC implements KeyHandler
     baos.write(publicPoint.getEncoded());
     if (fullStructure)
     {
-      ASN1 cofactor = new ASN1(0x87,
-                               ByteUtil.removeLeadingZero(BigInteger.valueOf(sunKey.getParams().getCofactor())
-                                                                    .toByteArray()));
+      ASN1 cofactor = new ASN1(0x87, ByteUtil.removeLeadingZero(BigInteger.valueOf(sunKey.getParams().getCofactor())
+                                                                          .toByteArray()));
       baos.write(cofactor.getEncoded());
     }
     return new ASN1(0x7f49, baos.toByteArray()).getEncoded();
@@ -265,11 +253,8 @@ public class KeyHandlerEC implements KeyHandler
       throw new IllegalArgumentException("argument o must be an ECPoint");
     }
     byte[] result = ByteUtil.combine(new byte[]{0x04},
-                                     ByteUtil.trimByteArray(((ECPoint)o).getAffineX().toByteArray(),
-                                                            this.fieldSize));
-    result = ByteUtil.combine(result,
-                              ByteUtil.trimByteArray(((ECPoint)o).getAffineY().toByteArray(),
-                                                     this.fieldSize));
+                                     ByteUtil.trimByteArray(((ECPoint)o).getAffineX().toByteArray(), this.fieldSize));
+    result = ByteUtil.combine(result, ByteUtil.trimByteArray(((ECPoint)o).getAffineY().toByteArray(), this.fieldSize));
     return result;
   }
 }

@@ -29,8 +29,8 @@ import lombok.extern.slf4j.Slf4j;
 
 /**
  * This class manages the timer for the global list retrieval. The class implements the Runnable interface. The
- * {@link #run() run} method is used to retrieve the Master List and Defect List. The
- * {@link #getGlobalListTrigger(List) getGlobalListTrigger} method determines how often the timer runs.
+ * {@link #run() run} method is used to retrieve the Master List and Defect List. The {@link #getGlobalListTrigger(List)
+ * getGlobalListTrigger} method determines how often the timer runs.
  *
  * @see ApplicationTimer
  */

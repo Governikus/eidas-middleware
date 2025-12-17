@@ -31,15 +31,20 @@ public class StartupListener
   @EventListener
   public void onApplicationEvent(WebServerInitializedEvent event)
   {
-    initCRL();
     try
     {
+      initCRL();
       cvcTlsCheck.check();
     }
     catch (UnsupportedECCertificateException e)
     {
       log.error(e.getMessage());
       System.exit(1);
+    }
+    catch (Exception e)
+    {
+      log.error("Error during startup. The eIDAS middleware application may not be ready to perform online authentications.",
+                e);
     }
   }
 

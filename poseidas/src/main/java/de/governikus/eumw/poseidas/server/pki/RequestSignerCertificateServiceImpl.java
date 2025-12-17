@@ -58,6 +58,7 @@ import de.governikus.eumw.poseidas.server.pki.entities.RequestSignerCertificate.
 import de.governikus.eumw.poseidas.server.pki.entities.TimerHistory;
 import de.governikus.eumw.utils.key.KeyReader;
 import de.governikus.eumw.utils.key.SecurityProvider;
+
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
@@ -156,16 +157,18 @@ public class RequestSignerCertificateServiceImpl implements RequestSignerCertifi
       return Optional.of(message);
     }
 
-    Integer currentRscId = facade.getCurrentRscChrId(cvcRefId);
     int nextRscId;
-    if (currentRscId == null)
+    try
     {
-      nextRscId = 1;
+      nextRscId = facade.getNextRscSequenceNumber(cvcRefId);
     }
-    else
+    catch (TerminalPermissionNotFoundException e)
     {
-      nextRscId = (currentRscId + 1) % 100;
+      String message = "Can not generate next RSC sequence number for entityID is unknown";
+      log.warn(LOG_MESSAGE_DEFAULT_FORMAT, cvcRefId, message, e);
+      return Optional.of(message);
     }
+
     String alias = buildAlias(cvcRefId, getRscChrIdAsString(nextRscId));
 
     HSMService hsm = ServiceRegistry.Util.getServiceRegistry().getService(HSMServiceFactory.class).getHSMService();
@@ -580,12 +583,56 @@ public class RequestSignerCertificateServiceImpl implements RequestSignerCertifi
     try
     {
       facade.deletePendingRequestSignerCertificate(cvcRefId);
-      facade.setPendingRequestSignerCertificate(cvcRefId, null);
       // If no current RSC present, then delete RSC Holder as well
       if (getRequestSignerCertificate(cvcRefId, true) == null)
       {
         facade.setRequestSignerCertificateHolder(cvcRefId, null);
       }
+    }
+    catch (TerminalPermissionNotFoundException e)
+    {
+      String message = "No Terminal Permission present";
+      log.warn(LOG_MESSAGE_DEFAULT_FORMAT, entityId, message, e);
+      return Optional.of(message);
+    }
+    return Optional.empty();
+  }
+
+  /**
+   * {@inheritDoc}
+   */
+  @Override
+  public Optional<String> deleteCurrentRSC(String entityId)
+  {
+    String cvcRefId = cvcRefIdFromEntityId(entityId);
+    if (cvcRefId == null)
+    {
+      String message = "Can not delete RSC for entityID is unknown";
+      log.warn(message);
+      return Optional.of(message);
+    }
+    KeyStore keyStore = hsmServiceHolder.getKeyStore();
+    if (keyStore != null)
+    {
+      // Delete key from HSM
+      Integer currentRscChrId = facade.getCurrentRscChrId(cvcRefId);
+      String alias = buildAlias(cvcRefId, getRscChrIdAsString(currentRscChrId));
+      try
+      {
+        hsmServiceHolder.deleteKey(alias);
+      }
+      catch (IOException | HSMException e)
+      {
+        String message = "Can not delete current RSC from HSM";
+        log.error(LOG_MESSAGE_DEFAULT_FORMAT, entityId, message, e);
+        return Optional.of(message);
+      }
+    }
+    // Delete RSC references in Database
+    try
+    {
+      facade.deleteCurrentRequestSignerCertificate(cvcRefId);
+      facade.setRequestSignerCertificateHolder(cvcRefId, null);
     }
     catch (TerminalPermissionNotFoundException e)
     {

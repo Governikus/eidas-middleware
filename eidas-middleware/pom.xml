@@ -14,15 +14,20 @@
     <parent>
         <groupId>de.governikus.eumw</groupId>
         <artifactId>eumw</artifactId>
-        <version>3.4.0</version>
+        <version>4.0.0</version>
     </parent>
     <artifactId>eidas-middleware</artifactId>
 
     <name>${project.artifactId}</name>
     <description>The eIDAS Middleware component</description>
     <url>http://governikus.de</url>
-    <dependencies>
 
+    <properties>
+        <!-- Formatter plugin-->
+        <formatter-path>${project.parent.basedir}</formatter-path>
+    </properties>
+
+    <dependencies>
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-devtools</artifactId>

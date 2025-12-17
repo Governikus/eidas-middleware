@@ -1,11 +1,10 @@
 /*
- * Copyright (c) 2020 Governikus KG. Licensed under the EUPL, Version 1.2 or as soon they will be approved by
- * the European Commission - subsequent versions of the EUPL (the "Licence"); You may not use this work except
- * in compliance with the Licence. You may obtain a copy of the Licence at:
- * http://joinup.ec.europa.eu/software/page/eupl Unless required by applicable law or agreed to in writing,
- * software distributed under the Licence is distributed on an "AS IS" basis, WITHOUT WARRANTIES OR CONDITIONS
- * OF ANY KIND, either express or implied. See the Licence for the specific language governing permissions and
- * limitations under the Licence.
+ * Copyright (c) 2020 Governikus KG. Licensed under the EUPL, Version 1.2 or as soon they will be approved by the
+ * European Commission - subsequent versions of the EUPL (the "Licence"); You may not use this work except in compliance
+ * with the Licence. You may obtain a copy of the Licence at: http://joinup.ec.europa.eu/software/page/eupl Unless
+ * required by applicable law or agreed to in writing, software distributed under the Licence is distributed on an
+ * "AS IS" basis, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the Licence for the
+ * specific language governing permissions and limitations under the Licence.
  */
 
 package de.governikus.eumw.poseidas.cardbase.npa;
@@ -22,8 +21,7 @@ import de.governikus.eumw.poseidas.cardbase.asn1.npa.SecurityInfos;
 
 
 /**
- * Utility class used in nPA context. (Separated from NPAUtil in client as this is also required on server
- * side.)
+ * Utility class used in nPA context. (Separated from NPAUtil in client as this is also required on server side.)
  *
  * @author Arne Stahlbock, ast@bos-bremen.de
  */
@@ -83,8 +81,7 @@ public class NPAUtil
       }
       else
       {
-        resultMap.put(PRK_ID,
-                      evaluateEFPrKD(pathOrObjects.getChildElementsByDTagBytes(new byte[]{(byte)0xa0})[0]));
+        resultMap.put(PRK_ID, evaluateEFPrKD(pathOrObjects.getChildElementsByDTagBytes(new byte[]{(byte)0xa0})[0]));
       }
 
       pathOrObjects = efodASN1.getChildElementsByDTagBytes(new byte[]{(byte)0xa4})[0];
@@ -106,8 +103,7 @@ public class NPAUtil
       }
       else
       {
-        resultMap.put(PIN_ID,
-                      evaluateEFAOD(pathOrObjects.getChildElementsByDTagBytes(new byte[]{(byte)0xa0})[0]));
+        resultMap.put(PIN_ID, evaluateEFAOD(pathOrObjects.getChildElementsByDTagBytes(new byte[]{(byte)0xa0})[0]));
       }
     }
     catch (IOException e)
@@ -212,8 +208,7 @@ public class NPAUtil
     {
       if (content.getChildElementCount() != 1)
       {
-        throw new IOException(
-                              "EF.AOD not containing exactly one authentication key object - unclear which to use");
+        throw new IOException("EF.AOD not containing exactly one authentication key object - unclear which to use");
       }
 
       ASN1 aoChoice = content.getChildElements()[0];

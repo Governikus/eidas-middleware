@@ -14,13 +14,11 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Vector;
-import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
 import org.bouncycastle.asn1.x509.X509Name;
 import org.bouncycastle.jce.PrincipalUtil;
 import org.bouncycastle.jce.X509Principal;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
@@ -61,9 +59,6 @@ public class RequestSignerCvcRenewTimer
 
   private final TimerHistoryService timerHistoryService;
 
-  @Value("${#{@getCvcRscRenewDelay}:120}")
-  int timerRateInSeconds;
-
   private static X509Principal getX509Principal(X509Certificate cert)
   {
     if (cert == null)
@@ -84,7 +79,7 @@ public class RequestSignerCvcRenewTimer
     }
   }
 
-  @Scheduled(fixedDelayString = "#{@getCvcRscRenewDelay}", initialDelay = 60, timeUnit = TimeUnit.SECONDS)
+  @Scheduled(fixedDelayString = "#{@getCvcRscRenewDelay}", initialDelay = 60 * TimerValues.SECOND)
   public void checkForInvalidCVCsWithRsCertificate()
   {
     // key is terminal permission refIds

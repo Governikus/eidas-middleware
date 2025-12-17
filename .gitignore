@@ -1,13 +1,84 @@
+##############################
+## Java
+##############################
+.mtj.tmp/
+*.class
+*.jar
+hs_err_pid*
+replay_pid*
+
+##############################
+## Config directories
+##############################
+configuration-migration/config
+databasemigration/config
+eidas-demo/config
+eidas-middleware/config
+
+
+##############################
+## Doc
+##############################
+
+_build/
+
+##############################
+## Maven
+##############################
 target/
-packer/
-*Jenkinsfile*
-.hg/
-/helm/
+pom.xml.tag
+pom.xml.releaseBackup
+pom.xml.versionsBackup
+pom.xml.next
+pom.xml.bak
+release.properties
+dependency-reduced-pom.xml
+buildNumber.properties
+.mvn/timing.properties
+.mvn/wrapper/maven-wrapper.jar
 
-# IntelliJ project files
-*.iml
-*.iws
-*.ipr
+
+##############################
+## IntelliJ
+##############################
+out/
 .idea/
+.idea_modules/
+*.iml
+*.ipr
+*.iws
 
-*/_build
+##############################
+## Eclipse
+##############################
+.settings/
+bin/
+tmp/
+.metadata
+.classpath
+.project
+*.tmp
+*.bak
+*.swp
+*~.nib
+local.properties
+.loadpath
+.factorypath
+
+
+##############################
+## Miscellaneous
+##############################
+*.log
+
+# for linux users using direnv
+.envrc
+
+# for private environments for the intellij http client
+/http-client.private.env.json
+
+##############################
+## HELM
+##############################
+/helm/**/*.tgz
+/helm/**/Chart.lock

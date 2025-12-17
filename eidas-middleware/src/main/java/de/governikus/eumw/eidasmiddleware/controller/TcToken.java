@@ -231,8 +231,7 @@ public class TcToken
     response.setContentType("text/xml");
     response.setCharacterEncoding("utf-8");
 
-    response.getWriter()
-            .write(tcToken);
+    response.getWriter().write(tcToken);
   }
 
   private String getTcToken(String eIDPSKId, String refID)

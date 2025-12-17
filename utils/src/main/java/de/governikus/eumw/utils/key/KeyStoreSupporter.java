@@ -1,11 +1,10 @@
 /*
- * Copyright (c) 2020 Governikus KG. Licensed under the EUPL, Version 1.2 or as soon they will be approved by
- * the European Commission - subsequent versions of the EUPL (the "Licence"); You may not use this work except
- * in compliance with the Licence. You may obtain a copy of the Licence at:
- * http://joinup.ec.europa.eu/software/page/eupl Unless required by applicable law or agreed to in writing,
- * software distributed under the Licence is distributed on an "AS IS" basis, WITHOUT WARRANTIES OR CONDITIONS
- * OF ANY KIND, either express or implied. See the Licence for the specific language governing permissions and
- * limitations under the Licence.
+ * Copyright (c) 2020 Governikus KG. Licensed under the EUPL, Version 1.2 or as soon they will be approved by the
+ * European Commission - subsequent versions of the EUPL (the "Licence"); You may not use this work except in compliance
+ * with the Licence. You may obtain a copy of the Licence at: http://joinup.ec.europa.eu/software/page/eupl Unless
+ * required by applicable law or agreed to in writing, software distributed under the Licence is distributed on an
+ * "AS IS" basis, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the Licence for the
+ * specific language governing permissions and limitations under the Licence.
  */
 
 package de.governikus.eumw.utils.key;
@@ -51,8 +50,8 @@ import lombok.extern.slf4j.Slf4j;
 
 
 /**
- * This class is meant to provide additional operations to work with keystores. This implies adding new
- * entries into a keystore, reading entries, convert a keystore from jks to pkcs12 or vice versa etc.
+ * This class is meant to provide additional operations to work with keystores. This implies adding new entries into a
+ * keystore, reading entries, convert a keystore from jks to pkcs12 or vice versa etc.
  */
 @Slf4j
 public final class KeyStoreSupporter
@@ -97,9 +96,9 @@ public final class KeyStoreSupporter
   }
 
   /**
-   * this method will make sure that the correct security provider is chosen for the different keystore types.
-   * The experience shows us that {@link BouncyCastleProvider} is often tried to be used for JKS and JCEKS
-   * keystores. But bouncy castle cannot handle these types why we are chosing the providers manually here
+   * this method will make sure that the correct security provider is chosen for the different keystore types. The
+   * experience shows us that {@link BouncyCastleProvider} is often tried to be used for JKS and JCEKS keystores. But
+   * bouncy castle cannot handle these types why we are chosing the providers manually here
    *
    * @param keyStoreType the keystore type for which a provider is needed.
    * @return the provider that can handle the given keystore
@@ -130,8 +129,7 @@ public final class KeyStoreSupporter
    * @param keystorePassword the password to safe the keystore and the private key
    * @param keyStoreType the type of the keystore
    * @return the keystore with the private key and the certificate
-   * @throws KeyStoreCreationFailedException if the algorithm of the {@code keyStoreType} could not be
-   *           resolved
+   * @throws KeyStoreCreationFailedException if the algorithm of the {@code keyStoreType} could not be resolved
    * @throws KeyStoreEntryException if the certificate or private key could not be added to the keystore
    */
   public static KeyStore toKeyStore(PrivateKey privateKey,
@@ -187,8 +185,7 @@ public final class KeyStoreSupporter
    * @param keystorePassword the password to safe the keystore and the private key
    * @param keyStoreType the type of the keystore
    * @return the keystore with the private key and the certificate
-   * @throws KeyStoreCreationFailedException if the algorithm of the {@code keyStoreType} could not be
-   *           resolved
+   * @throws KeyStoreCreationFailedException if the algorithm of the {@code keyStoreType} could not be resolved
    * @throws KeyStoreEntryException if the certificate or private key could not be added to the keystore
    */
   public static KeyStore toKeyStore(Certificate certificate,
@@ -222,8 +219,7 @@ public final class KeyStoreSupporter
    * @param keystorePassword the password to safe the keystore and the private key
    * @param keyStoreType the type of the keystore
    * @return the keystore with the private key and the certificate
-   * @throws KeyStoreCreationFailedException if the algorithm of the {@code keyStoreType} could not be
-   *           resolved
+   * @throws KeyStoreCreationFailedException if the algorithm of the {@code keyStoreType} could not be resolved
    * @throws KeyStoreEntryException if the certificate or private key could not be added to the keystore
    * @throws KeyGenerationException if the private key could not be created from the given byte-array
    * @throws CertificateCreationException if the certificate could not be created from the given data.
@@ -288,17 +284,15 @@ public final class KeyStoreSupporter
   }
 
   /**
-   * this method simply adds a certificate entry to the given keystore. This method is only to extend the
-   * adding of certificate method by logging and it prevents overriding existing entries.
+   * this method simply adds a certificate entry to the given keystore. This method is only to extend the adding of
+   * certificate method by logging and it prevents overriding existing entries.
    *
    * @param keyStore the keystore to which the certificate should be added
    * @param certificate the certificate to add to the given keystore
    * @param alias the alias that will be used for the certificate entry.
    * @return the keystore that was also given as parameter with the added certificate.
    */
-  public static KeyStore addCertificateEntryToKeyStore(KeyStore keyStore,
-                                                       Certificate certificate,
-                                                       String alias)
+  public static KeyStore addCertificateEntryToKeyStore(KeyStore keyStore, Certificate certificate, String alias)
   {
     Optional<Certificate> certificateOptional = getCertificate(keyStore, alias);
     if (certificateOptional.isPresent())
@@ -330,8 +324,8 @@ public final class KeyStoreSupporter
   }
 
   /**
-   * convenience method for adding a certificate entry to the given keystore under the given alias, without
-   * having to handle the checked exception
+   * convenience method for adding a certificate entry to the given keystore under the given alias, without having to
+   * handle the checked exception
    *
    * @param keyStore the keystore to extend with the certificate
    * @param alias the alias under which the certificate should be stored
@@ -347,8 +341,8 @@ public final class KeyStoreSupporter
     }
     catch (KeyStoreException e)
     {
-      throw new KeyStoreCreationFailedException("could not add certificate to keystore '" + keyStore
-                                                + "' with alias '" + alias + "'", e);
+      throw new KeyStoreCreationFailedException("could not add certificate to keystore '" + keyStore + "' with alias '"
+                                                + alias + "'", e);
     }
     return keyStore;
   }
@@ -411,8 +405,8 @@ public final class KeyStoreSupporter
     }
     catch (KeyStoreException e)
     {
-      throw new KeyStoreCreationFailedException("could not add key entry with alias '" + alias
-                                                + "' to keystore '" + keyStore + "'", e);
+      throw new KeyStoreCreationFailedException("could not add key entry with alias '" + alias + "' to keystore '"
+                                                + keyStore + "'", e);
     }
     return keyStore;
   }
@@ -426,9 +420,7 @@ public final class KeyStoreSupporter
    * @param keyStoreType the type to which the keystore should be converted
    * @return the converted keystore.
    */
-  public static KeyStore convertKeyStore(KeyStore keyStore,
-                                         String keyStorePassword,
-                                         KeyStoreType keyStoreType)
+  public static KeyStore convertKeyStore(KeyStore keyStore, String keyStorePassword, KeyStoreType keyStoreType)
   {
     if (keyStore.getType().equals(keyStoreType.name()))
     {
@@ -455,8 +447,8 @@ public final class KeyStoreSupporter
   }
 
   /**
-   * this method tries to access an entry of the given {@code keyStore} and will add it to the
-   * {@code newKeyStore} object no matter if the given alias is a key-entry or a certificate entry
+   * this method tries to access an entry of the given {@code keyStore} and will add it to the {@code newKeyStore}
+   * object no matter if the given alias is a key-entry or a certificate entry
    *
    * @param keyStore the keystore that holds the original entry
    * @param keyStorePassword the password to access the original keystore
@@ -510,8 +502,8 @@ public final class KeyStoreSupporter
     }
     if (file.exists() && file.isDirectory())
     {
-      throw new KeyStoreCreationFailedException("given file '" + file
-                                                + "' is a directory. Keystore cannot be " + "saved.");
+      throw new KeyStoreCreationFailedException("given file '" + file + "' is a directory. Keystore cannot be "
+                                                + "saved.");
     }
 
     File parentFile = file.getParentFile();
@@ -530,8 +522,7 @@ public final class KeyStoreSupporter
     }
     catch (IOException | CertificateException | KeyStoreException | NoSuchAlgorithmException e)
     {
-      throw new KeyStoreCreationFailedException("could not create keystore file for some unexpected reason.",
-                                                e);
+      throw new KeyStoreCreationFailedException("could not create keystore file for some unexpected reason.", e);
     }
   }
 
@@ -543,10 +534,7 @@ public final class KeyStoreSupporter
    * @param keyStore the keystore to save.
    * @param keystorePassword the password to access and save the given keystore
    */
-  public static void keyStoreToFile(File directory,
-                                    String filename,
-                                    KeyStore keyStore,
-                                    String keystorePassword)
+  public static void keyStoreToFile(File directory, String filename, KeyStore keyStore, String keystorePassword)
   {
     if (log.isTraceEnabled())
     {
@@ -628,9 +616,7 @@ public final class KeyStoreSupporter
    * @param keyStorePassword the password to access the keystore
    * @return the read keystore
    */
-  public static KeyStore readKeyStore(byte[] keyStoreBytes,
-                                      KeyStoreType keyStoreType,
-                                      String keyStorePassword)
+  public static KeyStore readKeyStore(byte[] keyStoreBytes, KeyStoreType keyStoreType, String keyStorePassword)
   {
     if (keyStoreBytes == null || keyStoreType == null || keyStorePassword == null)
     {
@@ -648,12 +634,11 @@ public final class KeyStoreSupporter
     }
     catch (IOException e)
     {
-      if (e.getMessage() != null
-          && (e.getMessage().toLowerCase(Locale.ENGLISH).contains(STRING_INVALID_KEYSTORE_FORMAT)
-              || e.getMessage().contains(STRING_NOT_PKCS12)))
+      if (e.getMessage() != null && (e.getMessage().toLowerCase(Locale.ENGLISH).contains(STRING_INVALID_KEYSTORE_FORMAT)
+                                     || e.getMessage().contains(STRING_NOT_PKCS12)))
       {
-        throw new KeyStoreCreationFailedException(STRING_BYTE_ARRAY_CANNOT_BE_READ_IN_THE_GIVEN
-                                                  + "keystore-format '" + keyStoreType.name() + "'.", e);
+        throw new KeyStoreCreationFailedException(STRING_BYTE_ARRAY_CANNOT_BE_READ_IN_THE_GIVEN + "keystore-format '"
+                                                  + keyStoreType.name() + "'.", e);
       }
       throw new KeyStoreCreationFailedException(MESSAGE_KEYSTORE_READ_ABORTED, e);
     }
@@ -667,9 +652,7 @@ public final class KeyStoreSupporter
    * @param keyStorePassword the password to access the keystore
    * @return the read keystore
    */
-  public static KeyStore readKeyStore(InputStream keyStoreStream,
-                                      KeyStoreType keyStoreType,
-                                      String keyStorePassword)
+  public static KeyStore readKeyStore(InputStream keyStoreStream, KeyStoreType keyStoreType, String keyStorePassword)
   {
     if (keyStoreStream == null || keyStoreType == null || keyStorePassword == null)
     {
@@ -687,12 +670,11 @@ public final class KeyStoreSupporter
     }
     catch (IOException e)
     {
-      if (e.getMessage() != null
-          && (e.getMessage().toLowerCase(Locale.ENGLISH).contains(STRING_INVALID_KEYSTORE_FORMAT)
-              || e.getMessage().contains(STRING_NOT_PKCS12)))
+      if (e.getMessage() != null && (e.getMessage().toLowerCase(Locale.ENGLISH).contains(STRING_INVALID_KEYSTORE_FORMAT)
+                                     || e.getMessage().contains(STRING_NOT_PKCS12)))
       {
-        throw new KeyStoreCreationFailedException(STRING_BYTE_ARRAY_CANNOT_BE_READ_IN_THE_GIVEN
-                                                  + "keystore-format '" + keyStoreType.name() + "'.", e);
+        throw new KeyStoreCreationFailedException(STRING_BYTE_ARRAY_CANNOT_BE_READ_IN_THE_GIVEN + "keystore-format '"
+                                                  + keyStoreType.name() + "'.", e);
       }
       throw new KeyStoreCreationFailedException(MESSAGE_KEYSTORE_READ_ABORTED, e);
     }
@@ -719,8 +701,7 @@ public final class KeyStoreSupporter
    *
    * @param truststoreBytes the bytes of the truststore
    * @param keyStoreType the keystore type that the truststore represents
-   * @param password an optional password that can be entered for JKS keystores and must be entered for PKCS12
-   *          keystores
+   * @param password an optional password that can be entered for JKS keystores and must be entered for PKCS12 keystores
    * @return a keystore that can only be used as truststore
    */
   public static KeyStore readTruststore(byte[] truststoreBytes, KeyStoreType keyStoreType, String password)
@@ -749,13 +730,10 @@ public final class KeyStoreSupporter
    *
    * @param truststoreStream a stream containing the truststore data
    * @param keyStoreType the keystore type that the truststore represents
-   * @param password an optional password that can be entered for JKS keystores and must be entered for PKCS12
-   *          keystores
+   * @param password an optional password that can be entered for JKS keystores and must be entered for PKCS12 keystores
    * @return a keystore that can only be used as truststore
    */
-  public static KeyStore readTruststore(InputStream truststoreStream,
-                                        KeyStoreType keyStoreType,
-                                        String password)
+  public static KeyStore readTruststore(InputStream truststoreStream, KeyStoreType keyStoreType, String password)
   {
     if (truststoreStream == null)
     {
@@ -774,43 +752,39 @@ public final class KeyStoreSupporter
     }
     catch (KeyStoreException | CertificateException | NoSuchAlgorithmException e)
     {
-      throw new KeyStoreCreationFailedException("an unexpected error aborted the reading of the truststore.",
-                                                e);
+      throw new KeyStoreCreationFailedException("an unexpected error aborted the reading of the truststore.", e);
     }
     catch (IOException e)
     {
-      if (e.getMessage() != null
-          && (e.getMessage().toLowerCase(Locale.ENGLISH).contains(STRING_INVALID_KEYSTORE_FORMAT)
-              || e.getMessage().contains(STRING_NOT_PKCS12)))
+      if (e.getMessage() != null && (e.getMessage().toLowerCase(Locale.ENGLISH).contains(STRING_INVALID_KEYSTORE_FORMAT)
+                                     || e.getMessage().contains(STRING_NOT_PKCS12)))
       {
-        throw new KeyStoreCreationFailedException(STRING_BYTE_ARRAY_CANNOT_BE_READ_IN_THE_GIVEN
-                                                  + "truststore-format '" + keyStoreType.name() + "'.", e);
+        throw new KeyStoreCreationFailedException(STRING_BYTE_ARRAY_CANNOT_BE_READ_IN_THE_GIVEN + "truststore-format '"
+                                                  + keyStoreType.name() + "'.", e);
       }
-      throw new KeyStoreCreationFailedException("an unexpected error aborted the reading of the truststore.",
-                                                e);
+      throw new KeyStoreCreationFailedException("an unexpected error aborted the reading of the truststore.", e);
     }
   }
 
   /**
    * this method will merge all accessible entries from the given keystores into a single keystore <br>
    * <b>WARNING:</b> <br>
-   * It might be that keystore1 and 2 may contain different entries under the same alias. In order for these
-   * both not to collide with one another the alias from keystore2 will be extended by "_2" <br>
+   * It might be that keystore1 and 2 may contain different entries under the same alias. In order for these both not to
+   * collide with one another the alias from keystore2 will be extended by "_2" <br>
    * <br>
-   * If keystore 1 and 2 will share the same entry under different aliases the alias from keystore1 is
-   * preferred unless the entry of keystore1 is accessible. Otherwise the entry of keystore2 will be added if
-   * it is accessbile instead. <br>
+   * If keystore 1 and 2 will share the same entry under different aliases the alias from keystore1 is preferred unless
+   * the entry of keystore1 is accessible. Otherwise the entry of keystore2 will be added if it is accessbile instead.
    * <br>
-   * If a private key entry cannot be accessed since its password is not matching the keystore password the
-   * entry will be omitted and only be added as a certificate entry.
+   * <br>
+   * If a private key entry cannot be accessed since its password is not matching the keystore password the entry will
+   * be omitted and only be added as a certificate entry.
    *
    * @param keyStore1 the first keystore
    * @param password1 the password to access the first keystore
    * @param keyStore2 the second keystore
    * @param password2 the password to access the second keystore
    * @param keyStoreType this will be the type of the keystore that contains the new entries.
-   * @param mergedKeyStoreKeyPassword this will be the password of all added private keys within the merged
-   *          keystore.
+   * @param mergedKeyStoreKeyPassword this will be the password of all added private keys within the merged keystore.
    * @return a new keystore that contains all entries of the two keystores that were directly accessible.
    */
   public static KeyStore mergeKeyStores(KeyStore keyStore1,
@@ -873,15 +847,14 @@ public final class KeyStoreSupporter
   }
 
   /**
-   * reads the first found keystore entry and expects it to be a private-key entry. This method can be used if
-   * the alias of the keystore is unknown and the given keystore contains only a single private-key-entry
+   * reads the first found keystore entry and expects it to be a private-key entry. This method can be used if the alias
+   * of the keystore is unknown and the given keystore contains only a single private-key-entry
    *
    * @param keyStore the keystore with hopefully only a single private key entry
    * @param privateKeyPassword the password of the private key
-   * @return the keypair of the keystore. (Since empty keystores are invalid this method should never return
-   *         null)
-   * @throws KeyStoreReadingException if the keystore entry could not be read or if the first keystore entry
-   *           is only a certificate entry
+   * @return the keypair of the keystore. (Since empty keystores are invalid this method should never return null)
+   * @throws KeyStoreReadingException if the keystore entry could not be read or if the first keystore entry is only a
+   *           certificate entry
    */
   public static KeyPair readFirstKeyPairEntryFromKeyStore(KeyStore keyStore, String privateKeyPassword)
   {
@@ -899,8 +872,7 @@ public final class KeyStoreSupporter
       }
       catch (KeyStoreException | NoSuchAlgorithmException | UnrecoverableKeyException e)
       {
-        throw new KeyStoreReadingException("could not extract private key from keystore with alias '" + alias
-                                           + "'", e);
+        throw new KeyStoreReadingException("could not extract private key from keystore with alias '" + alias + "'", e);
       }
     }
     return keyPair;
@@ -926,8 +898,7 @@ public final class KeyStoreSupporter
   }
 
   /**
-   * convenience method to access the private key from the keystore without having to handle the checked
-   * exceptions
+   * convenience method to access the private key from the keystore without having to handle the checked exceptions
    *
    * @param keyStore the keystore from which the private key should be accessed
    * @param alias the alias of the private key entry
@@ -942,8 +913,8 @@ public final class KeyStoreSupporter
     }
     catch (KeyStoreException | NoSuchAlgorithmException e)
     {
-      throw new KeyStoreReadingException("could not extract key-entry from the given keystore of alias '"
-                                         + alias + "'", e);
+      throw new KeyStoreReadingException("could not extract key-entry from the given keystore of alias '" + alias + "'",
+                                         e);
     }
     catch (UnrecoverableKeyException e)
     {
@@ -969,8 +940,8 @@ public final class KeyStoreSupporter
     }
     catch (KeyStoreException e)
     {
-      throw new KeyStoreReadingException("cannot read certificate chain of keystore '" + keyStore
-                                         + "' for alias '" + alias + "'", e);
+      throw new KeyStoreReadingException("cannot read certificate chain of keystore '" + keyStore + "' for alias '"
+                                         + alias + "'", e);
     }
   }
 
@@ -989,8 +960,8 @@ public final class KeyStoreSupporter
     }
     catch (KeyStoreException e)
     {
-      throw new KeyStoreReadingException("cannot read certificate of keystore '" + keyStore + "' for alias '"
-                                         + alias + "'", e);
+      throw new KeyStoreReadingException("cannot read certificate of keystore '" + keyStore + "' for alias '" + alias
+                                         + "'", e);
     }
   }
 
@@ -999,6 +970,7 @@ public final class KeyStoreSupporter
    */
   public enum KeyStoreType
   {
+
     JKS("jks"), JCEKS("jceks"), PKCS12("p12");
 
     /**

@@ -1,11 +1,10 @@
 /*
- * Copyright (c) 2020 Governikus KG. Licensed under the EUPL, Version 1.2 or as soon they will be approved by
- * the European Commission - subsequent versions of the EUPL (the "Licence"); You may not use this work except
- * in compliance with the Licence. You may obtain a copy of the Licence at:
- * http://joinup.ec.europa.eu/software/page/eupl Unless required by applicable law or agreed to in writing,
- * software distributed under the Licence is distributed on an "AS IS" basis, WITHOUT WARRANTIES OR CONDITIONS
- * OF ANY KIND, either express or implied. See the Licence for the specific language governing permissions and
- * limitations under the Licence.
+ * Copyright (c) 2020 Governikus KG. Licensed under the EUPL, Version 1.2 or as soon they will be approved by the
+ * European Commission - subsequent versions of the EUPL (the "Licence"); You may not use this work except in compliance
+ * with the Licence. You may obtain a copy of the Licence at: http://joinup.ec.europa.eu/software/page/eupl Unless
+ * required by applicable law or agreed to in writing, software distributed under the Licence is distributed on an
+ * "AS IS" basis, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the Licence for the
+ * specific language governing permissions and limitations under the Licence.
  */
 
 package de.governikus.eumw.poseidas.cardbase.impl;
@@ -47,10 +46,9 @@ public final class NumInfoImpl<T extends Number & Comparable<T>> implements NumI
    * @see #FLOAT
    * @see #DOUBLE
    */
-  private static final NumInfo<Byte> BYTE = new NumInfoImpl<>(Byte.class, ZERO_BYTE,
-                                                                 NEGATIVE_INFINITY_BYTE,
-                                                                 NEGATIVE_INFINITY_BYTE, MIN_BYTE, MAX_BYTE,
-                                                                 null, Byte.SIZE);
+  private static final NumInfo<Byte> BYTE = new NumInfoImpl<>(Byte.class, ZERO_BYTE, NEGATIVE_INFINITY_BYTE,
+                                                              NEGATIVE_INFINITY_BYTE, MIN_BYTE, MAX_BYTE, null,
+                                                              Byte.SIZE);
 
   /**
    * Constant of informations about number type Short.
@@ -70,10 +68,9 @@ public final class NumInfoImpl<T extends Number & Comparable<T>> implements NumI
    * @see #FLOAT
    * @see #DOUBLE
    */
-  private static final NumInfo<Short> SHORT = new NumInfoImpl<>(Short.class, ZERO_SHORT,
-                                                                    NEGATIVE_INFINITY_SHORT,
-                                                                    NEGATIVE_INFINITY_SHORT, MIN_SHORT,
-                                                                    MAX_SHORT, NAN_SHORT, Short.SIZE);
+  private static final NumInfo<Short> SHORT = new NumInfoImpl<>(Short.class, ZERO_SHORT, NEGATIVE_INFINITY_SHORT,
+                                                                NEGATIVE_INFINITY_SHORT, MIN_SHORT, MAX_SHORT,
+                                                                NAN_SHORT, Short.SIZE);
 
   /**
    * Constant of informations about number type Integer.
@@ -94,10 +91,9 @@ public final class NumInfoImpl<T extends Number & Comparable<T>> implements NumI
    * @see #DOUBLE
    */
   private static final NumInfo<Integer> INTEGER = new NumInfoImpl<>(Integer.class, ZERO_INTEGER,
-                                                                          NEGATIVE_INFINITY_INTEGER,
-                                                                          NEGATIVE_INFINITY_INTEGER,
-                                                                          MIN_INTEGER, MAX_INTEGER,
-                                                                          NAN_INTEGER, Integer.SIZE);
+                                                                    NEGATIVE_INFINITY_INTEGER,
+                                                                    NEGATIVE_INFINITY_INTEGER, MIN_INTEGER, MAX_INTEGER,
+                                                                    NAN_INTEGER, Integer.SIZE);
 
   /**
    * Constant of informations about number type Long.
@@ -117,10 +113,9 @@ public final class NumInfoImpl<T extends Number & Comparable<T>> implements NumI
    * @see #FLOAT
    * @see #DOUBLE
    */
-  private static final NumInfo<Long> LONG = new NumInfoImpl<>(Long.class, ZERO_LONG,
-                                                                 NEGATIVE_INFINITY_LONG,
-                                                                 NEGATIVE_INFINITY_LONG, MIN_LONG, MAX_LONG,
-                                                                 NAN_LONG, Long.SIZE);
+  private static final NumInfo<Long> LONG = new NumInfoImpl<>(Long.class, ZERO_LONG, NEGATIVE_INFINITY_LONG,
+                                                              NEGATIVE_INFINITY_LONG, MIN_LONG, MAX_LONG, NAN_LONG,
+                                                              Long.SIZE);
 
   /**
    * Constant of informations about number type BigInteger.
@@ -140,15 +135,11 @@ public final class NumInfoImpl<T extends Number & Comparable<T>> implements NumI
    * @see #FLOAT
    * @see #DOUBLE
    */
-  private static final NumInfo<java.math.BigInteger> BIGINTEGER = new NumInfoImpl<>(
-                                                                                             BigInteger.class,
-                                                                                             ZERO_BIGINTEGER,
-                                                                                             NEGATIVE_INFINITY_BIGINTEGER,
-                                                                                             POSITIVE_INFINITY_BIGINTEGER,
-                                                                                             MIN_BIGINTEGER,
-                                                                                             MAX_BIGINTEGER,
-                                                                                             NAN_BIGINTEGER,
-                                                                                             UNKNOWN_SIZE);
+  private static final NumInfo<java.math.BigInteger> BIGINTEGER = new NumInfoImpl<>(BigInteger.class, ZERO_BIGINTEGER,
+                                                                                    NEGATIVE_INFINITY_BIGINTEGER,
+                                                                                    POSITIVE_INFINITY_BIGINTEGER,
+                                                                                    MIN_BIGINTEGER, MAX_BIGINTEGER,
+                                                                                    NAN_BIGINTEGER, UNKNOWN_SIZE);
 
   /**
    * Constant of informations about number type Float.
@@ -168,10 +159,9 @@ public final class NumInfoImpl<T extends Number & Comparable<T>> implements NumI
    * @see #BIGINTEGER
    * @see #DOUBLE
    */
-  private static final NumInfo<Float> FLOAT = new NumInfoImpl<>(Float.class, ZERO_FLOAT,
-                                                                    NEGATIVE_INFINITY_FLOAT,
-                                                                    POSITIVE_INFINITY_FLOAT, MIN_FLOAT,
-                                                                    MAX_FLOAT, NAN_FLOAT, Float.SIZE);
+  private static final NumInfo<Float> FLOAT = new NumInfoImpl<>(Float.class, ZERO_FLOAT, NEGATIVE_INFINITY_FLOAT,
+                                                                POSITIVE_INFINITY_FLOAT, MIN_FLOAT, MAX_FLOAT,
+                                                                NAN_FLOAT, Float.SIZE);
 
   /**
    * Constant of informations about number type Double.
@@ -191,10 +181,9 @@ public final class NumInfoImpl<T extends Number & Comparable<T>> implements NumI
    * @see #BIGINTEGER
    * @see #FLOAT
    */
-  private static final NumInfo<Double> DOUBLE = new NumInfoImpl<>(Double.class, ZERO_DOUBLE,
-                                                                       NEGATIVE_INFINITY_DOUBLE,
-                                                                       POSITIVE_INFINITY_DOUBLE, MIN_DOUBLE,
-                                                                       MAX_DOUBLE, NAN_DOUBLE, Double.SIZE);
+  private static final NumInfo<Double> DOUBLE = new NumInfoImpl<>(Double.class, ZERO_DOUBLE, NEGATIVE_INFINITY_DOUBLE,
+                                                                  POSITIVE_INFINITY_DOUBLE, MIN_DOUBLE, MAX_DOUBLE,
+                                                                  NAN_DOUBLE, Double.SIZE);
 
   /**
    * Constant list of number informations.
@@ -250,10 +239,8 @@ public final class NumInfoImpl<T extends Number & Comparable<T>> implements NumI
    *
    * @param numClass number class, <code>null</code> not permitted
    * @param zero zero value, <code>null</code> not permitted
-   * @param negativeInfinity negative infinity value, <code>null</code> permitted (
-   *          {@link NumInfo#UNKNOWN_INFINITY})
-   * @param positiveInfinity positive infinity value, <code>null</code> permitted (
-   *          {@link NumInfo#UNKNOWN_INFINITY})
+   * @param negativeInfinity negative infinity value, <code>null</code> permitted ( {@link NumInfo#UNKNOWN_INFINITY})
+   * @param positiveInfinity positive infinity value, <code>null</code> permitted ( {@link NumInfo#UNKNOWN_INFINITY})
    * @param min minimum value, <code>null</code> permitted ({@link NumInfo#UNKNOWN_MIN})
    * @param max maximum value, <code>null</code> permitted ({@link NumInfo#UNKNOWN_MAX})
    * @param nan not a number value, <code>null</code> permitted ({@link NumInfo#UNKNOWN_NAN})
@@ -261,14 +248,7 @@ public final class NumInfoImpl<T extends Number & Comparable<T>> implements NumI
    *          {@link NumInfo#UNKNOWN_SIZE}
    * @throws IllegalArgumentException if one of the arguments is not valid
    */
-  private NumInfoImpl(Class<T> numClass,
-                      T zero,
-                      T negativeInfinity,
-                      T positiveInfinity,
-                      T min,
-                      T max,
-                      T nan,
-                      int size)
+  private NumInfoImpl(Class<T> numClass, T zero, T negativeInfinity, T positiveInfinity, T min, T max, T nan, int size)
   {
     super();
     AssertUtil.notNull(numClass, "number class");
@@ -353,8 +333,8 @@ public final class NumInfoImpl<T extends Number & Comparable<T>> implements NumI
   public String toString()
   {
     return super.toString() + " (Class: " + this.numClass + ", zero: " + this.zero + ", negative infinity: "
-           + this.negativeInfinity + ", positive infinity: " + this.positiveInfinity + ", minimum: "
-           + this.min + ", maximum: " + this.max + ", NaN: " + this.nan + ", size: " + this.size + ")";
+           + this.negativeInfinity + ", positive infinity: " + this.positiveInfinity + ", minimum: " + this.min
+           + ", maximum: " + this.max + ", NaN: " + this.nan + ", size: " + this.size + ")";
   }
 
 }

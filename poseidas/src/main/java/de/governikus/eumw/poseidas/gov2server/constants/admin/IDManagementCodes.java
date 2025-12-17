@@ -1,19 +1,17 @@
 /*
- * Copyright (c) 2020 Governikus KG. Licensed under the EUPL, Version 1.2 or as soon they will be approved by
- * the European Commission - subsequent versions of the EUPL (the "Licence"); You may not use this work except
- * in compliance with the Licence. You may obtain a copy of the Licence at:
- * http://joinup.ec.europa.eu/software/page/eupl Unless required by applicable law or agreed to in writing,
- * software distributed under the Licence is distributed on an "AS IS" basis, WITHOUT WARRANTIES OR CONDITIONS
- * OF ANY KIND, either express or implied. See the Licence for the specific language governing permissions and
- * limitations under the Licence.
+ * Copyright (c) 2020 Governikus KG. Licensed under the EUPL, Version 1.2 or as soon they will be approved by the
+ * European Commission - subsequent versions of the EUPL (the "Licence"); You may not use this work except in compliance
+ * with the Licence. You may obtain a copy of the Licence at: http://joinup.ec.europa.eu/software/page/eupl Unless
+ * required by applicable law or agreed to in writing, software distributed under the Licence is distributed on an
+ * "AS IS" basis, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the Licence for the
+ * specific language governing permissions and limitations under the Licence.
  */
 
 package de.governikus.eumw.poseidas.gov2server.constants.admin;
 
 /**
- * This is the set of all error codes which may produced by the Governikus Identity Manager in addition to
- * global codes. WebAdmin should be able to display a nice text for each messages created by one of these
- * codes.
+ * This is the set of all error codes which may produced by the Governikus Identity Manager in addition to global codes.
+ * WebAdmin should be able to display a nice text for each messages created by one of these codes.
  * <p>
  *
  * @author tt
@@ -36,25 +34,22 @@ public final class IDManagementCodes
   /**
    * Some provider uses nPA but has no terminal certificate available. Detail is providers entityID.
    */
-  public static final Code1 MISSING_TERMINAL_CERTIFICATE = new Code1(PREFIX_ERROR
-                                                                     + "missingTerminalCertificate");
+  public static final Code1 MISSING_TERMINAL_CERTIFICATE = new Code1(PREFIX_ERROR + "missingTerminalCertificate");
 
   /**
-   * The terminal certificate data for some provider is present but not complete or (partly) incorrect. Detail
-   * is providers entityID.
+   * The terminal certificate data for some provider is present but not complete or (partly) incorrect. Detail is
+   * providers entityID.
    */
-  public static final Code1 INCOMPLETE_TERMINAL_CERTIFICATE = new Code1(PREFIX_ERROR
-                                                                        + "incompleteTerminalCertificate");
+  public static final Code1 INCOMPLETE_TERMINAL_CERTIFICATE = new Code1(PREFIX_ERROR + "incompleteTerminalCertificate");
 
   /**
-   * There is no master list for the given service provider. First parameter is providers entityID, second
-   * parameter is list type.
+   * There is no master list for the given service provider. First parameter is providers entityID, second parameter is
+   * list type.
    */
   public static final Code2 NO_LIST_AVAILABLE = new Code2(PREFIX_ERROR + "noListAvailable");
 
   /**
-   * The sector public hash in the CVC does not match the sector public hash from the CVC. Detail is providers
-   * entityID.
+   * The sector public hash in the CVC does not match the sector public hash from the CVC. Detail is providers entityID.
    */
   public static final Code1 SECTOR_HASH_DOES_NOT_MATCH = new Code1(PREFIX_ERROR + "sectorHashDoesNotMatch");
 
@@ -74,8 +69,7 @@ public final class IDManagementCodes
   public static final Code2 MISSING_OPTION_FOR_PROVIDER = new Code2(PREFIX_ERROR + "missingOptionForProvider");
 
   /**
-   * A configuration field for a service provider contains an invalid value. Details: provider name, field
-   * name
+   * A configuration field for a service provider contains an invalid value. Details: provider name, field name
    */
   public static final Code2 INVALID_OPTION_FOR_PROVIDER = new Code2(PREFIX_ERROR + "invalidOptionForProvider");
 

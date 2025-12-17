@@ -196,29 +196,29 @@ public class RequestReceiver
    */
   private ModelAndView showMiddlewarePage(String sessionId, String userAgent)
   {
-      String ausweisappLink;
-      if (isMobileDevice(userAgent))
-      {
-        ausweisappLink = "eid://127.0.0.1:24727/eID-Client?tcTokenURL=";
-      }
-      else
-      {
-        ausweisappLink = "http://127.0.0.1:24727/eID-Client?tcTokenURL=";
-      }
-      ModelAndView modelAndView = new ModelAndView("middleware");
-
-      String tcTokenURL = requestHandler.getTcTokenURL(sessionId);
-      modelAndView.addObject("tcTokenURL", tcTokenURL);
-
-      ausweisappLink = ausweisappLink.concat(URLEncoder.encode(tcTokenURL, StandardCharsets.UTF_8));
-      modelAndView.addObject("ausweisapp", ausweisappLink);
-
-      String linkToSelf = ContextPaths.EIDAS_CONTEXT_PATH + ContextPaths.REQUEST_RECEIVER + "?sessionId=" + sessionId;
-      modelAndView.addObject("linkToSelf", linkToSelf);
-      return modelAndView;
+    String ausweisappLink;
+    if (isMobileDevice(userAgent))
+    {
+      ausweisappLink = "eid://127.0.0.1:24727/eID-Client?tcTokenURL=";
     }
+    else
+    {
+      ausweisappLink = "http://127.0.0.1:24727/eID-Client?tcTokenURL=";
+    }
+    ModelAndView modelAndView = new ModelAndView("middleware");
 
-    private ModelAndView showSamlErrorPage(ErrorCodeWithResponseException e, String relayState, HttpSession httpSession)
+    String tcTokenURL = requestHandler.getTcTokenURL(sessionId);
+    modelAndView.addObject("tcTokenURL", tcTokenURL);
+
+    ausweisappLink = ausweisappLink.concat(URLEncoder.encode(tcTokenURL, StandardCharsets.UTF_8));
+    modelAndView.addObject("ausweisapp", ausweisappLink);
+
+    String linkToSelf = ContextPaths.EIDAS_CONTEXT_PATH + ContextPaths.REQUEST_RECEIVER + "?sessionId=" + sessionId;
+    modelAndView.addObject("linkToSelf", linkToSelf);
+    return modelAndView;
+  }
+
+  private ModelAndView showSamlErrorPage(ErrorCodeWithResponseException e, String relayState, HttpSession httpSession)
   {
     RequestingServiceProvider reqSP = configurationService.getProviderByEntityID(e.getIssuer());
     String samlResponse = responseHandler.prepareSAMLErrorResponse(reqSP,

@@ -41,14 +41,14 @@ public interface CardCommunication
 
   /**
    * Gets plaintext commands.
-   * 
+   *
    * @return commands
    */
   public CommandAPDU[] getPlaintextCommands();
 
   /**
    * Sets encrypted commands.
-   * 
+   *
    * @param commands, <code>null</code> or empty array not permitted, <code>null</code> or incomplete commands not
    *          permitted (at least 4 bytes)
    * @throws IllegalArgumentException if command array <code>null</code> or empty
@@ -57,14 +57,14 @@ public interface CardCommunication
 
   /**
    * Gets encrypted commands.
-   * 
+   *
    * @return commands, <code>null</code> possible
    */
   public CommandAPDU[] getEncryptedCommands();
 
   /**
    * Sets encrypted responses.
-   * 
+   *
    * @param responses responses, <code>null</code> permitted to clear, response not <code>null</code> only permitted
    *          with at least 2 bytes
    * @throws IllegalArgumentException if response not <code>null</code> and any single response does not possess 2 bytes
@@ -73,14 +73,14 @@ public interface CardCommunication
 
   /**
    * Gets encrypted responses.
-   * 
+   *
    * @return responses, maybe <code>null</code>
    */
   public ResponseAPDU[] getEncryptedResponses();
 
   /**
    * Sets plaintext responses.
-   * 
+   *
    * @param responses responses, <code>null</code> permitted to clear, response not <code>null</code> only permitted
    *          with at least 2 bytes
    * @throws IllegalArgumentException if response not <code>null</code> and any single response does not possess 2 bytes
@@ -89,7 +89,7 @@ public interface CardCommunication
 
   /**
    * Gets plaintext responses.
-   * 
+   *
    * @return responses, maybe <code>null</code>
    */
   public ResponseAPDU[] getPlaintextResponses();

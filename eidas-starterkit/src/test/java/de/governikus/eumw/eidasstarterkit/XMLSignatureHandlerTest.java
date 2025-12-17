@@ -74,8 +74,7 @@ class XMLSignatureHandlerTest
 
   @ParameterizedTest
   @ValueSource(strings = {"SHA-256", "SHA256", "SHA384", "SHA-384", "SHA512", "SHA-512"})
-  void testWhenAddSignatureCalledWithRSAKeyAndKnownDigestAlgorithmThenAddSignature(String digestAlgo)
-    throws Exception
+  void testWhenAddSignatureCalledWithRSAKeyAndKnownDigestAlgorithmThenAddSignature(String digestAlgo) throws Exception
   {
     X509Certificate cert = Utils.readCert(XMLSignatureHandlerTest.class.getResourceAsStream("/EidasSignerTest_x509.cer"));
     PrivateKey pk = Utils.readPKCS12(XMLSignatureHandlerTest.class.getResourceAsStream(TEST_P12_RSA),
@@ -92,8 +91,7 @@ class XMLSignatureHandlerTest
 
   @ParameterizedTest
   @ValueSource(strings = {"SHA-256", "SHA256", "SHA384", "SHA-384", "SHA512", "SHA-512"})
-  void testWhenAddSignatureCalledWithECKeyAndKnownDigestAlgorithmThenAddSignature(String digestAlgo)
-    throws Exception
+  void testWhenAddSignatureCalledWithECKeyAndKnownDigestAlgorithmThenAddSignature(String digestAlgo) throws Exception
   {
     X509Certificate cert = Utils.readCert(XMLSignatureHandlerTest.class.getResourceAsStream("/EidasSignerTest_x509.cer"));
     PrivateKey pk = Utils.readPKCS12(XMLSignatureHandlerTest.class.getResourceAsStream(TEST_P12_EC),

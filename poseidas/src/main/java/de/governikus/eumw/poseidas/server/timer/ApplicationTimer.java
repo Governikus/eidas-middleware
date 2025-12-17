@@ -36,7 +36,6 @@ import de.governikus.eumw.poseidas.server.pki.PermissionDataHandling;
 import de.governikus.eumw.poseidas.server.pki.RequestSignerCertificateService;
 import de.governikus.eumw.poseidas.server.pki.TlsClientRenewalService;
 import de.governikus.eumw.poseidas.server.pki.entities.TimerHistory.TimerType;
-
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
@@ -80,6 +79,8 @@ public class ApplicationTimer implements SchedulingConfigurer
   private final String getRSCRate;
 
   private final String getTLSClientRate;
+
+  private final HsmKeyDeletionTimer hsmKeyDeletionTimer;
 
   /**
    * Store planned timer executions
@@ -145,6 +146,8 @@ public class ApplicationTimer implements SchedulingConfigurer
                                  crlRenewalTimer.getCrlTrigger(nextTimerExecutions.get(TimerType.CRL_RENEWAL_TIMER)));
     taskRegistrar.addTriggerTask(tlsEntangleTimer,
                                  tlsEntangleTimer.getTlsEntangleTrigger(nextTimerExecutions.get(TimerType.TLS_ENTANGLE_TIMER)));
+    taskRegistrar.addTriggerTask(hsmKeyDeletionTimer,
+                                 hsmKeyDeletionTimer.getHsmDeletionTrigger(nextTimerExecutions.get(TimerType.HSM_DELETION_TIMER)));
   }
 
   static long getUnitOfTime(TimerUnit unitFromXML)

@@ -1,11 +1,10 @@
 /*
- * Copyright (c) 2020 Governikus KG. Licensed under the EUPL, Version 1.2 or as soon they will be approved by
- * the European Commission - subsequent versions of the EUPL (the "Licence"); You may not use this work except
- * in compliance with the Licence. You may obtain a copy of the Licence at:
- * http://joinup.ec.europa.eu/software/page/eupl Unless required by applicable law or agreed to in writing,
- * software distributed under the Licence is distributed on an "AS IS" basis, WITHOUT WARRANTIES OR CONDITIONS
- * OF ANY KIND, either express or implied. See the Licence for the specific language governing permissions and
- * limitations under the Licence.
+ * Copyright (c) 2020 Governikus KG. Licensed under the EUPL, Version 1.2 or as soon they will be approved by the
+ * European Commission - subsequent versions of the EUPL (the "Licence"); You may not use this work except in compliance
+ * with the Licence. You may obtain a copy of the Licence at: http://joinup.ec.europa.eu/software/page/eupl Unless
+ * required by applicable law or agreed to in writing, software distributed under the Licence is distributed on an
+ * "AS IS" basis, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the Licence for the
+ * specific language governing permissions and limitations under the Licence.
  */
 
 package de.governikus.eumw.poseidas.eidserver.convenience.session;
@@ -117,8 +116,7 @@ public class Session implements Serializable
       throw new IllegalArgumentException(sessionInput.getLogPrefix()
                                          + "MasterList is null. MasterList must be set in session input");
     }
-    List<TerminalData> cvcList = formatCVCList(sessionInput.getTerminalCertificate(),
-                                               sessionInput.getCvcChain());
+    List<TerminalData> cvcList = formatCVCList(sessionInput.getTerminalCertificate(), sessionInput.getCvcChain());
     if (cvcList.isEmpty())
     {
       throw new IllegalArgumentException(sessionInput.getLogPrefix() + "CVC list is empty."
@@ -150,8 +148,7 @@ public class Session implements Serializable
     }
     catch (IOException e)
     {
-      throw new IllegalArgumentException(sessionInput.getLogPrefix()
-                                         + "CVC in SessionInput is not wellformed. "
+      throw new IllegalArgumentException(sessionInput.getLogPrefix() + "CVC in SessionInput is not wellformed. "
                                          + "Terminal CVC not added: ", e);
     }
 
@@ -160,8 +157,7 @@ public class Session implements Serializable
   }
 
   /**
-   * poseidas server sets an unsorted list also with root certificates. Until this is fixed this check is
-   * implemented
+   * poseidas server sets an unsorted list also with root certificates. Until this is fixed this check is implemented
    *
    * @param terminalCertificate the terminal certificate to build the chain for
    * @param cvcChain the unsorted chain certificates
@@ -226,8 +222,8 @@ public class Session implements Serializable
     {
       if (cvc != null)
       {
-        output.append("\n" + " o '" + cvc.getHolderReferenceString() + "' signed by '"
-                      + cvc.getCAReferenceString() + "'");
+        output.append("\n" + " o '" + cvc.getHolderReferenceString() + "' signed by '" + cvc.getCAReferenceString()
+                      + "'");
       }
     }
     return output.toString();
@@ -264,9 +260,7 @@ public class Session implements Serializable
     return Arrays.equals(cvc.getHolderReference(), cvc.getCAReference());
   }
 
-  private static EIDSequence createSequence(TerminalData cvc,
-                                            List<TerminalData> cvcList,
-                                            SessionInput sessionInput)
+  private static EIDSequence createSequence(TerminalData cvc, List<TerminalData> cvcList, SessionInput sessionInput)
     throws ChatOptionNotAllowedException
   {
     return new EIDSequence(cvc, cvcList, sessionInput);
@@ -283,8 +277,7 @@ public class Session implements Serializable
   }
 
   /**
-   * Return the time after which this session return true if session has expired. Feature is needed to avoid
-   * memory leak
+   * Return the time after which this session return true if session has expired. Feature is needed to avoid memory leak
    *
    * @return the point in time when session is expired
    */
@@ -313,8 +306,7 @@ public class Session implements Serializable
     is.defaultReadObject();
     try
     {
-      List<TerminalData> cvcList = formatCVCList(sessionInput.getTerminalCertificate(),
-                                                 sessionInput.getCvcChain());
+      List<TerminalData> cvcList = formatCVCList(sessionInput.getTerminalCertificate(), sessionInput.getCvcChain());
       eIDSequence = createSequence(sessionInput.getTerminalCertificate(), cvcList, sessionInput);
     }
     catch (ChatOptionNotAllowedException e)

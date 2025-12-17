@@ -1,11 +1,10 @@
 /*
- * Copyright (c) 2020 Governikus KG. Licensed under the EUPL, Version 1.2 or as soon they will be approved by
- * the European Commission - subsequent versions of the EUPL (the "Licence"); You may not use this work except
- * in compliance with the Licence. You may obtain a copy of the Licence at:
- * http://joinup.ec.europa.eu/software/page/eupl Unless required by applicable law or agreed to in writing,
- * software distributed under the Licence is distributed on an "AS IS" basis, WITHOUT WARRANTIES OR CONDITIONS
- * OF ANY KIND, either express or implied. See the Licence for the specific language governing permissions and
- * limitations under the Licence.
+ * Copyright (c) 2020 Governikus KG. Licensed under the EUPL, Version 1.2 or as soon they will be approved by the
+ * European Commission - subsequent versions of the EUPL (the "Licence"); You may not use this work except in compliance
+ * with the Licence. You may obtain a copy of the Licence at: http://joinup.ec.europa.eu/software/page/eupl Unless
+ * required by applicable law or agreed to in writing, software distributed under the Licence is distributed on an
+ * "AS IS" basis, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the Licence for the
+ * specific language governing permissions and limitations under the Licence.
  */
 
 package de.governikus.eumw.poseidas.cardserver.service.hsm.impl;
@@ -121,8 +120,7 @@ public class BOSHSMSimulatorService implements HSMService
     return signature.sign();
   }
 
-  public static PrivateKey buildPrivateKey(byte[] keyBytes)
-    throws NoSuchAlgorithmException, InvalidKeySpecException
+  public static PrivateKey buildPrivateKey(byte[] keyBytes) throws NoSuchAlgorithmException, InvalidKeySpecException
   {
     AssertUtil.notNullOrEmpty(keyBytes, "bytes of received key");
 
@@ -130,8 +128,7 @@ public class BOSHSMSimulatorService implements HSMService
     PrivateKey privSignKey = null;
     try
     {
-      privSignKey = KeyFactory.getInstance("EC", SecurityProvider.BOUNCY_CASTLE_PROVIDER)
-                              .generatePrivate(keySpec);
+      privSignKey = KeyFactory.getInstance("EC", SecurityProvider.BOUNCY_CASTLE_PROVIDER).generatePrivate(keySpec);
     }
     catch (InvalidKeySpecException e)
     {
@@ -139,8 +136,7 @@ public class BOSHSMSimulatorService implements HSMService
       {
         log.debug("Failed to generate EC private key", e);
       }
-      privSignKey = KeyFactory.getInstance("RSA", SecurityProvider.BOUNCY_CASTLE_PROVIDER)
-                              .generatePrivate(keySpec);
+      privSignKey = KeyFactory.getInstance("RSA", SecurityProvider.BOUNCY_CASTLE_PROVIDER).generatePrivate(keySpec);
     }
     return privSignKey;
   }

@@ -1,11 +1,10 @@
 /*
- * Copyright (c) 2020 Governikus KG. Licensed under the EUPL, Version 1.2 or as soon they will be approved by
- * the European Commission - subsequent versions of the EUPL (the "Licence"); You may not use this work except
- * in compliance with the Licence. You may obtain a copy of the Licence at:
- * http://joinup.ec.europa.eu/software/page/eupl Unless required by applicable law or agreed to in writing,
- * software distributed under the Licence is distributed on an "AS IS" basis, WITHOUT WARRANTIES OR CONDITIONS
- * OF ANY KIND, either express or implied. See the Licence for the specific language governing permissions and
- * limitations under the Licence.
+ * Copyright (c) 2020 Governikus KG. Licensed under the EUPL, Version 1.2 or as soon they will be approved by the
+ * European Commission - subsequent versions of the EUPL (the "Licence"); You may not use this work except in compliance
+ * with the Licence. You may obtain a copy of the Licence at: http://joinup.ec.europa.eu/software/page/eupl Unless
+ * required by applicable law or agreed to in writing, software distributed under the Licence is distributed on an
+ * "AS IS" basis, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the Licence for the
+ * specific language governing permissions and limitations under the Licence.
  */
 
 package de.governikus.eumw.poseidas.cardbase.asn1;
@@ -39,8 +38,8 @@ final class ASN1FilterUtil
    *
    * @param asn1s array of ASN.1, <code>null</code> and empty array permitted
    * @param tag tag for filtering
-   * @return filtered array of child elements, {@link ASN1Constants#EMPTY_ASN1_ARRAY} for no child element
-   *         found with given tag
+   * @return filtered array of child elements, {@link ASN1Constants#EMPTY_ASN1_ARRAY} for no child element found with
+   *         given tag
    */
   static ASN1[] filterByTag(ASN1[] asn1s, int tag)
   {
@@ -52,8 +51,8 @@ final class ASN1FilterUtil
    *
    * @param asn1s array of ASN.1, <code>null</code> and empty array permitted
    * @param tag tag for filtering
-   * @return filtered array of child elements, {@link ASN1Constants#EMPTY_ASN1_ARRAY} for no child element
-   *         found with given tag
+   * @return filtered array of child elements, {@link ASN1Constants#EMPTY_ASN1_ARRAY} for no child element found with
+   *         given tag
    */
   private static ASN1[] filterByTag(ASN1[] asn1s, long tag)
   {
@@ -78,10 +77,10 @@ final class ASN1FilterUtil
    * Filter array of child elements for elements with given tag of tag with description and tag.
    *
    * @param asn1s array of ASN.1, <code>null</code> and empty array permitted (leading to empty result)
-   * @param dTag description and tag for filtering - including ASN.1 bit coded informations about class and
-   *          content, <code>null</code> not permitted
-   * @return filtered array of child elements, {@link ASN1Constants#EMPTY_ASN1_ARRAY} for no child element
-   *         found with given tag
+   * @param dTag description and tag for filtering - including ASN.1 bit coded informations about class and content,
+   *          <code>null</code> not permitted
+   * @return filtered array of child elements, {@link ASN1Constants#EMPTY_ASN1_ARRAY} for no child element found with
+   *         given tag
    * @throws IllegalArgumentException if dTag <code>null</code>
    * @see #filterByTagOfDTagBytes(ASN1[], byte[])
    */
@@ -98,10 +97,10 @@ final class ASN1FilterUtil
    * Filter array of child elements for elements with given tag of tag bytes with description and tag.
    *
    * @param asn1s array of ASN.1, <code>null</code> and empty array permitted (leading to empty result)
-   * @param dTagBytes bytes with description and tag of ASN.1 - including ASN.1 bit coded informations about
-   *          class and content, <code>null</code> not permitted
-   * @return filtered array of child elements, {@link ASN1Constants#EMPTY_ASN1_ARRAY} for no child element
-   *         found with given tag
+   * @param dTagBytes bytes with description and tag of ASN.1 - including ASN.1 bit coded informations about class and
+   *          content, <code>null</code> not permitted
+   * @return filtered array of child elements, {@link ASN1Constants#EMPTY_ASN1_ARRAY} for no child element found with
+   *         given tag
    * @throws IllegalArgumentException if dTagBytes <code>null</code>
    */
   private static ASN1[] filterByTagOfDTagBytes(ASN1[] asn1s, byte[] dTagBytes)
@@ -131,10 +130,10 @@ final class ASN1FilterUtil
    * Filter array of child elements for elements with given description and tag.
    *
    * @param asn1Objects array of ASN.1, <code>null</code> and empty array permitted (leading to empty result)
-   * @param dTag description and tag for filtering - including ASN.1 bit coded informations about class and
-   *          content, <code>null</code> not permitted
-   * @return filtered array of child elements, {@link ASN1Constants#EMPTY_ASN1_ARRAY} for no child element
-   *         found with given tag
+   * @param dTag description and tag for filtering - including ASN.1 bit coded informations about class and content,
+   *          <code>null</code> not permitted
+   * @return filtered array of child elements, {@link ASN1Constants#EMPTY_ASN1_ARRAY} for no child element found with
+   *         given tag
    * @throws IllegalArgumentException if dTag <code>null</code>
    * @see #filterByDTagBytes(ASN1[], byte[])
    */
@@ -151,10 +150,10 @@ final class ASN1FilterUtil
    * Filter array of child elements for elements with given bytes of description and tag.
    *
    * @param asn1s array of ASN.1, <code>null</code> and empty array permitted (leading to empty result)
-   * @param dTagBytes bytes with description and tag of ASN.1 - including ASN.1 bit coded informations about
-   *          class and content, <code>null</code> or empty array not permitted
-   * @return filtered array of child elements, {@link ASN1Constants#EMPTY_ASN1_ARRAY} for no child element
-   *         found with given tag
+   * @param dTagBytes bytes with description and tag of ASN.1 - including ASN.1 bit coded informations about class and
+   *          content, <code>null</code> or empty array not permitted
+   * @return filtered array of child elements, {@link ASN1Constants#EMPTY_ASN1_ARRAY} for no child element found with
+   *         given tag
    * @throws IllegalArgumentException if dTagBytes <code>null</code> or empty
    */
   static ASN1[] filterByDTagBytes(ASN1[] asn1s, byte[] dTagBytes)

@@ -1,4 +1,4 @@
-FROM governikus/eidas-base-container:${project.version}
+FROM ${BASE_IMAGE_TO_USE}
 MAINTAINER Benny Prange <benny.prange@governikus.de>
 
 # NOTE: Some ENV variables are set in the parent "eidas-base-image"
@@ -11,9 +11,8 @@ WORKDIR /opt/eidas-middleware
 RUN mkdir /opt/eidas-middleware/config
 
 # Copy the freshly built artifact
-COPY maven/ /opt/eidas-middleware
+COPY eidas-demo/target/eidas-demo.jar /opt/eidas-middleware/eidas-demo.jar
 
-RUN    mv eidas-demo*.jar eidas-demo.jar &&\
-    mkdir -p ${CONFIG_DIR}
+RUN mkdir -p ${CONFIG_DIR}
 
 ENTRYPOINT ["java", "-jar", "./eidas-demo.jar"]

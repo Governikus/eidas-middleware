@@ -58,7 +58,6 @@ class RequestSignerCvcRenewTimerTest
   @Mock
   private EidasMiddlewareConfig.EidConfiguration eidConfiguration;
 
-
   @Mock
   private ServiceProviderType serviceProviderType;
 
@@ -79,9 +78,8 @@ class RequestSignerCvcRenewTimerTest
 
 
   @BeforeEach
-  public void setup()
+  void setup()
   {
-    requestSignerCvcRenewTimer.timerRateInSeconds = 120;
     lenient().when(rscService.hasRequestSignerCertificate(Mockito.anyString())).thenReturn(true);
 
     lenient().when(configurationService.getConfiguration()).thenReturn(Optional.of(eidasMiddlewareConfig));

@@ -32,7 +32,7 @@ public interface RequestSignerCertificateService
 
   /**
    * Build a CMS container signed with the indicated RSC and containing the given data.
-   * 
+   *
    * @param entityId entityId to indicate the RSC for signing
    * @param content content for the CMS container
    * @param contentType content type for the CMS container
@@ -77,6 +77,14 @@ public interface RequestSignerCertificateService
    * @return {@link Optional#empty} if the pending RSC was deleted, otherwise an error message
    */
   Optional<String> deletePendingRSC(String entityId);
+
+  /**
+   * Deletes the current request certificate for a service provider
+   *
+   * @param entityId the entity ID of the service provider for which the current RSC should be deleted
+   * @return {@link Optional#empty} if the current RSC was deleted, otherwise an error message
+   */
+  Optional<String> deleteCurrentRSC(String entityId);
 
   /**
    * Generates a new pending RSC and sends this RSC to the DVCA

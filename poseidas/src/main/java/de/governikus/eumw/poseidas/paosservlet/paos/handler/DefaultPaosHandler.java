@@ -126,8 +126,7 @@ public class DefaultPaosHandler extends AbstractPaosHandler
   }
 
   @Override
-  protected String createPAOSMessage(Object object)
-    throws IOException, SOAPException
+  protected String createPAOSMessage(Object object) throws IOException, SOAPException
   {
 
     MessageFactory messageFactory = MessageFactory.newInstance();

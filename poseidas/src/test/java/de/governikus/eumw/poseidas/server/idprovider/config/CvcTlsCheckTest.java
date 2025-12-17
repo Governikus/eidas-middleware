@@ -56,7 +56,7 @@ class CvcTlsCheckTest
 
   private static final String CERTIFICATE_VALID = "certificate valid";
 
-  private static final HSMServiceHolder HSM_SERVICE_DUMMY = new HSMServiceHolder(null, null, null);
+  private static final HSMServiceHolder HSM_SERVICE_DUMMY = new HSMServiceHolder(null, null, null, 2, false, null);
 
   public static final String DVCA_CONFIGURATION_NAME = "dvcaConfig";
 

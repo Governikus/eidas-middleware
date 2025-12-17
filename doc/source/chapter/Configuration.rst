@@ -156,18 +156,6 @@ This configuration file contains the following sections:
     the default folder is ``block-list-data`` (as a relative path to the eIDAS Middleware main folder).
     The MW requires permission to write and read in that folder.
 
-#.  **TLS Client Certificate renewal**
-
-    This feature implements automatic renewal of TLS client certificates for communication with the Autothorization CA.
-
-#.  **RI service interface v1.4**
-
-    This feature allows for communication with the block list server according to TR-03129 v1.4.
-
-    .. attention::
-        The feature RI service interface v1.4 is not available in production yet.
-        Please consult with eidas-middleware@governikus.de before changing this property.
-
 
 
 Startup

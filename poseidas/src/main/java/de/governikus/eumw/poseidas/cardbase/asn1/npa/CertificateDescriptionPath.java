@@ -1,11 +1,10 @@
 /*
- * Copyright (c) 2020 Governikus KG. Licensed under the EUPL, Version 1.2 or as soon they will be approved by
- * the European Commission - subsequent versions of the EUPL (the "Licence"); You may not use this work except
- * in compliance with the Licence. You may obtain a copy of the Licence at:
- * http://joinup.ec.europa.eu/software/page/eupl Unless required by applicable law or agreed to in writing,
- * software distributed under the Licence is distributed on an "AS IS" basis, WITHOUT WARRANTIES OR CONDITIONS
- * OF ANY KIND, either express or implied. See the Licence for the specific language governing permissions and
- * limitations under the Licence.
+ * Copyright (c) 2020 Governikus KG. Licensed under the EUPL, Version 1.2 or as soon they will be approved by the
+ * European Commission - subsequent versions of the EUPL (the "Licence"); You may not use this work except in compliance
+ * with the Licence. You may obtain a copy of the Licence at: http://joinup.ec.europa.eu/software/page/eupl Unless
+ * required by applicable law or agreed to in writing, software distributed under the Licence is distributed on an
+ * "AS IS" basis, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the Licence for the
+ * specific language governing permissions and limitations under the Licence.
  */
 
 package de.governikus.eumw.poseidas.cardbase.asn1.npa;
@@ -32,12 +31,11 @@ public class CertificateDescriptionPath extends ASN1Path
    * @param tag tag byte of child element
    * @param index index of child element
    * @param parent optional parent path element
-   * @param encoderClass Class of {@link ASN1Encoder} for creating ASN1. object with support convenience
-   *          methods to access contents of ASN.1, <code>null</code> permitted, any real Class must possess an
-   *          empty, accessible Constructor to create an instance, otherwise an
-   *          {@link IllegalArgumentException} is thrown
-   * @throws IllegalArgumentException if Class of {@link ASN1Encoder} does not possess an empty constructor
-   *           for initialization
+   * @param encoderClass Class of {@link ASN1Encoder} for creating ASN1. object with support convenience methods to
+   *          access contents of ASN.1, <code>null</code> permitted, any real Class must possess an empty, accessible
+   *          Constructor to create an instance, otherwise an {@link IllegalArgumentException} is thrown
+   * @throws IllegalArgumentException if Class of {@link ASN1Encoder} does not possess an empty constructor for
+   *           initialization
    * @see ASN1Path#ASN1Path(String, byte, int, ASN1Path, Class)
    */
   private CertificateDescriptionPath(String name,
@@ -56,12 +54,11 @@ public class CertificateDescriptionPath extends ASN1Path
    * @param tagByteString tag of child element as Hex-String
    * @param index index of child element
    * @param parent optional parent path element
-   * @param encoderClass Class of {@link ASN1Encoder} for creating ASN1. object with support convenience
-   *          methods to access contents of ASN.1, <code>null</code> permitted, any real Class must possess an
-   *          empty, accessible Constructor to create an instance, otherwise an
-   *          {@link IllegalArgumentException} is thrown
-   * @throws IllegalArgumentException if Class of {@link ASN1Encoder} does not possess an empty constructor
-   *           for initialization
+   * @param encoderClass Class of {@link ASN1Encoder} for creating ASN1. object with support convenience methods to
+   *          access contents of ASN.1, <code>null</code> permitted, any real Class must possess an empty, accessible
+   *          Constructor to create an instance, otherwise an {@link IllegalArgumentException} is thrown
+   * @throws IllegalArgumentException if Class of {@link ASN1Encoder} does not possess an empty constructor for
+   *           initialization
    * @see ASN1Path#ASN1Path(String, String, int, ASN1Path, Class)
    */
   private CertificateDescriptionPath(String name,
@@ -82,10 +79,7 @@ public class CertificateDescriptionPath extends ASN1Path
    * @param parent optional parent path element
    * @see ASN1Path#ASN1Path(String, String, int, ASN1Path)
    */
-  private CertificateDescriptionPath(String name,
-                                     String tagByteString,
-                                     int index,
-                                     CertificateDescriptionPath parent)
+  private CertificateDescriptionPath(String name, String tagByteString, int index, CertificateDescriptionPath parent)
   {
     super(name, tagByteString, index, parent);
   }
@@ -95,38 +89,33 @@ public class CertificateDescriptionPath extends ASN1Path
    */
   static final CertificateDescriptionPath CERTIFICATE_DESCRIPTION = new CertificateDescriptionPath("CERTIFICATE_DESCRIPTION",
                                                                                                    ASN1Constants.UNIVERSAL_TAG_SEQUENCE_CONSTRUCTED,
-                                                                                                   0, null,
-                                                                                                   null);
+                                                                                                   0, null, null);
 
   /**
    * Path to description type.
    */
   static final CertificateDescriptionPath DESCRIPTION_TYPE = new CertificateDescriptionPath("DESCRIPTION_TYPE",
                                                                                             ASN1Constants.UNIVERSAL_TAG_OID,
-                                                                                            0,
-                                                                                            CERTIFICATE_DESCRIPTION,
+                                                                                            0, CERTIFICATE_DESCRIPTION,
                                                                                             OID.class);
 
   /**
    * Path to issuer name part.
    */
-  static final CertificateDescriptionPath ISSUER_NAME_PART = new CertificateDescriptionPath("ISSUER_NAME_PART",
-                                                                                            "a1", 0,
+  static final CertificateDescriptionPath ISSUER_NAME_PART = new CertificateDescriptionPath("ISSUER_NAME_PART", "a1", 0,
                                                                                             CERTIFICATE_DESCRIPTION);
 
   /**
    * Path to issuer name.
    */
   static final CertificateDescriptionPath ISSUER_NAME = new CertificateDescriptionPath("ISSUER_NAME",
-                                                                                       ASN1Constants.UTF8_STRING,
-                                                                                       0, ISSUER_NAME_PART,
-                                                                                       null);
+                                                                                       ASN1Constants.UTF8_STRING, 0,
+                                                                                       ISSUER_NAME_PART, null);
 
   /**
    * Path to issuer URL part.
    */
-  static final CertificateDescriptionPath ISSUER_URL_PART = new CertificateDescriptionPath("ISSUER_URL_PART",
-                                                                                           "a2", 0,
+  static final CertificateDescriptionPath ISSUER_URL_PART = new CertificateDescriptionPath("ISSUER_URL_PART", "a2", 0,
                                                                                            CERTIFICATE_DESCRIPTION);
 
   /**
@@ -134,29 +123,26 @@ public class CertificateDescriptionPath extends ASN1Path
    */
   static final CertificateDescriptionPath ISSUER_URL = new CertificateDescriptionPath("ISSUER_URL",
                                                                                       ASN1Constants.UNIVERSAL_19_PRINTABLE_STRING,
-                                                                                      0, ISSUER_URL_PART,
-                                                                                      null);
+                                                                                      0, ISSUER_URL_PART, null);
 
   /**
    * Path to subject name part.
    */
-  static final CertificateDescriptionPath SUBJECT_NAME_PART = new CertificateDescriptionPath("SUBJECT_NAME_PART",
-                                                                                             "a3", 0,
+  static final CertificateDescriptionPath SUBJECT_NAME_PART = new CertificateDescriptionPath("SUBJECT_NAME_PART", "a3",
+                                                                                             0,
                                                                                              CERTIFICATE_DESCRIPTION);
 
   /**
    * Path to subject name.
    */
   static final CertificateDescriptionPath SUBJECT_NAME = new CertificateDescriptionPath("SUBJECT_NAME",
-                                                                                        ASN1Constants.UTF8_STRING,
-                                                                                        0, SUBJECT_NAME_PART,
-                                                                                        null);
+                                                                                        ASN1Constants.UTF8_STRING, 0,
+                                                                                        SUBJECT_NAME_PART, null);
 
   /**
    * Path to subject URL part.
    */
-  static final CertificateDescriptionPath SUBJECT_URL_PART = new CertificateDescriptionPath("SUBJECT_URL_PART",
-                                                                                            "a4", 0,
+  static final CertificateDescriptionPath SUBJECT_URL_PART = new CertificateDescriptionPath("SUBJECT_URL_PART", "a4", 0,
                                                                                             CERTIFICATE_DESCRIPTION);
 
   /**
@@ -164,8 +150,7 @@ public class CertificateDescriptionPath extends ASN1Path
    */
   static final CertificateDescriptionPath SUBJECT_URL = new CertificateDescriptionPath("SUBJECT_URL",
                                                                                        ASN1Constants.UNIVERSAL_19_PRINTABLE_STRING,
-                                                                                       0, SUBJECT_URL_PART,
-                                                                                       null);
+                                                                                       0, SUBJECT_URL_PART, null);
 
   /**
    * Path to terms of usage defined by any description type.
@@ -179,8 +164,7 @@ public class CertificateDescriptionPath extends ASN1Path
    */
   static final CertificateDescriptionPath TERMS_OF_USAGE_PLAIN_TEXT = new CertificateDescriptionPath("PLAIN_TEXT_TERMS_OF_USAGE",
                                                                                                      ASN1Constants.UTF8_STRING,
-                                                                                                     0,
-                                                                                                     TERMS_OF_USAGE,
+                                                                                                     0, TERMS_OF_USAGE,
                                                                                                      null);
 
   /**
@@ -188,24 +172,20 @@ public class CertificateDescriptionPath extends ASN1Path
    */
   static final CertificateDescriptionPath TERMS_OF_USAGE_HTML = new CertificateDescriptionPath("HTML_TERMS_OF_USAGE",
                                                                                                ASN1Constants.UNIVERSAL_22_IA5_STRING,
-                                                                                               0,
-                                                                                               TERMS_OF_USAGE,
-                                                                                               null);
+                                                                                               0, TERMS_OF_USAGE, null);
 
   /**
    * Path to terms of usage defined as pdf.
    */
   static final CertificateDescriptionPath TERMS_OF_USAGE_PDF = new CertificateDescriptionPath("PDF_TERMS_OF_USAGE",
                                                                                               ASN1Constants.UNIVERSAL_TAG_OCTET_STRING,
-                                                                                              0,
-                                                                                              TERMS_OF_USAGE,
-                                                                                              null);
+                                                                                              0, TERMS_OF_USAGE, null);
 
   /**
    * Path to optional redirect URL part.
    */
-  static final CertificateDescriptionPath REDIRECT_URL_PART = new CertificateDescriptionPath("REDIRECT_URL_PART",
-                                                                                             "a6", 0,
+  static final CertificateDescriptionPath REDIRECT_URL_PART = new CertificateDescriptionPath("REDIRECT_URL_PART", "a6",
+                                                                                             0,
                                                                                              CERTIFICATE_DESCRIPTION);
 
   /**
@@ -213,8 +193,7 @@ public class CertificateDescriptionPath extends ASN1Path
    */
   public static final CertificateDescriptionPath REDIRECT_URL = new CertificateDescriptionPath("REDIRECT_URL",
                                                                                                ASN1Constants.UNIVERSAL_19_PRINTABLE_STRING,
-                                                                                               0,
-                                                                                               REDIRECT_URL_PART,
+                                                                                               0, REDIRECT_URL_PART,
                                                                                                null);
 
   /**

@@ -1,11 +1,10 @@
 /*
- * Copyright (c) 2020 Governikus KG. Licensed under the EUPL, Version 1.2 or as soon they will be approved by
- * the European Commission - subsequent versions of the EUPL (the "Licence"); You may not use this work except
- * in compliance with the Licence. You may obtain a copy of the Licence at:
- * http://joinup.ec.europa.eu/software/page/eupl Unless required by applicable law or agreed to in writing,
- * software distributed under the Licence is distributed on an "AS IS" basis, WITHOUT WARRANTIES OR CONDITIONS
- * OF ANY KIND, either express or implied. See the Licence for the specific language governing permissions and
- * limitations under the Licence.
+ * Copyright (c) 2020 Governikus KG. Licensed under the EUPL, Version 1.2 or as soon they will be approved by the
+ * European Commission - subsequent versions of the EUPL (the "Licence"); You may not use this work except in compliance
+ * with the Licence. You may obtain a copy of the Licence at: http://joinup.ec.europa.eu/software/page/eupl Unless
+ * required by applicable law or agreed to in writing, software distributed under the Licence is distributed on an
+ * "AS IS" basis, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the Licence for the
+ * specific language governing permissions and limitations under the Licence.
  */
 
 package de.governikus.eumw.poseidas.server.eidservice;
@@ -45,8 +44,8 @@ import oasis.names.tc.dss._1_0.core.schema.Result;
 
 
 /**
- * Functional implementation of the eID-interface. This class provides an API which can be used from inside
- * the server instead of the WebService interface.
+ * Functional implementation of the eID-interface. This class provides an API which can be used from inside the server
+ * instead of the WebService interface.
  *
  * @author CM, TT
  * @author hauke
@@ -135,15 +134,12 @@ public class EIDInternal
       return errorResponse;
     }
     EIDSession mySession = new EIDSession(sessionId, requestId, client.getName());
-    EIDRequestResponse response = new EIDRequestResponse(sessionId, requestId, Constants.EID_MAJOR_OK, null,
-                                                         null,
+    EIDRequestResponse response = new EIDRequestResponse(sessionId, requestId, Constants.EID_MAJOR_OK, null, null,
                                                          mySession.getLogPrefix());
 
     try
     {
-      SessionInput input = startEcardApiRequest(mySession,
-                                                request,
-                                                client.getCVCRefID());
+      SessionInput input = startEcardApiRequest(mySession, request, client.getCVCRefID());
       ECardIDServerFactory.getInstance().getCurrentServer();
       mySession.setSessionInput(input);
 
@@ -171,15 +167,14 @@ public class EIDInternal
           minorCode = Constants.EID_MINOR_COMMON_INTERNALERROR;
           break;
       }
-      return new EIDRequestResponse(sessionId, requestId, Constants.EID_MAJOR_ERROR, minorCode,
-                                    e.getMessage(), mySession.getLogPrefix());
+      return new EIDRequestResponse(sessionId, requestId, Constants.EID_MAJOR_ERROR, minorCode, e.getMessage(),
+                                    mySession.getLogPrefix());
     }
     catch (IllegalArgumentException e)
     {
       LOG.info(mySession.getLogPrefix() + "an internal error occurred while processing a request", e);
       return new EIDRequestResponse(sessionId, requestId, Constants.EID_MAJOR_ERROR,
-                                    Constants.EID_MINOR_COMMON_INTERNALERROR, e.getMessage(),
-                                    mySession.getLogPrefix());
+                                    Constants.EID_MINOR_COMMON_INTERNALERROR, e.getMessage(), mySession.getLogPrefix());
     }
     return response;
   }
@@ -192,8 +187,7 @@ public class EIDInternal
     if (client == null)
     {
       return new EIDRequestResponse(sessionId, requestId, Constants.EID_MAJOR_ERROR,
-                                    Constants.EID_MINOR_COMMON_INTERNALERROR,
-                                    "client is unknown in the configuration",
+                                    Constants.EID_MINOR_COMMON_INTERNALERROR, "client is unknown in the configuration",
                                     "<unknown>: " + requestId + COLON_AND_SPACE);
     }
     if (!client.isEnabled())
@@ -212,16 +206,16 @@ public class EIDInternal
     {
       return new EIDRequestResponse(sessionId, requestId, Constants.EID_MAJOR_ERROR,
                                     Constants.EID_MINOR_USEID_MISSING_ARGUMENT,
-                                    "The session Id it too short with " + ((sessionId == null) ? 0
-                                      : sessionId.length()) + " bytes",
+                                    "The session Id it too short with " + ((sessionId == null) ? 0 : sessionId.length())
+                                                                                + " bytes",
                                     client.getName() + COLON_AND_SPACE + requestId + COLON_AND_SPACE);
     }
     if (requestId == null || requestId.length() < 16 || requestId.length() > 10240)
     {
       return new EIDRequestResponse(sessionId, requestId, Constants.EID_MAJOR_ERROR,
                                     Constants.EID_MINOR_USEID_MISSING_ARGUMENT,
-                                    "The Request ID it too short with " + ((requestId == null) ? 0
-                                      : requestId.length()) + " bytes",
+                                    "The Request ID it too short with " + ((requestId == null) ? 0 : requestId.length())
+                                                                                + " bytes",
                                     client.getName() + COLON_AND_SPACE + requestId + COLON_AND_SPACE);
     }
     if (ageVerificationRequestIncomplete(request))
@@ -251,9 +245,7 @@ public class EIDInternal
     return cvcFacade.getTerminalPermission(refId);
   }
 
-  private SessionInput startEcardApiRequest(EIDSession session,
-                                            EIDRequestInput request,
-                                            String refId)
+  private SessionInput startEcardApiRequest(EIDSession session, EIDRequestInput request, String refId)
     throws ErrorCodeException
   {
     SessionInputImpl input;
@@ -277,8 +269,7 @@ public class EIDInternal
     TerminalData cvc = tp.getFullCvc();
     if (masterListData.length >= 2 && isZipData(masterListData))
     {
-      List<X509Certificate> masterListCerts = addMasterListCertsFromZip(masterListData,
-                                                                        session.getLogPrefix());
+      List<X509Certificate> masterListCerts = addMasterListCertsFromZip(masterListData, session.getLogPrefix());
       input = new SessionInputImpl(cvc, tp.getCvcChain(), session.getSessionId(),
 
                                    new BlackListConnectorImpl(blockListService, tp.getSectorID()), masterListCerts,
@@ -474,15 +465,13 @@ public class EIDInternal
     }
     if (session == null)
     {
-      return new EIDResultResponse(Constants.EID_MAJOR_ERROR,
-                                   Constants.EID_MINOR_GETRESULT_INVALID_SESSION, null,
+      return new EIDResultResponse(Constants.EID_MAJOR_ERROR, Constants.EID_MINOR_GETRESULT_INVALID_SESSION, null,
                                    "<unknown>: " + requestId + COLON_AND_SPACE);
     }
     if (session.getSequenceNumber() != null && requestCounter != session.getSequenceNumber() + 1)
     {
       sessionManager.remove(session);
-      return new EIDResultResponse(Constants.EID_MAJOR_ERROR,
-                                   Constants.EID_MINOR_GETRESULT_INVALID_COUNTER, null,
+      return new EIDResultResponse(Constants.EID_MAJOR_ERROR, Constants.EID_MINOR_GETRESULT_INVALID_COUNTER, null,
                                    session.getLogPrefix());
     }
     session.setSequenceNumber(requestCounter);
@@ -496,14 +485,14 @@ public class EIDInternal
       catch (ErrorCodeException e)
       {
         LOG.error(session.getLogPrefix() + "Can not store session", e);
-        return new EIDResultResponse(Constants.EID_MAJOR_ERROR,
-                                     Constants.EID_MINOR_COMMON_INTERNALERROR, null, session.getLogPrefix());
+        return new EIDResultResponse(Constants.EID_MAJOR_ERROR, Constants.EID_MINOR_COMMON_INTERNALERROR, null,
+                                     session.getLogPrefix());
       }
-      return new EIDResultResponse(Constants.EID_MAJOR_ERROR,
-                                   Constants.EID_MINOR_GETRESULT_NO_RESULT_YET, null, session.getLogPrefix());
+      return new EIDResultResponse(Constants.EID_MAJOR_ERROR, Constants.EID_MINOR_GETRESULT_NO_RESULT_YET, null,
+                                   session.getLogPrefix());
     }
-    EIDResultResponse response = new EIDResultResponse(session.getResult(),
-                                                       session.getInfoMap(), session.getLogPrefix());
+    EIDResultResponse response = new EIDResultResponse(session.getResult(), session.getInfoMap(),
+                                                       session.getLogPrefix());
     sessionManager.remove(session);
     return response;
   }

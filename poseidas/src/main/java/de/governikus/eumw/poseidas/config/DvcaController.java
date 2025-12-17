@@ -273,7 +273,7 @@ public class DvcaController
     final Optional<DvcaConfigurationType> optionalOldDvcaConfig = eidConfiguration.getDvcaConfiguration()
                                                                                   .parallelStream()
                                                                                   .filter(p -> currentName.orElse("")
-                                                                                                   .equalsIgnoreCase(p.getName()))
+                                                                                                          .equalsIgnoreCase(p.getName()))
                                                                                   .findAny();
 
     // If an existing DVCA configuration is edited and its name is changed, change also the name in the service

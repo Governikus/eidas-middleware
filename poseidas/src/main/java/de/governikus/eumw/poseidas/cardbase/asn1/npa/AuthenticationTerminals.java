@@ -1,11 +1,10 @@
 /*
- * Copyright (c) 2020 Governikus KG. Licensed under the EUPL, Version 1.2 or as soon they will be approved by
- * the European Commission - subsequent versions of the EUPL (the "Licence"); You may not use this work except
- * in compliance with the Licence. You may obtain a copy of the Licence at:
- * http://joinup.ec.europa.eu/software/page/eupl Unless required by applicable law or agreed to in writing,
- * software distributed under the Licence is distributed on an "AS IS" basis, WITHOUT WARRANTIES OR CONDITIONS
- * OF ANY KIND, either express or implied. See the Licence for the specific language governing permissions and
- * limitations under the Licence.
+ * Copyright (c) 2020 Governikus KG. Licensed under the EUPL, Version 1.2 or as soon they will be approved by the
+ * European Commission - subsequent versions of the EUPL (the "Licence"); You may not use this work except in compliance
+ * with the Licence. You may obtain a copy of the Licence at: http://joinup.ec.europa.eu/software/page/eupl Unless
+ * required by applicable law or agreed to in writing, software distributed under the Licence is distributed on an
+ * "AS IS" basis, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the Licence for the
+ * specific language governing permissions and limitations under the Licence.
  */
 
 package de.governikus.eumw.poseidas.cardbase.asn1.npa;
@@ -33,6 +32,7 @@ public class AuthenticationTerminals extends BaseAccessRoleAndRights
    */
   public enum AccessRoleEnum implements BitIdentifier
   {
+
     /**
      * Role CVCA.
      *
@@ -155,6 +155,7 @@ public class AuthenticationTerminals extends BaseAccessRoleAndRights
    */
   public enum AccessRightEnum implements BitIdentifier
   {
+
     /**
      * Right Write DG17.
      *
@@ -163,7 +164,9 @@ public class AuthenticationTerminals extends BaseAccessRoleAndRights
      * @see ATConstants#ACCESS_RIGHT_INDEX_WRITE_DG17
      * @see ATConstants#ACCESS_RIGHT_MASK_WRITE_DG17
      */
-    WRITE_DG17(new BitIdentifierImpl(ATConstants.ACCESS_RIGHT_NAME_WRITE_DG17, ATConstants.ACCESS_RIGHT_INDEX_WRITE_DG17, ATConstants.ACCESS_RIGHT_MASK_WRITE_DG17)),
+    WRITE_DG17(new BitIdentifierImpl(ATConstants.ACCESS_RIGHT_NAME_WRITE_DG17,
+                                     ATConstants.ACCESS_RIGHT_INDEX_WRITE_DG17,
+                                     ATConstants.ACCESS_RIGHT_MASK_WRITE_DG17)),
     /**
      * Right Write DG18.
      *
@@ -172,7 +175,9 @@ public class AuthenticationTerminals extends BaseAccessRoleAndRights
      * @see ATConstants#ACCESS_RIGHT_INDEX_WRITE_DG18
      * @see ATConstants#ACCESS_RIGHT_MASK_WRITE_DG18
      */
-    WRITE_DG18(new BitIdentifierImpl(ATConstants.ACCESS_RIGHT_NAME_WRITE_DG18, ATConstants.ACCESS_RIGHT_INDEX_WRITE_DG18, ATConstants.ACCESS_RIGHT_MASK_WRITE_DG18)),
+    WRITE_DG18(new BitIdentifierImpl(ATConstants.ACCESS_RIGHT_NAME_WRITE_DG18,
+                                     ATConstants.ACCESS_RIGHT_INDEX_WRITE_DG18,
+                                     ATConstants.ACCESS_RIGHT_MASK_WRITE_DG18)),
     /**
      * Right Write DG19.
      *
@@ -181,7 +186,9 @@ public class AuthenticationTerminals extends BaseAccessRoleAndRights
      * @see ATConstants#ACCESS_RIGHT_INDEX_WRITE_DG19
      * @see ATConstants#ACCESS_RIGHT_MASK_WRITE_DG19
      */
-    WRITE_DG19(new BitIdentifierImpl(ATConstants.ACCESS_RIGHT_NAME_WRITE_DG19, ATConstants.ACCESS_RIGHT_INDEX_WRITE_DG19, ATConstants.ACCESS_RIGHT_MASK_WRITE_DG19)),
+    WRITE_DG19(new BitIdentifierImpl(ATConstants.ACCESS_RIGHT_NAME_WRITE_DG19,
+                                     ATConstants.ACCESS_RIGHT_INDEX_WRITE_DG19,
+                                     ATConstants.ACCESS_RIGHT_MASK_WRITE_DG19)),
     /**
      * Right Write DG20.
      *
@@ -190,7 +197,9 @@ public class AuthenticationTerminals extends BaseAccessRoleAndRights
      * @see ATConstants#ACCESS_RIGHT_INDEX_WRITE_DG20
      * @see ATConstants#ACCESS_RIGHT_MASK_WRITE_DG20
      */
-    WRITE_DG20(new BitIdentifierImpl(ATConstants.ACCESS_RIGHT_NAME_WRITE_DG20, ATConstants.ACCESS_RIGHT_INDEX_WRITE_DG20, ATConstants.ACCESS_RIGHT_MASK_WRITE_DG20)),
+    WRITE_DG20(new BitIdentifierImpl(ATConstants.ACCESS_RIGHT_NAME_WRITE_DG20,
+                                     ATConstants.ACCESS_RIGHT_INDEX_WRITE_DG20,
+                                     ATConstants.ACCESS_RIGHT_MASK_WRITE_DG20)),
     /**
      * Right Write DG21.
      *
@@ -199,7 +208,9 @@ public class AuthenticationTerminals extends BaseAccessRoleAndRights
      * @see ATConstants#ACCESS_RIGHT_INDEX_WRITE_DG21
      * @see ATConstants#ACCESS_RIGHT_MASK_WRITE_DG21
      */
-    WRITE_DG21(new BitIdentifierImpl(ATConstants.ACCESS_RIGHT_NAME_WRITE_DG21, ATConstants.ACCESS_RIGHT_INDEX_WRITE_DG21, ATConstants.ACCESS_RIGHT_MASK_WRITE_DG21)),
+    WRITE_DG21(new BitIdentifierImpl(ATConstants.ACCESS_RIGHT_NAME_WRITE_DG21,
+                                     ATConstants.ACCESS_RIGHT_INDEX_WRITE_DG21,
+                                     ATConstants.ACCESS_RIGHT_MASK_WRITE_DG21)),
     /**
      * Right Write DG22.
      *
@@ -208,7 +219,9 @@ public class AuthenticationTerminals extends BaseAccessRoleAndRights
      * @see ATConstants#ACCESS_RIGHT_INDEX_WRITE_DG22
      * @see ATConstants#ACCESS_RIGHT_MASK_WRITE_DG22
      */
-    WRITE_DG22(new BitIdentifierImpl(ATConstants.ACCESS_RIGHT_NAME_WRITE_DG22, ATConstants.ACCESS_RIGHT_INDEX_WRITE_DG22, ATConstants.ACCESS_RIGHT_MASK_WRITE_DG22)),
+    WRITE_DG22(new BitIdentifierImpl(ATConstants.ACCESS_RIGHT_NAME_WRITE_DG22,
+                                     ATConstants.ACCESS_RIGHT_INDEX_WRITE_DG22,
+                                     ATConstants.ACCESS_RIGHT_MASK_WRITE_DG22)),
     /**
      * Right PSA.
      *
@@ -217,7 +230,8 @@ public class AuthenticationTerminals extends BaseAccessRoleAndRights
      * @see ATConstants#ACCESS_RIGHT_INDEX_PSA
      * @see ATConstants#ACCESS_RIGHT_MASK_PSA
      */
-    PSA(new BitIdentifierImpl(ATConstants.ACCESS_RIGHT_NAME_PSA, ATConstants.ACCESS_RIGHT_INDEX_PSA, ATConstants.ACCESS_RIGHT_MASK_PSA)),
+    PSA(new BitIdentifierImpl(ATConstants.ACCESS_RIGHT_NAME_PSA, ATConstants.ACCESS_RIGHT_INDEX_PSA,
+                              ATConstants.ACCESS_RIGHT_MASK_PSA)),
     /**
      * Right Read DG22.
      *
@@ -226,7 +240,8 @@ public class AuthenticationTerminals extends BaseAccessRoleAndRights
      * @see ATConstants#ACCESS_RIGHT_INDEX_READ_DG22
      * @see ATConstants#ACCESS_RIGHT_MASK_READ_DG22
      */
-    READ_DG22(new BitIdentifierImpl(ATConstants.ACCESS_RIGHT_NAME_READ_DG22, ATConstants.ACCESS_RIGHT_INDEX_READ_DG22, ATConstants.ACCESS_RIGHT_MASK_READ_DG22)),
+    READ_DG22(new BitIdentifierImpl(ATConstants.ACCESS_RIGHT_NAME_READ_DG22, ATConstants.ACCESS_RIGHT_INDEX_READ_DG22,
+                                    ATConstants.ACCESS_RIGHT_MASK_READ_DG22)),
     /**
      * Right Read DG21.
      *
@@ -235,7 +250,8 @@ public class AuthenticationTerminals extends BaseAccessRoleAndRights
      * @see ATConstants#ACCESS_RIGHT_INDEX_READ_DG21
      * @see ATConstants#ACCESS_RIGHT_MASK_READ_DG21
      */
-    READ_DG21(new BitIdentifierImpl(ATConstants.ACCESS_RIGHT_NAME_READ_DG21, ATConstants.ACCESS_RIGHT_INDEX_READ_DG21, ATConstants.ACCESS_RIGHT_MASK_READ_DG21)),
+    READ_DG21(new BitIdentifierImpl(ATConstants.ACCESS_RIGHT_NAME_READ_DG21, ATConstants.ACCESS_RIGHT_INDEX_READ_DG21,
+                                    ATConstants.ACCESS_RIGHT_MASK_READ_DG21)),
     /**
      * Right Read DG20.
      *
@@ -244,7 +260,8 @@ public class AuthenticationTerminals extends BaseAccessRoleAndRights
      * @see ATConstants#ACCESS_RIGHT_INDEX_READ_DG20
      * @see ATConstants#ACCESS_RIGHT_MASK_READ_DG20
      */
-    READ_DG20(new BitIdentifierImpl(ATConstants.ACCESS_RIGHT_NAME_READ_DG20, ATConstants.ACCESS_RIGHT_INDEX_READ_DG20, ATConstants.ACCESS_RIGHT_MASK_READ_DG20)),
+    READ_DG20(new BitIdentifierImpl(ATConstants.ACCESS_RIGHT_NAME_READ_DG20, ATConstants.ACCESS_RIGHT_INDEX_READ_DG20,
+                                    ATConstants.ACCESS_RIGHT_MASK_READ_DG20)),
     /**
      * Right Read DG19.
      *
@@ -253,7 +270,8 @@ public class AuthenticationTerminals extends BaseAccessRoleAndRights
      * @see ATConstants#ACCESS_RIGHT_INDEX_READ_DG19
      * @see ATConstants#ACCESS_RIGHT_MASK_READ_DG19
      */
-    READ_DG19(new BitIdentifierImpl(ATConstants.ACCESS_RIGHT_NAME_READ_DG19, ATConstants.ACCESS_RIGHT_INDEX_READ_DG19, ATConstants.ACCESS_RIGHT_MASK_READ_DG19)),
+    READ_DG19(new BitIdentifierImpl(ATConstants.ACCESS_RIGHT_NAME_READ_DG19, ATConstants.ACCESS_RIGHT_INDEX_READ_DG19,
+                                    ATConstants.ACCESS_RIGHT_MASK_READ_DG19)),
     /**
      * Right Read DG18.
      *
@@ -262,7 +280,8 @@ public class AuthenticationTerminals extends BaseAccessRoleAndRights
      * @see ATConstants#ACCESS_RIGHT_INDEX_READ_DG18
      * @see ATConstants#ACCESS_RIGHT_MASK_READ_DG18
      */
-    READ_DG18(new BitIdentifierImpl(ATConstants.ACCESS_RIGHT_NAME_READ_DG18, ATConstants.ACCESS_RIGHT_INDEX_READ_DG18, ATConstants.ACCESS_RIGHT_MASK_READ_DG18)),
+    READ_DG18(new BitIdentifierImpl(ATConstants.ACCESS_RIGHT_NAME_READ_DG18, ATConstants.ACCESS_RIGHT_INDEX_READ_DG18,
+                                    ATConstants.ACCESS_RIGHT_MASK_READ_DG18)),
     /**
      * Right Read DG17.
      *
@@ -271,7 +290,8 @@ public class AuthenticationTerminals extends BaseAccessRoleAndRights
      * @see ATConstants#ACCESS_RIGHT_INDEX_READ_DG17
      * @see ATConstants#ACCESS_RIGHT_MASK_READ_DG17
      */
-    READ_DG17(new BitIdentifierImpl(ATConstants.ACCESS_RIGHT_NAME_READ_DG17, ATConstants.ACCESS_RIGHT_INDEX_READ_DG17, ATConstants.ACCESS_RIGHT_MASK_READ_DG17)),
+    READ_DG17(new BitIdentifierImpl(ATConstants.ACCESS_RIGHT_NAME_READ_DG17, ATConstants.ACCESS_RIGHT_INDEX_READ_DG17,
+                                    ATConstants.ACCESS_RIGHT_MASK_READ_DG17)),
     /**
      * Right Read DG16.
      *
@@ -280,7 +300,8 @@ public class AuthenticationTerminals extends BaseAccessRoleAndRights
      * @see ATConstants#ACCESS_RIGHT_INDEX_READ_DG16
      * @see ATConstants#ACCESS_RIGHT_MASK_READ_DG16
      */
-    READ_DG16(new BitIdentifierImpl(ATConstants.ACCESS_RIGHT_NAME_READ_DG16, ATConstants.ACCESS_RIGHT_INDEX_READ_DG16, ATConstants.ACCESS_RIGHT_MASK_READ_DG16)),
+    READ_DG16(new BitIdentifierImpl(ATConstants.ACCESS_RIGHT_NAME_READ_DG16, ATConstants.ACCESS_RIGHT_INDEX_READ_DG16,
+                                    ATConstants.ACCESS_RIGHT_MASK_READ_DG16)),
     /**
      * Right Read DG15.
      *
@@ -289,7 +310,8 @@ public class AuthenticationTerminals extends BaseAccessRoleAndRights
      * @see ATConstants#ACCESS_RIGHT_INDEX_READ_DG15
      * @see ATConstants#ACCESS_RIGHT_MASK_READ_DG15
      */
-    READ_DG15(new BitIdentifierImpl(ATConstants.ACCESS_RIGHT_NAME_READ_DG15, ATConstants.ACCESS_RIGHT_INDEX_READ_DG15, ATConstants.ACCESS_RIGHT_MASK_READ_DG15)),
+    READ_DG15(new BitIdentifierImpl(ATConstants.ACCESS_RIGHT_NAME_READ_DG15, ATConstants.ACCESS_RIGHT_INDEX_READ_DG15,
+                                    ATConstants.ACCESS_RIGHT_MASK_READ_DG15)),
     /**
      * Right Read DG14.
      *
@@ -298,7 +320,8 @@ public class AuthenticationTerminals extends BaseAccessRoleAndRights
      * @see ATConstants#ACCESS_RIGHT_INDEX_READ_DG14
      * @see ATConstants#ACCESS_RIGHT_MASK_READ_DG14
      */
-    READ_DG14(new BitIdentifierImpl(ATConstants.ACCESS_RIGHT_NAME_READ_DG14, ATConstants.ACCESS_RIGHT_INDEX_READ_DG14, ATConstants.ACCESS_RIGHT_MASK_READ_DG14)),
+    READ_DG14(new BitIdentifierImpl(ATConstants.ACCESS_RIGHT_NAME_READ_DG14, ATConstants.ACCESS_RIGHT_INDEX_READ_DG14,
+                                    ATConstants.ACCESS_RIGHT_MASK_READ_DG14)),
     /**
      * Right Read DG13.
      *
@@ -307,7 +330,8 @@ public class AuthenticationTerminals extends BaseAccessRoleAndRights
      * @see ATConstants#ACCESS_RIGHT_INDEX_READ_DG13
      * @see ATConstants#ACCESS_RIGHT_MASK_READ_DG13
      */
-    READ_DG13(new BitIdentifierImpl(ATConstants.ACCESS_RIGHT_NAME_READ_DG13, ATConstants.ACCESS_RIGHT_INDEX_READ_DG13, ATConstants.ACCESS_RIGHT_MASK_READ_DG13)),
+    READ_DG13(new BitIdentifierImpl(ATConstants.ACCESS_RIGHT_NAME_READ_DG13, ATConstants.ACCESS_RIGHT_INDEX_READ_DG13,
+                                    ATConstants.ACCESS_RIGHT_MASK_READ_DG13)),
     /**
      * Right Read DG12.
      *
@@ -316,7 +340,8 @@ public class AuthenticationTerminals extends BaseAccessRoleAndRights
      * @see ATConstants#ACCESS_RIGHT_INDEX_READ_DG12
      * @see ATConstants#ACCESS_RIGHT_MASK_READ_DG12
      */
-    READ_DG12(new BitIdentifierImpl(ATConstants.ACCESS_RIGHT_NAME_READ_DG12, ATConstants.ACCESS_RIGHT_INDEX_READ_DG12, ATConstants.ACCESS_RIGHT_MASK_READ_DG12)),
+    READ_DG12(new BitIdentifierImpl(ATConstants.ACCESS_RIGHT_NAME_READ_DG12, ATConstants.ACCESS_RIGHT_INDEX_READ_DG12,
+                                    ATConstants.ACCESS_RIGHT_MASK_READ_DG12)),
     /**
      * Right Read DG11.
      *
@@ -325,7 +350,8 @@ public class AuthenticationTerminals extends BaseAccessRoleAndRights
      * @see ATConstants#ACCESS_RIGHT_INDEX_READ_DG11
      * @see ATConstants#ACCESS_RIGHT_MASK_READ_DG11
      */
-    READ_DG11(new BitIdentifierImpl(ATConstants.ACCESS_RIGHT_NAME_READ_DG11, ATConstants.ACCESS_RIGHT_INDEX_READ_DG11, ATConstants.ACCESS_RIGHT_MASK_READ_DG11)),
+    READ_DG11(new BitIdentifierImpl(ATConstants.ACCESS_RIGHT_NAME_READ_DG11, ATConstants.ACCESS_RIGHT_INDEX_READ_DG11,
+                                    ATConstants.ACCESS_RIGHT_MASK_READ_DG11)),
     /**
      * Right Read DG10.
      *
@@ -334,7 +360,8 @@ public class AuthenticationTerminals extends BaseAccessRoleAndRights
      * @see ATConstants#ACCESS_RIGHT_INDEX_READ_DG10
      * @see ATConstants#ACCESS_RIGHT_MASK_READ_DG10
      */
-    READ_DG10(new BitIdentifierImpl(ATConstants.ACCESS_RIGHT_NAME_READ_DG10, ATConstants.ACCESS_RIGHT_INDEX_READ_DG10, ATConstants.ACCESS_RIGHT_MASK_READ_DG10)),
+    READ_DG10(new BitIdentifierImpl(ATConstants.ACCESS_RIGHT_NAME_READ_DG10, ATConstants.ACCESS_RIGHT_INDEX_READ_DG10,
+                                    ATConstants.ACCESS_RIGHT_MASK_READ_DG10)),
     /**
      * Right Read DG9.
      *
@@ -343,7 +370,8 @@ public class AuthenticationTerminals extends BaseAccessRoleAndRights
      * @see ATConstants#ACCESS_RIGHT_INDEX_READ_DG9
      * @see ATConstants#ACCESS_RIGHT_MASK_READ_DG9
      */
-    READ_DG9(new BitIdentifierImpl(ATConstants.ACCESS_RIGHT_NAME_READ_DG9, ATConstants.ACCESS_RIGHT_INDEX_READ_DG9, ATConstants.ACCESS_RIGHT_MASK_READ_DG9)),
+    READ_DG9(new BitIdentifierImpl(ATConstants.ACCESS_RIGHT_NAME_READ_DG9, ATConstants.ACCESS_RIGHT_INDEX_READ_DG9,
+                                   ATConstants.ACCESS_RIGHT_MASK_READ_DG9)),
     /**
      * Right Read DG8.
      *
@@ -352,7 +380,8 @@ public class AuthenticationTerminals extends BaseAccessRoleAndRights
      * @see ATConstants#ACCESS_RIGHT_INDEX_READ_DG8
      * @see ATConstants#ACCESS_RIGHT_MASK_READ_DG8
      */
-    READ_DG8(new BitIdentifierImpl(ATConstants.ACCESS_RIGHT_NAME_READ_DG8, ATConstants.ACCESS_RIGHT_INDEX_READ_DG8, ATConstants.ACCESS_RIGHT_MASK_READ_DG8)),
+    READ_DG8(new BitIdentifierImpl(ATConstants.ACCESS_RIGHT_NAME_READ_DG8, ATConstants.ACCESS_RIGHT_INDEX_READ_DG8,
+                                   ATConstants.ACCESS_RIGHT_MASK_READ_DG8)),
     /**
      * Right Read DG7.
      *
@@ -361,7 +390,8 @@ public class AuthenticationTerminals extends BaseAccessRoleAndRights
      * @see ATConstants#ACCESS_RIGHT_INDEX_READ_DG7
      * @see ATConstants#ACCESS_RIGHT_MASK_READ_DG7
      */
-    READ_DG7(new BitIdentifierImpl(ATConstants.ACCESS_RIGHT_NAME_READ_DG7, ATConstants.ACCESS_RIGHT_INDEX_READ_DG7, ATConstants.ACCESS_RIGHT_MASK_READ_DG7)),
+    READ_DG7(new BitIdentifierImpl(ATConstants.ACCESS_RIGHT_NAME_READ_DG7, ATConstants.ACCESS_RIGHT_INDEX_READ_DG7,
+                                   ATConstants.ACCESS_RIGHT_MASK_READ_DG7)),
     /**
      * Right Read DG6.
      *
@@ -370,7 +400,8 @@ public class AuthenticationTerminals extends BaseAccessRoleAndRights
      * @see ATConstants#ACCESS_RIGHT_INDEX_READ_DG6
      * @see ATConstants#ACCESS_RIGHT_MASK_READ_DG6
      */
-    READ_DG6(new BitIdentifierImpl(ATConstants.ACCESS_RIGHT_NAME_READ_DG6, ATConstants.ACCESS_RIGHT_INDEX_READ_DG6, ATConstants.ACCESS_RIGHT_MASK_READ_DG6)),
+    READ_DG6(new BitIdentifierImpl(ATConstants.ACCESS_RIGHT_NAME_READ_DG6, ATConstants.ACCESS_RIGHT_INDEX_READ_DG6,
+                                   ATConstants.ACCESS_RIGHT_MASK_READ_DG6)),
     /**
      * Right Read DG5.
      *
@@ -379,7 +410,8 @@ public class AuthenticationTerminals extends BaseAccessRoleAndRights
      * @see ATConstants#ACCESS_RIGHT_INDEX_READ_DG5
      * @see ATConstants#ACCESS_RIGHT_MASK_READ_DG5
      */
-    READ_DG5(new BitIdentifierImpl(ATConstants.ACCESS_RIGHT_NAME_READ_DG5, ATConstants.ACCESS_RIGHT_INDEX_READ_DG5, ATConstants.ACCESS_RIGHT_MASK_READ_DG5)),
+    READ_DG5(new BitIdentifierImpl(ATConstants.ACCESS_RIGHT_NAME_READ_DG5, ATConstants.ACCESS_RIGHT_INDEX_READ_DG5,
+                                   ATConstants.ACCESS_RIGHT_MASK_READ_DG5)),
     /**
      * Right Read DG4.
      *
@@ -388,7 +420,8 @@ public class AuthenticationTerminals extends BaseAccessRoleAndRights
      * @see ATConstants#ACCESS_RIGHT_INDEX_READ_DG4
      * @see ATConstants#ACCESS_RIGHT_MASK_READ_DG4
      */
-    READ_DG4(new BitIdentifierImpl(ATConstants.ACCESS_RIGHT_NAME_READ_DG4, ATConstants.ACCESS_RIGHT_INDEX_READ_DG4, ATConstants.ACCESS_RIGHT_MASK_READ_DG4)),
+    READ_DG4(new BitIdentifierImpl(ATConstants.ACCESS_RIGHT_NAME_READ_DG4, ATConstants.ACCESS_RIGHT_INDEX_READ_DG4,
+                                   ATConstants.ACCESS_RIGHT_MASK_READ_DG4)),
     /**
      * Right Read DG3.
      *
@@ -397,7 +430,8 @@ public class AuthenticationTerminals extends BaseAccessRoleAndRights
      * @see ATConstants#ACCESS_RIGHT_INDEX_READ_DG3
      * @see ATConstants#ACCESS_RIGHT_MASK_READ_DG3
      */
-    READ_DG3(new BitIdentifierImpl(ATConstants.ACCESS_RIGHT_NAME_READ_DG3, ATConstants.ACCESS_RIGHT_INDEX_READ_DG3, ATConstants.ACCESS_RIGHT_MASK_READ_DG3)),
+    READ_DG3(new BitIdentifierImpl(ATConstants.ACCESS_RIGHT_NAME_READ_DG3, ATConstants.ACCESS_RIGHT_INDEX_READ_DG3,
+                                   ATConstants.ACCESS_RIGHT_MASK_READ_DG3)),
     /**
      * Right Read DG2.
      *
@@ -406,7 +440,8 @@ public class AuthenticationTerminals extends BaseAccessRoleAndRights
      * @see ATConstants#ACCESS_RIGHT_INDEX_READ_DG2
      * @see ATConstants#ACCESS_RIGHT_MASK_READ_DG2
      */
-    READ_DG2(new BitIdentifierImpl(ATConstants.ACCESS_RIGHT_NAME_READ_DG2, ATConstants.ACCESS_RIGHT_INDEX_READ_DG2, ATConstants.ACCESS_RIGHT_MASK_READ_DG2)),
+    READ_DG2(new BitIdentifierImpl(ATConstants.ACCESS_RIGHT_NAME_READ_DG2, ATConstants.ACCESS_RIGHT_INDEX_READ_DG2,
+                                   ATConstants.ACCESS_RIGHT_MASK_READ_DG2)),
     /**
      * Right Read DG1.
      *
@@ -415,7 +450,8 @@ public class AuthenticationTerminals extends BaseAccessRoleAndRights
      * @see ATConstants#ACCESS_RIGHT_INDEX_READ_DG1
      * @see ATConstants#ACCESS_RIGHT_MASK_READ_DG1
      */
-    READ_DG1(new BitIdentifierImpl(ATConstants.ACCESS_RIGHT_NAME_READ_DG1, ATConstants.ACCESS_RIGHT_INDEX_READ_DG1, ATConstants.ACCESS_RIGHT_MASK_READ_DG1)),
+    READ_DG1(new BitIdentifierImpl(ATConstants.ACCESS_RIGHT_NAME_READ_DG1, ATConstants.ACCESS_RIGHT_INDEX_READ_DG1,
+                                   ATConstants.ACCESS_RIGHT_MASK_READ_DG1)),
     /**
      * Right Install Qualified Certificate.
      *
@@ -424,7 +460,9 @@ public class AuthenticationTerminals extends BaseAccessRoleAndRights
      * @see ATConstants#ACCESS_RIGHT_INDEX_INSTALL_QUALIFIED_CERTIFICATE
      * @see ATConstants#ACCESS_RIGHT_MASK_INSTALL_QUALIFIED_CERTIFICATE
      */
-    INSTALL_QUALIFIED_CERTIFICATE(new BitIdentifierImpl(ATConstants.ACCESS_RIGHT_NAME_INSTALL_QUALIFIED_CERTIFICATE, ATConstants.ACCESS_RIGHT_INDEX_INSTALL_QUALIFIED_CERTIFICATE, ATConstants.ACCESS_RIGHT_MASK_INSTALL_QUALIFIED_CERTIFICATE)),
+    INSTALL_QUALIFIED_CERTIFICATE(new BitIdentifierImpl(ATConstants.ACCESS_RIGHT_NAME_INSTALL_QUALIFIED_CERTIFICATE,
+                                                        ATConstants.ACCESS_RIGHT_INDEX_INSTALL_QUALIFIED_CERTIFICATE,
+                                                        ATConstants.ACCESS_RIGHT_MASK_INSTALL_QUALIFIED_CERTIFICATE)),
     /**
      * Right Install Certificate.
      *
@@ -433,7 +471,9 @@ public class AuthenticationTerminals extends BaseAccessRoleAndRights
      * @see ATConstants#ACCESS_RIGHT_INDEX_INSTALL_CERTIFICATE
      * @see ATConstants#ACCESS_RIGHT_MASK_INSTALL_CERTIFICATE
      */
-    INSTALL_CERTIFICATE(new BitIdentifierImpl(ATConstants.ACCESS_RIGHT_NAME_INSTALL_CERTIFICATE, ATConstants.ACCESS_RIGHT_INDEX_INSTALL_CERTIFICATE, ATConstants.ACCESS_RIGHT_MASK_INSTALL_CERTIFICATE)),
+    INSTALL_CERTIFICATE(new BitIdentifierImpl(ATConstants.ACCESS_RIGHT_NAME_INSTALL_CERTIFICATE,
+                                              ATConstants.ACCESS_RIGHT_INDEX_INSTALL_CERTIFICATE,
+                                              ATConstants.ACCESS_RIGHT_MASK_INSTALL_CERTIFICATE)),
     /**
      * Right PIN Management.
      *
@@ -442,7 +482,9 @@ public class AuthenticationTerminals extends BaseAccessRoleAndRights
      * @see ATConstants#ACCESS_RIGHT_INDEX_PIN_MANAGEMENT
      * @see ATConstants#ACCESS_RIGHT_MASK_PIN_MANAGEMENT
      */
-    PIN_MANAGEMENT(new BitIdentifierImpl(ATConstants.ACCESS_RIGHT_NAME_PIN_MANAGEMENT, ATConstants.ACCESS_RIGHT_INDEX_PIN_MANAGEMENT, ATConstants.ACCESS_RIGHT_MASK_PIN_MANAGEMENT)),
+    PIN_MANAGEMENT(new BitIdentifierImpl(ATConstants.ACCESS_RIGHT_NAME_PIN_MANAGEMENT,
+                                         ATConstants.ACCESS_RIGHT_INDEX_PIN_MANAGEMENT,
+                                         ATConstants.ACCESS_RIGHT_MASK_PIN_MANAGEMENT)),
     /**
      * Right CAN allowed.
      *
@@ -451,7 +493,9 @@ public class AuthenticationTerminals extends BaseAccessRoleAndRights
      * @see ATConstants#ACCESS_RIGHT_INDEX_CAN_ALLOWED
      * @see ATConstants#ACCESS_RIGHT_MASK_CAN_ALLOWED
      */
-    CAN_ALLOWED(new BitIdentifierImpl(ATConstants.ACCESS_RIGHT_NAME_CAN_ALLOWED, ATConstants.ACCESS_RIGHT_INDEX_CAN_ALLOWED, ATConstants.ACCESS_RIGHT_MASK_CAN_ALLOWED)),
+    CAN_ALLOWED(new BitIdentifierImpl(ATConstants.ACCESS_RIGHT_NAME_CAN_ALLOWED,
+                                      ATConstants.ACCESS_RIGHT_INDEX_CAN_ALLOWED,
+                                      ATConstants.ACCESS_RIGHT_MASK_CAN_ALLOWED)),
     /**
      * Right Privileged Terminal.
      *
@@ -460,7 +504,9 @@ public class AuthenticationTerminals extends BaseAccessRoleAndRights
      * @see ATConstants#ACCESS_RIGHT_INDEX_PRIVILEGED_TERMINAL
      * @see ATConstants#ACCESS_RIGHT_MASK_PRIVILEGED_TERMINAL
      */
-    PRIVILEGED_TERMINAL(new BitIdentifierImpl(ATConstants.ACCESS_RIGHT_NAME_PRIVILEGED_TERMINAL, ATConstants.ACCESS_RIGHT_INDEX_PRIVILEGED_TERMINAL, ATConstants.ACCESS_RIGHT_MASK_PRIVILEGED_TERMINAL)),
+    PRIVILEGED_TERMINAL(new BitIdentifierImpl(ATConstants.ACCESS_RIGHT_NAME_PRIVILEGED_TERMINAL,
+                                              ATConstants.ACCESS_RIGHT_INDEX_PRIVILEGED_TERMINAL,
+                                              ATConstants.ACCESS_RIGHT_MASK_PRIVILEGED_TERMINAL)),
     /**
      * Right Restricted Identification.
      *
@@ -469,7 +515,9 @@ public class AuthenticationTerminals extends BaseAccessRoleAndRights
      * @see ATConstants#ACCESS_RIGHT_INDEX_RESTRICTED_IDENTIFICATION
      * @see ATConstants#ACCESS_RIGHT_MASK_RESTRICTED_IDENTIFICATION
      */
-    RESTRICTED_IDENTIFICATION(new BitIdentifierImpl(ATConstants.ACCESS_RIGHT_NAME_RESTRICTED_IDENTIFICATION, ATConstants.ACCESS_RIGHT_INDEX_RESTRICTED_IDENTIFICATION, ATConstants.ACCESS_RIGHT_MASK_RESTRICTED_IDENTIFICATION)),
+    RESTRICTED_IDENTIFICATION(new BitIdentifierImpl(ATConstants.ACCESS_RIGHT_NAME_RESTRICTED_IDENTIFICATION,
+                                                    ATConstants.ACCESS_RIGHT_INDEX_RESTRICTED_IDENTIFICATION,
+                                                    ATConstants.ACCESS_RIGHT_MASK_RESTRICTED_IDENTIFICATION)),
     /**
      * Right Municipality ID Verification.
      *
@@ -478,7 +526,9 @@ public class AuthenticationTerminals extends BaseAccessRoleAndRights
      * @see ATConstants#ACCESS_RIGHT_INDEX_MUNICIPALITY_ID_VERIFICATION
      * @see ATConstants#ACCESS_RIGHT_MASK_MUNICIPALITY_ID_VERIFICATION
      */
-    MUNICIPALITY_ID_VERIFICATION(new BitIdentifierImpl(ATConstants.ACCESS_RIGHT_NAME_MUNICIPALITY_ID_VERIFICATION, ATConstants.ACCESS_RIGHT_INDEX_MUNICIPALITY_ID_VERIFICATION, ATConstants.ACCESS_RIGHT_MASK_MUNICIPALITY_ID_VERIFICATION)),
+    MUNICIPALITY_ID_VERIFICATION(new BitIdentifierImpl(ATConstants.ACCESS_RIGHT_NAME_MUNICIPALITY_ID_VERIFICATION,
+                                                       ATConstants.ACCESS_RIGHT_INDEX_MUNICIPALITY_ID_VERIFICATION,
+                                                       ATConstants.ACCESS_RIGHT_MASK_MUNICIPALITY_ID_VERIFICATION)),
     /**
      * Right Age Verification.
      *
@@ -487,7 +537,9 @@ public class AuthenticationTerminals extends BaseAccessRoleAndRights
      * @see ATConstants#ACCESS_RIGHT_INDEX_AGE_VERIFICATION
      * @see ATConstants#ACCESS_RIGHT_MASK_AGE_VERIFICATION
      */
-    AGE_VERIFICATION(new BitIdentifierImpl(ATConstants.ACCESS_RIGHT_NAME_AGE_VERIFICATION, ATConstants.ACCESS_RIGHT_INDEX_AGE_VERIFICATION, ATConstants.ACCESS_RIGHT_MASK_AGE_VERIFICATION));
+    AGE_VERIFICATION(new BitIdentifierImpl(ATConstants.ACCESS_RIGHT_NAME_AGE_VERIFICATION,
+                                           ATConstants.ACCESS_RIGHT_INDEX_AGE_VERIFICATION,
+                                           ATConstants.ACCESS_RIGHT_MASK_AGE_VERIFICATION));
 
     // identifier
     private BitIdentifier bitIdentifier = null;

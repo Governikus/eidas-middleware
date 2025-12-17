@@ -46,9 +46,24 @@
                         </xs:sequence>
                     </xs:complexType>
                 </xs:element>
+                <xs:element name="SupportData" minOccurs="0">
+                    <xs:complexType>
+                        <xs:sequence>
+                            <xs:element name="KeyPairCertificates" type="tns:KeyPairCertificateDataType" minOccurs="0" maxOccurs="unbounded"/>
+                        </xs:sequence>
+                    </xs:complexType>
+                </xs:element>
             </xs:sequence>
         </xs:complexType>
     </xs:element>
+
+    <!-- KeyPairCertificateDataType for SupportData -->
+    <xs:complexType name="KeyPairCertificateDataType">
+        <xs:sequence>
+            <xs:element name="KeyPair" type="xs:string"/>
+            <xs:element name="Certificate" type="xs:base64Binary"/>
+        </xs:sequence>
+    </xs:complexType>
 
     <!-- Keydata -->
     <xs:complexType name="CertificateType">
@@ -138,6 +153,7 @@
             <xs:element name="TlsEntangleRenewal" type="tns:EntanglementTimerType"/>
             <xs:element name="DaysRefreshRSCBeforeExpires" type="xs:int" minOccurs="0"/>
             <xs:element name="DaysRefreshTlsClientBeforeExpires" type="xs:int" minOccurs="0"/>
+            <xs:element name="HsmKeyDeletion" type="tns:HsmKeyDeletionType"/>
         </xs:sequence>
     </xs:complexType>
 
@@ -156,6 +172,16 @@
             <xs:extension base="tns:TimerType">
                 <xs:sequence>
                     <xs:element name="AutomaticTlsEntangleActive" type="xs:boolean" default="true"/>
+                </xs:sequence>
+            </xs:extension>
+        </xs:complexContent>
+    </xs:complexType>
+
+    <xs:complexType name="HsmKeyDeletionType">
+        <xs:complexContent>
+            <xs:extension base="tns:TimerType">
+                <xs:sequence>
+                    <xs:element name="AutomaticHsmKeyDeletionActive" type="xs:boolean" default="true"/>
                 </xs:sequence>
             </xs:extension>
         </xs:complexContent>

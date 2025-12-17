@@ -24,7 +24,7 @@ public class ConfigKeyDataService
 
   /**
    * Check if a keypair is referenced in the configuration
-   * 
+   *
    * @param keyPairName name of the keypair
    * @return true if the keypair is referenced in any configuration
    */
@@ -62,7 +62,7 @@ public class ConfigKeyDataService
 
   /**
    * Check if a certificate is referenced in the configuration
-   * 
+   *
    * @param certificateName name of the certificate
    * @return true if the certificate is referenced in any configuration
    */

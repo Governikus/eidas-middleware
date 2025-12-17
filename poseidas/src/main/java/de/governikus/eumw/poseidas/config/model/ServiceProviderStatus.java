@@ -54,6 +54,8 @@ public class ServiceProviderStatus
 
   private boolean automaticCvcRenewalFailed;
 
+  private boolean pendingCertificateRequestPresent;
+
   // BLock list
   private boolean blackListPresent;
 
@@ -80,6 +82,8 @@ public class ServiceProviderStatus
   // rsc
 
   private boolean rscAnyPresent;
+
+  private boolean rscCurrentPresent;
 
   private boolean rscPendingPresent;
 

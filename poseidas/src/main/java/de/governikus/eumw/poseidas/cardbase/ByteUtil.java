@@ -1,11 +1,10 @@
 /*
- * Copyright (c) 2020 Governikus KG. Licensed under the EUPL, Version 1.2 or as soon they will be approved by
- * the European Commission - subsequent versions of the EUPL (the "Licence"); You may not use this work except
- * in compliance with the Licence. You may obtain a copy of the Licence at:
- * http://joinup.ec.europa.eu/software/page/eupl Unless required by applicable law or agreed to in writing,
- * software distributed under the Licence is distributed on an "AS IS" basis, WITHOUT WARRANTIES OR CONDITIONS
- * OF ANY KIND, either express or implied. See the Licence for the specific language governing permissions and
- * limitations under the Licence.
+ * Copyright (c) 2020 Governikus KG. Licensed under the EUPL, Version 1.2 or as soon they will be approved by the
+ * European Commission - subsequent versions of the EUPL (the "Licence"); You may not use this work except in compliance
+ * with the Licence. You may obtain a copy of the Licence at: http://joinup.ec.europa.eu/software/page/eupl Unless
+ * required by applicable law or agreed to in writing, software distributed under the Licence is distributed on an
+ * "AS IS" basis, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the Licence for the
+ * specific language governing permissions and limitations under the Licence.
  */
 
 package de.governikus.eumw.poseidas.cardbase;
@@ -98,8 +97,8 @@ public final class ByteUtil
   /**
    * Combine multiple byte-arrays.
    *
-   * @param bytes multiple byte-arrays, <code>null</code> or empty array permitted, <code>null</code> or empty
-   *          array entries permitted
+   * @param bytes multiple byte-arrays, <code>null</code> or empty array permitted, <code>null</code> or empty array
+   *          entries permitted
    * @return new byte-array containing bytes of given byte-arrays, <code>null</code> if array of arrays is
    *         <code>null</code> and {@link Constants#EMPTY_PRIMITIVE_BYTE_ARRAY} if result array is empty
    * @see #count(byte[][])
@@ -179,8 +178,8 @@ public final class ByteUtil
   }
 
   /**
-   * Returns a new byte-array with a sub byte-array of given byte array beginning from given index to the end
-   * of the array.
+   * Returns a new byte-array with a sub byte-array of given byte array beginning from given index to the end of the
+   * array.
    * <p>
    * Notice: similar to {@link String#substring(int)}.
    * </p>
@@ -207,12 +206,12 @@ public final class ByteUtil
    * </p>
    *
    * @param bytes byte-array, <code>null</code> not permitted, empty array permitted
-   * @param beginIndex index to begin sub array, value greater equals <code>0</code> and less equals length or
-   *          array only permitted
-   * @param endIndex index to end sub array, value greater equals <code>0</code> and less equals length or
-   *          array only permitted, end index must be greater equals begin index
-   * @return new created byte-array with sub bytes of byte-array, {@link Constants#EMPTY_PRIMITIVE_BYTE_ARRAY}
-   *         if indices equals
+   * @param beginIndex index to begin sub array, value greater equals <code>0</code> and less equals length or array
+   *          only permitted
+   * @param endIndex index to end sub array, value greater equals <code>0</code> and less equals length or array only
+   *          permitted, end index must be greater equals begin index
+   * @return new created byte-array with sub bytes of byte-array, {@link Constants#EMPTY_PRIMITIVE_BYTE_ARRAY} if
+   *         indices equals
    * @see Constants#EMPTY_PRIMITIVE_BYTE_ARRAY
    * @see String#substring(int, int)
    */
@@ -240,8 +239,7 @@ public final class ByteUtil
     }
     if (beginIndex == bytes.length && endIndex != bytes.length)
     {
-      throw new IllegalArgumentException(
-                                         "if begin index equals length of array, end index expected equals length of array only permitted");
+      throw new IllegalArgumentException("if begin index equals length of array, end index expected equals length of array only permitted");
     }
     if (endIndex < beginIndex)
     {
@@ -261,8 +259,7 @@ public final class ByteUtil
    * Sets bits specified by mask at byte of byte-array specified by byte index.
    *
    * @param bytes byte-array, <code>null</code> or empty array not permitted
-   * @param byteIndex index of byte, index greater equals <code>0</code> and less equals length of byte-array
-   *          permitted
+   * @param byteIndex index of byte, index greater equals <code>0</code> and less equals length of byte-array permitted
    * @param mask bit mask to set
    * @throws IllegalArgumentException if byte-array or byte index not permitted
    * @see #setBits(byte, byte)
@@ -367,8 +364,7 @@ public final class ByteUtil
   /**
    * Returns a byte-array which is the result of a shift left operation (one step) on the input.
    *
-   * @param input array to be shifted, most significant byte at index 0, <code>null</code> or empty not
-   *          permitted
+   * @param input array to be shifted, most significant byte at index 0, <code>null</code> or empty not permitted
    * @return shifted array (as a new array instance, input is unchanged)
    * @throws IllegalArgumentException if input <code>null</code> or empty
    */
@@ -402,8 +398,8 @@ public final class ByteUtil
    *
    * @param bytes byte-array to search, <code>null</code> or empty array permitted
    * @param search byte-array to find, <code>null</code> or empty array permitted
-   * @return last index of byte-array or {@link #INDEX_NOT_FOUND} if not found, an empty array or
-   *         <code>null</code> is found at passed index
+   * @return last index of byte-array or {@link #INDEX_NOT_FOUND} if not found, an empty array or <code>null</code> is
+   *         found at passed index
    * @see #INDEX_NOT_FOUND
    * @see #lastIndexOf(byte[], byte[], int)
    * @see String#lastIndexOf(String)
@@ -426,8 +422,8 @@ public final class ByteUtil
    * @param bytes byte-array to search, <code>null</code> or empty array permitted
    * @param search byte-array to find, <code>null</code> or empty array permitted
    * @param beginIndex index
-   * @return last index of byte-array or {@link #INDEX_NOT_FOUND} if not found, an empty array or
-   *         <code>null</code> is found at passed index
+   * @return last index of byte-array or {@link #INDEX_NOT_FOUND} if not found, an empty array or <code>null</code> is
+   *         found at passed index
    * @see #INDEX_NOT_FOUND
    * @see String#lastIndexOf(String, int)
    */
@@ -439,8 +435,7 @@ public final class ByteUtil
     }
     if (bytes != null && beginIndex > bytes.length)
     {
-      throw new IllegalArgumentException(
-                                         "index for search not permitted greater equals than length of byte-array");
+      throw new IllegalArgumentException("index for search not permitted greater equals than length of byte-array");
     }
     if (bytes == null)
     {
@@ -499,11 +494,11 @@ public final class ByteUtil
    *
    * @param bytes byte-array, <code>null</code> not permitted, empty array permitted
    * @param fillByte fill byte
-   * @param beginIndex index to start fill, index less equals than <code>0</code> not permitted, index greater
-   *          than length of byte-array not permitted
-   * @param endIndex index to end fill, index less equals than <code>0</code> not permitted, index greater
-   *          than length of byte-array not permitted, if beginIndex equals length of byte-array only length
-   *          of byte.array permitted, end index greater equals begin index permitted only
+   * @param beginIndex index to start fill, index less equals than <code>0</code> not permitted, index greater than
+   *          length of byte-array not permitted
+   * @param endIndex index to end fill, index less equals than <code>0</code> not permitted, index greater than length
+   *          of byte-array not permitted, if beginIndex equals length of byte-array only length of byte.array
+   *          permitted, end index greater equals begin index permitted only
    * @throws IllegalArgumentException if byte-array <code>null</code>, indices not permitted
    */
   public static final void fill(byte[] bytes, byte fillByte, int beginIndex, int endIndex)
@@ -530,8 +525,7 @@ public final class ByteUtil
     }
     if (beginIndex == bytes.length && endIndex != bytes.length)
     {
-      throw new IllegalArgumentException(
-                                         "if begin index equals length of array, end index expected equals length of array");
+      throw new IllegalArgumentException("if begin index equals length of array, end index expected equals length of array");
     }
     if (endIndex < beginIndex)
     {
@@ -547,9 +541,9 @@ public final class ByteUtil
    * Checks byte-array and index of byte.
    *
    * @param bytes byte-array, <code>null</code> or empty array not permitted
-   * @param byteIndex index of byte, index greater equals <code>0</code> and less length of byte-array
-   *          permitted or index greater equals <code>0</code> and less equals length of byte-array permitted
-   *          according to lengthOfArrayExcluded value
+   * @param byteIndex index of byte, index greater equals <code>0</code> and less length of byte-array permitted or
+   *          index greater equals <code>0</code> and less equals length of byte-array permitted according to
+   *          lengthOfArrayExcluded value
    * @param lengthOfArrayExcluded <code>true</code>, if byte index less than length of array permitted,
    *          <code>false</code>, if byte index less equals length of array permitted
    * @throws IllegalArgumentException if byte-array or byte index not permitted
@@ -653,8 +647,8 @@ public final class ByteUtil
   }
 
   /**
-   * Check array of bit indices - every index of bit must be between minimum 0 - {@link #MINIMUM_BIT_INDEX}
-   * and maximum 7 - {@link ByteConstants#MINIMUM_BIT_INDEX}.
+   * Check array of bit indices - every index of bit must be between minimum 0 - {@link #MINIMUM_BIT_INDEX} and maximum
+   * 7 - {@link ByteConstants#MINIMUM_BIT_INDEX}.
    *
    * @param indices bit indices
    * @throws IllegalArgumentException if one index not permitted
@@ -675,8 +669,8 @@ public final class ByteUtil
   }
 
   /**
-   * Checks given index of bit must be between minimum 0 - {@link ByteConstants#MINIMUM_BIT_INDEX} and maximum
-   * 7 - {@link ByteConstants#MINIMUM_BIT_INDEX}.
+   * Checks given index of bit must be between minimum 0 - {@link ByteConstants#MINIMUM_BIT_INDEX} and maximum 7 -
+   * {@link ByteConstants#MINIMUM_BIT_INDEX}.
    *
    * @param index index of bit
    * @throws IllegalArgumentException if index not permitted
@@ -696,8 +690,8 @@ public final class ByteUtil
   }
 
   /**
-   * Trim byte array containing integer to required length (cutting or extending if required) without changing
-   * integer value.
+   * Trim byte array containing integer to required length (cutting or extending if required) without changing integer
+   * value.
    *
    * @param tmp bytes to trim, <code>null</code> or empty not permitted
    * @param trimLen length to trim to, must be (tmp.length-1) or higher

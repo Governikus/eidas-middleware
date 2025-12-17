@@ -140,6 +140,15 @@
                                         Renew this CVC
                                     </button>
                                 </form>
+                                <form action="#" method=get  id="delete-pending-certificate-request-form"
+                                      th:action="@{'/admin-interface/details/deletePendingCertificateRequest'}"
+                                      th:if="${entity.getServiceProviderStatus().isPendingCertificateRequestPresent() == true}">
+                                    <input hidden name="entityid" type="text" th:value="${entityID}">
+                                    <button style="margin-top: 10px;" type="submit" class="btn btn-primary w-100" value="Delete pending certificate request"
+                                            id="delete-pending-certificate-request-button">
+                                        Delete pending certificate request
+                                    </button>
+                                </form>
                             </div>
                         </div>
                     </div>
@@ -270,6 +279,14 @@
                                         <input hidden name="entityid" type="text" th:value="${entityID}">
                                         <button type="submit" class="btn btn-primary w-100"
                                                 value="Delete Pending RSC" id="delete-pending-rsc-button">Delete Pending RSC
+                                        </button>
+                                    </form>
+                                    <form action="#" method=get
+                                          th:action="@{'/admin-interface/details/deleteCurrentRSC'}"
+                                          th:if="${entity.serviceProviderStatus.getRscCurrentValidUntil() != null}">
+                                        <input hidden name="entityid" type="text" th:value="${entityID}">
+                                        <button type="submit" class="btn btn-primary w-100"
+                                                value="Delete Current RSC" id="delete-current-rsc-button">Delete Current RSC
                                         </button>
                                     </form>
                                 </div>

@@ -53,7 +53,7 @@ public class TimerHistoryService
 
   /**
    * Reads all {@link TimerHistory} entities from the database by the timerType.
-   * 
+   *
    * @param timerType The type of the timer
    *          ({@link de.governikus.eumw.poseidas.server.pki.entities.TimerHistory.TimerType}).
    * @return List of all stored {@link TimerHistory} entities for the timerType.

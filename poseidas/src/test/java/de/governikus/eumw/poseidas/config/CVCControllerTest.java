@@ -43,6 +43,7 @@ import com.gargoylesoftware.htmlunit.html.HtmlPage;
 import de.governikus.eumw.poseidas.config.base.TestConfiguration;
 import de.governikus.eumw.poseidas.config.model.ServiceProviderStatus;
 import de.governikus.eumw.poseidas.gov2server.constants.admin.GlobalManagementCodes;
+import de.governikus.eumw.poseidas.gov2server.GovManagementException;
 import de.governikus.eumw.poseidas.server.pki.RequestSignerCertificateService;
 import de.governikus.eumw.poseidas.server.pki.ServiceProviderStatusService;
 import de.governikus.eumw.poseidas.server.pki.TlsClientRenewalService;
@@ -69,11 +70,10 @@ class CVCControllerTest extends ServiceProviderTestBase
 
 
   @BeforeEach
-  public void setUp() throws Exception
+  void setUp() throws Exception
   {
     Mockito.when(configurationService.getConfiguration()).thenReturn(createConfiguration());
-    Mockito.when(data.getPermissionDataInfo(Mockito.anyString(), Mockito.anyBoolean()))
-           .thenReturn(createPermissionDataInfo());
+    Mockito.when(data.getPermissionDataInfo(Mockito.anyString())).thenReturn(createPermissionDataInfo());
     serviceProviderStatus = createServiceProviderStatus();
     Mockito.when(serviceProviderStatusService.getServiceProviderStatus(Mockito.any()))
            .thenReturn(serviceProviderStatus);
@@ -322,10 +322,10 @@ class CVCControllerTest extends ServiceProviderTestBase
     LocalDate validUntil = LocalDate.now().minusYears(1);
     ServiceProviderStatus serviceProviderStatus = ServiceProviderStatus.builder()
                                                                        .rscAnyPresent(true)
+                                                                       .rscCurrentPresent(true)
                                                                        .rscPendingPresent(false)
                                                                        .canGenerateAndSendRsc(true)
                                                                        .canSendPendingRsc(false)
-                                                                       .rscPendingPresent(false)
                                                                        .rscCurrentValidUntil(validUntil)
                                                                        .build();
     Mockito.when(serviceProviderStatusService.getServiceProviderStatus(Mockito.any()))
@@ -345,6 +345,7 @@ class CVCControllerTest extends ServiceProviderTestBase
     validUntil = LocalDate.now();
     serviceProviderStatus = ServiceProviderStatus.builder()
                                                  .rscAnyPresent(true)
+                                                 .rscCurrentPresent(true)
                                                  .rscPendingPresent(false)
                                                  .canGenerateAndSendRsc(true)
                                                  .canSendPendingRsc(false)
@@ -360,6 +361,8 @@ class CVCControllerTest extends ServiceProviderTestBase
     htmlForm = serviceProviderPage.getElementById("delete-pending-rsc-button");
     Assertions.assertNull(htmlForm);
     htmlForm = serviceProviderPage.getElementById("download-rsc-button");
+    Assertions.assertNotNull(htmlForm);
+    htmlForm = serviceProviderPage.getElementById("delete-current-rsc-button");
     Assertions.assertNotNull(htmlForm);
     HtmlPage generatedRSCPage = submitFormById(serviceProviderPage, "generate-send-rsc-button");
     rscInfoTable = (HtmlDivision)generatedRSCPage.getElementById("rsc-info-table");
@@ -378,6 +381,7 @@ class CVCControllerTest extends ServiceProviderTestBase
     LocalDate validUntil = LocalDate.now().minusYears(1);
     ServiceProviderStatus serviceProviderStatus = ServiceProviderStatus.builder()
                                                                        .rscAnyPresent(true)
+                                                                       .rscCurrentPresent(true)
                                                                        .rscPendingPresent(false)
                                                                        .canGenerateAndSendRsc(true)
                                                                        .canSendPendingRsc(false)
@@ -400,6 +404,7 @@ class CVCControllerTest extends ServiceProviderTestBase
     Mockito.when(requestSignerCertificateService.renewRSC(Mockito.anyString())).thenReturn(Optional.of("WURST"));
     serviceProviderStatus = ServiceProviderStatus.builder()
                                                  .rscAnyPresent(true)
+                                                 .rscCurrentPresent(true)
                                                  .rscPendingPresent(true)
                                                  .canGenerateAndSendRsc(false)
                                                  .canSendPendingRsc(true)
@@ -421,6 +426,8 @@ class CVCControllerTest extends ServiceProviderTestBase
     Assertions.assertNotNull(htmlForm);
     htmlForm = generatedRSCPage.getElementById("generate-send-rsc-button");
     Assertions.assertNull(htmlForm);
+    htmlForm = generatedRSCPage.getElementById("delete-current-rsc-button");
+    Assertions.assertNotNull(htmlForm);
     htmlForm = generatedRSCPage.getElementById("delete-pending-rsc-button");
     Assertions.assertNotNull(htmlForm);
     htmlForm = generatedRSCPage.getElementById("download-rsc-button");
@@ -431,6 +438,7 @@ class CVCControllerTest extends ServiceProviderTestBase
     Mockito.when(requestSignerCertificateService.deletePendingRSC(Mockito.anyString())).thenReturn(Optional.empty());
     serviceProviderStatus = ServiceProviderStatus.builder()
                                                  .rscAnyPresent(true)
+                                                 .rscCurrentPresent(true)
                                                  .rscPendingPresent(false)
                                                  .canGenerateAndSendRsc(true)
                                                  .canSendPendingRsc(false)
@@ -451,6 +459,80 @@ class CVCControllerTest extends ServiceProviderTestBase
     Assertions.assertNotNull(htmlForm);
     assertMessageAlert(deletePendingRsc, "Pending request signer certificate successfully deleted");
     Assertions.assertNotNull(htmlForm);
+  }
+
+  @Test
+  void testDeleteCurrentRSC() throws IOException
+  {
+    LocalDate validUntil = LocalDate.now().plusYears(1);
+    ServiceProviderStatus serviceProviderStatusDeleteRsc = ServiceProviderStatus.builder()
+                                                                                .rscAnyPresent(true)
+                                                                                .rscCurrentPresent(true)
+                                                                                .rscPendingPresent(false)
+                                                                                .canGenerateAndSendRsc(true)
+                                                                                .canSendPendingRsc(false)
+                                                                                .rscCurrentValidUntil(validUntil)
+                                                                                .build();
+    Mockito.when(serviceProviderStatusService.getServiceProviderStatus(Mockito.any()))
+           .thenReturn(serviceProviderStatusDeleteRsc);
+
+    HtmlPage serviceProviderPage = getServiceProviderPage();
+    // Check the data for RSC
+    HtmlDivision rscInfoTable = (HtmlDivision)serviceProviderPage.getElementById("rsc-info-table");
+    Map<String, String> rscInfoMap = new HashMap<>();
+    getInfoFromTable(rscInfoMap, rscInfoTable);
+    Assertions.assertEquals(3, rscInfoMap.size());
+    Assertions.assertEquals("✔", rscInfoMap.get("Is RSC in use:"));
+    Assertions.assertEquals("❌", rscInfoMap.get("RSC pending"));
+    Assertions.assertEquals(validUntil.format(DateTimeFormatter.ISO_DATE), rscInfoMap.get("Valid until:"));
+
+    Mockito.when(requestSignerCertificateService.deleteCurrentRSC(Mockito.anyString()))
+           .thenReturn(Optional.of("WURST"));
+
+    serviceProviderStatusDeleteRsc = ServiceProviderStatus.builder()
+                                                          .rscAnyPresent(true)
+                                                          .rscCurrentPresent(true)
+                                                          .rscPendingPresent(false)
+                                                          .canGenerateAndSendRsc(true)
+                                                          .canSendPendingRsc(false)
+                                                          .rscCurrentValidUntil(validUntil)
+                                                          .build();
+
+    Mockito.when(serviceProviderStatusService.getServiceProviderStatus(Mockito.any()))
+           .thenReturn(serviceProviderStatusDeleteRsc);
+
+    HtmlPage deleteCurrentRsc = submitFormById(serviceProviderPage, "delete-current-rsc-button");
+    rscInfoTable = (HtmlDivision)deleteCurrentRsc.getElementById("rsc-info-table");
+    getInfoFromTable(rscInfoMap, rscInfoTable);
+    Assertions.assertEquals(3, rscInfoMap.size());
+    Assertions.assertEquals("✔", rscInfoMap.get("Is RSC in use:"));
+    Assertions.assertEquals("❌", rscInfoMap.get("RSC pending"));
+    Assertions.assertEquals(validUntil.format(DateTimeFormatter.ISO_DATE), rscInfoMap.get("Valid until:"));
+    assertErrorAlert(deleteCurrentRsc, "Deleting of current request signer certificate failed");
+
+    Mockito.when(requestSignerCertificateService.deleteCurrentRSC(Mockito.anyString())).thenReturn(Optional.empty());
+
+    serviceProviderStatusDeleteRsc = ServiceProviderStatus.builder()
+                                                          .rscAnyPresent(false)
+                                                          .rscCurrentPresent(false)
+                                                          .rscPendingPresent(false)
+                                                          .canGenerateAndSendRsc(false)
+                                                          .canSendPendingRsc(false)
+                                                          .rscCurrentValidUntil(null)
+                                                          .build();
+
+    Mockito.when(serviceProviderStatusService.getServiceProviderStatus(Mockito.any()))
+           .thenReturn(serviceProviderStatusDeleteRsc);
+
+    deleteCurrentRsc = submitFormById(serviceProviderPage, "delete-current-rsc-button");
+    rscInfoTable = (HtmlDivision)deleteCurrentRsc.getElementById("rsc-info-table");
+    getInfoFromTable(rscInfoMap, rscInfoTable);
+    Assertions.assertEquals(3, rscInfoMap.size());
+    Assertions.assertEquals("❌", rscInfoMap.get("Is RSC in use:"));
+    Assertions.assertEquals("❌", rscInfoMap.get("RSC pending"));
+    Assertions.assertEquals("", rscInfoMap.get("Valid until:"));
+    assertMessageAlert(deleteCurrentRsc, "Current request signer certificate successfully deleted");
+
   }
 
   @Test
@@ -604,4 +686,36 @@ class CVCControllerTest extends ServiceProviderTestBase
     Mockito.verify(tlsClientRenewalService, Mockito.atLeastOnce()).fetchCertificate(SERVICE_PROVIDER);
     assertMessageAlert(pullCertificatePage, "Poll of TLS client certificate was successful.");
   }
+
+  @Test
+  @DisplayName("test Delete_Pending_Certificate_Request is successful")
+  void testDeletePendingCertificateRequestSuccessfully() throws GovManagementException, IOException
+  {
+    Mockito.when(data.deletePendingCertificateRequest(Mockito.anyString())).thenReturn(Optional.empty());
+    HtmlPage serviceProviderPage = getServiceProviderPage();
+
+    DomElement htmlForm = serviceProviderPage.getElementById("delete-pending-certificate-request-button");
+    Assertions.assertNotNull(htmlForm);
+
+    HtmlPage deletePendingCertRequestPage = (HtmlPage)click(serviceProviderPage,
+                                                            "delete-pending-certificate-request-button");
+    assertMessageAlert(deletePendingCertRequestPage, "Pending Certificate Request successfully deleted");
+  }
+
+  @Test
+  @DisplayName("test Delete_Pending_Certificate_Request fails with message")
+  void testDeletePendingCertificateRequestFailed() throws GovManagementException, IOException
+  {
+    Mockito.when(data.deletePendingCertificateRequest(Mockito.anyString()))
+           .thenReturn(Optional.of(GlobalManagementCodes.INTERNAL_ERROR.createMessage().toString()));
+    HtmlPage serviceProviderPage = getServiceProviderPage();
+
+    DomElement htmlForm = serviceProviderPage.getElementById("delete-pending-certificate-request-button");
+    Assertions.assertNotNull(htmlForm);
+
+    HtmlPage deletePendingCertRequestPage = (HtmlPage)click(serviceProviderPage,
+                                                            "delete-pending-certificate-request-button");
+    assertErrorAlert(deletePendingCertRequestPage, "Deletion of pending certificate request has failed");
+  }
+
 }

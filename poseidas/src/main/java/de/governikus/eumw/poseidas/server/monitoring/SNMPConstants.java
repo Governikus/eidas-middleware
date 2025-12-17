@@ -92,6 +92,8 @@ public final class SNMPConstants
 
   public static final int RSC_CURRENT_CERTIFICATE_VALID_UNTIL = 62;
 
+  public static final int TLS_CLIENT_CERTIFICATE_VALID_UNTIL = 71;
+
   /* Status for RSC set to current */
   public static final int RSC_SET_CURRENT = 0;
 
@@ -125,6 +127,7 @@ public final class SNMPConstants
   @AllArgsConstructor(access = AccessLevel.PRIVATE)
   public enum TrapOID
   {
+
     // types:
     TRAP_TYPE_MESSAGE(TRAP_TYPE_PREFIX + "1"),
     TRAP_TYPE_INT(TRAP_TYPE_PREFIX + "2"),
@@ -162,6 +165,7 @@ public final class SNMPConstants
   @AllArgsConstructor(access = AccessLevel.PRIVATE)
   public enum GetOID
   {
+
     // global
     CRL_GET_AVAILABLE(GLOBAL_PREFIX + CRL_PREFIX + "1"),
     CRL_GET_LAST_SUCCESSFUL_RETRIEVAL(GLOBAL_PREFIX + CRL_PREFIX + "2"),
@@ -192,7 +196,9 @@ public final class SNMPConstants
     DEFECTLIST_GET_DVCA_AVAILABILITY(PROVIDER_SPECIFIC_PREFIX + DEFECTLIST_DVCA_AVAILABILITY),
 
     RSC_GET_PENDING_AVAILABLE(PROVIDER_SPECIFIC_PREFIX + RSC_PENDING_AVAILABLE),
-    RSC_GET_CURRENT_CERTIFICATE_VALID_UNTIL(PROVIDER_SPECIFIC_PREFIX + RSC_CURRENT_CERTIFICATE_VALID_UNTIL);
+    RSC_GET_CURRENT_CERTIFICATE_VALID_UNTIL(PROVIDER_SPECIFIC_PREFIX + RSC_CURRENT_CERTIFICATE_VALID_UNTIL),
+
+    TLS_GET_CLIENT_CERTIFICATE_VALID_UNTIL(PROVIDER_SPECIFIC_PREFIX + TLS_CLIENT_CERTIFICATE_VALID_UNTIL);
 
     @Getter
     private String value;
@@ -217,7 +223,7 @@ public final class SNMPConstants
 
     /**
      * Gets the OID as org.snmp4j.smi.OID.
-     * 
+     *
      * @return
      */
     public OID toSNMPOid()

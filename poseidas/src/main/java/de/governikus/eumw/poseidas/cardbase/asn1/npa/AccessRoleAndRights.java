@@ -1,11 +1,10 @@
 /*
- * Copyright (c) 2020 Governikus KG. Licensed under the EUPL, Version 1.2 or as soon they will be approved by
- * the European Commission - subsequent versions of the EUPL (the "Licence"); You may not use this work except
- * in compliance with the Licence. You may obtain a copy of the Licence at:
- * http://joinup.ec.europa.eu/software/page/eupl Unless required by applicable law or agreed to in writing,
- * software distributed under the Licence is distributed on an "AS IS" basis, WITHOUT WARRANTIES OR CONDITIONS
- * OF ANY KIND, either express or implied. See the Licence for the specific language governing permissions and
- * limitations under the Licence.
+ * Copyright (c) 2020 Governikus KG. Licensed under the EUPL, Version 1.2 or as soon they will be approved by the
+ * European Commission - subsequent versions of the EUPL (the "Licence"); You may not use this work except in compliance
+ * with the Licence. You may obtain a copy of the Licence at: http://joinup.ec.europa.eu/software/page/eupl Unless
+ * required by applicable law or agreed to in writing, software distributed under the Licence is distributed on an
+ * "AS IS" basis, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the Licence for the
+ * specific language governing permissions and limitations under the Licence.
  */
 
 package de.governikus.eumw.poseidas.cardbase.asn1.npa;
@@ -21,8 +20,7 @@ import de.governikus.eumw.poseidas.cardbase.asn1.ASN1;
 
 
 /**
- * Abstract base for access role and rights implementation used by
- * {@link CertificateHolderAuthorizationTemplate}.
+ * Abstract base for access role and rights implementation used by {@link CertificateHolderAuthorizationTemplate}.
  *
  * @see BaseAccessRoleAndRights
  * @see InspectionSystems
@@ -95,9 +93,8 @@ public abstract class AccessRoleAndRights extends ASN1
    * @see AccessRoleAndRights#ACCESS_ROLE_MASK
    * @see AccessRoleAndRights#ACCESS_ROLE_CVCA_MASK
    */
-  static final BitIdentifier IDENTIFIER_CVCA = new BitIdentifierImpl(ACCESS_ROLE_NAME_CVCA,
-                                                                     ACCESS_ROLE_BYTE_INDEX, ACCESS_ROLE_MASK,
-                                                                     ACCESS_ROLE_CVCA_MASK);
+  static final BitIdentifier IDENTIFIER_CVCA = new BitIdentifierImpl(ACCESS_ROLE_NAME_CVCA, ACCESS_ROLE_BYTE_INDEX,
+                                                                     ACCESS_ROLE_MASK, ACCESS_ROLE_CVCA_MASK);
 
   // list of defined access roles
   private final List<BitIdentifier> definedAccessRolesIdentifierList;
@@ -116,10 +113,9 @@ public abstract class AccessRoleAndRights extends ASN1
    *
    * @param bytes bytes of
    * @param valueByteCount count of value bytes expected by implementation
-   * @param definedAccessRolesIdentifierList list of defined access roles, <code>null</code> or empty list not
+   * @param definedAccessRolesIdentifierList list of defined access roles, <code>null</code> or empty list not permitted
+   * @param definedAccessRightsIdentifierList list of defined access rights, <code>null</code> or empty list not
    *          permitted
-   * @param definedAccessRightsIdentifierList list of defined access rights, <code>null</code> or empty list
-   *          not permitted
    * @throws IOException if reading of stream fails
    * @see ASN1#ASN1(byte[])
    */
@@ -131,9 +127,7 @@ public abstract class AccessRoleAndRights extends ASN1
   {
     // init ASN.1
     super(bytes);
-    AssertUtil.equals(new BigInteger(new byte[]{ASN1EidConstants.TAG_DISCRETIONARY_DATA}),
-                      super.getTag(),
-                      "tag");
+    AssertUtil.equals(new BigInteger(new byte[]{ASN1EidConstants.TAG_DISCRETIONARY_DATA}), super.getTag(), "tag");
     // check count of bytes
     if (super.getValue() == null || super.getValue().length != valueByteCount)
     {

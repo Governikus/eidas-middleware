@@ -1,11 +1,10 @@
 /*
- * Copyright (c) 2020 Governikus KG. Licensed under the EUPL, Version 1.2 or as soon they will be approved by
- * the European Commission - subsequent versions of the EUPL (the "Licence"); You may not use this work except
- * in compliance with the Licence. You may obtain a copy of the Licence at:
- * http://joinup.ec.europa.eu/software/page/eupl Unless required by applicable law or agreed to in writing,
- * software distributed under the Licence is distributed on an "AS IS" basis, WITHOUT WARRANTIES OR CONDITIONS
- * OF ANY KIND, either express or implied. See the Licence for the specific language governing permissions and
- * limitations under the Licence.
+ * Copyright (c) 2020 Governikus KG. Licensed under the EUPL, Version 1.2 or as soon they will be approved by the
+ * European Commission - subsequent versions of the EUPL (the "Licence"); You may not use this work except in compliance
+ * with the Licence. You may obtain a copy of the Licence at: http://joinup.ec.europa.eu/software/page/eupl Unless
+ * required by applicable law or agreed to in writing, software distributed under the Licence is distributed on an
+ * "AS IS" basis, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the Licence for the
+ * specific language governing permissions and limitations under the Licence.
  */
 
 package de.governikus.eumw.poseidas.cardbase.asn1.npa;
@@ -39,8 +38,8 @@ public class CertificateDescription extends AbstractASN1Encoder
   /**
    * Sets OID.
    *
-   * @param oid OID as String, normally "0.4.0.127.0.7.3.1.3.1" as defined at TC-03110 (version 2.02) in
-   *          appendix C.3.1, <code>null</code> not permitted
+   * @param oid OID as String, normally "0.4.0.127.0.7.3.1.3.1" as defined at TC-03110 (version 2.02) in appendix C.3.1,
+   *          <code>null</code> not permitted
    * @throws UnsupportedOperationException if adding child not supported
    * @throws IOException if internal recoding fails
    * @throws IllegalArgumentException if argument <code>null</code>
@@ -69,7 +68,8 @@ public class CertificateDescription extends AbstractASN1Encoder
     super.removeChildElement(this.getChildElementByPath(CertificateDescriptionPath.SUBJECT_NAME_PART), null);
     this.addChildElement(new ASN1(CertificateDescriptionPath.SUBJECT_NAME_PART.getTag().toByteArray(),
                                   new ASN1(CertificateDescriptionPath.SUBJECT_NAME.getTag().toByteArray(),
-                                           subject.getBytes(StandardCharsets.UTF_8)).getEncoded()), null);
+                                           subject.getBytes(StandardCharsets.UTF_8)).getEncoded()),
+                         null);
   }
 
   /**
@@ -88,7 +88,8 @@ public class CertificateDescription extends AbstractASN1Encoder
     super.removeChildElement(this.getChildElementByPath(CertificateDescriptionPath.SUBJECT_URL_PART), null);
     this.addChildElement(new ASN1(CertificateDescriptionPath.SUBJECT_URL_PART.getTag().toByteArray(),
                                   new ASN1(CertificateDescriptionPath.SUBJECT_URL.getTag().toByteArray(),
-                                           subjectURL.getBytes(StandardCharsets.UTF_8)).getEncoded()), null);
+                                           subjectURL.getBytes(StandardCharsets.UTF_8)).getEncoded()),
+                         null);
   }
 
   /**
@@ -107,7 +108,8 @@ public class CertificateDescription extends AbstractASN1Encoder
     super.removeChildElement(this.getChildElementByPath(CertificateDescriptionPath.ISSUER_NAME_PART), null);
     this.addChildElement(new ASN1(CertificateDescriptionPath.ISSUER_NAME_PART.getTag().toByteArray(),
                                   new ASN1(CertificateDescriptionPath.ISSUER_NAME.getTag().toByteArray(),
-                                           issuer.getBytes(StandardCharsets.UTF_8)).getEncoded()), null);
+                                           issuer.getBytes(StandardCharsets.UTF_8)).getEncoded()),
+                         null);
   }
 
   /**
@@ -126,7 +128,8 @@ public class CertificateDescription extends AbstractASN1Encoder
     super.removeChildElement(this.getChildElementByPath(CertificateDescriptionPath.ISSUER_URL_PART), null);
     this.addChildElement(new ASN1(CertificateDescriptionPath.ISSUER_URL_PART.getTag().toByteArray(),
                                   new ASN1(CertificateDescriptionPath.ISSUER_URL.getTag().toByteArray(),
-                                           issuerURL.getBytes(StandardCharsets.UTF_8)).getEncoded()), null);
+                                           issuerURL.getBytes(StandardCharsets.UTF_8)).getEncoded()),
+                         null);
   }
 
   /**
@@ -145,28 +148,27 @@ public class CertificateDescription extends AbstractASN1Encoder
     super.removeChildElement(this.getChildElementByPath(CertificateDescriptionPath.REDIRECT_URL_PART), null);
     this.addChildElement(new ASN1(CertificateDescriptionPath.REDIRECT_URL_PART.getTag().toByteArray(),
                                   new ASN1(CertificateDescriptionPath.REDIRECT_URL.getTag().toByteArray(),
-                                           redirectURL.getBytes(StandardCharsets.UTF_8)).getEncoded()), null);
+                                           redirectURL.getBytes(StandardCharsets.UTF_8)).getEncoded()),
+                         null);
   }
 
   /**
    * Sets communication certificates.
    *
-   * @param commCertificates byte-array containing subsequent ASN.1-encoded octet strings, each of which is
-   *          the hash of one communication certificate, <code>null</code> or empty not permitted
+   * @param commCertificates byte-array containing subsequent ASN.1-encoded octet strings, each of which is the hash of
+   *          one communication certificate, <code>null</code> or empty not permitted
    * @throws UnsupportedOperationException
    * @throws IOException
    * @throws IllegalArgumentException if argument <code>null</code> or empty
    */
-  public final synchronized void setCommCertificates(byte[] commCertificates)
-    throws IOException
+  public final synchronized void setCommCertificates(byte[] commCertificates) throws IOException
   {
     AssertUtil.notNullOrEmpty(commCertificates, "communication certificate hashes");
-    super.removeChildElement(this.getChildElementByPath(CertificateDescriptionPath.COMM_CERTIFICATES_PART),
-                             null);
+    super.removeChildElement(this.getChildElementByPath(CertificateDescriptionPath.COMM_CERTIFICATES_PART), null);
     this.addChildElement(new ASN1(CertificateDescriptionPath.COMM_CERTIFICATES_PART.getTag().toByteArray(),
-                                  new ASN1(CertificateDescriptionPath.COMM_CERTIFICATES.getTag()
-                                                                                       .toByteArray(),
-                                           commCertificates).getEncoded()), null);
+                                  new ASN1(CertificateDescriptionPath.COMM_CERTIFICATES.getTag().toByteArray(),
+                                           commCertificates).getEncoded()),
+                         null);
   }
 
   /**
@@ -192,8 +194,7 @@ public class CertificateDescription extends AbstractASN1Encoder
    */
   private void check()
   {
-    if (!Arrays.equals(CertificateDescriptionPath.CERTIFICATE_DESCRIPTION.getTag().toByteArray(),
-                       this.getDTagBytes()))
+    if (!Arrays.equals(CertificateDescriptionPath.CERTIFICATE_DESCRIPTION.getTag().toByteArray(), this.getDTagBytes()))
     {
       throw new IllegalArgumentException("ASN.1 does not represent a certificate description");
     }

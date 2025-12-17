@@ -35,12 +35,15 @@ import de.governikus.eumw.poseidas.server.pki.entities.CertInChain;
 import de.governikus.eumw.poseidas.server.pki.entities.CertInChainPK;
 import de.governikus.eumw.poseidas.server.pki.entities.ChangeKeyLock;
 import de.governikus.eumw.poseidas.server.pki.entities.PendingCertificateRequest;
+import de.governikus.eumw.poseidas.server.pki.entities.RequestSignerCertificate;
 import de.governikus.eumw.poseidas.server.pki.entities.TerminalPermission;
 import de.governikus.eumw.poseidas.server.pki.repositories.CVCUpdateLockRepository;
 import de.governikus.eumw.poseidas.server.pki.repositories.CertInChainRepository;
 import de.governikus.eumw.poseidas.server.pki.repositories.ChangeKeyLockRepository;
 import de.governikus.eumw.poseidas.server.pki.repositories.PendingCertificateRequestRepository;
+import de.governikus.eumw.poseidas.server.pki.repositories.RequestSignerCertificateRepository;
 import de.governikus.eumw.poseidas.server.pki.repositories.TerminalPermissionRepository;
+
 import lombok.SneakyThrows;
 
 
@@ -657,5 +660,86 @@ class TerminalPermissionAOBeanTest
     // No public SP in config
     validConfiguration.getEidasConfiguration().setPublicServiceProviderName(null);
     Assertions.assertFalse(terminalPermissionAOBean.isPublicClient("cvcRefId"));
+  }
+
+  @Test
+  void testDeleteCurrentRsc() throws Exception
+  {
+    TerminalPermissionRepository terminalPermissionRepository = Mockito.mock(TerminalPermissionRepository.class);
+    RequestSignerCertificateRepository requestSignerCertificateRepository = Mockito.mock(RequestSignerCertificateRepository.class);
+
+    TerminalPermissionAOBean terminalPermissionAOBean = new TerminalPermissionAOBean(terminalPermissionRepository,
+                                                                                     requestSignerCertificateRepository,
+                                                                                     null, null, null, null, null, null,
+                                                                                     null);
+
+    String refID = "refID";
+    TerminalPermission terminalPermission = new TerminalPermission(refID);
+    Mockito.when(terminalPermissionRepository.findById(refID)).thenReturn(Optional.of(terminalPermission));
+    Assertions.assertThrows(TerminalPermissionNotFoundException.class,
+                            () -> terminalPermissionAOBean.deleteCurrentRequestSignerCertificate("unknown"));
+    Mockito.verify(terminalPermissionRepository, Mockito.never()).saveAndFlush(Mockito.any());
+
+    terminalPermissionAOBean.deleteCurrentRequestSignerCertificate(refID);
+    Mockito.verify(requestSignerCertificateRepository, Mockito.times(0)).delete(Mockito.any());
+    Mockito.verify(terminalPermissionRepository, Mockito.times(1)).saveAndFlush(Mockito.any());
+
+    RequestSignerCertificate requestSignerCertificate = new RequestSignerCertificate();
+    requestSignerCertificate.setKey(new CertInChainPK(terminalPermission.getRefID(), 4));
+    terminalPermission.setCurrentRequestSignerCertificate(requestSignerCertificate);
+    Mockito.when(terminalPermissionRepository.findById(refID)).thenReturn(Optional.of(terminalPermission));
+
+    // Mock saveAndFlush to assert for TerminalPermission changes
+    Mockito.doAnswer(invocationOnMock -> {
+      TerminalPermission invocationOnMockArgument = invocationOnMock.getArgument(0);
+      Assertions.assertNull(invocationOnMockArgument.getCurrentRequestSignerCertificate());
+      return null;
+    }).when(terminalPermissionRepository).saveAndFlush(Mockito.any());
+    // Mock delete to assert for correct PendingRequest
+    Mockito.doAnswer(invocationOnMock -> {
+      RequestSignerCertificate invocationOnMockArgument = invocationOnMock.getArgument(0);
+      Assertions.assertEquals(requestSignerCertificate, invocationOnMockArgument);
+      return null;
+    }).when(requestSignerCertificateRepository).delete(Mockito.any());
+
+    terminalPermissionAOBean.deleteCurrentRequestSignerCertificate(refID);
+    Mockito.verify(requestSignerCertificateRepository, Mockito.times(1)).delete(Mockito.any());
+
+  }
+
+  @Test
+  void testGetNextRscSequenceNumber() throws TerminalPermissionNotFoundException
+  {
+
+    // Prepare TerminalPermission
+    TerminalPermissionRepository terminalPermissionRepository = Mockito.mock(TerminalPermissionRepository.class);
+    RequestSignerCertificateRepository requestSignerCertificateRepository = Mockito.mock(RequestSignerCertificateRepository.class);
+    TerminalPermissionAOBean terminalPermissionAOBean = new TerminalPermissionAOBean(terminalPermissionRepository,
+                                                                                     requestSignerCertificateRepository,
+                                                                                     null, null, null, null, null, null,
+                                                                                     null);
+
+    // ServiceProvider unknown, Throw!
+    Assertions.assertThrows(TerminalPermissionNotFoundException.class,
+                            () -> terminalPermissionAOBean.getNextRscSequenceNumber("unknown"));
+
+    // No currentRsc and null in DB return 1
+    String refID = "refID";
+    TerminalPermission terminalPermission = new TerminalPermission(refID);
+    Mockito.when(terminalPermissionRepository.findById(refID)).thenReturn(Optional.of(terminalPermission));
+    Assertions.assertEquals(1, terminalPermissionAOBean.getNextRscSequenceNumber(refID));
+
+    // No currentRsc but value in DB return value in DB
+    terminalPermission.setNextRscSequenceNumber(3);
+    Mockito.when(terminalPermissionRepository.findById(refID)).thenReturn(Optional.of(terminalPermission));
+    Assertions.assertEquals(3, terminalPermissionAOBean.getNextRscSequenceNumber(refID));
+
+    // CurrentRsc available so return currentRsc + 1
+    RequestSignerCertificate requestSignerCertificate = new RequestSignerCertificate();
+    requestSignerCertificate.setKey(new CertInChainPK(terminalPermission.getRefID(), 4));
+    terminalPermission.setCurrentRequestSignerCertificate(requestSignerCertificate);
+    Mockito.when(terminalPermissionRepository.findById(refID)).thenReturn(Optional.of(terminalPermission));
+    Assertions.assertEquals(5, terminalPermissionAOBean.getNextRscSequenceNumber(refID));
+
   }
 }

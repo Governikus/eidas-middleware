@@ -26,6 +26,7 @@ import de.governikus.eumw.poseidas.cardbase.asn1.npa.CertificateDescription;
 import de.governikus.eumw.poseidas.config.model.ServiceProviderStatus;
 import de.governikus.eumw.poseidas.server.idprovider.config.CvcTlsCheck;
 import de.governikus.eumw.poseidas.server.pki.entities.TerminalPermission;
+
 import lombok.extern.slf4j.Slf4j;
 
 
@@ -87,7 +88,8 @@ public class ServiceProviderStatusService
              .cvcCar(terminalPermission.getFullCvc().getCAReferenceString())
              .cvcChr(terminalPermission.getFullCvc().getHolderReferenceString())
              .cvcRefId(terminalPermission.getRefID())
-             .automaticCvcRenewalFailed(terminalPermission.isAutomaticCvcRenewFailed());
+             .automaticCvcRenewalFailed(terminalPermission.isAutomaticCvcRenewFailed())
+             .pendingCertificateRequestPresent(terminalPermission.getPendingRequest() != null);
       if (terminalPermission.getCvcDescription() != null)
       {
         try
@@ -108,18 +110,22 @@ public class ServiceProviderStatusService
            .masterListDVCAAvailability(permissionDataHandling.pingPAService(serviceProviderType.getName()))
            .defectListPresent(terminalPermission.getDefectListStoreDate() != null)
            .defectListLastRetrieval(dateToLocalDateTime(terminalPermission.getDefectListStoreDate()))
-           .defectListDVCAAvailability(permissionDataHandling.pingPAService(serviceProviderType.getName()));
+           .defectListDVCAAvailability(permissionDataHandling.pingPAService(serviceProviderType.getName()))
+           .pendingCertificateRequestPresent(terminalPermission.getPendingRequest() != null);
 
     X509Certificate pendingRSC = rscService.getRequestSignerCertificate(serviceProviderType.getName(), false);
     X509Certificate currentRSC = rscService.getRequestSignerCertificate(serviceProviderType.getName(), true);
     if (currentRSC != null)
     {
-      builder.rscCurrentValidUntil(dateToLocalDate(currentRSC.getNotAfter())).rscAnyPresent(true);
+      builder.rscCurrentValidUntil(dateToLocalDate(currentRSC.getNotAfter()))
+             .rscAnyPresent(true)
+             .rscCurrentPresent(true);
     }
     if (pendingRSC != null)
     {
-      builder.rscPendingPresent(true).rscAnyPresent(true);
-      builder.rscRenewalError(terminalPermission.getAutomaticRscRenewFailed());
+      builder.rscPendingPresent(true)
+             .rscAnyPresent(true)
+             .rscRenewalError(terminalPermission.getAutomaticRscRenewFailed());
     }
     if (currentRSC != null && pendingRSC != null)
     {

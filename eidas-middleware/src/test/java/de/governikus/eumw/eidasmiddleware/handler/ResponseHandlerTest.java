@@ -908,7 +908,8 @@ class ResponseHandlerTest
     when(mockRequestSession.getReqProviderEntityId()).thenReturn(ENTITY_ID);
     when(mockConfigurationService.getProviderByEntityID(ENTITY_ID)).thenReturn(mockRequestingServiceProvider);
     when(mockHsmServiceHolder.getKeyStore()).thenReturn(null);
-    when(mockConfigurationService.getSamlKeyPair(Mockito.anyString())).thenReturn(new KeyPair(keystore, alias, password));
+    when(mockConfigurationService.getSamlKeyPair(Mockito.anyString())).thenReturn(new KeyPair(keystore, alias,
+                                                                                              password));
     when(mockRequestingServiceProvider.getAssertionConsumerURL()).thenReturn("consumerUrl");
     when(mockConfigurationService.getServerURLWithEidasContextPath()).thenReturn("https://localhost");
     when(mockRequestingServiceProvider.getEntityID()).thenReturn(ENTITY_ID);

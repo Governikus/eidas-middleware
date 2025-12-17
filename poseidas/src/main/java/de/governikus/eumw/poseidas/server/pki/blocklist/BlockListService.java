@@ -4,6 +4,7 @@ import java.io.BufferedWriter;
 import java.io.File;
 import java.io.IOException;
 import java.io.PrintWriter;
+import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -350,9 +351,11 @@ public class BlockListService
     return currentBlockListFile;
   }
 
-  private Path buildPathToBlockListFile(String cvcRefId, Number blockListVersion)
+  Path buildPathToBlockListFile(String cvcRefId, Number blockListVersion)
   {
-    return Path.of(storageFolderName, "%s.version-%s".formatted(cvcRefId, blockListVersion));
+    String partiallyEncoded = URLEncoder.encode(cvcRefId, StandardCharsets.UTF_8);
+    String fullyEncoded = partiallyEncoded.replace(".", "%2E").replace("*", "%2A");
+    return Path.of(storageFolderName, "%s.version-%s".formatted(fullyEncoded, blockListVersion));
   }
 
   private void updateBlackListVersionAndStoreDate(TerminalPermission terminalPermission,

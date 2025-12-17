@@ -1,11 +1,10 @@
 /*
- * Copyright (c) 2020 Governikus KG. Licensed under the EUPL, Version 1.2 or as soon they will be approved by
- * the European Commission - subsequent versions of the EUPL (the "Licence"); You may not use this work except
- * in compliance with the Licence. You may obtain a copy of the Licence at:
- * http://joinup.ec.europa.eu/software/page/eupl Unless required by applicable law or agreed to in writing,
- * software distributed under the Licence is distributed on an "AS IS" basis, WITHOUT WARRANTIES OR CONDITIONS
- * OF ANY KIND, either express or implied. See the Licence for the specific language governing permissions and
- * limitations under the Licence.
+ * Copyright (c) 2020 Governikus KG. Licensed under the EUPL, Version 1.2 or as soon they will be approved by the
+ * European Commission - subsequent versions of the EUPL (the "Licence"); You may not use this work except in compliance
+ * with the Licence. You may obtain a copy of the Licence at: http://joinup.ec.europa.eu/software/page/eupl Unless
+ * required by applicable law or agreed to in writing, software distributed under the Licence is distributed on an
+ * "AS IS" basis, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the Licence for the
+ * specific language governing permissions and limitations under the Licence.
  */
 
 package de.governikus.eumw.poseidas.server.idprovider.core;
@@ -25,8 +24,8 @@ import de.governikus.eumw.eidascommon.ErrorCodeException;
 
 
 /**
- * Session storage implementation which keeps sessions in memory. Works only on one-JVM-systems but is much
- * faster than DB based implementation.
+ * Session storage implementation which keeps sessions in memory. Works only on one-JVM-systems but is much faster than
+ * DB based implementation.
  *
  * @author tautenhahn
  */
@@ -147,16 +146,14 @@ public class SessionStoreAOBeanMemory implements SessionStoreAO
     {
       if (LOG.isErrorEnabled())
       {
-        LOG.error("There is an overflow, deleting all not ended sessions older than "
-                  + (TIME_LIMIT_SOFT_DEFAULT / 1000) + "did not helped, will delete all sessions older than "
-                  + (TIME_LIMIT_HARD_DEFAULT / 1000));
+        LOG.error("There is an overflow, deleting all not ended sessions older than " + (TIME_LIMIT_SOFT_DEFAULT / 1000)
+                  + "did not helped, will delete all sessions older than " + (TIME_LIMIT_HARD_DEFAULT / 1000));
       }
       deteleOldSessions(TIME_LIMIT_HARD_DEFAULT);
     }
     if (contentBySessionId.size() > maxPendingRequests)
     {
-      throw new ErrorCodeException(ErrorCode.TOO_MANY_OPEN_SESSIONS,
-                                   Integer.toString(contentBySessionId.size()),
+      throw new ErrorCodeException(ErrorCode.TOO_MANY_OPEN_SESSIONS, Integer.toString(contentBySessionId.size()),
                                    Integer.toString(maxPendingRequests));
     }
   }

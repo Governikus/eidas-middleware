@@ -143,13 +143,11 @@ public class EidasEncrypter
     String algorithm = encryptionCertificate.getPublicKey().getAlgorithm();
     return switch (algorithm)
     {
-      case "EC" ->
-      {
+      case "EC" -> {
         prepareForEC(encryptionCertificate, kekParameters);
         yield kekParameters;
       }
-      case "RSA" ->
-      {
+      case "RSA" -> {
         prepareForRsa(encryptionCertificate, includeCert, kekParameters);
         yield kekParameters;
       }
@@ -202,7 +200,9 @@ public class EidasEncrypter
 
       KeyAgreementParameters keyAgreementParameters = new KeyAgreementParameters(keyAgreementParameterCollection);
       KeyAgreementProcessor keyAgreementProcessor = KeyAgreementSupport.getProcessor("http://www.w3.org/2009/xmlenc11#ECDH-ES");
-      return keyAgreementProcessor.execute(credential, EncryptionConstants.ALGO_ID_KEYWRAP_AES256, keyAgreementParameters);
+      return keyAgreementProcessor.execute(credential,
+                                           EncryptionConstants.ALGO_ID_KEYWRAP_AES256,
+                                           keyAgreementParameters);
 
     }
     catch (KeyAgreementException | KeyException var4)

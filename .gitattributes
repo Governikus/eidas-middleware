@@ -1,0 +1,3 @@
+*.xml text eol=lf
+*.java text eol=lf
+*.properties text eol=lf

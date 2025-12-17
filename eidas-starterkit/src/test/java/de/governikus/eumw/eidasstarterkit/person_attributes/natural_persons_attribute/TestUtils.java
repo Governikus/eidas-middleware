@@ -34,8 +34,7 @@ public final class TestUtils
   public static String attributeToString(Attribute attribute)
     throws MarshallingException, TransformerException, IOException
   {
-    Marshaller rm = XMLObjectProviderRegistrySupport.getMarshallerFactory()
-                                                    .getMarshaller(attribute.getElementQName());
+    Marshaller rm = XMLObjectProviderRegistrySupport.getMarshallerFactory().getMarshaller(attribute.getElementQName());
     Element all = rm.marshall(attribute);
     byte[] returnValue;
     Transformer trans = Utils.getTransformer();

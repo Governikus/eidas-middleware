@@ -1,11 +1,10 @@
 /*
- * Copyright (c) 2020 Governikus KG. Licensed under the EUPL, Version 1.2 or as soon they will be approved by
- * the European Commission - subsequent versions of the EUPL (the "Licence"); You may not use this work except
- * in compliance with the Licence. You may obtain a copy of the Licence at:
- * http://joinup.ec.europa.eu/software/page/eupl Unless required by applicable law or agreed to in writing,
- * software distributed under the Licence is distributed on an "AS IS" basis, WITHOUT WARRANTIES OR CONDITIONS
- * OF ANY KIND, either express or implied. See the Licence for the specific language governing permissions and
- * limitations under the Licence.
+ * Copyright (c) 2020 Governikus KG. Licensed under the EUPL, Version 1.2 or as soon they will be approved by the
+ * European Commission - subsequent versions of the EUPL (the "Licence"); You may not use this work except in compliance
+ * with the Licence. You may obtain a copy of the Licence at: http://joinup.ec.europa.eu/software/page/eupl Unless
+ * required by applicable law or agreed to in writing, software distributed under the Licence is distributed on an
+ * "AS IS" basis, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the Licence for the
+ * specific language governing permissions and limitations under the Licence.
  */
 
 package de.governikus.eumw.poseidas.server.pki;
@@ -63,8 +62,8 @@ public class CmsSignatureChecker
 {
 
   /**
-   * the trust anchor that is the base certificate that must be used to verify all other certificates that
-   * have been used for signing within the cms-data lock
+   * the trust anchor that is the base certificate that must be used to verify all other certificates that have been
+   * used for signing within the cms-data lock
    */
   private final Set<X509Certificate> trustAnchors = new HashSet<>();
 
@@ -83,8 +82,8 @@ public class CmsSignatureChecker
   private Certificate verifierCertificate;
 
   /**
-   * Holds the string representation of the OID associated with the encapsulated content info structure
-   * carried in the signed data.
+   * Holds the string representation of the OID associated with the encapsulated content info structure carried in the
+   * signed data.
    */
   @Getter
   private String signedContentTypeOID;
@@ -102,7 +101,7 @@ public class CmsSignatureChecker
 
   /**
    * Constructor allowing configuration of accepted cryptographic algorithms.
-   * 
+   *
    * @param trustAnchors trust anchor certificates, <code>null</code> not permitted
    * @param digestAlgs accepted digest algorithms as OID strings, <code>null</code> or empty for accepting any digest
    * @param sigAlgs accepted signature algorithms as OID strings, <code>null</code> or empty for accepting any algorithm
@@ -120,11 +119,11 @@ public class CmsSignatureChecker
   }
 
   /**
-   * checks the signature of the signed data and checks the validity of the certificates by validating them
-   * against the current trust anchor
+   * checks the signature of the signed data and checks the validity of the certificates by validating them against the
+   * current trust anchor
    *
-   * @param signedCmsData the signed data to validate. This data itself contains the certificates that must be
-   *          used to validate the signature. The trust anchor is used to check if the certificates are valid
+   * @param signedCmsData the signed data to validate. This data itself contains the certificates that must be used to
+   *          validate the signature. The trust anchor is used to check if the certificates are valid
    * @throws CMSException if the given datablock is not valid CMS data
    */
   public void checkEnvelopedSignature(byte[] signedCmsData) throws CMSException, SignatureException
@@ -133,11 +132,11 @@ public class CmsSignatureChecker
   }
 
   /**
-   * checks the signature of the signed data and checks the validity of the certificates by validating them
-   * against the current trust anchor
+   * checks the signature of the signed data and checks the validity of the certificates by validating them against the
+   * current trust anchor
    *
-   * @param signedCmsData the signed data to validate. This data itself contains the certificates that must be
-   *          used to validate the signature. The trust anchor is used to check if the certificates are valid
+   * @param signedCmsData the signed data to validate. This data itself contains the certificates that must be used to
+   *          validate the signature. The trust anchor is used to check if the certificates are valid
    * @throws CMSException if the given datablock is not valid CMS data
    */
   public void checkEnvelopedSignature(InputStream signedCmsData) throws CMSException, SignatureException
@@ -146,13 +145,12 @@ public class CmsSignatureChecker
   }
 
   /**
-   * checks the signature of the signed data and checks the validity of the certificates by validating them
-   * against the current trust anchor
+   * checks the signature of the signed data and checks the validity of the certificates by validating them against the
+   * current trust anchor
    *
-   * @param signedCmsData the signed data to validate. This data itself contains the certificates that must be
-   *          used to validate the signature. The trust anchor is used to check if the certificates are valid
-   * @param crlService CRLService to check revocation status, check will not be performed if <code>null</code>
-   *          given
+   * @param signedCmsData the signed data to validate. This data itself contains the certificates that must be used to
+   *          validate the signature. The trust anchor is used to check if the certificates are valid
+   * @param crlService CRLService to check revocation status, check will not be performed if <code>null</code> given
    * @throws CMSException if the given datablock is not valid CMS data
    */
   public void checkEnvelopedSignature(byte[] signedCmsData, CertificationRevocationListImpl crlService)
@@ -247,8 +245,7 @@ public class CmsSignatureChecker
    * @param publicKey the public key that should be used to verify the CMS signature
    * @return the signer information verifier
    */
-  private SignerInformationVerifier getSignerInformationVerifier(PublicKey publicKey)
-    throws SignatureException
+  private SignerInformationVerifier getSignerInformationVerifier(PublicKey publicKey) throws SignatureException
   {
     try
     {
@@ -271,8 +268,7 @@ public class CmsSignatureChecker
    * @param holder the certificate data
    * @return the input stream
    */
-  private ByteArrayInputStream getInputStreamOfCertificateData(X509CertificateHolder holder)
-    throws SignatureException
+  private ByteArrayInputStream getInputStreamOfCertificateData(X509CertificateHolder holder) throws SignatureException
   {
     byte[] certificateData;
     try
@@ -289,8 +285,7 @@ public class CmsSignatureChecker
   /**
    * checks if the given certificate was issued by the {@link #trustAnchors} certificate
    */
-  private void validateCertificate(X509Certificate verificationCertificate,
-                                   CertificationRevocationListImpl crl)
+  private void validateCertificate(X509Certificate verificationCertificate, CertificationRevocationListImpl crl)
     throws SignatureException
   {
     if (crl != null)
@@ -339,8 +334,7 @@ public class CmsSignatureChecker
     }
     catch (GeneralSecurityException e)
     {
-      throw new SignatureException(String.format("Certificate for subject '%s' was not signed by "
-                                                 + "trustanchor '%s'",
+      throw new SignatureException(String.format("Certificate for subject '%s' was not signed by " + "trustanchor '%s'",
                                                  verificationCertificate.getSubjectDN().toString(),
                                                  trustAnchor.get().getSubjectDN().toString()),
                                    e);

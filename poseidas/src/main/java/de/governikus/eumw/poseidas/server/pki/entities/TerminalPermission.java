@@ -110,6 +110,13 @@ public class TerminalPermission implements Serializable
   @Nullable
   private Integer nextCvcSequenceNumber;
 
+  /**
+   * Holds the sequence number to use next for a RSC. Nullable because field was added lately and could stay undefined
+   * through migration.
+   */
+  @Nullable
+  private Integer nextRscSequenceNumber;
+
   @Column(columnDefinition = "boolean default false")
   private boolean automaticCvcRenewFailed;
 

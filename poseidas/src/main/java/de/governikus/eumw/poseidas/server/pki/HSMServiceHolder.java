@@ -16,6 +16,7 @@ import java.util.Calendar;
 import java.util.Date;
 import java.util.List;
 
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
@@ -29,6 +30,9 @@ import de.governikus.eumw.poseidas.gov2server.constants.admin.GlobalManagementCo
 import de.governikus.eumw.poseidas.gov2server.constants.admin.ManagementMessage;
 import de.governikus.eumw.poseidas.server.idprovider.core.WarmupListener;
 import de.governikus.eumw.poseidas.server.pki.entities.ChangeKeyLock;
+
+import lombok.AccessLevel;
+import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 
 
@@ -42,25 +46,30 @@ import lombok.extern.slf4j.Slf4j;
 public class HSMServiceHolder implements WarmupListener
 {
 
+  @Setter(AccessLevel.PACKAGE) // For tests
   private HSMService service;
 
   private final int hsmType;
 
   private final HSMConfiguration hsmConfig;
 
-  @Autowired
   protected TerminalPermissionAO facade;
 
-  @Value("${hsm.keys.delete:30}")
   private int deleteOldKeys;
 
-  @Value("${hsm.keys.archive:false}")
   private boolean archiveOldKeys;
 
   public HSMServiceHolder(@Value("${hsm.type:}") String hsmTypeStr,
                           @Value("${pkcs11.config:}") String pathToPkcs11Config,
-                          @Value("${pkcs11.passwd:}") String pkcs11Passwd)
+                          @Value("${pkcs11.passwd:}") String pkcs11Passwd,
+                          @Value("${hsm.keys.delete:30}") int deleteOldKeys,
+                          @Value("${hsm.keys.archive:false}") boolean archiveOldKeys,
+                          @Autowired TerminalPermissionAO facade)
   {
+    this.facade = facade;
+    this.deleteOldKeys = deleteOldKeys;
+    this.archiveOldKeys = archiveOldKeys;
+
     if ("PKCS11".equalsIgnoreCase(hsmTypeStr))
     {
       hsmType = HSMService.PKCS11_HSM;
@@ -190,22 +199,46 @@ public class HSMServiceHolder implements WarmupListener
   }
 
   /**
+   * A wrapper for returning the outcome of the old key deletion check
+   *
+   * @param success indicating if the key deletion routine ran successfully
+   * @param message a message describing the outcome
+   */
+  public record KeyDeletionResult(boolean success, String message)
+  {
+
+  }
+
+  /**
    * If service is alive and a positive number given, delete all keys which have expired since the given number of days.
    *
-   * @param deleteAfterDays days after which to delete a key
-   * @param archive <code>true</code> for archiving old keys in database
+   * @return An object containing information about the outcome of the check
    * @throws HSMException
    * @throws IOException
    */
-  synchronized void deleteOutdatedKeys() throws HSMException, IOException
+  public synchronized KeyDeletionResult deleteOutdatedKeys() throws HSMException, IOException
   {
-    if (deleteOldKeys < 1 || !isServiceAvailable(true))
+    if (hsmType == HSMService.NO_HSM)
     {
-      return;
+      String message = "HSM is not in use - no deletion of outdated keys necessary";
+      log.debug(message);
+      return new KeyDeletionResult(true, message);
     }
+
+    if (deleteOldKeys < 1)
+    {
+      return new KeyDeletionResult(false, "Given timespan %s is not valid".formatted(deleteOldKeys));
+    }
+
+    if (!isServiceAvailable(true))
+    {
+      return new KeyDeletionResult(false, "Service is not available");
+    }
+
     Calendar cal = Calendar.getInstance();
     cal.add(Calendar.DAY_OF_MONTH, -deleteOldKeys);
     Date keepLimit = cal.getTime();
+    ArrayList<String> deletedKeys = new ArrayList<>();
     for ( String alias : service.getAliases() )
     {
       log.debug("Checking alias {}", alias);
@@ -216,54 +249,61 @@ public class HSMServiceHolder implements WarmupListener
       }
       catch (UnsupportedOperationException e)
       {
-        if (log.isDebugEnabled())
-        {
-          log.debug("Failed to get expiration date for alias: " + alias, e);
-        }
+        log.debug("Failed to get expiration date for alias: {}", alias, e);
         try
         {
           reference = service.getGenerationDate(alias);
         }
         catch (UnsupportedOperationException e2)
         {
-          if (log.isDebugEnabled())
-          {
-            log.debug("Failed to get generation date for alias: " + alias, e2);
-          }
+          log.debug("Failed to get generation date for alias: {}", alias, e2);
           // do not delete if no date is known
-          return;
-        }
-      }
-      if (reference.before(keepLimit))
-      {
-        log.debug("Trying to delete key {}", alias);
-        ChangeKeyLock lock = facade.obtainChangeKeyLock(alias, ChangeKeyLock.TYPE_DELETE);
-        if (lock == null)
-        {
-          log.debug("Key {} is currently being changed in the HSM cluster", alias);
           continue;
         }
-        log.debug("lock for key {} obtained", alias);
-        if (archiveOldKeys)
-        {
-          try
-          {
-            byte[] keyData = service.exportKey(alias);
-            this.facade.archiveKey(alias, keyData);
-            log.debug("key {} successfully archived", alias);
-          }
-          catch (UnsupportedOperationException e)
-          {
-            log.warn("key " + alias + " not archived due to exception", e);
-          }
-        }
-        service.deleteKey(alias);
       }
-      else
+      if (!reference.before(keepLimit))
       {
         log.debug("Not deleting key {} - still young enough", alias);
+        continue;
       }
+      log.debug("Trying to delete key {}", alias);
+      ChangeKeyLock lock = facade.obtainChangeKeyLock(alias, ChangeKeyLock.TYPE_DELETE);
+      if (lock == null)
+      {
+        log.debug("Key {} is currently being changed in the HSM cluster", alias);
+        continue;
+      }
+
+      log.debug("lock for key {} obtained", alias);
+      if (archiveOldKeys)
+      {
+        try
+        {
+          byte[] keyData = service.exportKey(alias);
+          this.facade.archiveKey(alias, keyData);
+          log.debug("key {} successfully archived", alias);
+        }
+        catch (UnsupportedOperationException e)
+        {
+          log.warn("key {} not archived due to exception", alias, e);
+          continue;
+        }
+      }
+
+      log.debug("Deleting key {}", alias);
+      service.deleteKey(alias);
+      log.info("key {} successfully deleted", alias);
+      deletedKeys.add(alias);
     }
+
+    if (deletedKeys.isEmpty())
+    {
+      return new KeyDeletionResult(true, "No keys present to delete");
+    }
+
+    return new KeyDeletionResult(true, "The following keys were deleted from the HSM: "
+                                       + StringUtils.join(deletedKeys, ", "));
+
   }
 
   /**
@@ -319,7 +359,7 @@ public class HSMServiceHolder implements WarmupListener
   }
 
   @Override
-  public final List<ManagementMessage> warmingUp()
+  public List<ManagementMessage> warmingUp()
   {
     List<ManagementMessage> result = new ArrayList<>();
     if (!isServiceAvailable(false))

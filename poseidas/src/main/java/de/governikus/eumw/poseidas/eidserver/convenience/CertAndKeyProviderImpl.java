@@ -1,11 +1,10 @@
 /*
- * Copyright (c) 2020 Governikus KG. Licensed under the EUPL, Version 1.2 or as soon they will be approved by
- * the European Commission - subsequent versions of the EUPL (the "Licence"); You may not use this work except
- * in compliance with the Licence. You may obtain a copy of the Licence at:
- * http://joinup.ec.europa.eu/software/page/eupl Unless required by applicable law or agreed to in writing,
- * software distributed under the Licence is distributed on an "AS IS" basis, WITHOUT WARRANTIES OR CONDITIONS
- * OF ANY KIND, either express or implied. See the Licence for the specific language governing permissions and
- * limitations under the Licence.
+ * Copyright (c) 2020 Governikus KG. Licensed under the EUPL, Version 1.2 or as soon they will be approved by the
+ * European Commission - subsequent versions of the EUPL (the "Licence"); You may not use this work except in compliance
+ * with the Licence. You may obtain a copy of the Licence at: http://joinup.ec.europa.eu/software/page/eupl Unless
+ * required by applicable law or agreed to in writing, software distributed under the Licence is distributed on an
+ * "AS IS" basis, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the Licence for the
+ * specific language governing permissions and limitations under the Licence.
  */
 
 package de.governikus.eumw.poseidas.eidserver.convenience;
@@ -45,8 +44,7 @@ public class CertAndKeyProviderImpl implements CertAndKeyProvider
 
 
   /**
-   * add an terminal CVC into the provider that also contains a private key. This is package private on
-   * purpose.
+   * add an terminal CVC into the provider that also contains a private key. This is package private on purpose.
    *
    * @param certBuffer the bytes of the certificate.
    * @throws IOException if the bytes do not represent a proper certificate
@@ -56,8 +54,7 @@ public class CertAndKeyProviderImpl implements CertAndKeyProvider
     byte[] encoded = cvc.getEncoded();
     addCert(encoded);
     ECCVCertificate cert = new ECCVCertificate(encoded);
-    String holderName = new String(cert.getCVCPart(ECCVCPath.HOLDER_REFERENCE).getValue(),
-                                   StandardCharsets.UTF_8);
+    String holderName = new String(cert.getCVCPart(ECCVCPath.HOLDER_REFERENCE).getValue(), StandardCharsets.UTF_8);
     if (this.keyMap.containsKey(holderName))
     {
       LOG.debug(LOG_PREFIX + "Terminal key already set for holder name: " + holderName);
@@ -69,8 +66,7 @@ public class CertAndKeyProviderImpl implements CertAndKeyProvider
   }
 
   /**
-   * add an issuer CVC into the provider, so it can build a certificate chain. This is package private on
-   * purpose.
+   * add an issuer CVC into the provider, so it can build a certificate chain. This is package private on purpose.
    *
    * @param certBuffer the bytes of the certificate.
    * @throws IOException if the bytes do not represent a proper certificate
@@ -91,8 +87,7 @@ public class CertAndKeyProviderImpl implements CertAndKeyProvider
   }
 
   @Override
-  public List<byte[]> getCertChain(String rootHolder, String termHolder) throws
-    IOException
+  public List<byte[]> getCertChain(String rootHolder, String termHolder) throws IOException
   {
     List<byte[]> result = new ArrayList<>();
     if (rootHolder == null || rootHolder.length() == 0 || termHolder == null || termHolder.length() == 0)

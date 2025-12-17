@@ -5,8 +5,8 @@ import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.test.context.ContextConfiguration;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 
 import de.governikus.eumw.config.DvcaConfigurationType;
 import de.governikus.eumw.config.EidasMiddlewareConfig;
@@ -17,17 +17,17 @@ import de.governikus.eumw.poseidas.server.idprovider.config.ConfigurationTestHel
 
 @SpringBootTest
 @ContextConfiguration(classes = {DvcaServiceFactory.class})
-class DvcaServiceFactoryRIService110Test
+class DvcaServiceFactoryTest
 {
 
   @Autowired
   DvcaServiceFactory dvcaServiceFactory;
 
-  @MockBean
+  @MockitoBean
   ConfigurationService configurationService;
 
   @Test
-  void testUseRiService110() throws Exception
+  void testCreateRestrictedIdService() throws Exception
   {
     EidasMiddlewareConfig configuration = ConfigurationTestHelper.createConfigurationWithClientKeyPair();
 
@@ -43,6 +43,6 @@ class DvcaServiceFactoryRIService110Test
     Mockito.when(configurationService.getKeyPair(serviceProviderType.getClientKeyPairName()))
            .thenReturn(ConfigurationTestHelper.getKeyPair(serviceProviderType.getClientKeyPairName(), configuration));
     RestrictedIdService restrictedIdService = dvcaServiceFactory.createRestrictedIdService(serviceProviderType, null);
-    Assertions.assertInstanceOf(RestrictedIdService110.class, restrictedIdService);
+    Assertions.assertInstanceOf(RestrictedIdService140.class, restrictedIdService);
   }
 }

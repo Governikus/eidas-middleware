@@ -1,11 +1,10 @@
 /*
- * Copyright (c) 2020 Governikus KG. Licensed under the EUPL, Version 1.2 or as soon they will be approved by
- * the European Commission - subsequent versions of the EUPL (the "Licence"); You may not use this work except
- * in compliance with the Licence. You may obtain a copy of the Licence at:
- * http://joinup.ec.europa.eu/software/page/eupl Unless required by applicable law or agreed to in writing,
- * software distributed under the Licence is distributed on an "AS IS" basis, WITHOUT WARRANTIES OR CONDITIONS
- * OF ANY KIND, either express or implied. See the Licence for the specific language governing permissions and
- * limitations under the Licence.
+ * Copyright (c) 2020 Governikus KG. Licensed under the EUPL, Version 1.2 or as soon they will be approved by the
+ * European Commission - subsequent versions of the EUPL (the "Licence"); You may not use this work except in compliance
+ * with the Licence. You may obtain a copy of the Licence at: http://joinup.ec.europa.eu/software/page/eupl Unless
+ * required by applicable law or agreed to in writing, software distributed under the Licence is distributed on an
+ * "AS IS" basis, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the Licence for the
+ * specific language governing permissions and limitations under the Licence.
  */
 
 package de.governikus.eumw.poseidas.cardbase.crypto.ec;
@@ -64,8 +63,8 @@ public final class ECMath
    * Generates a KeyPair using given parameter spec.
    * <p>
    * </p>
-   * Note: to be removed as soon as Java provides (usable) own implementation. This version is actually not
-   * especially efficient.
+   * Note: to be removed as soon as Java provides (usable) own implementation. This version is actually not especially
+   * efficient.
    *
    * @param spec parameter specification, <code>null</code> not permitted
    * @return generated keypair
@@ -92,8 +91,8 @@ public final class ECMath
    * Multiplies an {@link ECPoint} with a {@link BigInteger} factor.
    * <p>
    * </p>
-   * Note: to be removed as soon as Java provides (usable) own implementation. This version is actually not
-   * especially efficient.
+   * Note: to be removed as soon as Java provides (usable) own implementation. This version is actually not especially
+   * efficient.
    *
    * @param p point, <code>null</code> not permitted
    * @param factor factor, <code>null</code> not permitted, must be positive
@@ -192,12 +191,12 @@ public final class ECMath
   /**
    * Generates {@link ECPoint} object from byte-array representation of EC point
    *
-   * @param pointBytes EC point in byte-array representation, <code>null</code> or empty not permitted, length
-   *          must be exactly one plus double fieldSize
+   * @param pointBytes EC point in byte-array representation, <code>null</code> or empty not permitted, length must be
+   *          exactly one plus double fieldSize
    * @param fieldSize size of field (domain parameters) (in bytes), must be positive
    * @return generated {@link ECPoint} object
-   * @throws IllegalArgumentException if pointBytes <code>null</code> or empty, length not matching
-   *           requirement, or if fieldSize not positive
+   * @throws IllegalArgumentException if pointBytes <code>null</code> or empty, length not matching requirement, or if
+   *           fieldSize not positive
    */
   public static ECPoint pointFromBytes(byte[] pointBytes, int fieldSize)
   {
@@ -213,14 +212,13 @@ public final class ECMath
   }
 
   /**
-   * Verifies EC signature. (Note: not tuned for efficiency, to be replaced as soon as Java provides own
-   * usable implementation.)
+   * Verifies EC signature. (Note: not tuned for efficiency, to be replaced as soon as Java provides own usable
+   * implementation.)
    *
    * @param signature raw signature, no ASN.1 structure, <code>null</code> or empty not permitted
    * @param signedData data which was signed, <code>null</code> not permitted
    * @param pubKey public key of signer, <code>null</code> not permitted
-   * @param mdAlg hash algorithm used in signing, <code>null</code> not permitted, must be a valid hash
-   *          algorithm name
+   * @param mdAlg hash algorithm used in signing, <code>null</code> not permitted, must be a valid hash algorithm name
    * @return <code>true</code> in case of signature verified successfully, <code>false</code> otherwise
    * @throws IllegalArgumentException if any argument <code>null</code> or signature empty
    * @throws NoSuchAlgorithmException if given digest algorithm unknown

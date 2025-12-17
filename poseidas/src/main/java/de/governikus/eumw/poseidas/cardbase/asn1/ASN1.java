@@ -1,11 +1,10 @@
 /*
- * Copyright (c) 2020 Governikus KG. Licensed under the EUPL, Version 1.2 or as soon they will be approved by
- * the European Commission - subsequent versions of the EUPL (the "Licence"); You may not use this work except
- * in compliance with the Licence. You may obtain a copy of the Licence at:
- * http://joinup.ec.europa.eu/software/page/eupl Unless required by applicable law or agreed to in writing,
- * software distributed under the Licence is distributed on an "AS IS" basis, WITHOUT WARRANTIES OR CONDITIONS
- * OF ANY KIND, either express or implied. See the Licence for the specific language governing permissions and
- * limitations under the Licence.
+ * Copyright (c) 2020 Governikus KG. Licensed under the EUPL, Version 1.2 or as soon they will be approved by the
+ * European Commission - subsequent versions of the EUPL (the "Licence"); You may not use this work except in compliance
+ * with the Licence. You may obtain a copy of the Licence at: http://joinup.ec.europa.eu/software/page/eupl Unless
+ * required by applicable law or agreed to in writing, software distributed under the Licence is distributed on an
+ * "AS IS" basis, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the Licence for the
+ * specific language governing permissions and limitations under the Licence.
  */
 
 package de.governikus.eumw.poseidas.cardbase.asn1;
@@ -128,8 +127,8 @@ public class ASN1
   /**
    * Constructor of immutable ASN.1.
    *
-   * @param dTagBytes bytes of Description and Tag - including ASN.1 bit coded informations about class and
-   *          content, <code>null</code> or empty array not permitted
+   * @param dTagBytes bytes of Description and Tag - including ASN.1 bit coded informations about class and content,
+   *          <code>null</code> or empty array not permitted
    * @param lengthBytes bytes of length, <code>null</code> or empty array not permitted
    * @param valueBytes bytes of value, <code>null</code> or empty array permitted
    * @param immutable <code>true</code> for immutable ASN.1
@@ -147,8 +146,8 @@ public class ASN1
   /**
    * Constructor.
    *
-   * @param dTagBytes bytes of Description and Tag - including ASN.1 bit coded informations about class and
-   *          content, <code>null</code> or empty array not permitted
+   * @param dTagBytes bytes of Description and Tag - including ASN.1 bit coded informations about class and content,
+   *          <code>null</code> or empty array not permitted
    * @param lengthBytes bytes of length, <code>null</code> or empty array not permitted
    * @param valueBytes bytes of value, <code>null</code> or empty array permitted
    * @throws IllegalArgumentException if byte arrays does specify a valid ASN.1
@@ -184,8 +183,8 @@ public class ASN1
    * Copy-Constructor.
    *
    * @param asn1 to be copied ASN.1, <code>null</code> not permitted
-   * @throws IllegalArgumentException if asn1 is <code>null</code> or bytes of tag, length and value does not
-   *           specify a valid ASN.1
+   * @throws IllegalArgumentException if asn1 is <code>null</code> or bytes of tag, length and value does not specify a
+   *           valid ASN.1
    * @see ASN1#ASN1(byte[], byte[], byte[])
    */
   public ASN1(ASN1 asn1)
@@ -220,8 +219,8 @@ public class ASN1
   /**
    * Constructor.
    *
-   * @param dTagBytes bytes of Description and Tag - including ASN.1 bit coded informations about class and
-   *          content, <code>null</code> or empty array not permitted
+   * @param dTagBytes bytes of Description and Tag - including ASN.1 bit coded informations about class and content,
+   *          <code>null</code> or empty array not permitted
    * @param valueBytes value bytes
    * @throws IllegalArgumentException if dTagBytes <code>null</code> or empty
    */
@@ -481,8 +480,7 @@ public class ASN1
   public ASN1[] getChildElements() throws IOException
   {
     List<ASN1> childList = getChildElementList();
-    return CollectionUtil.isNullOrEmpty(childList) ? new ASN1[0]
-      : childList.toArray(new ASN1[childList.size()]);
+    return CollectionUtil.isNullOrEmpty(childList) ? new ASN1[0] : childList.toArray(new ASN1[childList.size()]);
   }
 
   /**
@@ -492,8 +490,8 @@ public class ASN1
    * @param root optional root element to indicate changes to whole structure
    * @throws IOException if fails
    * @throws IllegalStateException if changing disabled
-   * @throws UnsupportedOperationException if not supported (at least for all ASN.1 types that does not
-   *           possess any child)
+   * @throws UnsupportedOperationException if not supported (at least for all ASN.1 types that does not possess any
+   *           child)
    */
   public final synchronized void addChildElements(List<ASN1> childList, ASN1 root) throws IOException
   {
@@ -525,8 +523,8 @@ public class ASN1
    * @param root optional root element to indicate changes to whole structure
    * @throws IOException if fails
    * @throws IllegalStateException if changing disabled
-   * @throws UnsupportedOperationException if not supported (at least for all ASN.1 types that does not
-   *           possess any child)
+   * @throws UnsupportedOperationException if not supported (at least for all ASN.1 types that does not possess any
+   *           child)
    */
   public final synchronized void addChildElement(ASN1 child, ASN1 root) throws IOException
   {
@@ -575,11 +573,10 @@ public class ASN1
    * @throws IOException if fails
    * @throws IllegalStateException if changing disabled
    * @throws IllegalArgumentException if old or new child element is <code>null</code>
-   * @throws UnsupportedOperationException if not supported (at least for all ASN.1 types that does not
-   *           possess any child)
+   * @throws UnsupportedOperationException if not supported (at least for all ASN.1 types that does not possess any
+   *           child)
    */
-  public final synchronized void replaceChildElement(ASN1 oldChild, ASN1 newChild, ASN1 root)
-    throws IOException
+  public final synchronized void replaceChildElement(ASN1 oldChild, ASN1 newChild, ASN1 root) throws IOException
   {
     checkChangeEnabled();
     checkExtendedChildOperationAvailability();
@@ -602,13 +599,12 @@ public class ASN1
   /**
    * Removes on child element.
    *
-   * @param child child element to be removed, <code>null</code> permitted, if not found ignored, otherwise
-   *          removed
+   * @param child child element to be removed, <code>null</code> permitted, if not found ignored, otherwise removed
    * @param root optional root element to indicate changes to whole structure
    * @throws IOException if fails
    * @throws IllegalStateException if changing disabled
-   * @throws UnsupportedOperationException if not supported (at least for all ASN.1 types that does not
-   *           possess any child)
+   * @throws UnsupportedOperationException if not supported (at least for all ASN.1 types that does not possess any
+   *           child)
    */
   public final synchronized void removeChildElement(ASN1 child, ASN1 root) throws IOException
   {
@@ -712,9 +708,9 @@ public class ASN1
   /**
    * Set state of ASN.1.
    *
-   * @param changed <code>true</code> for changed (forces recoding at {@link #getEncoded()}),
-   *          <code>false</code> to avoid recoding, recommended any changes of child elements or value bytes
-   *          must indicate content changes by calling with <code>true</code>
+   * @param changed <code>true</code> for changed (forces recoding at {@link #getEncoded()}), <code>false</code> to
+   *          avoid recoding, recommended any changes of child elements or value bytes must indicate content changes by
+   *          calling with <code>true</code>
    * @throws IllegalStateException if changing disabled
    */
   private final synchronized void setChanged(boolean changed)
@@ -929,8 +925,8 @@ public class ASN1
   }
 
   /**
-   * Returns a string representation with reduced or full informations about this ASN.1 using indents for
-   * child elements.
+   * Returns a string representation with reduced or full informations about this ASN.1 using indents for child
+   * elements.
    *
    * @param indent1 indent for String representation of this ASN.1
    * @param indent2 indent for String representation of child elements of this ASN.1
@@ -984,8 +980,8 @@ public class ASN1
   }
 
   /**
-   * Gets child element of ASN.1 by given path. Note: this method only works reliable if being called on an
-   * {@link ASN1} which is root of the {@link ASN1Path} structure of which given <code>path</code> is element.
+   * Gets child element of ASN.1 by given path. Note: this method only works reliable if being called on an {@link ASN1}
+   * which is root of the {@link ASN1Path} structure of which given <code>path</code> is element.
    *
    * @param path path to child element, <code>null</code> not permitted
    * @return child element of ASN.1 specified by path, uses subclass of {@link ASN1} if given in path object,
@@ -1082,8 +1078,8 @@ public class ASN1
    *
    * @see #copy(ASN1)
    * @throws IllegalStateException if ASN.1 not in state for update
-   * @throws IllegalArgumentException if ASN.1 contains inconsistent or invalid data, other case is parsing of
-   *           child elements fails
+   * @throws IllegalArgumentException if ASN.1 contains inconsistent or invalid data, other case is parsing of child
+   *           elements fails
    */
   protected void update()
   {

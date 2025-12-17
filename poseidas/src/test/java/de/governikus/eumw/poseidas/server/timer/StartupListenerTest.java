@@ -78,8 +78,7 @@ class StartupListenerTest
            .thenReturn(Optional.of(ConfigurationTestHelper.createValidConfiguration()));
     TerminalPermission terminalPermission = Mockito.mock(TerminalPermission.class);
     Mockito.when(facade.getTerminalPermission(Mockito.anyString())).thenReturn(terminalPermission);
-    Mockito.when(terminalPermission.getMasterList())
-           .thenReturn(Base64.getDecoder().decode(MASTERLIST_BASE64));
+    Mockito.when(terminalPermission.getMasterList()).thenReturn(Base64.getDecoder().decode(MASTERLIST_BASE64));
     startupListener.onApplicationEvent(webServerInitializedEvent);
 
     Mockito.verify(permissionDataHandling, Mockito.times(1)).renewMasterAndDefectList();

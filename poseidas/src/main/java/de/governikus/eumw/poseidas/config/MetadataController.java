@@ -157,8 +157,8 @@ public class MetadataController
                                .toList();
   }
 
-  record EidasMetadataEntry(String entityId, Boolean checkedAsValid, String errorMessage) {
-  }
+  record EidasMetadataEntry(String entityId, Boolean checkedAsValid, String errorMessage)
+  {}
 
   private EidasMetadataNode parseToEidasMetadata(byte[] bytes) throws Exception
   {
@@ -412,7 +412,7 @@ public class MetadataController
       // Exception message already logged in Utils.ensureKeySize
       redirectAttributes.addFlashAttribute(REDIRECT_ATTRIBUTE_ERROR,
                                            "Cannot save the selected metadata verification certificate: "
-                                                    + e.getMessage());
+                                                                     + e.getMessage());
       return REDIRECT_TO_INDEX;
     }
 

@@ -30,7 +30,7 @@ public class KeyChecker
 
   /**
    * Checks if a key meets the requirements to be used as a new tls client key
-   * 
+   *
    * @param keyPairName the name of the key pair to check
    * @param currentTlsClientKeypair the name of the current tls client key pair of the service provider
    * @return an object containing a boolean and a message in case of a key not matching the requirements
@@ -88,7 +88,7 @@ public class KeyChecker
     return new MtlsKeyCheck(true, "");
   }
 
-  public record MtlsKeyCheck(boolean isValid, String reason) {
-  }
+  public record MtlsKeyCheck(boolean isValid, String reason)
+  {}
 
 }

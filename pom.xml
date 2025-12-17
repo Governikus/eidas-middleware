@@ -15,7 +15,7 @@
 
     <groupId>de.governikus.eumw</groupId>
     <artifactId>eumw</artifactId>
-    <version>3.4.0</version>
+    <version>4.0.0</version>
     <packaging>pom</packaging>
 
     <name>EU Middleware</name>
@@ -36,9 +36,9 @@
     </organization>
 
     <scm>
-        <url>https://hg.govkg.de/Autent/eumw</url>
-        <connection>scm:hg:https://hg.govkg.de/Autent/eumw</connection>
-        <tag>eumw-3.4.0</tag>
+        <url>https://gitlab.govkg.de/govkg/autent/autent-a/eumw</url>
+        <connection>scm:git:https://gitlab.govkg.de/govkg/autent/autent-a/eumw.git</connection>
+        <tag>eumw-4.0.0</tag>
     </scm>
 
     <repositories>
@@ -90,105 +90,111 @@
         <argLine />
 
         <!-- crypto -->
-        <version.bouncycastle>1.80</version.bouncycastle>
+        <version.bouncycastle>1.82</version.bouncycastle>
         <version.javasupport>8.4.2</version.javasupport>
-        <version.opensaml>5.1.3</version.opensaml>
-        <version.opensaml-eidas>3.2.1</version.opensaml-eidas>
-        <version.opensaml-security-ext>4.1.3</version.opensaml-security-ext>
+        <version.opensaml>5.1.6</version.opensaml>
+        <version.opensaml-eidas>3.2.5</version.opensaml-eidas>
+        <version.opensaml-security-ext>4.1.8</version.opensaml-security-ext>
         <!-- 4.0.2 introduces a bug in the EncryptionMethod-Element, so this version should not be used. -->
-        <version.xmlsec>4.0.3</version.xmlsec>
+        <version.xmlsec>4.0.4</version.xmlsec>
 
-        <version.cxf>4.0.6</version.cxf>
+        <version.cxf>4.1.3</version.cxf>
         <!-- se.swedenconnect.opensaml:opensaml-security-ext:4.0.0 uses version 9.0.0, after updating it, check if his is necessary-->
-        <version.shib-support>9.1.3</version.shib-support>
+        <version.shib-support>9.1.6</version.shib-support>
 
-        <version.springboot>3.4.3</version.springboot>
-        <version.thymeleaf-layout-dialect>3.3.0</version.thymeleaf-layout-dialect>
+        <version.springboot>3.5.7</version.springboot>
+        <version.thymeleaf-layout-dialect>3.4.0</version.thymeleaf-layout-dialect>
 
-        <version.woodstox>7.1.0</version.woodstox>
+        <version.woodstox>7.1.1</version.woodstox>
 
-        <version.asm>9.7.1</version.asm>
-        <version.classgraph>4.8.179</version.classgraph>
-        <version.commons.fileupload>1.5.0</version.commons.fileupload>
-        <version.commons.io>2.18.0</version.commons.io>
-        <version.commons.text>1.13.0</version.commons.text>
-        <version.commons.lang3>3.17.0</version.commons.lang3>
-        <version.guava>33.4.0-jre</version.guava>
+        <version.asm>9.9</version.asm>
+        <version.classgraph>4.8.184</version.classgraph>
+        <version.commons.fileupload>1.6.0</version.commons.fileupload>
+        <version.commons.io>2.20.0</version.commons.io>
+        <version.commons.text>1.14.0</version.commons.text>
+        <version.commons.lang3>3.19.0</version.commons.lang3>
+        <version.guava>33.5.0-jre</version.guava>
         <!-- only used for the migration tool -->
         <version.h2>1.4.200</version.h2>
         <version.hsqldb>2.7.4</version.hsqldb>
         <!-- httpclient is moved to httpclient5 and needs a code migration -->
         <version.httpclient>4.5.14</version.httpclient>
         <version.istack-commons-runtime>4.2.0</version.istack-commons-runtime>
-        <version.jackson>2.18.2</version.jackson>
+        <version.jackson>2.20.0</version.jackson>
+        <!-- Needed because jackson-annotations artifact has version 2.20 -->
+        <version.jackson220>2.20</version.jackson220>
         <version.jakarta.activation>2.0.1</version.jakarta.activation>
         <version.jakarta.jws-api>3.0.0</version.jakarta.jws-api>
         <version.jaxb2-basics>2.0.12</version.jaxb2-basics>
         <version.jaxws.maven.plugin>4.0.3</version.jaxws.maven.plugin>
-        <version.jaxb-runtime>4.0.5</version.jaxb-runtime>
-        <version.jmrtd>0.7.42</version.jmrtd>
+        <version.jaxb-runtime>4.0.6</version.jaxb-runtime>
+        <version.jmrtd>0.8.3</version.jmrtd>
         <version.json-schema-validator>2.2.14</version.json-schema-validator>
         <version.jsr305>3.0.2</version.jsr305>
-        <version.groovy>4.0.25</version.groovy>
+        <version.groovy>5.0.2</version.groovy>
         <version.snmp4j>3.8.2</version.snmp4j>
         <version.snakeyaml>2.4</version.snakeyaml>
 
         <!-- IDE helper -->
-        <version.lombok>1.18.36</version.lombok>
+        <version.lombok>1.18.38</version.lombok>
 
         <!-- logging dependencies -->
-        <version.log4j2>2.24.3</version.log4j2>
+        <version.log4j2>2.25.1</version.log4j2>
         <version.slf4j>2.0.17</version.slf4j>
 
         <!-- test dependencies -->
         <version.htmlunit>2.70.0</version.htmlunit>
-        <version.junit-bom>5.12.0</version.junit-bom>
+        <version.junit-bom>6.0.0</version.junit-bom>
         <!-- Newer version is available but not compatible with HtmlUnit -->
         <version.mockserver>5.12.0</version.mockserver>
         <version.opentest4j>1.3.0</version.opentest4j>
 
         <!-- version for dependency check, can be overwritten by Jenkins -->
-        <version.dependency-check-maven>11.1.1</version.dependency-check-maven>
+        <version.dependency-check-maven>12.1.8</version.dependency-check-maven>
 
         <!-- version for Webjars -->
         <version.webjars.locator>0.52</version.webjars.locator>
         <version.webjars.fontawesome>6.7.2</version.webjars.fontawesome>
-        <version.webjars.identglue>1.0.14</version.webjars.identglue>
-        <version.webjars.bootstrap>5.3.3</version.webjars.bootstrap>
+        <version.webjars.identglue>1.0.16</version.webjars.identglue>
+        <version.webjars.bootstrap>5.3.8</version.webjars.bootstrap>
         <version.webjars.jquery>3.7.1</version.webjars.jquery>
 
         <!-- versions for plugins -->
         <!-- The versions only need to be updated when a new feature is needed or there are problems with previous versions -->
-        <version.build-helper-maven-plugin>3.0.0</version.build-helper-maven-plugin>
-        <version.docker-maven-plugin>0.43.0</version.docker-maven-plugin>
-        <version.extra-enforcer-rules>1.0-beta-7</version.extra-enforcer-rules>
-        <version.jacoco-maven-plugin>0.8.10</version.jacoco-maven-plugin>
+        <version.build-helper-maven-plugin>3.6.1</version.build-helper-maven-plugin>
+        <version.docker-maven-plugin>0.46.0</version.docker-maven-plugin>
+        <version.extra-enforcer-rules>1.10.0</version.extra-enforcer-rules>
+        <version.jacoco-maven-plugin>0.8.13</version.jacoco-maven-plugin>
         <version.jaxb2-maven-plugin>0.15.3</version.jaxb2-maven-plugin>
         <version.jaxb2-value-constructor>3.0</version.jaxb2-value-constructor>
         <version.jaxws-maven-plugin>4.0.1</version.jaxws-maven-plugin>
-        <version.license-maven-plugin>2.0.0</version.license-maven-plugin>
-        <version.maven-assembly-plugin>3.2.0</version.maven-assembly-plugin>
-        <version.maven-clean-plugin>3.0.0</version.maven-clean-plugin>
-        <version.maven-compiler-plugin>3.7.0</version.maven-compiler-plugin>
-        <version.maven-deploy-plugin>3.0.0-M1</version.maven-deploy-plugin>
-        <version.maven-enforcer-plugin>3.0.0-M1</version.maven-enforcer-plugin>
+        <version.license-maven-plugin>2.6.0</version.license-maven-plugin>
+        <version.maven-assembly-plugin>3.7.1</version.maven-assembly-plugin>
+        <version.maven-clean-plugin>3.5.0</version.maven-clean-plugin>
+        <version.maven-compiler-plugin>3.14.0</version.maven-compiler-plugin>
+        <version.maven-deploy-plugin>3.1.4</version.maven-deploy-plugin>
+        <version.maven-enforcer-plugin>3.6.1</version.maven-enforcer-plugin>
         <version.maven-failsafe-plugin>2.22.2</version.maven-failsafe-plugin>
         <version.maven-install-plugin>2.5.2</version.maven-install-plugin>
-        <version.maven-javadoc-plugin>3.0.0</version.maven-javadoc-plugin>
-        <version.maven-jar-plugin>3.0.2</version.maven-jar-plugin>
-        <version.maven-jarsigner-plugin>3.0.0</version.maven-jarsigner-plugin>
+        <version.maven-javadoc-plugin>3.11.3</version.maven-javadoc-plugin>
+        <version.maven-jar-plugin>3.4.2</version.maven-jar-plugin>
+        <version.maven-jarsigner-plugin>3.1.0</version.maven-jarsigner-plugin>
         <version.maven-jxr-plugin>2.5</version.maven-jxr-plugin>
         <version.maven-release-plugin>2.5.3</version.maven-release-plugin>
-        <version.maven-resources-plugin>3.0.2</version.maven-resources-plugin>
-        <version.maven-site-plugin>3.7</version.maven-site-plugin>
-        <version.maven-source-plugin>3.0.1</version.maven-source-plugin>
+        <version.maven-resources-plugin>3.3.1</version.maven-resources-plugin>
+        <version.maven-site-plugin>3.21.0</version.maven-site-plugin>
+        <version.maven-source-plugin>3.3.1</version.maven-source-plugin>
         <version.maven-surefire-plugin>2.22.2</version.maven-surefire-plugin>
 
 
         <!-- this must be compatible to jakarta-xml-ws.version from spring-boot-dependencies -->
         <version.jaxws-rt>4.0.3</version.jaxws-rt>
-        <version.jvnet.jaxb>4.0.8</version.jvnet.jaxb>
-        <version.commons.codec>1.17.1</version.commons.codec>
+        <version.jvnet.jaxb>4.0.9</version.jvnet.jaxb>
+        <version.commons.codec>1.19.0</version.commons.codec>
+
+        <!-- Formatter plugin-->
+        <version.maven.formatter.plugin>2.27.0</version.maven.formatter.plugin>
+        <formatter-path>${project.basedir}</formatter-path>
     </properties>
 
     <build>
@@ -371,8 +377,19 @@
                     <version>${version.license-maven-plugin}</version>
                     <configuration>
                         <licenseMergesUrl>
-                            https://hg.govkg.de/Infrastruktur/maven/LicenseWhitelist/raw-file/default/license-merges
+                            https://gitlab.govkg.de/public-govkg/licensing/licensewhitelist/-/raw/main/license-merges
                         </licenseMergesUrl>
+                        <includedLicenses>
+                            https://gitlab.govkg.de/public-govkg/licensing/licensewhitelist/-/raw/main/license-whitelist
+                        </includedLicenses>
+                        <overrideUrl>
+                            https://gitlab.govkg.de/public-govkg/licensing/licensewhitelist/-/raw/main/license-artifact-override
+                        </overrideUrl>
+                        <missingFileUrl>
+                            https://gitlab.govkg.de/public-govkg/licensing/licensewhitelist/-/raw/main/license-artifact-mapping
+                        </missingFileUrl>
+                        <useMissingFile>true</useMissingFile>
+                        <excludedScopes>system,test,provided</excludedScopes>
                         <excludedGroups>de\.governikus\.eumw</excludedGroups>
                     </configuration>
                 </plugin>
@@ -401,9 +418,27 @@
                     <!-- the version will be set by Jenkins -->
                     <version>${version.dependency-check-maven}</version>
                 </plugin>
+
             </plugins>
         </pluginManagement>
         <plugins>
+            <plugin>
+                <groupId>net.revelc.code.formatter</groupId>
+                <artifactId>formatter-maven-plugin</artifactId>
+                <version>${version.maven.formatter.plugin}</version>
+                <configuration>
+                    <configFile>${formatter-path}/GOV-formatting.xml</configFile>
+                    <lineEnding>LF</lineEnding>
+                </configuration>
+                <executions>
+                    <execution>
+                        <id>formatter</id>
+                        <goals>
+                            <goal>validate</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-enforcer-plugin</artifactId>
@@ -910,7 +945,8 @@
             <dependency>
                 <groupId>com.fasterxml.jackson.core</groupId>
                 <artifactId>jackson-annotations</artifactId>
-                <version>${version.jackson}</version>
+                <!-- Needed because this artifact has version 2.20 -->
+                <version>${version.jackson220}</version>
             </dependency>
             <dependency>
                 <groupId>com.fasterxml.jackson.core</groupId>

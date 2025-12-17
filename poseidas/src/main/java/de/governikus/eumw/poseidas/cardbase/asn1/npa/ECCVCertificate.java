@@ -1,11 +1,10 @@
 /*
- * Copyright (c) 2020 Governikus KG. Licensed under the EUPL, Version 1.2 or as soon they will be approved by
- * the European Commission - subsequent versions of the EUPL (the "Licence"); You may not use this work except
- * in compliance with the Licence. You may obtain a copy of the Licence at:
- * http://joinup.ec.europa.eu/software/page/eupl Unless required by applicable law or agreed to in writing,
- * software distributed under the Licence is distributed on an "AS IS" basis, WITHOUT WARRANTIES OR CONDITIONS
- * OF ANY KIND, either express or implied. See the Licence for the specific language governing permissions and
- * limitations under the Licence.
+ * Copyright (c) 2020 Governikus KG. Licensed under the EUPL, Version 1.2 or as soon they will be approved by the
+ * European Commission - subsequent versions of the EUPL (the "Licence"); You may not use this work except in compliance
+ * with the Licence. You may obtain a copy of the Licence at: http://joinup.ec.europa.eu/software/page/eupl Unless
+ * required by applicable law or agreed to in writing, software distributed under the Licence is distributed on an
+ * "AS IS" basis, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the Licence for the
+ * specific language governing permissions and limitations under the Licence.
  */
 
 package de.governikus.eumw.poseidas.cardbase.asn1.npa;
@@ -67,8 +66,8 @@ public class ECCVCertificate extends AbstractASN1Encoder
    *
    * @param bytes bytes of complete CVC, <code>null</code> or empty not permitted
    * @throws IOException if reading of stream fails
-   * @throws IllegalArgumentException if bytes <code>null</code> or empty or if bytes contain structure not
-   *           complying with CVC structure.
+   * @throws IllegalArgumentException if bytes <code>null</code> or empty or if bytes contain structure not complying
+   *           with CVC structure.
    * @see ASN1#ASN1(byte[])
    */
   public ECCVCertificate(byte[] bytes) throws IOException
@@ -103,8 +102,7 @@ public class ECCVCertificate extends AbstractASN1Encoder
     {
       List<ASN1> bodyChildList = checkBody();
 
-      if (!Arrays.equals(ECCVCPath.PROFILE_IDENTIFIER.getTag().toByteArray(),
-                         bodyChildList.get(0).getDTagBytes()))
+      if (!Arrays.equals(ECCVCPath.PROFILE_IDENTIFIER.getTag().toByteArray(), bodyChildList.get(0).getDTagBytes()))
       {
         throw new IllegalArgumentException(ERROR_MESSAGE_NO_CVC);
       }
@@ -122,8 +120,7 @@ public class ECCVCertificate extends AbstractASN1Encoder
       }
       this.publicKey = new ECPublicKey(bodyChildList.get(2).getEncoded());
 
-      if (!Arrays.equals(ECCVCPath.HOLDER_REFERENCE.getTag().toByteArray(),
-                         bodyChildList.get(3).getDTagBytes()))
+      if (!Arrays.equals(ECCVCPath.HOLDER_REFERENCE.getTag().toByteArray(), bodyChildList.get(3).getDTagBytes()))
       {
         throw new IllegalArgumentException(ERROR_MESSAGE_NO_CVC);
       }
@@ -136,15 +133,13 @@ public class ECCVCertificate extends AbstractASN1Encoder
       }
       this.chat = new CertificateHolderAuthorizationTemplate(bodyChildList.get(4).getEncoded());
 
-      if (!Arrays.equals(ECCVCPath.EFFECTIVE_DATE.getTag().toByteArray(),
-                         bodyChildList.get(5).getDTagBytes()))
+      if (!Arrays.equals(ECCVCPath.EFFECTIVE_DATE.getTag().toByteArray(), bodyChildList.get(5).getDTagBytes()))
       {
         throw new IllegalArgumentException(ERROR_MESSAGE_NO_CVC);
       }
       this.effectiveDate = this.getDate(bodyChildList.get(5).getValue());
 
-      if (!Arrays.equals(ECCVCPath.EXPIRATION_DATE.getTag().toByteArray(),
-                         bodyChildList.get(6).getDTagBytes()))
+      if (!Arrays.equals(ECCVCPath.EXPIRATION_DATE.getTag().toByteArray(), bodyChildList.get(6).getDTagBytes()))
       {
         throw new IllegalArgumentException(ERROR_MESSAGE_NO_CVC);
       }
@@ -222,13 +217,11 @@ public class ECCVCertificate extends AbstractASN1Encoder
   /**
    * Gets child element by given path.
    *
-   * @param path path to child element, <code>null</code> not permitted, must be instance of {@link ECCVCPath}
-   *          .
+   * @param path path to child element, <code>null</code> not permitted, must be instance of {@link ECCVCPath} .
    * @return child element of ASN.1 specified by path, uses subclass of {@link ASN1} if given in path object,
    *         <code>null</code>, if not found
    * @throws IOException if reading fails
-   * @throws IllegalArgumentException if requested path <code>null</code> or if path not instance of
-   *           {@link ECCVCPath}
+   * @throws IllegalArgumentException if requested path <code>null</code> or if path not instance of {@link ECCVCPath}
    */
   @Override
   public ASN1 getChildElementByPath(ASN1Path path) throws IOException
@@ -316,8 +309,8 @@ public class ECCVCertificate extends AbstractASN1Encoder
   }
 
   /**
-   * the hash of the public sector key, necessary for the EID service to query the matching sector public key
-   * of the certificate used for restricted identification.
+   * the hash of the public sector key, necessary for the EID service to query the matching sector public key of the
+   * certificate used for restricted identification.
    *
    * @return the SectorPublicKeyHash or null
    */
@@ -348,16 +341,14 @@ public class ECCVCertificate extends AbstractASN1Encoder
     {
       throw new IOException("date in unknown format");
     }
-    String dateString = "20" + dateByte[0] + dateByte[1] + dateByte[2] + dateByte[3] + dateByte[4]
-                        + dateByte[5];
+    String dateString = "20" + dateByte[0] + dateByte[1] + dateByte[2] + dateByte[3] + dateByte[4] + dateByte[5];
     SimpleDateFormat df = new SimpleDateFormat("yyyyMMdd");
     df.setTimeZone(TimeZone.getTimeZone("UTC"));
     return df.parse(dateString);
   }
 
   /**
-   * Check if the Hash of the CVCdescription inside the CVC matches the actual hash of the given
-   * CVCDescription.
+   * Check if the Hash of the CVCdescription inside the CVC matches the actual hash of the given CVCDescription.
    *
    * @param cvcDescription
    * @return true if equals false if not or the data structures are corrupt

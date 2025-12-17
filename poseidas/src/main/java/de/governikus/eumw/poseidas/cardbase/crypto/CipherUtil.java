@@ -1,11 +1,10 @@
 /*
- * Copyright (c) 2020 Governikus KG. Licensed under the EUPL, Version 1.2 or as soon they will be approved by
- * the European Commission - subsequent versions of the EUPL (the "Licence"); You may not use this work except
- * in compliance with the Licence. You may obtain a copy of the Licence at:
- * http://joinup.ec.europa.eu/software/page/eupl Unless required by applicable law or agreed to in writing,
- * software distributed under the Licence is distributed on an "AS IS" basis, WITHOUT WARRANTIES OR CONDITIONS
- * OF ANY KIND, either express or implied. See the Licence for the specific language governing permissions and
- * limitations under the Licence.
+ * Copyright (c) 2020 Governikus KG. Licensed under the EUPL, Version 1.2 or as soon they will be approved by the
+ * European Commission - subsequent versions of the EUPL (the "Licence"); You may not use this work except in compliance
+ * with the Licence. You may obtain a copy of the Licence at: http://joinup.ec.europa.eu/software/page/eupl Unless
+ * required by applicable law or agreed to in writing, software distributed under the Licence is distributed on an
+ * "AS IS" basis, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the Licence for the
+ * specific language governing permissions and limitations under the Licence.
  */
 
 package de.governikus.eumw.poseidas.cardbase.crypto;
@@ -77,9 +76,7 @@ public final class CipherUtil
   /**
    * List of key sizes permitted for AES: 16 (128bit), 24 (192bit) and 32 (256bit).
    */
-  private static final List<Integer> KEY_SIZES_LIST_AES = Collections.unmodifiableList(Arrays.asList(16,
-                                                                                                     24,
-                                                                                                     32));
+  private static final List<Integer> KEY_SIZES_LIST_AES = Collections.unmodifiableList(Arrays.asList(16, 24, 32));
 
   /**
    * Constructor.
@@ -95,22 +92,18 @@ public final class CipherUtil
    *
    * @param algorithm algorithm, <code>null</code> or empty String not permitted
    * @param key key, <code>null</code> not permitted
-   * @param mode mode of Cipher, {@link Cipher#ENCRYPT_MODE}, {@link Cipher#DECRYPT_MODE},
-   *          {@link Cipher#WRAP_MODE} or , {@link Cipher#UNWRAP_MODE} only permitted
-   * @param iv initialization vector, <code>null</code> not permitted or specification with <code>null</code>
-   *          or empty byte array as IV ({@link IvParameterSpec#getIV()}), only possible for ECB block mode
+   * @param mode mode of Cipher, {@link Cipher#ENCRYPT_MODE}, {@link Cipher#DECRYPT_MODE}, {@link Cipher#WRAP_MODE} or ,
+   *          {@link Cipher#UNWRAP_MODE} only permitted
+   * @param iv initialization vector, <code>null</code> not permitted or specification with <code>null</code> or empty
+   *          byte array as IV ({@link IvParameterSpec#getIV()}), only possible for ECB block mode
    * @param provider name of provider, <code>null</code> for wildcard
    * @return Cipher-instance
-   * @throws IllegalArgumentException if algorithm, key, mode or initialization not permitted, algorithm, key
-   *           or parameters not supported
+   * @throws IllegalArgumentException if algorithm, key, mode or initialization not permitted, algorithm, key or
+   *           parameters not supported
    * @see Cipher#getInstance(String)
    * @see Cipher#init(int, java.security.Key, java.security.spec.AlgorithmParameterSpec)
    */
-  private static final Cipher getCipher(String algorithm,
-                                        SecretKey key,
-                                        int mode,
-                                        IvParameterSpec iv,
-                                        String provider)
+  private static final Cipher getCipher(String algorithm, SecretKey key, int mode, IvParameterSpec iv, String provider)
   {
     // first check arguments contain valid values
     checkGetCipherArguments(algorithm, key, mode, iv, provider);
@@ -154,8 +147,7 @@ public final class CipherUtil
     }
     catch (InvalidAlgorithmParameterException e)
     {
-      throw new IllegalArgumentException("invalid algorithm parameters: " + iv + ", message: "
-                                         + e.getMessage(), e);
+      throw new IllegalArgumentException("invalid algorithm parameters: " + iv + ", message: " + e.getMessage(), e);
     }
     return c;
   }
@@ -165,10 +157,10 @@ public final class CipherUtil
    *
    * @param algorithm algorithm, <code>null</code> or empty String not permitted
    * @param key key, <code>null</code> not permitted
-   * @param mode mode of Cipher, {@link Cipher#ENCRYPT_MODE}, {@link Cipher#DECRYPT_MODE},
-   *          {@link Cipher#WRAP_MODE} or , {@link Cipher#UNWRAP_MODE} only permitted
-   * @param iv initialization vector, <code>null</code> not permitted or specification with <code>null</code>
-   *          or empty byte array as IV ({@link IvParameterSpec#getIV()}), only possible for ECB block mode
+   * @param mode mode of Cipher, {@link Cipher#ENCRYPT_MODE}, {@link Cipher#DECRYPT_MODE}, {@link Cipher#WRAP_MODE} or ,
+   *          {@link Cipher#UNWRAP_MODE} only permitted
+   * @param iv initialization vector, <code>null</code> not permitted or specification with <code>null</code> or empty
+   *          byte array as IV ({@link IvParameterSpec#getIV()}), only possible for ECB block mode
    * @param provider name of provider, <code>null</code> for wildcard
    * @throws IllegalArgumentException if at least one argument or combination of arguments not valid
    */
@@ -221,8 +213,8 @@ public final class CipherUtil
    * @param key key to check, <code>null</code> not permitted, only key of expected algorithm is permitted
    * @param algorithm expected algorithm, algorithm
    * @param keySizeList optional List of permitted key sizes
-   * @throws IllegalArgumentException if key <code>null</code> or algorithm is not as expected, if List of
-   *           permitted key sizes given length of is checked against List
+   * @throws IllegalArgumentException if key <code>null</code> or algorithm is not as expected, if List of permitted key
+   *           sizes given length of is checked against List
    */
   private static void checkCipherKey(SecretKey key, String algorithm, List<Integer> keySizeList)
   {
@@ -260,8 +252,7 @@ public final class CipherUtil
   private static final String TRANSFORMATION_SEPARATOR = "/";
 
   /**
-   * Constant of index for name of transformation at result of {@link #getTransformationParts(String)}:
-   * <tt>0</tt>.
+   * Constant of index for name of transformation at result of {@link #getTransformationParts(String)}: <tt>0</tt>.
    *
    * @see #getTransformationParts(String)
    * @see #IDX_TRANSFORMATION_BLOCKMODE
@@ -280,8 +271,7 @@ public final class CipherUtil
   private static final int IDX_TRANSFORMATION_BLOCKMODE = 1;
 
   /**
-   * Constant of index for padding of transformation at result of {@link #getTransformationParts(String)}:
-   * <tt>2</tt>.
+   * Constant of index for padding of transformation at result of {@link #getTransformationParts(String)}: <tt>2</tt>.
    *
    * @see #getTransformationParts(String)
    * @see #IDX_TRANSFORMATION_ALGORITHM_NAME
@@ -295,17 +285,17 @@ public final class CipherUtil
   private static final String BLOCK_MODE_ECB = "ECB";
 
   /**
-   * Gets the different parts of transformation specifications as used by JCE: algorithm name, block mode and
-   * padding, e. g. 'DES/CBC/NoPadding'.
+   * Gets the different parts of transformation specifications as used by JCE: algorithm name, block mode and padding,
+   * e. g. 'DES/CBC/NoPadding'.
    *
-   * @param transformation transformation, <code>null</code> or empty String not permitted, transformation
-   *          expected as String containing as maximum the three parts for name of algorithm, block mode and
-   *          padding separated by {@link #TRANSFORMATION_SEPARATOR}
+   * @param transformation transformation, <code>null</code> or empty String not permitted, transformation expected as
+   *          String containing as maximum the three parts for name of algorithm, block mode and padding separated by
+   *          {@link #TRANSFORMATION_SEPARATOR}
    * @return parts of algorithms array, using indices {@link #IDX_TRANSFORMATION_ALGORITHM_NAME},
    *         {@link #IDX_TRANSFORMATION_BLOCKMODE} and {@link #IDX_TRANSFORMATION_PADDING}, some parts maybe
    *         <code>null</code>, if part not specified
-   * @throws IllegalArgumentException if transformation is <code>null</code>, empty String or does contain too
-   *           much parts
+   * @throws IllegalArgumentException if transformation is <code>null</code>, empty String or does contain too much
+   *           parts
    * @see #TRANSFORMATION_SEPARATOR
    * @see #IDX_TRANSFORMATION_ALGORITHM_NAME
    * @see #IDX_TRANSFORMATION_BLOCKMODE
@@ -337,16 +327,16 @@ public final class CipherUtil
    *
    * @param algorithm algorithm, <code>null</code> or empty String not permitted
    * @param key key, <code>null</code> not permitted, only AES keys permitted
-   * @param iv initialization vector, <code>null</code> not permitted or specification with <code>null</code>
-   *          or empty byte array as IV ({@link IvParameterSpec#getIV()})
+   * @param iv initialization vector, <code>null</code> not permitted or specification with <code>null</code> or empty
+   *          byte array as IV ({@link IvParameterSpec#getIV()})
    * @param data bytes to be deciphered
    * @param provider name of provider, <code>null</code> for wildcard
    * @return deciphered bytes
-   * @throws IllegalArgumentException if algorithm, key, mode or initialization vector not permitted,
-   *           algorithm, key or parameters not supported
+   * @throws IllegalArgumentException if algorithm, key, mode or initialization vector not permitted, algorithm, key or
+   *           parameters not supported
    * @throws BadPaddingException if block not padded correctly
-   * @throws IllegalBlockSizeException if length of bytes-array is not multiple of AES key size (16 byte for
-   *           128 bit, 24 byte for 192 bit and 32 byte for 256 bit)
+   * @throws IllegalBlockSizeException if length of bytes-array is not multiple of AES key size (16 byte for 128 bit, 24
+   *           byte for 192 bit and 32 byte for 256 bit)
    * @see #decipherAES(String, SecretKey, IvParameterSpec, byte[], String)
    * @see #cipherAES(String, SecretKey, int, IvParameterSpec, byte[], String)
    * @see Cipher#ENCRYPT_MODE
@@ -366,16 +356,16 @@ public final class CipherUtil
    *
    * @param algorithm algorithm, <code>null</code> or empty String not permitted
    * @param key key, <code>null</code> not permitted, only AES keys permitted
-   * @param iv initialization vector, <code>null</code> not permitted or specification with <code>null</code>
-   *          or empty byte array as IV ({@link IvParameterSpec#getIV()})
+   * @param iv initialization vector, <code>null</code> not permitted or specification with <code>null</code> or empty
+   *          byte array as IV ({@link IvParameterSpec#getIV()})
    * @param data bytes to be deciphered
    * @param provider name of provider, <code>null</code> for wildcard
    * @return deciphered bytes
-   * @throws IllegalArgumentException if algorithm, key, mode or initialization vector not permitted,
-   *           algorithm, key or parameters not supported
+   * @throws IllegalArgumentException if algorithm, key, mode or initialization vector not permitted, algorithm, key or
+   *           parameters not supported
    * @throws BadPaddingException if block not padded correctly
-   * @throws IllegalBlockSizeException if length of bytes-array is not multiple of AES key size (16 byte for
-   *           128 bit, 24 byte for 192 bit and 32 byte for 256 bit)
+   * @throws IllegalBlockSizeException if length of bytes-array is not multiple of AES key size (16 byte for 128 bit, 24
+   *           byte for 192 bit and 32 byte for 256 bit)
    * @see #encipherAES(String, SecretKey, IvParameterSpec, byte[], String)
    * @see #cipherAES(String, SecretKey, int, IvParameterSpec, byte[], String)
    * @see Cipher#DECRYPT_MODE
@@ -396,13 +386,13 @@ public final class CipherUtil
    * @param algorithm algorithm, <code>null</code> or empty String not permitted
    * @param key key, <code>null</code> not permitted, only AES keys permitted
    * @param mode mode of Cipher, {@link Cipher#ENCRYPT_MODE} or {@link Cipher#DECRYPT_MODE} only permitted
-   * @param iv initialization vector, <code>null</code> not permitted or specification with <code>null</code>
-   *          or empty byte array as IV ({@link IvParameterSpec#getIV()})
+   * @param iv initialization vector, <code>null</code> not permitted or specification with <code>null</code> or empty
+   *          byte array as IV ({@link IvParameterSpec#getIV()})
    * @param data bytes to be enciphered/deciphered, multiple of 8 bytes
    * @param provider name of provider, <code>null</code> for wildcard
    * @return enciphered/deciphered bytes
-   * @throws IllegalArgumentException if algorithm, key, mode or initialization vector not permitted,
-   *           algorithm, key or parameters not supported
+   * @throws IllegalArgumentException if algorithm, key, mode or initialization vector not permitted, algorithm, key or
+   *           parameters not supported
    * @throws BadPaddingException
    * @throws IllegalBlockSizeException
    */
@@ -423,18 +413,17 @@ public final class CipherUtil
   /**
    * Calculates CMAC of data (used for smartcards with AES based Secure messaging).
    *
-   * @param bytes bytes to calculate checksum, <code>null</code> not permitted, empty array permitted,
-   *          byte-array not multiple of AES block size permitted
+   * @param bytes bytes to calculate checksum, <code>null</code> not permitted, empty array permitted, byte-array not
+   *          multiple of AES block size permitted
    * @param macKey key for MAC calculation, <code>null</code> or other than AES key not permitted
    * @param iv initialization vector for calculation, <code>null</code> not permitted or specification with
    *          <code>null</code> or empty byte array as IV ({@link IvParameterSpec#getIV()})
-   * @param outputLength optional output length ({@link #AES_CMAC_MINIMUM_LENGTH} to
-   *          {@value #AES_CMAC_MAXIMUM_LENGTH} bytes possible), <code>null</code> to use default
-   *          {@link #AES_CMAC_DEFAULT_LENGTH}
+   * @param outputLength optional output length ({@link #AES_CMAC_MINIMUM_LENGTH} to {@value #AES_CMAC_MAXIMUM_LENGTH}
+   *          bytes possible), <code>null</code> to use default {@link #AES_CMAC_DEFAULT_LENGTH}
    * @return calculated checksum (CMAC as requested {@link #AES_CMAC_MINIMUM_LENGTH} to
    *         {@value #AES_CMAC_MAXIMUM_LENGTH} bytes)
-   * @throws IllegalArgumentException if bytes, key or initialization vector invalid, also fails if padding
-   *           not specified and passed bytes not externally padded to AES block size
+   * @throws IllegalArgumentException if bytes, key or initialization vector invalid, also fails if padding not
+   *           specified and passed bytes not externally padded to AES block size
    */
   public static final byte[] cMAC(byte[] bytes, SecretKey macKey, IvParameterSpec iv, Integer outputLength)
   {
@@ -460,16 +449,14 @@ public final class CipherUtil
   /**
    * Plain CMAC calculation without SSC operating on data with key only.
    *
-   * @param bytes bytes to calculate checksum, <code>null</code> not permitted, empty array permitted,
-   *          byte-array not multiple of AES block size permitted
+   * @param bytes bytes to calculate checksum, <code>null</code> not permitted, empty array permitted, byte-array not
+   *          multiple of AES block size permitted
    * @param macKey key for MAC calculation, <code>null</code> or other than AES key not permitted
-   * @param outputLength optional output length ({@link #AES_CMAC_MINIMUM_LENGTH} to
-   *          {@value #AES_CMAC_MAXIMUM_LENGTH} bytes possible), <code>null</code> to use default
-   *          {@link #AES_CMAC_DEFAULT_LENGTH}
+   * @param outputLength optional output length ({@link #AES_CMAC_MINIMUM_LENGTH} to {@value #AES_CMAC_MAXIMUM_LENGTH}
+   *          bytes possible), <code>null</code> to use default {@link #AES_CMAC_DEFAULT_LENGTH}
    * @return calculated checksum (CMAC as requested {@link #AES_CMAC_MINIMUM_LENGTH} to
    *         {@value #AES_CMAC_MAXIMUM_LENGTH} bytes)
-   * @throws IllegalArgumentException if data <code>null</code> or empty, key invalid, output length not
-   *           within borders
+   * @throws IllegalArgumentException if data <code>null</code> or empty, key invalid, output length not within borders
    * @see #AES_CMAC_MINIMUM_LENGTH
    * @see #AES_CMAC_DEFAULT_LENGTH
    * @see #AES_CMAC_MAXIMUM_LENGTH
@@ -490,13 +477,11 @@ public final class CipherUtil
     }
     else if (outputLength < AES_CMAC_MINIMUM_LENGTH)
     {
-      throw new IllegalArgumentException("output length exceeds minimum of " + AES_CMAC_MINIMUM_LENGTH
-                                         + " bytes");
+      throw new IllegalArgumentException("output length exceeds minimum of " + AES_CMAC_MINIMUM_LENGTH + " bytes");
     }
     else if (outputLength > AES_CMAC_MAXIMUM_LENGTH)
     {
-      throw new IllegalArgumentException("output length exceeds maximum of " + AES_CMAC_MAXIMUM_LENGTH
-                                         + " bytes");
+      throw new IllegalArgumentException("output length exceeds maximum of " + AES_CMAC_MAXIMUM_LENGTH + " bytes");
     }
 
     BlockCipher bc = new AESEngine();

@@ -90,7 +90,7 @@ public final class Utils
 
   /**
    * Minimal size for ephemeral DH keys (TLS).
-   * 
+   *
    * @see <a href=
    *      "https://docs.oracle.com/javase/8/docs/technotes/guides/security/jsse/JSSERefGuide.html#customizing_dh_keys">JAVA
    *      JSSE DOC</a>

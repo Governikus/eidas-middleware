@@ -50,7 +50,7 @@ public class PasswordHandler
 
   /**
    * This method checks if a password is set in password.properties
-   * 
+   *
    * @return True if password is set in password.properties.
    */
   public boolean isPasswordSet()
@@ -96,7 +96,7 @@ public class PasswordHandler
 
   /**
    * Create or overwrite the password in password.properties
-   * 
+   *
    * @param password New password
    * @param isMigration If the password is migrated from application.properties
    * @throws IOException If this method can't write to file system
@@ -139,6 +139,7 @@ public class PasswordHandler
 
   /**
    * Check if the given password matches the actual password in password.properties.
+   *
    * @param oldPassword The password to check against the actual password.
    * @return true when ths password matches.
    */

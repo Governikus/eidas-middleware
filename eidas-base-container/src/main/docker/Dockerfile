@@ -1,9 +1,11 @@
-FROM azul/zulu-openjdk-alpine:17.0.10
+ARG IMAGE_MIRROR_PREFIX=""
+ARG PROJECT_VERSION="unknown"
+FROM ${IMAGE_MIRROR_PREFIX}azul/zulu-openjdk-alpine:17.0.10
 
 MAINTAINER Benny Prange <benny.prange@governikus.de>
 
 # Define the application version for the subsequent application images
-ENV VERSION=${project.version}
+ENV VERSION=${PROJECT_VERSION}
 # Define the spring boot configuration directory
 ENV CONFIG_DIR=/opt/eidas-middleware/configuration
 

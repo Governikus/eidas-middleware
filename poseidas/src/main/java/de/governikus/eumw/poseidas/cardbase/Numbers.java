@@ -1,11 +1,10 @@
 /*
- * Copyright (c) 2020 Governikus KG. Licensed under the EUPL, Version 1.2 or as soon they will be approved by
- * the European Commission - subsequent versions of the EUPL (the "Licence"); You may not use this work except
- * in compliance with the Licence. You may obtain a copy of the Licence at:
- * http://joinup.ec.europa.eu/software/page/eupl Unless required by applicable law or agreed to in writing,
- * software distributed under the Licence is distributed on an "AS IS" basis, WITHOUT WARRANTIES OR CONDITIONS
- * OF ANY KIND, either express or implied. See the Licence for the specific language governing permissions and
- * limitations under the Licence.
+ * Copyright (c) 2020 Governikus KG. Licensed under the EUPL, Version 1.2 or as soon they will be approved by the
+ * European Commission - subsequent versions of the EUPL (the "Licence"); You may not use this work except in compliance
+ * with the Licence. You may obtain a copy of the Licence at: http://joinup.ec.europa.eu/software/page/eupl Unless
+ * required by applicable law or agreed to in writing, software distributed under the Licence is distributed on an
+ * "AS IS" basis, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the Licence for the
+ * specific language governing permissions and limitations under the Licence.
  */
 
 package de.governikus.eumw.poseidas.cardbase;
@@ -27,14 +26,13 @@ public class Numbers
    * Checks value is positive.
    * <p>
    * Note: <code>null</code> value representing unknown infinite or NaN ({@link NumInfo#UNKNOWN_INFINITY} and
-   * {@link NumInfo#UNKNOWN_NAN}) is a negative infinity, positive infinity and NaN, but not a minimum or
-   * maximum. Additionally it is positive and negative and not zero.
+   * {@link NumInfo#UNKNOWN_NAN}) is a negative infinity, positive infinity and NaN, but not a minimum or maximum.
+   * Additionally it is positive and negative and not zero.
    * </p>
    *
    * @param <T> type of number
    * @param value value, <code>null</code> permitted, unknown number type not permitted
-   * @return <code>true</code> for positive value, <code>false</code> otherwise (especially for
-   *         <code>null</code>)
+   * @return <code>true</code> for positive value, <code>false</code> otherwise (especially for <code>null</code>)
    * @throws IllegalArgumentException if value <code>null</code> or unknown number type
    * @see NumInfo#getZero()
    * @see NumInfo#UNKNOWN_ZERO
@@ -58,9 +56,9 @@ public class Numbers
   /**
    * Checks value A is greater than B.
    * <p>
-   * Note: <code>null</code> value representing unknown infinity ({@link NumInfo#UNKNOWN_INFINITY}, identical
-   * to {@link NumInfo#UNKNOWN_NAN}) is greater and less than every other value, negative infinity is less
-   * than an every other value and positive infinity is greater than an every other value.
+   * Note: <code>null</code> value representing unknown infinity ({@link NumInfo#UNKNOWN_INFINITY}, identical to
+   * {@link NumInfo#UNKNOWN_NAN}) is greater and less than every other value, negative infinity is less than an every
+   * other value and positive infinity is greater than an every other value.
    * </p>
    *
    * @param <T> type of number
@@ -90,18 +88,17 @@ public class Numbers
   }
 
   /**
-   * Compares value A with the value B for order. Returns a negative integer, zero, or a positive integer as
-   * value A is less than, equal to, or greater than the value B.
+   * Compares value A with the value B for order. Returns a negative integer, zero, or a positive integer as value A is
+   * less than, equal to, or greater than the value B.
    * <p>
-   * Note: <code>null</code> value representing infinite ({@link NumInfo#UNKNOWN_INFINITY}) is greater than
-   * every other value.
+   * Note: <code>null</code> value representing infinite ({@link NumInfo#UNKNOWN_INFINITY}) is greater than every other
+   * value.
    * </p>
    *
    * @param <T> type of number
    * @param a value A, <code>null</code> permitted representing negative infinity
    * @param b value B, <code>null</code> permitted representing positive infinity
-   * @return <code>-1</code>, zero, or <code></code> as value A is less than, equals to or greater than value
-   *         B
+   * @return <code>-1</code>, zero, or <code></code> as value A is less than, equals to or greater than value B
    * @see NumInfo#UNKNOWN_INFINITY
    * @see NumInfo#NEGATIVE_INFINITY_BYTE
    * @see NumInfo#NEGATIVE_INFINITY_SHORT
@@ -163,8 +160,8 @@ public class Numbers
   /**
    * Gets number informations related to type of value.
    * <p>
-   * Note: <code>null</code> for <code>null</code> value representing infinite (
-   * {@link NumInfo#UNKNOWN_INFINITY}) or NaN.
+   * Note: <code>null</code> for <code>null</code> value representing infinite ( {@link NumInfo#UNKNOWN_INFINITY}) or
+   * NaN.
    * </p>
    *
    * @param <T> type of number
@@ -188,8 +185,8 @@ public class Numbers
    * Cast a number extending Class to a Class extending Number and implementing Comparable.
    *
    * @param <T> type of Class extending Number and implementing Comparable
-   * @param typeClass typeClass, <code>null</code> not permitted, Class must be assignable from {@link Number}
-   *          and {@link Comparable}
+   * @param typeClass typeClass, <code>null</code> not permitted, Class must be assignable from {@link Number} and
+   *          {@link Comparable}
    * @return casted Class
    * @throws IllegalArgumentException if type class <code>null</code> or not valid
    */

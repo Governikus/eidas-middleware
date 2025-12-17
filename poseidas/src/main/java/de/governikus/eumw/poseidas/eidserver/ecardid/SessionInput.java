@@ -1,11 +1,10 @@
 /*
- * Copyright (c) 2020 Governikus KG. Licensed under the EUPL, Version 1.2 or as soon they will be approved by
- * the European Commission - subsequent versions of the EUPL (the "Licence"); You may not use this work except
- * in compliance with the Licence. You may obtain a copy of the Licence at:
- * http://joinup.ec.europa.eu/software/page/eupl Unless required by applicable law or agreed to in writing,
- * software distributed under the Licence is distributed on an "AS IS" basis, WITHOUT WARRANTIES OR CONDITIONS
- * OF ANY KIND, either express or implied. See the Licence for the specific language governing permissions and
- * limitations under the Licence.
+ * Copyright (c) 2020 Governikus KG. Licensed under the EUPL, Version 1.2 or as soon they will be approved by the
+ * European Commission - subsequent versions of the EUPL (the "Licence"); You may not use this work except in compliance
+ * with the Licence. You may obtain a copy of the Licence at: http://joinup.ec.europa.eu/software/page/eupl Unless
+ * required by applicable law or agreed to in writing, software distributed under the Licence is distributed on an
+ * "AS IS" basis, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the Licence for the
+ * specific language governing permissions and limitations under the Licence.
  */
 
 package de.governikus.eumw.poseidas.eidserver.ecardid;
@@ -20,8 +19,8 @@ import de.governikus.eumw.poseidas.eidmodel.data.EIDKeys;
 
 
 /**
- * Interface for the interface between eID-Server ant the eCard API convenience layer. The EID-Server provides
- * an implementation of this interface that provides the information given.
+ * Interface for the interface between eID-Server ant the eCard API convenience layer. The EID-Server provides an
+ * implementation of this interface that provides the information given.
  *
  * @author Alexander Funk
  * @author <a href="mail:hme@bos-bremen.de">Hauke Mehrtens</a>
@@ -58,22 +57,22 @@ public interface SessionInput extends Serializable
   public abstract boolean isPerformRestrictedIdentification();
 
   /**
-   * Return the set of all fields which are required by the server. Use this information to create the
-   * RequiredCHAT. Furthermore, this information should be used together with {@link #getOptionalFields()} to
-   * build the DataSetToBeRead.
+   * Return the set of all fields which are required by the server. Use this information to create the RequiredCHAT.
+   * Furthermore, this information should be used together with {@link #getOptionalFields()} to build the
+   * DataSetToBeRead.
    */
   public abstract Set<EIDKeys> getRequiredFields();
 
   /**
-   * Return the set of all fields which are requested but not required by the server. Use this information to
-   * create the OptionalCHAT. Furthermore, this information should be used together with
-   * {@link #getRequiredFields()} to build the DataSetToBeRead.
+   * Return the set of all fields which are requested but not required by the server. Use this information to create the
+   * OptionalCHAT. Furthermore, this information should be used together with {@link #getRequiredFields()} to build the
+   * DataSetToBeRead.
    */
   public abstract Set<EIDKeys> getOptionalFields();
 
   /**
-   * Return the list with all Certificates expect the terminal certificate to build the chain: DV certificate
-   * and all link certificates.
+   * Return the list with all Certificates expect the terminal certificate to build the chain: DV certificate and all
+   * link certificates.
    *
    * @return list with all used certificates in chain except the root certificate
    */
@@ -95,15 +94,14 @@ public interface SessionInput extends Serializable
   public abstract BlackListConnector getBlackListConnector();
 
   /**
-   * Returns the Master List which should be used for this Session. If you have a zip or any other method of
-   * providing these certificates use {@link #getMasterListCerts()}. If you have a normal master list use this
-   * method.
+   * Returns the Master List which should be used for this Session. If you have a zip or any other method of providing
+   * these certificates use {@link #getMasterListCerts()}. If you have a normal master list use this method.
    */
   public abstract byte[] getMasterList();
 
   /**
-   * Provide a list of certificates which should be treated as the master list, this could be used when you
-   * have a zip file with valid certificates. In normal cases you should use {@link #getMasterList()}.
+   * Provide a list of certificates which should be treated as the master list, this could be used when you have a zip
+   * file with valid certificates. In normal cases you should use {@link #getMasterList()}.
    */
   public abstract List<X509Certificate> getMasterListCerts();
 

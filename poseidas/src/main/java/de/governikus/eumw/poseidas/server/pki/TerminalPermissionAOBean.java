@@ -21,6 +21,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -56,6 +57,7 @@ import de.governikus.eumw.poseidas.server.pki.repositories.PendingCertificateReq
 import de.governikus.eumw.poseidas.server.pki.repositories.RequestSignerCertificateRepository;
 import de.governikus.eumw.poseidas.server.pki.repositories.TerminalPermissionRepository;
 import de.governikus.eumw.utils.key.SecurityProvider;
+
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
@@ -413,6 +415,30 @@ public class TerminalPermissionAOBean implements TerminalPermissionAO
       return;
     }
     pendingCertificateRequestRepository.delete(pending);
+    tp.setPendingRequest(null);
+    terminalPermissionRepository.saveAndFlush(tp);
+  }
+
+  @Override
+  @Transactional
+  public void deletePendingCertificateRequest(String refID) throws TerminalPermissionNotFoundException
+  {
+    Optional<TerminalPermission> terminalPermissionOptional = terminalPermissionRepository.findById(refID);
+    if (terminalPermissionOptional.isEmpty())
+    {
+      log.error("Could not delete Pending Certificate Request. RefID: {} does not exist.", refID);
+      throw new TerminalPermissionNotFoundException();
+    }
+    TerminalPermission tp = terminalPermissionOptional.get();
+    PendingCertificateRequest pendingCertificateRequest = tp.getPendingRequest();
+
+    if (pendingCertificateRequest == null)
+    {
+      log.info("There is no Pending Certificate Request for terminal permission with RefID: {}", refID);
+      return;
+    }
+
+    pendingCertificateRequestRepository.delete(pendingCertificateRequest);
     tp.setPendingRequest(null);
     terminalPermissionRepository.saveAndFlush(tp);
   }
@@ -800,9 +826,14 @@ public class TerminalPermissionAOBean implements TerminalPermissionAO
     {
       requestSignerCertificateRepository.delete(terminalPermission.getCurrentRequestSignerCertificate());
     }
-
+    terminalPermission.setNextRscSequenceNumber(terminalPermission.getPendingRequestSignerCertificate()
+                                                                  .getKey()
+                                                                  .getPosInChain()
+                                                + 1);
     terminalPermission.setCurrentRequestSignerCertificate(terminalPermission.getPendingRequestSignerCertificate());
     terminalPermission.setPendingRequestSignerCertificate(null);
+
+
     // if there is a pending CVC request (signed by old RSC), the DVCA will no longer accept it, so it must be created
     // again with new sequence number and signed by new RSC
     if (terminalPermission.getPendingRequest() != null && deletePendingCertificateRequest)
@@ -843,6 +874,34 @@ public class TerminalPermissionAOBean implements TerminalPermissionAO
     if (pendingRequestSignerCertificate != null)
     {
       requestSignerCertificateRepository.save(pendingRequestSignerCertificate);
+    }
+    terminalPermissionRepository.saveAndFlush(terminalPermission);
+  }
+
+  /**
+   * {@inheritDoc}
+   */
+  @Override
+  @Transactional
+  public void deleteCurrentRequestSignerCertificate(String refID) throws TerminalPermissionNotFoundException
+  {
+    Optional<TerminalPermission> terminalPermissionOptional = terminalPermissionRepository.findById(refID);
+    if (terminalPermissionOptional.isEmpty())
+    {
+      log.error("Could not delete current RSC for {}. RefID does not exist.", refID);
+      throw new TerminalPermissionNotFoundException();
+    }
+
+    TerminalPermission terminalPermission = terminalPermissionOptional.get();
+    RequestSignerCertificate currentRequestSignerCertificate = terminalPermission.getCurrentRequestSignerCertificate();
+
+    if (currentRequestSignerCertificate != null)
+    {
+      // Set nextRscSequenceNumber to the sequenceNumber from this RSC +1 to be sure, to generate the next RSC
+      // with this ID.
+      terminalPermission.setNextRscSequenceNumber(currentRequestSignerCertificate.getKey().getPosInChain() + 1);
+      requestSignerCertificateRepository.delete(currentRequestSignerCertificate);
+      terminalPermission.setCurrentRequestSignerCertificate(null);
     }
     terminalPermissionRepository.saveAndFlush(terminalPermission);
   }
@@ -993,6 +1052,21 @@ public class TerminalPermissionAOBean implements TerminalPermissionAO
     TerminalPermission permission = tp.get();
     permission.increaseSequenceNumber();
     terminalPermissionRepository.saveAndFlush(permission);
+  }
+
+  @Override
+  public Integer getNextRscSequenceNumber(String refId) throws TerminalPermissionNotFoundException
+  {
+    Integer currentRscId = getCurrentRscChrId(refId);
+    if (currentRscId != null)
+    {
+      return currentRscId + 1;
+    }
+
+    TerminalPermission tp = terminalPermissionRepository.findById(refId)
+                                                        .orElseThrow(() -> new TerminalPermissionNotFoundException(refId));
+
+    return Objects.requireNonNullElse(tp.getNextRscSequenceNumber(), 1);
   }
 
   @Override

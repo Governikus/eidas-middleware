@@ -1,5 +1,8 @@
 package de.governikus.eumw.poseidas.server.pki;
 
+import static de.governikus.eumw.poseidas.server.idprovider.config.ConfigurationTestHelper.CVC_REF_ID;
+import static de.governikus.eumw.poseidas.server.idprovider.config.ConfigurationTestHelper.SP_NAME;
+
 import java.io.File;
 import java.io.IOException;
 import java.math.BigInteger;
@@ -8,10 +11,12 @@ import java.nio.file.Path;
 import java.sql.Date;
 import java.time.LocalDate;
 import java.util.Base64;
+import java.util.Optional;
 
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
@@ -19,7 +24,6 @@ import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.boot.test.mock.mockito.SpyBean;
 import org.springframework.boot.test.util.TestPropertyValues;
 import org.springframework.context.ApplicationContextInitializer;
 import org.springframework.context.ConfigurableApplicationContext;
@@ -31,6 +35,7 @@ import org.springframework.test.context.bean.override.mockito.MockitoSpyBean;
 import de.governikus.eumw.config.DvcaConfigurationType;
 import de.governikus.eumw.config.ServiceProviderType;
 import de.governikus.eumw.poseidas.cardbase.Hex;
+import de.governikus.eumw.poseidas.gov2server.GovManagementException;
 import de.governikus.eumw.poseidas.server.idprovider.config.ConfigurationRepository;
 import de.governikus.eumw.poseidas.server.idprovider.config.ConfigurationService;
 import de.governikus.eumw.poseidas.server.idprovider.config.ConfigurationTestHelper;
@@ -38,7 +43,9 @@ import de.governikus.eumw.poseidas.server.pki.blocklist.BlockListService;
 import de.governikus.eumw.poseidas.server.pki.caserviceaccess.DvcaServiceFactory;
 import de.governikus.eumw.poseidas.server.pki.caserviceaccess.PKIServiceConnector;
 import de.governikus.eumw.poseidas.server.pki.caserviceaccess.RestrictedIdService;
+import de.governikus.eumw.poseidas.server.pki.entities.PendingCertificateRequest;
 import de.governikus.eumw.poseidas.server.pki.entities.TerminalPermission;
+import de.governikus.eumw.poseidas.server.pki.repositories.PendingCertificateRequestRepository;
 import de.governikus.eumw.poseidas.server.pki.repositories.TerminalPermissionRepository;
 import de.governikus.eumw.poseidas.server.timer.ApplicationTimer;
 
@@ -79,17 +86,20 @@ class PermissionDataHandlingTest
   @Autowired
   ConfigurationService configurationService;
 
-  @MockitoSpyBean
-  BlockListService blockListService;
-
   @Autowired
   TerminalPermissionRepository terminalPermissionRepository;
 
   @Autowired
+  PendingCertificateRequestRepository pendingCertificateRequestRepository;
+
+  @Autowired
   ConfigurationRepository configurationRepository;
 
+  @MockitoSpyBean
+  BlockListService blockListService;
+
   // SpyBean so calls to the DVCA can be mocked
-  @SpyBean
+  @MockitoSpyBean
   DvcaServiceFactory dvcaServiceFactory;
 
   @Mock
@@ -98,12 +108,12 @@ class PermissionDataHandlingTest
   @Mock
   PKIServiceConnector pkiServiceConnector;
 
-
   @BeforeEach
   void setUp()
   {
     configurationRepository.deleteAll();
     terminalPermissionRepository.deleteAll();
+    pendingCertificateRequestRepository.deleteAll();
   }
 
   @AfterEach
@@ -111,6 +121,7 @@ class PermissionDataHandlingTest
   {
     configurationRepository.deleteAll();
     terminalPermissionRepository.deleteAll();
+    pendingCertificateRequestRepository.deleteAll();
   }
 
   @ParameterizedTest
@@ -290,6 +301,46 @@ class PermissionDataHandlingTest
                                                           Base64.getDecoder()
                                                                 .decode("N6gtmN8CT7C+dhcld80AAUW1T1uFVbKNjhooonUlzo8=")));
   }
+
+  @Test
+  void testDeletePendingCertificateRequest_TerminalPermissionIsNull() throws GovManagementException, IOException
+  {
+    // configuration setup
+    saveConfiguration();
+
+    Optional<String> result = permissionDataHandling.deletePendingCertificateRequest(SP_NAME);
+
+    Assertions.assertTrue(result.isPresent());
+    Assertions.assertEquals("No Terminal Permission was found for provider sp-name", result.get());
+  }
+
+  @Test
+  void testDeletePendingCertificateRequest_Success() throws GovManagementException, IOException
+  {
+    // configuration setup
+    saveConfiguration();
+    saveTerminal(ConfigurationTestHelper.CVC_REF_ID, SECTOR_ID_B64, CVC_SP_1);
+
+    // create a pending certificate request
+    PendingCertificateRequest pendingCertificateRequest = new PendingCertificateRequest(CVC_REF_ID);
+    pendingCertificateRequestRepository.save(pendingCertificateRequest);
+
+    // associate it with the terminal permission
+    TerminalPermission terminalPermission = terminalPermissionRepository.findById(CVC_REF_ID).orElseThrow();
+    terminalPermission.setPendingRequest(pendingCertificateRequest);
+    terminalPermissionRepository.save(terminalPermission);
+
+    // perform deletion
+    Optional<String> result = permissionDataHandling.deletePendingCertificateRequest(SP_NAME);
+
+    Assertions.assertTrue(result.isEmpty());
+
+    Optional<TerminalPermission> updatedTerminalPermission = terminalPermissionRepository.findById(CVC_REF_ID);
+    Assertions.assertTrue(updatedTerminalPermission.isPresent());
+    Assertions.assertNull(updatedTerminalPermission.get().getPendingRequest());
+  }
+
+  // helper methods
 
   private void saveConfiguration() throws IOException
   {

@@ -1,11 +1,10 @@
 /*
- * Copyright (c) 2020 Governikus KG. Licensed under the EUPL, Version 1.2 or as soon they will be approved by
- * the European Commission - subsequent versions of the EUPL (the "Licence"); You may not use this work except
- * in compliance with the Licence. You may obtain a copy of the Licence at:
- * http://joinup.ec.europa.eu/software/page/eupl Unless required by applicable law or agreed to in writing,
- * software distributed under the Licence is distributed on an "AS IS" basis, WITHOUT WARRANTIES OR CONDITIONS
- * OF ANY KIND, either express or implied. See the Licence for the specific language governing permissions and
- * limitations under the Licence.
+ * Copyright (c) 2020 Governikus KG. Licensed under the EUPL, Version 1.2 or as soon they will be approved by the
+ * European Commission - subsequent versions of the EUPL (the "Licence"); You may not use this work except in compliance
+ * with the Licence. You may obtain a copy of the Licence at: http://joinup.ec.europa.eu/software/page/eupl Unless
+ * required by applicable law or agreed to in writing, software distributed under the Licence is distributed on an
+ * "AS IS" basis, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the Licence for the
+ * specific language governing permissions and limitations under the Licence.
  */
 
 package de.governikus.eumw.eidasstarterkit;
@@ -94,8 +93,7 @@ class EidasMetadataServiceTest
     EntityDescriptor entityDescriptor = getEntityDescriptor(metadataByteArray);
     Signature sig = entityDescriptor.getSignature();
     Credential credential = new BasicX509Credential(keyPair.getCert());
-    Assertions.assertThrows(ConstraintViolationException.class,
-                            () -> SignatureValidator.validate(sig, credential));
+    Assertions.assertThrows(ConstraintViolationException.class, () -> SignatureValidator.validate(sig, credential));
   }
 
   @Test
@@ -173,9 +171,9 @@ class EidasMetadataServiceTest
     supportedNameIdTypes.add(EidasNameIdType.PERSISTENT);
     supportedNameIdTypes.add(EidasNameIdType.TRANSIENT);
     supportedNameIdTypes.add(EidasNameIdType.UNSPECIFIED);
-    return new EidasMetadataService("id", "entityID", Instant.now(), keyPair.getCert(), keyPair.getCert(),
-                                    organisation, contactPerson, contactPerson, "https://post-endpoint.com",
-                                    "https://redirect-endpoint.com", attributes, supportedNameIdTypes, "2.0",
-                                    signed, true, "DE");
+    return new EidasMetadataService("id", "entityID", Instant.now(), keyPair.getCert(), keyPair.getCert(), organisation,
+                                    contactPerson, contactPerson, "https://post-endpoint.com",
+                                    "https://redirect-endpoint.com", attributes, supportedNameIdTypes, "2.0", signed,
+                                    true, "DE");
   }
 }

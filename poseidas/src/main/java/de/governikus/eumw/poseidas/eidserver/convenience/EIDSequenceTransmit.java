@@ -843,19 +843,19 @@ public class EIDSequenceTransmit
 
     log.debug("{}{}Try check...", parent.getLogPrefix(), LOG_COMMAND);
 
-      boolean documentValidityVerificationFailed = connector.contains(id);
-      log.debug("{}{}Check done", parent.getLogPrefix(), LOG_COMMAND);
-      if (documentValidityVerificationFailed)
-      {
-        log.debug("{}{}Found Card on BlackList", parent.getLogPrefix(), LOG_COMMAND);
-        setParentClear();
-        parent.getEIDInfoContainer().setStatus(EIDStatus.REVOKED);
-      }
-      else
-      {
-        log.debug("{}{}Card not found on BlackList", parent.getLogPrefix(), LOG_COMMAND);
-      }
-      log.debug("{}{}Leave Blacklist connector usage", parent.getLogPrefix(), LOG_COMMAND);
+    boolean documentValidityVerificationFailed = connector.contains(id);
+    log.debug("{}{}Check done", parent.getLogPrefix(), LOG_COMMAND);
+    if (documentValidityVerificationFailed)
+    {
+      log.debug("{}{}Found Card on BlackList", parent.getLogPrefix(), LOG_COMMAND);
+      setParentClear();
+      parent.getEIDInfoContainer().setStatus(EIDStatus.REVOKED);
+    }
+    else
+    {
+      log.debug("{}{}Card not found on BlackList", parent.getLogPrefix(), LOG_COMMAND);
+    }
+    log.debug("{}{}Leave Blacklist connector usage", parent.getLogPrefix(), LOG_COMMAND);
   }
 
   private void checkBlockingIdentification(RestrictedIdentificationResult result) throws ECardException

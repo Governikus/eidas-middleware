@@ -11,7 +11,7 @@ public class NationalityTypeImpl extends XSStringImpl implements NationalityType
 
   /**
    * Constructor.
-   * 
+   *
    * @param namespaceURI the namespace the element is in
    * @param elementLocalName the local name of the XML element this Object represents
    * @param namespacePrefix the prefix for the given namespace

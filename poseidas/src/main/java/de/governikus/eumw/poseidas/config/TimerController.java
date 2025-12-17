@@ -19,6 +19,7 @@ import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import de.governikus.eumw.config.EidasMiddlewareConfig;
 import de.governikus.eumw.config.EntanglementTimerType;
+import de.governikus.eumw.config.HsmKeyDeletionType;
 import de.governikus.eumw.config.TimerConfigurationType;
 import de.governikus.eumw.config.TimerType;
 import de.governikus.eumw.config.TimerTypeCertRenewal;
@@ -165,6 +166,14 @@ public class TimerController
       ? TlsClientRenewalService.DEFAULT_DAYS_BEFORE_EXPIRATION
       : timerConfigurationType.getDaysRefreshTlsClientBeforeExpires());
 
+    if (timerConfigurationType.getHsmKeyDeletion() != null)
+    {
+      timerConfigModelBuilder.hsmKeyDeletionLength(timerConfigurationType.getHsmKeyDeletion().getLength());
+      timerConfigModelBuilder.hsmKeyDeletionRenewalUnit(timerConfigurationType.getHsmKeyDeletion().getUnit());
+      timerConfigModelBuilder.automaticHsmKeyDeletionActive(timerConfigurationType.getHsmKeyDeletion()
+                                                                                  .isAutomaticHsmKeyDeletionActive());
+    }
+
     return timerConfigModelBuilder.build();
   }
 
@@ -183,7 +192,10 @@ public class TimerController
                                                                 timerConfigModel.getTlsEntangleRenewalUnit(),
                                                                 timerConfigModel.isAutomaticTlsEntangleActive()),
                                       timerConfigModel.getDaysRefreshRscBeforeExpiration(),
-                                      timerConfigModel.getDaysRefreshTlsClientBeforeExpiration());
+                                      timerConfigModel.getDaysRefreshTlsClientBeforeExpiration(),
+                                      new HsmKeyDeletionType(timerConfigModel.getHsmKeyDeletionLength(),
+                                                             timerConfigModel.getHsmKeyDeletionRenewalUnit(),
+                                                             timerConfigModel.isAutomaticHsmKeyDeletionActive()));
   }
 
   private void setDefaultTimerValues(TimerConfigurationType timerConfigurationType)
@@ -215,6 +227,10 @@ public class TimerController
     if (timerConfigurationType.getDaysRefreshTlsClientBeforeExpires() == null)
     {
       timerConfigurationType.setDaysRefreshTlsClientBeforeExpires(TlsClientRenewalService.DEFAULT_DAYS_BEFORE_EXPIRATION);
+    }
+    if (timerConfigurationType.getHsmKeyDeletion() == null)
+    {
+      timerConfigurationType.setHsmKeyDeletion(new HsmKeyDeletionType(24, TimerUnit.HOURS, false));
     }
   }
 }

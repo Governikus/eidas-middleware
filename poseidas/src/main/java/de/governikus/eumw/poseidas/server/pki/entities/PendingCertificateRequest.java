@@ -224,7 +224,7 @@ public class PendingCertificateRequest implements Serializable
 
   /**
    * Defines if this pending request may be sent again.
-   * 
+   *
    * @return
    */
   public boolean isCanBeSentAgain()
@@ -234,7 +234,7 @@ public class PendingCertificateRequest implements Serializable
 
   /**
    * Set if this pending request may be sent again.
-   * 
+   *
    * @param canBeSentAgain new value
    */
   public void setCanBeSentAgain(boolean canBeSentAgain)

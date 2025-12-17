@@ -1,11 +1,10 @@
 /*
- * Copyright (c) 2020 Governikus KG. Licensed under the EUPL, Version 1.2 or as soon they will be approved by
- * the European Commission - subsequent versions of the EUPL (the "Licence"); You may not use this work except
- * in compliance with the Licence. You may obtain a copy of the Licence at:
- * http://joinup.ec.europa.eu/software/page/eupl Unless required by applicable law or agreed to in writing,
- * software distributed under the Licence is distributed on an "AS IS" basis, WITHOUT WARRANTIES OR CONDITIONS
- * OF ANY KIND, either express or implied. See the Licence for the specific language governing permissions and
- * limitations under the Licence.
+ * Copyright (c) 2020 Governikus KG. Licensed under the EUPL, Version 1.2 or as soon they will be approved by the
+ * European Commission - subsequent versions of the EUPL (the "Licence"); You may not use this work except in compliance
+ * with the Licence. You may obtain a copy of the Licence at: http://joinup.ec.europa.eu/software/page/eupl Unless
+ * required by applicable law or agreed to in writing, software distributed under the Licence is distributed on an
+ * "AS IS" basis, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the Licence for the
+ * specific language governing permissions and limitations under the Licence.
  */
 
 package de.governikus.eumw.poseidas.eidserver.model.signeddata;
@@ -141,8 +140,7 @@ public class BlackList
     if (version != VERSION_V1 && version != VERSION_V2)
     {
       throw new IOException("Unsupported block list version. Supported versions are " + VERSION_V1 + " and "
-                            + VERSION_V2
-                            + " but received " + version);
+                            + VERSION_V2 + " but received " + version);
     }
     log.trace("Found block list version {}", version);
 
@@ -176,32 +174,21 @@ public class BlackList
     }
 
     // delta
-    // in delta, index 3 is always delta base but Governikus DVCA has a defect causing this field to be missing...
-    ASN1Encodable object = sequence.getObjectAt(3);
-    int indexCorrection = 0;
-    if (object instanceof ASN1OctetString os)
-    {
-      deltaBase = os.getOctets();
-      log.trace("Found block list delta base {}", deltaBase);
-    }
-    // ...which is why we must work around this issue for the time being
-    else
-    {
-      indexCorrection = -1;
-    }
-
+    // in delta, index 3 is always delta base
+    deltaBase = ((ASN1OctetString)sequence.getObjectAt(3)).getOctets();
+    log.trace("Found block list delta base {}", deltaBase);
     if (version == VERSION_V1)
     {
       // in delta v1, index 4 is always list content
-      return ((ASN1Sequence)sequence.getObjectAt(4 + indexCorrection)).parser();
+      return ((ASN1Sequence)sequence.getObjectAt(4)).parser();
     }
 
     // VERSION_V2
     // in delta v2, index 4 is always number of final entries
-    finalEntries = ((ASN1Integer)sequence.getObjectAt(4 + indexCorrection)).getValue().intValue();
+    finalEntries = ((ASN1Integer)sequence.getObjectAt(4)).getValue().intValue();
     log.trace("Found block list final number of entries {}", finalEntries);
     // in delta v2, index 5 is always list content
-    return ((ASN1Sequence)sequence.getObjectAt(5 + indexCorrection)).parser();
+    return ((ASN1Sequence)sequence.getObjectAt(5)).parser();
   }
 
   private void parseBlkDetails(ASN1SequenceParser parser) throws IOException

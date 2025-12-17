@@ -3,8 +3,10 @@ package de.governikus.eumw.poseidas.config;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
+import java.security.KeyStore;
 import java.security.cert.CertificateException;
 import java.security.cert.CertificateFactory;
+import java.security.cert.X509Certificate;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Optional;
@@ -27,6 +29,7 @@ import org.springframework.web.multipart.MultipartFile;
 import de.governikus.eumw.config.CertificateType;
 import de.governikus.eumw.config.DvcaConfigurationType;
 import de.governikus.eumw.config.EidasMiddlewareConfig;
+import de.governikus.eumw.config.KeyPairCertificateDataType;
 import de.governikus.eumw.config.KeyPairType;
 import de.governikus.eumw.config.KeyStoreType;
 import de.governikus.eumw.config.ServiceProviderType;
@@ -95,6 +98,8 @@ public class ImportExportConfigurationController
       EidasMiddlewareConfig eidasMiddlewareConfig = XmlHelper.unmarshal(new String(xml.getBytes(),
                                                                                    StandardCharsets.UTF_8),
                                                                         EidasMiddlewareConfig.class);
+      // We don't want to save the support data
+      eidasMiddlewareConfig.setSupportData(null);
       Optional.ofNullable(eidasMiddlewareConfig.getEidasConfiguration())
               .ifPresent(eidasConfiguration -> eidasConfiguration.setDecryptionKeyPairName(null));
 
@@ -311,12 +316,72 @@ public class ImportExportConfigurationController
       model.addAttribute(MSG_ATTRIBUTE, "No configuration present!");
       return CONFIGURATION_FORM;
     }
-    String configAsString = XmlHelper.marshalObject(eidasMiddlewareConfig.get());
+
+    String configAsString;
+    if (withPrivateKeys)
+    {
+      configAsString = XmlHelper.marshalObject(eidasMiddlewareConfig.get());
+    }
+    else
+    {
+      configAsString = XmlHelper.marshalObject(getEidasMiddlewareConfigWithSupportData(eidasMiddlewareConfig.get()));
+    }
+
     String configurationFileName = "eIDAS_Middleware_configuration" + (withPrivateKeys ? "_full" : "_noKeys") + ".xml";
 
     return ResponseEntity.ok()
                          .header("Content-Disposition", "attachment; filename=" + configurationFileName)
                          .contentType(MediaType.APPLICATION_OCTET_STREAM)
                          .body(configAsString.getBytes(StandardCharsets.UTF_8));
+  }
+
+  private EidasMiddlewareConfig getEidasMiddlewareConfigWithSupportData(EidasMiddlewareConfig eidasMiddlewareConfig)
+  {
+    EidasMiddlewareConfig.SupportData supportData = new EidasMiddlewareConfig.SupportData();
+
+    // Needed to get certificates
+    Optional<EidasMiddlewareConfig> configWithKeys = configurationService.getConfiguration();
+
+    if (configWithKeys.isEmpty())
+    {
+      log.debug("No configuration present!");
+      return eidasMiddlewareConfig;
+    }
+
+    List<KeyPairType> keyPair = configWithKeys.get().getKeyData().getKeyPair();
+    for ( KeyPairType keyPairType : keyPair )
+    {
+      String keyStoreName = keyPairType.getKeyStoreName();
+      Optional<KeyStoreType> keyStoreTypeOpt = configWithKeys.get()
+                                                             .getKeyData()
+                                                             .getKeyStore()
+                                                             .stream()
+                                                             .filter(keystore -> keystore.getName()
+                                                                                         .equals(keyStoreName))
+                                                             .findFirst();
+      if (keyStoreTypeOpt.isEmpty())
+      {
+        log.debug("Keystore " + keyStoreName + " not found");
+        continue;
+      }
+      KeyStoreType keyStoreType = keyStoreTypeOpt.get();
+      KeyStore keyStore = KeyStoreSupporter.readKeyStore(keyStoreType.getKeyStore(),
+                                                         KeyStoreSupporter.KeyStoreType.valueOf(keyStoreType.getType()
+                                                                                                            .value()),
+                                                         keyStoreType.getPassword());
+      try
+      {
+        X509Certificate cert = (X509Certificate)keyStore.getCertificate(keyPairType.getAlias());
+        supportData.getKeyPairCertificates()
+                   .add(new KeyPairCertificateDataType(keyPairType.getName(), cert.getEncoded()));
+      }
+      catch (Exception e)
+      {
+        log.error("Failed to read certificate for support data: " + e.getMessage());
+      }
+    }
+
+    eidasMiddlewareConfig.setSupportData(supportData);
+    return eidasMiddlewareConfig;
   }
 }

@@ -48,7 +48,6 @@ import de.governikus.eumw.poseidas.server.pki.caserviceaccess.DvcaServiceFactory
 import de.governikus.eumw.poseidas.server.pki.caserviceaccess.PKIServiceConnector;
 import de.governikus.eumw.poseidas.server.pki.caserviceaccess.RestrictedIdService;
 import de.governikus.eumw.poseidas.server.pki.caserviceaccess.RestrictedIdService.BlackListResult;
-import de.governikus.eumw.poseidas.server.pki.caserviceaccess.RestrictedIdService110;
 import de.governikus.eumw.poseidas.server.pki.caserviceaccess.RestrictedIdService140;
 import de.governikus.eumw.poseidas.server.pki.entities.TerminalPermission;
 import lombok.AllArgsConstructor;
@@ -263,7 +262,7 @@ public class RestrictedIdHandler extends BerCaRequestHandlerBase
                                   SNMPConstants.LIST_NOT_RECEIVED);
       return new HashSet<>();
     }
-    if (RestrictedIdService140.NO_NEW_DATA.equals(blResult) || RestrictedIdService110.NO_NEW_DATA.equals(blResult))
+    if (RestrictedIdService140.NO_NEW_DATA.equals(blResult))
     {
       log.info("{}: No newer delta block list from BerCa available", cvcRefId);
       SNMPTrapSender.sendSNMPTrap(SNMPConstants.TrapOID.BLACKLIST_TRAP_LAST_RENEWAL_STATUS, SNMPConstants.LIST_RENEWED);

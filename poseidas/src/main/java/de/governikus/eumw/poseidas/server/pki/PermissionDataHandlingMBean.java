@@ -10,6 +10,7 @@
 package de.governikus.eumw.poseidas.server.pki;
 
 import java.util.Map;
+import java.util.Optional;
 
 import de.governikus.eumw.poseidas.gov2server.GovManagementException;
 import de.governikus.eumw.poseidas.gov2server.constants.admin.ManagementMessage;
@@ -39,9 +40,8 @@ public interface PermissionDataHandlingMBean
    * the map.
    *
    * @param cvcRefId
-   * @param withBlkNumber include the number of entries in the blacklist, this could take some more time.
    */
-  Map<String, Object> getPermissionDataInfo(String cvcRefId, boolean withBlkNumber);
+  Map<String, Object> getPermissionDataInfo(String cvcRefId);
 
   /**
    * Request a new CVC for each service provider where the current CVC will expire within the time specified in
@@ -49,6 +49,15 @@ public interface PermissionDataHandlingMBean
    * only once.
    */
   void renewOutdatedCVCs();
+
+  /**
+   * Triggers the deletion of the pending certificate request associated with a specific entityId
+   *
+   * @param entityId defines the service provider whose pending certificate request is to be deleted
+   * @return an Optional containing a String with the message for the outcome of the deletion
+   * @throws GovManagementException
+   */
+  Optional<String> deletePendingCertificateRequest(String entityId) throws GovManagementException;
 
   /**
    * Request a new terminal certificate to access the nPA with. The system will generate and store a key pair, create a

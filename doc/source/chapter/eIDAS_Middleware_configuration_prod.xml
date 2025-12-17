@@ -4,7 +4,7 @@
         <DvcaConfiguration ServerSSLCertificateName="dvcaServerCertificate" BlackListTrustAnchorCertificateName="blackListTrustAnchor" MasterListTrustAnchorCertificateName="masterListTrustAnchor">
             <Name>D-Trust productive</Name>
             <TerminalAuthServiceUrl>https://berca-p1.d-trust.net/ps/dvca-at/v1_4</TerminalAuthServiceUrl>
-            <RestrictedIdServiceUrl>https://berca-p1.d-trust.net/ps/dvsd_v2/v1_1</RestrictedIdServiceUrl>
+            <RestrictedIdServiceUrl>https://berca-p1.d-trust.net/ps/dvsd_v2/v1_4</RestrictedIdServiceUrl>
             <PassiveAuthServiceUrl>https://berca-p1.d-trust.net/ps/scs/v1_4</PassiveAuthServiceUrl>
         </DvcaConfiguration>
         <AllowedEidMeans>A,ID,UB</AllowedEidMeans>

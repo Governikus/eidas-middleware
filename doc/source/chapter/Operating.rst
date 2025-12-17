@@ -60,14 +60,14 @@ To run the eIDAS Middleware, execute the following command.
 It will mount the named volumes containing the database and configuration in the container
 and the application will be available on port 8443. ::
 
-    docker run --rm -it -v eidas-configuration:/opt/eidas-middleware/configuration -v eidas-database:/opt/eidas-middleware/database -p 8443:8443 --name eidas-middleware-application governikus/eidas-middleware-application:3.4.0
+    docker run --rm -it -v eidas-configuration:/opt/eidas-middleware/configuration -v eidas-database:/opt/eidas-middleware/database -p 8443:8443 --name eidas-middleware-application governikus/eidas-middleware-application:4.0.0
 
 To stop and remove the container, just hit ``CTRL+C``.
 
 To keep the container running longer without being attached to the STDOUT and STDERR, change the command to
 the following::
 
-    docker run -d -v eidas-configuration:/opt/eidas-middleware/configuration -v eidas-database:/opt/eidas-middleware/database -p 8443:8443 --name eidas-middleware-application governikus/eidas-middleware-application:3.4.0
+    docker run -d -v eidas-configuration:/opt/eidas-middleware/configuration -v eidas-database:/opt/eidas-middleware/database -p 8443:8443 --name eidas-middleware-application governikus/eidas-middleware-application:4.0.0
 
 For more information on starting and stopping containers and viewing the logs,
 see the `Docker Docs <https://docs.docker.com/engine/reference/run/>`_.
@@ -187,7 +187,7 @@ Scalability
 The performance of the eIDAS Middleware improves by adding more memory (RAM) and using a faster CPU.
 In case the memory configuration has changed, the server needs to be restarted.
 To start the JVM with more memory, add ``-Xmx`` with the new maximum memory size to the start command,
-e.g. ``java -Xmx8g -jar eidas-middleware-3.4.0.jar`` for 8 GB.
+e.g. ``java -Xmx8g -jar eidas-middleware-4.0.0.jar`` for 8 GB.
 
 
 Request Signer Certificate
@@ -213,6 +213,8 @@ As a fallback, the :term:`Authorization Certificate` requests are still signed u
 A :term:`Request Signer Certificate` is always valid for 3 years.
 
 The current :term:`Request Signer Certificate` can be downloaded anytime by clicking the "Download RSC" button.
+
+The current :term:`Request Signer Certificate` can be deleted by clicking the "Delete Current RSC" button.
 
 Automatic renewal of the request signer certificate
 """""""""""""""""""""""""""""""""""""""""""""""""""
@@ -404,7 +406,7 @@ Optional property for ``TRAP`` is ``poseidas.snmp.managementport`` (port 162 is 
 set).
 
 All existing SNMP GET values are explained in detail in the MIB located at
-``https://github.com/Governikus/eidas-middleware/blob/3.4.0/poseidas/snmp/EIDASMW-SNMP-MIB.mib``.
+``https://github.com/Governikus/eidas-middleware/blob/4.0.0/poseidas/snmp/EIDASMW-SNMP-MIB.mib``.
 
 Global GET
 ''''''''''
@@ -415,7 +417,7 @@ Global GET
 
     OID; GET (Return value datatype); Description
     |CRL_GET_LAST_SUCCESSFUL_RETRIEVAL|; lastSuccessfulCRLRetrieval (DateAndTime); The timestamp for the last successful retrieval of a certificate revocation list is returned
-    |CRL_GET_AVAILABLE|; isCRLAvailable (Integer32); 0: A certificate revocation list is present. 1: No certificate revocation list is present
+    |CRL_GET_AVAILABLE|; isCRLAvailable (Integer32); 0: No certificate revocation list is present, 1: A certificate revocation list is present
     |GET_TLS_CERTIFICATE_VALID|; tlsCertificateExpirationDate (DateAndTime); Expiration date of the server certificate
 
 
@@ -447,6 +449,7 @@ Get prefix = |GET_PREFIX|
     |DEFECTLIST_GET_DVCA_AVAILABILITY|; defectListCAAvailable (Integer32); Defect List PKI availability: 0 = not available, 1 = available
     |RSC_GET_PENDING_AVAILABLE|; rscPendingAvailable (Integer32); Pending RSC availability: 0 = not available, 1 = available
     |RSC_GET_CURRENT_CERTIFICATE_VALID_UNTIL|; rscCurrentValidUntil (DateAndTime); Last date of RSC validity
+    |GET_TLS_CLIENT_CERTIFICATE_VALID_UNTIL|; tlsClientCertificateValidUntil (DateAndTime); Expiry date of the TLS client certificate
 
 TRAP
 ''''

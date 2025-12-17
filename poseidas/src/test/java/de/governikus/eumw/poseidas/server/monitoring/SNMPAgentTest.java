@@ -2,6 +2,7 @@ package de.governikus.eumw.poseidas.server.monitoring;
 
 import java.time.LocalDateTime;
 import java.time.ZoneId;
+import java.util.Date;
 import java.util.GregorianCalendar;
 import java.util.HashSet;
 import java.util.Optional;
@@ -37,10 +38,10 @@ import org.snmp4j.smi.VariableBinding;
 import org.snmp4j.transport.DefaultUdpTransportMapping;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.DynamicPropertyRegistry;
 import org.springframework.test.context.DynamicPropertySource;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.util.TestSocketUtils;
 
 import de.governikus.eumw.config.EidasMiddlewareConfig;
@@ -51,6 +52,7 @@ import de.governikus.eumw.poseidas.eidserver.model.signeddata.MasterList;
 import de.governikus.eumw.poseidas.server.idprovider.config.ConfigurationService;
 import de.governikus.eumw.poseidas.server.idprovider.config.ConfigurationTestHelper;
 import de.governikus.eumw.poseidas.server.pki.TerminalPermissionAO;
+import de.governikus.eumw.poseidas.server.pki.TlsClientRenewalService;
 import de.governikus.eumw.poseidas.server.pki.entities.TerminalPermission;
 import de.governikus.eumw.poseidas.server.pki.repositories.CertInChainRepository;
 import de.governikus.eumw.poseidas.server.pki.repositories.KeyArchiveRepository;
@@ -69,14 +71,17 @@ class SNMPAgentTest
   private static final String CLIENT_KEY = "clientKey";
 
   // These mocked beans are necessary to start the application context
-  @MockBean
+  @MockitoBean
   private MetadataService metadataService;
 
-  @MockBean
+  @MockitoBean
   private IndexController overviewController;
 
-  @MockBean
+  @MockitoBean
   private ConfigurationService configurationService;
+
+  @MockitoBean
+  private TlsClientRenewalService tlsClientRenewalService;
 
   @Autowired
   private TerminalPermissionAO facade;
@@ -132,9 +137,8 @@ class SNMPAgentTest
     userTarget.setSecurityName(new OctetString("test"));
     userTarget.setVersion(SnmpConstants.version3);
     Mockito.when(configurationService.getConfiguration()).thenReturn(Optional.of(prepareConfiguration()));
-    DatabaseInit databaseInit = new DatabaseInit(requestSignerCertificateRepository,
-                                                 terminalPermissionRepository, certInChainRepository,
-                                                 keyArchiveRepository);
+    DatabaseInit databaseInit = new DatabaseInit(requestSignerCertificateRepository, terminalPermissionRepository,
+                                                 certInChainRepository, keyArchiveRepository);
     databaseInit.initializeSNMPDatabase();
   }
 
@@ -618,6 +622,40 @@ class SNMPAgentTest
     responseEvent = snmp.send(pdu, userTarget);
 
     Assertions.assertEquals(SnmpConstants.SNMP_ERROR_NO_SUCH_NAME, responseEvent.getResponse().getErrorStatus());
+    Assertions.assertEquals("Null", responseEvent.getResponse().get(0).getVariable().toString());
+  }
+
+  @Test
+  void testWhenTlsClientCertificateAvailableThenReturnValdiUntilDate() throws Exception
+  {
+    LocalDateTime expectedLocalDateTime = LocalDateTime.parse("2075-08-13T12:55:26");
+
+    Mockito.when(tlsClientRenewalService.currentTlsCertValidUntil("TestbedA"))
+           .thenReturn(Optional.of(Date.from(expectedLocalDateTime.atZone(ZoneId.systemDefault()).toInstant())));
+
+    PDU pdu = new ScopedPDU();
+    pdu.add(new VariableBinding(new OID(SNMPConstants.GetOID.TLS_GET_CLIENT_CERTIFICATE_VALID_UNTIL.getValue()
+                                        + ".1")));
+    pdu.setType(PDU.GET);
+    ResponseEvent responseEvent = snmp.send(pdu, userTarget);
+
+    LocalDateTime actualLocalDateTime = getLocalDateTimeFromResponse(responseEvent);
+
+    Assertions.assertEquals(expectedLocalDateTime, actualLocalDateTime);
+  }
+
+  @Test
+  void testWhenlsClientCertificateNotAvailableThenReturnErrorStatusResourceUnavailable() throws Exception
+  {
+    PDU pdu = new ScopedPDU();
+    pdu.add(new VariableBinding(new OID(SNMPConstants.GetOID.TLS_GET_CLIENT_CERTIFICATE_VALID_UNTIL.getValue()
+                                        + ".1")));
+    pdu.setType(PDU.GET);
+
+    ResponseEvent responseEvent = snmp.send(pdu, userTarget);
+
+    Assertions.assertEquals(SnmpConstants.SNMP_ERROR_RESOURCE_UNAVAILABLE,
+                            responseEvent.getResponse().getErrorStatus());
     Assertions.assertEquals("Null", responseEvent.getResponse().get(0).getVariable().toString());
   }
 
