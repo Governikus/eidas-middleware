@@ -61,8 +61,8 @@ public class TimerValues
   public String getCvcRscRenewDelay(@Value("${timer.invalidCvcRscRenew.delayInSeconds:120}") int rate)
   {
     String timerName = "Invalid cvc renewal with rsc timer";
-    String rateAsString = String.valueOf(rate);
-    logRateForTimer(timerName, String.valueOf(rate * 1000));
+    String rateAsString = String.valueOf(rate * SECOND);
+    logRateForTimer(timerName, rateAsString);
     return rateAsString;
   }
 

@@ -1,11 +1,10 @@
 /*
- * Copyright (c) 2020 Governikus KG. Licensed under the EUPL, Version 1.2 or as soon they will be approved by
- * the European Commission - subsequent versions of the EUPL (the "Licence"); You may not use this work except
- * in compliance with the Licence. You may obtain a copy of the Licence at:
- * http://joinup.ec.europa.eu/software/page/eupl Unless required by applicable law or agreed to in writing,
- * software distributed under the Licence is distributed on an "AS IS" basis, WITHOUT WARRANTIES OR CONDITIONS
- * OF ANY KIND, either express or implied. See the Licence for the specific language governing permissions and
- * limitations under the Licence.
+ * Copyright (c) 2020 Governikus KG. Licensed under the EUPL, Version 1.2 or as soon they will be approved by the
+ * European Commission - subsequent versions of the EUPL (the "Licence"); You may not use this work except in compliance
+ * with the Licence. You may obtain a copy of the Licence at: http://joinup.ec.europa.eu/software/page/eupl Unless
+ * required by applicable law or agreed to in writing, software distributed under the Licence is distributed on an
+ * "AS IS" basis, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the Licence for the
+ * specific language governing permissions and limitations under the Licence.
  */
 
 package de.governikus.eumw.poseidas.cardbase.asn1;
@@ -108,8 +107,8 @@ public class ASN1Path
    * Constructor.
    *
    * @param name name, <code>null</code> or empty String permitted
-   * @param tagBytes tag bytes of child element, <code>null</code> or empty array not permitted, must specify
-   *          a valid tag
+   * @param tagBytes tag bytes of child element, <code>null</code> or empty array not permitted, must specify a valid
+   *          tag
    * @param index index of child element, only zero or positive value permitted
    * @param parent optional parent path element
    * @throws IllegalArgumentException if arguments not valid
@@ -118,16 +117,15 @@ public class ASN1Path
    */
   protected ASN1Path(String name, byte[] tagBytes, int index, ASN1Path parent)
   {
-    this(name, new BigInteger(ASN1Util.checkTagBytes(tagBytes)), index, parent, null,
-         ASN1PathType.NO_INFORMATION);
+    this(name, new BigInteger(ASN1Util.checkTagBytes(tagBytes)), index, parent, null, ASN1PathType.NO_INFORMATION);
   }
 
   /**
    * Constructor.
    *
    * @param name name, <code>null</code> or empty String permitted
-   * @param tagHexString tag of child element as Hex-String, <code>null</code> or empty String not permitted,
-   *          must specify a valid tag
+   * @param tagHexString tag of child element as Hex-String, <code>null</code> or empty String not permitted, must
+   *          specify a valid tag
    * @param index index of child element, only zero or positive value permitted
    * @param parent optional parent path element
    * @throws IllegalArgumentException if arguments not valid
@@ -148,14 +146,13 @@ public class ASN1Path
    * @param tag tag of child element, <code>null</code> not permitted, must specify a valid tag
    * @param index index of child element, only zero or positive value permitted
    * @param parent optional parent path element
-   * @param encoderClass Class of {@link ASN1Encoder} for creating ASN1. object with support convenience
-   *          methods to access contents of ASN.1, <code>null</code> permitted, any real Class must possess an
-   *          empty, accessible Constructor to create an instance, otherwise an
-   *          {@link IllegalArgumentException} is thrown
-   * @param type of ASN1Path - indicates different kind of child and importance for validity checks, type not
-   *          permitted as <code>null</code>
-   * @throws IllegalArgumentException if Class of {@link ASN1Encoder} does not possess an empty constructor
-   *           for initialization or if arguments not valid
+   * @param encoderClass Class of {@link ASN1Encoder} for creating ASN1. object with support convenience methods to
+   *          access contents of ASN.1, <code>null</code> permitted, any real Class must possess an empty, accessible
+   *          Constructor to create an instance, otherwise an {@link IllegalArgumentException} is thrown
+   * @param type of ASN1Path - indicates different kind of child and importance for validity checks, type not permitted
+   *          as <code>null</code>
+   * @throws IllegalArgumentException if Class of {@link ASN1Encoder} does not possess an empty constructor for
+   *           initialization or if arguments not valid
    * @see ASN1Path#ASN1Path(String, BigInteger, int, Filter, ASN1Path, Class, ASN1PathType)
    */
   protected ASN1Path(String name,
@@ -176,20 +173,15 @@ public class ASN1Path
    * @param tagByte tag byte of child element, must specify a valid tag
    * @param index index of child element, only zero or positive value permitted
    * @param parent optional parent path element
-   * @param encoderClass Class of {@link ASN1Encoder} for creating ASN1. object with support convenience
-   *          methods to access contents of ASN.1, <code>null</code> permitted, any real Class must possess an
-   *          empty, accessible Constructor to create an instance, otherwise an
-   *          {@link IllegalArgumentException} is thrown
-   * @throws IllegalArgumentException if Class of {@link ASN1Encoder} does not possess an empty constructor
-   *           for initialization or if arguments not valid
+   * @param encoderClass Class of {@link ASN1Encoder} for creating ASN1. object with support convenience methods to
+   *          access contents of ASN.1, <code>null</code> permitted, any real Class must possess an empty, accessible
+   *          Constructor to create an instance, otherwise an {@link IllegalArgumentException} is thrown
+   * @throws IllegalArgumentException if Class of {@link ASN1Encoder} does not possess an empty constructor for
+   *           initialization or if arguments not valid
    * @see ASN1Path#ASN1Path(String, byte[], int, ASN1Path, Class, ASN1PathType)
    * @see ASN1PathType#NO_INFORMATION
    */
-  protected ASN1Path(String name,
-                     byte tagByte,
-                     int index,
-                     ASN1Path parent,
-                     Class<? extends ASN1Encoder> encoderClass)
+  protected ASN1Path(String name, byte tagByte, int index, ASN1Path parent, Class<? extends ASN1Encoder> encoderClass)
   {
     this(name, new byte[]{tagByte}, index, parent, encoderClass, ASN1PathType.NO_INFORMATION);
   }
@@ -198,16 +190,15 @@ public class ASN1Path
    * Constructor.
    *
    * @param name name, <code>null</code> or empty String permitted
-   * @param tagBytes tag bytes of child element, <code>null</code> or empty array not permitted, must specify
-   *          a valid tag
+   * @param tagBytes tag bytes of child element, <code>null</code> or empty array not permitted, must specify a valid
+   *          tag
    * @param index index of child element, only zero or positive value permitted
    * @param parent optional parent path element
-   * @param encoderClass Class of {@link ASN1Encoder} for creating ASN1. object with support convenience
-   *          methods to access contents of ASN.1, <code>null</code> permitted, any real Class must possess an
-   *          empty, accessible Constructor to create an instance, otherwise an
-   *          {@link IllegalArgumentException} is thrown
-   * @throws IllegalArgumentException if Class of {@link ASN1Encoder} does not possess an empty constructor
-   *           for initialization or if arguments not valid
+   * @param encoderClass Class of {@link ASN1Encoder} for creating ASN1. object with support convenience methods to
+   *          access contents of ASN.1, <code>null</code> permitted, any real Class must possess an empty, accessible
+   *          Constructor to create an instance, otherwise an {@link IllegalArgumentException} is thrown
+   * @throws IllegalArgumentException if Class of {@link ASN1Encoder} does not possess an empty constructor for
+   *           initialization or if arguments not valid
    * @see ASN1Path#ASN1Path(String, BigInteger, int, ASN1Path, Class, ASN1PathType)
    * @see ASN1PathType#NO_INFORMATION
    */
@@ -225,17 +216,16 @@ public class ASN1Path
    * Constructor.
    *
    * @param name name, <code>null</code> or empty String permitted
-   * @param tagBytes tag bytes of child element, <code>null</code> or empty array not permitted, must specify
-   *          a valid tag
+   * @param tagBytes tag bytes of child element, <code>null</code> or empty array not permitted, must specify a valid
+   *          tag
    * @param index index of child element, only zero or positive value permitted
    * @param parent optional parent path element
-   * @param encoderClass Class of {@link ASN1Encoder} for creating ASN1. object with support convenience
-   *          methods to access contents of ASN.1, <code>null</code> permitted, any real Class must possess an
-   *          empty, accessible Constructor to create an instance, otherwise an
-   *          {@link IllegalArgumentException} is thrown
+   * @param encoderClass Class of {@link ASN1Encoder} for creating ASN1. object with support convenience methods to
+   *          access contents of ASN.1, <code>null</code> permitted, any real Class must possess an empty, accessible
+   *          Constructor to create an instance, otherwise an {@link IllegalArgumentException} is thrown
    * @param type type of ASN1Path
-   * @throws IllegalArgumentException if Class of {@link ASN1Encoder} does not possess an empty constructor
-   *           for initialization or if arguments not valid
+   * @throws IllegalArgumentException if Class of {@link ASN1Encoder} does not possess an empty constructor for
+   *           initialization or if arguments not valid
    * @see ASN1Path#ASN1Path(String, BigInteger, int, ASN1Path, Class, ASN1PathType)
    */
   private ASN1Path(String name,
@@ -253,16 +243,15 @@ public class ASN1Path
    * Constructor.
    *
    * @param name name, <code>null</code> or empty String permitted
-   * @param tagHexString tag of child element as Hex-String, <code>null</code> or empty String not permitted,
-   *          must specify a valid tag
+   * @param tagHexString tag of child element as Hex-String, <code>null</code> or empty String not permitted, must
+   *          specify a valid tag
    * @param index index of child element, only zero or positive value permitted
    * @param parent optional parent path element
-   * @param encoderClass Class of {@link ASN1Encoder} for creating ASN1. object with support convenience
-   *          methods to access contents of ASN.1, <code>null</code> permitted, any real Class must possess an
-   *          empty, accessible Constructor to create an instance, otherwise an
-   *          {@link IllegalArgumentException} is thrown
-   * @throws IllegalArgumentException if Class of {@link ASN1Encoder} does not possess an empty constructor
-   *           for initialization or if arguments not valid
+   * @param encoderClass Class of {@link ASN1Encoder} for creating ASN1. object with support convenience methods to
+   *          access contents of ASN.1, <code>null</code> permitted, any real Class must possess an empty, accessible
+   *          Constructor to create an instance, otherwise an {@link IllegalArgumentException} is thrown
+   * @throws IllegalArgumentException if Class of {@link ASN1Encoder} does not possess an empty constructor for
+   *           initialization or if arguments not valid
    * @see ASN1Path#ASN1Path(String, BigInteger, int, ASN1Path, Class, ASN1PathType)
    * @see Hex#parseBigInteger(String)
    * @see ASN1PathType#NO_INFORMATION
@@ -273,8 +262,8 @@ public class ASN1Path
                      ASN1Path parent,
                      Class<? extends ASN1Encoder> encoderClass)
   {
-    this(name, Hex.parse(AssertUtil.notNullOrEmpty(tagHexString, STRING_TAG_HEX_STRING)), index, parent,
-         encoderClass, ASN1PathType.NO_INFORMATION);
+    this(name, Hex.parse(AssertUtil.notNullOrEmpty(tagHexString, STRING_TAG_HEX_STRING)), index, parent, encoderClass,
+         ASN1PathType.NO_INFORMATION);
   }
 
   /**
@@ -282,17 +271,16 @@ public class ASN1Path
    *
    * @param name name, <code>null</code> or empty String permitted
    * @param tag tag of child element, <code>null</code> not permitted, must specify a valid tag
-   * @param filter filter for element, <code>null</code> not permitted, filter class of filter only permitted
-   *          as {@link ASN1}
+   * @param filter filter for element, <code>null</code> not permitted, filter class of filter only permitted as
+   *          {@link ASN1}
    * @param parent optional parent path element
-   * @param encoderClass Class of {@link ASN1Encoder} for creating ASN1. object with support convenience
-   *          methods to access contents of ASN.1, <code>null</code> permitted, any real Class must possess an
-   *          empty, accessible Constructor to create an instance, otherwise an
-   *          {@link IllegalArgumentException} is thrown
-   * @param type of ASN1Path - indicates different kind of child and importance for validity checks, type not
-   *          permitted as <code>null</code>
-   * @throws IllegalArgumentException if Class of {@link ASN1Encoder} does not possess an empty constructor
-   *           for initialization or arguments not valid
+   * @param encoderClass Class of {@link ASN1Encoder} for creating ASN1. object with support convenience methods to
+   *          access contents of ASN.1, <code>null</code> permitted, any real Class must possess an empty, accessible
+   *          Constructor to create an instance, otherwise an {@link IllegalArgumentException} is thrown
+   * @param type of ASN1Path - indicates different kind of child and importance for validity checks, type not permitted
+   *          as <code>null</code>
+   * @throws IllegalArgumentException if Class of {@link ASN1Encoder} does not possess an empty constructor for
+   *           initialization or arguments not valid
    * @see ASN1Path#ASN1Path(String, BigInteger, int, Filter, ASN1Path, Class, ASN1PathType)
    */
   private ASN1Path(String name,
@@ -302,9 +290,8 @@ public class ASN1Path
                    Class<? extends ASN1Encoder> encoderClass,
                    ASN1PathType type)
   {
-    this(name, AssertUtil.notNullReturn(tag, STRING_TAG), NO_INDEX,
-         AssertUtil.notNullReturn(filter, STRING_FILTER), parent, encoderClass,
-         AssertUtil.notNullReturn(type, STRING_TYPE));
+    this(name, AssertUtil.notNullReturn(tag, STRING_TAG), NO_INDEX, AssertUtil.notNullReturn(filter, STRING_FILTER),
+         parent, encoderClass, AssertUtil.notNullReturn(type, STRING_TYPE));
   }
 
   /**
@@ -312,19 +299,18 @@ public class ASN1Path
    *
    * @param name name, <code>null</code> or empty String permitted
    * @param tag tag of child element, <code>null</code> not permitted, must specify a valid tag
-   * @param index index of child element, when filter specified always {@link #NO_INDEX}, otherwise index less
-   *          than 0 not permitted
-   * @param filter filter for element, <code>null</code> permitted if index is not {@link #NO_INDEX}, filter
-   *          class of filter only permitted as {@link ASN1}
+   * @param index index of child element, when filter specified always {@link #NO_INDEX}, otherwise index less than 0
+   *          not permitted
+   * @param filter filter for element, <code>null</code> permitted if index is not {@link #NO_INDEX}, filter class of
+   *          filter only permitted as {@link ASN1}
    * @param parent optional parent path element
-   * @param encoderClass Class of {@link ASN1Encoder} for creating ASN1. object with support convenience
-   *          methods to access contents of ASN.1, <code>null</code> permitted, any real Class must possess an
-   *          empty, accessible Constructor to create an instance, otherwise an
-   *          {@link IllegalArgumentException} is thrown
-   * @param type of ASN1Path - indicates different kind of child and importance for validity checks, type not
-   *          permitted as <code>null</code>
-   * @throws IllegalArgumentException if Class of {@link ASN1Encoder} does not possess an empty constructor
-   *           for initialization or arguments not valid
+   * @param encoderClass Class of {@link ASN1Encoder} for creating ASN1. object with support convenience methods to
+   *          access contents of ASN.1, <code>null</code> permitted, any real Class must possess an empty, accessible
+   *          Constructor to create an instance, otherwise an {@link IllegalArgumentException} is thrown
+   * @param type of ASN1Path - indicates different kind of child and importance for validity checks, type not permitted
+   *          as <code>null</code>
+   * @throws IllegalArgumentException if Class of {@link ASN1Encoder} does not possess an empty constructor for
+   *           initialization or arguments not valid
    */
   private ASN1Path(String name,
                    BigInteger tag,
@@ -397,15 +383,14 @@ public class ASN1Path
    *
    * @param name name, <code>null</code> or empty String permitted
    * @param tagByte tag byte of child element, must specify a valid tag
-   * @param filter filter for element, <code>null</code> not permitted, filter class of filter only permitted
-   *          as {@link ASN1}
+   * @param filter filter for element, <code>null</code> not permitted, filter class of filter only permitted as
+   *          {@link ASN1}
    * @param parent optional parent path element
-   * @param encoderClass Class of {@link ASN1Encoder} for creating ASN1. object with support convenience
-   *          methods to access contents of ASN.1, <code>null</code> permitted, any real Class must possess an
-   *          empty, accessible Constructor to create an instance, otherwise an
-   *          {@link IllegalArgumentException} is thrown
-   * @throws IllegalArgumentException if Class of {@link ASN1Encoder} does not possess an empty constructor
-   *           for initialization
+   * @param encoderClass Class of {@link ASN1Encoder} for creating ASN1. object with support convenience methods to
+   *          access contents of ASN.1, <code>null</code> permitted, any real Class must possess an empty, accessible
+   *          Constructor to create an instance, otherwise an {@link IllegalArgumentException} is thrown
+   * @throws IllegalArgumentException if Class of {@link ASN1Encoder} does not possess an empty constructor for
+   *           initialization
    * @see ASN1Path#ASN1Path(String, byte[], Filter, ASN1Path, Class, ASN1PathType)
    */
   protected ASN1Path(String name,
@@ -421,18 +406,17 @@ public class ASN1Path
    * Constructor.
    *
    * @param name name, <code>null</code> or empty String permitted
-   * @param tagBytes tag bytes of child element, <code>null</code> or empty array not permitted, must specify
-   *          a valid tag
-   * @param filter filter for element, <code>null</code> not permitted, filter class of filter only permitted
-   *          as {@link ASN1}
+   * @param tagBytes tag bytes of child element, <code>null</code> or empty array not permitted, must specify a valid
+   *          tag
+   * @param filter filter for element, <code>null</code> not permitted, filter class of filter only permitted as
+   *          {@link ASN1}
    * @param parent optional parent path element
-   * @param encoderClass Class of {@link ASN1Encoder} for creating ASN1. object with support convenience
-   *          methods to access contents of ASN.1, <code>null</code> permitted, any real Class must possess an
-   *          empty, accessible Constructor to create an instance, otherwise an
-   *          {@link IllegalArgumentException} is thrown
+   * @param encoderClass Class of {@link ASN1Encoder} for creating ASN1. object with support convenience methods to
+   *          access contents of ASN.1, <code>null</code> permitted, any real Class must possess an empty, accessible
+   *          Constructor to create an instance, otherwise an {@link IllegalArgumentException} is thrown
    * @param type type of ASN1Path
-   * @throws IllegalArgumentException if Class of {@link ASN1Encoder} does not possess an empty constructor
-   *           for initialization
+   * @throws IllegalArgumentException if Class of {@link ASN1Encoder} does not possess an empty constructor for
+   *           initialization
    * @see ASN1Path#ASN1Path(String, BigInteger, Filter, ASN1Path, Class, ASN1PathType)
    */
   private ASN1Path(String name,
@@ -489,8 +473,8 @@ public class ASN1Path
   @Override
   public String toString()
   {
-    return this.getName() + "(Tag: 0x" + Hex.hexify(this.tag.toByteArray()) + ", Index: " + this.index
-           + ", Parent: " + (this.parent != null ? this.parent.name : "no parent") + ")";
+    return this.getName() + "(Tag: 0x" + Hex.hexify(this.tag.toByteArray()) + ", Index: " + this.index + ", Parent: "
+           + (this.parent != null ? this.parent.name : "no parent") + ")";
   }
 
   // instantiate an instance for decoding

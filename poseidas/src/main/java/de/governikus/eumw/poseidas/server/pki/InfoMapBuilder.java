@@ -1,11 +1,10 @@
 /*
- * Copyright (c) 2020 Governikus KG. Licensed under the EUPL, Version 1.2 or as soon they will be approved by
- * the European Commission - subsequent versions of the EUPL (the "Licence"); You may not use this work except
- * in compliance with the Licence. You may obtain a copy of the Licence at:
- * http://joinup.ec.europa.eu/software/page/eupl Unless required by applicable law or agreed to in writing,
- * software distributed under the Licence is distributed on an "AS IS" basis, WITHOUT WARRANTIES OR CONDITIONS
- * OF ANY KIND, either express or implied. See the Licence for the specific language governing permissions and
- * limitations under the Licence.
+ * Copyright (c) 2020 Governikus KG. Licensed under the EUPL, Version 1.2 or as soon they will be approved by the
+ * European Commission - subsequent versions of the EUPL (the "Licence"); You may not use this work except in compliance
+ * with the Licence. You may obtain a copy of the Licence at: http://joinup.ec.europa.eu/software/page/eupl Unless
+ * required by applicable law or agreed to in writing, software distributed under the Licence is distributed on an
+ * "AS IS" basis, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the Licence for the
+ * specific language governing permissions and limitations under the Licence.
  */
 
 package de.governikus.eumw.poseidas.server.pki;
@@ -62,12 +61,10 @@ public class InfoMapBuilder
    *
    * @param facade
    * @param cvcRefID Reference ID for the provider
-   * @param withBlkNumber include the number of entries in the blacklist, this could take some more time.
    */
   static Map<String, Object> createInfoMap(TerminalPermissionAO facade,
                                            BlockListService blockListService,
-                                           String cvcRefID,
-                                           boolean withBlkNumber)
+                                           String cvcRefID)
   {
     if (facade == null)
     {
@@ -85,12 +82,9 @@ public class InfoMapBuilder
     }
 
 
-    result.put(AdminPoseidasConstants.VALUE_PERMISSION_DATA_BLACK_LIST_DATE,
-               terminal.getBlackListStoreDate());
-    result.put(AdminPoseidasConstants.VALUE_PERMISSION_DATA_MASTER_LIST_DATE,
-               terminal.getMasterListStoreDate());
-    result.put(AdminPoseidasConstants.VALUE_PERMISSION_DATA_DEFECT_LIST_DATE,
-               terminal.getDefectListStoreDate());
+    result.put(AdminPoseidasConstants.VALUE_PERMISSION_DATA_BLACK_LIST_DATE, terminal.getBlackListStoreDate());
+    result.put(AdminPoseidasConstants.VALUE_PERMISSION_DATA_MASTER_LIST_DATE, terminal.getMasterListStoreDate());
+    result.put(AdminPoseidasConstants.VALUE_PERMISSION_DATA_DEFECT_LIST_DATE, terminal.getDefectListStoreDate());
 
     if (terminal.getPendingRequest() != null)
     {
@@ -114,11 +108,6 @@ public class InfoMapBuilder
       {
         TerminalData cvc = new TerminalData(terminal.getCvc());
         getInfoFromCvc(result, cvc, terminal.getRefID(), terminal.getSectorID());
-        if (cvc.getSectorPublicKeyHash() != null && withBlkNumber)
-        {
-          result.put(AdminPoseidasConstants.VALUE_PERMISSION_DATA_BLACKLIST_ENTRIES,
-                     blockListService.count(terminal.getSectorID()));
-        }
       }
       catch (IOException e)
       {
@@ -188,10 +177,7 @@ public class InfoMapBuilder
     }
   }
 
-  private static void getInfoFromCvc(Map<String, Object> result,
-                                     TerminalData cvc,
-                                     String cvcRefID,
-                                     byte[] sectorID)
+  private static void getInfoFromCvc(Map<String, Object> result, TerminalData cvc, String cvcRefID, byte[] sectorID)
   {
     try
     {
@@ -202,8 +188,7 @@ public class InfoMapBuilder
       }
       result.put(AdminPoseidasConstants.VALUE_PERMISSION_DATA_EXPIRATION_DATE, cvc.getExpirationDate());
       result.put(AdminPoseidasConstants.VALUE_PERMISSION_DATA_EFFECTIVE_DATE, cvc.getEffectiveDate());
-      result.put(AdminPoseidasConstants.VALUE_PERMISSION_DATA_HOLDERREFERENCE,
-                 cvc.getHolderReferenceString());
+      result.put(AdminPoseidasConstants.VALUE_PERMISSION_DATA_HOLDERREFERENCE, cvc.getHolderReferenceString());
       result.put(AdminPoseidasConstants.VALUE_PERMISSION_DATA_CA_REFERENCE, cvc.getCAReferenceString());
       result.put(AdminPoseidasConstants.VALUE_PERMISSION_DATA_SECTOR_PUBLIC_KEY_HASH,
                  DatatypeConverter.printHexBinary(cvc.getSectorPublicKeyHash()));
@@ -238,9 +223,7 @@ public class InfoMapBuilder
     }
   }
 
-  private static void getInfoFromCvcDescription(Map<String, Object> result,
-                                                byte[] cvcDescBytes,
-                                                String cvcRefID)
+  private static void getInfoFromCvcDescription(Map<String, Object> result, byte[] cvcDescBytes, String cvcRefID)
   {
     try
     {

@@ -1,11 +1,10 @@
 /*
- * Copyright (c) 2020 Governikus KG. Licensed under the EUPL, Version 1.2 or as soon they will be approved by
- * the European Commission - subsequent versions of the EUPL (the "Licence"); You may not use this work except
- * in compliance with the Licence. You may obtain a copy of the Licence at:
- * http://joinup.ec.europa.eu/software/page/eupl Unless required by applicable law or agreed to in writing,
- * software distributed under the Licence is distributed on an "AS IS" basis, WITHOUT WARRANTIES OR CONDITIONS
- * OF ANY KIND, either express or implied. See the Licence for the specific language governing permissions and
- * limitations under the Licence.
+ * Copyright (c) 2020 Governikus KG. Licensed under the EUPL, Version 1.2 or as soon they will be approved by the
+ * European Commission - subsequent versions of the EUPL (the "Licence"); You may not use this work except in compliance
+ * with the Licence. You may obtain a copy of the Licence at: http://joinup.ec.europa.eu/software/page/eupl Unless
+ * required by applicable law or agreed to in writing, software distributed under the Licence is distributed on an
+ * "AS IS" basis, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the Licence for the
+ * specific language governing permissions and limitations under the Licence.
  */
 
 package de.governikus.eumw.poseidas.eidserver.eac;
@@ -21,8 +20,8 @@ import org.bouncycastle.asn1.pkcs.SignedData;
 
 
 /**
- * EACSignedDataParser to support Master- and Defect-List handling for the {@link EACSignedDataChecker} and
- * the {@link EACSignedDataParser}
+ * EACSignedDataParser to support Master- and Defect-List handling for the {@link EACSignedDataChecker} and the
+ * {@link EACSignedDataParser}
  *
  * @author Ole Behrens
  */
@@ -56,8 +55,7 @@ public abstract class EACSignedDataParser
     }
     ASN1TaggedObject dto = (ASN1TaggedObject)(seq.getObjectAt(1));
     SignedData signedDataFromCard = new SignedData((ASN1Sequence)(dto.getBaseObject()));
-    LOG.debug(logPrefix + "Check signature data:\n  "
-              + signedDataFromCard.getSignerInfos().toString());
+    LOG.debug(logPrefix + "Check signature data:\n  " + signedDataFromCard.getSignerInfos().toString());
     return signedDataFromCard;
   }
 }

@@ -34,8 +34,8 @@ import lombok.extern.slf4j.Slf4j;
 
 /**
  * This class manages the timer for the CRL renewal. The class implements the Runnable interface. The {@link #run() run}
- * method is used to renew CRLs. The {@link #getCrlTrigger(List) getCrlTrigger} method determines how often the
- * timer runs.
+ * method is used to renew CRLs. The {@link #getCrlTrigger(List) getCrlTrigger} method determines how often the timer
+ * runs.
  *
  * @see ApplicationTimer
  */

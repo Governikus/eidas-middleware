@@ -1,4 +1,4 @@
-FROM governikus/eidas-base-container:${project.version}
+FROM ${BASE_IMAGE_TO_USE}
 MAINTAINER Benny Prange <benny.prange@governikus.de>
 
 # Define the location of the configuration directory inside of the container
@@ -17,9 +17,8 @@ USER eidas-middleware
 WORKDIR /opt/eidas-middleware
 
 # Copy the freshly built artifact
-COPY maven/ /opt/eidas-middleware
+COPY eidas-middleware/target/eidas-middleware.jar /opt/eidas-middleware/eidas-middleware.jar
 
-RUN    mv eidas-middleware*.jar eidas-middleware.jar &&\
-    mkdir -p ${CONFIG_DIR}
+RUN mkdir -p ${CONFIG_DIR}
 
 ENTRYPOINT ["java", "-jar", "./eidas-middleware.jar"]

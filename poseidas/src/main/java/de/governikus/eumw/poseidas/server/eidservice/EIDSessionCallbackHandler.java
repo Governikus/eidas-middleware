@@ -1,11 +1,10 @@
 /*
- * Copyright (c) 2020 Governikus KG. Licensed under the EUPL, Version 1.2 or as soon they will be approved by
- * the European Commission - subsequent versions of the EUPL (the "Licence"); You may not use this work except
- * in compliance with the Licence. You may obtain a copy of the Licence at:
- * http://joinup.ec.europa.eu/software/page/eupl Unless required by applicable law or agreed to in writing,
- * software distributed under the Licence is distributed on an "AS IS" basis, WITHOUT WARRANTIES OR CONDITIONS
- * OF ANY KIND, either express or implied. See the Licence for the specific language governing permissions and
- * limitations under the Licence.
+ * Copyright (c) 2020 Governikus KG. Licensed under the EUPL, Version 1.2 or as soon they will be approved by the
+ * European Commission - subsequent versions of the EUPL (the "Licence"); You may not use this work except in compliance
+ * with the Licence. You may obtain a copy of the Licence at: http://joinup.ec.europa.eu/software/page/eupl Unless
+ * required by applicable law or agreed to in writing, software distributed under the Licence is distributed on an
+ * "AS IS" basis, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the Licence for the
+ * specific language governing permissions and limitations under the Licence.
  */
 
 package de.governikus.eumw.poseidas.server.eidservice;
@@ -29,9 +28,8 @@ import oasis.names.tc.dss._1_0.core.schema.Result;
 
 
 /**
- * handles the callbacks from the eCard and starts writes the resulting data into the correct session. This
- * class allows using the listener pattern even though the listener objects themselves are serialized into the
- * database.
+ * handles the callbacks from the eCard and starts writes the resulting data into the correct session. This class allows
+ * using the listener pattern even though the listener objects themselves are serialized into the database.
  *
  * @author hme
  */
@@ -96,8 +94,7 @@ public final class EIDSessionCallbackHandler implements ECardIDCallback
 
     if (container == null)
     {
-      LOG.info(session.getLogPrefix()
-               + "Something went wrong in the eCardAPI on this server, got null response.");
+      LOG.info(session.getLogPrefix() + "Something went wrong in the eCardAPI on this server, got null response.");
       session.setResult(createResult(Constants.EID_MAJOR_ERROR,
                                      Constants.EID_MINOR_COMMON_INTERNALERROR,
                                      "Something went wrong in the eCardAPI on this server, got null response."));

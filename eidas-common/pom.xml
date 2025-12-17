@@ -14,12 +14,17 @@
     <parent>
         <groupId>de.governikus.eumw</groupId>
         <artifactId>eumw</artifactId>
-        <version>3.4.0</version>
+        <version>4.0.0</version>
     </parent>
     <artifactId>eidas-common</artifactId>
 
     <name>${project.artifactId}</name>
     <description>Common sources for all eIDAS modules</description>
+
+    <properties>
+        <!-- Formatter plugin-->
+        <formatter-path>${project.parent.basedir}</formatter-path>
+    </properties>
 
     <dependencies>
         <dependency>

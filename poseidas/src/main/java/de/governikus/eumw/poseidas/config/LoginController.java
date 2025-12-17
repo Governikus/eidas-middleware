@@ -105,7 +105,8 @@ public class LoginController
   private boolean checkNewPassword(Model model, NewPasswordModel newPasswordModel)
   {
 
-    if (passwordHandler.getHashedPassword() != null && !passwordHandler.verifyOldPassword(newPasswordModel.getOldPassword()))
+    if (passwordHandler.getHashedPassword() != null
+        && !passwordHandler.verifyOldPassword(newPasswordModel.getOldPassword()))
     {
       model.addAttribute(newPasswordModel);
       model.addAttribute(ERROR, "The old password is not correct.");

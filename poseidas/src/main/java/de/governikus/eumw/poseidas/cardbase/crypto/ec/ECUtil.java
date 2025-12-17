@@ -1,11 +1,10 @@
 /*
- * Copyright (c) 2020 Governikus KG. Licensed under the EUPL, Version 1.2 or as soon they will be approved by
- * the European Commission - subsequent versions of the EUPL (the "Licence"); You may not use this work except
- * in compliance with the Licence. You may obtain a copy of the Licence at:
- * http://joinup.ec.europa.eu/software/page/eupl Unless required by applicable law or agreed to in writing,
- * software distributed under the Licence is distributed on an "AS IS" basis, WITHOUT WARRANTIES OR CONDITIONS
- * OF ANY KIND, either express or implied. See the Licence for the specific language governing permissions and
- * limitations under the Licence.
+ * Copyright (c) 2020 Governikus KG. Licensed under the EUPL, Version 1.2 or as soon they will be approved by the
+ * European Commission - subsequent versions of the EUPL (the "Licence"); You may not use this work except in compliance
+ * with the Licence. You may obtain a copy of the Licence at: http://joinup.ec.europa.eu/software/page/eupl Unless
+ * required by applicable law or agreed to in writing, software distributed under the Licence is distributed on an
+ * "AS IS" basis, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the Licence for the
+ * specific language governing permissions and limitations under the Licence.
  */
 
 package de.governikus.eumw.poseidas.cardbase.crypto.ec;
@@ -106,8 +105,7 @@ public class ECUtil
   public static ECParameterSpec parameterSpecFromCVC(ECCVCertificate cert) throws IOException
   {
     AssertUtil.notNull(cert, "CVC");
-    AssertUtil.notNull(cert.getChildElementByPath(ECCVCPath.PUBLIC_KEY_COEFFICIENT_A),
-                       "domain parameters in CVC");
+    AssertUtil.notNull(cert.getChildElementByPath(ECCVCPath.PUBLIC_KEY_COEFFICIENT_A), "domain parameters in CVC");
 
     BigInteger primeModulus = new BigInteger(ByteUtil.addLeadingZero(cert.getChildElementByPath(ECCVCPath.PUBLIC_KEY_PRIME_MODULUS)
                                                                          .getValue()));
@@ -132,9 +130,8 @@ public class ECUtil
   /**
    * Builds {@link ECParameterSpec} from {@link de.governikus.eumw.poseidas.cardbase.asn1.npa.ECPublicKey}.
    *
-   * @param key {@link de.governikus.eumw.poseidas.cardbase.asn1.npa.ECPublicKey} to use for creation,
-   *          <code>null</code> not permitted, must be a key which contains domain parameters (not every
-   *          specimen does)
+   * @param key {@link de.governikus.eumw.poseidas.cardbase.asn1.npa.ECPublicKey} to use for creation, <code>null</code>
+   *          not permitted, must be a key which contains domain parameters (not every specimen does)
    * @return generated {@link ECParameterSpec}
    * @throws IllegalArgumentException if key <code>null</code> or not containing domain parameters
    * @throws IOException
@@ -204,13 +201,13 @@ public class ECUtil
   }
 
   /**
-   * Create an {@link ECPublicKey} from an {@link de.governikus.eumw.poseidas.cardbase.asn1.npa.ECPublicKey}
-   * structure as defined in "Advanced Security Mechanisms for Machine Readable Travel Documents", p. 82. This
-   * is the variant to be used if the curve parameters are contained in the
+   * Create an {@link ECPublicKey} from an {@link de.governikus.eumw.poseidas.cardbase.asn1.npa.ECPublicKey} structure
+   * as defined in "Advanced Security Mechanisms for Machine Readable Travel Documents", p. 82. This is the variant to
+   * be used if the curve parameters are contained in the
    * {@link de.governikus.eumw.poseidas.cardbase.asn1.npa.ECPublicKey} structure.
    *
-   * @param keyASN1 {@link de.governikus.eumw.poseidas.cardbase.asn1.npa.ECPublicKey} structure containing
-   *          data of the public key to be created.
+   * @param keyASN1 {@link de.governikus.eumw.poseidas.cardbase.asn1.npa.ECPublicKey} structure containing data of the
+   *          public key to be created.
    * @return the created {@link ECPublicKey}, <code>null</code> if creating fails
    * @throws IllegalArgumentException if <code>null</code> given as argument
    */
@@ -223,13 +220,13 @@ public class ECUtil
   }
 
   /**
-   * Create an {@link ECPublicKey} from an {@link de.governikus.eumw.poseidas.cardbase.asn1.npa.ECPublicKey}
-   * structure as defined in "Advanced Security Mechanisms for Machine Readable Travel Documents", p. 82. This
-   * is the variant to be used if the curve parameters are not contained in the
+   * Create an {@link ECPublicKey} from an {@link de.governikus.eumw.poseidas.cardbase.asn1.npa.ECPublicKey} structure
+   * as defined in "Advanced Security Mechanisms for Machine Readable Travel Documents", p. 82. This is the variant to
+   * be used if the curve parameters are not contained in the
    * {@link de.governikus.eumw.poseidas.cardbase.asn1.npa.ECPublicKey} structure.
    *
-   * @param keyASN1 {@link de.governikus.eumw.poseidas.cardbase.asn1.npa.ECPublicKey} structure containing
-   *          data of the public key to be created.
+   * @param keyASN1 {@link de.governikus.eumw.poseidas.cardbase.asn1.npa.ECPublicKey} structure containing data of the
+   *          public key to be created.
    * @param paramSpec curve parameters given separately
    * @return the created {@link ECPublicKey}, <code>null</code> if creating fails
    * @throws IllegalArgumentException if <code>null</code> given as argument
@@ -242,8 +239,7 @@ public class ECUtil
     AssertUtil.notNull(paramSpec, "curve parameters");
     byte[] publicPointBytes = keyASN1.getChildElementByPath(ECPublicKeyPath.PUBLIC_POINT_Y).getValue();
 
-    ECPoint point = ECMath.pointFromBytes(publicPointBytes,
-                                          paramSpec.getCurve().getField().getFieldSize() / 8);
+    ECPoint point = ECMath.pointFromBytes(publicPointBytes, paramSpec.getCurve().getField().getFieldSize() / 8);
     return new ECPublicKeyImpl(point, paramSpec);
   }
 }

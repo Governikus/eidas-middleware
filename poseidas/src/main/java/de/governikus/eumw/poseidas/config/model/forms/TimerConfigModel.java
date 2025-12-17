@@ -62,6 +62,15 @@ public class TimerConfigModel
   private boolean automaticTlsEntangleActive;
 
   @Positive
+  @NotNull(message = "May not be empty")
+  private Integer hsmKeyDeletionLength;
+
+  @NotNull(message = "Has to be selected")
+  private TimerUnit hsmKeyDeletionRenewalUnit;
+
+  private boolean automaticHsmKeyDeletionActive;
+
+  @Positive
   private Integer daysRefreshRscBeforeExpiration;
 
   @Positive

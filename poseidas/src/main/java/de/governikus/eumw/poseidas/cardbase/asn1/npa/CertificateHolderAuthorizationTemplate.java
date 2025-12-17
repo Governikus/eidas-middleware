@@ -1,11 +1,10 @@
 /*
- * Copyright (c) 2020 Governikus KG. Licensed under the EUPL, Version 1.2 or as soon they will be approved by
- * the European Commission - subsequent versions of the EUPL (the "Licence"); You may not use this work except
- * in compliance with the Licence. You may obtain a copy of the Licence at:
- * http://joinup.ec.europa.eu/software/page/eupl Unless required by applicable law or agreed to in writing,
- * software distributed under the Licence is distributed on an "AS IS" basis, WITHOUT WARRANTIES OR CONDITIONS
- * OF ANY KIND, either express or implied. See the Licence for the specific language governing permissions and
- * limitations under the Licence.
+ * Copyright (c) 2020 Governikus KG. Licensed under the EUPL, Version 1.2 or as soon they will be approved by the
+ * European Commission - subsequent versions of the EUPL (the "Licence"); You may not use this work except in compliance
+ * with the Licence. You may obtain a copy of the Licence at: http://joinup.ec.europa.eu/software/page/eupl Unless
+ * required by applicable law or agreed to in writing, software distributed under the Licence is distributed on an
+ * "AS IS" basis, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the Licence for the
+ * specific language governing permissions and limitations under the Licence.
  */
 
 package de.governikus.eumw.poseidas.cardbase.asn1.npa;
@@ -40,8 +39,8 @@ public class CertificateHolderAuthorizationTemplate extends AbstractASN1Encoder 
   private AccessRoleAndRights accessRoleAndRights;
 
   /**
-   * Default encoder constructor (created ASN.1 is not initialized internally, use {@link #decode(ASN1)} for
-   * complete initialization).
+   * Default encoder constructor (created ASN.1 is not initialized internally, use {@link #decode(ASN1)} for complete
+   * initialization).
    *
    * @see AbstractASN1Encoder#AbstractASN1Encoder()
    */
@@ -55,8 +54,8 @@ public class CertificateHolderAuthorizationTemplate extends AbstractASN1Encoder 
    *
    * @param bytes bytes of complete CHAT, <code>null</code> or empty not permitted
    * @throws IOException if reading of stream fails
-   * @throws IllegalArgumentException if bytes <code>null</code> or empty or if bytes contain structure not
-   *           complying with CHAT structure.
+   * @throws IllegalArgumentException if bytes <code>null</code> or empty or if bytes contain structure not complying
+   *           with CHAT structure.
    * @see ASN1#ASN1(byte[])
    */
   public CertificateHolderAuthorizationTemplate(byte[] bytes) throws IOException
@@ -68,19 +67,18 @@ public class CertificateHolderAuthorizationTemplate extends AbstractASN1Encoder 
   /**
    * Constructor.
    *
-   * @param oidAccessRoleAndRights OID of access role and rights, <code>null</code> not permitted, OID must be
-   *          one of {@link AuthenticationTerminals#OID_AUTHENTICATION_TERMINALS},
-   *          {@link SignatureTerminals#OID_SIGNATURE_TERMINAL} or
-   *          {@link InspectionSystems#OID_INSPECTION_SYSTEMS}, others not valid
-   * @param chatMatrix byte[]-array with access mask, <code>null</code> or empty array not permitted,
-   *          according to Class byte[]-array with different length expected
-   * @throws IllegalArgumentException if byte[]-array of chat matrix invalid (<code>null</code> or incorrect
-   *           length), OID <code>null</code> or not valid
+   * @param oidAccessRoleAndRights OID of access role and rights, <code>null</code> not permitted, OID must be one of
+   *          {@link AuthenticationTerminals#OID_AUTHENTICATION_TERMINALS},
+   *          {@link SignatureTerminals#OID_SIGNATURE_TERMINAL} or {@link InspectionSystems#OID_INSPECTION_SYSTEMS},
+   *          others not valid
+   * @param chatMatrix byte[]-array with access mask, <code>null</code> or empty array not permitted, according to Class
+   *          byte[]-array with different length expected
+   * @throws IllegalArgumentException if byte[]-array of chat matrix invalid (<code>null</code> or incorrect length),
+   *           OID <code>null</code> or not valid
    * @throws IOException if processing bytes fails, some decoding uses {@link ASN1#ASN1(byte[])}
    * @throws UnsupportedOperationException if decoding from bytes not supported
    */
-  public CertificateHolderAuthorizationTemplate(OID oidAccessRoleAndRights, byte[] chatMatrix)
-    throws IOException
+  public CertificateHolderAuthorizationTemplate(OID oidAccessRoleAndRights, byte[] chatMatrix) throws IOException
   {
     super();
     AssertUtil.notNull(oidAccessRoleAndRights, "OID");
@@ -142,8 +140,7 @@ public class CertificateHolderAuthorizationTemplate extends AbstractASN1Encoder 
       else
       {
         throw new IllegalArgumentException("not acceptable OID used, possible OID is "
-                                           + AuthenticationTerminals.getOIDString()
-                                           + " for AuthenticationTerminals");
+                                           + AuthenticationTerminals.getOIDString() + " for AuthenticationTerminals");
       }
     }
     catch (IOException e)
@@ -172,6 +169,7 @@ public class CertificateHolderAuthorizationTemplate extends AbstractASN1Encoder 
 
   public enum ChatTerminalType
   {
+
     NONE(0), AUTHENTICATION_TERMINAL(ATConstants.VALUE_BYTE_COUNT);
 
     private int byteMatrixCount = -1;
@@ -395,15 +393,11 @@ public class CertificateHolderAuthorizationTemplate extends AbstractASN1Encoder 
       stringBuilder.append(CVCPermission.AUT_READ_DG03.getDescription() + ": ")
                    .append(isReadDateOfExpiry())
                    .append("\n");
-      stringBuilder.append(CVCPermission.AUT_READ_DG04.getDescription() + ": ")
-                   .append(isReadGivenNames())
-                   .append("\n");
+      stringBuilder.append(CVCPermission.AUT_READ_DG04.getDescription() + ": ").append(isReadGivenNames()).append("\n");
       stringBuilder.append(CVCPermission.AUT_READ_DG05.getDescription() + ": ")
                    .append(isReadFamilyNames())
                    .append("\n");
-      stringBuilder.append(CVCPermission.AUT_READ_DG06.getDescription() + ": ")
-                   .append(isReadNomDePlume())
-                   .append("\n");
+      stringBuilder.append(CVCPermission.AUT_READ_DG06.getDescription() + ": ").append(isReadNomDePlume()).append("\n");
       stringBuilder.append(CVCPermission.AUT_READ_DG07.getDescription() + ": ")
                    .append(isReadAcademicTitle())
                    .append("\n");
@@ -416,24 +410,18 @@ public class CertificateHolderAuthorizationTemplate extends AbstractASN1Encoder 
       stringBuilder.append(CVCPermission.AUT_READ_DG10.getDescription() + ": ")
                    .append(isReadNationality())
                    .append("\n");
-      stringBuilder.append(CVCPermission.AUT_READ_DG11.getDescription() + ": ")
-                   .append(isReadSex())
-                   .append("\n");
+      stringBuilder.append(CVCPermission.AUT_READ_DG11.getDescription() + ": ").append(isReadSex()).append("\n");
       stringBuilder.append(CVCPermission.AUT_READ_DG12.getDescription() + ": ")
                    .append(isReadOptionalDataR())
                    .append("\n");
-      stringBuilder.append(CVCPermission.AUT_READ_DG13.getDescription() + ": ")
-                   .append(isReadBirthName())
-                   .append("\n");
+      stringBuilder.append(CVCPermission.AUT_READ_DG13.getDescription() + ": ").append(isReadBirthName()).append("\n");
       stringBuilder.append(CVCPermission.AUT_READ_DG14.getDescription() + ": ")
                    .append(isReadWrittenSignature())
                    .append("\n");
       stringBuilder.append(CVCPermission.AUT_READ_DG15.getDescription() + ": ")
                    .append(isReadDateOfIssuance())
                    .append("\n");
-      stringBuilder.append(CVCPermission.AUT_READ_DG16.getDescription() + ": ")
-                   .append(isReadRFU4())
-                   .append("\n");
+      stringBuilder.append(CVCPermission.AUT_READ_DG16.getDescription() + ": ").append(isReadRFU4()).append("\n");
       stringBuilder.append(CVCPermission.AUT_READ_DG17.getDescription() + ": ")
                    .append(isReadPlaceOfResidence())
                    .append("\n");

@@ -14,12 +14,17 @@
     <parent>
         <groupId>de.governikus.eumw</groupId>
         <artifactId>eumw</artifactId>
-        <version>3.4.0</version>
+        <version>4.0.0</version>
     </parent>
     <artifactId>poseidas</artifactId>
 
     <name>POSeIDAS</name>
     <description>The POSeIDAS eID server</description>
+
+    <properties>
+        <!-- Formatter plugin-->
+        <formatter-path>${project.parent.basedir}</formatter-path>
+    </properties>
 
     <dependencies>
         <dependency>
@@ -256,17 +261,6 @@
                             <artifactId>jaxb-plugins</artifactId>
                             <version>${version.jvnet.jaxb}</version>
                         </plugin>
-
-<!--                        <plugin>-->
-<!--                            <groupId>org.jvnet.jaxb2_commons</groupId>-->
-<!--                            <artifactId>jaxb2-value-constructor</artifactId>-->
-<!--                            <version>${version.jaxb2-value-constructor}</version>-->
-<!--                        </plugin>-->
-<!--                        <plugin>-->
-<!--                            <groupId>org.jvnet.jaxb2_commons</groupId>-->
-<!--                            <artifactId>jaxb2-basics</artifactId>-->
-<!--                            <version>${version.jaxb2-basics}</version>-->
-<!--                        </plugin>-->
                     </plugins>
                 </configuration>
             </plugin>
@@ -407,26 +401,6 @@
                             </bindingFiles>
                             <packageName>de.governikus.eumw.poseidas.services.common.wsdl.v1_4_0
                             </packageName>
-                        </configuration>
-                    </execution>
-
-                    <!--1.10-->
-                    <execution>
-                        <id>wsimport restricted id service version 1.10</id>
-                        <phase>generate-sources</phase>
-                        <goals>
-                            <goal>wsimport</goal>
-                        </goals>
-                        <configuration>
-                            <!-- CAUTION! linebreaks will prevent the schemata from being parsed correctly -->
-                            <wsdlFiles>
-                                <wsdlFile>CA-Services/Restricted_ID/WS_DV_RestrictedID.wsdl</wsdlFile>
-                            </wsdlFiles>
-                            <bindingDirectory>src/main/resources/META-INF/wsdl</bindingDirectory>
-                            <bindingFiles>
-                                <bindingFile>CA-Services/restrictedId.dv.jxb</bindingFile>
-                                <bindingFile>CA-Services/restrictedId.dv.wsb</bindingFile>
-                            </bindingFiles>
                         </configuration>
                     </execution>
 

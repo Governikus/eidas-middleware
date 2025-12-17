@@ -37,7 +37,8 @@ public class TimerHistory
     GLOBAL_LIST_TIMER,
     RSC_RENEWAL,
     TLS_ENTANGLE_TIMER,
-    TLS_CLIENT_RENEWAL;
+    TLS_CLIENT_RENEWAL,
+    HSM_DELETION_TIMER;
   }
 
   @Id

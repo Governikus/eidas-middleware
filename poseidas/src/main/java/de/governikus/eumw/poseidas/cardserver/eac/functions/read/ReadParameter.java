@@ -1,11 +1,10 @@
 /*
- * Copyright (c) 2020 Governikus KG. Licensed under the EUPL, Version 1.2 or as soon they will be approved by
- * the European Commission - subsequent versions of the EUPL (the "Licence"); You may not use this work except
- * in compliance with the Licence. You may obtain a copy of the Licence at:
- * http://joinup.ec.europa.eu/software/page/eupl Unless required by applicable law or agreed to in writing,
- * software distributed under the Licence is distributed on an "AS IS" basis, WITHOUT WARRANTIES OR CONDITIONS
- * OF ANY KIND, either express or implied. See the Licence for the specific language governing permissions and
- * limitations under the Licence.
+ * Copyright (c) 2020 Governikus KG. Licensed under the EUPL, Version 1.2 or as soon they will be approved by the
+ * European Commission - subsequent versions of the EUPL (the "Licence"); You may not use this work except in compliance
+ * with the Licence. You may obtain a copy of the Licence at: http://joinup.ec.europa.eu/software/page/eupl Unless
+ * required by applicable law or agreed to in writing, software distributed under the Licence is distributed on an
+ * "AS IS" basis, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the Licence for the
+ * specific language governing permissions and limitations under the Licence.
  */
 
 package de.governikus.eumw.poseidas.cardserver.eac.functions.read;
@@ -86,11 +85,10 @@ public class ReadParameter implements FunctionParameter
   /**
    * Constructor.
    *
-   * @param offset offset for reading, default <code>0</code>, value greater equals <code>0</code> and less
-   *          equals <code>32768</code> only permitted, when SFI given offset less equals <code>255</code>
-   *          permitted only
-   * @param length length for reading, default <code>0</code> for reading 256 bytes, value greater equals
-   *          <code>0</code> and less equals than <code>65536</code> permitted only
+   * @param offset offset for reading, default <code>0</code>, value greater equals <code>0</code> and less equals
+   *          <code>32768</code> only permitted, when SFI given offset less equals <code>255</code> permitted only
+   * @param length length for reading, default <code>0</code> for reading 256 bytes, value greater equals <code>0</code>
+   *          and less equals than <code>65536</code> permitted only
    * @param sfi optional SFI
    * @throws IllegalArgumentException when arguments invalid
    */

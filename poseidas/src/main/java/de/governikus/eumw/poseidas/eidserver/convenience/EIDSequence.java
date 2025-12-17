@@ -1,11 +1,10 @@
 /*
- * Copyright (c) 2020 Governikus KG. Licensed under the EUPL, Version 1.2 or as soon they will be approved by
- * the European Commission - subsequent versions of the EUPL (the "Licence"); You may not use this work except
- * in compliance with the Licence. You may obtain a copy of the Licence at:
- * http://joinup.ec.europa.eu/software/page/eupl Unless required by applicable law or agreed to in writing,
- * software distributed under the Licence is distributed on an "AS IS" basis, WITHOUT WARRANTIES OR CONDITIONS
- * OF ANY KIND, either express or implied. See the Licence for the specific language governing permissions and
- * limitations under the Licence.
+ * Copyright (c) 2020 Governikus KG. Licensed under the EUPL, Version 1.2 or as soon they will be approved by the
+ * European Commission - subsequent versions of the EUPL (the "Licence"); You may not use this work except in compliance
+ * with the Licence. You may obtain a copy of the Licence at: http://joinup.ec.europa.eu/software/page/eupl Unless
+ * required by applicable law or agreed to in writing, software distributed under the Licence is distributed on an
+ * "AS IS" basis, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the Licence for the
+ * specific language governing permissions and limitations under the Licence.
  */
 
 package de.governikus.eumw.poseidas.eidserver.convenience;
@@ -73,8 +72,8 @@ import oasis.names.tc.dss._1_0.core.schema.Result;
 
 
 /**
- * EIDSequence tries to do an EAC protocol with a remote card and ask for some information from the card,
- * described by the SessionInput.
+ * EIDSequence tries to do an EAC protocol with a remote card and ask for some information from the card, described by
+ * the SessionInput.
  * <p>
  * <ol>
  * <li>Start sequence required data to start</li>
@@ -85,9 +84,8 @@ import oasis.names.tc.dss._1_0.core.schema.Result;
  * </ol>
  * </p>
  * <p>
- * After Authentication the first Transmit starts. For every Transmit request a response is received and
- * analyzed. If the content is as expected, new requests are send until all required informations are
- * received.
+ * After Authentication the first Transmit starts. For every Transmit request a response is received and analyzed. If
+ * the content is as expected, new requests are send until all required informations are received.
  * <p>
  * <p>
  * MCard provides TransmitBatches to handle more than one command per transmit.
@@ -264,13 +262,11 @@ public class EIDSequence extends ECardConvenienceSequenceAdapter
    *
    * @param frameworkInstance for eCard
    * @param cvc represents the card verifiable certificate from mCard
-   * @param cvcList represents the card verifiable certificate from mCard and the link certificates from
-   *          server
+   * @param cvcList represents the card verifiable certificate from mCard and the link certificates from server
    * @param requiredChat CHAT for this session
    * @param optionalChat CHAT for this session
    * @param sessionInput for this sequence
-   * @throws IllegalArgumentException is thrown if no Blacklist is available or sessionInput returns
-   *           unexpected result
+   * @throws IllegalArgumentException is thrown if no Blacklist is available or sessionInput returns unexpected result
    */
   public EIDSequence(TerminalData cvc, List<TerminalData> cvcList, SessionInput sessionInput)
     throws ChatOptionNotAllowedException
@@ -351,8 +347,7 @@ public class EIDSequence extends ECardConvenienceSequenceAdapter
       catch (NullPointerException e)
       {
         LOG.warn(logPrefix + "[SERVER] blacklist not available");
-        throw new IllegalArgumentException(LOG_PRE_INIT + INITIALIZE_FAIL
-                                           + "BlacklistConnector is not available", e);
+        throw new IllegalArgumentException(LOG_PRE_INIT + INITIALIZE_FAIL + "BlacklistConnector is not available", e);
       }
 
       if (sessionInput.getSessionID() == null)
@@ -375,8 +370,8 @@ public class EIDSequence extends ECardConvenienceSequenceAdapter
     if (sessionInput.getDefectList() != null)
     {
       defectList = new DefectList(sessionInput.getDefectList());
-      LOG.debug(logPrefix + LOG_PRE_INIT + " DefectList received from manager containing ("
-                + defectList.size() + ") defects");
+      LOG.debug(logPrefix + LOG_PRE_INIT + " DefectList received from manager containing (" + defectList.size()
+                + ") defects");
     }
     else
     {
@@ -406,8 +401,7 @@ public class EIDSequence extends ECardConvenienceSequenceAdapter
       authenticatedAuxiliaryData.setCommunityIDAuxiliaryData(sessionInput.getRequiredCommunity());
     }
     String documentVerification = new SimpleDateFormat("yyyyMMdd").format(now);
-    LOG.debug(logPrefix + LOG_PRE_INIT + "Document Validity will be checked for date: "
-              + documentVerification);
+    LOG.debug(logPrefix + LOG_PRE_INIT + "Document Validity will be checked for date: " + documentVerification);
     authenticatedAuxiliaryData.setDocumentVerificationAuxiliaryData(documentVerification);
   }
 
@@ -812,8 +806,7 @@ public class EIDSequence extends ECardConvenienceSequenceAdapter
       String resultMessage = "Card not valid:"
                              + " Term holder not available or no root found for searched issuer in CVC";
       LOG.debug(logPrefix + LOG_PRE_AUTH + "Card not valid for CVC");
-      LOG.debug(logPrefix + LOG_PRE_AUTH
-                + "Maybe the EID Server fail to handle ECardIDServerI#addCVCCert(...)"
+      LOG.debug(logPrefix + LOG_PRE_AUTH + "Maybe the EID Server fail to handle ECardIDServerI#addCVCCert(...)"
                 + " or card is expired");
       eidInfoContainer.setStatus(EIDStatus.NOT_AUTHENTIC);
       return handleError(ResultMinor.SAL_SECURITY_CONDITION_NOT_SATISFIED, resultMessage);
@@ -883,8 +876,7 @@ public class EIDSequence extends ECardConvenienceSequenceAdapter
       {
         LOG.debug(logPrefix + "Can not proceed with transmit: result from card not verified");
         eidInfoContainer.setStatus(EIDStatus.NOT_AUTHENTIC);
-        throw new ECardException(ResultMinor.COMMON_INTERNAL_ERROR,
-                                 "Data in EAC2OutputType could not be verified");
+        throw new ECardException(ResultMinor.COMMON_INTERNAL_ERROR, "Data in EAC2OutputType could not be verified");
       }
     }
     catch (IllegalArgumentException e)
@@ -1060,8 +1052,8 @@ public class EIDSequence extends ECardConvenienceSequenceAdapter
   }
 
   /**
-   * Create an optional {@link CertificateHolderAuthorizationTemplate} by extracting the informations from
-   * outer session input
+   * Create an optional {@link CertificateHolderAuthorizationTemplate} by extracting the informations from outer session
+   * input
    *
    * @param sessionInput to be used for creation
    * @return {@link CertificateHolderAuthorizationTemplate} with optional fields
@@ -1074,8 +1066,8 @@ public class EIDSequence extends ECardConvenienceSequenceAdapter
   }
 
   /**
-   * Create the required {@link CertificateHolderAuthorizationTemplate} by extracting the informations from
-   * outer session input
+   * Create the required {@link CertificateHolderAuthorizationTemplate} by extracting the informations from outer
+   * session input
    *
    * @param sessionInput to be used for creation
    * @return {@link CertificateHolderAuthorizationTemplate} with required fields
@@ -1136,8 +1128,8 @@ public class EIDSequence extends ECardConvenienceSequenceAdapter
   }
 
   /**
-   * Hold authorizations (which the end user is asked to grant). Currently supports CHAT only, can be extended
-   * to others (POSeIDAS).
+   * Hold authorizations (which the end user is asked to grant). Currently supports CHAT only, can be extended to others
+   * (POSeIDAS).
    */
   @Getter
   @Setter

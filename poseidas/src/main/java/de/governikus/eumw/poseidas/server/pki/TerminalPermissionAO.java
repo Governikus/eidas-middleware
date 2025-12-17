@@ -83,6 +83,14 @@ public interface TerminalPermissionAO
   void deleteCVCRequest(String refID);
 
   /**
+   * Deletes the pending certificate request associated with a specified terminal permission
+   *
+   * @param refID The identifier of the terminal permission whose pending certificate request is to be deleted
+   * @throws TerminalPermissionNotFoundException if the terminal permission with the specified refID does not exist
+   */
+  void deletePendingCertificateRequest(String refID) throws TerminalPermissionNotFoundException;
+
+  /**
    * Store an obtained CVC. As a side effect, the pending request is updated to state "received" or deleted in case it
    * was a subsequent request.
    *
@@ -342,6 +350,21 @@ public interface TerminalPermissionAO
    * @throws TerminalPermissionNotFoundException
    */
   void deletePendingRequestSignerCertificate(String refID) throws TerminalPermissionNotFoundException;
+
+  /**
+   * Deletes the current Request Signer Certificate.
+   *
+   * @param refID RefId of a {@link TerminalPermission}
+   * @throws TerminalPermissionNotFoundException
+   */
+  void deleteCurrentRequestSignerCertificate(String refID) throws TerminalPermissionNotFoundException;
+
+  /**
+   * Get the next sequence number for Request Signer Certificate.
+   *
+   * @param refID RefId of a {@link TerminalPermission}
+   */
+  Integer getNextRscSequenceNumber(String refID) throws TerminalPermissionNotFoundException;
 
   /**
    * Sets the status of the automatic CVC renewal. If an CVC renewal was successful the value is {@code false}. Only

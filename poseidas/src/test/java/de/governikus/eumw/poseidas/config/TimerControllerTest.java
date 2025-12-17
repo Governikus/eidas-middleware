@@ -35,6 +35,7 @@ import de.governikus.eumw.config.TimerUnit;
 import de.governikus.eumw.poseidas.config.base.TestConfiguration;
 import de.governikus.eumw.poseidas.config.base.WebAdminTestBase;
 import de.governikus.eumw.poseidas.server.idprovider.config.ConfigurationService;
+
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
@@ -57,29 +58,35 @@ class TimerControllerTest extends WebAdminTestBase
 
   private final ConfigurationService configurationService;
 
-  private final static String CVC_RENEWAL_HOURS_BEFORE_FIELD_ID = "hoursRefreshCvcBeforeExpiration";
+  private static final String CVC_RENEWAL_HOURS_BEFORE_FIELD_ID = "hoursRefreshCvcBeforeExpiration";
 
-  private final static String CVC_RENEWAL_VALUE_FIELD_ID = "CVC-renewal";
+  private static final String CVC_RENEWAL_VALUE_FIELD_ID = "CVC-renewal";
 
-  private final static String CVC_RENEWAL_UNIT_FIELD_ID = "cvcRenewalUnit";
+  private static final String CVC_RENEWAL_UNIT_FIELD_ID = "cvcRenewalUnit";
 
-  private final static String BL_RENEWAL_VALUE_FIELD_ID = "Block-List-renewal";
+  private static final String BL_RENEWAL_VALUE_FIELD_ID = "Block-List-renewal";
 
-  private final static String BL_RENEWAL_UNIT_FIELD_ID = "blackListRenewalUnit";
+  private static final String BL_RENEWAL_UNIT_FIELD_ID = "blackListRenewalUnit";
 
-  private final static String ML_RENEWAL_VALUE_FIELD_ID = "Master-and-defect-list-renewal";
+  private static final String ML_RENEWAL_VALUE_FIELD_ID = "Master-and-defect-list-renewal";
 
-  private final static String ML_RENEWAL_UNIT_FIELD_ID = "masterDefectListRenewalUnit";
+  private static final String ML_RENEWAL_UNIT_FIELD_ID = "masterDefectListRenewalUnit";
 
-  private final static String CRL_RENEWAL_VALUE_FIELD_ID = "CRL-renewal";
+  private static final String CRL_RENEWAL_VALUE_FIELD_ID = "CRL-renewal";
 
-  private final static String CRL_RENEWAL_UNIT_FIELD_ID = "crlRenewalUnit";
+  private static final String CRL_RENEWAL_UNIT_FIELD_ID = "crlRenewalUnit";
 
-  private final static String TLS_ENTANGLE_RENEWAL_VALUE_FIELD_ID = "Entangle-TLS-server-certificate";
+  private static final String TLS_ENTANGLE_RENEWAL_VALUE_FIELD_ID = "Entangle-TLS-server-certificate";
 
-  private final static String TLS_ENTANGLE_RENEWAL_UNIT_FIELD_ID = "tlsEntangleRenewalUnit";
+  private static final String TLS_ENTANGLE_RENEWAL_UNIT_FIELD_ID = "tlsEntangleRenewalUnit";
 
-  private final static String AUTOMATIC_TLS_ENTANGLE_FIELD_ID = "Automatic-entanglement-active:";
+  private static final String AUTOMATIC_TLS_ENTANGLE_FIELD_ID = "Automatic-entanglement-active:";
+
+  private static final String HSM_KEY_DELETION_VALUE_FIELD_ID = "deleteHsmKeysTimer";
+
+  private static final String HSM_KEY_DELETION_UNIT_FIELD_ID = "hsmKeyDeletionRenewalUnit";
+
+  private static final String HSM_KEY_DELETION_ACTIVE = "Automatic-key-deletion-active";
 
   @Autowired
   public TimerControllerTest(ConfigurationService configurationService)
@@ -93,22 +100,25 @@ class TimerControllerTest extends WebAdminTestBase
   private enum Timer
   {
 
-    CVC_RENEWAL(CVC_RENEWAL_VALUE_FIELD_ID, CVC_RENEWAL_UNIT_FIELD_ID, CVC_RENEWAL_HOURS_BEFORE_FIELD_ID),
+    CVC_RENEWAL(CVC_RENEWAL_VALUE_FIELD_ID, CVC_RENEWAL_UNIT_FIELD_ID, CVC_RENEWAL_HOURS_BEFORE_FIELD_ID, null),
     BL_RENEWAL(BL_RENEWAL_VALUE_FIELD_ID, BL_RENEWAL_UNIT_FIELD_ID),
     ML_RENEWAL(ML_RENEWAL_VALUE_FIELD_ID, ML_RENEWAL_UNIT_FIELD_ID),
     CRL_RENEWAL(CRL_RENEWAL_VALUE_FIELD_ID, CRL_RENEWAL_UNIT_FIELD_ID),
     TLS_ENTANGLE_RENEWAL(TLS_ENTANGLE_RENEWAL_VALUE_FIELD_ID, TLS_ENTANGLE_RENEWAL_UNIT_FIELD_ID),
-    AUTOMATIC_TLS_ENTANGLE(AUTOMATIC_TLS_ENTANGLE_FIELD_ID, null);
+    AUTOMATIC_TLS_ENTANGLE(AUTOMATIC_TLS_ENTANGLE_FIELD_ID, null),
+    HSM_KEY_DELETION(HSM_KEY_DELETION_VALUE_FIELD_ID, HSM_KEY_DELETION_UNIT_FIELD_ID, null, HSM_KEY_DELETION_ACTIVE);
 
     private final String valueID;
 
     private final String unitID;
 
     private String hoursBeforeID;
+
+    private String activeID;
   }
 
   @BeforeEach
-  public void clearConfiguration()
+  void clearConfiguration()
   {
     configurationService.saveConfiguration(new EidasMiddlewareConfig(), false);
   }
@@ -199,6 +209,11 @@ class TimerControllerTest extends WebAdminTestBase
         case AUTOMATIC_TLS_ENTANGLE:
           setAutoEntangleValue(timerConfigPage, timer, true);
           break;
+        case HSM_KEY_DELETION:
+          setActive(timerConfigPage, timer, true);
+          setTimerValue(timerConfigPage, timer, 5, TimerUnit.MINUTES);
+          break;
+
         default:
           fail("Timer not represented in switch case: " + timer.name());
           break;
@@ -219,6 +234,9 @@ class TimerControllerTest extends WebAdminTestBase
                 TimerUnit.MINUTES,
                 1,
                 TimerUnit.HOURS,
+                true,
+                5,
+                TimerUnit.MINUTES,
                 true);
   }
 
@@ -248,6 +266,10 @@ class TimerControllerTest extends WebAdminTestBase
     assertEquals(HOURS, timerConfigPage.getElementById(TLS_ENTANGLE_RENEWAL_UNIT_FIELD_ID).asNormalizedText());
 
     assertEquals("checked", timerConfigPage.getElementById(AUTOMATIC_TLS_ENTANGLE_FIELD_ID).asNormalizedText());
+
+    assertEquals("24", timerConfigPage.getElementById(HSM_KEY_DELETION_VALUE_FIELD_ID).asNormalizedText());
+    assertEquals(HOURS, timerConfigPage.getElementById(HSM_KEY_DELETION_UNIT_FIELD_ID).asNormalizedText());
+    assertEquals("unchecked", timerConfigPage.getElementById(HSM_KEY_DELETION_ACTIVE).asNormalizedText());
   }
 
   private void checkValues(int cvcHoursBefore,
@@ -261,7 +283,10 @@ class TimerControllerTest extends WebAdminTestBase
                            TimerUnit crlRenewUnit,
                            int tlsEntangleValue,
                            TimerUnit tlsEntangleUnit,
-                           boolean autoEntangle)
+                           boolean autoEntangle,
+                           int hsmKeyDeletionValue,
+                           TimerUnit hsmKeyDeletionUnit,
+                           boolean hsmKeyDeletionActive)
   {
 
     final Optional<TimerConfigurationType> timerConfigurationTypeOptional = configurationService.getConfiguration()
@@ -286,6 +311,10 @@ class TimerControllerTest extends WebAdminTestBase
     assertEquals(tlsEntangleValue, timerConfigurationType.getTlsEntangleRenewal().getLength());
     assertEquals(tlsEntangleUnit, timerConfigurationType.getTlsEntangleRenewal().getUnit());
     assertEquals(autoEntangle, timerConfigurationType.getTlsEntangleRenewal().isAutomaticTlsEntangleActive());
+
+    assertEquals(hsmKeyDeletionValue, timerConfigurationType.getHsmKeyDeletion().getLength());
+    assertEquals(hsmKeyDeletionUnit, timerConfigurationType.getHsmKeyDeletion().getUnit());
+    assertEquals(hsmKeyDeletionActive, timerConfigurationType.getHsmKeyDeletion().isAutomaticHsmKeyDeletionActive());
   }
 
   private void setTimerValue(HtmlPage timerConfigPage, Timer timer, int value, TimerUnit unit)
@@ -306,6 +335,12 @@ class TimerControllerTest extends WebAdminTestBase
   private void setAutoEntangleValue(HtmlPage timerConfigPage, Timer timer, boolean isActive)
   {
     HtmlCheckBoxInput htmlCheckBoxInput = timerConfigPage.getHtmlElementById(timer.getValueID());
+    htmlCheckBoxInput.setChecked(isActive);
+  }
+
+  private void setActive(HtmlPage timerConfigPage, Timer timer, boolean isActive)
+  {
+    HtmlCheckBoxInput htmlCheckBoxInput = timerConfigPage.getHtmlElementById(timer.getActiveID());
     htmlCheckBoxInput.setChecked(isActive);
   }
 

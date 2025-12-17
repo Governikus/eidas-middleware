@@ -1,11 +1,10 @@
 /*
- * Copyright (c) 2020 Governikus KG. Licensed under the EUPL, Version 1.2 or as soon they will be approved by
- * the European Commission - subsequent versions of the EUPL (the "Licence"); You may not use this work except
- * in compliance with the Licence. You may obtain a copy of the Licence at:
- * http://joinup.ec.europa.eu/software/page/eupl Unless required by applicable law or agreed to in writing,
- * software distributed under the Licence is distributed on an "AS IS" basis, WITHOUT WARRANTIES OR CONDITIONS
- * OF ANY KIND, either express or implied. See the Licence for the specific language governing permissions and
- * limitations under the Licence.
+ * Copyright (c) 2020 Governikus KG. Licensed under the EUPL, Version 1.2 or as soon they will be approved by the
+ * European Commission - subsequent versions of the EUPL (the "Licence"); You may not use this work except in compliance
+ * with the Licence. You may obtain a copy of the Licence at: http://joinup.ec.europa.eu/software/page/eupl Unless
+ * required by applicable law or agreed to in writing, software distributed under the Licence is distributed on an
+ * "AS IS" basis, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the Licence for the
+ * specific language governing permissions and limitations under the Licence.
  */
 
 package de.governikus.eumw.poseidas.cardbase;
@@ -17,8 +16,7 @@ import java.util.Formatter;
 
 
 /**
- * Utilities for general testing of arguments and generating {@link IllegalArgumentException} with unified
- * messages.
+ * Utilities for general testing of arguments and generating {@link IllegalArgumentException} with unified messages.
  *
  * @author Jens Wothe, jw@bos-bremen.de
  */
@@ -43,8 +41,7 @@ public final class AssertUtil
   private static final String DEFAULT_ARGUMENTS_NAME = "values";
 
   /**
-   * Constant of error message for check numeric value is zero or positive (greater equals than <code>0</code>
-   * ).
+   * Constant of error message for check numeric value is zero or positive (greater equals than <code>0</code> ).
    *
    * @see #zeroOrPositive(int, String)
    */
@@ -86,8 +83,7 @@ public final class AssertUtil
   private static final String MESSAGE_CHECK_FAILED_NUM_GREATER_EQUALS = "%1s not as expected, expected relation '>=', found: %2s < %3s";
 
   /**
-   * Constant of error message for check notNullOrEmpty failed because Collection is <code>null</code> or
-   * empty.
+   * Constant of error message for check notNullOrEmpty failed because Collection is <code>null</code> or empty.
    *
    * @see #notNullOrEmpty(Collection, String)
    */
@@ -105,8 +101,8 @@ public final class AssertUtil
    * Checks Object is not <code>null</code>.
    *
    * @param object Object to check
-   * @param message optional message to used as argument for formatting message, <code>null</code> or empty
-   *          String is permitted
+   * @param message optional message to used as argument for formatting message, <code>null</code> or empty String is
+   *          permitted
    * @throws IllegalArgumentException if Object is <code>null</code>
    * @see #MESSAGE_CHECK_FAILED_OBJECT_NULL
    */
@@ -114,8 +110,7 @@ public final class AssertUtil
   {
     if (object == null)
     {
-      throw new IllegalArgumentException(format(MESSAGE_CHECK_FAILED_OBJECT_NULL,
-                                                makeMessage(message, "Object")));
+      throw new IllegalArgumentException(format(MESSAGE_CHECK_FAILED_OBJECT_NULL, makeMessage(message, "Object")));
     }
   }
 
@@ -123,8 +118,8 @@ public final class AssertUtil
    * Checks array is not <code>null</code> or empty and returns array if not.
    *
    * @param array array
-   * @param message optional message to used as argument for formatting message, <code>null</code> or empty
-   *          String is permitted
+   * @param message optional message to used as argument for formatting message, <code>null</code> or empty String is
+   *          permitted
    * @return array, if check ok
    * @throws IllegalArgumentException if array is <code>null</code> or empty
    * @see #MESSAGE_CHECK_FAILED_ARRAY_NULL_OR_EMPTY
@@ -143,8 +138,8 @@ public final class AssertUtil
    * Checks String is not <code>null</code> or empty.
    *
    * @param s String
-   * @param message optional message to used as argument for formatting message, <code>null</code> or empty
-   *          String is permitted
+   * @param message optional message to used as argument for formatting message, <code>null</code> or empty String is
+   *          permitted
    * @return s
    * @throws IllegalArgumentException if String is <code>null</code> or empty
    * @see #MESSAGE_CHECK_FAILED_STRING_NULL_OR_EMPTY
@@ -163,8 +158,8 @@ public final class AssertUtil
    * Checks Collection is not <code>null</code> or empty.
    *
    * @param collection Collection
-   * @param message optional message to used as argument for formatting message, <code>null</code> or empty
-   *          String is permitted
+   * @param message optional message to used as argument for formatting message, <code>null</code> or empty String is
+   *          permitted
    * @throws IllegalArgumentException if Collection is <code>null</code> or empty
    * @see CollectionUtil#isNull(Collection)
    * @see #MESSAGE_CHECK_FAILED_COLLECTION_NULL_OR_EMPTY
@@ -182,8 +177,8 @@ public final class AssertUtil
    * Checks array is not <code>null</code> or empty and returns array if not.
    *
    * @param array array
-   * @param message optional message to used as argument for formatting message, <code>null</code> or empty
-   *          String is permitted
+   * @param message optional message to used as argument for formatting message, <code>null</code> or empty String is
+   *          permitted
    * @return array, if check ok
    * @throws IllegalArgumentException if array is <code>null</code> or empty
    * @see ArrayUtil#isNull(Object[])
@@ -205,8 +200,8 @@ public final class AssertUtil
    *
    * @param <T> type of object
    * @param object Object to check
-   * @param message optional message to used as argument for formatting message, <code>null</code> or empty
-   *          String is permitted
+   * @param message optional message to used as argument for formatting message, <code>null</code> or empty String is
+   *          permitted
    * @return object
    * @throws IllegalArgumentException if Object is <code>null</code>
    * @see #MESSAGE_CHECK_FAILED_OBJECT_NULL
@@ -215,8 +210,7 @@ public final class AssertUtil
   {
     if (object == null)
     {
-      throw new IllegalArgumentException(format(MESSAGE_CHECK_FAILED_OBJECT_NULL,
-                                                makeMessage(message, "Object")));
+      throw new IllegalArgumentException(format(MESSAGE_CHECK_FAILED_OBJECT_NULL, makeMessage(message, "Object")));
     }
     return object;
   }
@@ -226,8 +220,7 @@ public final class AssertUtil
    *
    * @param a value A
    * @param b value B
-   * @param message message to used as argument for formatting message, <code>null</code> or empty String is
-   *          permitted
+   * @param message message to used as argument for formatting message, <code>null</code> or empty String is permitted
    * @throws IllegalArgumentException if value A not greater than or equal to value B
    */
   public static void greaterEquals(int a, int b, String message)
@@ -251,8 +244,8 @@ public final class AssertUtil
    *
    * @param value1 value1
    * @param value2 value2
-   * @param message optional message to used as argument for formatting message, <code>null</code> or empty
-   *          String is permitted
+   * @param message optional message to used as argument for formatting message, <code>null</code> or empty String is
+   *          permitted
    * @throws IllegalArgumentException if values not equal
    */
   public static void equals(long value1, long value2, String message)
@@ -272,8 +265,8 @@ public final class AssertUtil
    *
    * @param value1 value1
    * @param value2 value2
-   * @param message optional message to used as argument for formatting message, <code>null</code> or empty
-   *          String is permitted
+   * @param message optional message to used as argument for formatting message, <code>null</code> or empty String is
+   *          permitted
    * @throws IllegalArgumentException if values not equal
    */
   public static void equals(Class<?> value1, Class<?> value2, String message)
@@ -293,8 +286,8 @@ public final class AssertUtil
    *
    * @param value1 value1
    * @param value2 value2
-   * @param message optional message to used as argument for formatting message, <code>null</code> or empty
-   *          String is permitted
+   * @param message optional message to used as argument for formatting message, <code>null</code> or empty String is
+   *          permitted
    * @throws IllegalArgumentException if values not equal
    */
   public static void equals(BigInteger value1, BigInteger value2, String message)
@@ -317,8 +310,7 @@ public final class AssertUtil
    * Checks value is zero or positive.
    *
    * @param value value
-   * @param message message to used as argument for formatting message, <code>null</code> or empty String is
-   *          permitted
+   * @param message message to used as argument for formatting message, <code>null</code> or empty String is permitted
    * @throws IllegalArgumentException if value not zero or positive
    */
   public static void zeroOrPositive(int value, String message)
@@ -362,8 +354,7 @@ public final class AssertUtil
    *
    * @param <T> type of number
    * @param value value, <code>null</code> permitted
-   * @param message message to used as argument for formatting message, <code>null</code> or empty String is
-   *          permitted
+   * @param message message to used as argument for formatting message, <code>null</code> or empty String is permitted
    * @throws IllegalArgumentException if value not positive
    */
   public static <T extends Number & Comparable<T>> void positive(T value, String message)

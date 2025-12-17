@@ -1,11 +1,10 @@
 /*
- * Copyright (c) 2020 Governikus KG. Licensed under the EUPL, Version 1.2 or as soon they will be approved by
- * the European Commission - subsequent versions of the EUPL (the "Licence"); You may not use this work except
- * in compliance with the Licence. You may obtain a copy of the Licence at:
- * http://joinup.ec.europa.eu/software/page/eupl Unless required by applicable law or agreed to in writing,
- * software distributed under the Licence is distributed on an "AS IS" basis, WITHOUT WARRANTIES OR CONDITIONS
- * OF ANY KIND, either express or implied. See the Licence for the specific language governing permissions and
- * limitations under the Licence.
+ * Copyright (c) 2020 Governikus KG. Licensed under the EUPL, Version 1.2 or as soon they will be approved by the
+ * European Commission - subsequent versions of the EUPL (the "Licence"); You may not use this work except in compliance
+ * with the Licence. You may obtain a copy of the Licence at: http://joinup.ec.europa.eu/software/page/eupl Unless
+ * required by applicable law or agreed to in writing, software distributed under the Licence is distributed on an
+ * "AS IS" basis, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the Licence for the
+ * specific language governing permissions and limitations under the Licence.
  */
 
 package de.governikus.eumw.poseidas.cardserver.certrequest;
@@ -34,12 +33,11 @@ public class CertificateRequestPath extends ASN1Path
    * @param tagBytes tag bytes of child element
    * @param index index of child element
    * @param parent optional parent path element
-   * @param encoderClass Class of {@link ASN1Encoder} for creating ASN1. object with support convenience
-   *          methods to access contents of ASN.1, <code>null</code> permitted, any real Class must possess an
-   *          empty, accessible Constructor to create an instance, otherwise an
-   *          {@link IllegalArgumentException} is thrown
-   * @throws IllegalArgumentException if Class of {@link ASN1Encoder} does not possess an empty constructor
-   *           for initialization
+   * @param encoderClass Class of {@link ASN1Encoder} for creating ASN1. object with support convenience methods to
+   *          access contents of ASN.1, <code>null</code> permitted, any real Class must possess an empty, accessible
+   *          Constructor to create an instance, otherwise an {@link IllegalArgumentException} is thrown
+   * @throws IllegalArgumentException if Class of {@link ASN1Encoder} does not possess an empty constructor for
+   *           initialization
    * @see ASN1Path#ASN1Path(String, byte, int, ASN1Path, Class)
    */
   private CertificateRequestPath(String name,
@@ -58,8 +56,8 @@ public class CertificateRequestPath extends ASN1Path
    * @param tagBytes tag bytes of child element
    * @param index index of child element
    * @param parent optional parent path element
-   * @throws IllegalArgumentException if Class of {@link ASN1Encoder} does not possess an empty constructor
-   *           for initialization
+   * @throws IllegalArgumentException if Class of {@link ASN1Encoder} does not possess an empty constructor for
+   *           initialization
    * @see ASN1Path#ASN1Path(String, byte, int, ASN1Path, Class)
    */
   private CertificateRequestPath(String name, byte tag, int index, ASN1Path parent)
@@ -98,8 +96,7 @@ public class CertificateRequestPath extends ASN1Path
   /**
    * Path to root of certificate request - authentication - see table D.1 at TC-03110, version 2.02.
    */
-  static final CertificateRequestPath AUTHENTICATION = new CertificateRequestPath("CERTIFICATE_REQUEST", "67",
-                                                                                  0, null);
+  static final CertificateRequestPath AUTHENTICATION = new CertificateRequestPath("CERTIFICATE_REQUEST", "67", 0, null);
 
   /**
    * Path to CVCertificate of request.
@@ -113,8 +110,7 @@ public class CertificateRequestPath extends ASN1Path
    */
   public static final CertificateRequestPath CV_CERTIFICATE_BODY = new CertificateRequestPath("CV_CERTIFICATE_BODY",
                                                                                               ASN1EidConstants.TAG_CERTIFICATE_BODY.toArray(),
-                                                                                              0,
-                                                                                              CV_CERTIFICATE);
+                                                                                              0, CV_CERTIFICATE);
 
   /**
    * Path to CA reference of certificate body.
@@ -128,8 +124,7 @@ public class CertificateRequestPath extends ASN1Path
    */
   public static final CertificateRequestPath HOLDER_REFERENCE = new CertificateRequestPath("HOLDER_REFERENCE",
                                                                                            ASN1EidConstants.TAG_CERTIFICATE_HOLDER_REFERENCE.toArray(),
-                                                                                           0,
-                                                                                           CV_CERTIFICATE_BODY);
+                                                                                           0, CV_CERTIFICATE_BODY);
 
   /**
    * Path to public key of certificate body.
@@ -150,12 +145,10 @@ public class CertificateRequestPath extends ASN1Path
    */
   static final CertificateRequestPath CERTIFICATE_EXTENSIONS = new CertificateRequestPath("BODY_CERTIFICATE_EXTENSIONS",
                                                                                           ASN1EidConstants.TAG_CERTIFICATE_EXTENSIONS,
-                                                                                          0,
-                                                                                          CV_CERTIFICATE_BODY);
+                                                                                          0, CV_CERTIFICATE_BODY);
 
   /**
-   * Path to first certificate discretionary data (public key or certificate description) of certificate
-   * extensions.
+   * Path to first certificate discretionary data (public key or certificate description) of certificate extensions.
    */
   static final CertificateRequestPath EXTENSIONS_DISCRETIONARY_DATA_FIRST = new CertificateRequestPath("EXTENSIONS_DISCRETIONARY_DATA_FIRST",
                                                                                                        ASN1EidConstants.TAG_DISCRETIONARY_DATA_TEMPLATE,
@@ -179,8 +172,7 @@ public class CertificateRequestPath extends ASN1Path
                                                                                                  EXTENSIONS_DISCRETIONARY_DATA_FIRST);
 
   /**
-   * Path to second certificate discretionary data (public key or certificate description) of certificate
-   * extensions.
+   * Path to second certificate discretionary data (public key or certificate description) of certificate extensions.
    */
   static final CertificateRequestPath EXTENSIONS_DISCRETIONARY_DATA_SECOND = new CertificateRequestPath("EXTENSIONS_DISCRETIONARY_DATA_SECOND",
                                                                                                         ASN1EidConstants.TAG_DISCRETIONARY_DATA_TEMPLATE,

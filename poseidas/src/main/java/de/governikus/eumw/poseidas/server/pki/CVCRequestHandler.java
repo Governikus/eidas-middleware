@@ -294,6 +294,7 @@ public class CVCRequestHandler extends BerCaRequestHandlerBase
   private static List<TerminalData> formatCVCList(TerminalData terminalCertificate,
                                                   List<byte[]> cvcChain,
                                                   String cvcRefId)
+    throws CertificateException
   {
     if (log.isDebugEnabled())
     {
@@ -304,7 +305,7 @@ public class CVCRequestHandler extends BerCaRequestHandlerBase
     // Check the terminal CVC and add it to the list as first element
     if (terminalCertificate.isSelfSigned())
     {
-      throw new IllegalArgumentException("First CVC in list is self signed and not the terminal CVC");
+      throw new CertificateException("First CVC in list is self signed and not the terminal CVC");
     }
     TerminalData check = terminalCertificate;
     while (true)

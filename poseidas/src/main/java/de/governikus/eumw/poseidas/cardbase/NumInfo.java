@@ -1,11 +1,10 @@
 /*
- * Copyright (c) 2020 Governikus KG. Licensed under the EUPL, Version 1.2 or as soon they will be approved by
- * the European Commission - subsequent versions of the EUPL (the "Licence"); You may not use this work except
- * in compliance with the Licence. You may obtain a copy of the Licence at:
- * http://joinup.ec.europa.eu/software/page/eupl Unless required by applicable law or agreed to in writing,
- * software distributed under the Licence is distributed on an "AS IS" basis, WITHOUT WARRANTIES OR CONDITIONS
- * OF ANY KIND, either express or implied. See the Licence for the specific language governing permissions and
- * limitations under the Licence.
+ * Copyright (c) 2020 Governikus KG. Licensed under the EUPL, Version 1.2 or as soon they will be approved by the
+ * European Commission - subsequent versions of the EUPL (the "Licence"); You may not use this work except in compliance
+ * with the Licence. You may obtain a copy of the Licence at: http://joinup.ec.europa.eu/software/page/eupl Unless
+ * required by applicable law or agreed to in writing, software distributed under the Licence is distributed on an
+ * "AS IS" basis, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the Licence for the
+ * specific language governing permissions and limitations under the Licence.
  */
 
 package de.governikus.eumw.poseidas.cardbase;
@@ -135,8 +134,8 @@ public interface NumInfo<T extends Number & Comparable<T>>
   public static final int UNKNOWN_SIZE = 0;
 
   /**
-   * Constant representing unknown infinity value (general, for all numeric types no explicit positive or
-   * negative infinity value is defined): <code>null</code>.
+   * Constant representing unknown infinity value (general, for all numeric types no explicit positive or negative
+   * infinity value is defined): <code>null</code>.
    *
    * @see #NEGATIVE_INFINITY_BYTE
    * @see #NEGATIVE_INFINITY_SHORT
@@ -291,8 +290,8 @@ public interface NumInfo<T extends Number & Comparable<T>>
 
 
   /**
-   * Constant representing unknown NaN - not a number value (general, for all numeric types no explicit NaN
-   * value is defined): <code>null</code>.
+   * Constant representing unknown NaN - not a number value (general, for all numeric types no explicit NaN value is
+   * defined): <code>null</code>.
    *
    * @see #NAN_BYTE
    * @see #NAN_SHORT
@@ -385,8 +384,8 @@ public interface NumInfo<T extends Number & Comparable<T>>
   public static final Double NAN_DOUBLE = Double.NaN;
 
   /**
-   * Constant representing unknown minimum value (general, for all numeric types no explicit maximum value is
-   * defined): <code>null</code>.
+   * Constant representing unknown minimum value (general, for all numeric types no explicit maximum value is defined):
+   * <code>null</code>.
    *
    * @see #UNKNOWN_MIN
    * @see #MIN_SHORT
@@ -496,8 +495,8 @@ public interface NumInfo<T extends Number & Comparable<T>>
   public static final Double MIN_DOUBLE = Double.MIN_VALUE;
 
   /**
-   * Constant representing unknown maximum value (general, for all numeric types no explicit maximum value is
-   * defined): <code>null</code>.
+   * Constant representing unknown maximum value (general, for all numeric types no explicit maximum value is defined):
+   * <code>null</code>.
    *
    * @see #MAX_SHORT
    * @see #MAX_INTEGER

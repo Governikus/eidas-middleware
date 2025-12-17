@@ -1,11 +1,10 @@
 /*
- * Copyright (c) 2020 Governikus KG. Licensed under the EUPL, Version 1.2 or as soon they will be approved by
- * the European Commission - subsequent versions of the EUPL (the "Licence"); You may not use this work except
- * in compliance with the Licence. You may obtain a copy of the Licence at:
- * http://joinup.ec.europa.eu/software/page/eupl Unless required by applicable law or agreed to in writing,
- * software distributed under the Licence is distributed on an "AS IS" basis, WITHOUT WARRANTIES OR CONDITIONS
- * OF ANY KIND, either express or implied. See the Licence for the specific language governing permissions and
- * limitations under the Licence.
+ * Copyright (c) 2020 Governikus KG. Licensed under the EUPL, Version 1.2 or as soon they will be approved by the
+ * European Commission - subsequent versions of the EUPL (the "Licence"); You may not use this work except in compliance
+ * with the Licence. You may obtain a copy of the Licence at: http://joinup.ec.europa.eu/software/page/eupl Unless
+ * required by applicable law or agreed to in writing, software distributed under the Licence is distributed on an
+ * "AS IS" basis, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the Licence for the
+ * specific language governing permissions and limitations under the Licence.
  */
 
 package de.governikus.eumw.poseidas.cardbase.crypto.sm;
@@ -59,17 +58,17 @@ public class AESEncSSCIvParameterSpec extends IvParameterSpec
   private final SecretKey keyEnc;
 
   /**
-   * Constructor with initial send sequence counter as byte[]-array (SSC is increased according to
-   * initialIncrease value and first IV generated, IV is the ssc encrypted with given key).
+   * Constructor with initial send sequence counter as byte[]-array (SSC is increased according to initialIncrease value
+   * and first IV generated, IV is the ssc encrypted with given key).
    * <p>
    * Notice: implementation must secure ssc initialization value is untouched by increasing.
    * </p>
    *
    * @param ssc initial send sequence counter as byte[]-array, <code>null</code> or empty array not permitted
-   * @param keyEnc encryption key for generation of IV by encrypting SSC, <code>null</code> not permitted,
-   *          only AES keys permitted
-   * @throws IllegalArgumentException if initial send sequence counter is <code>null</code> or empty array,
-   *           key is <code>null</code> or not an AES key
+   * @param keyEnc encryption key for generation of IV by encrypting SSC, <code>null</code> not permitted, only AES keys
+   *          permitted
+   * @throws IllegalArgumentException if initial send sequence counter is <code>null</code> or empty array, key is
+   *           <code>null</code> or not an AES key
    * @see #increaseSSC()
    */
   public AESEncSSCIvParameterSpec(byte[] ssc, SecretKey keyEnc)
@@ -79,9 +78,8 @@ public class AESEncSSCIvParameterSpec extends IvParameterSpec
     AssertUtil.notNull(keyEnc, "encryption key");
     if (!CipherUtil.ALGORITHM_AES.equals(keyEnc.getAlgorithm()))
     {
-      throw new IllegalArgumentException("only " + CipherUtil.ALGORITHM_AES
-                                         + "key permitted, but key with algorithm " + keyEnc.getAlgorithm()
-                                         + " used");
+      throw new IllegalArgumentException("only " + CipherUtil.ALGORITHM_AES + "key permitted, but key with algorithm "
+                                         + keyEnc.getAlgorithm() + " used");
     }
     this.keyEnc = keyEnc;
     // SSC as unsigned integer from byte-array
@@ -99,11 +97,7 @@ public class AESEncSSCIvParameterSpec extends IvParameterSpec
     byte[] result = ByteUtil.copy(iv);
     try
     {
-      result = CipherUtil.encipherAES(CipherUtil.ALGORITHM_AES + "/ECB/NoPadding",
-                                      keyEnc,
-                                      null,
-                                      result,
-                                      null);
+      result = CipherUtil.encipherAES(CipherUtil.ALGORITHM_AES + "/ECB/NoPadding", keyEnc, null, result, null);
     }
     catch (IllegalArgumentException | IllegalBlockSizeException | BadPaddingException e)
     {

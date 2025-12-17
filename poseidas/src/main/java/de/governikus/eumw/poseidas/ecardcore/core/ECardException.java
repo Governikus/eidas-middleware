@@ -1,11 +1,10 @@
 /*
- * Copyright (c) 2020 Governikus KG. Licensed under the EUPL, Version 1.2 or as soon they will be approved by
- * the European Commission - subsequent versions of the EUPL (the "Licence"); You may not use this work except
- * in compliance with the Licence. You may obtain a copy of the Licence at:
- * http://joinup.ec.europa.eu/software/page/eupl Unless required by applicable law or agreed to in writing,
- * software distributed under the Licence is distributed on an "AS IS" basis, WITHOUT WARRANTIES OR CONDITIONS
- * OF ANY KIND, either express or implied. See the Licence for the specific language governing permissions and
- * limitations under the Licence.
+ * Copyright (c) 2020 Governikus KG. Licensed under the EUPL, Version 1.2 or as soon they will be approved by the
+ * European Commission - subsequent versions of the EUPL (the "Licence"); You may not use this work except in compliance
+ * with the Licence. You may obtain a copy of the Licence at: http://joinup.ec.europa.eu/software/page/eupl Unless
+ * required by applicable law or agreed to in writing, software distributed under the Licence is distributed on an
+ * "AS IS" basis, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the Licence for the
+ * specific language governing permissions and limitations under the Licence.
  */
 
 package de.governikus.eumw.poseidas.ecardcore.core;
@@ -21,14 +20,12 @@ import oasis.names.tc.dss._1_0.core.schema.Result;
 
 
 /**
- * ECardException is the java equivalent of a negative Result in the eCard-Webservice. It can be used to
- * terminate the control-flow in a request implementation, and be converted into an result in the top level
- * request function.
+ * ECardException is the java equivalent of a negative Result in the eCard-Webservice. It can be used to terminate the
+ * control-flow in a request implementation, and be converted into an result in the top level request function.
  * <p>
- * Any Exception must at least contain a minor code from the eCard-API. It can to be translated into a result
- * object to create a negative response in an API call. Results shall not be created in the application code
- * manually. They can be either created from an ECardException or from an ECardErrorCode by using the
- * ECardExceptionMapper.
+ * Any Exception must at least contain a minor code from the eCard-API. It can to be translated into a result object to
+ * create a negative response in an API call. Results shall not be created in the application code manually. They can be
+ * either created from an ECardException or from an ECardErrorCode by using the ECardExceptionMapper.
  * </p>
  *
  * @author Alexander Funk
@@ -142,9 +139,8 @@ public class ECardException extends Exception
   }
 
   /**
-   * An ECardException can be turned into a eCard-API result, with the given minor code and the message. Use
-   * this when handling an ECardException. The stackTrace is logged here as a info to trace down probable
-   * causes.
+   * An ECardException can be turned into a eCard-API result, with the given minor code and the message. Use this when
+   * handling an ECardException. The stackTrace is logged here as a info to trace down probable causes.
    *
    * @return the Result associated with the ECardException
    */

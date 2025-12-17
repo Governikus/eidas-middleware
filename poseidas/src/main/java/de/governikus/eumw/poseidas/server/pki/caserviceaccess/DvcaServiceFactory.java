@@ -7,7 +7,6 @@ import java.security.KeyStore;
 import java.security.cert.X509Certificate;
 import java.util.List;
 
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import de.governikus.eumw.config.DvcaConfigurationType;
@@ -31,9 +30,6 @@ public class DvcaServiceFactory
 {
 
   private final ConfigurationService configurationService;
-
-  @Value("${poseidas.ri-service.1-40:false}")
-  private boolean useRiService140;
 
   /**
    * Creates a PassiveAuthService service.
@@ -111,11 +107,7 @@ public class DvcaServiceFactory
       DvcaConfigurationType dvcaConfiguration = configurationService.getDvcaConfiguration(serviceProvider);
       PKIServiceConnector connector = getPkiServiceConnector(serviceProvider, hsmKeyStore, dvcaConfiguration, 180);
       String serviceUrl = dvcaConfiguration.getRestrictedIdServiceUrl();
-      if (useRiService140)
-      {
-        return new RestrictedIdService140(connector, serviceUrl);
-      }
-      return new RestrictedIdService110(connector, serviceUrl);
+      return new RestrictedIdService140(connector, serviceUrl);
     }
     catch (GeneralSecurityException | IOException | NullPointerException e)
     {

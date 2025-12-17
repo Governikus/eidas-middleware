@@ -1,11 +1,10 @@
 /*
- * Copyright (c) 2020 Governikus KG. Licensed under the EUPL, Version 1.2 or as soon they will be approved by
- * the European Commission - subsequent versions of the EUPL (the "Licence"); You may not use this work except
- * in compliance with the Licence. You may obtain a copy of the Licence at:
- * http://joinup.ec.europa.eu/software/page/eupl Unless required by applicable law or agreed to in writing,
- * software distributed under the Licence is distributed on an "AS IS" basis, WITHOUT WARRANTIES OR CONDITIONS
- * OF ANY KIND, either express or implied. See the Licence for the specific language governing permissions and
- * limitations under the Licence.
+ * Copyright (c) 2020 Governikus KG. Licensed under the EUPL, Version 1.2 or as soon they will be approved by the
+ * European Commission - subsequent versions of the EUPL (the "Licence"); You may not use this work except in compliance
+ * with the Licence. You may obtain a copy of the Licence at: http://joinup.ec.europa.eu/software/page/eupl Unless
+ * required by applicable law or agreed to in writing, software distributed under the Licence is distributed on an
+ * "AS IS" basis, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the Licence for the
+ * specific language governing permissions and limitations under the Licence.
  */
 
 package de.governikus.eumw.poseidas.cardserver.eac;
@@ -50,8 +49,7 @@ public class InputAPDUInfoTypeUtil
   /**
    * Creates list of InputAPDUInfoType from list of commands.
    *
-   * @param commandList list of commands, <code>null</code> or empty permitted, <code>null</code> entries
-   *          ignored
+   * @param commandList list of commands, <code>null</code> or empty permitted, <code>null</code> entries ignored
    * @return list of InputAPDUInfoType
    */
   public static List<InputAPDUInfoType> create(List<CommandAPDU> commandList)
@@ -79,13 +77,11 @@ public class InputAPDUInfoTypeUtil
   /**
    * Creates list of InputAPDUInfoType for command and optional accepted response list.
    *
-   * @param commandList list of commands, <code>null</code> or empty permitted, <code>null</code> entries
-   *          ignored
+   * @param commandList list of commands, <code>null</code> or empty permitted, <code>null</code> entries ignored
    * @param acceptedResponseList optional accepted response code list, <code>null</code> for all
    * @return list of InputAPDUInfoType
    */
-  private static List<InputAPDUInfoType> create(List<CommandAPDU> commandList,
-                                               List<ResponseAPDU> acceptedResponseList)
+  private static List<InputAPDUInfoType> create(List<CommandAPDU> commandList, List<ResponseAPDU> acceptedResponseList)
   {
     List<InputAPDUInfoType> result = new ArrayList<>();
     if (!CollectionUtil.isNullOrEmpty(commandList))

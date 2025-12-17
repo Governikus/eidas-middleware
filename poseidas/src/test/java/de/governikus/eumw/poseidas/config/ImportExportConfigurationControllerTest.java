@@ -16,6 +16,8 @@ import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
+import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 
@@ -30,17 +32,20 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.context.annotation.Import;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 
+import com.gargoylesoftware.htmlunit.UnexpectedPage;
 import com.gargoylesoftware.htmlunit.html.HtmlFileInput;
 import com.gargoylesoftware.htmlunit.html.HtmlForm;
 import com.gargoylesoftware.htmlunit.html.HtmlPage;
 
 import de.governikus.eumw.config.EidasMiddlewareConfig;
+import de.governikus.eumw.config.KeyPairType;
+import de.governikus.eumw.config.KeyStoreType;
 import de.governikus.eumw.eidascommon.ContextPaths;
 import de.governikus.eumw.poseidas.config.base.TestConfiguration;
 import de.governikus.eumw.poseidas.config.base.WebAdminTestBase;
 import de.governikus.eumw.poseidas.server.idprovider.config.ConfigurationRepository;
 import de.governikus.eumw.poseidas.server.idprovider.config.ConfigurationService;
-
+import de.governikus.eumw.utils.xml.XmlHelper;
 import lombok.extern.slf4j.Slf4j;
 
 
@@ -137,8 +142,142 @@ class ImportExportConfigurationControllerTest extends WebAdminTestBase
                                       .getServerSSLCertificateName());
     assertTrue(eidasMiddlewareConfig.getKeyData().getKeyPair().isEmpty());
     assertNull(eidasMiddlewareConfig.getEidasConfiguration().getDecryptionKeyPairName());
+  }
 
-    eidasMiddlewareConfig.getEidasConfiguration();
+  @Test
+  void testUploadWithSupportData() throws Exception
+  {
+    assertTrue(configurationService.getConfiguration().isEmpty());
+    HtmlPage configurationPage = getConfigurationPage();
+    HtmlForm uploadForm = configurationPage.getForms().get(0);
+    HtmlFileInput inputField = uploadForm.getInputByName("configurationFile");
+    String pathToConfigFile = Objects.requireNonNull(ImportExportConfigurationControllerTest.class.getResource("/configuration/Configuration_with_supportdata.xml"))
+                                     .toExternalForm();
+    inputField.setValueAttribute(pathToConfigFile);
+    HtmlPage savedConfig = configurationPage.getHtmlElementById("save").click();
+    assertTrue(savedConfig.asNormalizedText().contains("Configuration successfully imported!"));
+    assertTrue(configurationService.getConfiguration().isPresent());
+
+    Optional<EidasMiddlewareConfig> configurationOptional = configurationService.getConfiguration();
+    assertFalse(configurationOptional.isEmpty());
+    EidasMiddlewareConfig eidasMiddlewareConfig = configurationOptional.get();
+    assertNull(eidasMiddlewareConfig.getSupportData());
+    assertEquals(4, eidasMiddlewareConfig.getKeyData().getCertificate().size());
+    assertEquals("serverCertificate",
+                 eidasMiddlewareConfig.getEidConfiguration()
+                                      .getDvcaConfiguration()
+                                      .get(0)
+                                      .getServerSSLCertificateName());
+  }
+
+  @Test
+  void testDownloadWithPrivateKeys() throws Exception
+  {
+    assertTrue(configurationService.getConfiguration().isEmpty());
+    HtmlPage configurationPage = getConfigurationPage();
+    HtmlForm uploadForm = configurationPage.getForms().get(0);
+    HtmlFileInput inputField = uploadForm.getInputByName("configurationFile");
+    String pathToConfigFile = Objects.requireNonNull(ImportExportConfigurationControllerTest.class.getResource("/configuration/Configuration.xml"))
+                                     .toExternalForm();
+    inputField.setValueAttribute(pathToConfigFile);
+    HtmlPage savedConfig = configurationPage.getHtmlElementById("save").click();
+    assertTrue(savedConfig.asNormalizedText().contains("Configuration successfully imported!"));
+    assertTrue(configurationService.getConfiguration().isPresent());
+
+    UnexpectedPage downloadedConfigObj = configurationPage.getAnchorByHref(ContextPaths.ADMIN_CONTEXT_PATH
+                                                                           + ContextPaths.IMPORT_EXPORT_CONFIGURATION
+                                                                           + "/downloadWithPrivateKeys")
+                                                          .click();
+    String downloadedConfigAsString = new String(downloadedConfigObj.getInputStream().readAllBytes(),
+                                                 StandardCharsets.UTF_8);
+    EidasMiddlewareConfig downloadedMwConfig = XmlHelper.unmarshal(downloadedConfigAsString,
+                                                                   EidasMiddlewareConfig.class);
+
+    assertNotNull(downloadedMwConfig.getEidasConfiguration().getContactPerson());
+    assertNotNull(downloadedMwConfig.getEidasConfiguration().getOrganization());
+
+    assertFalse(downloadedMwConfig.getEidConfiguration().getDvcaConfiguration().isEmpty());
+    assertEquals(1, downloadedMwConfig.getEidConfiguration().getDvcaConfiguration().size());
+    assertNotNull(downloadedMwConfig.getEidConfiguration().getTimerConfiguration());
+    assertFalse(downloadedMwConfig.getEidConfiguration().getServiceProvider().isEmpty());
+    assertEquals(1, downloadedMwConfig.getEidConfiguration().getServiceProvider().size());
+
+    assertFalse(downloadedMwConfig.getKeyData().getCertificate().isEmpty());
+    assertEquals(4, downloadedMwConfig.getKeyData().getCertificate().size());
+    List<KeyStoreType> keyStores = downloadedMwConfig.getKeyData().getKeyStore();
+    assertFalse(keyStores.isEmpty());
+    assertEquals(3, keyStores.size());
+    for ( KeyStoreType keyStore : keyStores )
+    {
+      assertNotNull(keyStore.getKeyStore());
+    }
+
+    List<KeyPairType> keyPairs = downloadedMwConfig.getKeyData().getKeyPair();
+    assertFalse(keyPairs.isEmpty());
+    assertEquals(3, keyPairs.size());
+    for ( KeyPairType keyPair : keyPairs )
+    {
+      assertNotNull(keyPair.getPassword());
+    }
+
+    assertNull(downloadedMwConfig.getSupportData());
+  }
+
+  @Test
+  void testDownloadWithoutPrivateKeys() throws Exception
+  {
+    assertTrue(configurationService.getConfiguration().isEmpty());
+    HtmlPage configurationPage = getConfigurationPage();
+    HtmlForm uploadForm = configurationPage.getForms().get(0);
+    HtmlFileInput inputField = uploadForm.getInputByName("configurationFile");
+    String pathToConfigFile = Objects.requireNonNull(ImportExportConfigurationControllerTest.class.getResource("/configuration/Configuration.xml"))
+                                     .toExternalForm();
+    inputField.setValueAttribute(pathToConfigFile);
+    HtmlPage savedConfig = configurationPage.getHtmlElementById("save").click();
+    assertTrue(savedConfig.asNormalizedText().contains("Configuration successfully imported!"));
+    assertTrue(configurationService.getConfiguration().isPresent());
+
+    UnexpectedPage downloadedConfigObj = configurationPage.getAnchorByHref(ContextPaths.ADMIN_CONTEXT_PATH
+                                                                           + ContextPaths.IMPORT_EXPORT_CONFIGURATION
+                                                                           + "/downloadWithoutPrivateKeys")
+                                                          .click();
+    String downloadedConfigAsString = new String(downloadedConfigObj.getInputStream().readAllBytes(),
+                                                 StandardCharsets.UTF_8);
+    EidasMiddlewareConfig downloadedMwConfig = XmlHelper.unmarshal(downloadedConfigAsString,
+                                                                   EidasMiddlewareConfig.class);
+
+    assertNotNull(downloadedMwConfig.getEidasConfiguration().getContactPerson());
+    assertNotNull(downloadedMwConfig.getEidasConfiguration().getOrganization());
+
+    assertFalse(downloadedMwConfig.getEidConfiguration().getDvcaConfiguration().isEmpty());
+    assertEquals(1, downloadedMwConfig.getEidConfiguration().getDvcaConfiguration().size());
+    assertNotNull(downloadedMwConfig.getEidConfiguration().getTimerConfiguration());
+    assertFalse(downloadedMwConfig.getEidConfiguration().getServiceProvider().isEmpty());
+    assertEquals(1, downloadedMwConfig.getEidConfiguration().getServiceProvider().size());
+
+    assertFalse(downloadedMwConfig.getKeyData().getCertificate().isEmpty());
+    assertEquals(4, downloadedMwConfig.getKeyData().getCertificate().size());
+
+    List<KeyStoreType> keyStores = downloadedMwConfig.getKeyData().getKeyStore();
+    assertFalse(keyStores.isEmpty());
+    assertEquals(3, keyStores.size());
+    for ( KeyStoreType keyStore : keyStores )
+    {
+      assertNull(keyStore.getKeyStore());
+      assertNull(keyStore.getPassword());
+    }
+
+    List<KeyPairType> keyPairs = downloadedMwConfig.getKeyData().getKeyPair();
+    assertFalse(keyPairs.isEmpty());
+    assertEquals(3, keyPairs.size());
+    for ( KeyPairType keyPair : keyPairs )
+    {
+      assertNull(keyPair.getPassword());
+    }
+
+    assertNotNull(downloadedMwConfig.getSupportData());
+    assertFalse(downloadedMwConfig.getSupportData().getKeyPairCertificates().isEmpty());
+    assertEquals(3, downloadedMwConfig.getSupportData().getKeyPairCertificates().size());
   }
 
   @ParameterizedTest

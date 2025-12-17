@@ -222,7 +222,7 @@ public class ConfigurationService
 
   /**
    * Update a key pair with a new certificate.
-   * 
+   *
    * @param keyPairName name of key pair to be updated
    * @param cert new certificate to replace the old one
    * @return updated configuration

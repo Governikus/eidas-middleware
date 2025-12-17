@@ -64,13 +64,18 @@ class RequestReceiverTest
     prepareMocks();
     Mockito.when(requestHandler.getTcTokenURL(REQUEST_ID)).thenReturn(TC_TOKEN_URL + REQUEST_ID);
     RequestReceiver requestReceiver = new RequestReceiver(requestHandler, responseHandler, configurationService);
-    ModelAndView landingPage = requestReceiver.doGet(RELAY_STATE, SAML_REQUEST_BASE_64_MOCK, null, null, null, null, new MockHttpSession());
+    ModelAndView landingPage = requestReceiver.doGet(RELAY_STATE,
+                                                     SAML_REQUEST_BASE_64_MOCK,
+                                                     null,
+                                                     null,
+                                                     null,
+                                                     null,
+                                                     new MockHttpSession());
 
     Assertions.assertEquals("middleware", landingPage.getViewName());
     ModelMap modelMap = landingPage.getModelMap();
     Assertions.assertEquals(3, modelMap.size());
-    Assertions.assertEquals(EID_CLIENT_URL
-                            + URLEncoder.encode(TC_TOKEN_URL + REQUEST_ID, StandardCharsets.UTF_8),
+    Assertions.assertEquals(EID_CLIENT_URL + URLEncoder.encode(TC_TOKEN_URL + REQUEST_ID, StandardCharsets.UTF_8),
                             modelMap.getAttribute("ausweisapp"));
     Assertions.assertEquals(ContextPaths.EIDAS_CONTEXT_PATH + ContextPaths.REQUEST_RECEIVER + "?sessionId="
                             + REQUEST_ID,
@@ -88,8 +93,7 @@ class RequestReceiverTest
     Assertions.assertEquals("middleware", landingPage.getViewName());
     ModelMap modelMap = landingPage.getModelMap();
     Assertions.assertEquals(3, modelMap.size());
-    Assertions.assertEquals(EID_CLIENT_URL
-                            + URLEncoder.encode(TC_TOKEN_URL + REQUEST_ID, StandardCharsets.UTF_8),
+    Assertions.assertEquals(EID_CLIENT_URL + URLEncoder.encode(TC_TOKEN_URL + REQUEST_ID, StandardCharsets.UTF_8),
                             modelMap.getAttribute("ausweisapp"));
     Assertions.assertEquals(ContextPaths.EIDAS_CONTEXT_PATH + ContextPaths.REQUEST_RECEIVER + "?sessionId="
                             + REQUEST_ID,
@@ -106,7 +110,13 @@ class RequestReceiverTest
     Mockito.when(responseHandler.prepareDummyResponse(REQUEST_ID, null)).thenReturn(SAML_RESPONSE);
     Mockito.when(responseHandler.getConsumerURLForRequestID(REQUEST_ID)).thenReturn(CONSUMER_URL);
     RequestReceiver requestReceiver = new RequestReceiver(requestHandler, responseHandler, configurationService);
-    ModelAndView responsePage = requestReceiver.doGet(RELAY_STATE, SAML_REQUEST_BASE_64_MOCK, null, null, null, null, new MockHttpSession());
+    ModelAndView responsePage = requestReceiver.doGet(RELAY_STATE,
+                                                      SAML_REQUEST_BASE_64_MOCK,
+                                                      null,
+                                                      null,
+                                                      null,
+                                                      null,
+                                                      new MockHttpSession());
 
     Assertions.assertEquals("response", responsePage.getViewName());
     ModelMap modelMap = responsePage.getModelMap();
@@ -207,8 +217,7 @@ class RequestReceiverTest
     Assertions.assertEquals("middleware", landingPage.getViewName());
     ModelMap modelMap = landingPage.getModelMap();
     Assertions.assertEquals(3, modelMap.size());
-    Assertions.assertEquals(EID_CLIENT_MOBIL_URL
-                            + URLEncoder.encode(TC_TOKEN_URL + REQUEST_ID, StandardCharsets.UTF_8),
+    Assertions.assertEquals(EID_CLIENT_MOBIL_URL + URLEncoder.encode(TC_TOKEN_URL + REQUEST_ID, StandardCharsets.UTF_8),
                             modelMap.getAttribute("ausweisapp"));
     Assertions.assertEquals(ContextPaths.EIDAS_CONTEXT_PATH + ContextPaths.REQUEST_RECEIVER + "?sessionId="
                             + REQUEST_ID,

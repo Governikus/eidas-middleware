@@ -247,8 +247,7 @@ public abstract class AbstractPaosHandler
    * @throws TransformerException
    * @throws ParserConfigurationException
    */
-  protected abstract String createPAOSMessage(Object object)
-    throws IOException, SOAPException;
+  protected abstract String createPAOSMessage(Object object) throws IOException, SOAPException;
 
   /**
    * Sets up the HTTP servlet response and writes the body.

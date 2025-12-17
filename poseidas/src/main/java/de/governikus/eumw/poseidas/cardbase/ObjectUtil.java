@@ -1,11 +1,10 @@
 /*
- * Copyright (c) 2020 Governikus KG. Licensed under the EUPL, Version 1.2 or as soon they will be approved by
- * the European Commission - subsequent versions of the EUPL (the "Licence"); You may not use this work except
- * in compliance with the Licence. You may obtain a copy of the Licence at:
- * http://joinup.ec.europa.eu/software/page/eupl Unless required by applicable law or agreed to in writing,
- * software distributed under the Licence is distributed on an "AS IS" basis, WITHOUT WARRANTIES OR CONDITIONS
- * OF ANY KIND, either express or implied. See the Licence for the specific language governing permissions and
- * limitations under the Licence.
+ * Copyright (c) 2020 Governikus KG. Licensed under the EUPL, Version 1.2 or as soon they will be approved by the
+ * European Commission - subsequent versions of the EUPL (the "Licence"); You may not use this work except in compliance
+ * with the Licence. You may obtain a copy of the Licence at: http://joinup.ec.europa.eu/software/page/eupl Unless
+ * required by applicable law or agreed to in writing, software distributed under the Licence is distributed on an
+ * "AS IS" basis, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the Licence for the
+ * specific language governing permissions and limitations under the Licence.
  */
 
 package de.governikus.eumw.poseidas.cardbase;
@@ -36,8 +35,7 @@ public final class ObjectUtil
   private static final int COMPARE_RESULT_FIRST_EQUAL_TO_SECOND = 0;
 
   /**
-   * Constant of result for comparison first Object less than second Object: negative integer -
-   * <code>-1</code>.
+   * Constant of result for comparison first Object less than second Object: negative integer - <code>-1</code>.
    *
    * @see Comparator#compare(Object, Object)
    */
@@ -88,26 +86,23 @@ public final class ObjectUtil
    * <li>reference is equals or both <code>null</code> - <code>true</code></li>
    * <li>only Object one of the Objects is <code>null</code> - <code>false</code></li>
    * <li>use {@link Object#equals(Object)} - related to implementation and used check mode</li>
-   * <li>[check using optional given Comparator using {@link Comparator#compare(Object, Object)}, if Objects
-   * not equals - related to implementation of Comparator]</li>
+   * <li>[check using optional given Comparator using {@link Comparator#compare(Object, Object)}, if Objects not equals
+   * - related to implementation of Comparator]</li>
    * </ol>
    * </p>
    *
    * @param o1 one Object, <code>null</code> permitted
    * @param o2 another Object, <code>null</code> permitted
-   * @param equalsMode mode for using {@link Object#equals(Object)}, <code>null</code> permitted and default
-   *          mode is used
-   * @param comparator optional Comparator, <code>null</code> permitted, please check documentation of
-   *          Comparator according to default JavaDoc hints about implementation and equality and result
+   * @param equalsMode mode for using {@link Object#equals(Object)}, <code>null</code> permitted and default mode is
+   *          used
+   * @param comparator optional Comparator, <code>null</code> permitted, please check documentation of Comparator
+   *          according to default JavaDoc hints about implementation and equality and result
    *          {@link #COMPARE_RESULT_FIRST_EQUAL_TO_SECOND}
    * @return <code>true</code>, if Objects are equal, otherwise <code>false</code>
    * @see #DEFAULT_EQUALS_MODE
    * @see EqualsMode
    */
-  private static boolean isEquals(Object o1,
-                                 Object o2,
-                                 final EqualsMode equalsMode,
-                                 Comparator<Object> comparator)
+  private static boolean isEquals(Object o1, Object o2, final EqualsMode equalsMode, Comparator<Object> comparator)
   {
     EqualsMode tmpEqualsMode = equalsMode;
     if (ObjectUtil.isNull(equalsMode))
@@ -179,6 +174,7 @@ public final class ObjectUtil
    */
   public enum EqualsMode implements Comparator<Object>
   {
+
     /**
      * Mode for checking Objects are equal: first Object must be equal to second.
      *

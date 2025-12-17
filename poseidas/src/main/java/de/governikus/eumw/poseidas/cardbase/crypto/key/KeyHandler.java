@@ -1,11 +1,10 @@
 /*
- * Copyright (c) 2020 Governikus KG. Licensed under the EUPL, Version 1.2 or as soon they will be approved by
- * the European Commission - subsequent versions of the EUPL (the "Licence"); You may not use this work except
- * in compliance with the Licence. You may obtain a copy of the Licence at:
- * http://joinup.ec.europa.eu/software/page/eupl Unless required by applicable law or agreed to in writing,
- * software distributed under the Licence is distributed on an "AS IS" basis, WITHOUT WARRANTIES OR CONDITIONS
- * OF ANY KIND, either express or implied. See the Licence for the specific language governing permissions and
- * limitations under the Licence.
+ * Copyright (c) 2020 Governikus KG. Licensed under the EUPL, Version 1.2 or as soon they will be approved by the
+ * European Commission - subsequent versions of the EUPL (the "Licence"); You may not use this work except in compliance
+ * with the Licence. You may obtain a copy of the Licence at: http://joinup.ec.europa.eu/software/page/eupl Unless
+ * required by applicable law or agreed to in writing, software distributed under the Licence is distributed on an
+ * "AS IS" basis, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the Licence for the
+ * specific language governing permissions and limitations under the Licence.
  */
 
 package de.governikus.eumw.poseidas.cardbase.crypto.key;
@@ -43,8 +42,8 @@ public interface KeyHandler
    * @throws NoSuchProviderException
    * @throws NoSuchAlgorithmException
    */
-  public abstract KeyPair generateKeyPair(DomainParameterInfo params) throws
-    IOException, NoSuchAlgorithmException, NoSuchProviderException, InvalidAlgorithmParameterException;
+  public abstract KeyPair generateKeyPair(DomainParameterInfo params)
+    throws IOException, NoSuchAlgorithmException, NoSuchProviderException, InvalidAlgorithmParameterException;
 
   /**
    * Generates a key pair.
@@ -56,8 +55,8 @@ public interface KeyHandler
    * @throws NoSuchAlgorithmException
    * @throws InvalidAlgorithmParameterException
    */
-  public abstract KeyPair generateKeyPair(AlgorithmParameterSpec spec) throws
-    NoSuchAlgorithmException, NoSuchProviderException, InvalidAlgorithmParameterException;
+  public abstract KeyPair generateKeyPair(AlgorithmParameterSpec spec)
+    throws NoSuchAlgorithmException, NoSuchProviderException, InvalidAlgorithmParameterException;
 
   /**
    * Builds {@link PublicKey} object from byte-array encoding the key.
@@ -71,8 +70,7 @@ public interface KeyHandler
    * @throws NoSuchProviderException
    * @throws NoSuchAlgorithmException
    */
-  public abstract PublicKey buildKeyFromBytes(DomainParameterInfo params, byte[] keyBytes)
-    throws IOException;
+  public abstract PublicKey buildKeyFromBytes(DomainParameterInfo params, byte[] keyBytes) throws IOException;
 
   /**
    * Builds {@link PublicKey} object from byte-array encoding the key.
@@ -107,19 +105,16 @@ public interface KeyHandler
   public abstract byte[] ephemeralKeyBytes(PublicKey key);
 
   /**
-   * Generate the structure to be used for calculating authentication token. Structure is defined in BSI
-   * TR-03110.
+   * Generate the structure to be used for calculating authentication token. Structure is defined in BSI TR-03110.
    *
    * @param key the key to be converted, <code>null</code> not permitted
    * @param oid {@link OID} to use in structure, <code>null</code> not permitted
    * @param fullStructure flag indicating if the structure shall contain optional data or not
-   * @return byte array of the ASN.1 structure containing the public key, <code>null</code> if converting
-   *         fails
+   * @return byte array of the ASN.1 structure containing the public key, <code>null</code> if converting fails
    * @throws IllegalArgumentException if key or oid <code>null</code> or key of wrong type
    * @throws IOException
    */
-  public abstract byte[] convertPublicKey(PublicKey key, OID oid, boolean fullStructure)
-    throws IOException;
+  public abstract byte[] convertPublicKey(PublicKey key, OID oid, boolean fullStructure) throws IOException;
 
   /**
    * Compresses a public key.

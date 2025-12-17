@@ -1,11 +1,10 @@
 /*
- * Copyright (c) 2020 Governikus KG. Licensed under the EUPL, Version 1.2 or as soon they will be approved by
- * the European Commission - subsequent versions of the EUPL (the "Licence"); You may not use this work except
- * in compliance with the Licence. You may obtain a copy of the Licence at:
- * http://joinup.ec.europa.eu/software/page/eupl Unless required by applicable law or agreed to in writing,
- * software distributed under the Licence is distributed on an "AS IS" basis, WITHOUT WARRANTIES OR CONDITIONS
- * OF ANY KIND, either express or implied. See the Licence for the specific language governing permissions and
- * limitations under the Licence.
+ * Copyright (c) 2020 Governikus KG. Licensed under the EUPL, Version 1.2 or as soon they will be approved by the
+ * European Commission - subsequent versions of the EUPL (the "Licence"); You may not use this work except in compliance
+ * with the Licence. You may obtain a copy of the Licence at: http://joinup.ec.europa.eu/software/page/eupl Unless
+ * required by applicable law or agreed to in writing, software distributed under the Licence is distributed on an
+ * "AS IS" basis, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the Licence for the
+ * specific language governing permissions and limitations under the Licence.
  */
 
 package de.governikus.eumw.poseidas.ecardcore.model;
@@ -14,7 +13,9 @@ package de.governikus.eumw.poseidas.ecardcore.model;
 import org.w3c.dom.Element;
 
 import de.governikus.eumw.poseidas.cardbase.Hex;
+import de.governikus.eumw.poseidas.ecardcore.core.ECardException;
 import de.governikus.eumw.poseidas.ecardcore.utilities.EACElementUtil;
+
 import iso.std.iso_iec._24727.tech.schema.EAC2OutputType;
 
 
@@ -60,7 +61,7 @@ public class EAC2OutputTypeWrapper extends EAC2OutputType
     EACElementUtil.addElement(this, 0, ELEMENT_EF_CARD_SECURITY, Hex.hexify(ef));
   }
 
-  public byte[] getEFCardSecurity()
+  public byte[] getEFCardSecurity() throws ECardException
   {
     return getUniqueElement(ELEMENT_EF_CARD_SECURITY);
   }
@@ -84,7 +85,7 @@ public class EAC2OutputTypeWrapper extends EAC2OutputType
     EACElementUtil.addElement(this, index, ELEMENT_AUTHENTICATION_TOKEN, Hex.hexify(token));
   }
 
-  public byte[] getAuthenticationToken()
+  public byte[] getAuthenticationToken() throws ECardException
   {
     return getUniqueElement(ELEMENT_AUTHENTICATION_TOKEN);
   }
@@ -108,7 +109,7 @@ public class EAC2OutputTypeWrapper extends EAC2OutputType
     EACElementUtil.addElement(this, index, ELEMENT_NONCE, Hex.hexify(nonce));
   }
 
-  public byte[] getNonce()
+  public byte[] getNonce() throws ECardException
   {
     return getUniqueElement(ELEMENT_NONCE);
   }
@@ -133,7 +134,7 @@ public class EAC2OutputTypeWrapper extends EAC2OutputType
     EACElementUtil.addElement(this, index, ELEMENT_CHALLENGE, Hex.hexify(chal));
   }
 
-  public byte[] getChallenge()
+  public byte[] getChallenge() throws ECardException
   {
     return getUniqueElement(ELEMENT_CHALLENGE);
   }
@@ -151,13 +152,13 @@ public class EAC2OutputTypeWrapper extends EAC2OutputType
     EACElementUtil.addElement(this, super.getAny().size(), ELEMENT_EPHEMERAL_PUBLIC_KEY, Hex.hexify(key));
   }
 
-  public byte[] getEphemeralPublicKey()
+  public byte[] getEphemeralPublicKey() throws ECardException
   {
     return getUniqueElement(ELEMENT_EPHEMERAL_PUBLIC_KEY);
   }
 
 
-  private byte[] getUniqueElement(String localName)
+  private byte[] getUniqueElement(String localName) throws ECardException
   {
     byte[] value = null;
     for ( Element e : super.getAny() )
@@ -166,7 +167,7 @@ public class EAC2OutputTypeWrapper extends EAC2OutputType
       {
         if (value != null)
         {
-          throw new IllegalArgumentException("Element \"" + localName + "\" not unique");
+          throw new ECardException(ResultMinor.COMMON_INCORRECT_PARAMETER, "Element \"" + localName + "\" not unique");
         }
         value = Hex.parse(e.getTextContent());
       }

@@ -1,17 +1,16 @@
 /*
- * Copyright (c) 2020 Governikus KG. Licensed under the EUPL, Version 1.2 or as soon they will be approved by
- * the European Commission - subsequent versions of the EUPL (the "Licence"); You may not use this work except
- * in compliance with the Licence. You may obtain a copy of the Licence at:
- * http://joinup.ec.europa.eu/software/page/eupl Unless required by applicable law or agreed to in writing,
- * software distributed under the Licence is distributed on an "AS IS" basis, WITHOUT WARRANTIES OR CONDITIONS
- * OF ANY KIND, either express or implied. See the Licence for the specific language governing permissions and
- * limitations under the Licence.
+ * Copyright (c) 2020 Governikus KG. Licensed under the EUPL, Version 1.2 or as soon they will be approved by the
+ * European Commission - subsequent versions of the EUPL (the "Licence"); You may not use this work except in compliance
+ * with the Licence. You may obtain a copy of the Licence at: http://joinup.ec.europa.eu/software/page/eupl Unless
+ * required by applicable law or agreed to in writing, software distributed under the Licence is distributed on an
+ * "AS IS" basis, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the Licence for the
+ * specific language governing permissions and limitations under the Licence.
  */
 
 package de.governikus.eumw.poseidas.eidserver.crl;
 
+import java.io.ByteArrayInputStream;
 import java.io.IOException;
-import java.net.URI;
 import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
 import java.security.SignatureException;
@@ -23,6 +22,9 @@ import java.security.cert.X509Certificate;
 import java.util.Optional;
 import java.util.Set;
 
+import org.apache.hc.client5.http.classic.methods.HttpGet;
+import org.apache.hc.client5.http.impl.classic.CloseableHttpClient;
+import org.apache.hc.client5.http.impl.classic.HttpClientBuilder;
 import org.bouncycastle.asn1.x509.Extension;
 
 import de.governikus.eumw.poseidas.cardserver.CertificateUtil;
@@ -39,8 +41,8 @@ public class HttpCrlFetcher implements CrlFetcher
   private final Set<X509Certificate> trustAnchors;
 
   /**
-   * Constructor for {@link HttpCrlFetcher} that takes a set of {@link X509Certificate} to validate the
-   * signature of a {@link X509CRL}.
+   * Constructor for {@link HttpCrlFetcher} that takes a set of {@link X509Certificate} to validate the signature of a
+   * {@link X509CRL}.
    *
    * @param trustAnchors validates {@link X509CRL} signature
    */
@@ -91,13 +93,17 @@ public class HttpCrlFetcher implements CrlFetcher
     try
     {
       CertificateFactory cf = CertificateFactory.getInstance("x509", SecurityProvider.BOUNCY_CASTLE_PROVIDER);
-      return (X509CRL)cf.generateCRL(URI.create(url).toURL().openStream());
+      byte[] downloadedCrlBytes;
+      try (CloseableHttpClient httpClient = HttpClientBuilder.create().useSystemProperties().build())
+      {
+        downloadedCrlBytes = httpClient.execute(new HttpGet(url),
+                                                response -> response.getEntity().getContent().readAllBytes());
+      }
+      return (X509CRL)cf.generateCRL(new ByteArrayInputStream(downloadedCrlBytes));
     }
     catch (IOException | CRLException | CertificateException e)
     {
-      throw new CertificateValidationException(String.format("Failed to download CRL '%s' (%s)",
-                                                             url,
-                                                             e.getMessage()),
+      throw new CertificateValidationException(String.format("Failed to download CRL '%s' (%s)", url, e.getMessage()),
                                                e);
     }
   }

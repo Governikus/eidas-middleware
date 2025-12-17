@@ -25,6 +25,7 @@ import org.springframework.web.servlet.ModelAndView;
 import de.governikus.eumw.eidascommon.ContextPaths;
 import de.governikus.eumw.eidasmiddleware.RequestProcessingException;
 import de.governikus.eumw.eidasmiddleware.handler.ResponseHandler;
+
 import lombok.extern.slf4j.Slf4j;
 
 
@@ -108,7 +109,6 @@ public class ResponseSender
 
   /**
    * This endpoint is used to switch the language.
-   *
    */
   @PostMapping
   public ModelAndView switchLanguage(@RequestParam(name = "authnRequestId") String authnRequestId,
@@ -136,7 +136,8 @@ public class ResponseSender
     return response;
   }
 
-  public record SamlResponseRecord(String samlResponse, String consumerURL, String relayState) implements Serializable {
+  public record SamlResponseRecord(String samlResponse, String consumerURL, String relayState) implements Serializable
+  {
 
     @Serial
     private static final long serialVersionUID = 1L;

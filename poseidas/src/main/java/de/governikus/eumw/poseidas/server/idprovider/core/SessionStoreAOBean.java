@@ -1,11 +1,10 @@
 /*
- * Copyright (c) 2020 Governikus KG. Licensed under the EUPL, Version 1.2 or as soon they will be approved by
- * the European Commission - subsequent versions of the EUPL (the "Licence"); You may not use this work except
- * in compliance with the Licence. You may obtain a copy of the Licence at:
- * http://joinup.ec.europa.eu/software/page/eupl Unless required by applicable law or agreed to in writing,
- * software distributed under the Licence is distributed on an "AS IS" basis, WITHOUT WARRANTIES OR CONDITIONS
- * OF ANY KIND, either express or implied. See the Licence for the specific language governing permissions and
- * limitations under the Licence.
+ * Copyright (c) 2020 Governikus KG. Licensed under the EUPL, Version 1.2 or as soon they will be approved by the
+ * European Commission - subsequent versions of the EUPL (the "Licence"); You may not use this work except in compliance
+ * with the Licence. You may obtain a copy of the Licence at: http://joinup.ec.europa.eu/software/page/eupl Unless
+ * required by applicable law or agreed to in writing, software distributed under the Licence is distributed on an
+ * "AS IS" basis, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the Licence for the
+ * specific language governing permissions and limitations under the Licence.
  */
 
 package de.governikus.eumw.poseidas.server.idprovider.core;
@@ -59,7 +58,7 @@ public class SessionStoreAOBean implements SessionStoreAO
    */
   int timeLimitSoft = TIME_LIMIT_SOFT_DEFAULT;
 
-  @PersistenceContext(/*unitName = "eID-Server"*/)
+  @PersistenceContext(/* unitName = "eID-Server" */)
   EntityManager entityManager;
 
   @Override
@@ -82,8 +81,7 @@ public class SessionStoreAOBean implements SessionStoreAO
   {
     try
     {
-      TypedQuery<SessionInStore> query = entityManager.createNamedQuery("getByRequestId",
-                                                                        SessionInStore.class);
+      TypedQuery<SessionInStore> query = entityManager.createNamedQuery("getByRequestId", SessionInStore.class);
       query.setParameter("className", type.getSimpleName());
       query.setParameter("requestId", requestId);
       SessionInStore store = query.getSingleResult();
@@ -148,8 +146,7 @@ public class SessionStoreAOBean implements SessionStoreAO
     {
       String sessionId = session.getSessionId();
       SessionInStore store = entityManager.find(SessionInStore.class,
-                                                new SessionInStorePK(sessionId,
-                                                                     session.getClass().getSimpleName()));
+                                                new SessionInStorePK(sessionId, session.getClass().getSimpleName()));
       if (store != null)
       {
         entityManager.remove(store);

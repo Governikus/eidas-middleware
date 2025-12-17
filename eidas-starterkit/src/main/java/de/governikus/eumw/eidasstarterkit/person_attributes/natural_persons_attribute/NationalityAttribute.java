@@ -26,7 +26,7 @@ public class NationalityAttribute extends AbstractEidasAttribute
 
   /**
    * Constructor.
-   * 
+   *
    * @param nationality
    */
   public NationalityAttribute(String nationality)

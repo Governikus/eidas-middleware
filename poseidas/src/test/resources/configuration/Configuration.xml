@@ -107,7 +107,7 @@
         </KeyStore>
         <KeyPair KeyStoreName="providerAKeyStore">
             <Name>providerADvcaClientKeyPair</Name>
-            <Alias>providerADvcaClientKeyPair</Alias>
+            <Alias>middleware</Alias>
             <Password>123456</Password>
         </KeyPair>
         <KeyPair KeyStoreName="middlewareSigning">

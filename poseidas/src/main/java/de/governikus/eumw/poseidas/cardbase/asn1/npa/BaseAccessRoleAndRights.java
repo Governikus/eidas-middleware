@@ -1,11 +1,10 @@
 /*
- * Copyright (c) 2020 Governikus KG. Licensed under the EUPL, Version 1.2 or as soon they will be approved by
- * the European Commission - subsequent versions of the EUPL (the "Licence"); You may not use this work except
- * in compliance with the Licence. You may obtain a copy of the Licence at:
- * http://joinup.ec.europa.eu/software/page/eupl Unless required by applicable law or agreed to in writing,
- * software distributed under the Licence is distributed on an "AS IS" basis, WITHOUT WARRANTIES OR CONDITIONS
- * OF ANY KIND, either express or implied. See the Licence for the specific language governing permissions and
- * limitations under the Licence.
+ * Copyright (c) 2020 Governikus KG. Licensed under the EUPL, Version 1.2 or as soon they will be approved by the
+ * European Commission - subsequent versions of the EUPL (the "Licence"); You may not use this work except in compliance
+ * with the Licence. You may obtain a copy of the Licence at: http://joinup.ec.europa.eu/software/page/eupl Unless
+ * required by applicable law or agreed to in writing, software distributed under the Licence is distributed on an
+ * "AS IS" basis, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the Licence for the
+ * specific language governing permissions and limitations under the Licence.
  */
 
 package de.governikus.eumw.poseidas.cardbase.asn1.npa;
@@ -68,11 +67,10 @@ public abstract class BaseAccessRoleAndRights extends AccessRoleAndRights
    * @see AccessRoleAndRights#ACCESS_ROLE_MASK
    * @see #ROLE_MASK_DV_OFFICIAL_DOMESTIC
    */
-  static final BitIdentifier IDENTIFIER_DV_OFFICIAL_DOMESTIC = new BitIdentifierImpl(
-                                                                                            ROLE_NAME_DV_OFFICIAL_DOMESTIC,
-                                                                                            ACCESS_ROLE_BYTE_INDEX,
-                                                                                            ACCESS_ROLE_MASK,
-                                                                                            ROLE_MASK_DV_OFFICIAL_DOMESTIC);
+  static final BitIdentifier IDENTIFIER_DV_OFFICIAL_DOMESTIC = new BitIdentifierImpl(ROLE_NAME_DV_OFFICIAL_DOMESTIC,
+                                                                                     ACCESS_ROLE_BYTE_INDEX,
+                                                                                     ACCESS_ROLE_MASK,
+                                                                                     ROLE_MASK_DV_OFFICIAL_DOMESTIC);
 
   /**
    * Role identifier DV (official foreign).
@@ -85,28 +83,27 @@ public abstract class BaseAccessRoleAndRights extends AccessRoleAndRights
    * @see AccessRoleAndRights#ACCESS_ROLE_MASK
    * @see #ROLE_MASK_DV_OFFICIAL_FOREIGN
    */
-  static final BitIdentifier IDENTIFIER_DV_OFFICIAL_FOREIGN = new BitIdentifierImpl(
-                                                                                           ROLE_NAME_DV_OFFICIAL_FOREIGN,
-                                                                                           ACCESS_ROLE_BYTE_INDEX,
-                                                                                           ACCESS_ROLE_MASK,
-                                                                                           ROLE_MASK_DV_OFFICIAL_FOREIGN);
+  static final BitIdentifier IDENTIFIER_DV_OFFICIAL_FOREIGN = new BitIdentifierImpl(ROLE_NAME_DV_OFFICIAL_FOREIGN,
+                                                                                    ACCESS_ROLE_BYTE_INDEX,
+                                                                                    ACCESS_ROLE_MASK,
+                                                                                    ROLE_MASK_DV_OFFICIAL_FOREIGN);
 
   /**
    * Constructor.
    *
    * @param bytes bytes of ASN.1 object
    * @param valueByteCount count of value bytes expected by implementation
-   * @param definedAccessRolesIdentifierList list of defined access roles, <code>null</code> or empty list not
+   * @param definedAccessRolesIdentifierList list of defined access roles, <code>null</code> or empty list not permitted
+   * @param definedAccessRightsIdentifierList list of defined access rights, <code>null</code> or empty list not
    *          permitted
-   * @param definedAccessRightsIdentifierList list of defined access rights, <code>null</code> or empty list
-   *          not permitted
    * @throws IOException if reading of stream fails
    * @see AccessRoleAndRights#AccessRoleAndRights(byte[], int, List, List)
    */
   BaseAccessRoleAndRights(byte[] bytes,
-                                 int valueByteCount,
-                                 List<BitIdentifier> definedAccessRolesIdentifierList,
-                                 List<BitIdentifier> definedAccessRightsIdentifierList) throws IOException
+                          int valueByteCount,
+                          List<BitIdentifier> definedAccessRolesIdentifierList,
+                          List<BitIdentifier> definedAccessRightsIdentifierList)
+    throws IOException
   {
     super(bytes, valueByteCount, definedAccessRolesIdentifierList, definedAccessRightsIdentifierList);
   }

@@ -49,8 +49,7 @@ class MasterAndDefectListHandlerTest
   void setUp() throws Exception
   {
     Mockito.when(terminalPermissionAO.getTerminalPermission("CVCRefID")).thenReturn(terminalPermission);
-    Mockito.when(passiveAuthService.getMasterList())
-           .thenReturn(getResourceAsByteArray("/masterlist/MASTERLIST.bin"));
+    Mockito.when(passiveAuthService.getMasterList()).thenReturn(getResourceAsByteArray("/masterlist/MASTERLIST.bin"));
     EidasMiddlewareConfig configuration = ConfigurationTestHelper.createValidConfiguration();
     DvcaConfigurationType dvcaConfigurationType = configuration.getEidConfiguration().getDvcaConfiguration().get(0);
     dvcaConfigurationType.setName("dvcaConfName");
@@ -95,8 +94,7 @@ class MasterAndDefectListHandlerTest
 
 
   @Test
-  void testGetMasterListReturnsMasterWithWrongMasterListFromTerminalPermission()
-    throws Exception
+  void testGetMasterListReturnsMasterWithWrongMasterListFromTerminalPermission() throws Exception
   {
     Mockito.when(terminalPermission.getMasterList())
            .thenReturn(getResourceAsByteArray("/masterlist/wrongMasterList.bin"));

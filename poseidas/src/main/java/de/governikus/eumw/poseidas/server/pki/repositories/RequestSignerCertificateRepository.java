@@ -7,6 +7,5 @@ import org.springframework.stereotype.Repository;
 
 
 @Repository
-public interface RequestSignerCertificateRepository
-  extends JpaRepository<RequestSignerCertificate, CertInChainPK>
+public interface RequestSignerCertificateRepository extends JpaRepository<RequestSignerCertificate, CertInChainPK>
 {}

@@ -20,6 +20,7 @@ import se.swedenconnect.opensaml.xmlsec.config.SAML2IntSecurityConfiguration;
 
 class EidasResponseTest
 {
+
   @BeforeEach
   void setUp() throws Exception
   {
@@ -27,6 +28,7 @@ class EidasResponseTest
                        .initialize(new OpenSAMLSecurityDefaultsConfig(new SAML2IntSecurityConfiguration()),
                                    new OpenSAMLSecurityExtensionConfig());
   }
+
   @Test
   void eidasSamlResponseHasSecondStatusCode() throws Exception
   {
@@ -39,9 +41,8 @@ class EidasResponseTest
     EidasSigner signer = new EidasSigner(true, pk, cert);
 
     EidasResponse eidasResponse = new EidasResponse("destination", "recipient",
-                                                    new EidasPersistentNameId("eidasnameidTest"),
-                                                    "inResponseTo", "issuer", EidasLoaEnum.LOA_HIGH, signer,
-                                                    encrypter);
+                                                    new EidasPersistentNameId("eidasnameidTest"), "inResponseTo",
+                                                    "issuer", EidasLoaEnum.LOA_HIGH, signer, encrypter);
 
     eidasResponse.setSamlStatusError(response, ErrorCode.CANCELLATION_BY_USER, null);
     Assertions.assertEquals(response.getStatus().getStatusCode().getValue(), StatusCode.RESPONDER);
@@ -61,9 +62,8 @@ class EidasResponseTest
     EidasSigner signer = new EidasSigner(true, pk, cert);
 
     EidasResponse eidasResponse = new EidasResponse("destination", "recipient",
-                                                    new EidasPersistentNameId("eidasnameidTest"),
-                                                    "inResponseTo", "issuer", EidasLoaEnum.LOA_HIGH, signer,
-                                                    encrypter);
+                                                    new EidasPersistentNameId("eidasnameidTest"), "inResponseTo",
+                                                    "issuer", EidasLoaEnum.LOA_HIGH, signer, encrypter);
 
     eidasResponse.setSamlStatusError(response, ErrorCode.SUCCESS, null);
     Assertions.assertEquals(response.getStatus().getStatusCode().getValue(), StatusCode.SUCCESS);

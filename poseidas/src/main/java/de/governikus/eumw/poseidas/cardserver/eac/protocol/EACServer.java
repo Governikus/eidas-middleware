@@ -63,10 +63,13 @@ import de.governikus.eumw.poseidas.cardserver.service.hsm.impl.LocalCertAndKeyPr
 import de.governikus.eumw.poseidas.cardserver.sm.AESBatchSecureMessaging;
 import de.governikus.eumw.poseidas.cardserver.sm.BatchAESEncSSCIvParameterSpec;
 import de.governikus.eumw.poseidas.cardserver.sm.BatchSecureMessaging;
+import de.governikus.eumw.poseidas.ecardcore.core.ECardException;
 import de.governikus.eumw.poseidas.ecardcore.model.EAC1InputTypeWrapper;
 import de.governikus.eumw.poseidas.ecardcore.model.EAC1OutputTypeWrapper;
 import de.governikus.eumw.poseidas.ecardcore.model.EAC2InputTypeWrapper;
 import de.governikus.eumw.poseidas.ecardcore.model.EAC2OutputTypeWrapper;
+import de.governikus.eumw.poseidas.ecardcore.model.ResultMinor;
+
 import iso.std.iso_iec._24727.tech.schema.DIDAuthenticationDataType;
 import iso.std.iso_iec._24727.tech.schema.EAC1InputType;
 import iso.std.iso_iec._24727.tech.schema.EAC1OutputType;
@@ -147,7 +150,7 @@ public class EACServer
   private EAC2InputTypeWrapper produceSecondInput(EAC1OutputTypeWrapper firstOutput, Object[] additionalParameters)
     throws IOException, InvalidAlgorithmParameterException, NoSuchAlgorithmException, NoSuchProviderException,
     InvalidKeyException, InvalidKeySpecException, SignatureException, UnrecoverableKeyException, KeyStoreException,
-    CertificateException, HSMException, InvalidEidException
+    CertificateException, HSMException, InvalidEidException, ECardException
   {
     AssertUtil.notNull(firstOutput, "first output");
     AssertUtil.notNullOrEmpty(additionalParameters, "additional parameters");
@@ -245,16 +248,14 @@ public class EACServer
 
     // sign if possible
     byte[] rPicc = firstOutput.getChallenge();
-    if (rPicc != null)
-    {
-      byte[] idPicc = firstOutput.getIDPICC();
-      byte[] convertedSignature = produceSignature(termCert,
-                                                   firstInput.getAuthenticatedAuxiliaryData(),
-                                                   idPicc,
-                                                   rPicc,
-                                                   compressedKey);
-      result2.setSignature(convertedSignature);
-    }
+    byte[] idPicc = firstOutput.getIDPICC();
+    byte[] convertedSignature = produceSignature(termCert,
+                                                 firstInput.getAuthenticatedAuxiliaryData(),
+                                                 idPicc,
+                                                 rPicc,
+                                                 compressedKey);
+    result2.setSignature(convertedSignature);
+
 
     return result2;
   }
@@ -285,11 +286,19 @@ public class EACServer
                                          byte[] rPicc,
                                          byte[] compressedKey)
     throws InvalidKeyException, UnrecoverableKeyException, InvalidKeySpecException, NoSuchAlgorithmException,
-    NoSuchProviderException, SignatureException, KeyStoreException, CertificateException, IOException, HSMException
+    NoSuchProviderException, SignatureException, KeyStoreException, CertificateException, IOException, HSMException,
+    ECardException
   {
     AssertUtil.notNull(termCert, "terminal certificate");
-    AssertUtil.notNullOrEmpty(idPicc, "ID of PICC");
-    AssertUtil.notNullOrEmpty(rPicc, "challenge");
+    if (idPicc == null)
+    {
+      throw new ECardException(ResultMinor.COMMON_INCORRECT_PARAMETER, "IDPICC is missing in the EAC1OutputType");
+    }
+    if (rPicc == null)
+    {
+      throw new ECardException(ResultMinor.COMMON_INCORRECT_PARAMETER,
+                               "EAC1OutputType not containing required challenge");
+    }
 
     OID signatureAlg = (OID)termCert.getChildElementByPath(ECCVCPath.PUBLIC_KEY_OID);
     String termHolder = new String(termCert.getChildElementByPath(ECCVCPath.HOLDER_REFERENCE).getValue(),
@@ -319,7 +328,7 @@ public class EACServer
    */
   private EACFinal processCompleteTACAOutput(EAC2OutputTypeWrapper secondOutput, Object[] additionalParameters)
     throws IOException, NoSuchAlgorithmException, InvalidKeyException, NoSuchProviderException, InvalidKeySpecException,
-    InvalidEidException
+    InvalidEidException, ECardException
   {
     AssertUtil.notNull(secondOutput, "second output");
     AssertUtil.notNullOrEmpty(additionalParameters, "additional parameters");
@@ -337,10 +346,16 @@ public class EACServer
     AssertUtil.notNull(cardSecurityBytes, "EF.CardSecurity from card");
 
     byte[] nonce = secondOutput.getNonce();
+    if (nonce == null)
+    {
+      throw new ECardException(ResultMinor.COMMON_INCORRECT_PARAMETER, "Nonce is missing in the EAC2OutputType");
+    }
     byte[] authToken = secondOutput.getAuthenticationToken();
+    if (authToken == null)
+    {
+      throw new ECardException(ResultMinor.COMMON_INCORRECT_PARAMETER, "Auth token is missing in the EAC2OutputType");
+    }
     byte[] cardKeyBytes = secondOutput.getEphemeralPublicKey();
-    AssertUtil.notNull(nonce, "nonce from card");
-    AssertUtil.notNull(authToken, "authentication token from card");
 
     // check signature on EF.CardSecurity
     Certificate signerCert = checker.checkSignedData(cardSecurityBytes);
@@ -410,14 +425,13 @@ public class EACServer
    * @return next input to client or final result of EAC
    * @throws IllegalArgumentException if unknown step selected, if resultClass / parameterClass not matching selected
    *           step, if result <code>null</code>, if additionalParameters not matching requirement of selected step
-   * @throws InternalError if anything during production of step output fails
    */
   public <P extends Object, Q extends DIDAuthenticationDataType> P executeStep(int stepSelect,
                                                                                Class<Q> resultClass,
                                                                                Q result,
                                                                                Class<P> parameterClass,
                                                                                Object[] additionalParameters)
-    throws InvalidEidException
+    throws ECardException, InvalidEidException
   {
     if (stepSelect == STEP_PACE_OUTPUT_TO_TACA_INPUT)
     {
@@ -429,41 +443,47 @@ public class EACServer
       {
         throw new IllegalArgumentException("incorrect parameter class for given step");
       }
+
       try
       {
         return parameterClass.cast(this.produceSecondInput((EAC1OutputTypeWrapper)result, additionalParameters));
       }
-      catch (IllegalArgumentException | InvalidEidException e)
+      catch (InvalidEidException e)
       {
         throw e;
       }
       catch (Exception e)
       {
-        throw new RuntimeException("internal error: " + e.getMessage(), e);
+        if (e instanceof ECardException eCardException)
+        {
+          throw eCardException;
+        }
+        throw new ECardException(ResultMinor.COMMON_INTERNAL_ERROR, "internal error: " + e.getMessage(), e);
       }
+
     }
 
     if (stepSelect == STEP_TACA_RESULT)
     {
       if (resultClass != EAC2OutputTypeWrapper.class)
       {
-        throw new IllegalArgumentException("incorrect result class for given step");
+        throw new ECardException(ResultMinor.COMMON_INCORRECT_PARAMETER, "incorrect result class for given step");
       }
       if (parameterClass != EACFinal.class)
       {
-        throw new IllegalArgumentException("incorrect parameter class for given step");
+        throw new ECardException(ResultMinor.COMMON_INCORRECT_PARAMETER, "incorrect parameter class for given step");
       }
       try
       {
         return parameterClass.cast(this.processCompleteTACAOutput((EAC2OutputTypeWrapper)result, additionalParameters));
       }
-      catch (IllegalArgumentException | InvalidEidException e)
+      catch (InvalidEidException | ECardException e)
       {
         throw e;
       }
       catch (Exception e)
       {
-        throw new RuntimeException("internal error: " + e.getMessage(), e);
+        throw new ECardException(ResultMinor.COMMON_INTERNAL_ERROR, "internal error: " + e.getMessage(), e);
       }
     }
 

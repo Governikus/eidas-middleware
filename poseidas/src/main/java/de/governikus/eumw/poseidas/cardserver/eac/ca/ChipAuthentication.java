@@ -1,11 +1,10 @@
 /*
- * Copyright (c) 2020 Governikus KG. Licensed under the EUPL, Version 1.2 or as soon they will be approved by
- * the European Commission - subsequent versions of the EUPL (the "Licence"); You may not use this work except
- * in compliance with the Licence. You may obtain a copy of the Licence at:
- * http://joinup.ec.europa.eu/software/page/eupl Unless required by applicable law or agreed to in writing,
- * software distributed under the Licence is distributed on an "AS IS" basis, WITHOUT WARRANTIES OR CONDITIONS
- * OF ANY KIND, either express or implied. See the Licence for the specific language governing permissions and
- * limitations under the Licence.
+ * Copyright (c) 2020 Governikus KG. Licensed under the EUPL, Version 1.2 or as soon they will be approved by the
+ * European Commission - subsequent versions of the EUPL (the "Licence"); You may not use this work except in compliance
+ * with the Licence. You may obtain a copy of the Licence at: http://joinup.ec.europa.eu/software/page/eupl Unless
+ * required by applicable law or agreed to in writing, software distributed under the Licence is distributed on an
+ * "AS IS" basis, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the Licence for the
+ * specific language governing permissions and limitations under the Licence.
  */
 
 package de.governikus.eumw.poseidas.cardserver.eac.ca;
@@ -213,9 +212,8 @@ public class ChipAuthentication
    * @throws InvalidKeySpecException
    * @throws InvalidEidException
    */
-  public boolean processResponse(KeyPair tacaKeyPair, byte[] nonce, byte[] authToken)
-    throws IOException, InvalidKeyException, NoSuchAlgorithmException, NoSuchProviderException,
-    InvalidKeySpecException, InvalidEidException
+  public boolean processResponse(KeyPair tacaKeyPair, byte[] nonce, byte[] authToken) throws IOException,
+    InvalidKeyException, NoSuchAlgorithmException, NoSuchProviderException, InvalidKeySpecException, InvalidEidException
   {
     AssertUtil.notNull(tacaKeyPair, "key pair");
     AssertUtil.notNullOrEmpty(nonce, "nonce");
@@ -239,9 +237,8 @@ public class ChipAuthentication
    * @throws InvalidKeySpecException
    * @throws InvalidEidException
    */
-  private boolean processCA2Response(KeyPair tacaKeyPair, byte[] nonce, byte[] authToken)
-    throws IOException, InvalidKeyException, NoSuchAlgorithmException, NoSuchProviderException,
-    InvalidKeySpecException, InvalidEidException
+  private boolean processCA2Response(KeyPair tacaKeyPair, byte[] nonce, byte[] authToken) throws IOException,
+    InvalidKeyException, NoSuchAlgorithmException, NoSuchProviderException, InvalidKeySpecException, InvalidEidException
   {
     byte[] cardKeyBytes;
     if (this.caVersion == 2 && nonce != null && nonce.length > 0 && authToken != null && authToken.length > 0)

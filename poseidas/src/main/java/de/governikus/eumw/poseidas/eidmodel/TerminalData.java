@@ -1,11 +1,10 @@
 /*
- * Copyright (c) 2020 Governikus KG. Licensed under the EUPL, Version 1.2 or as soon they will be approved by
- * the European Commission - subsequent versions of the EUPL (the "Licence"); You may not use this work except
- * in compliance with the Licence. You may obtain a copy of the Licence at:
- * http://joinup.ec.europa.eu/software/page/eupl Unless required by applicable law or agreed to in writing,
- * software distributed under the Licence is distributed on an "AS IS" basis, WITHOUT WARRANTIES OR CONDITIONS
- * OF ANY KIND, either express or implied. See the Licence for the specific language governing permissions and
- * limitations under the Licence.
+ * Copyright (c) 2020 Governikus KG. Licensed under the EUPL, Version 1.2 or as soon they will be approved by the
+ * European Commission - subsequent versions of the EUPL (the "Licence"); You may not use this work except in compliance
+ * with the Licence. You may obtain a copy of the Licence at: http://joinup.ec.europa.eu/software/page/eupl Unless
+ * required by applicable law or agreed to in writing, software distributed under the Licence is distributed on an
+ * "AS IS" basis, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the Licence for the
+ * specific language governing permissions and limitations under the Licence.
  */
 
 package de.governikus.eumw.poseidas.eidmodel;
@@ -41,8 +40,8 @@ import de.governikus.eumw.poseidas.eidserver.convenience.EIDSequence.Authorizati
 
 /**
  * <p>
- * Descriptor of the Terminal Rights, all the information needed to communicate with remote eID card. Contains
- * CVC, description and sector public key for a terminal certificate
+ * Descriptor of the Terminal Rights, all the information needed to communicate with remote eID card. Contains CVC,
+ * description and sector public key for a terminal certificate
  * </p>
  *
  * @author Alexander Funk
@@ -93,8 +92,8 @@ public class TerminalData
    * @param pkcs8PrivateKeyBytes a byte array as private key encoded in ASN1 may be null for client side use
    * @param riKeyIBytes the RestrictedID Key 1 to authenticate by a restricted ID may be null
    * @param psKeyBytes the Pseudonymous Signature Key to may be null
-   * @throws IllegalArgumentException if one of the input parameter is malformed or can not be read or the CVC
-   *           does not match the cvcDescription.
+   * @throws IllegalArgumentException if one of the input parameter is malformed or can not be read or the CVC does not
+   *           match the cvcDescription.
    */
   private TerminalData(ECCVCertificate cvcWrapper,
                        byte[] cvcDescriptionBytes,
@@ -122,8 +121,7 @@ public class TerminalData
         cvcDescription = new CertificateDescription(cvcDescriptionBytes);
         if (!cvcWrapper.checkCVCDescriptionHash(cvcDescription))
         {
-          throw new IllegalArgumentException("Description does not match the terminal certificate: "
-                                             + cvcDescription);
+          throw new IllegalArgumentException("Description does not match the terminal certificate: " + cvcDescription);
         }
       }
       catch (IOException e)
@@ -160,8 +158,8 @@ public class TerminalData
    * @param pkcs8PrivateKeyBytes a byte array as private key encoded in ASN1 may be null for client side use
    * @param riKeyIBytes the RestrictedID Key 1 to authenticate by a restricted ID may be null
    * @param psKeyBytes the Pseudonymous Signature Key to may be null
-   * @throws IllegalArgumentException if one of the input parameter is malformed or can not be read or the CVC
-   *           does not match the cvcDescription.
+   * @throws IllegalArgumentException if one of the input parameter is malformed or can not be read or the CVC does not
+   *           match the cvcDescription.
    */
   public TerminalData(byte[] cvcBytes,
                       byte[] cvcDescriptionBytes,
@@ -453,8 +451,8 @@ public class TerminalData
   }
 
   /**
-   * Verifies a complete list of certificates to this CVC. Chain should be sorted as followed if the terminal
-   * CVC should be verified
+   * Verifies a complete list of certificates to this CVC. Chain should be sorted as followed if the terminal CVC should
+   * be verified
    * <ul>
    * <li>DV Certificate</li>
    * <li>All involved Link Certificates</li>
@@ -588,8 +586,8 @@ public class TerminalData
   }
 
   /**
-   * Verifies a certificate against the signing certificate. Note that the signing certificate must hold the
-   * latest parameter specification
+   * Verifies a certificate against the signing certificate. Note that the signing certificate must hold the latest
+   * parameter specification
    *
    * @param signingCVC that signed this CVC
    * @return true if verification returning positive result
@@ -610,8 +608,7 @@ public class TerminalData
   }
 
   /**
-   * Verifies a certificate against the signing certificate and a CVC holding the latest parameter
-   * specification
+   * Verifies a certificate against the signing certificate and a CVC holding the latest parameter specification
    *
    * @param signingCVC that signed this CVC
    * @param paramSpecCVC holding the latest parameter specifications
@@ -638,8 +635,7 @@ public class TerminalData
       ECCVCertificate paramSpecCertificate = new ECCVCertificate(paramSpecCVC.getEncoded());
       ECParameterSpec paramSpec = ECUtil.parameterSpecFromCVC(paramSpecCertificate);
       KeyHandler keyHandlerEC = KeyHandlerFactory.newKeyHandler("EC",
-                                                                paramSpec.getCurve().getField().getFieldSize()
-                                                                      / 8);
+                                                                paramSpec.getCurve().getField().getFieldSize() / 8);
       // Get the public key from signing CVC
       de.governikus.eumw.poseidas.cardbase.asn1.npa.ECPublicKey publicKey = signingCVC.getPublicKey();
       ASN1 child = publicKey.getChildElementByPath(ECPublicKeyPath.PUBLIC_POINT_Y);

@@ -97,6 +97,13 @@ class BlockListServiceTest
                                                 ConfigurationTestHelper.CVC_REF_ID + ".version-42")));
   }
 
+  @Test
+  void testPathEncoding()
+  {
+    Path path = blockListService.buildPathToBlockListFile("asdf.-*<%/.././\uD83D\uDE05", 0);
+    Assertions.assertTrue(path.toString().endsWith("asdf%2E-%2A%3C%25%2F%2E%2E%2F%2E%2F%F0%9F%98%85.version-0"));
+  }
+
   private static TerminalPermission createTerminalPermission()
   {
     TerminalPermission terminalPermission = new TerminalPermission();

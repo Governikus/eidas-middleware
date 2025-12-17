@@ -1,11 +1,10 @@
 /*
- * Copyright (c) 2020 Governikus KG. Licensed under the EUPL, Version 1.2 or as soon they will be approved by
- * the European Commission - subsequent versions of the EUPL (the "Licence"); You may not use this work except
- * in compliance with the Licence. You may obtain a copy of the Licence at:
- * http://joinup.ec.europa.eu/software/page/eupl Unless required by applicable law or agreed to in writing,
- * software distributed under the Licence is distributed on an "AS IS" basis, WITHOUT WARRANTIES OR CONDITIONS
- * OF ANY KIND, either express or implied. See the Licence for the specific language governing permissions and
- * limitations under the Licence.
+ * Copyright (c) 2020 Governikus KG. Licensed under the EUPL, Version 1.2 or as soon they will be approved by the
+ * European Commission - subsequent versions of the EUPL (the "Licence"); You may not use this work except in compliance
+ * with the Licence. You may obtain a copy of the Licence at: http://joinup.ec.europa.eu/software/page/eupl Unless
+ * required by applicable law or agreed to in writing, software distributed under the Licence is distributed on an
+ * "AS IS" basis, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the Licence for the
+ * specific language governing permissions and limitations under the Licence.
  */
 
 package de.governikus.eumw.poseidas.server.idprovider.core;
@@ -15,8 +14,8 @@ import de.governikus.eumw.eidascommon.ErrorCodeException;
 
 
 /**
- * This class manages the authentication sessions. It stores the sessions somewhere and returns them if any
- * user requests them.
+ * This class manages the authentication sessions. It stores the sessions somewhere and returns them if any user
+ * requests them.
  *
  * @author mehrtens
  */
@@ -27,8 +26,8 @@ public final class AuthenticationSessionManager
 
   /**
    * Get the only instance in this VM. Set system variable
-   * de.governikus.eumw.poseidas.server.idprovider.core.AuthenticationSessionManager.useDatabase <strong>
-   * before </strong> accessing this class to specify whether the sessions are kept im memory or in database.
+   * de.governikus.eumw.poseidas.server.idprovider.core.AuthenticationSessionManager.useDatabase <strong> before
+   * </strong> accessing this class to specify whether the sessions are kept im memory or in database.
    */
   public static AuthenticationSessionManager getInstance()
   {
@@ -76,8 +75,8 @@ public final class AuthenticationSessionManager
   }
 
   /**
-   * Remove a session and its request id from internal storage. Call this method also in case the session
-   * itself was not stored to remove the request id.
+   * Remove a session and its request id from internal storage. Call this method also in case the session itself was not
+   * stored to remove the request id.
    *
    * @param session the session to remove, <code>null</code> permitted and resulting in no operation.
    */
@@ -91,8 +90,8 @@ public final class AuthenticationSessionManager
   }
 
   /**
-   * Triggers a clean up of the stored session. Old sessions will be removed. A cleanup is also triggered from
-   * time to time when a new session is stored. Clients are not requested to call this method.
+   * Triggers a clean up of the stored session. Old sessions will be removed. A cleanup is also triggered from time to
+   * time when a new session is stored. Clients are not requested to call this method.
    *
    * @return The number of sessions stored after running cleanup.
    * @throws ErrorCodeException

@@ -38,6 +38,7 @@ import de.governikus.eumw.config.EidasMiddlewareConfig;
 import de.governikus.eumw.eidascommon.ContextPaths;
 import de.governikus.eumw.poseidas.config.model.ServiceProviderDetails;
 import de.governikus.eumw.poseidas.config.model.forms.CVCRequestModel;
+import de.governikus.eumw.poseidas.gov2server.GovManagementException;
 import de.governikus.eumw.poseidas.gov2server.constants.admin.ManagementMessage;
 import de.governikus.eumw.poseidas.server.exception.RequestSignerDownloadException;
 import de.governikus.eumw.poseidas.server.idprovider.config.ConfigurationService;
@@ -216,6 +217,31 @@ public class CVCController
 
         redirectAttributes.addFlashAttribute(ERROR, "Initial request failed: " + result);
       }
+    }
+    redirectAttributes.addFlashAttribute(JUMP_TO_TAB, CVC);
+    redirectAttributes.addAttribute(ENTITYID, entityID);
+    return REDIRECT_PREFIX + ContextPaths.ADMIN_CONTEXT_PATH + ContextPaths.DETAILS;
+  }
+
+  /**
+   * Deletes the pending certificate request
+   */
+  @GetMapping("/deletePendingCertificateRequest")
+  public String deletePendingCertificateRequest(@RequestParam(ENTITYID) String entityID,
+                                                RedirectAttributes redirectAttributes,
+                                                @ModelAttribute CVCRequestModel form)
+    throws GovManagementException
+  {
+    log.info("Deleting pending certificate request of Service Provider {}", entityID);
+    Optional<String> result = data.deletePendingCertificateRequest(entityID);
+    if (result.isEmpty())
+    {
+      redirectAttributes.addFlashAttribute(SUCCESS, "Pending Certificate Request successfully deleted");
+    }
+    else
+    {
+      redirectAttributes.addFlashAttribute(ERROR,
+                                           "Deletion of pending certificate request has failed: " + result.get());
     }
     redirectAttributes.addFlashAttribute(JUMP_TO_TAB, CVC);
     redirectAttributes.addAttribute(ENTITYID, entityID);
@@ -423,6 +449,29 @@ public class CVCController
     return REDIRECT_PREFIX + ContextPaths.ADMIN_CONTEXT_PATH + ContextPaths.DETAILS;
   }
 
+  /**
+   * Deletes the current RSC
+   */
+  @GetMapping("/deleteCurrentRSC")
+  public String deleteCurrentRSC(@RequestParam(ENTITYID) String entityID,
+                                 RedirectAttributes redirectAttributes,
+                                 @ModelAttribute CVCRequestModel form)
+  {
+    Optional<String> result = requestSignerCertificateService.deleteCurrentRSC(entityID);
+    if (result.isEmpty())
+    {
+      redirectAttributes.addFlashAttribute(SUCCESS, "Current request signer certificate successfully deleted");
+    }
+    else
+    {
+      redirectAttributes.addFlashAttribute(ERROR,
+                                           "Deleting of current request signer certificate failed: " + result.get());
+    }
+    redirectAttributes.addFlashAttribute(JUMP_TO_TAB, RSC);
+    redirectAttributes.addAttribute(ENTITYID, entityID);
+    return REDIRECT_PREFIX + ContextPaths.ADMIN_CONTEXT_PATH + ContextPaths.DETAILS;
+  }
+
   @PostMapping("/renewTLSClientCert")
   public String renewTlsClientKey(@RequestParam(ENTITYID) String entityID,
                                   @ModelAttribute CVCRequestModel form,
@@ -490,8 +539,7 @@ public class CVCController
                         .filter(serviceProviderType -> serviceProviderId.equals(serviceProviderType.getName()))
                         .findFirst()
                         .map(serviceProviderType -> new ServiceProviderDetails(serviceProviderType,
-                                                                               data.getPermissionDataInfo(serviceProviderType.getCVCRefID(),
-                                                                                                          false),
+                                                                               data.getPermissionDataInfo(serviceProviderType.getCVCRefID()),
                                                                                serviceProviderStatusService.getServiceProviderStatus(serviceProviderType),
                                                                                terminalPermissionAOBean))
                         .orElse(null);

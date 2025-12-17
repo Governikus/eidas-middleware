@@ -41,7 +41,8 @@ import se.swedenconnect.opensaml.eidas.common.EidasConstants;
 
 
 @UtilityClass
-public class RequestHelper {
+public class RequestHelper
+{
 
   @SneakyThrows
   public static byte[] createSamlPostRequest(String destination,
@@ -49,7 +50,8 @@ public class RequestHelper {
                                              X509Certificate cert,
                                              PrivateKey key,
                                              String signatureAlgorithm,
-                                             String digestAlgorithm) {
+                                             String digestAlgorithm)
+  {
     AuthnRequest authnRequest = createUnsignedAuthnRequest(destination, providerName);
 
     Signature sig = new SignatureBuilder().buildObject();
@@ -66,7 +68,7 @@ public class RequestHelper {
     keyInfo.getX509Datas().add(x509Data);
     sig.setKeyInfo(keyInfo);
     authnRequest.setSignature(sig);
-    ((SAMLObjectContentReference) sig.getContentReferences().get(0)).setDigestAlgorithm(digestAlgorithm);
+    ((SAMLObjectContentReference)sig.getContentReferences().get(0)).setDigestAlgorithm(digestAlgorithm);
 
 
     List<Signature> sigs = new ArrayList<>();
@@ -79,17 +81,20 @@ public class RequestHelper {
   }
 
   @SneakyThrows
-  public static byte[] marshallAuthnRequest(Element all) {
+  public static byte[] marshallAuthnRequest(Element all)
+  {
     Transformer trans = Utils.getTransformer();
     trans.setOutputProperty(OutputKeys.ENCODING, StandardCharsets.UTF_8.name());
-    try (ByteArrayOutputStream bout = new ByteArrayOutputStream()) {
+    try (ByteArrayOutputStream bout = new ByteArrayOutputStream())
+    {
       trans.transform(new DOMSource(all), new StreamResult(bout));
       return bout.toByteArray();
     }
   }
 
   @SneakyThrows
-  public static AuthnRequest createUnsignedAuthnRequest(String destination, String providerName) {
+  public static AuthnRequest createUnsignedAuthnRequest(String destination, String providerName)
+  {
     EidasSaml.init();
 
     AuthnRequest authnRequest = new AuthnRequestBuilder().buildObject();
@@ -98,7 +103,7 @@ public class RequestHelper {
     authnRequest.setForceAuthn(true);
     authnRequest.setIsPassive(false);
     authnRequest.getNamespaceManager()
-            .registerNamespaceDeclaration(new Namespace(EidasConstants.EIDAS_NS, EidasConstants.EIDAS_PREFIX));
+                .registerNamespaceDeclaration(new Namespace(EidasConstants.EIDAS_NS, EidasConstants.EIDAS_PREFIX));
     authnRequest.setDestination(destination);
     authnRequest.setIssueInstant(Instant.now());
     authnRequest.setProviderName(providerName);

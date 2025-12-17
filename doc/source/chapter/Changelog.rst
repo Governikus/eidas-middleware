@@ -276,3 +276,20 @@ Changelog
     - | eIDAS Middleware: CSR renewal will not use the current keypair.
       | Also use RSA 4096 instead of ECC.
     - eIDAS Middleware: Support only 'unspecified' as NameIdentifier.
+    - eIDAS Middleware: Change Integer objects to primitive ints in SNMPAgent: https://github.com/Governikus/eidas-middleware/pull/31 by hduelme.
+    - eIDAS Middleware: Refactor character encoding method usage: https://github.com/Governikus/eidas-middleware/pull/32 by hduelme.
+    - eIDAS Middleware: Remove checkCipherData: https://github.com/Governikus/eidas-middleware/pull/34 by Al1c3-1337.
+
+* 4.0.0
+
+    - eIDAS Middleware: URL-Encode filenames for the block list files.
+    - eIDAS Middleware: Add SNMP endpoint to get TLS client cert expiration date.
+    - eIDAS Middleware: Do not abort startup on CRL initialization errors.
+    - eIDAS Middleware: The RI interface is now using version 1.40. The 1.10 version is no longer supported and the
+      property to change the version is deleted. Breaking Change.
+    - eIDAS Middleware: Added keypair certificates in XML export without private keys.
+    - eIDAS Middleware: Fixed failing build caused by privileged port binding (linux) and failing tests: https://github.com/Governikus/eidas-middleware/pull/35 by asbachb.
+    - eIDAS Middleware: Added a "Delete pending certificate request" button to the Admin UI. The button is located in the CVC Info Card under the Service Provider's details and is visible only when a pending certificate request is present.
+    - eIDAS Middleware: Added a "Delete current RSC" button to the Admin UI. The button is located in the RSC Actions card under the Service Provider's details and is visible only when a current RSC is present.
+    - eIDAS Middleware: Added new column "NextRscSequenceNumber" to "TerminalPermission" table. Please make sure to create a database backup before applying this update.
+    - eIDAS Middleware: Added new timer to optionally delete expired keys in the HSM

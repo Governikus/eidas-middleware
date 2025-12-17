@@ -1,11 +1,10 @@
 /*
- * Copyright (c) 2020 Governikus KG. Licensed under the EUPL, Version 1.2 or as soon they will be approved by
- * the European Commission - subsequent versions of the EUPL (the "Licence"); You may not use this work except
- * in compliance with the Licence. You may obtain a copy of the Licence at:
- * http://joinup.ec.europa.eu/software/page/eupl Unless required by applicable law or agreed to in writing,
- * software distributed under the Licence is distributed on an "AS IS" basis, WITHOUT WARRANTIES OR CONDITIONS
- * OF ANY KIND, either express or implied. See the Licence for the specific language governing permissions and
- * limitations under the Licence.
+ * Copyright (c) 2020 Governikus KG. Licensed under the EUPL, Version 1.2 or as soon they will be approved by the
+ * European Commission - subsequent versions of the EUPL (the "Licence"); You may not use this work except in compliance
+ * with the Licence. You may obtain a copy of the Licence at: http://joinup.ec.europa.eu/software/page/eupl Unless
+ * required by applicable law or agreed to in writing, software distributed under the Licence is distributed on an
+ * "AS IS" basis, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the Licence for the
+ * specific language governing permissions and limitations under the Licence.
  */
 
 package de.governikus.eumw.poseidas.cardbase.asn1.npa;
@@ -391,8 +390,7 @@ public final class ATConstants
    * @see AuthenticationTerminals.AccessRightEnum#READ_DG16
    * @see EIDConstants#EID_NAME_DG16_RFU04
    */
-  public static final String ACCESS_RIGHT_NAME_READ_DG16 = "Read DG16 (eID): "
-                                                           + EIDConstants.EID_NAME_DG16_RFU04;
+  public static final String ACCESS_RIGHT_NAME_READ_DG16 = "Read DG16 (eID): " + EIDConstants.EID_NAME_DG16_RFU04;
 
   /**
    * Constant of byte index for right Read DG15 (eID): <code>2</code>.
@@ -460,8 +458,7 @@ public final class ATConstants
    * @see AuthenticationTerminals.AccessRightEnum#READ_DG13
    * @see EIDConstants#EID_NAME_DG13_BIRTH_NAME
    */
-  public static final String ACCESS_RIGHT_NAME_READ_DG13 = "Read DG13 (eID): "
-                                                           + EIDConstants.EID_NAME_DG13_BIRTH_NAME;
+  public static final String ACCESS_RIGHT_NAME_READ_DG13 = "Read DG13 (eID): " + EIDConstants.EID_NAME_DG13_BIRTH_NAME;
 
   /**
    * Constant of byte index for right Read DG12 (eID): <code>2</code>.
@@ -506,8 +503,7 @@ public final class ATConstants
    * @see AuthenticationTerminals.AccessRightEnum#READ_DG11
    * @see EIDConstants#EID_NAME_DG11_SEX
    */
-  public static final String ACCESS_RIGHT_NAME_READ_DG11 = "Read DG11 (eID): "
-                                                           + EIDConstants.EID_NAME_DG11_SEX;
+  public static final String ACCESS_RIGHT_NAME_READ_DG11 = "Read DG11 (eID): " + EIDConstants.EID_NAME_DG11_SEX;
 
   /**
    * Constant of byte index for right Read DG10 (eID): <code>2</code>.
@@ -529,8 +525,7 @@ public final class ATConstants
    * @see AuthenticationTerminals.AccessRightEnum#READ_DG10
    * @see EIDConstants#EID_NAME_DG10_NATIONALITY
    */
-  public static final String ACCESS_RIGHT_NAME_READ_DG10 = "Read DG10 (eID): "
-                                                           + EIDConstants.EID_NAME_DG10_NATIONALITY;
+  public static final String ACCESS_RIGHT_NAME_READ_DG10 = "Read DG10 (eID): " + EIDConstants.EID_NAME_DG10_NATIONALITY;
 
   /**
    * Constant of byte index for right Read DG9 (eID): <code>2</code>.
@@ -575,8 +570,7 @@ public final class ATConstants
    * @see AuthenticationTerminals.AccessRightEnum#READ_DG8
    * @see EIDConstants#EID_NAME_DG08_DATE_OF_BIRTH
    */
-  public static final String ACCESS_RIGHT_NAME_READ_DG8 = "Read DG8 (eID): "
-                                                          + EIDConstants.EID_NAME_DG08_DATE_OF_BIRTH;
+  public static final String ACCESS_RIGHT_NAME_READ_DG8 = "Read DG8 (eID): " + EIDConstants.EID_NAME_DG08_DATE_OF_BIRTH;
 
   /**
    * Constant of byte index for right Read DG7 (eID): <code>3</code>.
@@ -621,8 +615,7 @@ public final class ATConstants
    * @see AuthenticationTerminals.AccessRightEnum#READ_DG6
    * @see EIDConstants#EID_FID_DG06_NOM_DE_PLUME
    */
-  public static final String ACCESS_RIGHT_NAME_READ_DG6 = "Read DG6 (eID): "
-                                                          + EIDConstants.EID_NAME_DG06_NOM_DE_PLUME;
+  public static final String ACCESS_RIGHT_NAME_READ_DG6 = "Read DG6 (eID): " + EIDConstants.EID_NAME_DG06_NOM_DE_PLUME;
 
   /**
    * Constant of byte index for right Read DG5 (eID): <code>3</code>.
@@ -644,8 +637,7 @@ public final class ATConstants
    * @see AuthenticationTerminals.AccessRightEnum#READ_DG5
    * @see EIDConstants#EID_NAME_DG05_FAMILY_NAMES
    */
-  public static final String ACCESS_RIGHT_NAME_READ_DG5 = "Read DG5 (eID): "
-                                                          + EIDConstants.EID_NAME_DG05_FAMILY_NAMES;
+  public static final String ACCESS_RIGHT_NAME_READ_DG5 = "Read DG5 (eID): " + EIDConstants.EID_NAME_DG05_FAMILY_NAMES;
 
   /**
    * Constant of byte index for right Read DG4 (eID): <code>3</code>.
@@ -667,8 +659,7 @@ public final class ATConstants
    * @see AuthenticationTerminals.AccessRightEnum#READ_DG4
    * @see EIDConstants#EID_NAME_DG04_GIVEN_NAMES
    */
-  public static final String ACCESS_RIGHT_NAME_READ_DG4 = "Read DG4 (eID): "
-                                                          + EIDConstants.EID_NAME_DG04_GIVEN_NAMES;
+  public static final String ACCESS_RIGHT_NAME_READ_DG4 = "Read DG4 (eID): " + EIDConstants.EID_NAME_DG04_GIVEN_NAMES;
 
   /**
    * Constant of byte index for right Read DG3 (eID): <code>3</code>.
@@ -713,8 +704,7 @@ public final class ATConstants
    * @see AuthenticationTerminals.AccessRightEnum#READ_DG2
    * @see EIDConstants#EID_NAME_DG02_ISSUING_STATE
    */
-  public static final String ACCESS_RIGHT_NAME_READ_DG2 = "Read DG2 (eID): "
-                                                          + EIDConstants.EID_NAME_DG02_ISSUING_STATE;
+  public static final String ACCESS_RIGHT_NAME_READ_DG2 = "Read DG2 (eID): " + EIDConstants.EID_NAME_DG02_ISSUING_STATE;
 
   /**
    * Constant of byte index for right Read DG1 (eID): <code>3</code>.
@@ -736,8 +726,7 @@ public final class ATConstants
    * @see AuthenticationTerminals.AccessRightEnum#READ_DG1
    * @see EIDConstants#EID_NAME_DG01_DOCUMENT_TYPE
    */
-  public static final String ACCESS_RIGHT_NAME_READ_DG1 = "Read DG1 (eID): "
-                                                          + EIDConstants.EID_FID_DG01_DOCUMENT_TYPE;
+  public static final String ACCESS_RIGHT_NAME_READ_DG1 = "Read DG1 (eID): " + EIDConstants.EID_FID_DG01_DOCUMENT_TYPE;
 
   /**
    * Constant of byte index for right Install Qualified Certificate: <code>4</code>.

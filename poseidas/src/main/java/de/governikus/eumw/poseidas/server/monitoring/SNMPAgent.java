@@ -15,6 +15,7 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.GregorianCalendar;
 import java.util.List;
+import java.util.Optional;
 import java.util.SortedSet;
 import java.util.TreeSet;
 import java.util.regex.Matcher;
@@ -45,6 +46,7 @@ import de.governikus.eumw.poseidas.server.idprovider.config.CvcTlsCheck;
 import de.governikus.eumw.poseidas.server.pki.PermissionDataHandlingMBean;
 import de.governikus.eumw.poseidas.server.pki.RequestSignerCertificateService;
 import de.governikus.eumw.poseidas.server.pki.TerminalPermissionAO;
+import de.governikus.eumw.poseidas.server.pki.TlsClientRenewalService;
 import de.governikus.eumw.poseidas.server.pki.entities.TerminalPermission;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -71,6 +73,8 @@ public final class SNMPAgent implements CommandResponder
   private final RequestSignerCertificateService rscService;
 
   private final ConfigurationService configurationService;
+
+  private final TlsClientRenewalService tlsClientRenewalService;
 
   private static VariableBinding getDateAndTime(String oid, Date date)
   {
@@ -282,6 +286,9 @@ public final class SNMPAgent implements CommandResponder
                                      new Integer32(new CvcTlsCheck(facade, configurationService,
                                                                    null).checkCvcProvider(sp.getName()).isCvcTlsMatch()
                                                                      ? 1 : 0));
+        case SNMPConstants.TLS_CLIENT_CERTIFICATE_VALID_UNTIL:
+          Optional<Date> date = tlsClientRenewalService.currentTlsCertValidUntil(sp.getName());
+          return date.map(validUntil -> getDateAndTime(oid, validUntil)).orElseGet(() -> getDateAndTime(oid, null));
         default:
       }
     }

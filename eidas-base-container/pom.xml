@@ -14,10 +14,15 @@
     <parent>
         <artifactId>eumw</artifactId>
         <groupId>de.governikus.eumw</groupId>
-        <version>3.4.0</version>
+        <version>4.0.0</version>
     </parent>
 
     <artifactId>eidas-base-container</artifactId>
+
+    <properties>
+        <!-- Formatter plugin-->
+        <formatter-path>${project.parent.basedir}</formatter-path>
+    </properties>
 
     <build>
         <plugins>

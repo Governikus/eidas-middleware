@@ -33,10 +33,11 @@ import lombok.extern.slf4j.Slf4j;
 @RequestMapping(ContextPaths.ADMIN_CONTEXT_PATH)
 public class IndexController
 {
-    /**
+
+  /**
    * The index route redirects to /dashboard
    */
-    @GetMapping({"", "/"})
+  @GetMapping({"", "/"})
   public void index(HttpServletResponse response) throws IOException
   {
     response.sendRedirect(ContextPaths.ADMIN_CONTEXT_PATH + ContextPaths.DASHBOARD);

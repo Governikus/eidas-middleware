@@ -13,6 +13,7 @@ import org.mockito.Mockito;
 
 import de.governikus.eumw.config.EidasMiddlewareConfig;
 import de.governikus.eumw.config.ServiceProviderType;
+import de.governikus.eumw.poseidas.cardserver.service.hsm.impl.HSMException;
 import de.governikus.eumw.poseidas.gov2server.GovManagementException;
 import de.governikus.eumw.poseidas.gov2server.constants.admin.GlobalManagementCodes;
 import de.governikus.eumw.poseidas.server.idprovider.config.ConfigurationService;
@@ -24,6 +25,7 @@ import de.governikus.eumw.poseidas.server.pki.entities.TerminalPermission;
 import de.governikus.eumw.utils.key.KeyStoreSupporter;
 import de.governikus.eumw.utils.key.KeyStoreSupporter.KeyStoreType;
 import de.governikus.eumw.utils.key.SecurityProvider;
+
 import lombok.SneakyThrows;
 
 
@@ -38,6 +40,8 @@ class RequestSignerCertificateServiceImplTest
 
   private TerminalPermissionAO facade;
 
+  private HSMServiceHolder hsmServiceHolder;
+
   private TermAuthServiceBean termAuthServiceBean;
 
   private RequestSignerCertificateServiceImpl requestSignerCertificateService;
@@ -48,7 +52,7 @@ class RequestSignerCertificateServiceImplTest
     configurationService = Mockito.mock(ConfigurationService.class);
     facade = Mockito.mock(TerminalPermissionAO.class);
     termAuthServiceBean = Mockito.mock(TermAuthServiceBean.class);
-    HSMServiceHolder hsmServiceHolder = Mockito.mock(HSMServiceHolder.class);
+    hsmServiceHolder = Mockito.mock(HSMServiceHolder.class);
     TimerHistoryService timerHistoryService = Mockito.mock(TimerHistoryService.class);
     requestSignerCertificateService = new RequestSignerCertificateServiceImpl(configurationService, facade,
                                                                               hsmServiceHolder, termAuthServiceBean,
@@ -260,7 +264,6 @@ class RequestSignerCertificateServiceImplTest
     Optional<String> result = requestSignerCertificateService.deletePendingRSC(ConfigurationTestHelper.SP_NAME);
     Assertions.assertTrue(result.isEmpty());
     Mockito.verify(facade).deletePendingRequestSignerCertificate(ConfigurationTestHelper.CVC_REF_ID);
-    Mockito.verify(facade).setPendingRequestSignerCertificate(ConfigurationTestHelper.CVC_REF_ID, null);
     Mockito.verify(facade).setRequestSignerCertificateHolder(ConfigurationTestHelper.CVC_REF_ID, null);
   }
 
@@ -273,9 +276,56 @@ class RequestSignerCertificateServiceImplTest
     Optional<String> result = requestSignerCertificateService.deletePendingRSC(ConfigurationTestHelper.SP_NAME);
     Assertions.assertTrue(result.isEmpty());
     Mockito.verify(facade).deletePendingRequestSignerCertificate(ConfigurationTestHelper.CVC_REF_ID);
-    Mockito.verify(facade).setPendingRequestSignerCertificate(ConfigurationTestHelper.CVC_REF_ID, null);
     Mockito.verify(facade, Mockito.never()).setRequestSignerCertificateHolder(ConfigurationTestHelper.CVC_REF_ID, null);
 
+  }
+
+  @Test
+  void testDeleteCurrentRscHSM() throws Exception
+  {
+    Mockito.when(configurationService.getConfiguration()).thenReturn(Optional.of(prepareConfiguration()));
+
+    // Success
+    Mockito.when(hsmServiceHolder.getKeyStore()).thenReturn(Mockito.mock(KeyStore.class));
+    Mockito.when(facade.getCurrentRscChrId(Mockito.anyString())).thenReturn(1);
+
+    Optional<String> result = requestSignerCertificateService.deleteCurrentRSC(ConfigurationTestHelper.SP_NAME);
+    Mockito.verify(hsmServiceHolder).deleteKey(Mockito.anyString());
+    Assertions.assertEquals(Optional.empty(), result);
+
+    // Failed in HSM
+    Mockito.doThrow(new HSMException()).when(hsmServiceHolder).deleteKey(Mockito.anyString());
+    result = requestSignerCertificateService.deleteCurrentRSC(ConfigurationTestHelper.SP_NAME);
+    Assertions.assertTrue(result.isPresent());
+    Assertions.assertEquals("Can not delete current RSC from HSM", result.get());
+  }
+
+  @Test
+  void testDeleteCurrentRsc() throws Exception
+  {
+    Mockito.when(configurationService.getConfiguration()).thenReturn(Optional.of(prepareConfiguration()));
+
+
+    // Failed because unknown SP ID
+    Optional<String> result = requestSignerCertificateService.deleteCurrentRSC(null);
+    Assertions.assertTrue(result.isPresent());
+    Assertions.assertEquals("Can not delete RSC for entityID is unknown", result.get());
+    Mockito.verify(facade, Mockito.never()).deleteCurrentRequestSignerCertificate(ConfigurationTestHelper.CVC_REF_ID);
+    Mockito.verify(facade, Mockito.never()).setRequestSignerCertificateHolder(ConfigurationTestHelper.CVC_REF_ID, null);
+
+    // Success
+    result = requestSignerCertificateService.deleteCurrentRSC(ConfigurationTestHelper.SP_NAME);
+    Assertions.assertTrue(result.isEmpty());
+    Mockito.verify(facade).deleteCurrentRequestSignerCertificate(ConfigurationTestHelper.CVC_REF_ID);
+    Mockito.verify(facade).setRequestSignerCertificateHolder(ConfigurationTestHelper.CVC_REF_ID, null);
+
+    // Failed because no Termin Permission present.
+    Mockito.doThrow(new TerminalPermissionNotFoundException())
+           .when(facade)
+           .deleteCurrentRequestSignerCertificate(ConfigurationTestHelper.CVC_REF_ID);
+    result = requestSignerCertificateService.deleteCurrentRSC(ConfigurationTestHelper.SP_NAME);
+    Assertions.assertTrue(result.isPresent());
+    Assertions.assertEquals("No Terminal Permission present", result.get());
   }
 
   @SneakyThrows

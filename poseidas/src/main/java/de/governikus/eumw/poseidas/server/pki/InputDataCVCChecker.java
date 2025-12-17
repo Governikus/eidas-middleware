@@ -1,11 +1,10 @@
 /*
- * Copyright (c) 2020 Governikus KG. Licensed under the EUPL, Version 1.2 or as soon they will be approved by
- * the European Commission - subsequent versions of the EUPL (the "Licence"); You may not use this work except
- * in compliance with the Licence. You may obtain a copy of the Licence at:
- * http://joinup.ec.europa.eu/software/page/eupl Unless required by applicable law or agreed to in writing,
- * software distributed under the Licence is distributed on an "AS IS" basis, WITHOUT WARRANTIES OR CONDITIONS
- * OF ANY KIND, either express or implied. See the Licence for the specific language governing permissions and
- * limitations under the Licence.
+ * Copyright (c) 2020 Governikus KG. Licensed under the EUPL, Version 1.2 or as soon they will be approved by the
+ * European Commission - subsequent versions of the EUPL (the "Licence"); You may not use this work except in compliance
+ * with the Licence. You may obtain a copy of the Licence at: http://joinup.ec.europa.eu/software/page/eupl Unless
+ * required by applicable law or agreed to in writing, software distributed under the Licence is distributed on an
+ * "AS IS" basis, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the Licence for the
+ * specific language governing permissions and limitations under the Licence.
  */
 
 package de.governikus.eumw.poseidas.server.pki;
@@ -69,8 +68,7 @@ public class InputDataCVCChecker
     assertNotEmpty(blackList, "ID.jsp.nPaConfiguration.blackList");
     if (chain == null || chain.length == 0)
     {
-      throw new GovManagementException(IDManagementCodes.MISSING_INPUT_VALUE,
-                                       "ID.jsp.nPaConfiguration.chain");
+      throw new GovManagementException(IDManagementCodes.MISSING_INPUT_VALUE, "ID.jsp.nPaConfiguration.chain");
     }
     assertNotEmpty(chain[0], "ID.jsp.nPaConfiguration.chain");
     checkCVCAndDescription(cvc, cvcDescription, cvcPrivateKey, riKey1, psKey);
@@ -87,8 +85,8 @@ public class InputDataCVCChecker
   }
 
   /**
-   * Check if given value either can be parsed as master list or looks like some other data type. Importing
-   * master lists in different formats is supported.
+   * Check if given value either can be parsed as master list or looks like some other data type. Importing master lists
+   * in different formats is supported.
    *
    * @param masterList
    * @throws GovManagementException
@@ -206,8 +204,7 @@ public class InputDataCVCChecker
       if (!blackList.getBlacklistDetails().isEmpty())
       {
         byte[] sectorIdBlacklist = blackList.getBlacklistDetails().get(0).getSectorID();
-        if (sectorIdCvc != null
-            && (sectorIdBlacklist == null || !Arrays.equals(sectorIdBlacklist, sectorIdCvc)))
+        if (sectorIdCvc != null && (sectorIdBlacklist == null || !Arrays.equals(sectorIdBlacklist, sectorIdCvc)))
         {
           throw new GovManagementException(IDManagementCodes.INVALID_INPUT_DATA,
                                            "sectorID from blacklist and CVC do not match");
@@ -230,7 +227,6 @@ public class InputDataCVCChecker
     {
       LOG.error("unspecified problem parsing input data", t);
     }
-    return new GovManagementException(IDManagementCodes.INVALID_INPUT_DATA,
-                                      "ID.jsp.nPaConfiguration." + name);
+    return new GovManagementException(IDManagementCodes.INVALID_INPUT_DATA, "ID.jsp.nPaConfiguration." + name);
   }
 }

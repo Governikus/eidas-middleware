@@ -1,11 +1,10 @@
 /*
- * Copyright (c) 2020 Governikus KG. Licensed under the EUPL, Version 1.2 or as soon they will be approved by
- * the European Commission - subsequent versions of the EUPL (the "Licence"); You may not use this work except
- * in compliance with the Licence. You may obtain a copy of the Licence at:
- * http://joinup.ec.europa.eu/software/page/eupl Unless required by applicable law or agreed to in writing,
- * software distributed under the Licence is distributed on an "AS IS" basis, WITHOUT WARRANTIES OR CONDITIONS
- * OF ANY KIND, either express or implied. See the Licence for the specific language governing permissions and
- * limitations under the Licence.
+ * Copyright (c) 2020 Governikus KG. Licensed under the EUPL, Version 1.2 or as soon they will be approved by the
+ * European Commission - subsequent versions of the EUPL (the "Licence"); You may not use this work except in compliance
+ * with the Licence. You may obtain a copy of the Licence at: http://joinup.ec.europa.eu/software/page/eupl Unless
+ * required by applicable law or agreed to in writing, software distributed under the Licence is distributed on an
+ * "AS IS" basis, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the Licence for the
+ * specific language governing permissions and limitations under the Licence.
  */
 
 package de.governikus.eumw.poseidas.eidmodel;
@@ -99,36 +98,32 @@ public class AuthenticatedAuxiliaryData
       case 10:
         if (!communityID.matches(upToCounty))
         {
-          throw new IllegalArgumentException(messageI + communityID.length() + messageII + upToCounty
-                                             + messageIII);
+          throw new IllegalArgumentException(messageI + communityID.length() + messageII + upToCounty + messageIII);
         }
         break;
       case 8:
         if (!communityID.matches(upToDistrict))
         {
-          throw new IllegalArgumentException(messageI + communityID.length() + messageII + upToDistrict
-                                             + messageIII);
+          throw new IllegalArgumentException(messageI + communityID.length() + messageII + upToDistrict + messageIII);
         }
         break;
       case 6:
         if (!communityID.matches(upToState))
         {
-          throw new IllegalArgumentException(messageI + communityID.length() + messageII + upToState
-                                             + messageIII);
+          throw new IllegalArgumentException(messageI + communityID.length() + messageII + upToState + messageIII);
         }
         break;
       case 4:
         if (!communityID.matches(upToCountry))
         {
-          throw new IllegalArgumentException(messageI + communityID.length() + messageII + upToCountry
-                                             + messageIII);
+          throw new IllegalArgumentException(messageI + communityID.length() + messageII + upToCountry + messageIII);
         }
         break;
       case 0:
         break;
       default:
-        String patterns = "  - <" + upToMunicipality + ">\n  - <" + upToDistrict + ">\n  - <" + upToState
-                          + ">\n  - <" + upToCountry + ">\n  - < >";
+        String patterns = "  - <" + upToMunicipality + ">\n  - <" + upToDistrict + ">\n  - <" + upToState + ">\n  - <"
+                          + upToCountry + ">\n  - < >";
         throw new IllegalArgumentException("CommunityID length not valid: [" + communityID.length()
                                            + "]. Value must match one of this patterns:\n" + patterns);
     }
@@ -167,8 +162,8 @@ public class AuthenticatedAuxiliaryData
   }
 
   /**
-   * Try to set a string as community identifier. Null values will be set to empty strings. If string has
-   * wrong format exception is thrown
+   * Try to set a string as community identifier. Null values will be set to empty strings. If string has wrong format
+   * exception is thrown
    *
    * @param communityVerification as String "02 76 XX 0X XX 0X XX" <br>
    *          0276 - Deutschland <br>
@@ -193,8 +188,7 @@ public class AuthenticatedAuxiliaryData
     if (ageVerification != null)
     {
       ASN1 iod = new OID(OID_STR_AGE_VERIFICATION);
-      ASN1 data = new ASN1(ASN1_ASN1_DISCRETIONARY_DATA_TAG,
-                           ageVerification.getBytes(StandardCharsets.UTF_8));
+      ASN1 data = new ASN1(ASN1_ASN1_DISCRETIONARY_DATA_TAG, ageVerification.getBytes(StandardCharsets.UTF_8));
       byte[] bytes = ByteUtil.combine(iod.getEncoded(), data.getEncoded());
       ASN1 dataTemplate = new ASN1(ASN1_DISCRETIONARY_DATA_TEMPLATE_TAG, bytes);
       childs.add(dataTemplate);
@@ -202,8 +196,7 @@ public class AuthenticatedAuxiliaryData
     if (documentVerification != null)
     {
       ASN1 iod = new OID(OID_STR_DOCUMENT_VERIFICATION);
-      ASN1 data = new ASN1(ASN1_ASN1_DISCRETIONARY_DATA_TAG,
-                           documentVerification.getBytes(StandardCharsets.UTF_8));
+      ASN1 data = new ASN1(ASN1_ASN1_DISCRETIONARY_DATA_TAG, documentVerification.getBytes(StandardCharsets.UTF_8));
       byte[] bytes = ByteUtil.combine(iod.getEncoded(), data.getEncoded());
       ASN1 dataTemplate = new ASN1(ASN1_DISCRETIONARY_DATA_TEMPLATE_TAG, bytes);
       childs.add(dataTemplate);

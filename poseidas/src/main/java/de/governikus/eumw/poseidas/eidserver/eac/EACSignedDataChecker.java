@@ -56,8 +56,8 @@ public class EACSignedDataChecker extends EACSignedDataParser implements SignedD
   public EACSignedDataChecker(List<X509Certificate> masterList, String logPrefix)
   {
     super(logPrefix);
-    //The allowed Digest Algorithms and Signature Algorithms can be found in TR-3116-2 2.1.2 (Status 2023)
-    //The allowed elliptic curves can be found in TR-3116-2 1.4.2 (Status 2023)
+    // The allowed Digest Algorithms and Signature Algorithms can be found in TR-3116-2 2.1.2 (Status 2023)
+    // The allowed elliptic curves can be found in TR-3116-2 1.4.2 (Status 2023)
     cmsSignatureChecker = new CmsSignatureChecker(masterList,
                                                   Set.of(HashConstants.SHA256_OID_STRING,
                                                          HashConstants.SHA384_OID_STRING,

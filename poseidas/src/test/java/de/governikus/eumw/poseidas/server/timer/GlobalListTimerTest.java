@@ -106,7 +106,7 @@ class GlobalListTimerTest
                                                                                new EntanglementTimerType(1,
                                                                                                          TimerUnit.HOURS,
                                                                                                          true),
-                                                                               null, null);
+                                                                               null, null, null);
     eidConfiguration.setTimerConfiguration(timerConfigurationType);
     eidasMiddlewareConfig.setEidConfiguration(eidConfiguration);
     return eidasMiddlewareConfig;

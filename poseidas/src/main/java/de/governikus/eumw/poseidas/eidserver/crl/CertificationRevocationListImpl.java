@@ -117,7 +117,7 @@ public class CertificationRevocationListImpl implements CertificationRevocationL
 
   /**
    * Allows to update the trust anchors to validate the CRL.
-   * 
+   *
    * @param masterList
    */
   public void updateMasterlist(@NotNull Collection<X509Certificate> masterList)
@@ -137,7 +137,7 @@ public class CertificationRevocationListImpl implements CertificationRevocationL
 
   /**
    * Try to initialize CRL if not already done.
-   * 
+   *
    * @param configurationService configuration
    * @param facade terminal permission data
    */
@@ -305,12 +305,12 @@ public class CertificationRevocationListImpl implements CertificationRevocationL
 
   /**
    * Holds succeeded and failed crl renewals.
-   * 
+   *
    * @param succeeded
    * @param failed
    */
-  public record RenewCrlsLists(List<String> succeeded, List<String> failed) {
-  }
+  public record RenewCrlsLists(List<String> succeeded, List<String> failed)
+  {}
 
   /**
    * Renews all CRLs that are stored in the {@link CrlCache}.

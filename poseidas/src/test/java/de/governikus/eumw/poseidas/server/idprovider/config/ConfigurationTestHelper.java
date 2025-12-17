@@ -9,6 +9,7 @@ import de.governikus.eumw.config.ConnectorMetadataType;
 import de.governikus.eumw.config.DvcaConfigurationType;
 import de.governikus.eumw.config.EidasMiddlewareConfig;
 import de.governikus.eumw.config.EntanglementTimerType;
+import de.governikus.eumw.config.HsmKeyDeletionType;
 import de.governikus.eumw.config.KeyPairType;
 import de.governikus.eumw.config.KeyStoreType;
 import de.governikus.eumw.config.KeyStoreTypeType;
@@ -67,6 +68,7 @@ public final class ConfigurationTestHelper
     timerConfigurationType.setMasterAndDefectListRenewal(new TimerType(1, TimerUnit.MINUTES));
     timerConfigurationType.setCrlRenewal(new TimerType(1, TimerUnit.MINUTES));
     timerConfigurationType.setTlsEntangleRenewal(new EntanglementTimerType(1, TimerUnit.HOURS, true));
+    timerConfigurationType.setHsmKeyDeletion(new HsmKeyDeletionType(1, TimerUnit.HOURS, true));
     eidConfiguration.setTimerConfiguration(timerConfigurationType);
     config.setEidConfiguration(eidConfiguration);
     var keyData = new EidasMiddlewareConfig.KeyData();

@@ -10,9 +10,9 @@ import se.swedenconnect.opensaml.eidas.ext.attributes.EidasAttributeValueType;
 
 /**
  * The eIDAS {@code NationalityType}.
- * 
+ *
  * <pre>
- * {@code 
+ * {@code
  * <xsd:simpleType name="NationalityType">
  *   <xsd:annotation>
  *     <xsd:documentation>
@@ -25,9 +25,9 @@ import se.swedenconnect.opensaml.eidas.ext.attributes.EidasAttributeValueType;
  *   </xsd:restriction>
  * </xsd:simpleType>}
  * </pre>
- * 
+ *
  * Example:
- * 
+ *
  * <pre>
  * {@code
  * <saml:Attribute

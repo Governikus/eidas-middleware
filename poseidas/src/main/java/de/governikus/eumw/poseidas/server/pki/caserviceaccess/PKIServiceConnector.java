@@ -1,11 +1,10 @@
 /*
- * Copyright (c) 2020 Governikus KG. Licensed under the EUPL, Version 1.2 or as soon they will be approved by
- * the European Commission - subsequent versions of the EUPL (the "Licence"); You may not use this work except
- * in compliance with the Licence. You may obtain a copy of the Licence at:
- * http://joinup.ec.europa.eu/software/page/eupl Unless required by applicable law or agreed to in writing,
- * software distributed under the Licence is distributed on an "AS IS" basis, WITHOUT WARRANTIES OR CONDITIONS
- * OF ANY KIND, either express or implied. See the Licence for the specific language governing permissions and
- * limitations under the Licence.
+ * Copyright (c) 2020 Governikus KG. Licensed under the EUPL, Version 1.2 or as soon they will be approved by the
+ * European Commission - subsequent versions of the EUPL (the "Licence"); You may not use this work except in compliance
+ * with the Licence. You may obtain a copy of the Licence at: http://joinup.ec.europa.eu/software/page/eupl Unless
+ * required by applicable law or agreed to in writing, software distributed under the Licence is distributed on an
+ * "AS IS" basis, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the Licence for the
+ * specific language governing permissions and limitations under the Licence.
  */
 
 package de.governikus.eumw.poseidas.server.pki.caserviceaccess;
@@ -62,9 +61,9 @@ import lombok.RequiredArgsConstructor;
 
 
 /**
- * Handles all aspects of getting the connection to the PKI service. Especially the SSL client authentication
- * is not handled properly by Metro. Current work-around is getting the WSDLs from own jar which is OK since
- * the WSDLs where already required at compile time.
+ * Handles all aspects of getting the connection to the PKI service. Especially the SSL client authentication is not
+ * handled properly by Metro. Current work-around is getting the WSDLs from own jar which is OK since the WSDLs where
+ * already required at compile time.
  *
  * @author tautenhahn
  */
@@ -135,8 +134,7 @@ public class PKIServiceConnector
                              String entityID)
     throws GeneralSecurityException
   {
-    this(timeout, sslServerCert, createKeystore(sslClientKey, sslClientCert, entityID), DUMMY_KEYPASS,
-         entityID);
+    this(timeout, sslServerCert, createKeystore(sslClientKey, sslClientCert, entityID), DUMMY_KEYPASS, entityID);
   }
 
   /**
@@ -162,9 +160,7 @@ public class PKIServiceConnector
     this.hsmMode = clientCertAndKey.getProvider().getName().startsWith("SunPKCS11-");
   }
 
-  private static KeyStore createKeystore(Key sslClientKey,
-                                         List<X509Certificate> sslClientCert,
-                                         String entityID)
+  private static KeyStore createKeystore(Key sslClientKey, List<X509Certificate> sslClientCert, String entityID)
     throws GeneralSecurityException
   {
     if (sslClientKey == null)
@@ -183,10 +179,14 @@ public class PKIServiceConnector
       LOG.error(entityID + ": KeyStore.load threw IOException even though no load was attempted", e);
     }
     X509Certificate[] clientCertChain = sslClientCert.toArray(new X509Certificate[sslClientCert.size()]);
-    // The BC JSSE Provider in version 1.66 manipulates the alias of the key store. For example 'test.alias' will be changed to '0.test.alias.1'
-    // Later when the private key entry will be loaded, the alias will be changed again. Theoretically the alias should be the same again,
-    // but unfortunately the method to build the alias search for '.' only from the beginning. So the alias '0.test.alias.1'
-    // will be just 'test' and not 'test.alias'. When an entity has '.' in the name, BC will not find the private key entry.
+    // The BC JSSE Provider in version 1.66 manipulates the alias of the key store. For example 'test.alias' will be
+    // changed to '0.test.alias.1'
+    // Later when the private key entry will be loaded, the alias will be changed again. Theoretically the alias should
+    // be the same again,
+    // but unfortunately the method to build the alias search for '.' only from the beginning. So the alias
+    // '0.test.alias.1'
+    // will be just 'test' and not 'test.alias'. When an entity has '.' in the name, BC will not find the private key
+    // entry.
     // Therefore, we change the alias to constant value.
     // See ProvX509KeyManager#loadPrivateKeyEntry BC version 1.66
     clientKeyStore.setKeyEntry(DVCA_MTLS_ALIAS, sslClientKey, DUMMY_KEYPASS, clientCertChain);
@@ -215,8 +215,8 @@ public class PKIServiceConnector
   }
 
   /**
-   * Block as long as another thread uses the SSL context. After calling this method, a client can set its own
-   * static properties to the SSL context without breaking some other process.
+   * Block as long as another thread uses the SSL context. After calling this method, a client can set its own static
+   * properties to the SSL context without breaking some other process.
    */
   public static synchronized void getContextLock()
   {
@@ -342,8 +342,7 @@ public class PKIServiceConnector
     try
     {
       SSL_LOGGER.debug(entityID + ": Creating https connection with client authentication to " + uri);
-      SSL_LOGGER.debug(entityID + ": Trusted SSL server certificate:\n"
-                       + certificateToString(sslServersCert));
+      SSL_LOGGER.debug(entityID + ": Trusted SSL server certificate:\n" + certificateToString(sslServersCert));
       if (clientCertAndKey != null)
       {
         SSL_LOGGER.debug(entityID + ": Certificate for SSL client key:\n"

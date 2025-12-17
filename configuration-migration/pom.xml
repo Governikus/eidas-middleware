@@ -3,7 +3,7 @@
     <parent>
         <artifactId>eumw</artifactId>
         <groupId>de.governikus.eumw</groupId>
-        <version>3.4.0</version>
+        <version>4.0.0</version>
     </parent>
     <modelVersion>4.0.0</modelVersion>
 
@@ -12,6 +12,9 @@
     <properties>
         <maven.compiler.source>11</maven.compiler.source>
         <maven.compiler.target>11</maven.compiler.target>
+
+        <!-- Formatter plugin-->
+        <formatter-path>${project.parent.basedir}</formatter-path>
     </properties>
 
     <dependencies>

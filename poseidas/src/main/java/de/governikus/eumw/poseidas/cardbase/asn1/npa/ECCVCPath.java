@@ -1,11 +1,10 @@
 /*
- * Copyright (c) 2020 Governikus KG. Licensed under the EUPL, Version 1.2 or as soon they will be approved by
- * the European Commission - subsequent versions of the EUPL (the "Licence"); You may not use this work except
- * in compliance with the Licence. You may obtain a copy of the Licence at:
- * http://joinup.ec.europa.eu/software/page/eupl Unless required by applicable law or agreed to in writing,
- * software distributed under the Licence is distributed on an "AS IS" basis, WITHOUT WARRANTIES OR CONDITIONS
- * OF ANY KIND, either express or implied. See the Licence for the specific language governing permissions and
- * limitations under the Licence.
+ * Copyright (c) 2020 Governikus KG. Licensed under the EUPL, Version 1.2 or as soon they will be approved by the
+ * European Commission - subsequent versions of the EUPL (the "Licence"); You may not use this work except in compliance
+ * with the Licence. You may obtain a copy of the Licence at: http://joinup.ec.europa.eu/software/page/eupl Unless
+ * required by applicable law or agreed to in writing, software distributed under the Licence is distributed on an
+ * "AS IS" basis, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the Licence for the
+ * specific language governing permissions and limitations under the Licence.
  */
 
 package de.governikus.eumw.poseidas.cardbase.asn1.npa;
@@ -36,12 +35,11 @@ public class ECCVCPath extends ASN1Path
    * @param tag tag byte of child element
    * @param filter filter of child element
    * @param parent optional parent path element
-   * @param encoderClass Class of {@link ASN1Encoder} for creating ASN1. object with support convenience
-   *          methods to access contents of ASN.1, <code>null</code> permitted, any real Class must possess an
-   *          empty, accessible Constructor to create an instance, otherwise an
-   *          {@link IllegalArgumentException} is thrown
-   * @throws IllegalArgumentException if Class of {@link ASN1Encoder} does not possess an empty constructor
-   *           for initialization
+   * @param encoderClass Class of {@link ASN1Encoder} for creating ASN1. object with support convenience methods to
+   *          access contents of ASN.1, <code>null</code> permitted, any real Class must possess an empty, accessible
+   *          Constructor to create an instance, otherwise an {@link IllegalArgumentException} is thrown
+   * @throws IllegalArgumentException if Class of {@link ASN1Encoder} does not possess an empty constructor for
+   *           initialization
    * @see ASN1Path#ASN1Path(String, byte, Filter, ASN1Path, Class)
    */
   private ECCVCPath(String name,
@@ -74,19 +72,14 @@ public class ECCVCPath extends ASN1Path
    * @param tag tag byte of child element
    * @param index index of child element
    * @param parent optional parent path element
-   * @param encoderClass Class of {@link ASN1Encoder} for creating ASN1. object with support convenience
-   *          methods to access contents of ASN.1, <code>null</code> permitted, any real Class must possess an
-   *          empty, accessible Constructor to create an instance, otherwise an
-   *          {@link IllegalArgumentException} is thrown
-   * @throws IllegalArgumentException if Class of {@link ASN1Encoder} does not possess an empty constructor
-   *           for initialization
+   * @param encoderClass Class of {@link ASN1Encoder} for creating ASN1. object with support convenience methods to
+   *          access contents of ASN.1, <code>null</code> permitted, any real Class must possess an empty, accessible
+   *          Constructor to create an instance, otherwise an {@link IllegalArgumentException} is thrown
+   * @throws IllegalArgumentException if Class of {@link ASN1Encoder} does not possess an empty constructor for
+   *           initialization
    * @see ASN1Path#ASN1Path(String, byte, int, ASN1Path, Class)
    */
-  private ECCVCPath(String name,
-                    byte tag,
-                    int index,
-                    ECCVCPath parent,
-                    Class<? extends ASN1Encoder> encoderClass)
+  private ECCVCPath(String name, byte tag, int index, ECCVCPath parent, Class<? extends ASN1Encoder> encoderClass)
   {
     super(name, tag, index, parent, encoderClass);
   }
@@ -98,12 +91,11 @@ public class ECCVCPath extends ASN1Path
    * @param tagBytes tag bytes of child element
    * @param index index of child element
    * @param parent optional parent path element
-   * @param encoderClass Class of {@link ASN1Encoder} for creating ASN1. object with support convenience
-   *          methods to access contents of ASN.1, <code>null</code> permitted, any real Class must possess an
-   *          empty, accessible Constructor to create an instance, otherwise an
-   *          {@link IllegalArgumentException} is thrown
-   * @throws IllegalArgumentException if Class of {@link ASN1Encoder} does not possess an empty constructor
-   *           for initialization
+   * @param encoderClass Class of {@link ASN1Encoder} for creating ASN1. object with support convenience methods to
+   *          access contents of ASN.1, <code>null</code> permitted, any real Class must possess an empty, accessible
+   *          Constructor to create an instance, otherwise an {@link IllegalArgumentException} is thrown
+   * @throws IllegalArgumentException if Class of {@link ASN1Encoder} does not possess an empty constructor for
+   *           initialization
    * @see ASN1Path#ASN1Path(String, byte[], int, ASN1Path, Class)
    */
   private ECCVCPath(String name,
@@ -166,8 +158,8 @@ public class ECCVCPath extends ASN1Path
    * Path to certificate body of CVCertificate.
    */
   public static final ECCVCPath CV_CERTIFICATE_BODY = new ECCVCPath("CV_CERTIFICATE_BODY",
-                                                                    ASN1EidConstants.TAG_CERTIFICATE_BODY.toArray(),
-                                                                    0, CV_CERTIFICATE);
+                                                                    ASN1EidConstants.TAG_CERTIFICATE_BODY.toArray(), 0,
+                                                                    CV_CERTIFICATE);
 
   /**
    * Path to profile identifier of certificate body.
@@ -180,8 +172,8 @@ public class ECCVCPath extends ASN1Path
    * Path to CA reference of certificate body.
    */
   public static final ECCVCPath CA_REFERENCE = new ECCVCPath("CA_REFERENCE",
-                                                             ASN1EidConstants.TAG_CERTIFICATION_AUTHORITY_REFERENCE,
-                                                             0, CV_CERTIFICATE_BODY);
+                                                             ASN1EidConstants.TAG_CERTIFICATION_AUTHORITY_REFERENCE, 0,
+                                                             CV_CERTIFICATE_BODY);
 
   /**
    * Path to holder reference of certificate body.
@@ -195,8 +187,7 @@ public class ECCVCPath extends ASN1Path
    */
   public static final ECCVCPath CERTIFICATE_HOLDER_AUTHORIZATION_TEMPLATE = new ECCVCPath("HOLDER_AUTH_TEMPLATE",
                                                                                           ASN1EidConstants.TAG_CERTIFICATE_HOLDER_AUTHORIZATION_TEMPLATE.toArray(),
-                                                                                          0,
-                                                                                          CV_CERTIFICATE_BODY,
+                                                                                          0, CV_CERTIFICATE_BODY,
                                                                                           CertificateHolderAuthorizationTemplate.class);
 
   /**
@@ -216,14 +207,14 @@ public class ECCVCPath extends ASN1Path
   /**
    * Path to public key of certificate body.
    */
-  static final ECCVCPath PUBLIC_KEY = new ECCVCPath("PUBLIC_KEY", ASN1EidConstants.TAG_PUBLIC_KEY.toArray(),
-                                                    0, CV_CERTIFICATE_BODY, ECPublicKey.class);
+  static final ECCVCPath PUBLIC_KEY = new ECCVCPath("PUBLIC_KEY", ASN1EidConstants.TAG_PUBLIC_KEY.toArray(), 0,
+                                                    CV_CERTIFICATE_BODY, ECPublicKey.class);
 
   /**
    * Path to OID of public key.
    */
-  public static final ECCVCPath PUBLIC_KEY_OID = new ECCVCPath("OID", ASN1Constants.UNIVERSAL_TAG_OID, 0,
-                                                               PUBLIC_KEY, OID.class);
+  public static final ECCVCPath PUBLIC_KEY_OID = new ECCVCPath("OID", ASN1Constants.UNIVERSAL_TAG_OID, 0, PUBLIC_KEY,
+                                                               OID.class);
 
   /**
    * Path to prime modulus (curve parameter) of public key.
@@ -246,8 +237,7 @@ public class ECCVCPath extends ASN1Path
   /**
    * Path to base point G (curve parameter) of public key.
    */
-  public static final ECCVCPath PUBLIC_KEY_BASE_POINT_G = new ECCVCPath("PUBLIC_KEY_BASE_POINT_G", "84", 0,
-                                                                        PUBLIC_KEY);
+  public static final ECCVCPath PUBLIC_KEY_BASE_POINT_G = new ECCVCPath("PUBLIC_KEY_BASE_POINT_G", "84", 0, PUBLIC_KEY);
 
   /**
    * Path to order of base point R (curve parameter) of public key.
@@ -258,22 +248,20 @@ public class ECCVCPath extends ASN1Path
   /**
    * Path to cofactor (curve parameter) of public key.
    */
-  public static final ECCVCPath PUBLIC_KEY_CO_FACTOR_F = new ECCVCPath("PUBLIC_KEY_CO_FACTOR_F", "87", 0,
-                                                                       PUBLIC_KEY);
+  public static final ECCVCPath PUBLIC_KEY_CO_FACTOR_F = new ECCVCPath("PUBLIC_KEY_CO_FACTOR_F", "87", 0, PUBLIC_KEY);
 
   /**
    * Path to signature of certificate.
    */
-  public static final ECCVCPath SIGNATURE = new ECCVCPath("SIGNATURE",
-                                                          ASN1EidConstants.TAG_SIGNATURE.toArray(), 0,
+  public static final ECCVCPath SIGNATURE = new ECCVCPath("SIGNATURE", ASN1EidConstants.TAG_SIGNATURE.toArray(), 0,
                                                           CV_CERTIFICATE);
 
   /**
    * Path to certificate extensions of certificate body.
    */
   public static final ECCVCPath CERTIFICATE_EXTENSIONS = new ECCVCPath("BODY_CERTIFICATE_EXTENSIONS",
-                                                                       ASN1EidConstants.TAG_CERTIFICATE_EXTENSIONS,
-                                                                       0, CV_CERTIFICATE_BODY);
+                                                                       ASN1EidConstants.TAG_CERTIFICATE_EXTENSIONS, 0,
+                                                                       CV_CERTIFICATE_BODY);
 
   /**
    * Constant of OID for certificate description content at certificate extensions.
@@ -296,8 +284,8 @@ public class ECCVCPath extends ASN1Path
   private static final Filter<ASN1> TERMINAL_SECTOR_RI_FILTER = new FindElementByOIDChildFilter(OID_TERMINAL_SECTOR_RI);
 
   /**
-   * Path to certificate description as certificate discretionary data of certificate at certificate
-   * extensions. extensions.
+   * Path to certificate description as certificate discretionary data of certificate at certificate extensions.
+   * extensions.
    */
   private static final ECCVCPath EXTENSIONS_DISCRETIONARY_DATA_CERTIFICATE_DESCRIPTION = new ECCVCPath("EXTENSIONS_DISCRETIONARY_DATA_CERTIFICATE_DESCRIPTIONS",
                                                                                                        ASN1EidConstants.TAG_DISCRETIONARY_DATA_TEMPLATE,
@@ -305,17 +293,16 @@ public class ECCVCPath extends ASN1Path
                                                                                                        ECCVCPath.CERTIFICATE_EXTENSIONS);
 
   /**
-   * Path to certificate description first hash as discretionary data as certificate discretionary data of
-   * certificate at certificate extensions.
+   * Path to certificate description first hash as discretionary data as certificate discretionary data of certificate
+   * at certificate extensions.
    */
   public static final ECCVCPath EXTENSIONS_DISCRETIONARY_DATA_CERTIFICATE_DESCRIPTION_HASH = new ECCVCPath("EXTENSIONS_DISCRETIONARY_DATA_CERTIFICATE_DESCRIPTION_HASH",
-                                                                                                           "80",
-                                                                                                           0,
+                                                                                                           "80", 0,
                                                                                                            EXTENSIONS_DISCRETIONARY_DATA_CERTIFICATE_DESCRIPTION);
 
   /**
-   * Path to terminal sector (RI) as discretionary data as certificate discretionary data of certificate at
-   * certificate extensions.
+   * Path to terminal sector (RI) as discretionary data as certificate discretionary data of certificate at certificate
+   * extensions.
    */
   private static final ECCVCPath EXTENSIONS_DISCRETIONARY_DATA_TERMINAL_SECTOR_RI = new ECCVCPath("EXTENSIONS_DISCRETIONARY_DATA_TERMINAL_SECTOR_RI",
                                                                                                   ASN1EidConstants.TAG_DISCRETIONARY_DATA_TEMPLATE,
@@ -323,16 +310,16 @@ public class ECCVCPath extends ASN1Path
                                                                                                   ECCVCPath.CERTIFICATE_EXTENSIONS);
 
   /**
-   * Path to terminal sector (RI) first hash as discretionary data as certificate discretionary data of
-   * certificate at certificate extensions.
+   * Path to terminal sector (RI) first hash as discretionary data as certificate discretionary data of certificate at
+   * certificate extensions.
    */
   static final ECCVCPath EXTENSIONS_DISCRETIONARY_DATA_TERMINAL_SECTOR_RI_FIRST_HASH = new ECCVCPath("EXTENSIONS_DISCRETIONARY_DATA_TERMINAL_SECTOR_RI_FIRST_HASH",
                                                                                                      "80", 0,
                                                                                                      EXTENSIONS_DISCRETIONARY_DATA_TERMINAL_SECTOR_RI);
 
   /**
-   * Path to terminal sector (RI) second hash as discretionary data as certificate discretionary data of
-   * certificate at certificate extensions.
+   * Path to terminal sector (RI) second hash as discretionary data as certificate discretionary data of certificate at
+   * certificate extensions.
    */
   static final ECCVCPath EXTENSIONS_DISCRETIONARY_DATA_TERMINAL_SECTOR_RI_SECOND_HASH = new ECCVCPath("EXTENSIONS_DISCRETIONARY_DATA_TERMINAL_SECTOR_RI_SECOND_HASH",
                                                                                                       "81", 0,

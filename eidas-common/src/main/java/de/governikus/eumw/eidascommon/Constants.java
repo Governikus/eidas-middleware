@@ -1,11 +1,10 @@
 /*
- * Copyright (c) 2020 Governikus KG. Licensed under the EUPL, Version 1.2 or as soon they will be approved by
- * the European Commission - subsequent versions of the EUPL (the "Licence"); You may not use this work except
- * in compliance with the Licence. You may obtain a copy of the Licence at:
- * http://joinup.ec.europa.eu/software/page/eupl Unless required by applicable law or agreed to in writing,
- * software distributed under the Licence is distributed on an "AS IS" basis, WITHOUT WARRANTIES OR CONDITIONS
- * OF ANY KIND, either express or implied. See the Licence for the specific language governing permissions and
- * limitations under the Licence.
+ * Copyright (c) 2020 Governikus KG. Licensed under the EUPL, Version 1.2 or as soon they will be approved by the
+ * European Commission - subsequent versions of the EUPL (the "Licence"); You may not use this work except in compliance
+ * with the Licence. You may obtain a copy of the Licence at: http://joinup.ec.europa.eu/software/page/eupl Unless
+ * required by applicable law or agreed to in writing, software distributed under the Licence is distributed on an
+ * "AS IS" basis, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the Licence for the
+ * specific language governing permissions and limitations under the Licence.
  */
 
 package de.governikus.eumw.eidascommon;
@@ -30,8 +29,8 @@ public final class Constants
   public static final String NAME_REFID = "requestID";
 
   /**
-   * Prefix of status codes according to TR-03130 chapter 4.5 for the result major. This is taken from
-   * TR-03112 eCard-API Part 1 Chapter 4.2.
+   * Prefix of status codes according to TR-03130 chapter 4.5 for the result major. This is taken from TR-03112
+   * eCard-API Part 1 Chapter 4.2.
    */
   private static final String EID_CODE_MAJOR_PREFIX = "http://www.bsi.bund.de/ecard/api/1.1/resultmajor";
 
@@ -53,8 +52,7 @@ public final class Constants
   /**
    * minor error code indicating a schema violation.
    */
-  public static final String EID_MINOR_COMMON_SCHEMA_VIOLATION = EID_CODE_MINOR_PREFIX
-                                                                 + "/common#schemaViolation";
+  public static final String EID_MINOR_COMMON_SCHEMA_VIOLATION = EID_CODE_MINOR_PREFIX + "/common#schemaViolation";
 
   /**
    * minor code for unspecified error
@@ -73,15 +71,12 @@ public final class Constants
                                                                       + "/useID#tooManyOpenSessions";
 
   /**
-   * minor error code indicating a request with a missing argument e.g. for age verification or community
-   * verification.
+   * minor error code indicating a request with a missing argument e.g. for age verification or community verification.
    */
-  public static final String EID_MINOR_USEID_MISSING_ARGUMENT = EID_CODE_MINOR_PREFIX
-                                                                + "/useID#missingArgument";
+  public static final String EID_MINOR_USEID_MISSING_ARGUMENT = EID_CODE_MINOR_PREFIX + "/useID#missingArgument";
 
   /**
-   * minor error code when the requests want's to read more attributes than allowed in the terminal
-   * certificate.
+   * minor error code when the requests want's to read more attributes than allowed in the terminal certificate.
    */
   public static final String EID_MINOR_USEID_MISSING_TERMINAL_RIGHTS = EID_CODE_MINOR_PREFIX
                                                                        + "/useID#missingTerminalRights";
@@ -89,20 +84,17 @@ public final class Constants
   /**
    * minor error code when the result is not yet available.
    */
-  public static final String EID_MINOR_GETRESULT_NO_RESULT_YET = EID_CODE_MINOR_PREFIX
-                                                                 + "/getResult#noResultYet";
+  public static final String EID_MINOR_GETRESULT_NO_RESULT_YET = EID_CODE_MINOR_PREFIX + "/getResult#noResultYet";
 
   /**
    * minor error code indicating an an invalid session id.
    */
-  public static final String EID_MINOR_GETRESULT_INVALID_SESSION = EID_CODE_MINOR_PREFIX
-                                                                   + "/getResult#invalidSession";
+  public static final String EID_MINOR_GETRESULT_INVALID_SESSION = EID_CODE_MINOR_PREFIX + "/getResult#invalidSession";
 
   /**
    * minor error code indicating an invalid request counter.
    */
-  public static final String EID_MINOR_GETRESULT_INVALID_COUNTER = EID_CODE_MINOR_PREFIX
-                                                                   + "/getResult#invalidCounter";
+  public static final String EID_MINOR_GETRESULT_INVALID_COUNTER = EID_CODE_MINOR_PREFIX + "/getResult#invalidCounter";
 
   /**
    * minor error code indicating an invalid document.

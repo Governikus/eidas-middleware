@@ -190,6 +190,7 @@ class ServiceProviderTestBase extends WebAdminTestBase
                                 .defectListLastRetrieval(now)
                                 .serviceProviderName(SERVICE_PROVIDER)
                                 .enabled(true)
+                                .pendingCertificateRequestPresent(true)
                                 .build();
   }
 }

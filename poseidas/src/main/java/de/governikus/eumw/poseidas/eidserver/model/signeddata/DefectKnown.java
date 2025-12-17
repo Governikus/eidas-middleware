@@ -1,11 +1,10 @@
 /*
- * Copyright (c) 2020 Governikus KG. Licensed under the EUPL, Version 1.2 or as soon they will be approved by
- * the European Commission - subsequent versions of the EUPL (the "Licence"); You may not use this work except
- * in compliance with the Licence. You may obtain a copy of the Licence at:
- * http://joinup.ec.europa.eu/software/page/eupl Unless required by applicable law or agreed to in writing,
- * software distributed under the Licence is distributed on an "AS IS" basis, WITHOUT WARRANTIES OR CONDITIONS
- * OF ANY KIND, either express or implied. See the Licence for the specific language governing permissions and
- * limitations under the Licence.
+ * Copyright (c) 2020 Governikus KG. Licensed under the EUPL, Version 1.2 or as soon they will be approved by the
+ * European Commission - subsequent versions of the EUPL (the "Licence"); You may not use this work except in compliance
+ * with the Licence. You may obtain a copy of the Licence at: http://joinup.ec.europa.eu/software/page/eupl Unless
+ * required by applicable law or agreed to in writing, software distributed under the Licence is distributed on an
+ * "AS IS" basis, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the Licence for the
+ * specific language governing permissions and limitations under the Licence.
  */
 
 package de.governikus.eumw.poseidas.eidserver.model.signeddata;
@@ -54,32 +53,32 @@ public class DefectKnown
    */
   private enum DefectCategoryID
   {
+
     ID_AUTH_DEFECT("id-AuthDefect",
                    "Authentication Defects",
                    "Category describes defects realated to"
-                     + " Passive Authentication, Chip Authentication and Active Authentication."
-                     + " If a document is affected by an authentication defect with unknown interpretation,"
-                     + " the electronic part of the document MUST NOT be used",
+                                             + " Passive Authentication, Chip Authentication and Active Authentication."
+                                             + " If a document is affected by an authentication defect with unknown interpretation,"
+                                             + " the electronic part of the document MUST NOT be used",
                    DefectCategory.APPLICATION_DEFECT),
     ID_EPASSPORT_DEFECT("id-ePassportDefect",
                         "Personalisation Defects of the ePassport Application",
-                        "Category describes defects related to"
-                          + " the personalisation of the ePassport application."
-                          + " If a document is affected by an personalization defect of the"
-                          + " Passport application with unknown interpretation,"
-                          + "the ePassport application MUST NOT be used",
+                        "Category describes defects related to" + " the personalisation of the ePassport application."
+                                                                                + " If a document is affected by an personalization defect of the"
+                                                                                + " Passport application with unknown interpretation,"
+                                                                                + "the ePassport application MUST NOT be used",
                         DefectCategory.APPLICATION_DEFECT),
     ID_EID_DEFECT("id-eIDDefect",
                   "Personalisation Defects of the eID Application",
                   "Category describes defects related to the personalisation of the eID application."
-                    + " If a document is affected by an personalization defect of the eID application"
-                    + " with unknown interpretation, the eID application SHOULD NOT be used",
+                                                                    + " If a document is affected by an personalization defect of the eID application"
+                                                                    + " with unknown interpretation, the eID application SHOULD NOT be used",
                   DefectCategory.APPLICATION_DEFECT),
     ID_DOCUMENT_DEFECT("id-DocumentDefect",
                        "General Document Defects",
                        "Category describes defects related to the document in general."
-                         + " If a document is affected by a general defect with unknown interpretation, "
-                         + " the electronic part of the document SHOULD NOT be used",
+                                                   + " If a document is affected by a general defect with unknown interpretation, "
+                                                   + " the electronic part of the document SHOULD NOT be used",
                        DefectCategory.DOCUMENT_DEFECT);
 
     private final String name;
@@ -151,20 +150,20 @@ public class DefectKnown
    */
   public enum DefectType
   {
+
     ID_CERT_REVOKED(DefectCategoryID.ID_AUTH_DEFECT,
                     "id-CertRevoked",
                     "Document Signer Certificate Revoked",
                     "The private key of the Document Signer is compromised."
-                      + " The electronic part of the document MUST NOT be used",
+                                                           + " The electronic part of the document MUST NOT be used",
                     1,
                     new char[]{'m', 'm', 'm'},
                     true),
     ID_CERT_REPLACED(DefectCategoryID.ID_AUTH_DEFECT,
                      "id-CertReplaced",
                      "Document Signer Certificate Malformed",
-                     "The Document Signer Certificate cannot be"
-                       + " decoded correctly using standardized mechanisms."
-                       + " A replacement certificate is provided (parameters)",
+                     "The Document Signer Certificate cannot be" + " decoded correctly using standardized mechanisms."
+                                                              + " A replacement certificate is provided (parameters)",
                      2,
                      new char[]{'m', 'm', 'm'},
                      true),
@@ -172,8 +171,8 @@ public class DefectKnown
                              "id-ChipAuthKeyRevoked",
                              "Chip Authentication Private Keys Compromised",
                              "The Chip Authentication Private Keys habe been compromised."
-                               + " Chip Authentication SHOULD be used, but the successful execution does"
-                               + " neither guarantee that the document nor the transerred data is genuine",
+                                                                             + " Chip Authentication SHOULD be used, but the successful execution does"
+                                                                             + " neither guarantee that the document nor the transerred data is genuine",
                              3,
                              new char[]{'m', 'm', 'm'},
                              false),
@@ -181,8 +180,8 @@ public class DefectKnown
                                "id-ActiveAuthKeyRevoked",
                                "Active Authentication Private Keys Compromised",
                                "The Active Authentication Private Keys habe been compromised."
-                                 + " Active Authentication SHOULD be used, but the successful execution does"
-                                 + " neither guarantee that the document nor the transerred data is genuine",
+                                                                                 + " Active Authentication SHOULD be used, but the successful execution does"
+                                                                                 + " neither guarantee that the document nor the transerred data is genuine",
                                4,
                                new char[]{'m', 'm', 'm'},
                                false),
@@ -190,8 +189,8 @@ public class DefectKnown
                               "id-ePassportDGMalformed",
                               "Data Group Malformed",
                               "The indicated data groups might be incorrectly encoded."
-                                + "In this case the data group SHOULD be ignored"
-                                + " and manual inspection is REQUIRED",
+                                                      + "In this case the data group SHOULD be ignored"
+                                                      + " and manual inspection is REQUIRED",
                               1,
                               new char[]{'m', 'm', 'o'},
                               true),
@@ -199,7 +198,7 @@ public class DefectKnown
                    "id-SODInvalid",
                    "Document Security Object Malformed",
                    "The validation of the Document Security Object might fail."
-                     + " In this case the electronic part of the document MUST NOT be used",
+                                                         + " In this case the electronic part of the document MUST NOT be used",
                    2,
                    new char[]{'m', 'm', 'o'},
                    false),
@@ -207,7 +206,7 @@ public class DefectKnown
                         "id-eIDDGMalformed",
                         "Data Group Malformed",
                         "The indicated data groups might be incorretly encoded. "
-                          + " In this case the data group SHOULD be ignored",
+                                                + " In this case the data group SHOULD be ignored",
                         1,
                         new char[]{'m', 'o', 'r'},
                         true),
@@ -222,7 +221,7 @@ public class DefectKnown
                                "id-CardSecurityMalformed",
                                "Card Security Object Malformed",
                                "The Card Security Object is incorrectly encoded. "
-                                 + "A corrected Card Security Object is provided that SHOULD be used instead",
+                                                                 + "A corrected Card Security Object is provided that SHOULD be used instead",
                                1,
                                new char[]{'m', 'o', 'm'},
                                true),
@@ -231,7 +230,7 @@ public class DefectKnown
                                "id-ChipSecurityMalformed",
                                "Card Security Object Malformed",
                                "The Chip Security Object might be incorrectly encoded."
-                                 + " The Card Security Object SHOULD be used instead",
+                                                                 + " The Card Security Object SHOULD be used instead",
                                2,
                                new char[]{'m', 'o', 'r'},
                                false),
@@ -239,9 +238,9 @@ public class DefectKnown
                       "id-PowerDownReq",
                       "Powerdown Required",
                       "The chip denies multiple successive authentication"
-                        + " using the General Authentication Procedure."
-                        + " Either the reader MUST powerdown the chip or the document MUST be removed"
-                        + " from the reader in between two authentications",
+                                            + " using the General Authentication Procedure."
+                                            + " Either the reader MUST powerdown the chip or the document MUST be removed"
+                                            + " from the reader in between two authentications",
                       3,
                       new char[]{'m', 'o', 'm'},
                       false);
@@ -318,8 +317,7 @@ public class DefectKnown
     }
 
     /**
-     * Get the purposes for this defect type. NOTE for EID only the commercial part should be used
-     * (purposes[2])
+     * Get the purposes for this defect type. NOTE for EID only the commercial part should be used (purposes[2])
      *
      * @return the purposes mapping
      */
@@ -428,8 +426,7 @@ public class DefectKnown
       // Check if a second element is available for parameters
       if (size < 2)
       {
-        throw new IOException("Defect type requires parameters"
-                              + " but no more elements are available in sequence");
+        throw new IOException("Defect type requires parameters" + " but no more elements are available in sequence");
       }
       objectAt = knownDefect.getObjectAt(1);
       setDefectParameter(objectAt);

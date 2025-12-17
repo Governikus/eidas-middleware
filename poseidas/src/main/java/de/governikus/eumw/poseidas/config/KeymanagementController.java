@@ -59,7 +59,6 @@ import de.governikus.eumw.poseidas.service.ConfigKeyDataService;
 import de.governikus.eumw.utils.key.KeyStoreSupporter;
 import de.governikus.eumw.utils.key.SecurityProvider;
 import de.governikus.eumw.utils.key.exceptions.KeyStoreCreationFailedException;
-
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
@@ -309,10 +308,8 @@ public class KeymanagementController
     }
     catch (KeyStoreException e)
     {
-      if (log.isWarnEnabled())
-      {
-        log.warn("Could not read alias from stored key store " + keyStoreType.getName(), e);
-      }
+      throw new KeyStoreCreationFailedException("Could not read alias from stored key store " + keyStoreType.getName(),
+                                                e);
     }
     return new KeystoreInfoHolder(keyStoreType.getName(), keyStoreType.getType().value(), certificateAlias,
                                   keypairAlias);
@@ -745,7 +742,9 @@ public class KeymanagementController
 
 
   @GetMapping("/deleteKeyStore")
-  public String deleteKeystore(Model model, @RequestParam("keystorename") String keyStoreName, RedirectAttributes redirectAttributes)
+  public String deleteKeystore(Model model,
+                               @RequestParam("keystorename") String keyStoreName,
+                               RedirectAttributes redirectAttributes)
   {
 
     final Optional<KeyStoreType> keyStoreTypeOptional = findKeystoreTypeByName(keyStoreName);
@@ -805,7 +804,8 @@ public class KeymanagementController
   }
 
   @PostMapping("/deleteKeyStore")
-  public String deleteKeystoreConfirmed(@RequestParam("keystorename") String keyStoreName, RedirectAttributes redirectAttributes)
+  public String deleteKeystoreConfirmed(@RequestParam("keystorename") String keyStoreName,
+                                        RedirectAttributes redirectAttributes)
   {
 
     final Optional<KeyStoreType> keyStoreTypeOptional = findKeystoreTypeByName(keyStoreName);
@@ -842,7 +842,9 @@ public class KeymanagementController
   }
 
   @GetMapping("/deleteCertificate")
-  public String deleteCertificate(Model model, @RequestParam("certificatename") String name, RedirectAttributes redirectAttributes)
+  public String deleteCertificate(Model model,
+                                  @RequestParam("certificatename") String name,
+                                  RedirectAttributes redirectAttributes)
   {
     final Optional<CertificateType> certificateTypeOptional = findCertificateTypeByName(name);
 
@@ -869,7 +871,8 @@ public class KeymanagementController
   }
 
   @PostMapping("/deleteCertificate")
-  public String deleteCertificateConfirmed(@RequestParam("certificatename") String name, RedirectAttributes redirectAttributes)
+  public String deleteCertificateConfirmed(@RequestParam("certificatename") String name,
+                                           RedirectAttributes redirectAttributes)
   {
     final Optional<CertificateType> certificateTypeOptional = findCertificateTypeByName(name);
     redirectAttributes.addFlashAttribute(JUMP_TO_TAB, CERTIFICATES_TAB);
@@ -909,7 +912,9 @@ public class KeymanagementController
   }
 
   @GetMapping("/deleteKeypair")
-  public String deleteKeypair(Model model, @RequestParam("keypairname") String name, RedirectAttributes redirectAttributes)
+  public String deleteKeypair(Model model,
+                              @RequestParam("keypairname") String name,
+                              RedirectAttributes redirectAttributes)
   {
     final Optional<KeyPairType> keyPairTypeOptional = findKeyPairTypeByName(name);
 
@@ -933,7 +938,9 @@ public class KeymanagementController
   }
 
   @PostMapping("/deleteKeypair")
-  public String deleteKeypairConfirmed(Model model, @RequestParam("keypairname") String name, RedirectAttributes redirectAttributes)
+  public String deleteKeypairConfirmed(Model model,
+                                       @RequestParam("keypairname") String name,
+                                       RedirectAttributes redirectAttributes)
   {
     final Optional<KeyPairType> keyPairTypeOptional = findKeyPairTypeByName(name);
     redirectAttributes.addFlashAttribute(JUMP_TO_TAB, KEY_PAIRS_TAB);

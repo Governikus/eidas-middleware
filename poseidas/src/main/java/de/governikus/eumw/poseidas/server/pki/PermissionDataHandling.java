@@ -71,6 +71,8 @@ public class PermissionDataHandling implements PermissionDataHandlingMBean
 
   private static final String RENEWAL_SUCCESSFUL = "renewal_successful";
 
+  private static final String LOG_MESSAGE_DEFAULT_FORMAT = "{}: {}";
+
   protected final HSMServiceHolder hsmServiceHolder;
 
   private final TerminalPermissionAO facade;
@@ -539,6 +541,33 @@ public class PermissionDataHandling implements PermissionDataHandlingMBean
     }
   }
 
+  public Optional<String> deletePendingCertificateRequest(String entityId) throws GovManagementException
+  {
+    ServiceProviderType serviceProvider = getServiceProvider(entityId);
+    String cvcRefId = serviceProvider.getCVCRefID();
+
+    Optional<TerminalPermission> terminalPermissionOpt = Optional.ofNullable(facade.getTerminalPermission(cvcRefId));
+
+    if (terminalPermissionOpt.isEmpty())
+    {
+      String message = "No Terminal Permission was found for provider %s".formatted(serviceProvider.getName());
+      log.warn(message);
+      return Optional.of(message);
+    }
+
+    try
+    {
+      facade.deletePendingCertificateRequest(serviceProvider.getCVCRefID());
+    }
+    catch (TerminalPermissionNotFoundException e)
+    {
+      String message = "No Terminal Permission was found for provider %s".formatted(serviceProvider.getName());
+      log.warn(LOG_MESSAGE_DEFAULT_FORMAT, entityId, message, e);
+      return Optional.of(message);
+    }
+    return Optional.empty();
+  }
+
   private Optional<String> renewCvcForProvider(ServiceProviderType provider,
                                                Map<String, Date> expirationDateMap,
                                                List<String> lockedServiceProviders)
@@ -688,12 +717,12 @@ public class PermissionDataHandling implements PermissionDataHandlingMBean
   }
 
   @Override
-  public Map<String, Object> getPermissionDataInfo(String cvcRefId, boolean withBlkNumber)
+  public Map<String, Object> getPermissionDataInfo(String cvcRefId)
   {
     Map<String, Object> result = new HashMap<>();
     try
     {
-      result = InfoMapBuilder.createInfoMap(facade, blockListService, cvcRefId, withBlkNumber);
+      result = InfoMapBuilder.createInfoMap(facade, blockListService, cvcRefId);
     }
     catch (IllegalArgumentException e)
     {
