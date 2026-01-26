@@ -1,0 +1,12 @@
+[Unit]
+Description=eIDAS-Middleware application
+
+[Service]
+Type=simple
+ExecStart=/opt/java/java/bin/java -jar /opt/eidas-middleware/eidas-middleware.jar
+WorkingDirectory=/opt/eidas-middleware
+User=eidasmw
+Group=eidasmw
+
+[Install]
+WantedBy=multi-user.target

@@ -1,0 +1,35 @@
+kind: Ingress
+apiVersion: networking.k8s.io/v1
+metadata:
+  name: eidas-middleware-ingress
+  annotations:
+    nginx.ingress.kubernetes.io/ssl-passthrough: "false"
+spec:
+  ingressClassName: nginx
+  rules:
+    - host: {{  .Values.eidas_middleware.hostname.eumw  }}
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: eidas-middleware-service
+                port:
+                  number: 443
+    - host: {{  .Values.eidas_middleware.hostname.admin_interface  }}
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: eidas-middleware-service
+                port:
+                  number: 80
+  {{- if hasSuffix "k8s.govkg.de" .Values.eidas_demo.hostname }}
+  tls:
+    - hosts:
+        - '{{ .Values.eidas_demo.hostname }}.k8s.govkg.de'
+      secretName: 'star.k8s.govkg.de'
+  {{- end }}

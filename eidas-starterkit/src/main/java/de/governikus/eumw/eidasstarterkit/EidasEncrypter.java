@@ -11,11 +11,12 @@ package de.governikus.eumw.eidasstarterkit;
 
 import java.security.KeyException;
 import java.security.NoSuchAlgorithmException;
+import java.security.PublicKey;
 import java.security.cert.X509Certificate;
+import java.security.interfaces.ECKey;
 import java.security.interfaces.RSAKey;
 import java.util.Collection;
 
-import org.apache.xml.security.algorithms.MessageDigestAlgorithm;
 import org.opensaml.core.config.ConfigurationService;
 import org.opensaml.saml.saml2.encryption.Encrypter;
 import org.opensaml.saml.saml2.encryption.Encrypter.KeyPlacement;
@@ -37,6 +38,7 @@ import org.opensaml.xmlsec.encryption.support.RSAOAEPParameters;
 import org.opensaml.xmlsec.keyinfo.KeyInfoGeneratorFactory;
 import org.opensaml.xmlsec.keyinfo.impl.KeyAgreementKeyInfoGeneratorFactory;
 
+import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
 
@@ -44,21 +46,45 @@ import lombok.extern.slf4j.Slf4j;
 public class EidasEncrypter
 {
 
-  private static final String KEYTRANSPORT_ALGO = EncryptionConstants.ALGO_ID_KEYTRANSPORT_RSAOAEP11;
-
-  private static final String KEYTRANSPORT_HASH_ALGO = EncryptionConstants.ALGO_ID_DIGEST_SHA256;
-
-  private static final String KEYTRANSPORT_MGF_ALGO = EncryptionConstants.ALGO_ID_MGF1_SHA256;
+  /**
+   * Defined in eIDAS Cryptographic Requirement (v1.4.1) chapter 3.2.1 and BSI TR-03116-4 (v2025) chapter 3.4.1
+   */
+  private static final String ALGO_CONTENTENCRYPTION = EncryptionConstants.ALGO_ID_BLOCKCIPHER_AES256_GCM;
 
   /**
-   * Defined in eIDAS Cryptographic Requirement (v1.4.1) chapter 3.2.2.1
+   * Defined in eIDAS Cryptographic Requirement (v1.4.1) chapter 3.2.2.2 and BSI TR-03116-4 (v2025) chapter 3.4.2.2
    */
-  private static final int MINIMAL_RSA_KEY_LENGTH = 3072;
+  private static final String ALGO_KEYAGREEMENT = EncryptionConstants.ALGO_ID_KEYAGREEMENT_ECDH_ES;
+
+  /**
+   * Defined in eIDAS Cryptographic Requirement (v1.4.1) chapter 3.2.2.1 and BSI TR-03116-4 (v2025) chapter 3.4.2.1
+   */
+  private static final String ALGO_KEYTRANSPORT = EncryptionConstants.ALGO_ID_KEYTRANSPORT_RSAOAEP11;
+
+  private static final String ALGO_KEYTRANSPORT_DIGEST = EncryptionConstants.ALGO_ID_DIGEST_SHA256;
+
+  private static final String ALGO_KEYTRANSPORT_MGF = EncryptionConstants.ALGO_ID_MGF1_SHA256;
+
+  /**
+   * Defined in eIDAS Cryptographic Requirement (v1.4.1) chapter 3.2.2.2 and BSI TR-03116-4 (v2025) chapter 3.4.2.2
+   */
+  private static final String ALGO_KEYWRAP = EncryptionConstants.ALGO_ID_KEYWRAP_AES256;
+
+  /**
+   * Defined in eIDAS Cryptographic Requirement (v1.4.1) chapter 3.2.2.1 and BSI TR-03116-4 (v2025) chapter 3.4.2.1
+   */
+  private static final int MINIMAL_LENGTH_RSA = 3072;
+
+  /**
+   * Defined in eIDAS Cryptographic Requirement (v1.4.1) chapter 3.2.2.2 and BSI TR-03116-4 (v2025) chapter 3.4.2.2
+   */
+  private static final int MINIMAL_LENGTH_EC = 256;
 
   /**
    * Completely configured encryption handler, null if encryption is not set.
    */
-  Encrypter encrypter;
+  @Getter
+  private final Encrypter encrypter;
 
   /**
    * Cipher-Algorithm is set to http://www.w3.org/2009/xmlenc11#aes256-gcm
@@ -70,7 +96,7 @@ public class EidasEncrypter
    */
   public EidasEncrypter(boolean includeCert, X509Certificate cert) throws NoSuchAlgorithmException, KeyException
   {
-    this(includeCert, cert, EncryptionConstants.ALGO_ID_BLOCKCIPHER_AES256_GCM);
+    this(includeCert, cert, ALGO_CONTENTENCRYPTION);
   }
 
   /**
@@ -85,53 +111,41 @@ public class EidasEncrypter
   private EidasEncrypter(boolean includeCert, X509Certificate cert, String cipherAlgo)
     throws NoSuchAlgorithmException, KeyException
   {
-    Credential receiverCredential = CredentialSupport.getSimpleCredential(cert, null);
-    Credential symmetricCredential = CredentialSupport.getSimpleCredential(AlgorithmSupport.generateSymmetricKey(cipherAlgo));
+    PublicKey receiverKey = CredentialSupport.getSimpleCredential(cert, null).getPublicKey();
+    if (receiverKey instanceof RSAKey key)
+    {
+      int keyLength = key.getModulus().bitLength();
+      if (keyLength < MINIMAL_LENGTH_RSA)
+      {
+        log.debug("Found invalid key length: {}. Key must be at least {}. Cert: {}",
+                  keyLength,
+                  MINIMAL_LENGTH_RSA,
+                  cert);
+        throw new KeyException("Key length is less than %s bit: %s".formatted(MINIMAL_LENGTH_RSA, keyLength));
+      }
+    }
+    else if (receiverKey instanceof ECKey key)
+    {
+      int keyLength = key.getParams().getCurve().getField().getFieldSize();
+      if (keyLength < MINIMAL_LENGTH_EC)
+      {
+        log.debug("Found invalid key length: {}. Key must be at least {}. Cert: {}",
+                  keyLength,
+                  MINIMAL_LENGTH_EC,
+                  cert);
+        throw new KeyException("Key length is less than %s bit: %s".formatted(MINIMAL_LENGTH_EC, keyLength));
+      }
+    }
 
+    Credential symmetricCredential = CredentialSupport.getSimpleCredential(AlgorithmSupport.generateSymmetricKey(cipherAlgo));
     DataEncryptionParameters encParams = new DataEncryptionParameters();
     encParams.setAlgorithm(cipherAlgo);
     encParams.setEncryptionCredential(symmetricCredential);
 
-    if ("EC".equals(cert.getPublicKey().getAlgorithm()))
-    {
-      encrypter = new Encrypter(encParams, getKeyEncryptionParameters(cert, true));
-    }
-    else
-    {
-      // Check key size -
-      if (receiverCredential.getPublicKey() instanceof RSAKey key)
-      {
-        int keyLength = key.getModulus().bitLength();
-        if (keyLength < MINIMAL_RSA_KEY_LENGTH)
-        {
-          log.debug("Found invalid key length: {}. Key must be at least {}. Cert: {}",
-                    keyLength,
-                    MINIMAL_RSA_KEY_LENGTH,
-                    cert);
-          throw new KeyException("Key length is less than %s bit: %s".formatted(MINIMAL_RSA_KEY_LENGTH, keyLength));
-        }
-      }
-
-      /**
-       * key encryption parameters used to set up the {@link #encrypter}, null if encryption is not set. Note that the
-       * encrypter will ignore these values given to it in the constructor when it encrypts an XMLObject. In that case,
-       * you have to give these values again to the encrypt method.
-       */
-      KeyEncryptionParameters kek = new KeyEncryptionParameters();
-      kek.setAlgorithm(KEYTRANSPORT_ALGO);
-      kek.setEncryptionCredential(receiverCredential);
-      kek.setRSAOAEPParameters(new RSAOAEPParameters(MessageDigestAlgorithm.ALGO_ID_DIGEST_SHA256,
-                                                     KEYTRANSPORT_MGF_ALGO, null));
-      encrypter = new Encrypter(encParams, kek);
-      if (includeCert)
-      {
-        KeyInfoGeneratorFactory kigf = ConfigurationService.get(EncryptionConfiguration.class)
-                                                           .getKeyTransportKeyInfoGeneratorManager()
-                                                           .getDefaultManager()
-                                                           .getFactory(new BasicX509Credential(cert));
-        kek.setKeyInfoGenerator(kigf.newInstance());
-      }
-    }
+    encrypter = new Encrypter(encParams,
+                              getKeyEncryptionParameters(cert,
+                                                         "EC".equals(cert.getPublicKey().getAlgorithm())
+                                                               || includeCert));
     encrypter.setKeyPlacement(KeyPlacement.INLINE);
   }
 
@@ -154,16 +168,15 @@ public class EidasEncrypter
       default -> throw new NoSuchAlgorithmException("Not supported or unknown standard algorithm name: "
                                                     + encryptionCertificate.getPublicKey().getAlgorithm());
     };
-
   }
 
   private static void prepareForRsa(X509Certificate encryptionCertificate,
                                     boolean includeCert,
                                     KeyEncryptionParameters kekParameters)
   {
-    kekParameters.setAlgorithm(KEYTRANSPORT_ALGO);
+    kekParameters.setAlgorithm(ALGO_KEYTRANSPORT);
     kekParameters.setEncryptionCredential(CredentialSupport.getSimpleCredential(encryptionCertificate, null));
-    kekParameters.setRSAOAEPParameters(new RSAOAEPParameters(KEYTRANSPORT_HASH_ALGO, KEYTRANSPORT_MGF_ALGO, null));
+    kekParameters.setRSAOAEPParameters(new RSAOAEPParameters(ALGO_KEYTRANSPORT_DIGEST, ALGO_KEYTRANSPORT_MGF, null));
     if (includeCert)
     {
       KeyInfoGeneratorFactory kigf = ConfigurationService.get(EncryptionConfiguration.class)
@@ -177,7 +190,7 @@ public class EidasEncrypter
   private static void prepareForEC(X509Certificate encryptionCertificate, KeyEncryptionParameters kekParameters)
     throws KeyException
   {
-    kekParameters.setAlgorithm(EncryptionConstants.ALGO_ID_KEYWRAP_AES256);
+    kekParameters.setAlgorithm(ALGO_KEYWRAP);
     Credential keyAgreementCredential = getKeyAgreementCredential(CredentialSupport.getSimpleCredential(encryptionCertificate,
                                                                                                         null));
     kekParameters.setEncryptionCredential(keyAgreementCredential);
@@ -197,17 +210,13 @@ public class EidasEncrypter
       {
         throw new KeyException("Key agreement parameters are null");
       }
-
       KeyAgreementParameters keyAgreementParameters = new KeyAgreementParameters(keyAgreementParameterCollection);
-      KeyAgreementProcessor keyAgreementProcessor = KeyAgreementSupport.getProcessor("http://www.w3.org/2009/xmlenc11#ECDH-ES");
-      return keyAgreementProcessor.execute(credential,
-                                           EncryptionConstants.ALGO_ID_KEYWRAP_AES256,
-                                           keyAgreementParameters);
-
+      KeyAgreementProcessor keyAgreementProcessor = KeyAgreementSupport.getProcessor(ALGO_KEYAGREEMENT);
+      return keyAgreementProcessor.execute(credential, ALGO_KEYWRAP, keyAgreementParameters);
     }
-    catch (KeyAgreementException | KeyException var4)
+    catch (KeyAgreementException | KeyException e)
     {
-      throw new KeyException("Could not generate key agreement credentials", var4);
+      throw new KeyException("Could not generate key agreement credentials", e);
     }
   }
 }

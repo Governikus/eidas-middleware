@@ -1,0 +1,41 @@
+debug: true
+hsm: false
+
+eidas_middleware:
+  hostname:
+    eumw: autent-eumw-head.govkg.de
+    admin_interface: autent-eumw-head-admin.govkg.de
+  port:
+    server: 8443
+    admin_interface: 8449
+    debug:
+      intern: 5005
+      extern: 31848
+  image: dev-docker.governikus.de/governikus/eidas-middleware-application
+  tag: main
+  hashed_password: $2a$10$EIwUSRpSu/eQzbtOw2dhvOJ2N6PIbTCGMhp9kc1sxEI2AAhKi0LxK
+  volume: eidas-middleware-db
+  database:
+    name: eidas-middleware-db
+    type: hsqldb
+    path: /opt/eidas-middleware/database
+    pw: fallturm
+    user: h2
+
+eidas_demo:
+  hostname: autent-eumw-demo-head.govkg.de
+  middleware_samlreceiverurl: https://autent-eumw-head.govkg.de/eidas-middleware/RequestReceiver
+  ports:
+    server: 8080
+    debug:
+      intern: 5005
+      extern: 31849
+  image: dev-docker.governikus.de/governikus/eidas-demo-application
+  tag: main
+  demo_decryption_keystore: demo-sig-enc.p12
+  demo_decryption_alias: demo-enc
+  demo_decryption_pin: 123456
+  middleware_signature_certificate: eumw_sign.cer
+  demo_signature_keystore: demo-sig-enc.p12
+  demo_signature_alias: demo-sig
+  demo_signature_pin: 123456

@@ -22,6 +22,7 @@ import jakarta.xml.bind.JAXBElement;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.bouncycastle.asn1.pkcs.IssuerAndSerialNumber;
 
 import de.governikus.eumw.poseidas.cardbase.asn1.ASN1;
 import de.governikus.eumw.poseidas.cardbase.asn1.npa.CertificateDescription;
@@ -54,6 +55,7 @@ import de.governikus.eumw.poseidas.eidserver.ecardid.SessionInput;
 import de.governikus.eumw.poseidas.eidserver.model.signeddata.DefectKnown.DefectType;
 import de.governikus.eumw.poseidas.eidserver.model.signeddata.DefectList;
 import de.governikus.eumw.poseidas.eidserver.model.signeddata.MasterList;
+import de.governikus.eumw.poseidas.server.pki.CmsSignatureChecker;
 import iso.std.iso_iec._24727.tech.schema.ConnectionHandleType;
 import iso.std.iso_iec._24727.tech.schema.DIDAuthenticate;
 import iso.std.iso_iec._24727.tech.schema.DIDAuthenticateResponse;
@@ -866,6 +868,14 @@ public class EIDSequence extends ECardConvenienceSequenceAdapter
       if (controller.isCardAffectedBy(DefectType.ID_POWER_DOWN_REQ))
       {
         LOG.debug(logPrefix + LOG_PRE_AUTH + "Expected Defect: " + DefectType.ID_POWER_DOWN_REQ);
+      }
+      if (controller.isCardAffectedBy(DefectType.ID_CERT_REPLACED))
+      {
+        CmsSignatureChecker cmsSignatureChecker = signedDataChecker.getCmsSignatureChecker();
+        X509Certificate replacedCertificate = controller.getReplacedCertificate();
+        IssuerAndSerialNumber issuerAndSerialNumber = controller.getIssuerAndSerialNumber();
+        cmsSignatureChecker.setCertReplacedRecord(new CmsSignatureChecker.CertReplacedRecord(replacedCertificate,
+                                                                                             issuerAndSerialNumber));
       }
       eacFinal = eacServer.executeStep(EACServer.STEP_TACA_RESULT,
                                        EAC2OutputTypeWrapper.class,

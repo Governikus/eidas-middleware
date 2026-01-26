@@ -293,3 +293,8 @@ Changelog
     - eIDAS Middleware: Added a "Delete current RSC" button to the Admin UI. The button is located in the RSC Actions card under the Service Provider's details and is visible only when a current RSC is present.
     - eIDAS Middleware: Added new column "NextRscSequenceNumber" to "TerminalPermission" table. Please make sure to create a database backup before applying this update.
     - eIDAS Middleware: Added new timer to optionally delete expired keys in the HSM
+
+* 4.0.1
+
+    - eIDAS Middleware: Restrict crypto algorithms to those allowed in TR-03116-4 (2025) and TR-02102-2 (2025)
+    - eIDAS Middleware: Fixed error when parsing a Defect List with id-CertReplaced element.

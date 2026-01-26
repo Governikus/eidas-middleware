@@ -1,0 +1,18 @@
+{{- if eq .Values.debug true }}
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    app: eidas-demo-debug-service
+  name: eidas-demo-debug-service
+spec:
+  ports:
+    - name: debug
+      nodePort: {{ .Values.eidas_demo.ports.debug.extern }}
+      port: {{ .Values.eidas_demo.ports.debug.intern }}
+      protocol: TCP
+      targetPort: {{ .Values.eidas_demo.ports.debug.intern }}
+  selector:
+    app: eidas-demo
+  type: NodePort
+{{- end}}

@@ -70,7 +70,7 @@ class EidasEncrypterTest
     PrivateKey pk = keypair[0].getKey();
     X509Certificate cert = keypair[0].getCert();
     EidasEncrypter encrypter = new EidasEncrypter(true, cert);
-    Assertions.assertNotNull(encrypter.encrypter);
+    Assertions.assertNotNull(encrypter.getEncrypter());
     EidasSigner signer = new EidasSigner(true, pk, cert);
 
     byte[] response = EidasSaml.createResponse(att,
@@ -110,7 +110,7 @@ class EidasEncrypterTest
     PrivateKey pk = keypair[0].getKey();
     X509Certificate cert = keypair[0].getCert();
     EidasEncrypter encrypter = new EidasEncrypter(true, cert);
-    Assertions.assertNotNull(encrypter.encrypter);
+    Assertions.assertNotNull(encrypter.getEncrypter());
     EidasSigner signer = new EidasSigner(true, pk, cert);
 
     byte[] response = EidasSaml.createResponse(att,
