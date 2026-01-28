@@ -1,0 +1,29 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  labels:
+    app: eidas-demo-config-map
+  name: eidas-demo-config-map
+binaryData:
+  demo_decryption_keystore.p12: |
+    {{ .Files.Get (printf "config/%s"  .Values.eidas_demo.demo_decryption_keystore) | b64enc }}
+  middleware_signature_certificate: |
+    {{ .Files.Get (printf "config/%s"  .Values.eidas_demo.middleware_signature_certificate) | b64enc }}
+  demo_signature_keystore.p12: |
+    {{ .Files.Get (printf "config/%s"  .Values.eidas_demo.demo_signature_keystore) | b64enc }}
+data:
+  # the application.properties file that is mounted into the container
+  application.properties: |
+    ###################
+    middleware.samlreceiverurl= {{.Values.eidas_demo.middleware_samlreceiverurl}}
+    middleware.signature.certificate=/opt/eidas-middleware/config/middleware_signature_certificate
+    demo.signature.keystore=/opt/eidas-middleware/config/demo_signature_keystore.p12
+    demo.signature.alias={{ .Values.eidas_demo.demo_signature_alias }}
+    demo.signature.pin={{ .Values.eidas_demo.demo_signature_pin }}
+    #
+    demo.decryption.keystore=/opt/eidas-middleware/config/demo_decryption_keystore.p12
+    demo.decryption.alias={{ .Values.eidas_demo.demo_decryption_alias }}
+    demo.decryption.pin={{ .Values.eidas_demo.demo_decryption_pin }}
+    #
+    server.port={{ .Values.eidas_demo.ports.server}}
+    ####################

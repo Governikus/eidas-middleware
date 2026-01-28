@@ -1,0 +1,20 @@
+#! /bin/sh
+iptables -F
+iptables -P INPUT DROP
+
+# DHCP
+iptables -A INPUT -p udp --dport 67:68 --sport 67:68 -j ACCEPT
+# SSH
+iptables -A INPUT -p tcp -m tcp --dport 22 -j ACCEPT
+# HTTP
+iptables -A INPUT -p tcp -m tcp --dport 8080 -j ACCEPT
+# HTTPS default port
+iptables -A INPUT -p tcp -m tcp --dport 443 -j ACCEPT
+# HTTPS eidas-middleware port
+iptables -A INPUT -p tcp -m tcp --dport 8443 -j ACCEPT
+# HTTPS admin-interface port
+iptables -A INPUT -p tcp -m tcp --dport 10000 -j ACCEPT
+# SNMP
+iptables -A INPUT -p udp -m udp --dport 161 -j ACCEPT
+#DNS
+iptables -A INPUT  -m state --state ESTABLISHED,RELATED -j ACCEPT

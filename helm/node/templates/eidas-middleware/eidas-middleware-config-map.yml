@@ -1,0 +1,25 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  labels:
+    app: eidas-middleware-config-map
+  name: eidas-middleware-config-map
+data:
+  # the application.properties file that is mounted into the container
+  application.properties: |
+    #############
+    hsm.type=NO_HSM
+    logging.level.de.governikus=DEBUG
+    management.endpoint.info.enabled=true
+    management.endpoints.enabled-by-default=false
+    server.adminInterfacePort={{ .Values.eidas_middleware.port.admin_interface}}
+    server.port={{ .Values.eidas_middleware.port.server}}
+    server.ssl.enabled=false
+    server.use-forward-headers=true
+    spring.datasource.password={{ .Values.eidas_middleware.database.pw}}
+    spring.datasource.url=jdbc\:{{ .Values.eidas_middleware.database.type }}\:{{ .Values.eidas_middleware.database.path }}/{{ .Values.eidas_middleware.database.name}};DB_CLOSE_DELAY\=-1;DB_CLOSE_ON_EXIT\=FALSE
+    spring.datasource.username={{ .Values.eidas_middleware.database.user}}
+    poseidas.ri-service.1-40={{ .Values.eidas_middleware.dvca14}}
+    #############
+  password.properties: |
+    admin.hashed.password= {{ .Values.eidas_middleware.hashed_password }}

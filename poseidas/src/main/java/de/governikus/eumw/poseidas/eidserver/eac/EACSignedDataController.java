@@ -10,6 +10,7 @@
 package de.governikus.eumw.poseidas.eidserver.eac;
 
 import java.io.IOException;
+import java.security.cert.X509Certificate;
 import java.util.ArrayList;
 import java.util.Enumeration;
 import java.util.List;
@@ -27,6 +28,7 @@ import de.governikus.eumw.poseidas.eidserver.model.signeddata.DefectKnown;
 import de.governikus.eumw.poseidas.eidserver.model.signeddata.DefectKnown.DefectType;
 import de.governikus.eumw.poseidas.eidserver.model.signeddata.DefectKnownParameter;
 import de.governikus.eumw.poseidas.eidserver.model.signeddata.DefectList;
+import lombok.Getter;
 import oasis.names.tc.dss._1_0.core.schema.ObjectFactory;
 import oasis.names.tc.dss._1_0.core.schema.Result;
 
@@ -44,6 +46,9 @@ public class EACSignedDataController extends EACSignedDataParser
   private List<Defect> cardDefects;
 
   private final ObjectFactory factory;
+
+  @Getter
+  private IssuerAndSerialNumber issuerAndSerialNumber;
 
   /**
    * Create a controller with card data and server defect list.<br/>
@@ -173,6 +178,28 @@ public class EACSignedDataController extends EACSignedDataParser
     return getDefectDataGroups(DefectType.ID_EID_DG_MALFORMED);
   }
 
+  public X509Certificate getReplacedCertificate()
+  {
+    if (isCardAffectedBy(DefectType.ID_CERT_REPLACED))
+    {
+      List<Defect> cardDefect = getDefectsWithType(DefectType.ID_CERT_REPLACED);
+      if (cardDefect.isEmpty())
+      {
+        LOG.debug("Card has no cert replaced defect");
+        return null;
+      }
+      Defect defect = cardDefect.get(0);
+      List<DefectKnown> certReplaceElements = defect.getKnownDefectsOfType(DefectType.ID_CERT_REPLACED);
+      if (certReplaceElements.isEmpty())
+      {
+        LOG.debug("No replaced certificate element found");
+      }
+      DefectKnown defectKnown = certReplaceElements.get(0);
+      return defectKnown.getParameter().getReplacedCertificate();
+    }
+    return null;
+  }
+
   /**
    * Get the data groups for specific type. Note: Must return an int[] from DefectKnownParameter
    *
@@ -226,7 +253,7 @@ public class EACSignedDataController extends EACSignedDataParser
     {
       shouldBeOne++;
       SignerInfo signatureInfo = new SignerInfo(signatureInfosFromCard.nextElement());
-      IssuerAndSerialNumber identifier = signatureInfo.getIssuerAndSerialNumber();
+      issuerAndSerialNumber = signatureInfo.getIssuerAndSerialNumber();
 
       if (shouldBeOne == 2 && LOG.isInfoEnabled())
       {
@@ -234,11 +261,11 @@ public class EACSignedDataController extends EACSignedDataParser
       }
       if (LOG.isDebugEnabled())
       {
-        LOG.debug(logPrefix + "Check issuer and serial for card: " + identifier.toString());
+        LOG.debug(logPrefix + "Check issuer and serial for card: " + issuerAndSerialNumber.toString());
       }
-      if (list.containDefectsForCard(identifier))
+      if (list.containDefectsForCard(issuerAndSerialNumber))
       {
-        cardDefects.addAll(list.getDefects(identifier));
+        cardDefects.addAll(list.getDefects(issuerAndSerialNumber));
       }
     }
     while (signatureInfosFromCard.hasMoreElements());

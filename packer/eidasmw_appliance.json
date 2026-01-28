@@ -1,0 +1,77 @@
+{
+    "variables": {
+        "username": "eidasmw",
+        "password": "Pleasechangeme!",
+        "jarversion": "{{env `VERSION`}}",
+        "pomversion": "{{env `POM_VERSION`}}",
+        "zulu-release": "zulu17.48.15-ca-jre17.0.10-linux_x64",
+        "source-path": ""
+    },
+    "builders": [
+        {
+            "boot_wait": "20s",
+            "format": "ova",
+            "guest_additions_mode": "disable",
+            "headless": true,
+            "shutdown_command": "echo '{{user `password`}}' | sudo -S shutdown -P now",
+            "source_path": "{{user `source-path`}}",
+            "checksum": "none",
+            "ssh_password": "{{user `password`}}",
+            "ssh_username": "{{user `username`}}",
+            "type": "virtualbox-ovf",
+            "vm_name": "eidas-middleware-{{user `pomversion`}}"
+        }
+    ],
+    "provisioners": [
+        {
+            "type": "file",
+            "source": "./resources",
+            "destination": "/home/eidasmw"
+        },
+        {
+            "inline": [
+                "apt-get update ",
+                "DEBIAN_FRONTEND=noninteractive apt-get -y upgrade",
+                "apt-get -y install unzip vim",
+                "mkdir /opt/java",
+                "mkdir /opt/tmp",
+                "mkdir /opt/eidas-middleware",
+                "mkdir /var/log/eidas-middleware",
+                "chown eidasmw /opt/java /opt/tmp /opt/eidas-middleware /var/log/eidas-middleware",
+                "chgrp eidasmw /opt/java /opt/tmp /opt/eidas-middleware /var/log/eidas-middleware",
+                "/bin/rm -v /etc/ssh/ssh_host_*",
+                "mv resources/eidas-middleware.service /etc/systemd/system",
+                "mv resources/iptables /etc/network/if-pre-up.d/iptables",
+                "chmod +x /etc/network/if-pre-up.d/iptables"
+            ],
+            "type": "shell",
+            "execute_command": "echo '{{user `password`}}' | sudo -S sh -c '{{ .Vars }} {{ .Path }}'"
+        },
+        {
+            "inline": [
+                "mkdir /opt/eidas-middleware/config",
+                "mkdir /opt/eidas-middleware/database",
+                "echo 'Starting Download of JRE'",
+                "cd /opt/tmp",
+                "wget -q http://cdn.azul.com/zulu/bin/{{user `zulu-release`}}.tar.gz",
+                "echo 'Finished Download of JRE'",
+                "tar xzf {{user `zulu-release`}}.tar.gz",
+                "echo 'Finished Extraction of JRE'",
+                "mv {{user `zulu-release`}} /opt/java",
+                "ln -s /opt/java/{{user `zulu-release`}} /opt/java/java",
+                "echo \"export JAVA_HOME=/opt/java/java\" >> ~/.bashrc",
+                "echo \"export PATH=\\$JAVA_HOME/bin:$PATH\" >> ~/.bashrc",
+                "cd /home/{{user `username`}}",
+                "mv resources/eidas-middleware-{{user `jarversion`}}.jar /opt/eidas-middleware/eidas-middleware.jar",
+                "mv resources/eIDAS_Middleware_configuration_*.xml /opt/eidas-middleware/config",
+                "mv resources/application.properties /opt/eidas-middleware/config",
+                "rm -rf /home/{{user `username`}}/resources",
+                "rm -rf /home/{{user `username`}}/{{user `zulu-release`}}.tar.gz",
+                "rm -rf /opt/tmp/*",
+                "history -cw"
+            ],
+            "type": "shell",
+            "inline_shebang": "/bin/bash -e"
+        }
+    ]
+}

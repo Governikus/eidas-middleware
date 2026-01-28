@@ -30,6 +30,7 @@ import de.governikus.eumw.poseidas.cardserver.eac.crypto.SignedDataChecker;
 import de.governikus.eumw.poseidas.eidserver.crl.CertificationRevocationListImpl;
 import de.governikus.eumw.poseidas.server.idprovider.config.ConfigurationService;
 import de.governikus.eumw.poseidas.server.pki.CmsSignatureChecker;
+import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
 
@@ -45,6 +46,7 @@ public class EACSignedDataChecker extends EACSignedDataParser implements SignedD
 
   private final Set<String> allowedDocumentTypes;
 
+  @Getter
   private final CmsSignatureChecker cmsSignatureChecker;
 
   /**

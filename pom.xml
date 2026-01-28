@@ -15,7 +15,7 @@
 
     <groupId>de.governikus.eumw</groupId>
     <artifactId>eumw</artifactId>
-    <version>4.0.0</version>
+    <version>4.0.1</version>
     <packaging>pom</packaging>
 
     <name>EU Middleware</name>
@@ -38,7 +38,7 @@
     <scm>
         <url>https://gitlab.govkg.de/govkg/autent/autent-a/eumw</url>
         <connection>scm:git:https://gitlab.govkg.de/govkg/autent/autent-a/eumw.git</connection>
-        <tag>eumw-4.0.0</tag>
+        <tag>eumw-4.0.1</tag>
     </scm>
 
     <repositories>
@@ -139,7 +139,7 @@
         <version.lombok>1.18.38</version.lombok>
 
         <!-- logging dependencies -->
-        <version.log4j2>2.25.1</version.log4j2>
+        <version.log4j2>2.25.3</version.log4j2>
         <version.slf4j>2.0.17</version.slf4j>
 
         <!-- test dependencies -->
@@ -185,6 +185,7 @@
         <version.maven-site-plugin>3.21.0</version.maven-site-plugin>
         <version.maven-source-plugin>3.3.1</version.maven-source-plugin>
         <version.maven-surefire-plugin>2.22.2</version.maven-surefire-plugin>
+        <version.sonar-maven-plugin>5.5.0.6356</version.sonar-maven-plugin>
 
 
         <!-- this must be compatible to jakarta-xml-ws.version from spring-boot-dependencies -->
@@ -418,7 +419,11 @@
                     <!-- the version will be set by Jenkins -->
                     <version>${version.dependency-check-maven}</version>
                 </plugin>
-
+                <plugin>
+                    <groupId>org.sonarsource.scanner.maven</groupId>
+                    <artifactId>sonar-maven-plugin</artifactId>
+                    <version>${version.sonar-maven-plugin}</version>
+                </plugin>
             </plugins>
         </pluginManagement>
         <plugins>

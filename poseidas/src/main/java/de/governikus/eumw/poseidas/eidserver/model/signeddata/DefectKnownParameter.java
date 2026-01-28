@@ -24,6 +24,9 @@ import org.bouncycastle.asn1.ASN1Enumerated;
 import org.bouncycastle.asn1.ASN1Integer;
 import org.bouncycastle.asn1.ASN1Set;
 
+import de.governikus.eumw.utils.key.SecurityProvider;
+import lombok.Getter;
+
 
 /**
  * DefectKnownParameter representing required parameters from known defects.
@@ -36,6 +39,9 @@ public class DefectKnownParameter
   private static final Log LOGGER = LogFactory.getLog(DefectKnownParameter.class.getName());
 
   private Object parameters;
+
+  @Getter
+  private X509Certificate replacedCertificate;
 
   /**
    * StatusCode for defect type id-CertRevoked
@@ -86,7 +92,8 @@ public class DefectKnownParameter
         break;
 
       case ID_CERT_REPLACED:
-        parameters = parseCertificateReplacedParameter(parameter);
+        replacedCertificate = parseCertificateReplacedParameter(parameter);
+        parameters = replacedCertificate;
         break;
 
       case ID_EPASSPORT_DG_MALFORMED:
@@ -146,7 +153,7 @@ public class DefectKnownParameter
       byte[] certificateBytes = parameter.toASN1Primitive().getEncoded();
       try (ByteArrayInputStream stream = new ByteArrayInputStream(certificateBytes))
       {
-        CertificateFactory factory = CertificateFactory.getInstance("X.509", "TODO CARD SECURITY PROVIDER");
+        CertificateFactory factory = CertificateFactory.getInstance("X.509", SecurityProvider.BOUNCY_CASTLE_PROVIDER);
         X509Certificate newCertificate = (X509Certificate)factory.generateCertificate(stream);
         LOGGER.debug("Parsed CertificateReplaced parameter (Found certificate to be placed)");
         return newCertificate;
@@ -155,10 +162,6 @@ public class DefectKnownParameter
     catch (CertificateException e)
     {
       throw new IOException("Can not get certificate from factory and data", e);
-    }
-    catch (NoSuchProviderException e)
-    {
-      throw new IOException(e);
     }
   }
 

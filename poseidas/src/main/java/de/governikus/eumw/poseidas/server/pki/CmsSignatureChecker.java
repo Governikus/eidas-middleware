@@ -16,6 +16,7 @@ import java.security.GeneralSecurityException;
 import java.security.PublicKey;
 import java.security.SignatureException;
 import java.security.cert.Certificate;
+import java.security.cert.CertificateEncodingException;
 import java.security.cert.X509Certificate;
 import java.util.Base64;
 import java.util.Collection;
@@ -26,6 +27,7 @@ import java.util.Set;
 
 import javax.security.auth.x500.X500Principal;
 
+import org.bouncycastle.asn1.pkcs.IssuerAndSerialNumber;
 import org.bouncycastle.asn1.x509.Extension;
 import org.bouncycastle.asn1.x9.ECNamedCurveTable;
 import org.bouncycastle.cert.X509CertificateHolder;
@@ -43,8 +45,8 @@ import de.governikus.eumw.poseidas.cardserver.CertificateUtil;
 import de.governikus.eumw.poseidas.eidserver.crl.CertificationRevocationListImpl;
 import de.governikus.eumw.utils.key.KeyReader;
 import de.governikus.eumw.utils.key.SecurityProvider;
-
 import lombok.Getter;
+import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 
 
@@ -88,6 +90,8 @@ public class CmsSignatureChecker
   @Getter
   private String signedContentTypeOID;
 
+  @Setter
+  private CertReplacedRecord certReplacedRecord;
 
   public CmsSignatureChecker(X509Certificate trustAnchor)
   {
@@ -169,6 +173,7 @@ public class CmsSignatureChecker
     {
       throw new SignatureException("No signing information present within signed data");
     }
+
     Store<X509CertificateHolder> certificateStorage = cmsSignedData.getCertificates();
     for ( SignerInformation signer : signers.getSigners() )
     {
@@ -180,26 +185,35 @@ public class CmsSignatureChecker
       {
         throw new SignatureException("Unsupported signature algorithm detected");
       }
+      X509Certificate signatureVerificationCertificate;
+      if (certReplacedRecord != null && isSerialNumberAndIssuerEqualsDocumentSigner(signer))
+      {
+        signatureVerificationCertificate = certReplacedRecord.replacedCertificate();
+      }
+      else
+      {
+        @SuppressWarnings("unchecked")
+        X509CertificateHolder holder = (X509CertificateHolder)certificateStorage.getMatches(signer.getSID())
+                                                                                .iterator()
+                                                                                .next();
+        ByteArrayInputStream certInputStream = getInputStreamOfCertificateData(holder);
+        signatureVerificationCertificate = KeyReader.readX509Certificate(certInputStream);
 
-      @SuppressWarnings("unchecked")
-      X509CertificateHolder holder = (X509CertificateHolder)certificateStorage.getMatches(signer.getSID())
-                                                                              .iterator()
-                                                                              .next();
-      ByteArrayInputStream certInputStream = getInputStreamOfCertificateData(holder);
-      X509Certificate signatureVerificationCertificate = KeyReader.readX509Certificate(certInputStream);
+      }
 
       if (!acceptedCurves.isEmpty() && "EC".equals(signatureVerificationCertificate.getPublicKey().getAlgorithm()))
       {
         byte[] paramsFromCert;
         try
         {
-          paramsFromCert = holder.getSubjectPublicKeyInfo()
-                                 .getAlgorithm()
-                                 .getParameters()
-                                 .toASN1Primitive()
-                                 .getEncoded();
+          X509CertificateHolder x509CertificateHolderToCheckParmatersFromCerticiate = new X509CertificateHolder(signatureVerificationCertificate.getEncoded());
+          paramsFromCert = x509CertificateHolderToCheckParmatersFromCerticiate.getSubjectPublicKeyInfo()
+                                                                              .getAlgorithm()
+                                                                              .getParameters()
+                                                                              .toASN1Primitive()
+                                                                              .getEncoded();
         }
-        catch (IOException e)
+        catch (IOException | CertificateEncodingException e)
         {
           throw new SignatureException("Unable to extract curve parameters from certificate", e);
         }
@@ -226,6 +240,7 @@ public class CmsSignatureChecker
 
       validateCertificate(signatureVerificationCertificate, crlService);
 
+      // Check Signature
       PublicKey publicKey = signatureVerificationCertificate.getPublicKey();
       SignerInformationVerifier signerInformationVerifier = getSignerInformationVerifier(publicKey);
       boolean isSignatureValid = signer.verify(signerInformationVerifier);
@@ -237,6 +252,14 @@ public class CmsSignatureChecker
     }
     signedContentTypeOID = cmsSignedData.getSignedContentTypeOID();
     verifiedContent = cmsSignedData.getSignedContent().getContent();
+  }
+
+  private boolean isSerialNumberAndIssuerEqualsDocumentSigner(SignerInformation signer)
+  {
+    return signer.getSID()
+                 .getSerialNumber()
+                 .equals(certReplacedRecord.issuerAndSerialNumber.getCertificateSerialNumber().getValue())
+           && signer.getSID().getIssuer().equals(certReplacedRecord.issuerAndSerialNumber().getName());
   }
 
   /**
@@ -340,4 +363,8 @@ public class CmsSignatureChecker
                                    e);
     }
   }
+
+  public record CertReplacedRecord(X509Certificate replacedCertificate, IssuerAndSerialNumber issuerAndSerialNumber)
+  {}
+
 }

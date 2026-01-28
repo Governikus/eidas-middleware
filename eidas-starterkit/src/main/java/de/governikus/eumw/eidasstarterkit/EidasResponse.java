@@ -574,7 +574,7 @@ public class EidasResponse
                                      signer.getSigType(),
                                      signer.getSigDigestAlg());
     assertion.setParent(null);
-    response.getEncryptedAssertions().add(this.encrypter.encrypter.encrypt(assertion));
+    response.getEncryptedAssertions().add(this.encrypter.getEncrypter().encrypt(assertion));
 
     if (response.getSignature() != null)
     {
