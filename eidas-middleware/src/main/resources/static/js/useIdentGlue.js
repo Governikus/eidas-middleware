@@ -18,21 +18,33 @@ $(function () {
         // Stationary Status
         const observer = new AusweisApp2.StationaryStatusObserver((status) => {
             console.log("new status", status);
-            if (status.status === "available") {
-                $("#client-inactive").attr("hidden", "hidden");
-                $("#client-active").removeAttr("hidden");
-            } else if (status.status === "safari") {
-                $("#client-inactive").attr("hidden", "hidden");
-                $("#client-active").attr("hidden", "hidden");
-            } else {
-                $("#client-active").attr("hidden", "hidden");
-                $("#client-inactive").removeAttr("hidden");
+            hideAll();
+            switch (status.status) {
+                case "available":
+                    $("#client-active").removeAttr("hidden");
+                    break;
+                case "safari":
+                    //no check for safari, so do nothing.
+                    break;
+                case "blocked":
+                    $("#client-blocked").removeAttr("hidden");
+                    break;
+                default:
+                    $("#client-inactive").removeAttr("hidden");
+                    break;
             }
         });
         observer.observe();
         $("#goToAa2").attr("href", getEIDLink(false));
     }
 });
+
+function hideAll() {
+    $("#client-inactive").attr("hidden", "hidden");
+    $("#client-active").attr("hidden", "hidden");
+    $("#client-blocked").attr("hidden", "hidden");
+
+}
 
 function getEIDLink(isMobile) {
     return AusweisApp2.getClientURL({

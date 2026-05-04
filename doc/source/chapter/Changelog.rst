@@ -298,3 +298,11 @@ Changelog
 
     - eIDAS Middleware: Restrict crypto algorithms to those allowed in TR-03116-4 (2025) and TR-02102-2 (2025)
     - eIDAS Middleware: Fixed error when parsing a Defect List with id-CertReplaced element.
+
+* 4.0.2
+
+    - All components: Update Spring Boot dependency to close CVE-2026-22732.
+    - eIDAS Middleware: Note: IdentGlue requires the new browser permission “Local Network Access” to function
+      correctly, as it is necessary for the status detection of the AusweisApp.
+    - eIDAS Middleware: Set XML parser properties jdk.xml.elementAttributeLimit and jdk.xml.maxElementDepth to 20 to
+      deny SAML or PAOS requests with too large contents.

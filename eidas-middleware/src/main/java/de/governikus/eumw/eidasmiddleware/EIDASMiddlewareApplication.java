@@ -68,6 +68,10 @@ public class EIDASMiddlewareApplication
     // Do not break SAML CipherValue content to prevent CR HTML entities in the content
     System.setProperty("org.apache.xml.security.ignoreLineBreaks", "true");
 
+    // Limit the number of attributes on elements and the depth of elements for the XML parser
+    System.setProperty("jdk.xml.elementAttributeLimit", "20");
+    System.setProperty("jdk.xml.maxElementDepth", "20");
+
     SpringApplication.run(EIDASMiddlewareApplication.class, args);
   }
 }

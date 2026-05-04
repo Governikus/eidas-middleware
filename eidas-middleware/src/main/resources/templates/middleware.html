@@ -135,19 +135,27 @@
                                          style="height: 50px;">
                                 </a>
                             </div>
-                            <p hidden id="client-active">
+                            <div hidden id="client-active" class="row align-items-center">
                                 <img th:src="@{/eidas-middleware/img/icon_accept1.png}"
-                                     class="eid-status-image" th:alt="#{image.icon.accept}"
+                                     class="col-2 col-lg-1" th:alt="#{image.icon.accept}"
                                      th:title="#{image.icon.accept}">
-                                <span id="status-eid-client-active"
-                                      th:text="#{content.eid.status.active}"></span>
-                            </p>
-                            <p hidden id="client-inactive">
+                                <p id="status-eid-client-active" class="col-12 col-lg-11 mb-0"
+                                   th:text="#{content.eid.status.active}"></p>
+                            </div>
+                            <div hidden id="client-inactive" class="row align-items-center">
                                 <img th:src="@{/eidas-middleware/img/icon_decline1.png}"
-                                     class="eid-status-image" th:alt="#{image.icon.decline}"
+                                     class="col-2 col-lg-1" th:alt="#{image.icon.decline}"
                                      th:title="#{image.icon.decline}">
-                                <span id="status-eid-client-inactive" th:text="#{content.eid.status.inactive}"></span>
-                            </p>
+                                <p id="status-eid-client-inactive" class="col-12 col-lg-11 mb-0"
+                                   th:text="#{content.eid.status.inactive}"></p>
+                            </div>
+                            <div hidden id="client-blocked" class="row align-items-center">
+                                <img th:src="@{/eidas-middleware/img/icon_decline1.png}"
+                                     class="col-2 col-lg-1" th:alt="#{image.icon.decline}"
+                                     th:title="#{image.icon.decline}">
+                                <p id="status-eid-client-blocked" class="col-12 col-lg-11 mb-0"
+                                   th:text="#{content.eid.status.blocked}"></p>
+                            </div>
                             <p hidden>
                                 <span id="tcTokenURL" th:utext="${tcTokenURL}">eIDLink</span>
                             </p>
