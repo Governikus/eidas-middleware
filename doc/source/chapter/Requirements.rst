@@ -67,3 +67,12 @@ in HSM instead of config files or databases. The Middleware uses the PKCS#11 sta
 with the HSM, which means that it should be able to function with any PKCS#11 compliant HSM.
 However this cannot be guaranteed since we are unable to test every single HSM model.
 We have successfully tested with SoftHSM.
+
+Tool Requirements
+-----------------
+
+To use IdentGlue, the browser must be granted access to the local network (“Local Network Access”).
+IdentGlue communicates with the AusweisApp on the local system to detect its status. If this browser permission is
+not granted, this communication cannot take place. As a result, status detection will fail and IdentGlue may not
+function properly or at all. Please ensure that the “Local Network Access” permission is enabled in your browser
+settings

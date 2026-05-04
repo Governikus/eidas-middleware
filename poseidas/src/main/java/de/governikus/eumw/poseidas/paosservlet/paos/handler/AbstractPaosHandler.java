@@ -48,6 +48,8 @@ public abstract class AbstractPaosHandler
 
   private static int currentID;
 
+  private static final int MAXIMUM_PAOS_REQUEST_SIZE = 10_000;
+
   protected String sessionId;
 
   protected Object conversationObject;
@@ -75,7 +77,15 @@ public abstract class AbstractPaosHandler
 
     if (LOG.isDebugEnabled())
     {
-      LOG.debug("Received a PAOS-request from client:\n" + new String(requestBody));
+      if (requestBody.length > MAXIMUM_PAOS_REQUEST_SIZE)
+      {
+        LOG.debug("PAOS request body is bigger than expected, it will be printed on TRACE level");
+        LOG.trace("Received a PAOS-request from client:\n" + new String(requestBody));
+      }
+      else
+      {
+        LOG.debug("Received a PAOS-request from client:\n" + new String(requestBody));
+      }
     }
     try
     {

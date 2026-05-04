@@ -15,7 +15,7 @@
 
     <groupId>de.governikus.eumw</groupId>
     <artifactId>eumw</artifactId>
-    <version>4.0.1</version>
+    <version>4.0.2</version>
     <packaging>pom</packaging>
 
     <name>EU Middleware</name>
@@ -38,7 +38,7 @@
     <scm>
         <url>https://gitlab.govkg.de/govkg/autent/autent-a/eumw</url>
         <connection>scm:git:https://gitlab.govkg.de/govkg/autent/autent-a/eumw.git</connection>
-        <tag>eumw-4.0.1</tag>
+        <tag>eumw-4.0.2</tag>
     </scm>
 
     <repositories>
@@ -90,7 +90,7 @@
         <argLine />
 
         <!-- crypto -->
-        <version.bouncycastle>1.82</version.bouncycastle>
+        <version.bouncycastle>1.84</version.bouncycastle>
         <version.javasupport>8.4.2</version.javasupport>
         <version.opensaml>5.1.6</version.opensaml>
         <version.opensaml-eidas>3.2.5</version.opensaml-eidas>
@@ -102,7 +102,7 @@
         <!-- se.swedenconnect.opensaml:opensaml-security-ext:4.0.0 uses version 9.0.0, after updating it, check if his is necessary-->
         <version.shib-support>9.1.6</version.shib-support>
 
-        <version.springboot>3.5.7</version.springboot>
+        <version.springboot>3.5.14</version.springboot>
         <version.thymeleaf-layout-dialect>3.4.0</version.thymeleaf-layout-dialect>
 
         <version.woodstox>7.1.1</version.woodstox>
@@ -120,9 +120,9 @@
         <!-- httpclient is moved to httpclient5 and needs a code migration -->
         <version.httpclient>4.5.14</version.httpclient>
         <version.istack-commons-runtime>4.2.0</version.istack-commons-runtime>
-        <version.jackson>2.20.0</version.jackson>
+        <version.jackson>2.21.2</version.jackson>
         <!-- Needed because jackson-annotations artifact has version 2.20 -->
-        <version.jackson220>2.20</version.jackson220>
+        <version.jackson220>2.21</version.jackson220>
         <version.jakarta.activation>2.0.1</version.jakarta.activation>
         <version.jakarta.jws-api>3.0.0</version.jakarta.jws-api>
         <version.jaxb2-basics>2.0.12</version.jaxb2-basics>
@@ -139,7 +139,7 @@
         <version.lombok>1.18.38</version.lombok>
 
         <!-- logging dependencies -->
-        <version.log4j2>2.25.3</version.log4j2>
+        <version.log4j2>2.25.4</version.log4j2>
         <version.slf4j>2.0.17</version.slf4j>
 
         <!-- test dependencies -->
@@ -155,7 +155,7 @@
         <!-- version for Webjars -->
         <version.webjars.locator>0.52</version.webjars.locator>
         <version.webjars.fontawesome>6.7.2</version.webjars.fontawesome>
-        <version.webjars.identglue>1.0.16</version.webjars.identglue>
+        <version.webjars.identglue>2.1.0</version.webjars.identglue>
         <version.webjars.bootstrap>5.3.8</version.webjars.bootstrap>
         <version.webjars.jquery>3.7.1</version.webjars.jquery>
 
