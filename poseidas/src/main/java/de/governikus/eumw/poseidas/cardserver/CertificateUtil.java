@@ -43,7 +43,7 @@ public final class CertificateUtil
   }
 
   /**
-   * Creates a self signed certificate from given key pair.
+   * Creates a self-signed certificate from given key pair.
    *
    * @param keyPair key pair
    * @param subject subject for the certificate as X.500 name

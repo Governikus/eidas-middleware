@@ -13,7 +13,7 @@ import java.security.Security;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
-import org.springframework.boot.web.servlet.ServletComponentScan;
+import org.springframework.boot.web.server.servlet.context.ServletComponentScan;
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.scheduling.annotation.EnableScheduling;
 import org.springframework.transaction.annotation.EnableTransactionManagement;
@@ -31,16 +31,23 @@ import de.governikus.eumw.utils.key.SecurityProvider;
 public class EIDASMiddlewareApplication
 {
 
-  public static void main(String[] args)
+  static void main(String[] args)
   {
-    // add bouncy for brainpool and ECDH
+    prepareConfigurationContext();
+    SpringApplication.run(EIDASMiddlewareApplication.class, args);
+  }
+
+  public static void prepareConfigurationContext()
+  {
+    // add bouncy for brainpool and ECDH in TLS
     Security.insertProviderAt(SecurityProvider.BOUNCY_CASTLE_JSSE_PROVIDER, 1);
-    Security.insertProviderAt(SecurityProvider.BOUNCY_CASTLE_PROVIDER, 2);
     Security.setProperty("ssl.KeyManagerFactory.algorithm", "PKIX");
     System.setProperty("jdk.tls.ephemeralDHKeySize", String.valueOf(Utils.MIN_EPHEMERAL_DH_KEY_SIZE));
 
-    System.setProperty("jdk.tls.namedGroups",
-                       "brainpoolP512r1,brainpoolP384r1,brainpoolP256r1,secp521r1,secp384r1,secp256r1,ffdhe4096,ffdhe3072,brainpoolP512r1tls13,brainpoolP384r1tls13,brainpoolP256r1tls13");
+    /*
+     * Named groups cannot be set with the property "jdk.tls.namedGroups" anymore if brainpool is used. See {@link
+     * de.governikus.eumw.eidasmiddleware.projectconfig.NioEndpointExtension }
+     */
 
     //@formatter:off
     System.setProperty("jdk.tls.server.SignatureSchemes",
@@ -71,7 +78,5 @@ public class EIDASMiddlewareApplication
     // Limit the number of attributes on elements and the depth of elements for the XML parser
     System.setProperty("jdk.xml.elementAttributeLimit", "20");
     System.setProperty("jdk.xml.maxElementDepth", "20");
-
-    SpringApplication.run(EIDASMiddlewareApplication.class, args);
   }
 }

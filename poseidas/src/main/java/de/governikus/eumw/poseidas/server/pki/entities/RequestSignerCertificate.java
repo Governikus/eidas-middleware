@@ -10,15 +10,20 @@
 package de.governikus.eumw.poseidas.server.pki.entities;
 
 import java.io.Serializable;
+import java.util.Objects;
 
 import jakarta.persistence.EmbeddedId;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Lob;
 
-import lombok.Data;
+import org.hibernate.proxy.HibernateProxy;
+
+import lombok.Getter;
+import lombok.Setter;
 
 
-@Data
+@Getter
+@Setter
 @Entity
 public class RequestSignerCertificate implements Serializable
 {
@@ -39,5 +44,28 @@ public class RequestSignerCertificate implements Serializable
   public enum Status
   {
     READY_TO_SEND, FAILURE
+  }
+
+  @Override
+  public final boolean equals(Object o)
+  {
+    if (this == o)
+      return true;
+    if (o == null)
+      return false;
+    Class<?> oEffectiveClass = o instanceof HibernateProxy hProxy
+      ? hProxy.getHibernateLazyInitializer().getPersistentClass() : o.getClass();
+    Class<?> thisEffectiveClass = this instanceof HibernateProxy hProxy
+      ? hProxy.getHibernateLazyInitializer().getPersistentClass() : this.getClass();
+    if (thisEffectiveClass != oEffectiveClass)
+      return false;
+    RequestSignerCertificate that = (RequestSignerCertificate)o;
+    return getKey() != null && Objects.equals(getKey(), that.getKey());
+  }
+
+  @Override
+  public final int hashCode()
+  {
+    return Objects.hash(key);
   }
 }

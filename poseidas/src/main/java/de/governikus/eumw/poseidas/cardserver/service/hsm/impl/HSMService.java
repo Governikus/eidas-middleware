@@ -26,7 +26,8 @@ import java.security.spec.InvalidKeySpecException;
 import java.util.Date;
 import java.util.List;
 
-import de.governikus.eumw.poseidas.cardbase.asn1.OID;
+import org.bouncycastle.asn1.ASN1ObjectIdentifier;
+
 import de.governikus.eumw.poseidas.cardserver.service.Service;
 
 
@@ -113,7 +114,7 @@ public interface HSMService extends Service
    * @throws HSMException
    * @throws IllegalStateException if called when not initialized
    */
-  public abstract byte[] sign(String alias, OID sigAlgOID, byte[] data)
+  public abstract byte[] sign(String alias, ASN1ObjectIdentifier sigAlgOID, byte[] data)
     throws NoSuchAlgorithmException, NoSuchProviderException, IOException, UnrecoverableKeyException, KeyStoreException,
     CertificateException, InvalidKeyException, SignatureException, InvalidKeySpecException, HSMException;
 
@@ -166,8 +167,8 @@ public interface HSMService extends Service
   /**
    * Initializes HSM and performs login. Must be called before using any other method.
    *
-   * @param config configuration data, <code>null</code> not permitted, must be instance of class matching specific HSM
-   *          implementation (ex: {@link PKCS11HSMConfiguration} for {@link PKCS11HSMService})
+   * @param config configuration data, <code>null</code> not permitted, must be an instance of class matching specific
+   *          HSM implementation (ex: {@link PKCS11HSMConfiguration} for {@link PKCS11HSMService})
    * @throws IllegalArgumentException if config <code>null</code> or of wrong type
    * @throws HSMException if login fails
    */

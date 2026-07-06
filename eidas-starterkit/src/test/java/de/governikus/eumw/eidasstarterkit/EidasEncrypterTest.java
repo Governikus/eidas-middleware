@@ -1,14 +1,18 @@
 package de.governikus.eumw.eidasstarterkit;
 
 import java.io.ByteArrayInputStream;
+import java.nio.charset.StandardCharsets;
 import java.security.PrivateKey;
 import java.security.cert.X509Certificate;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.apache.hc.client5.http.utils.Base64;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 import org.opensaml.core.xml.config.XMLObjectProviderRegistrySupport;
 import org.opensaml.core.xml.io.Unmarshaller;
 import org.opensaml.core.xml.io.UnmarshallerFactory;
@@ -18,6 +22,7 @@ import org.opensaml.saml.saml2.core.AttributeStatement;
 import org.opensaml.saml.saml2.core.Response;
 import org.opensaml.saml.saml2.encryption.Decrypter;
 import org.opensaml.security.credential.CredentialSupport;
+import org.opensaml.xmlsec.encryption.support.EncryptionConstants;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 
@@ -29,6 +34,7 @@ import de.governikus.eumw.eidasstarterkit.person_attributes.natural_persons_attr
 import de.governikus.eumw.eidasstarterkit.person_attributes.natural_persons_attribute.GivenNameAttribute;
 import de.governikus.eumw.eidasstarterkit.person_attributes.natural_persons_attribute.PersonIdentifierAttribute;
 import de.governikus.eumw.eidasstarterkit.person_attributes.natural_persons_attribute.PlaceOfBirthAttribute;
+
 import net.shibboleth.utilities.java.support.component.ComponentInitializationException;
 import net.shibboleth.utilities.java.support.xml.BasicParserPool;
 import net.shibboleth.utilities.java.support.xml.XMLParserException;
@@ -69,7 +75,51 @@ class EidasEncrypterTest
                                                     "123456".toCharArray())};
     PrivateKey pk = keypair[0].getKey();
     X509Certificate cert = keypair[0].getCert();
-    EidasEncrypter encrypter = new EidasEncrypter(true, cert);
+    EidasEncrypter encrypter = new EidasEncrypter(true, cert, List.of(new EncryptionAlgorithmInfo(
+                                                                                                  EidasEncrypter.DEFAULT_ALGO_KEYAGREEMENT).setKdfParams(new EncryptionAlgorithmInfo.KdfParams(EncryptionConstants.ALGO_ID_KEYDERIVATION_CONCATKDF, EncryptionConstants.ALGO_ID_DIGEST_SHA256)).setKaNonce(Base64.encodeBase64String("NONCE".getBytes(StandardCharsets.UTF_8)))));
+    Assertions.assertNotNull(encrypter.getEncrypter());
+    EidasSigner signer = new EidasSigner(true, pk, cert);
+
+    byte[] response = EidasSaml.createResponse(att,
+                                               destination,
+                                               recipient,
+                                               nameid,
+                                               issuer,
+                                               loa,
+                                               inResponseTo,
+                                               encrypter,
+                                               signer);
+
+    Response samlResponse = getSamlResponse(response);
+
+    Assertions.assertEquals(1, samlResponse.getEncryptedAssertions().size());
+
+    Decrypter decrypter = new Decrypter(DecryptionUtils.createDecryptionParameters(CredentialSupport.getSimpleCredential(cert,
+                                                                                                                         pk)));
+
+    Assertion assertion = decrypter.decrypt(samlResponse.getEncryptedAssertions().get(0));
+    List<AttributeStatement> attributeStatements = assertion.getAttributeStatements();
+    Assertions.assertEquals(att.size(), attributeStatements.get(0).getAttributes().size());
+  }
+
+
+  @ParameterizedTest
+  @ValueSource(strings = {EidasEncrypter.DEFAULT_ALGO_KEYTRANSPORT, ""})
+  void testEncryptionWithRSACertificate(String algo) throws Exception
+  {
+    List<EidasAttribute> att = getEidasAttributes();
+    String destination = "test destination";
+    String recipient = "test_recipient";
+    EidasNameId nameid = new EidasPersistentNameId("eidasnameidTest");
+    String issuer = "test issuer";
+    String inResponseTo = "test inResponseTo";
+    EidasLoaEnum loa = EidasLoaEnum.LOA_SUBSTANTIAL;
+    Utils.X509KeyPair[] keypair = {Utils.readPKCS12(EidasEncrypterTest.class.getResourceAsStream(RSA_KEYSTORE),
+                                                    "123456".toCharArray())};
+    PrivateKey pk = keypair[0].getKey();
+    X509Certificate cert = keypair[0].getCert();
+    EidasEncrypter encrypter = new EidasEncrypter(true, cert, algo.isEmpty() ? List.of()
+      : List.of(new EncryptionAlgorithmInfo(algo)));
     Assertions.assertNotNull(encrypter.getEncrypter());
     EidasSigner signer = new EidasSigner(true, pk, cert);
 
@@ -96,43 +146,13 @@ class EidasEncrypterTest
   }
 
   @Test
-  void testEncryptionWithRSACertificate() throws Exception
+  void testEncryptionWithIncorrectAlgo() throws Exception
   {
-    List<EidasAttribute> att = getEidasAttributes();
-    String destination = "test destination";
-    String recipient = "test_recipient";
-    EidasNameId nameid = new EidasPersistentNameId("eidasnameidTest");
-    String issuer = "test issuer";
-    String inResponseTo = "test inResponseTo";
-    EidasLoaEnum loa = EidasLoaEnum.LOA_SUBSTANTIAL;
     Utils.X509KeyPair[] keypair = {Utils.readPKCS12(EidasEncrypterTest.class.getResourceAsStream(RSA_KEYSTORE),
                                                     "123456".toCharArray())};
-    PrivateKey pk = keypair[0].getKey();
     X509Certificate cert = keypair[0].getCert();
-    EidasEncrypter encrypter = new EidasEncrypter(true, cert);
-    Assertions.assertNotNull(encrypter.getEncrypter());
-    EidasSigner signer = new EidasSigner(true, pk, cert);
-
-    byte[] response = EidasSaml.createResponse(att,
-                                               destination,
-                                               recipient,
-                                               nameid,
-                                               issuer,
-                                               loa,
-                                               inResponseTo,
-                                               encrypter,
-                                               signer);
-
-    Response samlResponse = getSamlResponse(response);
-
-    Assertions.assertEquals(1, samlResponse.getEncryptedAssertions().size());
-
-    Decrypter decrypter = new Decrypter(DecryptionUtils.createDecryptionParameters(CredentialSupport.getSimpleCredential(cert,
-                                                                                                                         pk)));
-
-    Assertion assertion = decrypter.decrypt(samlResponse.getEncryptedAssertions().get(0));
-    List<AttributeStatement> attributeStatements = assertion.getAttributeStatements();
-    Assertions.assertEquals(att.size(), attributeStatements.get(0).getAttributes().size());
+    Assertions.assertDoesNotThrow(() -> new EidasEncrypter(true, cert,
+                                                           List.of(new EncryptionAlgorithmInfo("incorrect"))));
   }
 
   private List<EidasAttribute> getEidasAttributes()

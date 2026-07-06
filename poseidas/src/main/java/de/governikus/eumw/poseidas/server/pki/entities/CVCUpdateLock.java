@@ -10,9 +10,12 @@
 package de.governikus.eumw.poseidas.server.pki.entities;
 
 import java.io.Serializable;
+import java.util.Objects;
 
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
+
+import org.hibernate.proxy.HibernateProxy;
 
 
 /**
@@ -80,4 +83,27 @@ public class CVCUpdateLock implements Serializable
     this.lockedAt = lockedAt;
   }
 
+  @Override
+  public final boolean equals(Object o)
+  {
+    if (this == o)
+      return true;
+    if (o == null)
+      return false;
+    Class<?> oEffectiveClass = o instanceof HibernateProxy hProxy
+      ? hProxy.getHibernateLazyInitializer().getPersistentClass() : o.getClass();
+    Class<?> thisEffectiveClass = this instanceof HibernateProxy hProxy
+      ? hProxy.getHibernateLazyInitializer().getPersistentClass() : this.getClass();
+    if (thisEffectiveClass != oEffectiveClass)
+      return false;
+    CVCUpdateLock that = (CVCUpdateLock)o;
+    return trustCenterUrl != null && Objects.equals(trustCenterUrl, that.trustCenterUrl);
+  }
+
+  @Override
+  public final int hashCode()
+  {
+    return this instanceof HibernateProxy hProxy ? hProxy.getHibernateLazyInitializer().getPersistentClass().hashCode()
+      : getClass().hashCode();
+  }
 }

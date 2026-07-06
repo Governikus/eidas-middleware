@@ -35,19 +35,21 @@ import org.snmp4j.smi.VariableBinding;
 import org.springframework.context.annotation.DependsOn;
 import org.springframework.stereotype.Component;
 
+import de.governikus.autent.asn1.CVCDescription;
 import de.governikus.eumw.config.EidasMiddlewareConfig;
 import de.governikus.eumw.config.ServiceProviderType;
-import de.governikus.eumw.poseidas.cardbase.asn1.npa.CertificateDescription;
 import de.governikus.eumw.poseidas.eidmodel.TerminalData;
 import de.governikus.eumw.poseidas.eidserver.crl.CertificationRevocationListImpl;
 import de.governikus.eumw.poseidas.server.idprovider.config.ConfigurationException;
 import de.governikus.eumw.poseidas.server.idprovider.config.ConfigurationService;
 import de.governikus.eumw.poseidas.server.idprovider.config.CvcTlsCheck;
+import de.governikus.eumw.poseidas.server.idprovider.config.TLSCertificateRequester;
 import de.governikus.eumw.poseidas.server.pki.PermissionDataHandlingMBean;
 import de.governikus.eumw.poseidas.server.pki.RequestSignerCertificateService;
 import de.governikus.eumw.poseidas.server.pki.TerminalPermissionAO;
 import de.governikus.eumw.poseidas.server.pki.TlsClientRenewalService;
 import de.governikus.eumw.poseidas.server.pki.entities.TerminalPermission;
+
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
@@ -75,6 +77,8 @@ public final class SNMPAgent implements CommandResponder
   private final ConfigurationService configurationService;
 
   private final TlsClientRenewalService tlsClientRenewalService;
+
+  private final TLSCertificateRequester tLSCertificateRequester;
 
   private static VariableBinding getDateAndTime(String oid, Date date)
   {
@@ -218,7 +222,9 @@ public final class SNMPAgent implements CommandResponder
           return getDateAndTime(oid, new Date(latestRetrieval));
         }
       case GET_TLS_CERTIFICATE_VALID:
-        return getDateAndTime(oid, new CvcTlsCheck(facade, configurationService, null).getTLSExpirationDate());
+        return getDateAndTime(oid,
+                              new CvcTlsCheck(facade, configurationService, null,
+                                              tLSCertificateRequester).getTLSExpirationDate());
       default:
         log.warn("No matching case for this OID: {}", oidConstant.getValue());
         throw new IllegalArgumentException("No matching case for this OID: " + oidConstant.getValue());
@@ -278,14 +284,14 @@ public final class SNMPAgent implements CommandResponder
           return new VariableBinding(new OID(oid), new Integer32(tp.getCvc() == null ? 0 : 1));
         case SNMPConstants.CVC_SUBJECT_URL:
           return new VariableBinding(new OID(oid),
-                                     new OctetString(new CertificateDescription(tp.getCvcDescription()).getSubjectUrl()));
+                                     new OctetString(new CVCDescription(tp.getCvcDescription()).getSubjectUrl()));
         case SNMPConstants.CVC_VALID_UNTIL:
           return getDateAndTime(oid, new TerminalData(tp.getCvc()).getExpirationDate());
         case SNMPConstants.CVC_TLS_CERTIFICATE_LINK_STATUS:
           return new VariableBinding(new OID(oid),
-                                     new Integer32(new CvcTlsCheck(facade, configurationService,
-                                                                   null).checkCvcProvider(sp.getName()).isCvcTlsMatch()
-                                                                     ? 1 : 0));
+                                     new Integer32(new CvcTlsCheck(facade, configurationService, null,
+                                                                   tLSCertificateRequester).checkCvcProvider(sp.getName())
+                                                                                           .isCvcTlsMatch() ? 1 : 0));
         case SNMPConstants.TLS_CLIENT_CERTIFICATE_VALID_UNTIL:
           Optional<Date> date = tlsClientRenewalService.currentTlsCertValidUntil(sp.getName());
           return date.map(validUntil -> getDateAndTime(oid, validUntil)).orElseGet(() -> getDateAndTime(oid, null));

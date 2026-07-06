@@ -12,8 +12,9 @@ package de.governikus.eumw.poseidas.cardserver;
 import java.security.NoSuchAlgorithmException;
 import java.security.Signature;
 
-import de.governikus.eumw.poseidas.cardbase.asn1.OID;
-import de.governikus.eumw.poseidas.cardbase.constants.OIDConstants;
+import org.bouncycastle.asn1.ASN1ObjectIdentifier;
+
+import de.governikus.autent.asn1.OIDConstants;
 import de.governikus.eumw.utils.key.SecurityProvider;
 
 
@@ -33,7 +34,7 @@ public class SignatureUtil
    * @throws IllegalArgumentException if OID <code>null</code> or unknown
    * @throws NoSuchAlgorithmException if algorithm not supported
    */
-  public static Signature createSignature(OID oid) throws NoSuchAlgorithmException
+  public static Signature createSignature(ASN1ObjectIdentifier oid) throws NoSuchAlgorithmException
   {
     Signature sig = null;
     if (oid == null)

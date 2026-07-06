@@ -29,7 +29,6 @@ import de.governikus.eumw.eidascommon.ErrorCode;
 import de.governikus.eumw.eidascommon.ErrorCodeException;
 import de.governikus.eumw.eidascommon.Utils;
 import de.governikus.eumw.poseidas.eidmodel.TerminalData;
-import de.governikus.eumw.poseidas.eidmodel.data.EIDKeys;
 import de.governikus.eumw.poseidas.eidserver.convenience.EIDSequence.Authorizations;
 import de.governikus.eumw.poseidas.eidserver.ecardid.ECardIDServerFactory;
 import de.governikus.eumw.poseidas.eidserver.ecardid.ECardIDServerI;
@@ -39,6 +38,8 @@ import de.governikus.eumw.poseidas.server.pki.TerminalPermissionAO;
 import de.governikus.eumw.poseidas.server.pki.blocklist.BlockListService;
 import de.governikus.eumw.poseidas.server.pki.entities.TerminalPermission;
 import de.governikus.eumw.utils.key.SecurityProvider;
+import de.governikus.panstar.sdk.utils.constant.EIDAttributeName;
+
 import lombok.RequiredArgsConstructor;
 import oasis.names.tc.dss._1_0.core.schema.Result;
 
@@ -332,13 +333,13 @@ public class EIDInternal
   private void translateSelector(EIDRequestInput request, SessionInputImpl input, Authorizations auth)
     throws ErrorCodeException
   {
-    for ( EIDKeys key : request.getRequiredFields() )
+    for ( EIDAttributeName key : request.getRequiredFields() )
     {
       if (!isInAuth(key, auth))
       {
         throw new ErrorCodeException(ErrorCode.EID_MISSING_TERMINAL_RIGHTS, key.toString());
       }
-      if (key == EIDKeys.AGE_VERIFICATION)
+      if (key == EIDAttributeName.AgeVerification)
       {
         if (request.getRequestedMinAge() == 0)
         {
@@ -346,7 +347,7 @@ public class EIDInternal
         }
         input.setAgeVerification(request.getRequestedMinAge(), true);
       }
-      else if (key == EIDKeys.MUNICIPALITY_ID_VERIFICATION)
+      else if (key == EIDAttributeName.PlaceVerification)
       {
         if (request.getRequestedCommunityIDPattern() == null)
         {
@@ -360,13 +361,13 @@ public class EIDInternal
       }
     }
 
-    for ( EIDKeys key : request.getOptionalFields() )
+    for ( EIDAttributeName key : request.getOptionalFields() )
     {
       if (!isInAuth(key, auth))
       {
         throw new ErrorCodeException(ErrorCode.EID_MISSING_TERMINAL_RIGHTS, key.toString());
       }
-      if (key == EIDKeys.AGE_VERIFICATION)
+      if (key == EIDAttributeName.AgeVerification)
       {
         if (request.getRequestedMinAge() == 0)
         {
@@ -374,7 +375,7 @@ public class EIDInternal
         }
         input.setAgeVerification(request.getRequestedMinAge(), false);
       }
-      else if (key == EIDKeys.MUNICIPALITY_ID_VERIFICATION)
+      else if (key == EIDAttributeName.PlaceVerification)
       {
         if (request.getRequestedCommunityIDPattern() == null)
         {
@@ -389,64 +390,9 @@ public class EIDInternal
     }
   }
 
-  private boolean isInAuth(EIDKeys key, Authorizations auth)
+  private boolean isInAuth(EIDAttributeName eidAttributeName, Authorizations auth)
   {
-    switch (key)
-    {
-      case DOCUMENT_TYPE:
-        return auth.getChat().isReadDocumentType();
-      case ISSUING_STATE:
-        return auth.getChat().isReadIssuingState();
-      case DATE_OF_EXPIRY:
-        return auth.getChat().isReadDateOfExpiry();
-      case GIVEN_NAMES:
-        return auth.getChat().isReadGivenNames();
-      case FAMILY_NAMES:
-        return auth.getChat().isReadFamilyNames();
-      case NOM_DE_PLUME:
-        return auth.getChat().isReadNomDePlume();
-      case ACADEMIC_TITLE:
-        return auth.getChat().isReadAcademicTitle();
-      case DATE_OF_BIRTH:
-        return auth.getChat().isReadDateOfBirth();
-      case PLACE_OF_BIRTH:
-        return auth.getChat().isReadPlaceOfBirth();
-      case NATIONALITY:
-        return auth.getChat().isReadNationality();
-      case SEX:
-        return auth.getChat().isReadSex();
-      case OPTIONAL_DATA_R:
-        return auth.getChat().isReadOptionalDataR();
-      case BIRTH_NAME:
-        return auth.getChat().isReadBirthName();
-      case WRITTEN_SIGNATURE:
-        return auth.getChat().isReadWrittenSignature();
-      case DATE_OF_ISSUANCE:
-        return auth.getChat().isReadDateOfIssuance();
-      case PLACE_OF_RESIDENCE:
-        return auth.getChat().isReadPlaceOfResidence();
-      case MUNICIPALITY_ID:
-        return auth.getChat().isReadMunicipalityID();
-      case RESIDENCE_PERMIT_I:
-        return auth.getChat().isReadResidencePermitI();
-      case RESIDENCE_PERMIT_II:
-        return auth.getChat().isReadResidencePermitII();
-      case PHONE_NUMBER:
-        return auth.getChat().isReadPhoneNumber();
-      case EMAIL_ADDRESS:
-        return auth.getChat().isReadEmailAddress();
-      case DOCUMENT_VALIDITY:
-        return false;
-      case RESTRICTED_ID:
-        return auth.getChat().isAuthenticateRestrictedIdentification();
-      case AGE_VERIFICATION:
-        return auth.getChat().isAuthenticateAgeVerification();
-      case MUNICIPALITY_ID_VERIFICATION:
-        return auth.getChat().isAuthenticateMunicipalityIDVerification();
-      default:
-        break;
-    }
-    return false;
+    return auth.getChat().allows(eidAttributeName.getAccessRights());
   }
 
   /**
@@ -499,15 +445,15 @@ public class EIDInternal
 
   private boolean ageVerificationRequestIncomplete(EIDRequestInput request)
   {
-    return (request.getRequiredFields().contains(EIDKeys.AGE_VERIFICATION)
-            || request.getOptionalFields().contains(EIDKeys.AGE_VERIFICATION))
+    return (request.getRequiredFields().contains(EIDAttributeName.AgeVerification)
+            || request.getOptionalFields().contains(EIDAttributeName.AgeVerification))
            && request.getRequestedMinAge() <= 0;
   }
 
   private boolean placeVerificationRequestIncomplete(EIDRequestInput request)
   {
-    return (request.getRequiredFields().contains(EIDKeys.MUNICIPALITY_ID_VERIFICATION)
-            || request.getOptionalFields().contains(EIDKeys.MUNICIPALITY_ID_VERIFICATION))
+    return (request.getRequiredFields().contains(EIDAttributeName.PlaceVerification)
+            || request.getOptionalFields().contains(EIDAttributeName.PlaceVerification))
            && request.getRequestedCommunityIDPattern() == null;
   }
 }

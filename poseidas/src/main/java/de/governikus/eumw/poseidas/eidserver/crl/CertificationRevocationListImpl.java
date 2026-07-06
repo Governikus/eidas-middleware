@@ -32,17 +32,16 @@ import org.bouncycastle.cert.jcajce.JcaX509ExtensionUtils;
 
 import com.sun.istack.NotNull;
 
+import de.governikus.autent.asn1.masterlist.MasterListParser;
 import de.governikus.eumw.config.EidasMiddlewareConfig;
 import de.governikus.eumw.config.ServiceProviderType;
 import de.governikus.eumw.poseidas.cardbase.ArrayUtil;
 import de.governikus.eumw.poseidas.eidserver.crl.exception.CertificateValidationException;
-import de.governikus.eumw.poseidas.eidserver.model.signeddata.MasterList;
 import de.governikus.eumw.poseidas.server.idprovider.config.ConfigurationService;
 import de.governikus.eumw.poseidas.server.monitoring.SNMPConstants;
 import de.governikus.eumw.poseidas.server.monitoring.SNMPTrapSender;
 import de.governikus.eumw.poseidas.server.pki.TerminalPermissionAO;
 import de.governikus.eumw.poseidas.server.pki.entities.TerminalPermission;
-
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
@@ -170,8 +169,17 @@ public class CertificationRevocationListImpl implements CertificationRevocationL
       log.warn("No terminal permission with master list found. Can not initialize CRL");
       return;
     }
-    MasterList ml = new MasterList(terminalPermission.get().getMasterList());
-    initialize(new HashSet<>(ml.getCertificates()), configurationService);
+    try
+    {
+      List<X509Certificate> masterListCertificates = MasterListParser.getMasterListCertificates(terminalPermission.get()
+                                                                                                                  .getMasterList());
+      HashSet<X509Certificate> certificatesSet = new HashSet<>(masterListCertificates);
+      initialize(certificatesSet, configurationService);
+    }
+    catch (MasterListParser.MasterlistParsingException e)
+    {
+      log.warn("Cannot parse the master list. Can not initialize CRL", e);
+    }
   }
 
   /**

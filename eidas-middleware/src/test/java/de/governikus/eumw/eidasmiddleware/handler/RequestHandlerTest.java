@@ -46,7 +46,7 @@ import org.opensaml.saml.saml2.core.AuthnRequest;
 import org.opensaml.saml.saml2.core.impl.AuthnRequestMarshaller;
 import org.opensaml.xmlsec.signature.support.SignatureConstants;
 import org.opensaml.xmlsec.signature.support.SignatureException;
-import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 import org.springframework.util.MultiValueMap;
 import org.springframework.web.util.UriComponentsBuilder;
@@ -68,6 +68,7 @@ import de.governikus.eumw.eidasstarterkit.EidasSaml;
 import de.governikus.eumw.eidasstarterkit.EidasSigner;
 import de.governikus.eumw.eidasstarterkit.person_attributes.EidasPersonAttributes;
 import de.governikus.eumw.poseidas.server.idprovider.config.ConfigurationService;
+import de.governikus.eumw.poseidas.server.pki.HSMServiceHolder;
 import de.governikus.eumw.utils.key.KeyStoreSupporter;
 import lombok.Data;
 import lombok.SneakyThrows;
@@ -84,11 +85,14 @@ import se.swedenconnect.opensaml.eidas.ext.SPTypeEnumeration;
 class RequestHandlerTest
 {
 
-  @MockBean
+  @MockitoBean
   private RequestSessionRepository requestSessionRepository;
 
-  @MockBean
+  @MockitoBean
   private ConfigurationService mockConfigurationService;
+
+  @MockitoBean
+  private HSMServiceHolder hsmServiceHolder;
 
   private static final String RELAY_STATE = "State#1542107483529";
 
@@ -127,7 +131,8 @@ class RequestHandlerTest
   void testMissingParametersForPost()
   {
     // both parameters null with POST
-    RequestHandler requestHandler = new RequestHandler(requestSessionRepository, mockConfigurationService);
+    RequestHandler requestHandler = new RequestHandler(requestSessionRepository, mockConfigurationService,
+                                                       hsmServiceHolder);
     RequestProcessingException requestProcessingException = Assertions.assertThrows(RequestProcessingException.class,
                                                                                     () -> requestHandler.handleSAMLPostRequest(null,
                                                                                                                                null));
@@ -141,12 +146,12 @@ class RequestHandlerTest
     // both parameters empty String with POST
     requestProcessingException = Assertions.assertThrows(RequestProcessingException.class,
                                                          () -> requestHandler.handleSAMLPostRequest("", ""));
-    Assertions.assertEquals(IllegalArgumentException.class, requestProcessingException.getCause().getClass());
+    Assertions.assertEquals(SAXParseException.class, requestProcessingException.getCause().getClass());
 
     // saml request empty String with POST
     requestProcessingException = Assertions.assertThrows(RequestProcessingException.class,
                                                          () -> requestHandler.handleSAMLPostRequest(RELAY_STATE, ""));
-    Assertions.assertEquals(IllegalArgumentException.class, requestProcessingException.getCause().getClass());
+    Assertions.assertEquals(SAXParseException.class, requestProcessingException.getCause().getClass());
   }
 
   /**
@@ -168,7 +173,8 @@ class RequestHandlerTest
            .thenReturn(sp);
 
     // create the handler and process the rquest with the wrong signature
-    RequestHandler requestHandler = new RequestHandler(requestSessionRepository, mockConfigurationService);
+    RequestHandler requestHandler = new RequestHandler(requestSessionRepository, mockConfigurationService,
+                                                       hsmServiceHolder);
     RequestProcessingException requestProcessingException = Assertions.assertThrows(RequestProcessingException.class,
                                                                                     () -> requestHandler.handleSAMLPostRequest(RELAY_STATE,
                                                                                                                                POST_REQUEST));
@@ -186,7 +192,8 @@ class RequestHandlerTest
   {
     // In this request some xml values were changed after the signature was added
     String wrongDigest = "PD94bWwgdmVyc2lvbj0iMS4wIiBlbmNvZGluZz0iVVRGLTgiPz48c2FtbDJwOkF1dGhuUmVxdWVzdCB4bWxuczpzYW1sMnA9InVybjpvYXNpczpuYW1lczp0YzpTQU1MOjIuMDpwcm90b2NvbCIgeG1sbnM6ZWlkYXM9Imh0dHA6Ly9laWRhcy5ldXJvcGEuZXUvc2FtbC1leHRlbnNpb25zIiBEZXN0aW5hdGlvbj0iaHR0cDovL2xvY2FsaG9zdDo4MDgwL2VJREFTRGVtb0FwcGxpY2F0aW9uL05ld1JlY2VpdmVyU2VydmxldCIgRm9yY2VBdXRobj0idHJ1ZSIgSUQ9Il80ZWMwNjFjNy1lZGQ4LTRiM2UtYWIyZi1jODNmNWU0YjZmZjIiIElzUGFzc2l2ZT0iZmFsc2UiIElzc3VlSW5zdGFudD0iMjAxOC0xMS0xM1QxNDowNTo0NS4wODFaIiBQcm92aWRlck5hbWU9IkRlZmF1bHRQcm92aWRlciIgVmVyc2lvbj0iMi4wIj48c2FtbDI6SXNzdWVyIHhtbG5zOnNhbWwyPSJ1cm46b2FzaXM6bmFtZXM6dGM6U0FNTDoyLjA6YXNzZXJ0aW9uIiBGb3JtYXQ9InVybjpvYXNpczpuYW1lczp0YzpTQU1MOjIuMDpuYW1laWQtZm9ybWF0OmVudGl0eSI+aHR0cDovL2xvY2FsaG9zdDo4MDgwL2VJREFTRGVtb0FwcGxpY2F0aW9uL01ldGFkYXRhPC9zYW1sMjpJc3N1ZXI+PGRzOlNpZ25hdHVyZSB4bWxuczpkcz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC8wOS94bWxkc2lnIyI+DQo8ZHM6U2lnbmVkSW5mbz4NCjxkczpDYW5vbmljYWxpemF0aW9uTWV0aG9kIEFsZ29yaXRobT0iaHR0cDovL3d3dy53My5vcmcvMjAwMS8xMC94bWwtZXhjLWMxNG4jIi8+DQo8ZHM6U2lnbmF0dXJlTWV0aG9kIEFsZ29yaXRobT0iaHR0cDovL3d3dy53My5vcmcvMjAwNy8wNS94bWxkc2lnLW1vcmUjc2hhMjU2LXJzYS1NR0YxIi8+DQo8ZHM6UmVmZXJlbmNlIFVSST0iI180ZWMwNjFjNy1lZGQ4LTRiM2UtYWIyZi1jODNmNWU0YjZmZjIiPg0KPGRzOlRyYW5zZm9ybXM+DQo8ZHM6VHJhbnNmb3JtIEFsZ29yaXRobT0iaHR0cDovL3d3dy53My5vcmcvMjAwMC8wOS94bWxkc2lnI2VudmVsb3BlZC1zaWduYXR1cmUiLz4NCjxkczpUcmFuc2Zvcm0gQWxnb3JpdGhtPSJodHRwOi8vd3d3LnczLm9yZy8yMDAxLzEwL3htbC1leGMtYzE0biMiLz4NCjwvZHM6VHJhbnNmb3Jtcz4NCjxkczpEaWdlc3RNZXRob2QgQWxnb3JpdGhtPSJodHRwOi8vd3d3LnczLm9yZy8yMDAxLzA0L3htbGVuYyNzaGEyNTYiLz4NCjxkczpEaWdlc3RWYWx1ZT45K3FpWUh5N2xxVkpCOG9UYlUveldSVTRFblI1cU9xelZaQ3czZUdSNGVNPTwvZHM6RGlnZXN0VmFsdWU+DQo8L2RzOlJlZmVyZW5jZT4NCjwvZHM6U2lnbmVkSW5mbz4NCjxkczpTaWduYXR1cmVWYWx1ZT4NCkpnaFlFbGFINmMwb1YrNlVtR2RaTC9VK1ZvMXArL2hsN2NSQ2lSaDd0Q0ppT2RhSE1nbVl6Z2FJTUxpVFJrZUU1TXB3S2taeEFUUFImIzEzOw0KdWI0cHBPTHZJcVpFaXFKTW1lUWY1Tk5VSDhrVVQxQ1VibWFXTEhkM1VZSHQvWUlJV1YraFpSck5BNGNDQUQ2TzRPdk9mWHVweUU5WCYjMTM7DQpCaXJkV3Z3MkVjQWN1OWkzY0xsTFlXZ3BiRW9nS2QrNzR0NGU3M2xlVWY4Z0RxMXFYa3RaZFhqS0NwU1NSRGdkUC9vTTJ3MmxNZWNJJiMxMzsNCjlzVEhxMEhkUmxDcUJqNmRoc1ZTM3dhRGVvQXF3Sk91U0Ria2NmVjlDSFMzamxpekpwZkpud1YzdUVwSGJHN2NTRGRSSlAvMzBOOFUmIzEzOw0Kc1ZJazRjWjRGT29nTnQ4V0dvS2pXc25Oa3V5SmRCcHZIa3krcXc9PQ0KPC9kczpTaWduYXR1cmVWYWx1ZT4NCjxkczpLZXlJbmZvPjxkczpYNTA5RGF0YT48ZHM6WDUwOUNlcnRpZmljYXRlPk1JSUVOakNDQXg2Z0F3SUJBZ0lJTmtyKzhkM01iUGt3RFFZSktvWklodmNOQVFFTEJRQXdWekVuTUNVR0ExVUVBd3dlWW05eklFTkJJR1ZKUkNCRGIyMXRkVzVwWTJGMGFXOXVJRU5sY25Sek1SOHdIUVlEVlFRS0RCWmljbVZ0Wlc0Z2IyNXNhVzVsSUhObGNuWnBZMlZ6TVFzd0NRWURWUVFHRXdKRVJUQWVGdzB4TXpBMk1URXhNVE16TkRGYUZ3MHhOakEyTVRBeE1UTXpOREZhTUcweEl6QWhCZ05WQkFNTUdtSnZjeTEwWlhOMExYUmpkRzlyWlc0dWMyRnRiQzF6YVdkdU1SZ3dGZ1lEVlFRTERBOTBaWE4wWTJWeWRHbG1hV05oZEdVeEh6QWRCZ05WQkFvTUZtSnlaVzFsYmlCdmJteHBibVVnYzJWeWRtbGpaWE14Q3pBSkJnTlZCQVlUQW1SbE1JSUJJakFOQmdrcWhraUc5dzBCQVFFRkFBT0NBUThBTUlJQkNnS0NBUUVBdCtHN3prUklDT2x5em1GNFZKYUJpMVRyMmZPd21iYXJEbXpoZ0VnS01kMWhRNU13MXdkcEVKMlNQcUlZNGVpdExIcjFpUHVDM21ERW9EV2NEMGxhNXFUQm9uUy9QUlZMSFNKRlBsc09qNGZJWjlyWTFFV1RWRmdYK1RyWm5PYXAxUTU1VzIyMktHVmJWeGY4RFZJUVhzcWxmZVJzZXNHZ3p3cG9zL1ZwZDA4Njc0SUJrWDJ6djdDV0dpSWhJbVBlZWlwb016RjNRcnhOSm1hR2o4RzlxT3ByQTA5Zy9HU2lrV21QVVFvbFN6RHZzYkV6LzgyNzVHYU5LRjlHR29hZkRabzlyUDhvSXdDd2hoTlludVhrMkhzcHhuRjlsY2xyWEdmN25HTk5WMlYyb2tSYzBybVF1OHBIenVtSXJkSEVSeHZtNVczeElPSlhPRUJlU0JwT0lRSURBUUFCbzRIdk1JSHNNQXdHQTFVZEV3RUIvd1FDTUFBd1B3WURWUjBsQkRnd05nWUlLd1lCQlFVSEF3RUdDQ3NHQVFVRkJ3TUNCZ2dyQmdFRkJRY0RCQVlLS3dZQkJBR0NOeFFDQWdZS0t3WUJCQUdDTndvREREQWZCZ05WSFNNRUdEQVdnQlFGSXFrOCtLUVIvU3RhNDNMdzg1Y3pWSmx4anpBT0JnTlZIUThCQWY4RUJBTUNCTEF3SFFZRFZSME9CQllFRktZd1pKeCsyT3BGY2VPUStzNHFtZVdBYWt1Uk1Fc0dDQ3NHQVFVRkJ3RUJCRDh3UFRBN0JnZ3JCZ0VGQlFjd0FZWXZhSFIwY0RvdkwyOWpjM0F1WW05ekxXSnlaVzFsYmk1a1pTOXdkV0pzYVdOM1pXSXZjM1JoZEhWekwyOWpjM0F3RFFZSktvWklodmNOQVFFTEJRQURnZ0VCQUxINS9tL21hWFFnNmREZ1REYzkrMjc1S1dNNVdBc1pFdmMrYjVOcUYvQUF5RkJvNnI1Y2NnZFF6a09xV2JWc29Gd1ZCWmxoQXgxOTZsWXpvdEpoVCtPcWcyWU5SYVB4UFIwb0NTdVh4ZHZVMFBDYzJrOHV6dWtoTFVCZHQ2ejlOOFVFcThONFNla1JUNW1lQzNjZEJQWnNEZWRldHBzZG9DWGZYdnl1TFJJRHp2bW5sZkJ4YWtLaEhXeXU5K3hEMGI1ZEhWbTIwU0dNSVBLVkZWaTkzd3FNeWRVbHRzSFlmVldlN1VpNHE0cW1OTEFOK1lHSFdhM2k2N3ZoMkVaSVMzYnZ4OWxKZk9USTRydlR0UlhjNVM2UHBLVXhodlcxczNZREpUeitraFIva0RYeFlTMlg2RzVQSFZYcktmbWEzMTFwbHB0My84TVZZaGgrcEV1R0ZSMD08L2RzOlg1MDlDZXJ0aWZpY2F0ZT48L2RzOlg1MDlEYXRhPjwvZHM6S2V5SW5mbz48L2RzOlNpZ25hdHVyZT48c2FtbDJwOkV4dGVuc2lvbnM+DQogICAgICAgIDxlaWRhczpTUFR5cGU+cHVibGljPC9laWRhczpTUFR5cGU+DQogICAgICAgIDxlaWRhczpSZXF1ZXN0ZWRBdHRyaWJ1dGVzPg0KCQkJPGVpZGFzOlJlcXVlc3RlZEF0dHJpYnV0ZSBOYW1lPSJodHRwOi8vZWlkYXMuZXVyb3BhLmV1L2F0dHJpYnV0ZXMvbmF0dXJhbHBlcnNvbi9QbGFjZU9mQmlydGgiIE5hbWVGb3JtYXQ9InVybjpvYXNpczpuYW1lczp0YzpTQU1MOjIuMDphdHRybmFtZS1mb3JtYXQ6dXJpIiBpc1JlcXVpcmVkPSJ0cnVlIi8+PGVpZGFzOlJlcXVlc3RlZEF0dHJpYnV0ZSBOYW1lPSJodHRwOi8vZWlkYXMuZXVyb3BhLmV1L2F0dHJpYnV0ZXMvbmF0dXJhbHBlcnNvbi9CaXJ0aE5hbWUiIE5hbWVGb3JtYXQ9InVybjpvYXNpczpuYW1lczp0YzpTQU1MOjIuMDphdHRybmFtZS1mb3JtYXQ6dXJpIiBpc1JlcXVpcmVkPSJ0cnVlIi8+PGVpZGFzOlJlcXVlc3RlZEF0dHJpYnV0ZSBOYW1lPSJodHRwOi8vZWlkYXMuZXVyb3BhLmV1L2F0dHJpYnV0ZXMvbmF0dXJhbHBlcnNvbi9DdXJyZW50QWRkcmVzcyIgTmFtZUZvcm1hdD0idXJuOm9hc2lzOm5hbWVzOnRjOlNBTUw6Mi4wOmF0dHJuYW1lLWZvcm1hdDp1cmkiIGlzUmVxdWlyZWQ9InRydWUiLz48ZWlkYXM6UmVxdWVzdGVkQXR0cmlidXRlIE5hbWU9Imh0dHA6Ly9laWRhcy5ldXJvcGEuZXUvYXR0cmlidXRlcy9uYXR1cmFscGVyc29uL0N1cnJlbnRGYW1pbHlOYW1lIiBOYW1lRm9ybWF0PSJ1cm46b2FzaXM6bmFtZXM6dGM6U0FNTDoyLjA6YXR0cm5hbWUtZm9ybWF0OnVyaSIgaXNSZXF1aXJlZD0idHJ1ZSIvPjxlaWRhczpSZXF1ZXN0ZWRBdHRyaWJ1dGUgTmFtZT0iaHR0cDovL2VpZGFzLmV1cm9wYS5ldS9hdHRyaWJ1dGVzL25hdHVyYWxwZXJzb24vRGF0ZU9mQmlydGgiIE5hbWVGb3JtYXQ9InVybjpvYXNpczpuYW1lczp0YzpTQU1MOjIuMDphdHRybmFtZS1mb3JtYXQ6dXJpIiBpc1JlcXVpcmVkPSJ0cnVlIi8+PGVpZGFzOlJlcXVlc3RlZEF0dHJpYnV0ZSBOYW1lPSJodHRwOi8vZWlkYXMuZXVyb3BhLmV1L2F0dHJpYnV0ZXMvbmF0dXJhbHBlcnNvbi9DdXJyZW50R2l2ZW5OYW1lIiBOYW1lRm9ybWF0PSJ1cm46b2FzaXM6bmFtZXM6dGM6U0FNTDoyLjA6YXR0cm5hbWUtZm9ybWF0OnVyaSIgaXNSZXF1aXJlZD0idHJ1ZSIvPjxlaWRhczpSZXF1ZXN0ZWRBdHRyaWJ1dGUgTmFtZT0iaHR0cDovL2VpZGFzLmV1cm9wYS5ldS9hdHRyaWJ1dGVzL25hdHVyYWxwZXJzb24vUGVyc29uSWRlbnRpZmllciIgTmFtZUZvcm1hdD0idXJuOm9hc2lzOm5hbWVzOnRjOlNBTUw6Mi4wOmF0dHJuYW1lLWZvcm1hdDp1cmkiIGlzUmVxdWlyZWQ9InRydWUiLz4NCiAgICAgICAgPC9laWRhczpSZXF1ZXN0ZWRBdHRyaWJ1dGVzPg0KICAgIDwvc2FtbDJwOkV4dGVuc2lvbnM+PHNhbWwycDpOYW1lSURQb2xpY3kgQWxsb3dDcmVhdGU9InRydWUiIEZvcm1hdD0idXJuOm9hc2lzOm5hbWVzOnRjOlNBTUw6Mi4wOm5hbWVpZC1mb3JtYXQ6dHJhbnNpZW50Ii8+PHNhbWwycDpSZXF1ZXN0ZWRBdXRobkNvbnRleHQgQ29tcGFyaXNvbj0ibWluaW11bSI+DQogICAgICAgIDxzYW1sMjpBdXRobkNvbnRleHRDbGFzc1JlZiB4bWxuczpzYW1sMj0idXJuOm9hc2lzOm5hbWVzOnRjOlNBTUw6Mi4wOmFzc2VydGlvbiI+aHR0cDovL2VpZGFzLmV1cm9wYS5ldS9Mb0EvaGlnaDwvc2FtbDI6QXV0aG5Db250ZXh0Q2xhc3NSZWY+DQogICAgPC9zYW1sMnA6UmVxdWVzdGVkQXV0aG5Db250ZXh0Pjwvc2FtbDJwOkF1dGhuUmVxdWVzdD4=";
-    RequestHandler requestHandler = new RequestHandler(requestSessionRepository, mockConfigurationService);
+    RequestHandler requestHandler = new RequestHandler(requestSessionRepository, mockConfigurationService,
+                                                       hsmServiceHolder);
     RequestProcessingException requestProcessingException = Assertions.assertThrows(RequestProcessingException.class,
                                                                                     () -> requestHandler.handleSAMLPostRequest(RELAY_STATE,
                                                                                                                                wrongDigest));
@@ -202,7 +209,8 @@ class RequestHandlerTest
   @Test
   void testPostGeneratedRequest() throws Exception
   {
-    RequestHandler requestHandler = new RequestHandler(requestSessionRepository, mockConfigurationService);
+    RequestHandler requestHandler = new RequestHandler(requestSessionRepository, mockConfigurationService,
+                                                       hsmServiceHolder);
     File keystoreFile = new File(RequestHandlerTest.class.getResource("/de/governikus/eumw/eidasmiddleware/bos-test-tctoken.saml-sign.p12")
                                                          .toURI());
     KeyStore keyStore = KeyStoreSupporter.readKeyStore(keystoreFile, DEFAULT_PASSWORD);
@@ -222,7 +230,8 @@ class RequestHandlerTest
   @Test
   void testPostGeneratedRequestWithoutRelayState() throws Exception
   {
-    RequestHandler requestHandler = new RequestHandler(requestSessionRepository, mockConfigurationService);
+    RequestHandler requestHandler = new RequestHandler(requestSessionRepository, mockConfigurationService,
+                                                       hsmServiceHolder);
     File keystoreFile = new File(RequestHandlerTest.class.getResource("/de/governikus/eumw/eidasmiddleware/bos-test-tctoken.saml-sign.p12")
                                                          .toURI());
     KeyStore keyStore = KeyStoreSupporter.readKeyStore(keystoreFile, DEFAULT_PASSWORD);
@@ -242,7 +251,8 @@ class RequestHandlerTest
   @Test
   void testPostWrongIssuer() throws URISyntaxException
   {
-    RequestHandler requestHandler = new RequestHandler(requestSessionRepository, mockConfigurationService);
+    RequestHandler requestHandler = new RequestHandler(requestSessionRepository, mockConfigurationService,
+                                                       hsmServiceHolder);
     File keystoreFile = new File(RequestHandlerTest.class.getResource("/de/governikus/eumw/eidasmiddleware/bos-test-tctoken.saml-sign.p12")
                                                          .toURI());
     KeyStore keyStore = KeyStoreSupporter.readKeyStore(keystoreFile, DEFAULT_PASSWORD);
@@ -269,7 +279,8 @@ class RequestHandlerTest
   @Test
   void testPostInvalidBase64()
   {
-    RequestHandler requestHandler = new RequestHandler(requestSessionRepository, mockConfigurationService);
+    RequestHandler requestHandler = new RequestHandler(requestSessionRepository, mockConfigurationService,
+                                                       hsmServiceHolder);
     RequestProcessingException requestProcessingException = Assertions.assertThrows(RequestProcessingException.class,
                                                                                     () -> requestHandler.handleSAMLPostRequest(RELAY_STATE,
                                                                                                                                INVALID_BASE64));
@@ -285,7 +296,8 @@ class RequestHandlerTest
   @Test
   void testPostInvalidXML()
   {
-    RequestHandler requestHandler = new RequestHandler(requestSessionRepository, mockConfigurationService);
+    RequestHandler requestHandler = new RequestHandler(requestSessionRepository, mockConfigurationService,
+                                                       hsmServiceHolder);
     RequestProcessingException requestProcessingException = Assertions.assertThrows(RequestProcessingException.class,
                                                                                     () -> requestHandler.handleSAMLPostRequest(RELAY_STATE,
                                                                                                                                INVALID_SIGNED_XML));
@@ -341,7 +353,8 @@ class RequestHandlerTest
                                                                  signatureAlgorithm,
                                                                  digestAlgorithm);
 
-    RequestHandler requestHandler = new RequestHandler(requestSessionRepository, mockConfigurationService);
+    RequestHandler requestHandler = new RequestHandler(requestSessionRepository, mockConfigurationService,
+                                                       hsmServiceHolder);
     RequestProcessingException requestProcessingException = Assertions.assertThrows(RequestProcessingException.class,
                                                                                     () -> requestHandler.handleSAMLPostRequest(RELAY_STATE,
                                                                                                                                Base64.getEncoder()
@@ -370,7 +383,8 @@ class RequestHandlerTest
            .thenReturn(sp);
 
     // sign the saml request with the signature certificate, but validate it with the encryption certificate
-    RequestHandler requestHandler = new RequestHandler(requestSessionRepository, mockConfigurationService);
+    RequestHandler requestHandler = new RequestHandler(requestSessionRepository, mockConfigurationService,
+                                                       hsmServiceHolder);
     File signatureKeystoreFile = new File(RequestHandlerTest.class.getResource("/de/governikus/eumw/eidasmiddleware/bos-test-tctoken.saml-sign.p12")
                                                                   .toURI());
     KeyStore signatureKeyStore = KeyStoreSupporter.readKeyStore(signatureKeystoreFile, DEFAULT_PASSWORD);
@@ -395,7 +409,8 @@ class RequestHandlerTest
   @Test
   void testMissingParametersForRedirect()
   {
-    RequestHandler requestHandler = new RequestHandler(requestSessionRepository, mockConfigurationService);
+    RequestHandler requestHandler = new RequestHandler(requestSessionRepository, mockConfigurationService,
+                                                       hsmServiceHolder);
 
     // all parameters null with GET
     Assertions.assertThrows(RequestProcessingException.class,
@@ -421,7 +436,8 @@ class RequestHandlerTest
   @Test
   void testRedirectManipulatedSignature() throws URISyntaxException
   {
-    RequestHandler requestHandler = new RequestHandler(requestSessionRepository, mockConfigurationService);
+    RequestHandler requestHandler = new RequestHandler(requestSessionRepository, mockConfigurationService,
+                                                       hsmServiceHolder);
     File keystoreFile = new File(RequestHandlerTest.class.getResource("/de/governikus/eumw/eidasmiddleware/bos-test-tctoken.saml-sign.p12")
                                                          .toURI());
     KeyStore keyStore = KeyStoreSupporter.readKeyStore(keystoreFile, DEFAULT_PASSWORD);
@@ -453,7 +469,8 @@ class RequestHandlerTest
   @Test
   void testRedirectGeneratedRequest() throws Exception
   {
-    RequestHandler requestHandler = new RequestHandler(requestSessionRepository, mockConfigurationService);
+    RequestHandler requestHandler = new RequestHandler(requestSessionRepository, mockConfigurationService,
+                                                       hsmServiceHolder);
     File keystoreFile = new File(RequestHandlerTest.class.getResource("/de/governikus/eumw/eidasmiddleware/bos-test-tctoken.saml-sign.p12")
                                                          .toURI());
     KeyStore keyStore = KeyStoreSupporter.readKeyStore(keystoreFile, DEFAULT_PASSWORD);
@@ -477,7 +494,8 @@ class RequestHandlerTest
   @Test
   void testRedirectGeneratedRequestWithoutRelayState() throws Exception
   {
-    RequestHandler requestHandler = new RequestHandler(requestSessionRepository, mockConfigurationService);
+    RequestHandler requestHandler = new RequestHandler(requestSessionRepository, mockConfigurationService,
+                                                       hsmServiceHolder);
     File keystoreFile = new File(RequestHandlerTest.class.getResource("/de/governikus/eumw/eidasmiddleware/bos-test-tctoken.saml-sign.p12")
                                                          .toURI());
     KeyStore keyStore = KeyStoreSupporter.readKeyStore(keystoreFile, DEFAULT_PASSWORD);
@@ -501,7 +519,8 @@ class RequestHandlerTest
   @Test
   void testRedirectWrongIssuer() throws URISyntaxException
   {
-    RequestHandler requestHandler = new RequestHandler(requestSessionRepository, mockConfigurationService);
+    RequestHandler requestHandler = new RequestHandler(requestSessionRepository, mockConfigurationService,
+                                                       hsmServiceHolder);
     File keystoreFile = new File(RequestHandlerTest.class.getResource("/de/governikus/eumw/eidasmiddleware/bos-test-tctoken.saml-sign.p12")
                                                          .toURI());
     KeyStore keyStore = KeyStoreSupporter.readKeyStore(keystoreFile, DEFAULT_PASSWORD);
@@ -531,7 +550,8 @@ class RequestHandlerTest
   @Test
   void testRedirectInvalidBase64() throws URISyntaxException
   {
-    RequestHandler requestHandler = new RequestHandler(requestSessionRepository, mockConfigurationService);
+    RequestHandler requestHandler = new RequestHandler(requestSessionRepository, mockConfigurationService,
+                                                       hsmServiceHolder);
     File keystoreFile = new File(RequestHandlerTest.class.getResource("/de/governikus/eumw/eidasmiddleware/bos-test-tctoken.saml-sign.p12")
                                                          .toURI());
     KeyStore keyStore = KeyStoreSupporter.readKeyStore(keystoreFile, DEFAULT_PASSWORD);
@@ -559,7 +579,8 @@ class RequestHandlerTest
   @ValueSource(strings = {XMLSignature.ALGO_ID_SIGNATURE_RSA_SHA1_MGF1, XMLSignature.ALGO_ID_SIGNATURE_ECDSA_SHA1})
   void testSha1RedirectRequest(String signatureAlgorithm)
   {
-    RequestHandler requestHandler = new RequestHandler(requestSessionRepository, mockConfigurationService);
+    RequestHandler requestHandler = new RequestHandler(requestSessionRepository, mockConfigurationService,
+                                                       hsmServiceHolder);
     AuthnRequest unsignedAuthnRequest = RequestHelper.createUnsignedAuthnRequest("http://localhost:8080/eIDASDemoApplication/NewReceiverServlet",
                                                                                  "http://localhost:8080/eIDASDemoApplication/Metadata");
     AuthnRequestMarshaller arm = new AuthnRequestMarshaller();

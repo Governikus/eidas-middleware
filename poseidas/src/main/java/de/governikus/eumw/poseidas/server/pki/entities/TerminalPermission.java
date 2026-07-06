@@ -15,6 +15,7 @@ import java.util.Date;
 import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Objects;
 import java.util.Set;
 
 import jakarta.annotation.Nullable;
@@ -30,8 +31,12 @@ import jakarta.persistence.OneToOne;
 import jakarta.persistence.Temporal;
 import jakarta.persistence.TemporalType;
 
+import org.hibernate.proxy.HibernateProxy;
+
 import de.governikus.eumw.poseidas.eidmodel.TerminalData;
-import lombok.Data;
+
+import lombok.Getter;
+import lombok.Setter;
 
 
 /**
@@ -41,7 +46,8 @@ import lombok.Data;
  * @author TT
  */
 @Entity
-@Data
+@Getter
+@Setter
 public class TerminalPermission implements Serializable
 {
 
@@ -234,22 +240,26 @@ public class TerminalPermission implements Serializable
   }
 
   @Override
-  public int hashCode()
+  public final boolean equals(Object o)
   {
-    return refID.hashCode();
+    if (this == o)
+      return true;
+    if (o == null)
+      return false;
+    Class<?> oEffectiveClass = o instanceof HibernateProxy hProxy
+      ? hProxy.getHibernateLazyInitializer().getPersistentClass() : o.getClass();
+    Class<?> thisEffectiveClass = this instanceof HibernateProxy hProxy
+      ? hProxy.getHibernateLazyInitializer().getPersistentClass() : this.getClass();
+    if (thisEffectiveClass != oEffectiveClass)
+      return false;
+    TerminalPermission that = (TerminalPermission)o;
+    return getRefID() != null && Objects.equals(getRefID(), that.getRefID());
   }
 
   @Override
-  public boolean equals(Object obj)
+  public final int hashCode()
   {
-    if (this == obj)
-    {
-      return true;
-    }
-    if (obj instanceof TerminalPermission tp)
-    {
-      return refID.equals(tp.refID);
-    }
-    return false;
+    return this instanceof HibernateProxy hProxy ? hProxy.getHibernateLazyInitializer().getPersistentClass().hashCode()
+      : getClass().hashCode();
   }
 }

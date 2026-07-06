@@ -19,7 +19,9 @@ import java.security.cert.X509Certificate;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Base64;
+import java.util.LinkedList;
 import java.util.List;
+import java.util.Optional;
 
 import javax.xml.transform.OutputKeys;
 import javax.xml.transform.Transformer;
@@ -33,6 +35,7 @@ import org.opensaml.core.config.InitializationException;
 import org.opensaml.core.xml.Namespace;
 import org.opensaml.core.xml.io.MarshallingException;
 import org.opensaml.core.xml.io.UnmarshallingException;
+import org.opensaml.core.xml.schema.XSInteger;
 import org.opensaml.saml.common.xml.SAMLConstants;
 import org.opensaml.saml.ext.saml2alg.DigestMethod;
 import org.opensaml.saml.ext.saml2alg.SigningMethod;
@@ -75,6 +78,13 @@ import org.opensaml.saml.saml2.metadata.impl.SPSSODescriptorBuilder;
 import org.opensaml.saml.saml2.metadata.impl.SurNameBuilder;
 import org.opensaml.saml.saml2.metadata.impl.TelephoneNumberBuilder;
 import org.opensaml.security.credential.UsageType;
+import org.opensaml.xmlsec.encryption.ConcatKDFParams;
+import org.opensaml.xmlsec.encryption.KANonce;
+import org.opensaml.xmlsec.encryption.KeyDerivationMethod;
+import org.opensaml.xmlsec.encryption.MGF;
+import org.opensaml.xmlsec.encryption.impl.ConcatKDFParamsBuilder;
+import org.opensaml.xmlsec.encryption.impl.KeyDerivationMethodBuilder;
+import org.opensaml.xmlsec.encryption.impl.MGFBuilder;
 import org.opensaml.xmlsec.encryption.support.EncryptionConstants;
 import org.opensaml.xmlsec.signature.KeyInfo;
 import org.opensaml.xmlsec.signature.Signature;
@@ -90,6 +100,7 @@ import org.w3c.dom.Node;
 
 import de.governikus.eumw.eidascommon.ErrorCodeException;
 import de.governikus.eumw.eidascommon.Utils;
+
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -137,6 +148,11 @@ public class EidasMetadataNode
   private SPTypeEnumeration spType;
 
   private Boolean checkedAsValid;
+
+  /**
+   * The supported encryption algorithms from the metadata key desciptor of {@link EidasMetadataNode#encCert}
+   */
+  private List<EncryptionAlgorithmInfo> supportedEncryptionAlgorithms;
 
   @Getter(AccessLevel.NONE)
   @Setter(AccessLevel.NONE)
@@ -220,8 +236,38 @@ public class EidasMetadataNode
     ki.getX509Datas().add(x509);
     kd.setKeyInfo(ki);
     EncryptionMethod encMethod = new EncryptionMethodBuilder().buildObject();
-    encMethod.setAlgorithm(EncryptionConstants.ALGO_ID_BLOCKCIPHER_AES256_GCM);
+    encMethod.setAlgorithm(EidasEncrypter.DEFAULT_ALGO_CONTENTENCRYPTION);
     kd.getEncryptionMethods().add(encMethod);
+
+    if ("RSA".equals(encCert.getPublicKey().getAlgorithm()))
+    {
+      encMethod = new EncryptionMethodBuilder().buildObject();
+      encMethod.setAlgorithm(EidasEncrypter.DEFAULT_ALGO_KEYTRANSPORT);
+      DigestMethod digMethod = new DigestMethodBuilder().buildObject();
+      digMethod.setAlgorithm(EidasEncrypter.DEFAULT_ALGO_KEYTRANSPORT_DIGEST);
+      encMethod.getUnknownXMLObjects().add(digMethod);
+      MGF mgf = new MGFBuilder().buildObject();
+      mgf.setAlgorithm(EidasEncrypter.DEFAULT_ALGO_KEYTRANSPORT_MGF);
+      encMethod.getUnknownXMLObjects().add(mgf);
+      kd.getEncryptionMethods().add(encMethod);
+    }
+    else if ("EC".equals(encCert.getPublicKey().getAlgorithm()))
+    {
+      encMethod = new EncryptionMethodBuilder().buildObject();
+      encMethod.setAlgorithm(EidasEncrypter.DEFAULT_ALGO_KEYWRAP);
+      kd.getEncryptionMethods().add(encMethod);
+      encMethod = new EncryptionMethodBuilder().buildObject();
+      encMethod.setAlgorithm(EidasEncrypter.DEFAULT_ALGO_KEYAGREEMENT);
+      KeyDerivationMethod kdm = new KeyDerivationMethodBuilder().buildObject();
+      kdm.setAlgorithm(EncryptionConstants.ALGO_ID_KEYDERIVATION_CONCATKDF);
+      ConcatKDFParams kdfParams = new ConcatKDFParamsBuilder().buildObject();
+      org.opensaml.xmlsec.signature.DigestMethod digMethod = new org.opensaml.xmlsec.signature.impl.DigestMethodBuilder().buildObject();
+      digMethod.setAlgorithm(EidasEncrypter.DEFAULT_ALGO_KEYTRANSPORT_DIGEST);
+      kdfParams.setDigestMethod(digMethod);
+      kdm.getUnknownXMLObjects().add(kdfParams);
+      encMethod.getUnknownXMLObjects().add(kdm);
+      kd.getEncryptionMethods().add(encMethod);
+    }
     spDescriptor.getKeyDescriptors().add(kd);
 
     AssertionConsumerService acs = new AssertionConsumerServiceBuilder().buildObject();
@@ -368,7 +414,6 @@ public class EidasMetadataNode
   {
     EidasMetadataNode eidasMetadataNode = new EidasMetadataNode();
     EntityDescriptor metaData = EidasSaml.unmarshalMetadata(is);
-
     Signature sig = metaData.getSignature();
     if (sig == null)
     {
@@ -423,11 +468,57 @@ public class EidasMetadataNode
       }
     });
 
+
     for ( KeyDescriptor k : ssoDescriptor.getKeyDescriptors() )
     {
       if (k.getUse() == UsageType.ENCRYPTION)
       {
         eidasMetadataNode.encCert = EidasMetadataService.getFirstCertFromKeyDescriptor(k);
+        List<EncryptionAlgorithmInfo> list = new LinkedList<>();
+        for ( EncryptionMethod encryptionMethod : k.getEncryptionMethods() )
+        {
+          if (encryptionMethod.getAlgorithm() == null)
+          {
+            log.debug("Found null algorithm in metadata key encryption object");
+            continue;
+          }
+
+          EncryptionAlgorithmInfo encryptionAlgorithmInfo = new EncryptionAlgorithmInfo(encryptionMethod.getAlgorithm());
+
+          Optional.ofNullable(encryptionMethod.getKeySize())
+                  .map(XSInteger::getValue)
+                  .ifPresent(encryptionAlgorithmInfo::setKeySize);
+
+          encryptionMethod.getUnknownXMLObjects().forEach(unknownXMLObject -> {
+            switch (unknownXMLObject)
+            {
+              case DigestMethod digestMethod -> encryptionAlgorithmInfo.setDigestAlgorithm(digestMethod.getAlgorithm());
+              case MGF mgf -> encryptionAlgorithmInfo.setMgfAlgorithm(mgf.getAlgorithm());
+              case KeyDerivationMethod kdm -> {
+                encryptionAlgorithmInfo.setKdfParams(new EncryptionAlgorithmInfo.KdfParams(kdm.getAlgorithm(), null));
+
+                kdm.getUnknownXMLObjects().forEach(unknownXMLOChild -> {
+                  switch (unknownXMLOChild)
+                  {
+                    case ConcatKDFParams kdfParams -> Optional.ofNullable(kdfParams.getDigestMethod())
+                                                              .map(org.opensaml.xmlsec.signature.DigestMethod::getAlgorithm)
+                                                              .ifPresent(digest -> encryptionAlgorithmInfo.setKdfParams(new EncryptionAlgorithmInfo.KdfParams(kdm.getAlgorithm(),
+                                                                                                                                                              digest)));
+                    case KANonce kaNonce -> Optional.ofNullable(kaNonce.getValue())
+                                                    .ifPresent(encryptionAlgorithmInfo::setKaNonce);
+                    default -> log.debug("Unknown XML object in metadata encryption key derivation method found: {}",
+                                         unknownXMLOChild.getElementQName());
+                  }
+                });
+              }
+              default -> log.debug("Unknown XML object in metadata encryption method found: {}",
+                                   unknownXMLObject.getElementQName());
+            }
+          });
+
+          list.add(encryptionAlgorithmInfo);
+        }
+        eidasMetadataNode.setSupportedEncryptionAlgorithms(list);
       }
       else if (k.getUse() == UsageType.SIGNING)
       {

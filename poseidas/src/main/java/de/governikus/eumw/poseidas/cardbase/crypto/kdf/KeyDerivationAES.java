@@ -16,6 +16,7 @@ import javax.crypto.SecretKey;
 import javax.crypto.spec.SecretKeySpec;
 
 import de.governikus.eumw.poseidas.cardbase.AssertUtil;
+import de.governikus.eumw.utils.key.SecurityProvider;
 
 
 /**
@@ -46,7 +47,8 @@ class KeyDerivationAES extends AbstractKeyDerivationFunction implements KeyDeriv
   {
     // keyLength == 128: use SHA1
     // keyLength == 192 || keyLength == 256: use SHA 256
-    super(keyLength == 128 ? MessageDigest.getInstance("SHA-1") : MessageDigest.getInstance("SHA-256"));
+    super(keyLength == 128 ? MessageDigest.getInstance("SHA-1", SecurityProvider.BOUNCY_CASTLE_PROVIDER)
+      : MessageDigest.getInstance("SHA-256", SecurityProvider.BOUNCY_CASTLE_PROVIDER));
     if (keyLength != 128 && keyLength != 192 && keyLength != 256)
     {
       throw new IllegalArgumentException("value " + keyLength + " for keyLength not accepted");

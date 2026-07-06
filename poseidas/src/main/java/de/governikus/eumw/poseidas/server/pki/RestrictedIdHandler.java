@@ -9,6 +9,7 @@
 
 package de.governikus.eumw.poseidas.server.pki;
 
+import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.math.BigInteger;
 import java.net.SocketException;
@@ -19,6 +20,7 @@ import java.security.NoSuchAlgorithmException;
 import java.security.SignatureException;
 import java.security.cert.X509Certificate;
 import java.util.Arrays;
+import java.util.Base64;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -28,14 +30,14 @@ import java.util.Optional;
 import java.util.Set;
 
 import org.apache.commons.lang3.ArrayUtils;
+import org.bouncycastle.asn1.ASN1ObjectIdentifier;
 import org.bouncycastle.cms.CMSException;
 
+import de.governikus.autent.asn1.CVC;
+import de.governikus.autent.asn1.blocklist.Asn1BlockList;
+import de.governikus.autent.asn1.blocklist.Asn1BlockListDetails;
+import de.governikus.autent.asn1.blocklist.Asn1BlockListImpl;
 import de.governikus.eumw.config.ServiceProviderType;
-import de.governikus.eumw.poseidas.cardbase.asn1.OID;
-import de.governikus.eumw.poseidas.cardbase.asn1.npa.ECCVCertificate;
-import de.governikus.eumw.poseidas.cardbase.crypto.DigestUtil;
-import de.governikus.eumw.poseidas.eidserver.model.signeddata.BlackList;
-import de.governikus.eumw.poseidas.eidserver.model.signeddata.BlackListDetails;
 import de.governikus.eumw.poseidas.gov2server.GovManagementException;
 import de.governikus.eumw.poseidas.gov2server.constants.admin.GlobalManagementCodes;
 import de.governikus.eumw.poseidas.server.idprovider.config.ConfigurationService;
@@ -50,6 +52,7 @@ import de.governikus.eumw.poseidas.server.pki.caserviceaccess.RestrictedIdServic
 import de.governikus.eumw.poseidas.server.pki.caserviceaccess.RestrictedIdService.BlackListResult;
 import de.governikus.eumw.poseidas.server.pki.caserviceaccess.RestrictedIdService140;
 import de.governikus.eumw.poseidas.server.pki.entities.TerminalPermission;
+import de.governikus.eumw.utils.key.SecurityProvider;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
@@ -97,13 +100,13 @@ public class RestrictedIdHandler extends BerCaRequestHandlerBase
     }
     try
     {
-      ECCVCertificate cvc = new ECCVCertificate(data.getCvc());
-      if (cvc.getSectorPublicKeyHash() == null)
+      CVC cvc = new CVC(data.getCvc());
+      if (cvc.getBody().getCertificateExtensions().getFirstSectorPublicKeyHash() == null)
       {
         throw new GovManagementException(GlobalManagementCodes.EC_UNEXPECTED_ERROR.createMessage("no sector public key hash in the block list or cvc found for entry "
                                                                                                  + cvcRefId));
       }
-      return cvc.getSectorPublicKeyHash();
+      return cvc.getBody().getCertificateExtensions().getFirstSectorPublicKeyHash();
     }
     catch (IOException e)
     {
@@ -135,7 +138,7 @@ public class RestrictedIdHandler extends BerCaRequestHandlerBase
           log.info("{}: new public sector key was fetched", cvcRefId);
         }
       }
-      catch (NoSuchAlgorithmException e)
+      catch (NoSuchAlgorithmException _)
       {
         throw new GovManagementException(GlobalManagementCodes.EC_UNEXPECTED_ERROR.createMessage("SHA-256 not supported "
                                                                                                  + cvcRefId));
@@ -156,8 +159,9 @@ public class RestrictedIdHandler extends BerCaRequestHandlerBase
     MessageDigest digest;
     try
     {
-      OID oid = data.getFullCvc().getPublicKey().getOID();
-      digest = DigestUtil.getDigestByOID(oid);
+      ASN1ObjectIdentifier oid = data.getFullCvc().getPublicKey().getUsage();
+      String algorithm = de.governikus.autent.asn1.utils.DigestUtil.getSUPPORTED_DIGEST_ALGORITHMS().get(oid);
+      digest = MessageDigest.getInstance(algorithm, SecurityProvider.BOUNCY_CASTLE_PROVIDER);
     }
     catch (IOException | IllegalArgumentException | NoSuchAlgorithmException e)
     {
@@ -167,7 +171,7 @@ public class RestrictedIdHandler extends BerCaRequestHandlerBase
       }
       // fallback, not guaranteed to work (SHA-256 is currently the only algorithm employed, subject to
       // change)
-      digest = MessageDigest.getInstance("SHA-256");
+      digest = MessageDigest.getInstance("SHA-256", SecurityProvider.BOUNCY_CASTLE_PROVIDER);
     }
     return digest;
   }
@@ -281,7 +285,7 @@ public class RestrictedIdHandler extends BerCaRequestHandlerBase
                                     System.currentTimeMillis() - blackListStart);
         return result;
       }
-      catch (BlockListConsistencyException e)
+      catch (BlockListConsistencyException _)
       {
         return requestBlackList(all, false);
       }
@@ -318,10 +322,10 @@ public class RestrictedIdHandler extends BerCaRequestHandlerBase
 
     TerminalPermission tp = facade.getTerminalPermission(cvcRefId);
 
-    ECCVCertificate cvc;
+    CVC cvc;
     try
     {
-      cvc = new ECCVCertificate(tp.getCvc());
+      cvc = new CVC(tp.getCvc());
     }
     catch (IOException e)
     {
@@ -331,10 +335,11 @@ public class RestrictedIdHandler extends BerCaRequestHandlerBase
       throw new GovManagementException(GlobalManagementCodes.EC_UNEXPECTED_ERROR, e.getMessage());
     }
 
+    byte[] firstSectorPublicKeyHash = cvc.getBody().getCertificateExtensions().getFirstSectorPublicKeyHash();
     Optional<BlockListHolder> optionalAddList = getBlockListInformation(new BlackListContent(blResult.getDeltaAdded()),
-                                                                        cvc.getSectorPublicKeyHash());
+                                                                        firstSectorPublicKeyHash);
     Optional<BlockListHolder> optionalRemoveList = getBlockListInformation(new BlackListContent(blResult.getDeltaRemoved()),
-                                                                           cvc.getSectorPublicKeyHash());
+                                                                           firstSectorPublicKeyHash);
 
     if (optionalRemoveList.isEmpty() || optionalAddList.isEmpty())
     {
@@ -378,27 +383,41 @@ public class RestrictedIdHandler extends BerCaRequestHandlerBase
   private Optional<BlockListHolder> getBlockListInformation(BlackListContent blackListContent,
                                                             byte[] sectorPublicKeyHash)
   {
-    BlackList blackList = new BlackList(blackListContent.getContent());
+    // new with asn1-utils
+    X509Certificate blackListTrustAnchor = configurationService.getCertificate(dvcaConfiguration.getBlackListTrustAnchorCertificateName());
+    Asn1BlockList blackList = new Asn1BlockListImpl(new ByteArrayInputStream(blackListContent.getContent()),
+                                                    blackListTrustAnchor);
 
     var listID = new BigInteger(blackList.getListID()).longValueExact();
-    if (blackList.getBlacklistDetails().size() == 1)
+    if (blackList.getBlockListDetails().size() == 1)
     {
-      BlackListDetails blackListDetails = blackList.getBlacklistDetails().get(0);
-      return Optional.of(new BlockListHolder(listID, blackListDetails.getSectorID(),
-                                             blackListDetails.getSectorSpecificIDs(), blackList.getFinalEntries()));
+      Asn1BlockListDetails blackListDetails = blackList.getBlockListDetails().get(0);
+      List<byte[]> sectorSpecIds = blackListDetails.getSectorSpecificIDsBase64()
+                                                   .stream()
+                                                   .map(s -> Base64.getDecoder().decode(s))
+                                                   .toList();
+
+      return Optional.of(new BlockListHolder(listID, blackListDetails.getSectorID(), sectorSpecIds,
+                                             blackList.getFinalEntries()));
     }
 
-
-    return blackList.getBlacklistDetails()
+    return blackList.getBlockListDetails()
                     .stream()
                     .filter(blackListDetails -> MessageDigest.isEqual(blackListDetails.getSectorID(),
                                                                       sectorPublicKeyHash))
-                    .map(d -> new BlockListHolder(listID, d.getSectorID(), d.getSectorSpecificIDs(),
+                    .map(d -> new BlockListHolder(listID, d.getSectorID(),
+                                                  d.getSectorSpecificIDsBase64()
+                                                   .stream()
+                                                   .map(s -> Base64.getDecoder().decode(s))
+                                                   .toList(),
                                                   blackList.getFinalEntries()))
                     .findAny();
   }
 
-  private record BlockListHolder(long listId, byte[] sectorID, List<byte[]> specificIDs, Integer numEntries)
+  private record BlockListHolder(long listId,
+                                 byte[] sectorID,
+                                 List<byte[]> specificIDs,
+                                 Optional<BigInteger> numEntries)
   {}
 
 
@@ -415,10 +434,10 @@ public class RestrictedIdHandler extends BerCaRequestHandlerBase
       return updatedSectorIDs;
     }
     TerminalPermission tp = facade.getTerminalPermission(cvcRefId);
-    ECCVCertificate cvc;
+    CVC cvc;
     try
     {
-      cvc = new ECCVCertificate(tp.getCvc());
+      cvc = new CVC(tp.getCvc());
     }
     catch (IOException e)
     {
@@ -428,7 +447,10 @@ public class RestrictedIdHandler extends BerCaRequestHandlerBase
       throw new GovManagementException(GlobalManagementCodes.EC_UNEXPECTED_ERROR, e.getMessage());
     }
 
-    Optional<BlockListHolder> optionalEntries = getBlockListInformation(blackList, cvc.getSectorPublicKeyHash());
+    Optional<BlockListHolder> optionalEntries = getBlockListInformation(blackList,
+                                                                        cvc.getBody()
+                                                                           .getCertificateExtensions()
+                                                                           .getFirstSectorPublicKeyHash());
 
     if (optionalEntries.isEmpty())
     {
@@ -525,8 +547,12 @@ public class RestrictedIdHandler extends BerCaRequestHandlerBase
     throws BlockListConsistencyException
   {
     log.debug("{}: block list parsing for collection started", cvcRefId);
-    BlackList parsedBlacklistAdded = new BlackList(collectionAdded.getContent());
-    BlackList parsedBlacklistRemoved = new BlackList(collectionRemoved.getContent());
+    X509Certificate blackListTrustAnchor = configurationService.getCertificate(dvcaConfiguration.getBlackListTrustAnchorCertificateName());
+
+    Asn1BlockList parsedBlacklistAdded = new Asn1BlockListImpl(new ByteArrayInputStream(collectionAdded.getContent()),
+                                                               blackListTrustAnchor);
+    Asn1BlockList parsedBlacklistRemoved = new Asn1BlockListImpl(new ByteArrayInputStream(collectionRemoved.getContent()),
+                                                                 blackListTrustAnchor);
     log.debug("{}: block list parsing for collection finished", cvcRefId);
 
     // allow gc
@@ -541,11 +567,7 @@ public class RestrictedIdHandler extends BerCaRequestHandlerBase
       throw new BlockListConsistencyException();
     }
 
-    if (parsedBlacklistAdded.getFinalEntries() != parsedBlacklistRemoved.getFinalEntries())
-    {
-      log.warn("Received delta lists contain different numbers of entries, refuse to process");
-      throw new BlockListConsistencyException();
-    }
+    checkExpectedFinalEntries(parsedBlacklistAdded, parsedBlacklistRemoved);
 
     List<String> allRefIDs = facade.getTerminalPermissionRefIDList();
     Map<TerminalPermission, List<byte[]>> addedEntries = buildMapOfSpecificIds(parsedBlacklistAdded, allRefIDs);
@@ -595,11 +617,25 @@ public class RestrictedIdHandler extends BerCaRequestHandlerBase
     return result;
   }
 
+  private static void checkExpectedFinalEntries(Asn1BlockList parsedBlacklistAdded,
+                                                Asn1BlockList parsedBlacklistRemoved)
+    throws BlockListConsistencyException
+  {
+    if (parsedBlacklistAdded.getFinalEntries().isPresent() && parsedBlacklistRemoved.getFinalEntries().isPresent())
+    {
+      if (!parsedBlacklistAdded.getFinalEntries().get().equals(parsedBlacklistRemoved.getFinalEntries().get()))
+      {
+        log.warn("Received delta lists contain different numbers of entries, refuse to process");
+        throw new BlockListConsistencyException();
+      }
+    }
+  }
 
-  private Map<TerminalPermission, List<byte[]>> buildMapOfSpecificIds(BlackList parsedBlacklist, List<String> allRefIDs)
+  private Map<TerminalPermission, List<byte[]>> buildMapOfSpecificIds(Asn1BlockList parsedBlacklist,
+                                                                      List<String> allRefIDs)
   {
     Map<TerminalPermission, List<byte[]>> map = new HashMap<>();
-    parsedBlacklist.getBlacklistDetails().forEach(blacklistDetails -> {
+    parsedBlacklist.getBlockListDetails().forEach(blacklistDetails -> {
       if (blackListDetailsSectorIDAvailable(blacklistDetails))
       {
         Optional<TerminalPermission> optTp = findSuitableTerminalPermission(blacklistDetails.getSectorID(), allRefIDs);
@@ -607,7 +643,11 @@ public class RestrictedIdHandler extends BerCaRequestHandlerBase
         {
           return;
         }
-        map.put(optTp.get(), blacklistDetails.getSectorSpecificIDs());
+        map.put(optTp.get(),
+                blacklistDetails.getSectorSpecificIDsBase64()
+                                .stream()
+                                .map(s -> Base64.getDecoder().decode(s))
+                                .toList());
       }
     });
     return map;
@@ -624,7 +664,10 @@ public class RestrictedIdHandler extends BerCaRequestHandlerBase
   {
     Set<ByteBuffer> result = new HashSet<>();
     log.debug("{}: block list parsing for collection started", cvcRefId);
-    BlackList parsedBlacklist = new BlackList(blockListCollection.getContent());
+    X509Certificate blackListTrustAnchor = configurationService.getCertificate(dvcaConfiguration.getBlackListTrustAnchorCertificateName());
+
+    Asn1BlockList parsedBlacklist = new Asn1BlockListImpl(new ByteArrayInputStream(blockListCollection.getContent()),
+                                                          blackListTrustAnchor);
     log.debug("{}: block list parsing for collection finished", cvcRefId);
 
     // allow gc
@@ -633,7 +676,7 @@ public class RestrictedIdHandler extends BerCaRequestHandlerBase
     List<String> allRefIDs = facade.getTerminalPermissionRefIDList();
     long blackListId = new BigInteger(parsedBlacklist.getListID()).longValueExact();
 
-    parsedBlacklist.getBlacklistDetails().forEach(blacklistDetails -> {
+    parsedBlacklist.getBlockListDetails().forEach(blacklistDetails -> {
       if (blackListDetailsSectorIDAvailable(blacklistDetails))
       {
         Optional<TerminalPermission> optTp = findSuitableTerminalPermission(blacklistDetails.getSectorID(), allRefIDs);
@@ -649,7 +692,10 @@ public class RestrictedIdHandler extends BerCaRequestHandlerBase
           blockListService.updateCompleteBlockList(tp,
                                                    blackListId,
                                                    blacklistDetails.getSectorID(),
-                                                   blacklistDetails.getSectorSpecificIDs());
+                                                   blacklistDetails.getSectorSpecificIDsBase64()
+                                                                   .stream()
+                                                                   .map(s -> Base64.getDecoder().decode(s))
+                                                                   .toList());
           log.debug("Finished processBlacklistDetails");
           log.debug("{}: Writing block list from collection into DB finished", tp.getRefID());
           result.add(ByteBuffer.wrap(blacklistDetails.getSectorID()));
@@ -686,9 +732,10 @@ public class RestrictedIdHandler extends BerCaRequestHandlerBase
       }
       try
       {
-        ECCVCertificate cvc = new ECCVCertificate(cvcBytes);
+        CVC cvc = new CVC(cvcBytes);
         // Compare the sectorID from the BlackList and given terminal
-        if (Arrays.equals(blackListDetailsSectorID, cvc.getSectorPublicKeyHash()))
+        if (Arrays.equals(blackListDetailsSectorID,
+                          cvc.getBody().getCertificateExtensions().getFirstSectorPublicKeyHash()))
         {
           return Optional.of(tp);
         }
@@ -707,7 +754,7 @@ public class RestrictedIdHandler extends BerCaRequestHandlerBase
    * @param blacklistDetails the BlackListDetail to be checked
    * @return true if the sectorID of the given BlackListDetail is not null and not empty
    */
-  private boolean blackListDetailsSectorIDAvailable(BlackListDetails blacklistDetails)
+  private boolean blackListDetailsSectorIDAvailable(Asn1BlockListDetails blacklistDetails)
   {
     return blacklistDetails.getSectorID() != null && blacklistDetails.getSectorID().length > 0;
   }
@@ -722,7 +769,7 @@ public class RestrictedIdHandler extends BerCaRequestHandlerBase
       new CmsSignatureChecker(trustAnchor).checkEnvelopedSignature(blacklist);
       return true;
     }
-    catch (SignatureException | CMSException e)
+    catch (SignatureException | CMSException | IOException e)
     {
       log.debug("Signature check on block list not successful", e);
       return false;

@@ -15,7 +15,8 @@
 
         </div>
         <div class="col">
-            <form method="POST" th:action="@{'/admin-interface/details/check?entityid=' + ${#uris.escapeQueryParam(entityID)}}">
+            <form method="POST"
+                  th:action="@{'/admin-interface/details/check?entityid=' + ${#uris.escapeQueryParam(entityID)}}">
                 <button name="submit" type="submit" value="value" class="btn btn-primary" id="check-button">Start
                     connection check
                 </button>
@@ -89,7 +90,8 @@
                                  class="alert alert-danger" role="alert">The CVC has expired. A new initial
                                 request must be made.
                             </div>
-                            <div th:if="${entity.getServiceProviderStatus().isAutomaticCvcRenewalFailed()} AND ${entity.serviceProviderStatus.isCvcValidity()}" class="alert alert-danger" role="alert">
+                            <div th:if="${entity.getServiceProviderStatus().isAutomaticCvcRenewalFailed()} AND ${entity.serviceProviderStatus.isCvcValidity()}"
+                                 class="alert alert-danger" role="alert">
                                 The automatic CVC renewal failed. Please start a manual renewal.
                             </div>
                             <div class="row">
@@ -101,8 +103,6 @@
                                         <pre class="col-8 col-form-label" th:text="${entity.getSubjectName()}"/>
                                         <div class="col-4 col-form-label">Subject URL:</div>
                                         <pre class="col-8 col-form-label" th:text="${entity.getSubjectURL()}"/>
-                                        <div class="col-4 col-form-label">Redirect URL:</div>
-                                        <pre class="col-8 col-form-label" th:text="${entity.getRedirectURL()}"/>
                                         <div class="col-4 col-form-label">Terms of usage:</div>
                                         <pre class="col-8 col-form-label"
                                              th:text="${entity.getTermsOfUsagePlainText()}"/>
@@ -125,9 +125,11 @@
                                 <div class="col-12 col-xl-4">
                                     <div class="row cvcInfoBox">
                                         <div class="col-4 col-form-label">Matches TLS:</div>
-                                        <pre class="col-8 col-form-label" th:text="${entity.serviceProviderStatus.isCvcTLSLinkStatus() ? '✔':'❌'}"/>
+                                        <pre class="col-8 col-form-label"
+                                             th:text="${entity.serviceProviderStatus.isCvcTLSLinkStatus() ? '✔':'❌'}"/>
                                         <div class="col-4 col-form-label">Matches URL:</div>
-                                        <pre class="col-8 col-form-label" th:text="${entity.serviceProviderStatus.isCvcUrlMatch() ? '✔':'❌'}"/>
+                                        <pre class="col-8 col-form-label"
+                                             th:text="${entity.serviceProviderStatus.isCvcUrlMatch() ? '✔':'❌'}"/>
                                     </div>
                                 </div>
                             </div>
@@ -140,11 +142,12 @@
                                         Renew this CVC
                                     </button>
                                 </form>
-                                <form action="#" method=get  id="delete-pending-certificate-request-form"
+                                <form action="#" method=get id="delete-pending-certificate-request-form"
                                       th:action="@{'/admin-interface/details/deletePendingCertificateRequest'}"
                                       th:if="${entity.getServiceProviderStatus().isPendingCertificateRequestPresent() == true}">
                                     <input hidden name="entityid" type="text" th:value="${entityID}">
-                                    <button style="margin-top: 10px;" type="submit" class="btn btn-primary w-100" value="Delete pending certificate request"
+                                    <button style="margin-top: 10px;" type="submit" class="btn btn-primary w-100"
+                                            value="Delete pending certificate request"
                                             id="delete-pending-certificate-request-button">
                                         Delete pending certificate request
                                     </button>
@@ -208,7 +211,8 @@
                                                 <div class="col-9 col-form-label"
                                                      th:text="${entity.serviceProviderStatus.rscCurrentValidUntil}"/>
                                                 <div class="col-3 col-form-label">RSC pending</div>
-                                                <div class="col-9 col-form-label" th:classappend="${entity.serviceProviderStatus.rscRenewalError == null ? '' : 'bg-danger text-white'}"
+                                                <div class="col-9 col-form-label"
+                                                     th:classappend="${entity.serviceProviderStatus.rscRenewalError == null ? '' : 'bg-danger text-white'}"
                                                      th:text="${entity.serviceProviderStatus.rscRenewalError != null ? ('⚠ Error in automatic RSC renewal: ' + entity.serviceProviderStatus.rscRenewalError) : entity.serviceProviderStatus.rscPendingPresent ? '✔' : '❌'}"/>
                                             </div>
                                         </div>
@@ -246,7 +250,8 @@
                                           th:if="${entity.serviceProviderStatus.canGenerateAndSendRsc}">
                                         <input hidden name="entityid" type="text" th:value="${entityID}">
                                         <button type="submit" class="btn btn-primary w-100"
-                                                value="Generate And Send RSC" id="generate-send-rsc-button">Generate And Send RSC
+                                                value="Generate And Send RSC" id="generate-send-rsc-button">Generate And
+                                            Send RSC
                                         </button>
                                     </form>
                                     <form action="#" method=get
@@ -278,7 +283,8 @@
                                           th:if="${entity.serviceProviderStatus.rscPendingPresent}">
                                         <input hidden name="entityid" type="text" th:value="${entityID}">
                                         <button type="submit" class="btn btn-primary w-100"
-                                                value="Delete Pending RSC" id="delete-pending-rsc-button">Delete Pending RSC
+                                                value="Delete Pending RSC" id="delete-pending-rsc-button">Delete Pending
+                                            RSC
                                         </button>
                                     </form>
                                     <form action="#" method=get
@@ -286,7 +292,8 @@
                                           th:if="${entity.serviceProviderStatus.getRscCurrentValidUntil() != null}">
                                         <input hidden name="entityid" type="text" th:value="${entityID}">
                                         <button type="submit" class="btn btn-primary w-100"
-                                                value="Delete Current RSC" id="delete-current-rsc-button">Delete Current RSC
+                                                value="Delete Current RSC" id="delete-current-rsc-button">Delete Current
+                                            RSC
                                         </button>
                                     </form>
                                 </div>
@@ -502,7 +509,7 @@
             </div>
         </div>
     </div>
-        <script th:src="@{/admin-interface/js/js-save-tabs.js}"></script>
+    <script th:src="@{/admin-interface/js/js-save-tabs.js}"></script>
 </section>
 
 </html>

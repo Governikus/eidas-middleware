@@ -10,7 +10,6 @@
 package de.governikus.eumw.poseidas.eidserver.convenience;
 
 import java.io.IOException;
-import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -19,8 +18,7 @@ import java.util.Map;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
-import de.governikus.eumw.poseidas.cardbase.asn1.npa.ECCVCPath;
-import de.governikus.eumw.poseidas.cardbase.asn1.npa.ECCVCertificate;
+import de.governikus.autent.asn1.CVC;
 import de.governikus.eumw.poseidas.cardserver.eac.ta.CertAndKeyProvider;
 import de.governikus.eumw.poseidas.eidmodel.TerminalData;
 
@@ -38,7 +36,7 @@ public class CertAndKeyProviderImpl implements CertAndKeyProvider
 
   private static final String LOG_PREFIX = "[Certificates and Keys]";
 
-  private final Map<String, ECCVCertificate> certMap = new HashMap<>();
+  private final Map<String, CVC> certMap = new HashMap<>();
 
   private final Map<String, byte[]> keyMap = new HashMap<>();
 
@@ -53,8 +51,8 @@ public class CertAndKeyProviderImpl implements CertAndKeyProvider
   {
     byte[] encoded = cvc.getEncoded();
     addCert(encoded);
-    ECCVCertificate cert = new ECCVCertificate(encoded);
-    String holderName = new String(cert.getCVCPart(ECCVCPath.HOLDER_REFERENCE).getValue(), StandardCharsets.UTF_8);
+    CVC cert = new CVC(encoded);
+    String holderName = cert.getBody().getCertificateHolderReference();
     if (this.keyMap.containsKey(holderName))
     {
       LOG.debug(LOG_PREFIX + "Terminal key already set for holder name: " + holderName);
@@ -73,8 +71,8 @@ public class CertAndKeyProviderImpl implements CertAndKeyProvider
    */
   public void addCert(byte[] certBuffer) throws IOException
   {
-    ECCVCertificate cert = new ECCVCertificate(certBuffer);
-    String holderName = new String(cert.getCVCPart(ECCVCPath.HOLDER_REFERENCE).getValue());
+    CVC cert = new CVC(certBuffer);
+    String holderName = cert.getBody().getCertificateHolderReference();
     if (this.certMap.containsKey(holderName))
     {
       LOG.debug(LOG_PREFIX + "Terminal or DV certificate already set for holder name: " + holderName);
@@ -102,7 +100,7 @@ public class CertAndKeyProviderImpl implements CertAndKeyProvider
     do
     {
       // Get certificate from map
-      ECCVCertificate cert = this.certMap.get(nextTermHolder);
+      CVC cert = this.certMap.get(nextTermHolder);
       if (cert == null)
       {
         LOG.debug(LOG_PREFIX + "term holder not available: " + nextTermHolder);
@@ -110,7 +108,7 @@ public class CertAndKeyProviderImpl implements CertAndKeyProvider
       }
 
       // Get issuer from this certificate
-      String issuer = new String(cert.getCVCPart(ECCVCPath.CA_REFERENCE).getValue(), StandardCharsets.UTF_8);
+      String issuer = cert.getBody().getCertificationAuthorityReference();
       LOG.debug(LOG_PREFIX + "Issuer to check: " + issuer);
 
       // If issuer is the term holder check if this holder fits the root holder

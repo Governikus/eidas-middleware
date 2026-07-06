@@ -9,9 +9,12 @@
 
 package de.governikus.eumw.poseidas.cardbase.crypto.sm;
 
+
 import java.io.IOException;
 import java.math.BigInteger;
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.List;
 
 import javax.crypto.BadPaddingException;
 import javax.crypto.IllegalBlockSizeException;
@@ -19,16 +22,22 @@ import javax.crypto.spec.IvParameterSpec;
 import javax.smartcardio.CommandAPDU;
 import javax.smartcardio.ResponseAPDU;
 
+import org.apache.commons.codec.DecoderException;
+import org.apache.commons.codec.binary.Hex;
+import org.bouncycastle.asn1.ASN1Encodable;
+import org.bouncycastle.asn1.ASN1OctetString;
+import org.bouncycastle.asn1.ASN1Primitive;
+import org.bouncycastle.asn1.ASN1Sequence;
+import org.bouncycastle.asn1.ASN1TaggedObject;
+
 import de.governikus.eumw.poseidas.cardbase.ArrayUtil;
 import de.governikus.eumw.poseidas.cardbase.AssertUtil;
 import de.governikus.eumw.poseidas.cardbase.ByteUtil;
-import de.governikus.eumw.poseidas.cardbase.Hex;
-import de.governikus.eumw.poseidas.cardbase.asn1.ASN1;
-import de.governikus.eumw.poseidas.cardbase.asn1.ASN1Constants;
 import de.governikus.eumw.poseidas.cardbase.card.CommandAPDUConstants;
 import de.governikus.eumw.poseidas.cardbase.card.SecureMessaging;
 import de.governikus.eumw.poseidas.cardbase.card.SecureMessagingException;
 import de.governikus.eumw.poseidas.cardbase.crypto.CipherUtil;
+import de.governikus.eumw.poseidas.cardserver.EACServerUtil;
 import lombok.extern.slf4j.Slf4j;
 
 
@@ -77,35 +86,43 @@ public class AESSecureMessaging implements SecureMessaging
     AssertUtil.notNull(command, "command");
     this.material.getIvParameterSpec().increaseSSC();
 
+    // prepare header for MAC calculation
+    byte[] header = {(byte)command.getCLA(), (byte)command.getINS(), (byte)command.getP1(), (byte)command.getP2()};
+    byte[] secureHeaderBytes = createSecureHeader(header);
+    byte[] paddedSecureHeaderBytes = pad(secureHeaderBytes);
+
+    // encrypt payload
+    byte[] cryptogramDOBytes = createCryptogramDO(command);
+
+    // calculate expected length
     boolean extended = command.getNc() > CommandAPDUConstants.SHORT_MAX_LC
                        || command.getNe() > CommandAPDUConstants.SHORT_MAX_LE;
-    byte[] header = new byte[]{(byte)command.getCLA(), (byte)command.getINS(), (byte)command.getP1(),
-                               (byte)command.getP2()};
     byte[] le = createLe(command, extended);
-    byte[] secureHeaderBytes = createSecureHeader(header);
-    byte[] secureHeaderPaddedBytes = pad(secureHeaderBytes);
-    byte[] cryptogramDOBytes = createCryptogramDO(command);
     byte[] neDOBytes = createNeDO(le);
-    byte[] macDOBytes = createMacDO(secureHeaderPaddedBytes, cryptogramDOBytes, neDOBytes);
+
+    // calculate MAC
+    byte[] macDOBytes = createMacDO(paddedSecureHeaderBytes, cryptogramDOBytes, neDOBytes);
+
+    // finally construct APDU
     byte[] dataFieldBytes = ByteUtil.combine(new byte[][]{cryptogramDOBytes, neDOBytes, macDOBytes});
-    int l = getNewLe(neDOBytes, dataFieldBytes);
+    int newLe = getNewLe(neDOBytes, dataFieldBytes);
     return new CommandAPDU(secureHeaderBytes[0], secureHeaderBytes[1], secureHeaderBytes[2], secureHeaderBytes[3],
-                           dataFieldBytes, l);
+                           dataFieldBytes, newLe);
   }
 
-  private int getNewLe(byte[] neDOBytes, byte[] dataFieldBytes)
+  private static int getNewLe(byte[] neDOBytes, byte[] dataFieldBytes)
   {
 
     int l = CommandAPDUConstants.SHORT_MAX_LE;
-    if ((neDOBytes != null && neDOBytes.length == 4)
-        || (dataFieldBytes != null && dataFieldBytes.length >= CommandAPDUConstants.SHORT_MAX_LE))
+    if (neDOBytes != null && neDOBytes.length == 4
+        || dataFieldBytes != null && dataFieldBytes.length >= CommandAPDUConstants.SHORT_MAX_LE)
     {
       l = CommandAPDUConstants.EXTENDED_MAX_LE;
     }
     return l;
   }
 
-  private byte[] createLe(CommandAPDU command, boolean extended)
+  private static byte[] createLe(CommandAPDU command, boolean extended)
   {
     if (command.getNe() == 0)
     {
@@ -142,71 +159,84 @@ public class AESSecureMessaging implements SecureMessaging
       log.warn("Error 6419: no data");
       throw new SecureMessagingException(SecureMessagingException.CODE_SOFTWARE, "response is not encrypted", null);
     }
-    ASN1[] childs = getDataChilds(responseData);
+
+    // for own mac calculation
+    byte[] dataForMacComparison = null;
+
     byte[] encDataDOBytes = null;
     int encTag = 0;
     byte[] processDOBytes = null;
     byte[] macDOBytes = null;
-    byte[] macData = null;
 
-    for ( ASN1 child : childs )
+    try
     {
-      BigInteger dTag = child.getDTag();
-      if (dTag.longValueExact() > Integer.MAX_VALUE)
+      for ( ASN1TaggedObject child : getDataChilds(responseData) )
       {
-        throw new SecureMessagingException(SecureMessagingException.CODE_SOFTWARE,
-                                           "The value of the dTag is greater than Integer.MaxValue", null);
-      }
-      int tag = dTag.intValueExact();
-      if (SMConstants.TAG_BYTE_DO_CRYPTOGRAM == tag || SMConstants.TAG_BYTE_DO_CRYPTOGRAM_85 == tag)
-      {
-        if (encDataDOBytes == null)
+        int tag = child.getTagNo();
+        if (toApplicationTag(SMConstants.TAG_BYTE_DO_CRYPTOGRAM) == tag
+            || toApplicationTag(SMConstants.TAG_BYTE_DO_CRYPTOGRAM_85) == tag)
         {
-          macData = ByteUtil.combine(macData, child.getEncoded());
-          encDataDOBytes = child.getValue();
-          encTag = tag;
+          if (encDataDOBytes == null)
+          {
+            dataForMacComparison = org.bouncycastle.util.Arrays.concatenate(dataForMacComparison, child.getEncoded());
+            encDataDOBytes = ((ASN1OctetString)child.getBaseObject()).getOctets();
+            encTag = tag;
+          }
+          else
+          {
+            throw new SecureMessagingException(SecureMessagingException.CODE_SOFTWARE,
+                                               "response contains more than one cryptogram", null);
+          }
+        }
+        else if (toApplicationTag(SMConstants.TAG_BYTE_DO_PROCESSING_STATUS) == tag)
+        {
+          if (processDOBytes == null)
+          {
+            dataForMacComparison = org.bouncycastle.util.Arrays.concatenate(dataForMacComparison, child.getEncoded());
+            processDOBytes = ((ASN1OctetString)child.getBaseObject()).getOctets();
+          }
+          else
+          {
+            throw new SecureMessagingException(SecureMessagingException.CODE_SOFTWARE,
+                                               "response contains more than one status", null);
+          }
+          if (!Arrays.equals(processDOBytes, new byte[]{(byte)response.getSW1(), (byte)response.getSW2()}))
+          {
+            throw new SecureMessagingException(SecureMessagingException.CODE_SOFTWARE,
+                                               "status appears to be manipulated", null);
+          }
+        }
+        else if (toApplicationTag(SMConstants.TAG_BYTE_DO_CRYPTOGRPAHIC_CHECKSUM) == tag)
+        {
+          if (macDOBytes == null)
+          {
+            macDOBytes = ((ASN1OctetString)child.getBaseObject()).getOctets();
+          }
+          else
+          {
+            throw new SecureMessagingException(SecureMessagingException.CODE_SOFTWARE,
+                                               "response contains more than one cryptogram checksum", null);
+          }
         }
         else
         {
-          throw new SecureMessagingException(SecureMessagingException.CODE_SOFTWARE,
-                                             "response contain more than one cryptogram", null);
+          if (tag >= 0x61 && tag <= 0x76)
+          {
+            log.warn("Error 6419: data object {} - full response {}",
+                     org.apache.commons.codec.binary.Hex.encodeHexString(child.getEncoded()),
+                     Hex.encodeHexString(response.getBytes()));
+          }
+          throw new SecureMessagingException(SecureMessagingException.CODE_SOFTWARE, "unrecognized DO at response",
+                                             null);
         }
-      }
-      else if (SMConstants.TAG_BYTE_DO_PROCESSING_STATUS == tag)
-      {
-        if (processDOBytes == null)
-        {
-          macData = ByteUtil.combine(macData, child.getEncoded());
-          processDOBytes = child.getValue();
-        }
-        else
-        {
-          throw new SecureMessagingException(SecureMessagingException.CODE_SOFTWARE,
-                                             "response contain more than one le", null);
-        }
-      }
-      else if (SMConstants.TAG_BYTE_DO_CRYPTOGRPAHIC_CHECKSUM == tag)
-      {
-        if (macDOBytes == null)
-        {
-          macDOBytes = child.getValue();
-        }
-        else
-        {
-          throw new SecureMessagingException(SecureMessagingException.CODE_SOFTWARE,
-                                             "response contain more than one cryptogram checksum", null);
-        }
-      }
-      else
-      {
-        if (tag >= 0x61 && tag <= 0x76)
-        {
-          log.warn("Error 6419: data object {}", Hex.hexify(child.getEncoded()));
-        }
-        throw new SecureMessagingException(SecureMessagingException.CODE_SOFTWARE, "unrecognized DO at response", null);
       }
     }
-    checkMac(macDOBytes, macData);
+    catch (IOException e)
+    {
+      throw new SecureMessagingException(SecureMessagingException.CODE_SOFTWARE, e.getMessage(), e);
+    }
+
+    checkMac(macDOBytes, dataForMacComparison);
     byte[] dataBytes = getDataBytes(encDataDOBytes, encTag);
     byte[] responseBytes = response.getBytes();
     byte[] result = ByteUtil.combine(new byte[][]{dataBytes, processDOBytes == null
@@ -214,17 +244,38 @@ public class AESSecureMessaging implements SecureMessaging
     return new ResponseAPDU(result);
   }
 
-  private ASN1[] getDataChilds(byte[] responseData) throws SecureMessagingException
+  private static List<ASN1TaggedObject> getDataChilds(byte[] responseData) throws SecureMessagingException
   {
-    ASN1[] childs = null;
-    ASN1 asn1data = new ASN1(ASN1Constants.UNIVERSAL_TAG_SEQUENCE_CONSTRUCTED, responseData);
+    ASN1Sequence seq;
     try
     {
-      childs = asn1data.getChildElements();
+      // responseData contains concatenated ASN.1 objects, combine them in a sequence to facilitate parsing
+      byte[] seqBytes = Hex.decodeHex(EACServerUtil.makeTag("30", Hex.encodeHexString(responseData)));
+      seq = (ASN1Sequence)ASN1Primitive.fromByteArray(seqBytes);
     }
-    catch (IOException e)
+    catch (DecoderException | IOException e)
     {
       throw new SecureMessagingException(SecureMessagingException.CODE_SOFTWARE, e.getMessage(), e);
+    }
+
+    List<ASN1TaggedObject> childs = new ArrayList<>();
+    for ( ASN1Encodable asn1 : seq )
+    {
+      if (!(asn1 instanceof ASN1TaggedObject))
+      {
+        try
+        {
+          log.warn("Error 6419: data object {} - response data {}",
+                   asn1.toASN1Primitive().getEncoded(),
+                   Hex.encodeHexString(responseData));
+        }
+        catch (IOException _)
+        {
+          // nothing, just the logging has failed
+        }
+        throw new SecureMessagingException(SecureMessagingException.CODE_SOFTWARE, "unrecognized DO at response", null);
+      }
+      childs.add((ASN1TaggedObject)asn1);
     }
     return childs;
   }
@@ -239,51 +290,54 @@ public class AESSecureMessaging implements SecureMessaging
         dataBytes = CipherUtil.decipherAES(CIPHER_ALGORITHM,
                                            this.material.getAESEncKey(),
                                            this.material.getIvParameterSpec().getEncryptedIV(),
-                                           encTag == SMConstants.TAG_BYTE_DO_CRYPTOGRAM
-                                             ? ByteUtil.subbytes(encDataDOBytes, 1) : encDataDOBytes,
-                                           null);
+                                           encTag == toApplicationTag(SMConstants.TAG_BYTE_DO_CRYPTOGRAM)
+                                             ? ByteUtil.subbytes(encDataDOBytes, 1) : encDataDOBytes);
       }
       catch (IllegalBlockSizeException | BadPaddingException e)
       {
         throw new SecureMessagingException(SecureMessagingException.CODE_SOFTWARE, e.getMessage(), e);
       }
-      dataBytes = SMUtil.unpadISO(dataBytes, 16);
+      dataBytes = SMUtil.unpadISO(dataBytes, CipherUtil.AES_IV_LENGTH);
     }
     return dataBytes;
   }
 
-  private void checkMac(byte[] macDOBytes, byte[] macData) throws SecureMessagingException
+  private void checkMac(byte[] receivedMac, byte[] dataForMacComparison) throws SecureMessagingException
   {
-    if (ArrayUtil.isNullOrEmpty(macDOBytes))
+    if (ArrayUtil.isNullOrEmpty(receivedMac))
     {
       // invalidate key material so the channel can no longer be used
       this.material = null;
       throw new SecureMessagingException(SecureMessagingException.CODE_CARD, "no checksum received from card", null);
     }
-    else
+
+    byte[] calculatedMac = cMac(pad(dataForMacComparison));
+    if (!Arrays.equals(calculatedMac, receivedMac))
     {
-      byte[] tmpMacData = pad(macData);
-      byte[] cMac = null;
-      cMac = cMac(tmpMacData);
-      if (!Arrays.equals(cMac, macDOBytes))
-      {
-        // invalidate key material so the channel can no longer be used
-        this.material = null;
-        throw new SecureMessagingException(SecureMessagingException.CODE_CARD, "checksum not verified", null);
-      }
+      // invalidate key material so the channel can no longer be used
+      this.material = null;
+      throw new SecureMessagingException(SecureMessagingException.CODE_CARD, "checksum not verified", null);
     }
   }
 
   private byte[] createMacDO(byte[] secureHeaderBytes, byte[] cryptogramDOBytes, byte[] neDOBytes)
+    throws SecureMessagingException
   {
     byte[] macData = ByteUtil.combine(new byte[][]{secureHeaderBytes, cryptogramDOBytes, neDOBytes});
     if (!ArrayUtil.isNullOrEmpty(cryptogramDOBytes) || !ArrayUtil.isNullOrEmpty(neDOBytes))
     {
       macData = pad(macData);
     }
-    byte[] cMac = this.cMac(macData);
-    ASN1 result = new ASN1(SMConstants.TAG_BYTE_DO_CRYPTOGRPAHIC_CHECKSUM, cMac);
-    return result.getEncoded();
+    byte[] cMac = cMac(macData);
+    try
+    {
+      return Hex.decodeHex(EACServerUtil.makeTag(Hex.encodeHexString(new byte[]{SMConstants.TAG_BYTE_DO_CRYPTOGRPAHIC_CHECKSUM}),
+                                                 Hex.encodeHexString(cMac)));
+    }
+    catch (DecoderException | IllegalArgumentException e)
+    {
+      throw new SecureMessagingException(SecureMessagingException.CODE_SOFTWARE, e.getMessage(), e);
+    }
   }
 
   private byte[] cMac(byte[] macData)
@@ -292,7 +346,7 @@ public class AESSecureMessaging implements SecureMessaging
     return CipherUtil.cMAC(macData, this.material.getAESMacKey(), ivSpec, CipherUtil.AES_CMAC_DEFAULT_LENGTH);
   }
 
-  private static byte[] createNeDO(byte[] le)
+  private static byte[] createNeDO(byte[] le) throws SecureMessagingException
   {
     if (ArrayUtil.isNullOrEmpty(le))
     {
@@ -303,7 +357,15 @@ public class AESSecureMessaging implements SecureMessaging
     {
       leTmp = ByteUtil.subbytes(le, 1, CommandAPDUConstants.COUNT_EXTENDED);
     }
-    return new ASN1(SMConstants.TAG_BYTE_DO_NE, leTmp).getEncoded();
+    try
+    {
+      return Hex.decodeHex(EACServerUtil.makeTag(Hex.encodeHexString(new byte[]{SMConstants.TAG_BYTE_DO_NE}),
+                                                 Hex.encodeHexString(leTmp)));
+    }
+    catch (DecoderException | IllegalArgumentException e)
+    {
+      throw new SecureMessagingException(SecureMessagingException.CODE_SOFTWARE, e.getMessage(), e);
+    }
   }
 
   private byte[] createCryptogramDO(CommandAPDU command) throws SecureMessagingException
@@ -317,24 +379,21 @@ public class AESSecureMessaging implements SecureMessaging
       }
       byte[] paddedData = pad(data);
       IvParameterSpec encIv = this.material.getIvParameterSpec().getEncryptedIV();
-      byte[] cryptogram = CipherUtil.encipherAES(CIPHER_ALGORITHM,
-                                                 this.material.getAESEncKey(),
-                                                 encIv,
-                                                 paddedData,
-                                                 null);
-      ASN1 result;
+      byte[] cryptogram = CipherUtil.encipherAES(CIPHER_ALGORITHM, this.material.getAESEncKey(), encIv, paddedData);
+
       if (command.getINS() % 2 == 0)
       {
         byte[] paddedCryptogram = ByteUtil.combine(new byte[]{SMConstants.PADDING_INDICATOR_BYTE_ISO}, cryptogram);
-        result = new ASN1(SMConstants.TAG_BYTE_DO_CRYPTOGRAM, paddedCryptogram);
+        return Hex.decodeHex(EACServerUtil.makeTag(Hex.encodeHexString(new byte[]{SMConstants.TAG_BYTE_DO_CRYPTOGRAM}),
+                                                   Hex.encodeHexString(paddedCryptogram)));
       }
       else
       {
-        result = new ASN1(SMConstants.TAG_BYTE_DO_CRYPTOGRAM_85, cryptogram);
+        return Hex.decodeHex(EACServerUtil.makeTag(Hex.encodeHexString(new byte[]{SMConstants.TAG_BYTE_DO_CRYPTOGRAM_85}),
+                                                   Hex.encodeHexString(cryptogram)));
       }
-      return result.getEncoded();
     }
-    catch (IllegalBlockSizeException | BadPaddingException e)
+    catch (IllegalBlockSizeException | BadPaddingException | DecoderException e)
     {
       throw new SecureMessagingException(SecureMessagingException.CODE_SOFTWARE, e.getMessage(), e);
     }
@@ -342,13 +401,18 @@ public class AESSecureMessaging implements SecureMessaging
 
   private static byte[] createSecureHeader(byte[] header)
   {
-    byte[] result = header.clone();
-    ByteUtil.setBits(result, 0, (byte)0x0c);
+    byte[] result = header;
+    result[0] |= 0x0c;
     return result;
   }
 
   private static byte[] pad(byte[] data)
   {
     return SMUtil.padISO(data, CipherUtil.AES_IV_LENGTH);
+  }
+
+  private static final byte toApplicationTag(byte tag)
+  {
+    return (byte)(tag - 0x80);
   }
 }

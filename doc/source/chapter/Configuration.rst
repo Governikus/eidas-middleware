@@ -42,8 +42,9 @@ The following table describes the individual key stores and certificates:
     | BerCA Client       | This key store is needed to access the :term:`Authorization CA`.                            | Admin-UI > eID service provider > DVCA client authentication key pair       |
     | Key Store          |                                                                                             |                                                                             |
     +--------------------+---------------------------------------------------------------------------------------------+-----------------------------------------------------------------------------+
-    | BerCA Server       | This certificate is needed to validate the BerCA server certificate of the                  | Admin-UI > DVCA > DVCA server certificate                                   |
-    | Certificate        | :term:`Authorization CA`.                                                                   |                                                                             |
+    | BerCA Server       | This optional certificate is needed to validate the BerCA server certificate of the         | Admin-UI > DVCA > DVCA server certificate                                   |
+    | Certificate        | :term:`Authorization CA`. If no certificate is configured the Java Trust Store will be used |                                                                             |
+    |                    | to validate the BerCA server certificate.                                                   |                                                                             |
     +--------------------+---------------------------------------------------------------------------------------------+-----------------------------------------------------------------------------+
     | Master List        | This certificate is needed to verify the signature of the :term:`Master List`.              | Admin-UI > DVCA > Master List Trust Anchor                                  |
     | Trust Anchor       |                                                                                             |                                                                             |
@@ -105,6 +106,9 @@ This configuration file contains the following sections:
         The eID port must be reachable by the users' eID clients from the internet while you can
         limit access to the second port to your administrators only.
 
+    The optional property ``server.maxRequestSize`` can be used to limit the request size in kilobytes (KB) for
+    specific POST endpoints. If not set the default value is 100KB.
+
 #.  **TLS settings**
 
     To configure the TLS connection with your Server TLS Key Store, insert the appropriate values in this section.
@@ -155,6 +159,13 @@ This configuration file contains the following sections:
     The folder can be configured using the property ``blocklist.storage-folder``. If it is not set,
     the default folder is ``block-list-data`` (as a relative path to the eIDAS Middleware main folder).
     The MW requires permission to write and read in that folder.
+
+#.  **Text in UI**
+
+    Beginning in version 4.1.0, the authority address can be shown in the eIDAS Middleware Website.
+    The text can be configured using the optional property ``eidas.middleware.authority.address``.
+    The optional property ``eidas.middleware.privacy.policy.url`` sets the URL to the privacy policy site. If one of
+    the properties is not set, it will not be shown in the footer area of the eIDAS Middleware Website.
 
 
 

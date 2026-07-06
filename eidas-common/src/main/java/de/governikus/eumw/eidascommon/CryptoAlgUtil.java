@@ -190,7 +190,7 @@ public class CryptoAlgUtil
     {
       fromXmlSigAlg(sigAlg);
     }
-    catch (Exception e)
+    catch (Exception _)
     {
       throw new ErrorCodeException(ErrorCode.SIGNATURE_CHECK_FAILED, INVALID_HASH_OR_SIGNATURE_ALGORITHM);
     }

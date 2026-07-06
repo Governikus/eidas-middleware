@@ -37,6 +37,7 @@ import de.governikus.eumw.poseidas.services.terminal.auth.wsdl.v1_4_0.GetCertifi
 import de.governikus.eumw.poseidas.services.terminal.auth.wsdl.v1_4_0.GetPKICommunicationCertRequest;
 import de.governikus.eumw.poseidas.services.terminal.auth.wsdl.v1_4_0.GetPKICommunicationCertResult;
 import de.governikus.eumw.poseidas.services.terminal.auth.wsdl.v1_4_0.GetPKICommunicationCertReturnCodeType;
+import de.governikus.eumw.poseidas.services.terminal.auth.wsdl.v1_4_0.OptionalMessageType;
 import de.governikus.eumw.poseidas.services.terminal.auth.wsdl.v1_4_0.OptionalNoPollBeforeType;
 import de.governikus.eumw.poseidas.services.terminal.auth.wsdl.v1_4_0.RequestCertificateRequest;
 import de.governikus.eumw.poseidas.services.terminal.auth.wsdl.v1_4_0.RequestCertificateResult;
@@ -63,7 +64,7 @@ import lombok.RequiredArgsConstructor;
 public class TermAuthService
 {
 
-  private final TerminalAuthWebService_1_4_0 port;
+  private TerminalAuthWebService_1_4_0 port;
 
   /**
    * create new instance
@@ -147,10 +148,13 @@ public class TermAuthService
     RequestCertificateResult result = port.requestCertificate(certificateRequest);
 
     RequestCertificateReturnCodeType returnCode = result.getReturnCode();
+    OptionalMessageType returnCodeMessage = result.getReturnCodeMessage();
     if (RequestCertificateReturnCodeType.OK_CERT_AVAILABLE != returnCode)
     {
       throw new GovManagementException(GlobalManagementCodes.EC_UNEXPECTED_ERROR,
-                                       "send request returned " + returnCode);
+                                       "send request returned %s %s".formatted(returnCode,
+                                                                               returnCodeMessage == null ? ""
+                                                                                 : returnCodeMessage.getMessage()));
     }
     return getCertificate(result.getCertificateSeq().getCertificate());
   }
@@ -265,5 +269,12 @@ public class TermAuthService
     private static final long serialVersionUID = 1L;
 
     private final OptionalNoPollBeforeType noPollBefore;
+  }
+
+
+  // For Testing
+  void setPort(TerminalAuthWebService_1_4_0 port)
+  {
+    this.port = port;
   }
 }

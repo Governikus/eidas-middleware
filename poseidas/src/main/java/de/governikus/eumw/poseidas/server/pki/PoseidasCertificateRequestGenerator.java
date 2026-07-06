@@ -15,12 +15,8 @@ import java.security.SignatureException;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
-import de.governikus.eumw.poseidas.cardbase.asn1.npa.ATConstants;
-import de.governikus.eumw.poseidas.cardbase.asn1.npa.CertificateDescription;
-import de.governikus.eumw.poseidas.cardbase.asn1.npa.CertificateHolderAuthorizationTemplate;
-import de.governikus.eumw.poseidas.cardbase.asn1.npa.ECCVCertificate;
+import de.governikus.autent.asn1.CVC;
 import de.governikus.eumw.poseidas.cardserver.certrequest.CvcRequestGenerator;
-import de.governikus.eumw.poseidas.cardserver.certrequest.CvcRequestGenerator.AdditionalCvcRequestInput;
 import de.governikus.eumw.poseidas.cardserver.certrequest.CvcRequestGenerator.CvcRequestData;
 import de.governikus.eumw.poseidas.cardserver.service.ServiceRegistry;
 import de.governikus.eumw.poseidas.cardserver.service.hsm.HSMServiceFactory;
@@ -44,23 +40,19 @@ class PoseidasCertificateRequestGenerator
 
   private final String entityID;
 
-  private ECCVCertificate rootCVC;
+  private CVC rootCVC;
 
-  private ECCVCertificate oldCVC;
+  private CVC oldCVC;
 
   private byte[] oldPrivKey;
 
-  private CertificateDescription description;
-
-  private AdditionalCvcRequestInput addData;
+  private String newChr;
 
   @Setter
   private byte[] rscPrivateKey;
 
   @Setter
   private String rscAlias;
-
-  private Integer nextCvcSequenceNumber;
 
   /**
    * Create instance for one-time use on behalf of specified service provider
@@ -84,28 +76,16 @@ class PoseidasCertificateRequestGenerator
    * {@link #setDataForFirstRequest(String, boolean, boolean, String, String, String, int)}
    *
    * @param encodedRootCvc
-   * @param encodedDescription
    * @param countryCode
    * @param chrMnemonic
    * @param sequenceNumber
    */
-  void setDataForFirstRequest(byte[] encodedRootCvc,
-                              byte[] encodedDescription,
-                              String countryCode,
-                              String chrMnemonic,
-                              int sequenceNumber)
+  void setDataForFirstRequest(byte[] encodedRootCvc, String countryCode, String chrMnemonic, int sequenceNumber)
     throws IOException
   {
-    rootCVC = new ECCVCertificate(encodedRootCvc);
+    rootCVC = new CVC(encodedRootCvc);
 
-    if (encodedDescription != null)
-    {
-      description = new CertificateDescription(encodedDescription);
-    }
-    CertificateHolderAuthorizationTemplate chat = new CertificateHolderAuthorizationTemplate(ATConstants.OID_AUTHENTICATION_TERMINALS,
-                                                                                             new byte[ATConstants.VALUE_BYTE_COUNT]);
-
-    addData = new AdditionalCvcRequestInput(createChr(countryCode, chrMnemonic, sequenceNumber), null, chat);
+    newChr = createChr(countryCode, chrMnemonic, sequenceNumber);
   }
 
   /**
@@ -114,25 +94,19 @@ class PoseidasCertificateRequestGenerator
    * @param encodedRootCVC
    * @param encodedOldCVC
    * @param oldPrivateKey can be null if old private key is in the HSM
-   * @param descriptionAsBytes
    * @param nextCvcSequenceNumber
    * @throws IOException
    */
   void prepareSubsequentRequest(byte[] encodedRootCVC,
                                 byte[] encodedOldCVC,
                                 byte[] oldPrivateKey,
-                                byte[] descriptionAsBytes,
                                 Integer nextCvcSequenceNumber)
     throws IOException
   {
-    rootCVC = new ECCVCertificate(encodedRootCVC);
-    oldCVC = new ECCVCertificate(encodedOldCVC);
+    rootCVC = new CVC(encodedRootCVC);
+    oldCVC = new CVC(encodedOldCVC);
     oldPrivKey = oldPrivateKey;
-    this.nextCvcSequenceNumber = nextCvcSequenceNumber;
-    if (descriptionAsBytes != null)
-    {
-      description = new CertificateDescription(descriptionAsBytes);
-    }
+    newChr = CvcRequestGenerator.generateNewCHR(oldCVC, nextCvcSequenceNumber);
   }
 
 
@@ -148,12 +122,11 @@ class PoseidasCertificateRequestGenerator
    */
   CvcRequestData create() throws IOException, SignatureException
   {
-    String newCHR = CvcRequestGenerator.generateNewCHR(oldCVC, addData, nextCvcSequenceNumber);
     boolean keyAlreadyThere = false;
     try
     {
       HSMService hsm = ServiceRegistry.Util.getServiceRegistry().getService(HSMServiceFactory.class).getHSMService();
-      keyAlreadyThere = hsm.containsKey(newCHR) || (facade != null && facade.changeKeyLockExists(newCHR));
+      keyAlreadyThere = hsm.containsKey(newChr) || (facade != null && facade.changeKeyLockExists(newChr));
     }
     catch (HSMException e)
     {
@@ -170,44 +143,20 @@ class PoseidasCertificateRequestGenerator
 
     if (keyAlreadyThere)
     {
-      return CvcRequestGenerator.generateRequest(oldCVC,
-                                                 oldPrivKey,
-                                                 rootCVC,
-                                                 description,
-                                                 addData,
-                                                 true,
-                                                 rscAlias,
-                                                 rscPrivateKey,
-                                                 nextCvcSequenceNumber);
+      return CvcRequestGenerator.generateRequest(oldCVC, oldPrivKey, rootCVC, newChr, true, rscAlias, rscPrivateKey);
     }
 
     ChangeKeyLock lock = null;
     if (facade != null)
     {
-      lock = facade.obtainChangeKeyLock(newCHR, ChangeKeyLock.TYPE_DISTRIBUTE);
+      lock = facade.obtainChangeKeyLock(newChr, ChangeKeyLock.TYPE_DISTRIBUTE);
       if (lock == null)
       {
-        LOG.debug(entityID + ": Key " + newCHR + " is currently being changed in the HSM cluster");
-        throw new IllegalStateException("Key " + newCHR + " is currently being changed in the HSM cluster");
+        LOG.debug(entityID + ": Key " + newChr + " is currently being changed in the HSM cluster");
+        throw new IllegalStateException("Key " + newChr + " is currently being changed in the HSM cluster");
       }
-      LOG.debug(entityID + ": lock for key " + newCHR + " obtained");
+      LOG.debug(entityID + ": lock for key " + newChr + " obtained");
     }
-    return CvcRequestGenerator.generateRequest(oldCVC,
-                                               oldPrivKey,
-                                               rootCVC,
-                                               description,
-                                               addData,
-                                               false,
-                                               rscAlias,
-                                               rscPrivateKey,
-                                               nextCvcSequenceNumber);
-  }
-
-  /**
-   * return the certificate description
-   */
-  public byte[] getCertificateDescription()
-  {
-    return description.getEncoded();
+    return CvcRequestGenerator.generateRequest(oldCVC, oldPrivKey, rootCVC, newChr, false, rscAlias, rscPrivateKey);
   }
 }

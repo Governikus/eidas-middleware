@@ -15,9 +15,10 @@ import java.util.List;
 import java.util.Set;
 
 import de.governikus.eumw.poseidas.eidmodel.TerminalData;
-import de.governikus.eumw.poseidas.eidmodel.data.EIDKeys;
 import de.governikus.eumw.poseidas.eidserver.ecardid.BlackListConnector;
 import de.governikus.eumw.poseidas.eidserver.ecardid.SessionInput;
+import de.governikus.panstar.sdk.utils.constant.EIDAttributeName;
+
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
@@ -47,9 +48,9 @@ public class SessionInputImpl implements SessionInput
 
   private String requiredCommunity;
 
-  private final Set<EIDKeys> requiredFields = new HashSet<>();
+  private final Set<EIDAttributeName> requiredFields = new HashSet<>();
 
-  private final Set<EIDKeys> optionalFields = new HashSet<>();
+  private final Set<EIDAttributeName> optionalFields = new HashSet<>();
 
   private final List<TerminalData> cvcChain;
 
@@ -107,11 +108,11 @@ public class SessionInputImpl implements SessionInput
     requiredAge = Integer.valueOf(age);
     if (required)
     {
-      requiredFields.add(EIDKeys.AGE_VERIFICATION);
+      requiredFields.add(EIDAttributeName.AgeVerification);
     }
     else
     {
-      optionalFields.add(EIDKeys.AGE_VERIFICATION);
+      optionalFields.add(EIDAttributeName.AgeVerification);
     }
   }
 
@@ -125,11 +126,11 @@ public class SessionInputImpl implements SessionInput
     requiredCommunity = value;
     if (required)
     {
-      requiredFields.add(EIDKeys.MUNICIPALITY_ID_VERIFICATION);
+      requiredFields.add(EIDAttributeName.PlaceVerification);
     }
     else
     {
-      optionalFields.add(EIDKeys.MUNICIPALITY_ID_VERIFICATION);
+      optionalFields.add(EIDAttributeName.PlaceVerification);
     }
   }
 
@@ -138,7 +139,7 @@ public class SessionInputImpl implements SessionInput
    *
    * @param key must not be age or place verification - use above methods to request these.
    */
-  void addOptionalField(EIDKeys key)
+  void addOptionalField(EIDAttributeName key)
   {
     addField(optionalFields, key);
   }
@@ -148,23 +149,23 @@ public class SessionInputImpl implements SessionInput
    *
    * @param key must not be age or place verification - use above methods to request these.
    */
-  void addRequiredField(EIDKeys key)
+  void addRequiredField(EIDAttributeName key)
   {
     addField(requiredFields, key);
   }
 
-  private void addField(Set<EIDKeys> keyset, EIDKeys key)
+  private void addField(Set<EIDAttributeName> keyset, EIDAttributeName key)
   {
-    if (key == EIDKeys.AGE_VERIFICATION || key == EIDKeys.MUNICIPALITY_ID_VERIFICATION)
+    if (key == EIDAttributeName.AgeVerification || key == EIDAttributeName.PlaceVerification)
     {
       throw new IllegalArgumentException("additional input needed - use separate method");
     }
-    if (key == EIDKeys.RESTRICTED_ID)
+    if (key == EIDAttributeName.RestrictedID)
     {
       performRestrictedIdentification = true;
       keyset.add(key);
     }
-    else if (key == EIDKeys.DOCUMENT_VALIDITY)
+    else if (key == EIDAttributeName.DocumentValidity)
     {
       verifyDocumentValidity = true;
     }

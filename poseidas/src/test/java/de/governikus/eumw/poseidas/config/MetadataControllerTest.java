@@ -85,15 +85,15 @@ import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 import org.w3c.dom.Element;
 
-import com.gargoylesoftware.htmlunit.UnexpectedPage;
-import com.gargoylesoftware.htmlunit.html.HtmlAnchor;
-import com.gargoylesoftware.htmlunit.html.HtmlDivision;
-import com.gargoylesoftware.htmlunit.html.HtmlListItem;
-import com.gargoylesoftware.htmlunit.html.HtmlPage;
-import com.gargoylesoftware.htmlunit.html.HtmlParagraph;
-import com.gargoylesoftware.htmlunit.html.HtmlSpan;
-import com.gargoylesoftware.htmlunit.html.HtmlTableRow;
-import com.gargoylesoftware.htmlunit.html.HtmlTextArea;
+import org.htmlunit.UnexpectedPage;
+import org.htmlunit.html.HtmlAnchor;
+import org.htmlunit.html.HtmlDivision;
+import org.htmlunit.html.HtmlListItem;
+import org.htmlunit.html.HtmlPage;
+import org.htmlunit.html.HtmlParagraph;
+import org.htmlunit.html.HtmlSpan;
+import org.htmlunit.html.HtmlTableRow;
+import org.htmlunit.html.HtmlTextArea;
 
 import de.governikus.eumw.config.CertificateType;
 import de.governikus.eumw.config.ConnectorMetadataType;

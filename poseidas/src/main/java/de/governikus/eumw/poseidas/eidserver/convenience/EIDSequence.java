@@ -24,12 +24,10 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.bouncycastle.asn1.pkcs.IssuerAndSerialNumber;
 
-import de.governikus.eumw.poseidas.cardbase.asn1.ASN1;
-import de.governikus.eumw.poseidas.cardbase.asn1.npa.CertificateDescription;
-import de.governikus.eumw.poseidas.cardbase.asn1.npa.CertificateDescriptionPath;
-import de.governikus.eumw.poseidas.cardbase.asn1.npa.CertificateHolderAuthorizationTemplate;
-import de.governikus.eumw.poseidas.cardbase.asn1.npa.CertificateHolderAuthorizationTemplate.ChatTerminalType;
-import de.governikus.eumw.poseidas.cardbase.npa.CVCPermission;
+import de.governikus.autent.asn1.AuthenticatedAuxiliaryData;
+import de.governikus.autent.asn1.CHAT;
+import de.governikus.autent.asn1.CVCDescription;
+import de.governikus.autent.asn1.masterlist.MasterListParser;
 import de.governikus.eumw.poseidas.cardserver.eac.protocol.EACFinal;
 import de.governikus.eumw.poseidas.cardserver.eac.protocol.EACServer;
 import de.governikus.eumw.poseidas.cardserver.eac.protocol.InvalidEidException;
@@ -41,9 +39,7 @@ import de.governikus.eumw.poseidas.ecardcore.model.EAC2OutputTypeWrapper;
 import de.governikus.eumw.poseidas.ecardcore.model.ResultMajor;
 import de.governikus.eumw.poseidas.ecardcore.model.ResultMinor;
 import de.governikus.eumw.poseidas.ecardcore.utilities.ECardCoreUtil;
-import de.governikus.eumw.poseidas.eidmodel.AuthenticatedAuxiliaryData;
 import de.governikus.eumw.poseidas.eidmodel.TerminalData;
-import de.governikus.eumw.poseidas.eidmodel.data.EIDKeys;
 import de.governikus.eumw.poseidas.eidserver.convenience.session.SessionManager;
 import de.governikus.eumw.poseidas.eidserver.eac.EACSignedDataChecker;
 import de.governikus.eumw.poseidas.eidserver.eac.EACSignedDataController;
@@ -54,8 +50,8 @@ import de.governikus.eumw.poseidas.eidserver.ecardid.EIDInfoContainer.EIDStatus;
 import de.governikus.eumw.poseidas.eidserver.ecardid.SessionInput;
 import de.governikus.eumw.poseidas.eidserver.model.signeddata.DefectKnown.DefectType;
 import de.governikus.eumw.poseidas.eidserver.model.signeddata.DefectList;
-import de.governikus.eumw.poseidas.eidserver.model.signeddata.MasterList;
 import de.governikus.eumw.poseidas.server.pki.CmsSignatureChecker;
+import de.governikus.panstar.sdk.utils.constant.EIDAttributeName;
 import iso.std.iso_iec._24727.tech.schema.ConnectionHandleType;
 import iso.std.iso_iec._24727.tech.schema.DIDAuthenticate;
 import iso.std.iso_iec._24727.tech.schema.DIDAuthenticateResponse;
@@ -212,7 +208,7 @@ public class EIDSequence extends ECardConvenienceSequenceAdapter
   /**
    * Data fields to be read
    */
-  private Set<CVCPermission> allRights;
+  private Set<EIDAttributeName> allRights;
 
 
   // ================ SIMPLE TYPES ================
@@ -262,11 +258,8 @@ public class EIDSequence extends ECardConvenienceSequenceAdapter
   /**
    * EIDSequence object to handle EAC protocol with nPA
    *
-   * @param frameworkInstance for eCard
    * @param cvc represents the card verifiable certificate from mCard
    * @param cvcList represents the card verifiable certificate from mCard and the link certificates from server
-   * @param requiredChat CHAT for this session
-   * @param optionalChat CHAT for this session
    * @param sessionInput for this sequence
    * @throws IllegalArgumentException is thrown if no Blacklist is available or sessionInput returns unexpected result
    */
@@ -292,29 +285,21 @@ public class EIDSequence extends ECardConvenienceSequenceAdapter
     }
     // First CVC from list is the terminal certificate
     mCardVerifiableCert = cvc;
-    CertificateDescription cvcDescription = mCardVerifiableCert.getCVCDescription();
+    CVCDescription cvcDescription = mCardVerifiableCert.getCVCDescription();
     // Check description
     if (cvcDescription == null)
     {
       throw new IllegalArgumentException(LOG_PRE_INIT + INITIALIZE_FAIL + "CVC description is null");
     }
-    try
+    List<byte[]> commonCertificates = cvcDescription.getCommunicationCertificateDigestValues();
+    if (commonCertificates != null)
     {
-      ASN1 commonCertificates = cvcDescription.getCertificateDescriptionPart(CertificateDescriptionPath.COMM_CERTIFICATES);
-      if (commonCertificates != null)
-      {
-        LOG.debug(logPrefix + LOG_PRE_INIT + "Common certificates length: "
-                  + commonCertificates.getChildElementCount());
-      }
-      else
-      {
-        throw new IllegalArgumentException(LOG_PRE_INIT + "CVC contains not the required descriptions: "
-                                           + "No common certificates found");
-      }
+      LOG.debug(logPrefix + LOG_PRE_INIT + "Common certificates length: " + commonCertificates.size());
     }
-    catch (IOException e)
+    else
     {
-      throw new IllegalArgumentException(LOG_PRE_INIT + "CVC contains not the required descriptions", e);
+      throw new IllegalArgumentException(LOG_PRE_INIT + "CVC contains not the required descriptions: "
+                                         + "No common certificates found");
     }
     this.cvcList = cvcList;
   }
@@ -396,15 +381,15 @@ public class EIDSequence extends ECardConvenienceSequenceAdapter
       }
       calendar.add(Calendar.YEAR, -1 * sessionInput.getRequiredAge());
       String ageVerification = new SimpleDateFormat("yyyyMMdd").format(calendar.getTime());
-      authenticatedAuxiliaryData.setAgeVerificationAuxiliaryData(ageVerification);
+      authenticatedAuxiliaryData.setAgeVerification(ageVerification);
     }
     if (sessionInput.getRequiredCommunity() != null)
     {
-      authenticatedAuxiliaryData.setCommunityIDAuxiliaryData(sessionInput.getRequiredCommunity());
+      authenticatedAuxiliaryData.setMunicipalityIDVerification(sessionInput.getRequiredCommunity());
     }
     String documentVerification = new SimpleDateFormat("yyyyMMdd").format(now);
     LOG.debug(logPrefix + LOG_PRE_INIT + "Document Validity will be checked for date: " + documentVerification);
-    authenticatedAuxiliaryData.setDocumentVerificationAuxiliaryData(documentVerification);
+    authenticatedAuxiliaryData.setDocumentVerification(documentVerification);
   }
 
   private List<X509Certificate> getMasterList(SessionInput sessionInput)
@@ -416,13 +401,20 @@ public class EIDSequence extends ECardConvenienceSequenceAdapter
         throw new IllegalArgumentException("Master list to set may not be empty");
       }
 
-      MasterList masterListObj = new MasterList(sessionInput.getMasterList());
-      List<X509Certificate> certificates = masterListObj.getCertificates();
-      if (certificates.isEmpty())
+      List<X509Certificate> masterListCertificates;
+      try
+      {
+        masterListCertificates = MasterListParser.getMasterListCertificates(sessionInput.getMasterList());
+      }
+      catch (MasterListParser.MasterlistParsingException e)
+      {
+        throw new IllegalArgumentException("Cannot parse Master list", e);
+      }
+      if (masterListCertificates.isEmpty())
       {
         throw new IllegalArgumentException("Master list is empty");
       }
-      return certificates;
+      return masterListCertificates;
     }
     else if (sessionInput.getMasterListCerts() != null)
     {
@@ -548,7 +540,7 @@ public class EIDSequence extends ECardConvenienceSequenceAdapter
     {
       rm = ResultMinor.valueOfEnum(result.getResultMinor());
     }
-    catch (IllegalArgumentException | NullPointerException e2)
+    catch (IllegalArgumentException | NullPointerException _)
     {
       rm = ResultMinor.COMMON_INTERNAL_ERROR;
     }
@@ -716,7 +708,7 @@ public class EIDSequence extends ECardConvenienceSequenceAdapter
    *
    * @return factory object
    */
-  private Object handleStart()
+  private Object handleStart() throws ECardException
   {
     LOG.debug(logPrefix + LOG_PRE_START + "Connection handle available. DIDName set directly to 'PIN'");
     mDIDName = DEFAULT_DID_NAME;
@@ -725,25 +717,18 @@ public class EIDSequence extends ECardConvenienceSequenceAdapter
     return returnObject;
   }
 
-  private Object handleDIDAuthenticate(DIDAuthenticateResponse response) throws ECardException
+  private Object handleDIDAuthenticate(DIDAuthenticateResponse didAuthenticateResponse) throws ECardException
   {
-    DIDAuthenticateResponse didAuthenticateResponse = response;
     // Check if it is an EAC1 or EAC2 response.
     DIDAuthenticationDataType protocolData = didAuthenticateResponse.getAuthenticationProtocolData();
-    if (protocolData instanceof EAC1OutputType)
+    return switch (protocolData)
     {
-      return handleAuthenticationProtocolData(new EAC1OutputTypeWrapper((EAC1OutputType)protocolData));
-    }
-    else if (protocolData instanceof EAC2OutputType)
-    {
-      return handleAuthenticationProtocolData(new EAC2OutputTypeWrapper((EAC2OutputType)protocolData));
-    }
-    else
-    {
-      return handleError(ResultMinor.COMMON_INTERNAL_ERROR,
-                         "DIDAuthenticateResponse: authenticationProtocolData is no instanceof "
-                                                            + "EAC1OutputType or EAC2OutputType");
-    }
+      case EAC1OutputType castedProtocolData -> handleAuthenticationProtocolData(new EAC1OutputTypeWrapper(castedProtocolData));
+      case EAC2OutputType castedProtocolData -> handleAuthenticationProtocolData(new EAC2OutputTypeWrapper(castedProtocolData));
+      default -> handleError(ResultMinor.COMMON_INTERNAL_ERROR,
+                             "DIDAuthenticateResponse: authenticationProtocolData is no instanceof "
+                                                                + "EAC1OutputType or EAC2OutputType");
+    };
   }
 
   private Object handleAuthenticationProtocolData(EAC1OutputTypeWrapper eac1OutputType) throws ECardException
@@ -761,8 +746,8 @@ public class EIDSequence extends ECardConvenienceSequenceAdapter
     // Create Server and get stored EAC1Input
     eacServer = new EACServer();
 
-    this.allRights = this.mRequiredAuthorizations.chat.getAllRights();
-    this.allRights.addAll(this.mOptionalAuthorizations.chat.getAllRights());
+    this.allRights = this.mRequiredAuthorizations.chat.getAllowedAttributes();
+    this.allRights.addAll(this.mOptionalAuthorizations.chat.getAllowedAttributes());
 
     // Get selected fields from user
     byte[] template = eac1OutputType.getCertificateHolderAuthorizationTemplate();
@@ -770,12 +755,13 @@ public class EIDSequence extends ECardConvenienceSequenceAdapter
     {
       try
       {
-        this.mModifiedAuthorizations.chat = new CertificateHolderAuthorizationTemplate(template);
-        this.allRights.retainAll(this.mModifiedAuthorizations.chat.getAllRights());
-        if ((mRequiredAuthorizations.chat.isReadBirthName() || mOptionalAuthorizations.chat.isReadBirthName())
-            && !mModifiedAuthorizations.chat.isReadBirthName())
+        this.mModifiedAuthorizations.chat = new CHAT(template);
+        this.allRights.retainAll(this.mModifiedAuthorizations.chat.getAllowedAttributes());
+        if ((mRequiredAuthorizations.chat.allows(EIDAttributeName.BirthName.getAccessRights())
+             || mOptionalAuthorizations.chat.allows(EIDAttributeName.BirthName.getAccessRights()))
+            && !mModifiedAuthorizations.chat.allows(EIDAttributeName.BirthName.getAccessRights()))
         {
-          eidInfoContainer.getInfoMap().put(EIDKeys.BIRTH_NAME, new EIDInfoResultDeselected());
+          eidInfoContainer.getInfoMap().put(EIDAttributeName.BirthName, new EIDInfoResultDeselected());
         }
       }
       catch (IOException | IllegalArgumentException e)
@@ -785,7 +771,7 @@ public class EIDSequence extends ECardConvenienceSequenceAdapter
     }
 
     LOG.debug(logPrefix + LOG_PRE_AUTH + "Create EAC2InputType");
-    EAC2InputTypeWrapper eac2InputType = null;
+    EAC2InputTypeWrapper eac2InputType;
     try
     {
       eac2InputType = eacServer.executeStep(EACServer.STEP_PACE_OUTPUT_TO_TACA_INPUT,
@@ -1001,16 +987,22 @@ public class EIDSequence extends ECardConvenienceSequenceAdapter
     return ofIso.createStartPAOSResponse(rt);
   }
 
-  private Object getEAC1DIDAuthenticate()
+  private Object getEAC1DIDAuthenticate() throws ECardException
   {
     eac1Input = new EAC1InputTypeWrapper();
     eac1Input.setProtocol(EACServer.PROTOCOL_EAC2);
 
-    eac1Input.setRequiredCHAT(mRequiredAuthorizations.chat.getEncoded());
-    eac1Input.setOptionalCHAT(mOptionalAuthorizations.chat.getEncoded());
-
-    eac1Input.setCertificateDescription(mCardVerifiableCert.getCVCDescription().getEncoded());
-    eac1Input.setAuthenticatedAuxiliaryData(authenticatedAuxiliaryData.getEncoded());
+    try
+    {
+      eac1Input.setRequiredCHAT(mRequiredAuthorizations.chat.getEncoded());
+      eac1Input.setOptionalCHAT(mOptionalAuthorizations.chat.getEncoded());
+      eac1Input.setCertificateDescription(mCardVerifiableCert.getCVCDescription().getEncoded());
+      eac1Input.setAuthenticatedAuxiliaryData(authenticatedAuxiliaryData.getEncoded());
+    }
+    catch (IOException e)
+    {
+      throw new ECardException(ResultMinor.COMMON_INTERNAL_ERROR, e);
+    }
 
     for ( TerminalData linkCVC : cvcList )
     {
@@ -1062,39 +1054,34 @@ public class EIDSequence extends ECardConvenienceSequenceAdapter
   }
 
   /**
-   * Create an optional {@link CertificateHolderAuthorizationTemplate} by extracting the informations from outer session
-   * input
+   * Create an optional {@link CHAT} by extracting the informations from outer session input
    *
    * @param sessionInput to be used for creation
-   * @return {@link CertificateHolderAuthorizationTemplate} with optional fields
+   * @return {@link CHAT} with optional fields
    * @throws ChatOptionNotAllowedException
    */
-  private static CertificateHolderAuthorizationTemplate createOptionalCHAT(SessionInput sessionInput)
-    throws ChatOptionNotAllowedException
+  private static CHAT createOptionalCHAT(SessionInput sessionInput) throws ChatOptionNotAllowedException
   {
     return createCHAT(sessionInput, true);
   }
 
   /**
-   * Create the required {@link CertificateHolderAuthorizationTemplate} by extracting the informations from outer
-   * session input
+   * Create the required {@link CHAT} by extracting the informations from outer session input
    *
    * @param sessionInput to be used for creation
-   * @return {@link CertificateHolderAuthorizationTemplate} with required fields
+   * @return {@link CHAT} with required fields
    * @throws ChatOptionNotAllowedException
    */
-  private static CertificateHolderAuthorizationTemplate createRequiredCHAT(SessionInput sessionInput)
-    throws ChatOptionNotAllowedException
+  private static CHAT createRequiredCHAT(SessionInput sessionInput) throws ChatOptionNotAllowedException
   {
     return createCHAT(sessionInput, false);
   }
 
-  private static CertificateHolderAuthorizationTemplate createCHAT(SessionInput input, boolean optionalFields)
-    throws ChatOptionNotAllowedException
+  private static CHAT createCHAT(SessionInput input, boolean optionalAttributes) throws ChatOptionNotAllowedException
   {
     // Set the fields from the session input
-    Set<EIDKeys> fields;
-    if (optionalFields)
+    Set<EIDAttributeName> fields;
+    if (optionalAttributes)
     {
       fields = input.getOptionalFields();
       LOG.debug(input.getLogPrefix() + LOG_PRE + "Optional fields(" + fields.size()
@@ -1106,33 +1093,29 @@ public class EIDSequence extends ECardConvenienceSequenceAdapter
       LOG.debug(input.getLogPrefix() + LOG_PRE + "Required fields(" + fields.size()
                 + ") received from server session input:\n" + fields);
     }
-    Set<CVCPermission> options = CVCPermission.getOptions(fields);
 
-    CertificateHolderAuthorizationTemplate chat = null;
-    try
-    {
-      chat = new CertificateHolderAuthorizationTemplate(ChatTerminalType.AUTHENTICATION_TERMINAL, options);
-    }
-    catch (IOException | UnsupportedOperationException | IllegalArgumentException e)
-    {
-      if (LOG.isDebugEnabled())
-      {
-        LOG.debug("Cannot construct CHAT with selected options", e);
-      }
-      throw new ChatOptionNotAllowedException("Cannot construct CHAT with selected options");
-    }
-    LOG.debug(input.getLogPrefix() + "CHAT created:\n" + chat);
+    CHAT chat = createChatFromEidAttributeNames(fields);
 
     // Get the CHAT from the CVC
-    CertificateHolderAuthorizationTemplate cvcChat = input.getTerminalCertificate().getCHAT();
-    for ( CVCPermission chatOption : chat.getAllRights() )
+    CHAT cvcChat = input.getTerminalCertificate().getCHAT();
+    for ( EIDAttributeName chatOption : chat.getAllowedAttributes() )
     {
-      if (!cvcChat.areBitsSet(chatOption))
+      if (!cvcChat.allows(chatOption.getAccessRights()))
       {
         String message = "Chat option not allowed: " + chatOption;
         LOG.error(input.getLogPrefix() + message);
         throw new ChatOptionNotAllowedException(message);
       }
+    }
+    return chat;
+  }
+
+  private static CHAT createChatFromEidAttributeNames(Set<EIDAttributeName> eidAttributeNames)
+  {
+    CHAT chat = new CHAT();
+    for ( EIDAttributeName eidAttributeName : eidAttributeNames )
+    {
+      chat.setPermissionsByte(eidAttributeName.getAccessRights());
     }
     return chat;
   }
@@ -1146,14 +1129,14 @@ public class EIDSequence extends ECardConvenienceSequenceAdapter
   public static class Authorizations
   {
 
-    private CertificateHolderAuthorizationTemplate chat = null;
+    private CHAT chat = null;
 
     public Authorizations()
     {
       super();
     }
 
-    public Authorizations(CertificateHolderAuthorizationTemplate chat)
+    public Authorizations(CHAT chat)
     {
       super();
       this.chat = chat;
@@ -1162,6 +1145,6 @@ public class EIDSequence extends ECardConvenienceSequenceAdapter
 
   private enum NextExpected
   {
-    EAC1, EAC2, TRANSMIT;
+    EAC1, EAC2, TRANSMIT
   }
 }

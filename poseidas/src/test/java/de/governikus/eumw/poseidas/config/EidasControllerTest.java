@@ -28,11 +28,11 @@ import org.junit.jupiter.params.provider.CsvSource;
 import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.context.annotation.Import;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 
-import com.gargoylesoftware.htmlunit.html.HtmlPage;
-import com.gargoylesoftware.htmlunit.html.HtmlSelect;
+import org.htmlunit.html.HtmlPage;
+import org.htmlunit.html.HtmlSelect;
 
 import de.governikus.eumw.config.CertificateType;
 import de.governikus.eumw.config.EidasMiddlewareConfig;
@@ -48,7 +48,6 @@ import de.governikus.eumw.poseidas.server.pki.HSMServiceHolder;
 import de.governikus.eumw.utils.key.KeyStoreSupporter;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
-
 
 
 /**
@@ -99,7 +98,7 @@ class EidasControllerTest extends WebAdminTestBase
 
   private static final String SIGN_METADATA_ID = "Sign-metadata";
 
-  @MockBean
+  @MockitoBean
   private HSMServiceHolder hsmServiceHolder;
 
   @Autowired

@@ -3,9 +3,8 @@ package de.governikus.eumw.poseidas.server.pki;
 import java.io.InputStream;
 import java.security.cert.CertificateFactory;
 import java.security.cert.X509Certificate;
+import java.util.List;
 
-import de.governikus.eumw.poseidas.server.pki.caserviceaccess.PassiveAuthService;
-import de.governikus.eumw.poseidas.server.pki.entities.TerminalPermission;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -16,12 +15,15 @@ import org.mockito.junit.jupiter.MockitoExtension;
 
 import com.google.common.io.ByteStreams;
 
+import de.governikus.autent.asn1.masterlist.MasterListParser;
 import de.governikus.eumw.config.DvcaConfigurationType;
 import de.governikus.eumw.config.EidasMiddlewareConfig;
 import de.governikus.eumw.config.ServiceProviderType;
-import de.governikus.eumw.poseidas.eidserver.model.signeddata.MasterList;
 import de.governikus.eumw.poseidas.server.idprovider.config.ConfigurationService;
 import de.governikus.eumw.poseidas.server.idprovider.config.ConfigurationTestHelper;
+import de.governikus.eumw.poseidas.server.pki.caserviceaccess.DvcaServiceFactory;
+import de.governikus.eumw.poseidas.server.pki.caserviceaccess.PassiveAuthService;
+import de.governikus.eumw.poseidas.server.pki.entities.TerminalPermission;
 import de.governikus.eumw.utils.key.SecurityProvider;
 
 
@@ -70,8 +72,8 @@ class MasterAndDefectListHandlerTest
                                                                                            configurationService);
 
     byte[] masterListByteArray = masterAndDefectListHandler.getMasterList(passiveAuthService);
-    MasterList masterList = new MasterList(masterListByteArray);
-    Assertions.assertEquals(11, masterList.getCertificates().size());
+    List<X509Certificate> masterListCertificates = MasterListParser.getMasterListCertificates(masterListByteArray);
+    Assertions.assertEquals(11, masterListCertificates.size());
   }
 
   @Test
@@ -88,8 +90,8 @@ class MasterAndDefectListHandlerTest
                                                                                            configurationService);
 
     byte[] masterListByteArray = masterAndDefectListHandler.getMasterList(passiveAuthService);
-    MasterList masterList = new MasterList(masterListByteArray);
-    Assertions.assertEquals(11, masterList.getCertificates().size());
+    List<X509Certificate> masterListCertificates = MasterListParser.getMasterListCertificates(masterListByteArray);
+    Assertions.assertEquals(11, masterListCertificates.size());
   }
 
 
@@ -108,8 +110,8 @@ class MasterAndDefectListHandlerTest
                                                                                            configurationService);
 
     byte[] masterListByteArray = masterAndDefectListHandler.getMasterList(passiveAuthService);
-    MasterList newMasterList = new MasterList(masterListByteArray);
-    Assertions.assertEquals(11, newMasterList.getCertificates().size());
+    List<X509Certificate> masterListCertificates = MasterListParser.getMasterListCertificates(masterListByteArray);
+    Assertions.assertEquals(11, masterListCertificates.size());
   }
 
   private byte[] getResourceAsByteArray(String path) throws Exception
@@ -118,5 +120,43 @@ class MasterAndDefectListHandlerTest
     {
       return ByteStreams.toByteArray(resourceAsStream);
     }
+  }
+
+  @Test
+  void testUpdateMasterList() throws Exception
+  {
+    Mockito.when(terminalPermission.getMasterList()).thenReturn(null);
+    X509Certificate rootCert = (X509Certificate)CertificateFactory.getInstance("X509",
+                                                                               SecurityProvider.BOUNCY_CASTLE_PROVIDER)
+                                                                  .generateCertificate(MasterAndDefectListHandlerTest.class.getResourceAsStream("/DE_TEST_CSCA_2018_12.cer"));
+    Mockito.when(configurationService.getCertificate(Mockito.anyString())).thenReturn(rootCert);
+
+    MasterAndDefectListHandler masterAndDefectListHandler = new MasterAndDefectListHandler(serviceProvider,
+                                                                                           terminalPermissionAO, null,
+                                                                                           configurationService);
+    List<X509Certificate> masterListCertificates = masterAndDefectListHandler.updateMasterList(passiveAuthService);
+    Assertions.assertEquals(11, masterListCertificates.size());
+  }
+
+  @Test
+  void testUpdate() throws Exception
+  {
+    X509Certificate rootCert = (X509Certificate)CertificateFactory.getInstance("X509",
+                                                                               SecurityProvider.BOUNCY_CASTLE_PROVIDER)
+                                                                  .generateCertificate(MasterAndDefectListHandlerTest.class.getResourceAsStream("/DE_TEST_CSCA_2018_12.cer"));
+    Mockito.when(configurationService.getCertificate(Mockito.anyString())).thenReturn(rootCert);
+
+    Mockito.when(passiveAuthService.getDefectList()).thenReturn(getResourceAsByteArray("/defectList/defectList.bin"));
+
+    DvcaServiceFactory dvcaServiceFactory = Mockito.mock(DvcaServiceFactory.class);
+    Mockito.when(dvcaServiceFactory.passiveAuthService(Mockito.any(), Mockito.any())).thenReturn(passiveAuthService);
+    MasterAndDefectListHandler masterAndDefectListHandler = new MasterAndDefectListHandler(serviceProvider,
+                                                                                           terminalPermissionAO, null,
+                                                                                           configurationService,
+                                                                                           dvcaServiceFactory);
+    masterAndDefectListHandler.updateLists();
+
+    Mockito.verify(terminalPermissionAO).storeMasterList(Mockito.eq(serviceProvider.getCVCRefID()), Mockito.any());
+    Mockito.verify(terminalPermissionAO).storeDefectList(Mockito.eq(serviceProvider.getCVCRefID()), Mockito.any());
   }
 }

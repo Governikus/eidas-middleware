@@ -9,10 +9,10 @@ Software Requirements
 ---------------------
 
 The eIDAS Middleware is a Spring Boot Application. This means that you can start the application with a JRE and
-there is no need for an application server. We support the latest available Zulu JRE in Version 17,
-at the time of this release this is 17.0.14.
+there is no need for an application server. We support the latest available Zulu JRE in Version 25,
+at the time of this release this is 25.0.3.
 
-For the operating system we support Debian 12 “Bookworm” (LTS).
+For the operating system we support Debian 13 “Trixie” (LTS).
 
 Hardware Requirements
 ---------------------
@@ -39,7 +39,7 @@ The eIDAS Middleware communicates with different parties. Therefore a number of 
 For a **test system**, the following URLs need to be reachable::
 
     https://dvca-r1.governikus-eid.de/gov_dvca/ta-service-140
-    https://dvca-r1.governikus-eid.de/gov_dvca/ri-service
+    https://dvca-r1.governikus-eid.de/gov_dvca/ri-service-140
     https://dvca-r1.governikus-eid.de/gov_dvca/pa-service-140
 
     http://www.bsi.bund.de/test_csca_crl
@@ -48,7 +48,7 @@ For a **test system**, the following URLs need to be reachable::
 For a **production system**, the following URLs need to be reachable::
 
     https://berca-p1.d-trust.net/ps/dvca-at/v1_4
-    https://berca-p1.d-trust.net/ps/dvsd_v2/v1_1
+    https://berca-p1.d-trust.net/ps/dvsd_v2/v1_4
     https://berca-p1.d-trust.net/ps/scs/v1_4
 
     http://www.bsi.bund.de/csca_crl

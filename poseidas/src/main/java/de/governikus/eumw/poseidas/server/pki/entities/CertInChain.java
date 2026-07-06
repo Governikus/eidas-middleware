@@ -10,12 +10,17 @@
 package de.governikus.eumw.poseidas.server.pki.entities;
 
 import java.io.Serializable;
+import java.util.Objects;
 
 import jakarta.persistence.EmbeddedId;
 import jakarta.persistence.Entity;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.Lob;
 import jakarta.persistence.ManyToOne;
+
+import org.hibernate.proxy.HibernateProxy;
+
+import lombok.Setter;
 
 
 /**
@@ -24,6 +29,7 @@ import jakarta.persistence.ManyToOne;
  * @author tt
  */
 @Entity
+@Setter
 public class CertInChain implements Serializable
 {
 
@@ -82,14 +88,6 @@ public class CertInChain implements Serializable
   private byte[] data;
 
   /**
-   * set certificate data
-   */
-  public void setData(byte[] data)
-  {
-    this.data = data;
-  }
-
-  /**
    * not wanted in the model
    *
    * @return the property terminalPermission
@@ -99,4 +97,26 @@ public class CertInChain implements Serializable
     return terminalPermission;
   }
 
+  @Override
+  public final boolean equals(Object o)
+  {
+    if (this == o)
+      return true;
+    if (o == null)
+      return false;
+    Class<?> oEffectiveClass = o instanceof HibernateProxy hproxy
+      ? hproxy.getHibernateLazyInitializer().getPersistentClass() : o.getClass();
+    Class<?> thisEffectiveClass = this instanceof HibernateProxy hproxy
+      ? hproxy.getHibernateLazyInitializer().getPersistentClass() : this.getClass();
+    if (thisEffectiveClass != oEffectiveClass)
+      return false;
+    CertInChain that = (CertInChain)o;
+    return getKey() != null && Objects.equals(getKey(), that.getKey());
+  }
+
+  @Override
+  public final int hashCode()
+  {
+    return Objects.hash(key);
+  }
 }

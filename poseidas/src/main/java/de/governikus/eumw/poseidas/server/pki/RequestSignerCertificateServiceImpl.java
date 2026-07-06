@@ -35,10 +35,10 @@ import org.springframework.stereotype.Service;
 
 import com.google.common.base.Strings;
 
+import de.governikus.autent.asn1.crypto.ec.KeyHandlerEC;
 import de.governikus.eumw.config.EidasMiddlewareConfig;
 import de.governikus.eumw.config.ServiceProviderType;
 import de.governikus.eumw.config.TimerConfigurationType;
-import de.governikus.eumw.poseidas.cardbase.asn1.npa.SecurityInfos;
 import de.governikus.eumw.poseidas.cardserver.CertificateUtil;
 import de.governikus.eumw.poseidas.cardserver.service.ServiceRegistry;
 import de.governikus.eumw.poseidas.cardserver.service.hsm.HSMServiceFactory;
@@ -172,7 +172,9 @@ public class RequestSignerCertificateServiceImpl implements RequestSignerCertifi
     String alias = buildAlias(cvcRefId, getRscChrIdAsString(nextRscId));
 
     HSMService hsm = ServiceRegistry.Util.getServiceRegistry().getService(HSMServiceFactory.class).getHSMService();
-    ECParameterSpec ecParameterSpec = SecurityInfos.getDomainParameterMap().get(DOMAIN_PARAMTER_ID_BRAINPOOL_P256R1);
+
+    ECParameterSpec ecParameterSpec = KeyHandlerEC.ECConstants.BRAINPOOL_P256R1;
+
     try
     {
       KeyPair keyPair = hsm.generateKeyPair("EC", ecParameterSpec, alias, null, true, lifespan);

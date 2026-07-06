@@ -33,7 +33,7 @@ public final class SecurityProvider
   /**
    * The BouncyCastle JSSE provider that is needed for Brainpool support.
    */
-  public static final Provider BOUNCY_CASTLE_JSSE_PROVIDER = new BouncyCastleJsseProvider();
+  public static final Provider BOUNCY_CASTLE_JSSE_PROVIDER = new BouncyCastleJsseProvider(BOUNCY_CASTLE_PROVIDER);
 
   /**
    * The Sun JSSE provider that is needed for TLS client keys in HSM.

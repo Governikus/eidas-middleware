@@ -30,7 +30,6 @@ import de.governikus.eumw.eidascommon.Utils;
 import de.governikus.eumw.eidasmiddleware.entities.RequestSession;
 import de.governikus.eumw.eidasmiddleware.repositories.RequestSessionRepository;
 import de.governikus.eumw.eidasstarterkit.EidasNaturalPersonAttributes;
-import de.governikus.eumw.poseidas.eidmodel.data.EIDKeys;
 import de.governikus.eumw.poseidas.paosservlet.authentication.AuthenticationConstants;
 import de.governikus.eumw.poseidas.server.eidservice.EIDInternal;
 import de.governikus.eumw.poseidas.server.eidservice.EIDRequestInput;
@@ -40,6 +39,7 @@ import de.governikus.eumw.poseidas.server.idprovider.exceptions.InvalidConfigura
 import de.governikus.eumw.poseidas.tctoken.ObjectFactory;
 import de.governikus.eumw.poseidas.tctoken.TCTokenType;
 import de.governikus.eumw.utils.xml.XmlHelper;
+import de.governikus.panstar.sdk.utils.constant.EIDAttributeName;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
@@ -151,7 +151,7 @@ public class TcToken
       {
         eidasNaturalPersonAttribute = EidasNaturalPersonAttributes.getValueOf(entry.getKey());
       }
-      catch (ErrorCodeException e)
+      catch (ErrorCodeException _)
       {
         log.warn("UNKNOWN Authrequest Attribute: '{}'", eidasNaturalPersonAttribute);
         continue;
@@ -159,37 +159,37 @@ public class TcToken
       switch (eidasNaturalPersonAttribute)
       {
         case FIRST_NAME:
-          intRequest.addRequiredFields(EIDKeys.GIVEN_NAMES);
+          intRequest.addRequiredFields(EIDAttributeName.GivenNames);
           break;
 
         case FAMILY_NAME:
-          intRequest.addRequiredFields(EIDKeys.FAMILY_NAMES);
+          intRequest.addRequiredFields(EIDAttributeName.FamilyNames);
           break;
 
         case BIRTH_NAME:
-          intRequest.addRequiredFields(EIDKeys.BIRTH_NAME);
-          intRequest.addRequiredFields(EIDKeys.FAMILY_NAMES);
-          intRequest.addRequiredFields(EIDKeys.GIVEN_NAMES);
+          intRequest.addRequiredFields(EIDAttributeName.BirthName);
+          intRequest.addRequiredFields(EIDAttributeName.FamilyNames);
+          intRequest.addRequiredFields(EIDAttributeName.GivenNames);
           break;
 
         case DATE_OF_BIRTH:
-          intRequest.addRequiredFields(EIDKeys.DATE_OF_BIRTH);
+          intRequest.addRequiredFields(EIDAttributeName.DateOfBirth);
           break;
 
         case PLACE_OF_BIRTH:
-          intRequest.addRequiredFields(EIDKeys.PLACE_OF_BIRTH);
+          intRequest.addRequiredFields(EIDAttributeName.PlaceOfBirth);
           break;
 
         case CURRENT_ADDRESS:
-          intRequest.addOptionalFields(EIDKeys.PLACE_OF_RESIDENCE);
+          intRequest.addOptionalFields(EIDAttributeName.PlaceOfResidence);
           break;
 
         case PERSON_IDENTIFIER:
-          intRequest.addRequiredFields(EIDKeys.RESTRICTED_ID);
+          intRequest.addRequiredFields(EIDAttributeName.RestrictedID);
           break;
 
         case NATIONALITY:
-          intRequest.addOptionalFields(EIDKeys.NATIONALITY);
+          intRequest.addOptionalFields(EIDAttributeName.Nationality);
           break;
 
         default:

@@ -15,9 +15,7 @@ import org.springframework.http.HttpMethod;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.web.SecurityFilterChain;
-import org.springframework.security.web.servlet.util.matcher.MvcRequestMatcher;
-import org.springframework.security.web.util.matcher.AntPathRequestMatcher;
-import org.springframework.web.servlet.handler.HandlerMappingIntrospector;
+import org.springframework.security.web.servlet.util.matcher.PathPatternRequestMatcher;
 
 import de.governikus.eumw.eidascommon.ContextPaths;
 
@@ -38,41 +36,32 @@ public class POSeIDASSecurityConfig
    */
   @Bean
   public SecurityFilterChain adminUiSecurityFilterChain(HttpSecurity httpSecurity,
-                                                        PasswordFileAuthenticationProvider authenticationProvider,
-                                                        HandlerMappingIntrospector introspector)
-    throws Exception
+                                                        PasswordFileAuthenticationProvider authenticationProvider)
   {
 
 
     httpSecurity.securityMatcher(ContextPaths.ADMIN_CONTEXT_PATH + "/**");
-    httpSecurity.authorizeHttpRequests(matcherRegistry -> matcherRegistry.requestMatchers(new MvcRequestMatcher(introspector,
-                                                                                                                ContextPaths.ADMIN_CONTEXT_PATH
-                                                                                                                              + "/webjars/**"),
-                                                                                          new MvcRequestMatcher(introspector,
-                                                                                                                ContextPaths.ADMIN_CONTEXT_PATH
-                                                                                                                              + "/css/**"),
-                                                                                          new MvcRequestMatcher(introspector,
-                                                                                                                ContextPaths.ADMIN_CONTEXT_PATH
-                                                                                                                              + "/images/**"),
-                                                                                          new MvcRequestMatcher(introspector,
-                                                                                                                ContextPaths.ADMIN_CONTEXT_PATH
-                                                                                                                              + "/js/**"),
-                                                                                          new MvcRequestMatcher(introspector,
-                                                                                                                ContextPaths.ADMIN_CONTEXT_PATH
-                                                                                                                              + "/setNewPassword"))
+    httpSecurity.authorizeHttpRequests(matcherRegistry -> matcherRegistry.requestMatchers(ContextPaths.ADMIN_CONTEXT_PATH
+                                                                                          + "/webjars/**",
+                                                                                          ContextPaths.ADMIN_CONTEXT_PATH
+                                                                                                           + "/css/**",
+                                                                                          ContextPaths.ADMIN_CONTEXT_PATH
+                                                                                                                        + "/images/**",
+                                                                                          ContextPaths.ADMIN_CONTEXT_PATH + "/js/**",
+                                                                                          ContextPaths.ADMIN_CONTEXT_PATH + "/setNewPassword")
                                                                          .permitAll()
-                                                                         .requestMatchers(new MvcRequestMatcher(introspector,
-                                                                                                                ContextPaths.ADMIN_CONTEXT_PATH
-                                                                                                                              + "/**"))
+                                                                         .requestMatchers(ContextPaths.ADMIN_CONTEXT_PATH
+                                                                                          + "/**")
                                                                          .authenticated());
 
     httpSecurity.formLogin(configurer -> configurer.loginPage(ContextPaths.ADMIN_CONTEXT_PATH + "/login")
                                                    .defaultSuccessUrl(ContextPaths.ADMIN_CONTEXT_PATH
                                                                       + ContextPaths.DASHBOARD)
                                                    .permitAll());
-    httpSecurity.logout(configurer -> configurer.logoutRequestMatcher(new AntPathRequestMatcher(ContextPaths.ADMIN_CONTEXT_PATH
-                                                                                                + "/logout",
-                                                                                                HttpMethod.GET.name()))
+    httpSecurity.logout(configurer -> configurer.logoutRequestMatcher(PathPatternRequestMatcher.withDefaults()
+                                                                                               .matcher(HttpMethod.GET,
+                                                                                                        ContextPaths.ADMIN_CONTEXT_PATH
+                                                                                                                        + "/logout"))
                                                 .permitAll());
     httpSecurity.headers(configurer -> configurer.contentSecurityPolicy(contentSecurityPolicyConfig -> contentSecurityPolicyConfig.policyDirectives("script-src 'self'")));
     httpSecurity.authenticationProvider(authenticationProvider);
@@ -84,7 +73,7 @@ public class POSeIDASSecurityConfig
    * Spring security for the eIDAS (SAML) part. No authentication is necessary.
    */
   @Bean
-  public SecurityFilterChain eidasSecurityFilterChain(HttpSecurity httpSecurity) throws Exception
+  public SecurityFilterChain eidasSecurityFilterChain(HttpSecurity httpSecurity)
   {
     httpSecurity.securityMatcher(ContextPaths.EIDAS_CONTEXT_PATH + "/**");
     httpSecurity.authorizeHttpRequests(matcherRegistry -> matcherRegistry.anyRequest().permitAll());

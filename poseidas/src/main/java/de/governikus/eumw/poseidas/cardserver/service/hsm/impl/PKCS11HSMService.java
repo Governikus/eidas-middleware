@@ -35,16 +35,19 @@ import java.util.Date;
 import java.util.Enumeration;
 import java.util.List;
 
+import org.bouncycastle.asn1.ASN1Integer;
+import org.bouncycastle.asn1.ASN1ObjectIdentifier;
+import org.bouncycastle.asn1.ASN1Primitive;
+import org.bouncycastle.asn1.ASN1Sequence;
 import org.bouncycastle.operator.OperatorCreationException;
 
+import de.governikus.autent.asn1.utils.SignatureUtil;
 import de.governikus.eumw.poseidas.cardbase.AssertUtil;
 import de.governikus.eumw.poseidas.cardbase.ByteUtil;
 import de.governikus.eumw.poseidas.cardbase.StringUtil;
-import de.governikus.eumw.poseidas.cardbase.asn1.ASN1;
-import de.governikus.eumw.poseidas.cardbase.asn1.OID;
-import de.governikus.eumw.poseidas.cardbase.constants.OIDConstants;
 import de.governikus.eumw.poseidas.cardserver.CertificateUtil;
 import de.governikus.eumw.poseidas.server.pki.RequestSignerCertificateServiceImpl;
+
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
@@ -192,7 +195,7 @@ public final class PKCS11HSMService implements HSMService
 
   /** {@inheritDoc} */
   @Override
-  public byte[] sign(String alias, OID sigAlgOID, byte[] data)
+  public byte[] sign(String alias, ASN1ObjectIdentifier sigAlgorithm, byte[] data)
     throws IllegalArgumentException, NoSuchAlgorithmException, IOException, UnrecoverableKeyException,
     KeyStoreException, InvalidKeyException, SignatureException, IllegalStateException
   {
@@ -200,12 +203,13 @@ public final class PKCS11HSMService implements HSMService
     {
       throw new IllegalStateException(MESSAGE_NOT_INITIALIZED);
     }
-    Signature s = Signature.getInstance(algNameFromOID(sigAlgOID), provider);
+    String pkcs11Algorithm = SignatureUtil.getSUPPORTED_PKCS11_SIGNATURE_ALGORITHMS().get(sigAlgorithm);
+    Signature s = Signature.getInstance(pkcs11Algorithm, provider);
     s.initSign((PrivateKey)keyStore.getKey(alias, null));
 
     s.update(data);
     byte[] sig = s.sign();
-    if (rawRequired(sigAlgOID))
+    if (rawRequired(sigAlgorithm))
     {
       ECPublicKey pk = (ECPublicKey)keyStore.getCertificate(alias).getPublicKey();
       return convertToRaw(sig, pk.getParams().getCurve().getField().getFieldSize() / 8);
@@ -216,84 +220,31 @@ public final class PKCS11HSMService implements HSMService
     }
   }
 
-  private static boolean rawRequired(OID oid)
+  private static boolean rawRequired(ASN1ObjectIdentifier oid)
   {
-    if (oid.equals(OIDConstants.OID_TA_ECDSA_SHA_1) || oid.equals(OIDConstants.OID_TA_ECDSA_SHA_224)
-        || oid.equals(OIDConstants.OID_TA_ECDSA_SHA_256) || oid.equals(OIDConstants.OID_TA_ECDSA_SHA_384)
-        || oid.equals(OIDConstants.OID_TA_ECDSA_SHA_512))
-    {
-      return true;
-    }
-    else if (oid.equals(OIDConstants.OID_TA_RSA_PSS_SHA_1) || oid.equals(OIDConstants.OID_TA_RSA_PSS_SHA_256)
-             || oid.equals(OIDConstants.OID_TA_RSA_PSS_SHA_512) || oid.equals(OIDConstants.OID_TA_RSA_V1_5_SHA_1)
-             || oid.equals(OIDConstants.OID_TA_RSA_V1_5_SHA_256) || oid.equals(OIDConstants.OID_TA_RSA_V1_5_SHA_512))
-    {
-      return false;
-    }
-    throw new IllegalArgumentException("unknown OID");
+    return de.governikus.autent.asn1.OIDConstants.OID_TA_ECDSA_SHA_1.equals(oid)
+           || de.governikus.autent.asn1.OIDConstants.OID_TA_ECDSA_SHA_224.equals(oid)
+           || de.governikus.autent.asn1.OIDConstants.OID_TA_ECDSA_SHA_256.equals(oid)
+           || de.governikus.autent.asn1.OIDConstants.OID_TA_ECDSA_SHA_384.equals(oid)
+           || de.governikus.autent.asn1.OIDConstants.OID_TA_ECDSA_SHA_512.equals(oid);
   }
+
 
   private static byte[] convertToRaw(byte[] sig, int trimLen) throws IOException
   {
-    ASN1 asn1 = new ASN1(sig);
-    ASN1[] children = asn1.getChildElements();
-    if (children.length != 2)
+    ASN1Primitive asn1 = ASN1Primitive.fromByteArray(sig);
+    if (!(asn1 instanceof ASN1Sequence sequence) || sequence.size() != 2)
     {
       throw new IllegalArgumentException("input is not a signature");
     }
-    ByteArrayOutputStream baos = new ByteArrayOutputStream();
-    baos.write(ByteUtil.trimByteArray(children[0].getValue(), trimLen));
-    baos.write(ByteUtil.trimByteArray(children[1].getValue(), trimLen));
-    return baos.toByteArray();
-  }
 
-  private static String algNameFromOID(OID oid)
-  {
-    if (oid.equals(OIDConstants.OID_TA_ECDSA_SHA_1))
-    {
-      return "SHA1withECDSA";
-    }
-    else if (oid.equals(OIDConstants.OID_TA_ECDSA_SHA_224))
-    {
-      return "SHA224withECDSA";
-    }
-    else if (oid.equals(OIDConstants.OID_TA_ECDSA_SHA_256))
-    {
-      return "SHA256withECDSA";
-    }
-    else if (oid.equals(OIDConstants.OID_TA_ECDSA_SHA_384))
-    {
-      return "SHA384withECDSA";
-    }
-    else if (oid.equals(OIDConstants.OID_TA_ECDSA_SHA_512))
-    {
-      return "SHA512withECDSA";
-    }
-    else if (oid.equals(OIDConstants.OID_TA_RSA_PSS_SHA_1))
-    {
-      return "SHA1withRSASSA-PSS";
-    }
-    else if (oid.equals(OIDConstants.OID_TA_RSA_PSS_SHA_256))
-    {
-      return "SHA256withRSASSA-PSS";
-    }
-    else if (oid.equals(OIDConstants.OID_TA_RSA_PSS_SHA_512))
-    {
-      return "SHA512withRSASSA-PSS";
-    }
-    else if (oid.equals(OIDConstants.OID_TA_RSA_V1_5_SHA_1))
-    {
-      return "SHA1withRSA";
-    }
-    else if (oid.equals(OIDConstants.OID_TA_RSA_V1_5_SHA_256))
-    {
-      return "SHA256withRSA";
-    }
-    else if (oid.equals(OIDConstants.OID_TA_RSA_V1_5_SHA_512))
-    {
-      return "SHA512withRSA";
-    }
-    throw new IllegalArgumentException("unknown OID");
+    ASN1Integer r = (ASN1Integer)sequence.getObjectAt(0);
+    ASN1Integer s = (ASN1Integer)sequence.getObjectAt(1);
+
+    ByteArrayOutputStream baos = new ByteArrayOutputStream();
+    baos.write(ByteUtil.trimByteArray(r.getValue().toByteArray(), trimLen));
+    baos.write(ByteUtil.trimByteArray(s.getValue().toByteArray(), trimLen));
+    return baos.toByteArray();
   }
 
   /** {@inheritDoc} */

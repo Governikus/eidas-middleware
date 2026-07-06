@@ -1,6 +1,6 @@
 ARG IMAGE_MIRROR_PREFIX=""
 ARG PROJECT_VERSION="unknown"
-FROM ${IMAGE_MIRROR_PREFIX}azul/zulu-openjdk-alpine:17.0.10
+FROM ${IMAGE_MIRROR_PREFIX}azul/zulu-openjdk-alpine:25.0.2-25.32
 
 MAINTAINER Benny Prange <benny.prange@governikus.de>
 

@@ -36,7 +36,7 @@ import lombok.extern.slf4j.Slf4j;
 public class PassiveAuthService
 {
 
-  private final PassiveAuthWebService_1_4_0 port;
+  private PassiveAuthWebService_1_4_0 port;
 
 
   PassiveAuthService(PKIServiceConnector con, String uri)
@@ -78,5 +78,11 @@ public class PassiveAuthService
       return null;
     }
     return mResult.getDefectList().getBinary();
+  }
+
+  // For Testing
+  void setPort(PassiveAuthWebService_1_4_0 port)
+  {
+    this.port = port;
   }
 }

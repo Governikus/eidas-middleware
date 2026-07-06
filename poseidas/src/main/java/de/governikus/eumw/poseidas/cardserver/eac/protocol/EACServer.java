@@ -10,7 +10,6 @@
 package de.governikus.eumw.poseidas.cardserver.eac.protocol;
 
 import java.io.IOException;
-import java.nio.charset.StandardCharsets;
 import java.security.InvalidAlgorithmParameterException;
 import java.security.InvalidKeyException;
 import java.security.KeyPair;
@@ -32,30 +31,27 @@ import javax.crypto.SecretKey;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.bouncycastle.asn1.ASN1InputStream;
+import org.bouncycastle.asn1.ASN1Object;
 import org.bouncycastle.asn1.ASN1ObjectIdentifier;
 
+import de.governikus.autent.asn1.CHAT;
+import de.governikus.autent.asn1.CVC;
+import de.governikus.autent.asn1.OIDConstants;
+import de.governikus.autent.asn1.crypto.KeyHandlerException;
+import de.governikus.autent.asn1.crypto.ec.KeyHandlerEC;
+import de.governikus.autent.asn1.si.ChipAuthenticationDomainParameterInfo;
+import de.governikus.autent.asn1.si.ChipAuthenticationInfo;
+import de.governikus.autent.asn1.si.ChipAuthenticationPublicKeyInfo;
+import de.governikus.autent.asn1.si.PACEInfo;
+import de.governikus.autent.asn1.si.SecurityInfos;
 import de.governikus.eumw.poseidas.cardbase.AssertUtil;
 import de.governikus.eumw.poseidas.cardbase.Hex;
-import de.governikus.eumw.poseidas.cardbase.asn1.OID;
-import de.governikus.eumw.poseidas.cardbase.asn1.npa.AuthenticationTerminals;
-import de.governikus.eumw.poseidas.cardbase.asn1.npa.CertificateHolderAuthorizationTemplate;
-import de.governikus.eumw.poseidas.cardbase.asn1.npa.ECCVCPath;
-import de.governikus.eumw.poseidas.cardbase.asn1.npa.ECCVCertificate;
-import de.governikus.eumw.poseidas.cardbase.asn1.npa.SecurityInfos;
-import de.governikus.eumw.poseidas.cardbase.asn1.npa.si.ChipAuthenticationDomainParameterInfo;
-import de.governikus.eumw.poseidas.cardbase.asn1.npa.si.ChipAuthenticationInfo;
-import de.governikus.eumw.poseidas.cardbase.asn1.npa.si.ChipAuthenticationPublicKeyInfo;
-import de.governikus.eumw.poseidas.cardbase.asn1.npa.si.PACEInfo;
-import de.governikus.eumw.poseidas.cardbase.constants.OIDConstants;
-import de.governikus.eumw.poseidas.cardbase.crypto.ec.ECUtil;
-import de.governikus.eumw.poseidas.cardbase.crypto.key.KeyHandler;
 import de.governikus.eumw.poseidas.cardbase.crypto.sm.AESKeyMaterial;
 import de.governikus.eumw.poseidas.cardbase.npa.InfoSelector;
-import de.governikus.eumw.poseidas.cardbase.npa.InfoSelector.ChipAuthenticationData;
 import de.governikus.eumw.poseidas.cardbase.npa.NPAUtil;
 import de.governikus.eumw.poseidas.cardserver.eac.ca.ChipAuthentication;
 import de.governikus.eumw.poseidas.cardserver.eac.crypto.SignedDataChecker;
-import de.governikus.eumw.poseidas.cardserver.eac.crypto.impl.KeyHandlerEC;
 import de.governikus.eumw.poseidas.cardserver.eac.ta.CertAndKeyProvider;
 import de.governikus.eumw.poseidas.cardserver.eac.ta.TerminalAuthentication;
 import de.governikus.eumw.poseidas.cardserver.service.hsm.impl.HSMException;
@@ -69,7 +65,6 @@ import de.governikus.eumw.poseidas.ecardcore.model.EAC1OutputTypeWrapper;
 import de.governikus.eumw.poseidas.ecardcore.model.EAC2InputTypeWrapper;
 import de.governikus.eumw.poseidas.ecardcore.model.EAC2OutputTypeWrapper;
 import de.governikus.eumw.poseidas.ecardcore.model.ResultMinor;
-
 import iso.std.iso_iec._24727.tech.schema.DIDAuthenticationDataType;
 import iso.std.iso_iec._24727.tech.schema.EAC1InputType;
 import iso.std.iso_iec._24727.tech.schema.EAC1OutputType;
@@ -104,9 +99,9 @@ public class EACServer
   public static final int STEP_TACA_RESULT = 3;
 
   /**
-   * Reference to the {@link ChipAuthenticationData} selected when creating second input.
+   * Reference to the {@link InfoSelector.ChipAuthenticationData} selected when creating second input.
    */
-  private ChipAuthenticationData caData = null;
+  private InfoSelector.ChipAuthenticationData caData = null;
 
   /**
    * Reference to the {@link PACEInfo} selected when creating second input.
@@ -148,9 +143,9 @@ public class EACServer
    * @throws SignatureException
    */
   private EAC2InputTypeWrapper produceSecondInput(EAC1OutputTypeWrapper firstOutput, Object[] additionalParameters)
-    throws IOException, InvalidAlgorithmParameterException, NoSuchAlgorithmException, NoSuchProviderException,
-    InvalidKeyException, InvalidKeySpecException, SignatureException, UnrecoverableKeyException, KeyStoreException,
-    CertificateException, HSMException, InvalidEidException, ECardException
+    throws IOException, NoSuchAlgorithmException, NoSuchProviderException, InvalidKeyException, InvalidKeySpecException,
+    SignatureException, UnrecoverableKeyException, KeyStoreException, CertificateException, HSMException,
+    InvalidEidException, ECardException, KeyHandlerException
   {
     AssertUtil.notNull(firstOutput, "first output");
     AssertUtil.notNullOrEmpty(additionalParameters, "additional parameters");
@@ -169,19 +164,18 @@ public class EACServer
       throw new IllegalArgumentException("parameter is not instance of CertAndKeyProvider");
     }
     EAC1InputTypeWrapper firstInput = (EAC1InputTypeWrapper)additionalParameters[0];
-    ECCVCertificate termCert = findTermCert(firstInput.getCertificateList());
+    CVC termCert = findTermCert(firstInput.getCertificateList());
     if (termCert == null)
     {
       throw new IllegalArgumentException("EAC1InputType not containing required data");
     }
 
     CertAndKeyProvider cakProvider = (CertAndKeyProvider)additionalParameters[1];
-    this.efCardAccess = new SecurityInfos();
-    this.efCardAccess.decode(firstOutput.getEFCardAccess());
+    this.efCardAccess = createEfCardAccess(firstOutput.getEFCardAccess());
 
-    List<ChipAuthenticationInfo> caInfoList = this.efCardAccess.getChipAuthenticationInfo();
-    List<ChipAuthenticationDomainParameterInfo> caDomParamList = this.efCardAccess.getChipAuthenticationDomainParameterInfo();
-    List<PACEInfo> paceInfoList = this.efCardAccess.getPACEInfo();
+    List<ChipAuthenticationInfo> caInfoList = this.efCardAccess.getChipAuthenticationInfoList();
+    List<ChipAuthenticationDomainParameterInfo> caDomParamList = this.efCardAccess.getChipAuthenticationDomainParameterInfoList();
+    List<PACEInfo> paceInfoList = this.efCardAccess.getPaceInfoList();
     AssertUtil.notNullOrEmpty(caInfoList, "list of CA info");
     AssertUtil.notNullOrEmpty(caDomParamList, "list of CA domain parameters");
     AssertUtil.notNullOrEmpty(paceInfoList, "list of PACE info");
@@ -193,15 +187,12 @@ public class EACServer
     }
 
     this.paceInfo = InfoSelector.selectPACEInfo(paceInfoList);
-    OID protocol = this.caData.getCaDomParamInfo().getProtocol();
-    KeyHandler kh = null;
+    ASN1ObjectIdentifier protocol = this.caData.getCaDomParamInfo().getProtocol();
+    ChipAuthenticationDomainParameterInfo caDomParamInfo = this.caData.getCaDomParamInfo();
+    KeyHandlerEC kh;
     if (protocol.equals(OIDConstants.OID_CA_ECDH))
     {
-      kh = new KeyHandlerEC(ECUtil.parameterSpecFromDomainParameters(this.caData.getCaDomParamInfo())
-                                  .getCurve()
-                                  .getField()
-                                  .getFieldSize()
-                            / 8);
+      kh = new KeyHandlerEC(caDomParamInfo);
     }
     else
     {
@@ -210,15 +201,14 @@ public class EACServer
     }
 
     // generate key pair
-    this.ephemeralTACAKeys = kh.generateKeyPair(this.caData.getCaDomParamInfo());
+    this.ephemeralTACAKeys = kh.generateKeyPair();
     LOG.debug("Generated key pair, public part: " + Hex.hexify(this.ephemeralTACAKeys.getPublic().getEncoded()));
     byte[] compressedKey = kh.compressKey(this.ephemeralTACAKeys.getPublic());
-    byte[] ephemeralPublicKey = kh.ephemeralKeyBytes(this.ephemeralTACAKeys.getPublic());
+    byte[] ephemeralPublicKey = kh.encodePublicKey(this.ephemeralTACAKeys.getPublic());
 
     List<byte[]> cl = new ArrayList<>();
 
-    String termHolder = new String(termCert.getChildElementByPath(ECCVCPath.HOLDER_REFERENCE).getValue(),
-                                   StandardCharsets.UTF_8);
+    String termHolder = termCert.getBody().getCertificateHolderReference();
     for ( String car : firstOutput.getCertificationAuthorityReference() )
     {
       List<byte[]> certList = cakProvider.getCertChain(car, termHolder);
@@ -280,7 +270,7 @@ public class EACServer
    * @throws UnrecoverableKeyException
    * @throws InvalidKeyException
    */
-  private static byte[] produceSignature(ECCVCertificate termCert,
+  private static byte[] produceSignature(CVC termCert,
                                          byte[] auxiliaryData,
                                          byte[] idPicc,
                                          byte[] rPicc,
@@ -300,9 +290,8 @@ public class EACServer
                                "EAC1OutputType not containing required challenge");
     }
 
-    OID signatureAlg = (OID)termCert.getChildElementByPath(ECCVCPath.PUBLIC_KEY_OID);
-    String termHolder = new String(termCert.getChildElementByPath(ECCVCPath.HOLDER_REFERENCE).getValue(),
-                                   StandardCharsets.UTF_8);
+    ASN1ObjectIdentifier signatureAlg = termCert.getBody().getPublicKey().getUsage();
+    String termHolder = termCert.getBody().getCertificateHolderReference();
 
     // create signature
     return TerminalAuthentication.sign(termHolder, signatureAlg, idPicc, rPicc, compressedKey, auxiliaryData);
@@ -328,7 +317,7 @@ public class EACServer
    */
   private EACFinal processCompleteTACAOutput(EAC2OutputTypeWrapper secondOutput, Object[] additionalParameters)
     throws IOException, NoSuchAlgorithmException, InvalidKeyException, NoSuchProviderException, InvalidKeySpecException,
-    InvalidEidException, ECardException
+    InvalidEidException, ECardException, KeyHandlerException
   {
     AssertUtil.notNull(secondOutput, "second output");
     AssertUtil.notNullOrEmpty(additionalParameters, "additional parameters");
@@ -370,9 +359,9 @@ public class EACServer
     }
 
     ChipAuthenticationPublicKeyInfo caPubKeyInfo = null;
-    if (this.caData.getCaInfo().getVersion() != 3)
+    if (!this.caData.getCaInfo().getVersion().hasValue(3))
     {
-      List<ChipAuthenticationPublicKeyInfo> caPubKeyInfoList = cardSecurity.getChipAuthenticationPublicKeyInfo();
+      List<ChipAuthenticationPublicKeyInfo> caPubKeyInfoList = cardSecurity.getChipAuthenticationPublicKeyInfoList();
       if (caPubKeyInfoList == null || caPubKeyInfoList.isEmpty())
       {
         throw new IllegalArgumentException("Required data for CA not available in EF.CardSecurity");
@@ -385,22 +374,28 @@ public class EACServer
 
     if (success)
     {
-      SecretKey macKey = ca.getMacKey();
-      SecretKey encKey = ca.getEncKey();
-      BatchSecureMessaging sm = null;
-      if (macKey.getAlgorithm().equals("AES"))
-      {
-        BatchAESEncSSCIvParameterSpec ssc = new BatchAESEncSSCIvParameterSpec(new byte[16], encKey);
-        AESKeyMaterial smKeyMaterial = new AESKeyMaterial(encKey, macKey, ssc);
-        sm = new AESBatchSecureMessaging(smKeyMaterial);
-      }
-      else
-      {
-        throw new IllegalArgumentException("secure messaging is not supported");
-      }
+      BatchSecureMessaging sm = getBatchSecureMessaging(ca);
       return new EACFinal(sm, cardSecurityBytes, this.caData, cardKeyBytes);
     }
     return null;
+  }
+
+  private static BatchSecureMessaging getBatchSecureMessaging(ChipAuthentication ca)
+  {
+    SecretKey macKey = ca.getMacKey();
+    SecretKey encKey = ca.getEncKey();
+    BatchSecureMessaging sm = null;
+    if ("AES".equals(macKey.getAlgorithm()))
+    {
+      BatchAESEncSSCIvParameterSpec ssc = new BatchAESEncSSCIvParameterSpec(new byte[16], encKey);
+      AESKeyMaterial smKeyMaterial = new AESKeyMaterial(encKey, macKey, ssc);
+      sm = new AESBatchSecureMessaging(smKeyMaterial);
+    }
+    else
+    {
+      throw new IllegalArgumentException("secure messaging is not supported");
+    }
+    return sm;
   }
 
   /**
@@ -497,15 +492,15 @@ public class EACServer
    * @return found terminal certificate, <code>null</code> if none present, first if more than one present
    * @throws IOException
    */
-  private static ECCVCertificate findTermCert(List<byte[]> certList) throws IOException
+  private static CVC findTermCert(List<byte[]> certList) throws IOException
   {
     AssertUtil.notNull(certList, "certificate list");
     for ( byte[] certBytes : certList )
     {
       AssertUtil.notNullOrEmpty(certBytes, "bytes of certificate (input for PACE)");
-      ECCVCertificate testCert = new ECCVCertificate(certBytes);
-      CertificateHolderAuthorizationTemplate chat = testCert.getChat();
-      if (chat.getAccessRoleAndRights().isRole(AuthenticationTerminals.AccessRoleEnum.AUTHENTICATION_TERMINAL))
+      CVC testCert = new CVC(certBytes);
+      CHAT chat = testCert.getBody().getCertificateHolderAuthorizationTemplate();
+      if (de.governikus.autent.asn1.OIDConstants.OID_AUTHENTICATION_TERMINAL.equals(chat.getOid()))
       {
         return testCert;
       }
@@ -524,14 +519,8 @@ public class EACServer
                                             SecurityInfos efCardSecurity,
                                             Integer serialNumber)
   {
-    if (efCardSecurity.getPACEInfo() == null || !efCardSecurity.getPACEInfo().containsAll(efCardAccess.getPACEInfo()))
-    {
-      return false;
-    }
 
-    if (efCardAccess.getPACEDomainParameterInfo() != null
-        && (efCardSecurity.getPACEDomainParameterInfo() == null
-            || !efCardSecurity.getPACEDomainParameterInfo().containsAll(efCardAccess.getPACEDomainParameterInfo())))
+    if (!containsAllAsn1(efCardSecurity.getPaceInfoList(), efCardAccess.getPaceInfoList()))
     {
       return false;
     }
@@ -540,45 +529,89 @@ public class EACServer
     // TR-03127 section D, run full check only on others
     if (serialNumber == null || serialNumber > 106)
     {
-      if (efCardAccess.getChipAuthenticationInfo() != null
-          && (efCardSecurity.getChipAuthenticationInfo() == null
-              || !efCardSecurity.getChipAuthenticationInfo().containsAll(efCardAccess.getChipAuthenticationInfo())))
+      if (!containsAllAsn1(efCardSecurity.getChipAuthenticationInfoList(),
+                           efCardAccess.getChipAuthenticationInfoList()))
       {
         return false;
       }
 
-      if (efCardAccess.getChipAuthenticationDomainParameterInfo() != null
-          && (efCardSecurity.getChipAuthenticationDomainParameterInfo() == null
-              || !efCardSecurity.getChipAuthenticationDomainParameterInfo()
-                                .containsAll(efCardAccess.getChipAuthenticationDomainParameterInfo())))
+      if (!containsAllAsn1(efCardSecurity.getChipAuthenticationDomainParameterInfoList(),
+                           efCardAccess.getChipAuthenticationDomainParameterInfoList()))
       {
         return false;
       }
     }
-    // run reduced check on defect cards: compare only first ChipAuthenticationInfo and
-    // ChipAuthenticationDomainParameterInfo
+    // run reduced check on defect cards: compare only first ChipAuthenticationInfoList and
+    // ChipAuthenticationDomainParameterInfoList
     else
     {
-      if (efCardAccess.getChipAuthenticationInfo() != null
-          && (efCardSecurity.getChipAuthenticationInfo() == null
-              || !efCardSecurity.getChipAuthenticationInfo().contains(efCardAccess.getChipAuthenticationInfo().get(0))))
+      if (!containsFirstAsn1(efCardSecurity.getChipAuthenticationInfoList(),
+                             efCardAccess.getChipAuthenticationInfoList()))
       {
         return false;
       }
 
-      if (efCardAccess.getChipAuthenticationDomainParameterInfo() != null
-          && (efCardSecurity.getChipAuthenticationDomainParameterInfo() == null
-              || !efCardSecurity.getChipAuthenticationDomainParameterInfo()
-                                .contains(efCardAccess.getChipAuthenticationDomainParameterInfo().get(0))))
+      if (!containsFirstAsn1(efCardSecurity.getChipAuthenticationDomainParameterInfoList(),
+                             efCardAccess.getChipAuthenticationDomainParameterInfoList()))
       {
         return false;
       }
     }
 
-    return efCardAccess.getTerminalAuthenticationInfo() == null
-           || efCardSecurity.getTerminalAuthenticationInfo() != null
-              && efCardSecurity.getTerminalAuthenticationInfo()
-                               .containsAll(efCardAccess.getTerminalAuthenticationInfo());
+    return containsAllAsn1(efCardSecurity.getTerminalAuthenticationInfoList(),
+                           efCardAccess.getTerminalAuthenticationInfoList());
+  }
+
+  /**
+   * Checks whether all elements in the 'required' list are present in the 'container' list, using canonical ASN.1
+   * equality.
+   * <p>
+   * This method is order-independent. Null or empty lists are handled as follows:
+   * <ul>
+   * <li>If 'required' is null or empty, this method returns true (nothing to check).</li>
+   * <li>If 'container' is null or empty but 'required' is not, this method returns false.</li>
+   * </ul>
+   *
+   * @param container the list of ASN1Object elements to search in (e.g., from EF.CardSecurity)
+   * @param required the list of ASN1Object elements that must be present (e.g., from EF.CardAccess)
+   * @return true if all elements in 'required' are present in 'container', false otherwise
+   */
+  private static boolean containsAllAsn1(List<? extends ASN1Object> container, List<? extends ASN1Object> required)
+  {
+    if (required == null || required.isEmpty())
+      return true;
+    if (container == null || container.isEmpty())
+      return false;
+
+    return required.stream()
+                   .allMatch(req -> container.stream()
+                                             .anyMatch(c -> req.toASN1Primitive().equals(c.toASN1Primitive())));
+  }
+
+  /**
+   * Checks whether the first element of the 'required' list is present in the 'container' list, using canonical ASN.1
+   * equality.
+   * <p>
+   * This method is used for "defect" ID cards where only the first element of a list needs to be validated. Null or
+   * empty lists are handled safely:
+   * <ul>
+   * <li>If 'required' is null or empty, this method returns true (nothing to check).</li>
+   * <li>If 'container' is null or empty but 'required' has at least one element, this method returns false.</li>
+   * </ul>
+   *
+   * @param container the list of ASN1Object elements to search in
+   * @param required the list of ASN1Object elements to check the first element of
+   * @param <T> the type of ASN1Object (or subclass) stored in the lists
+   * @return true if the first element of 'required' is present in 'container', false otherwise
+   */
+  private static <T extends ASN1Object> boolean containsFirstAsn1(List<T> container, List<T> required)
+  {
+    if (required == null || required.isEmpty())
+      return true;
+    if (container == null || container.isEmpty())
+      return false;
+    T first = required.get(0);
+    return container.stream().anyMatch(c -> first.toASN1Primitive().equals(c.toASN1Primitive()));
   }
 
   private static Integer extractSerialNumber(Certificate signerCert)
@@ -599,6 +632,15 @@ public class EACServer
         LOG.debug("unable to extract serial number", e);
       }
       return null;
+    }
+  }
+
+  private static SecurityInfos createEfCardAccess(byte[] data) throws IOException
+  {
+    // Use the ASN1InputStream to ignore possible trailing zero bytes
+    try (var asn1InputSteam = new ASN1InputStream(data))
+    {
+      return new SecurityInfos(asn1InputSteam.readObject());
     }
   }
 }

@@ -23,12 +23,14 @@ import java.util.List;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.xml.sax.SAXParseException;
 
 import de.governikus.eumw.eidascommon.ErrorCode;
 import de.governikus.eumw.eidascommon.ErrorCodeException;
 import de.governikus.eumw.eidascommon.Utils;
 import de.governikus.eumw.eidasstarterkit.person_attributes.EidasPersonAttributes;
 import de.governikus.eumw.utils.key.KeyStoreSupporter;
+import net.shibboleth.utilities.java.support.xml.XMLParserException;
 import se.swedenconnect.opensaml.eidas.ext.SPTypeEnumeration;
 
 
@@ -107,6 +109,30 @@ class EidasRequestTest
     Assertions.assertEquals(ErrorCode.INVALID_NAME_ID_TYPE, errorCodeException.getCode());
     Assertions.assertEquals(0, errorCodeException.getDetails().length);
     Assertions.assertEquals("Name id type is not supported.", errorCodeException.getMessage());
+  }
+
+  @Test
+  void parseSamlRequestTooManyAttributes() throws Exception
+  {
+    System.setProperty("jdk.xml.elementAttributeLimit", "20");
+    byte[] request = Files.readAllBytes(Paths.get("src/test/resources/EidasSamlRequestWithTooManyAttributes.xml"));
+    XMLParserException xmlEx = Assertions.assertThrows(XMLParserException.class,
+                                                       () -> EidasSaml.parseRequest(new ByteArrayInputStream(request)));
+    SAXParseException saxEx = Assertions.assertInstanceOf(SAXParseException.class, xmlEx.getCause());
+    // error code for too many attributes
+    Assertions.assertTrue(saxEx.getMessage().contains("JAXP00010002"));
+  }
+
+  @Test
+  void parseSamlRequestTooDeepNesting() throws Exception
+  {
+    System.setProperty("jdk.xml.maxElementDepth", "20");
+    byte[] request = Files.readAllBytes(Paths.get("src/test/resources/EidasSamlRequestWithTooDeepNesting.xml"));
+    XMLParserException xmlEx = Assertions.assertThrows(XMLParserException.class,
+                                                       () -> EidasSaml.parseRequest(new ByteArrayInputStream(request)));
+    SAXParseException saxEx = Assertions.assertInstanceOf(SAXParseException.class, xmlEx.getCause());
+    // error code for too deep nesting
+    Assertions.assertTrue(saxEx.getMessage().contains("JAXP00010006"));
   }
 
   @Test

@@ -256,7 +256,7 @@ class CertificationRevocationListImplTest
             return (X509CRL)cf.generateCRL(CertificationRevocationListImplTest.class.getResourceAsStream("/TEST.crl"));
           }
         }
-        catch (Exception e)
+        catch (Exception _)
         {
           throw new CertificateValidationException("For Test purpose");
         }

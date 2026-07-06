@@ -17,10 +17,9 @@ import java.security.cert.X509Certificate;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
+import java.util.Base64;
 import java.util.List;
 import java.util.Objects;
-
-import jakarta.xml.bind.DatatypeConverter;
 
 import org.apache.commons.lang3.StringUtils;
 import org.opensaml.core.config.InitializationException;
@@ -49,6 +48,7 @@ import de.governikus.eumw.eidasstarterkit.EidasRequest;
 import de.governikus.eumw.eidasstarterkit.EidasSaml;
 import de.governikus.eumw.poseidas.server.idprovider.config.ConfigurationException;
 import de.governikus.eumw.poseidas.server.idprovider.config.ConfigurationService;
+import de.governikus.eumw.poseidas.server.pki.HSMServiceHolder;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -78,6 +78,8 @@ public class RequestHandler
    * access the config of the middleware
    */
   private final ConfigurationService configurationService;
+
+  private final HSMServiceHolder hsmServiceHolder;
 
 
   public EidasRequest handleSAMLRedirectRequest(String samlRequest, String relayState, String sigAlg, String signature)
@@ -137,7 +139,7 @@ public class RequestHandler
         throw new ErrorCodeException(ErrorCode.ILLEGAL_REQUEST_SYNTAX, "Query Parameter 'SAMLRequest' is missing");
       }
 
-      byte[] samlRequest = DatatypeConverter.parseBase64Binary(samlRequestBase64);
+      byte[] samlRequest = Base64.getMimeDecoder().decode(samlRequestBase64);
 
       log.trace("Incoming SAML request: {}", new String(samlRequest, StandardCharsets.UTF_8));
 
@@ -310,7 +312,7 @@ public class RequestHandler
   private AuthnRequest getAuthnRequest(InputStream is)
     throws InitializationException, ComponentInitializationException, XMLParserException, UnmarshallingException
   {
-    EidasSaml.init();
+    EidasSaml.init(hsmServiceHolder.getKeyStore());
     BasicParserPool ppMgr = Utils.getBasicParserPool();
     Document inCommonMDDoc = ppMgr.parse(is);
 

@@ -10,11 +10,11 @@
 package de.governikus.eumw.poseidas.cardbase.crypto;
 
 
+import org.bouncycastle.asn1.ASN1ObjectIdentifier;
 import org.bouncycastle.asn1.x509.DigestInfo;
 
 import de.governikus.eumw.poseidas.cardbase.AssertUtil;
-import de.governikus.eumw.poseidas.cardbase.ByteUtil;
-import de.governikus.eumw.poseidas.cardbase.asn1.OID;
+
 import lombok.Getter;
 
 
@@ -23,11 +23,10 @@ import lombok.Getter;
  *
  * @see HashConstants
  * @see DigestInfo
- * @see HashAlgorithmEnum
  * @author Jens Wothe, jw@bos-bremen.de
  */
 @Getter
-public class HashAlgorithm extends OID implements HashInfo
+public class HashAlgorithm extends ASN1ObjectIdentifier
 {
 
   // name of algorithm
@@ -64,52 +63,4 @@ public class HashAlgorithm extends OID implements HashInfo
     return result;
   }
 
-  /** {@inheritDoc} */
-  @Override
-  public boolean equals(Object obj)
-  {
-    if (this == obj)
-    {
-      return true;
-    }
-    if (!super.equals(obj))
-    {
-      return false;
-    }
-    if (getClass() != obj.getClass())
-    {
-      return false;
-    }
-    HashAlgorithm other = (HashAlgorithm)obj;
-    if (hashLength != other.hashLength)
-    {
-      return false;
-    }
-    if (name == null)
-    {
-      if (other.name != null)
-      {
-        return false;
-      }
-    }
-    else if (!name.equals(other.name))
-    {
-      return false;
-    }
-    return true;
-  }
-
-  /** {@inheritDoc} */
-  @Override
-  public byte[] getOIDValue()
-  {
-    return ByteUtil.copy(super.getValue());
-  }
-
-  /** {@inheritDoc} */
-  @Override
-  public OID getOID()
-  {
-    return this;
-  }
 }

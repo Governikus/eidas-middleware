@@ -20,12 +20,15 @@ import org.springframework.web.context.ContextLoaderListener;
 
 import de.governikus.eumw.eidasstarterkit.EidasSaml;
 import de.governikus.eumw.poseidas.server.eidservice.EIDInternal;
+import de.governikus.eumw.poseidas.server.pki.HSMServiceHolder;
+import lombok.RequiredArgsConstructor;
 
 
 /**
  * Application Lifecycle Listener implementation class StartUpListener
  */
 @Component
+@RequiredArgsConstructor
 public class StartUpListener extends ContextLoaderListener
 {
 
@@ -33,14 +36,7 @@ public class StartUpListener extends ContextLoaderListener
 
   private final EIDInternal eidInternal;
 
-  /**
-   * Default constructor.
-   */
-  public StartUpListener(EIDInternal eidInternal)
-  {
-    super();
-    this.eidInternal = eidInternal;
-  }
+  private final HSMServiceHolder hsmServiceHolder;
 
   /**
    * @see ServletContextListener#contextDestroyed(ServletContextEvent)
@@ -59,7 +55,7 @@ public class StartUpListener extends ContextLoaderListener
   {
     try
     {
-      EidasSaml.init();
+      EidasSaml.init(hsmServiceHolder.getKeyStore());
     }
     catch (InitializationException e)
     {

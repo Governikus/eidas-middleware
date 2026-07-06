@@ -12,7 +12,7 @@ package de.governikus.eumw.poseidas.server.eidservice;
 import java.util.HashSet;
 import java.util.Set;
 
-import de.governikus.eumw.poseidas.eidmodel.data.EIDKeys;
+import de.governikus.panstar.sdk.utils.constant.EIDAttributeName;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import lombok.Setter;
@@ -42,17 +42,17 @@ public class EIDRequestInput
 
   private final boolean sessionIdMayDiffer;
 
-  private final Set<EIDKeys> requiredFields = new HashSet<>();
+  private final Set<EIDAttributeName> requiredFields = new HashSet<>();
 
-  private final Set<EIDKeys> optionalFields = new HashSet<>();
+  private final Set<EIDAttributeName> optionalFields = new HashSet<>();
 
-  public void addRequiredFields(EIDKeys key)
+  public void addRequiredFields(EIDAttributeName eidAttributeName)
   {
-    requiredFields.add(key);
+    requiredFields.add(eidAttributeName);
   }
 
-  public void addOptionalFields(EIDKeys key)
+  public void addOptionalFields(EIDAttributeName eidAttributeName)
   {
-    optionalFields.add(key);
+    optionalFields.add(eidAttributeName);
   }
 }

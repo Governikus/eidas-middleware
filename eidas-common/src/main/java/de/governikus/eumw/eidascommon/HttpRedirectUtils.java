@@ -26,6 +26,7 @@ import jakarta.xml.bind.DatatypeConverter;
 
 import org.apache.commons.lang3.StringUtils;
 
+import de.governikus.eumw.utils.key.SecurityProvider;
 import lombok.extern.slf4j.Slf4j;
 
 
@@ -80,10 +81,13 @@ public final class HttpRedirectUtils
   public static String deflate(byte[] input)
   {
     byte[] output = new byte[2 * input.length];
-    Deflater compresser = new Deflater(3, true);
-    compresser.setInput(input);
-    compresser.finish();
-    int compressedDataLength = compresser.deflate(output);
+    int compressedDataLength;
+    try (Deflater compressor = new Deflater(3, true))
+    {
+      compressor.setInput(input);
+      compressor.finish();
+      compressedDataLength = compressor.deflate(output);
+    }
     byte[] result = new byte[compressedDataLength];
     System.arraycopy(output, 0, result, 0, compressedDataLength);
     return DatatypeConverter.printBase64Binary(result);
@@ -97,10 +101,14 @@ public final class HttpRedirectUtils
   public static byte[] inflate(String input) throws DataFormatException
   {
     byte[] b = DatatypeConverter.parseBase64Binary(input);
-    Inflater decompessor = new Inflater(true);
-    decompessor.setInput(b);
-    byte[] output = new byte[10 * b.length];
-    int length = decompessor.inflate(output);
+    byte[] output;
+    int length;
+    try (Inflater decompressor = new Inflater(true))
+    {
+      decompressor.setInput(b);
+      output = new byte[10 * b.length];
+      length = decompressor.inflate(output);
+    }
     byte[] result = new byte[length];
     System.arraycopy(output, 0, result, 0, length);
     return result;
@@ -150,7 +158,7 @@ public final class HttpRedirectUtils
       }
 
       appendParam(result, false, SIGALG_PARAMNAME, xmlAlgId);
-      Signature sig = Signature.getInstance(jcaAlgName);
+      Signature sig = Signature.getInstance(jcaAlgName, SecurityProvider.BOUNCY_CASTLE_PROVIDER);
       sig.initSign(sigKey);
       sig.update(result.toString().getBytes(Utils.ENCODING));
       byte[] value = sig.sign();
@@ -192,7 +200,7 @@ public final class HttpRedirectUtils
       appendParam(queryStringToCheck, false, SIGALG_PARAMNAME, sigAlg);
 
 
-      Signature sig = Signature.getInstance(javaSigAlg);
+      Signature sig = Signature.getInstance(javaSigAlg, SecurityProvider.BOUNCY_CASTLE_PROVIDER);
       sig.initVerify(verificationCertificate);
       sig.update(queryStringToCheck.toString().getBytes(StandardCharsets.UTF_8));
       if (!sig.verify(DatatypeConverter.parseBase64Binary(signature)))

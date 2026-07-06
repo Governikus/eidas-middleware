@@ -12,8 +12,6 @@ package de.governikus.eumw.poseidas.cardbase.crypto;
 import java.security.InvalidAlgorithmParameterException;
 import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
-import java.security.NoSuchProviderException;
-import java.security.Security;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
@@ -33,6 +31,7 @@ import org.bouncycastle.crypto.params.KeyParameter;
 
 import de.governikus.eumw.poseidas.cardbase.AssertUtil;
 import de.governikus.eumw.poseidas.cardbase.ByteUtil;
+import de.governikus.eumw.utils.key.SecurityProvider;
 
 
 /**
@@ -96,34 +95,21 @@ public final class CipherUtil
    *          {@link Cipher#UNWRAP_MODE} only permitted
    * @param iv initialization vector, <code>null</code> not permitted or specification with <code>null</code> or empty
    *          byte array as IV ({@link IvParameterSpec#getIV()}), only possible for ECB block mode
-   * @param provider name of provider, <code>null</code> for wildcard
    * @return Cipher-instance
    * @throws IllegalArgumentException if algorithm, key, mode or initialization not permitted, algorithm, key or
    *           parameters not supported
    * @see Cipher#getInstance(String)
    * @see Cipher#init(int, java.security.Key, java.security.spec.AlgorithmParameterSpec)
    */
-  private static final Cipher getCipher(String algorithm, SecretKey key, int mode, IvParameterSpec iv, String provider)
+  private static final Cipher getCipher(String algorithm, SecretKey key, int mode, IvParameterSpec iv)
   {
     // first check arguments contain valid values
-    checkGetCipherArguments(algorithm, key, mode, iv, provider);
+    checkGetCipherArguments(algorithm, key, mode, iv);
     // create cipher with/without provider
     Cipher c = null;
     try
     {
-      if (provider == null)
-      {
-        c = Cipher.getInstance(algorithm);
-      }
-      else
-      {
-        c = Cipher.getInstance(algorithm, provider);
-      }
-    }
-    catch (NoSuchProviderException e)
-    {
-      // provider checked before, can not reach here
-      throw new IllegalArgumentException("no provider available: " + provider, e);
+      c = Cipher.getInstance(algorithm, SecurityProvider.BOUNCY_CASTLE_PROVIDER);
     }
     catch (NoSuchAlgorithmException e)
     {
@@ -161,14 +147,9 @@ public final class CipherUtil
    *          {@link Cipher#UNWRAP_MODE} only permitted
    * @param iv initialization vector, <code>null</code> not permitted or specification with <code>null</code> or empty
    *          byte array as IV ({@link IvParameterSpec#getIV()}), only possible for ECB block mode
-   * @param provider name of provider, <code>null</code> for wildcard
    * @throws IllegalArgumentException if at least one argument or combination of arguments not valid
    */
-  private static void checkGetCipherArguments(String algorithm,
-                                              SecretKey key,
-                                              int mode,
-                                              IvParameterSpec iv,
-                                              String provider)
+  private static void checkGetCipherArguments(String algorithm, SecretKey key, int mode, IvParameterSpec iv)
   {
     AssertUtil.notNullOrEmpty(algorithm, "algorithm");
     AssertUtil.notNull(key, "secret key");
@@ -200,10 +181,6 @@ public final class CipherUtil
     {
       throw new IllegalArgumentException("algorithm and algorithm of key does not match: " + algorithm + ", "
                                          + key.getAlgorithm());
-    }
-    if (provider != null && Security.getProvider(provider) == null)
-    {
-      throw new IllegalArgumentException("provider unknown: '" + provider + "'");
     }
   }
 
@@ -330,7 +307,6 @@ public final class CipherUtil
    * @param iv initialization vector, <code>null</code> not permitted or specification with <code>null</code> or empty
    *          byte array as IV ({@link IvParameterSpec#getIV()})
    * @param data bytes to be deciphered
-   * @param provider name of provider, <code>null</code> for wildcard
    * @return deciphered bytes
    * @throws IllegalArgumentException if algorithm, key, mode or initialization vector not permitted, algorithm, key or
    *           parameters not supported
@@ -341,14 +317,10 @@ public final class CipherUtil
    * @see #cipherAES(String, SecretKey, int, IvParameterSpec, byte[], String)
    * @see Cipher#ENCRYPT_MODE
    */
-  public static final byte[] encipherAES(String algorithm,
-                                         SecretKey key,
-                                         IvParameterSpec iv,
-                                         byte[] data,
-                                         String provider)
+  public static final byte[] encipherAES(String algorithm, SecretKey key, IvParameterSpec iv, byte[] data)
     throws IllegalBlockSizeException, BadPaddingException
   {
-    return cipherAES(algorithm, key, Cipher.ENCRYPT_MODE, iv, data, provider);
+    return cipherAES(algorithm, key, Cipher.ENCRYPT_MODE, iv, data);
   }
 
   /**
@@ -359,7 +331,6 @@ public final class CipherUtil
    * @param iv initialization vector, <code>null</code> not permitted or specification with <code>null</code> or empty
    *          byte array as IV ({@link IvParameterSpec#getIV()})
    * @param data bytes to be deciphered
-   * @param provider name of provider, <code>null</code> for wildcard
    * @return deciphered bytes
    * @throws IllegalArgumentException if algorithm, key, mode or initialization vector not permitted, algorithm, key or
    *           parameters not supported
@@ -370,14 +341,10 @@ public final class CipherUtil
    * @see #cipherAES(String, SecretKey, int, IvParameterSpec, byte[], String)
    * @see Cipher#DECRYPT_MODE
    */
-  public static final byte[] decipherAES(String algorithm,
-                                         SecretKey key,
-                                         IvParameterSpec iv,
-                                         byte[] data,
-                                         String provider)
+  public static final byte[] decipherAES(String algorithm, SecretKey key, IvParameterSpec iv, byte[] data)
     throws IllegalBlockSizeException, BadPaddingException
   {
-    return cipherAES(algorithm, key, Cipher.DECRYPT_MODE, iv, data, provider);
+    return cipherAES(algorithm, key, Cipher.DECRYPT_MODE, iv, data);
   }
 
   /**
@@ -389,24 +356,18 @@ public final class CipherUtil
    * @param iv initialization vector, <code>null</code> not permitted or specification with <code>null</code> or empty
    *          byte array as IV ({@link IvParameterSpec#getIV()})
    * @param data bytes to be enciphered/deciphered, multiple of 8 bytes
-   * @param provider name of provider, <code>null</code> for wildcard
    * @return enciphered/deciphered bytes
    * @throws IllegalArgumentException if algorithm, key, mode or initialization vector not permitted, algorithm, key or
    *           parameters not supported
    * @throws BadPaddingException
    * @throws IllegalBlockSizeException
    */
-  private static final byte[] cipherAES(String algorithm,
-                                        SecretKey key,
-                                        int mode,
-                                        IvParameterSpec iv,
-                                        byte[] data,
-                                        String provider)
+  private static final byte[] cipherAES(String algorithm, SecretKey key, int mode, IvParameterSpec iv, byte[] data)
     throws IllegalBlockSizeException, BadPaddingException
   {
     checkCipherKey(key, ALGORITHM_AES, KEY_SIZES_LIST_AES);
     checkCipherMode(mode);
-    Cipher cipher = getCipher(algorithm, key, mode, iv, provider);
+    Cipher cipher = getCipher(algorithm, key, mode, iv);
     return cipher.doFinal(data);
   }
 

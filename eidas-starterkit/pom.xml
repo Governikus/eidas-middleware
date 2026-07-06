@@ -14,7 +14,7 @@
     <parent>
         <groupId>de.governikus.eumw</groupId>
         <artifactId>eumw</artifactId>
-        <version>4.0.2</version>
+        <version>4.1.0</version>
     </parent>
     <artifactId>eidas-starterkit</artifactId>
 
@@ -39,6 +39,11 @@
         <dependency>
             <groupId>se.swedenconnect.opensaml</groupId>
             <artifactId>opensaml-security-ext</artifactId>
+        </dependency>
+
+        <dependency>
+            <groupId>de.governikus.opensaml.extension</groupId>
+            <artifactId>opensaml-governikus-extension</artifactId>
         </dependency>
 
         <dependency>

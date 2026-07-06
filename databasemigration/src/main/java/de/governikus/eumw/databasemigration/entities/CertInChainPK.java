@@ -13,7 +13,10 @@ import java.io.Serializable;
 
 import jakarta.persistence.Embeddable;
 
-import lombok.Data;
+import lombok.AccessLevel;
+import lombok.AllArgsConstructor;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
 
 
 /**
@@ -21,8 +24,10 @@ import lombok.Data;
  *
  * @author tt
  */
+@Getter
+@AllArgsConstructor(access = AccessLevel.PUBLIC)
+@NoArgsConstructor(access = AccessLevel.PUBLIC)
 @Embeddable
-@Data
 public class CertInChainPK implements Serializable
 {
 

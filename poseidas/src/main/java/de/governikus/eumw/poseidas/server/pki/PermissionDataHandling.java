@@ -9,11 +9,12 @@
 
 package de.governikus.eumw.poseidas.server.pki;
 
-import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.nio.ByteBuffer;
 import java.security.cert.X509Certificate;
+import java.time.Instant;
+import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Calendar;
@@ -30,12 +31,12 @@ import org.apache.commons.lang3.StringUtils;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Component;
 
+import de.governikus.autent.asn1.CVC;
 import de.governikus.eumw.config.DvcaConfigurationType;
 import de.governikus.eumw.config.EidasMiddlewareConfig;
 import de.governikus.eumw.config.ServiceProviderType;
 import de.governikus.eumw.config.TimerConfigurationType;
 import de.governikus.eumw.config.TimerTypeCertRenewal;
-import de.governikus.eumw.poseidas.cardbase.asn1.npa.ECCVCertificate;
 import de.governikus.eumw.poseidas.gov2server.GovManagementException;
 import de.governikus.eumw.poseidas.gov2server.constants.admin.AdminPoseidasConstants;
 import de.governikus.eumw.poseidas.gov2server.constants.admin.GlobalManagementCodes;
@@ -707,10 +708,11 @@ public class PermissionDataHandling implements PermissionDataHandlingMBean
   {
     try
     {
-      ECCVCertificate parsed = new ECCVCertificate(tp.getCvc());
-      return parsed.getExpirationDateDate().before(new Date());
+      CVC parsed = new CVC(tp.getCvc());
+      Date cvcExpirationDate = parsed.getBody().getCertificateExpirationDate().getDate();
+      return cvcExpirationDate.toInstant().plus(1, ChronoUnit.DAYS).isBefore(Instant.now());
     }
-    catch (IOException e)
+    catch (Exception e)
     {
       throw new IllegalArgumentException("unable to parse given cvc", e);
     }
@@ -724,7 +726,7 @@ public class PermissionDataHandling implements PermissionDataHandlingMBean
     {
       result = InfoMapBuilder.createInfoMap(facade, blockListService, cvcRefId);
     }
-    catch (IllegalArgumentException e)
+    catch (IllegalArgumentException _)
     {
       log.error("{}: Can not parse CVC data", cvcRefId);
       result.put(AdminPoseidasConstants.VALUE_PERMISSION_DATA_ERROR_MESSAGE,
@@ -767,10 +769,8 @@ public class PermissionDataHandling implements PermissionDataHandlingMBean
         createTerminalPermissionEntry(epaConf.getCVCRefID());
       }
 
-      byte[] cvcDescription = null;
-
       CVCRequestHandler handler = getCvcRequestHandler(epaConf);
-      handler.makeInitialRequest(cvcDescription, countryCode, chrMnemonic, sequenceNumber);
+      handler.makeInitialRequest(countryCode, chrMnemonic, sequenceNumber);
       return GlobalManagementCodes.OK.createMessage();
     }
     catch (IllegalArgumentException e)
@@ -842,7 +842,7 @@ public class PermissionDataHandling implements PermissionDataHandlingMBean
     {
       new URL(value);
     }
-    catch (MalformedURLException e)
+    catch (MalformedURLException _)
     {
       throw new GovManagementException(GlobalManagementCodes.EC_INVALIDCONFIGVALUE,
                                        ID_CONNECTOR_CONFIGURATION + fieldName);
@@ -852,12 +852,16 @@ public class PermissionDataHandling implements PermissionDataHandlingMBean
   private void checkService(DvcaConfigurationType dvcaConfiguration, ServiceProviderType serviceProvider, String pkiUrl)
     throws GovManagementException
   {
-    X509Certificate dvcaServerCertificate = configurationService.getCertificate(dvcaConfiguration.getServerSSLCertificateName());
+    Optional<X509Certificate> optionalDvcaServerCert = Optional.empty();
+    if (StringUtils.isNotBlank(dvcaConfiguration.getServerSSLCertificateName()))
+    {
+      optionalDvcaServerCert = Optional.of(configurationService.getCertificate(dvcaConfiguration.getServerSSLCertificateName()));
+    }
     KeyPair clientKeyPair = serviceProvider.getClientKeyPairName() == null ? null
       : configurationService.getKeyPair(serviceProvider.getClientKeyPairName());
     String filedNameSslKeysId = "ID.jsp.serviceProvider.nPaPkiConnectorConfiguration.autentService.sslKeyID";
 
-    if (dvcaServerCertificate == null || clientKeyPair == null && hsmServiceHolder.getKeyStore() == null)
+    if (clientKeyPair == null && hsmServiceHolder.getKeyStore() == null)
     {
       throw new GovManagementException(GlobalManagementCodes.EC_INVALIDCONFIGVALUE, filedNameSslKeysId);
     }
@@ -870,13 +874,13 @@ public class PermissionDataHandling implements PermissionDataHandlingMBean
       if (hsmServiceHolder.getKeyStore() == null)
       {
         List<X509Certificate> clientCertificate = List.of(clientKeyPair.getCertificate());
-        connector = new PKIServiceConnector(30, dvcaServerCertificate, clientKeyPair.getKey(), clientCertificate,
-                                            serviceProviderName);
+        connector = new PKIServiceConnector(30, optionalDvcaServerCert.orElse(null), clientKeyPair.getKey(),
+                                            clientCertificate, serviceProviderName);
       }
       else
       {
-        connector = new PKIServiceConnector(30, dvcaServerCertificate, hsmServiceHolder.getKeyStore(), null,
-                                            serviceProvider.getCVCRefID());
+        connector = new PKIServiceConnector(30, optionalDvcaServerCert.orElse(null), hsmServiceHolder.getKeyStore(),
+                                            null, serviceProvider.getCVCRefID());
       }
       byte[] content = connector.getFile(pkiUrl + "?wsdl");
       if (!new String(content).contains("wsdl"))

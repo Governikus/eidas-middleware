@@ -14,6 +14,7 @@ import java.nio.ByteBuffer;
 import java.util.Arrays;
 
 import de.governikus.eumw.poseidas.cardbase.constants.Constants;
+import lombok.experimental.UtilityClass;
 
 
 
@@ -23,11 +24,9 @@ import de.governikus.eumw.poseidas.cardbase.constants.Constants;
  * @author Arne Stahlbock, ast@bos-bremen.de
  * @author Jens Wothe, jw@bos-bremen.de
  */
+@UtilityClass
 public final class Hex
 {
-
-  private Hex()
-  {}
 
   /**
    * Constant of empty HEX-String.
@@ -52,7 +51,7 @@ public final class Hex
   private static final int DEFAULT_LINE_SIZE = 16;
 
   /**
-   * Hexify a byte value.
+   * Hexify a byte value to the unsigned representation.
    *
    * @param value byte value
    * @return hex-String
@@ -63,14 +62,14 @@ public final class Hex
   }
 
   /**
-   * Hexify an int value.
+   * Hexify an int value to the unsigned representation.
    *
    * @param value int value
    * @return hex-String
    */
-  public static String hexify(int value)
+  public static final String hexify(int value)
   {
-    return hexify(BigInteger.valueOf(value).toByteArray(), "");
+    return hexify(ByteUtil.removeLeadingZero(BigInteger.valueOf(value).toByteArray()), "");
   }
 
   /**
@@ -206,7 +205,7 @@ public final class Hex
    * @param src string to be cleaned
    * @return cleaned string
    */
-  private static String cleanString(String src)
+  private static final String cleanString(String src)
   {
     String s1 = src.replace(" ", "");
     String s2 = s1.replace("\n", "");

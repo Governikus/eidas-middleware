@@ -51,7 +51,6 @@ import de.governikus.eumw.eidasstarterkit.person_attributes.natural_persons_attr
 import de.governikus.eumw.eidasstarterkit.person_attributes.natural_persons_attribute.PlaceOfBirthAttribute;
 import de.governikus.eumw.poseidas.cardbase.StringUtil;
 import de.governikus.eumw.poseidas.ecardcore.model.ResultMinor;
-import de.governikus.eumw.poseidas.eidmodel.data.EIDKeys;
 import de.governikus.eumw.poseidas.eidserver.convenience.EIDInfoResult;
 import de.governikus.eumw.poseidas.eidserver.convenience.EIDInfoResultDeselected;
 import de.governikus.eumw.poseidas.eidserver.convenience.EIDInfoResultNotOnChip;
@@ -65,6 +64,7 @@ import de.governikus.eumw.poseidas.server.eidservice.EIDResultResponse;
 import de.governikus.eumw.poseidas.server.idprovider.config.ConfigurationService;
 import de.governikus.eumw.poseidas.server.idprovider.config.CvcTlsCheck;
 import de.governikus.eumw.poseidas.server.pki.HSMServiceHolder;
+import de.governikus.panstar.sdk.utils.constant.EIDAttributeName;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
@@ -249,7 +249,7 @@ public class ResponseHandler
                                       REQUIRED_ATTRIBUTE_HAS_BEEN_DESELECTED);
     }
 
-    EIDInfoResult dateOfBirth = eidResponse.getEIDInfo(EIDKeys.DATE_OF_BIRTH);
+    EIDInfoResult dateOfBirth = eidResponse.getEIDInfo(EIDAttributeName.DateOfBirth);
     String dateOfBirthStr = dateOfBirth instanceof EIDInfoResultString ? ((EIDInfoResultString)dateOfBirth).getResult()
       : null;
     if (dateOfBirthStr != null)
@@ -272,27 +272,15 @@ public class ResponseHandler
                                       REQUIRED_ATTRIBUTE_HAS_BEEN_DESELECTED);
     }
 
-    EIDInfoResult placeOfBirth = eidResponse.getEIDInfo(EIDKeys.PLACE_OF_BIRTH);
-    if (placeOfBirth instanceof EIDInfoResultPlaceStructured)
-    {
-      attributes.add(new PlaceOfBirthAttribute(((EIDInfoResultPlaceStructured)placeOfBirth).getCity()));
-    }
-    else if (placeOfBirth instanceof EIDInfoResultPlaceFreeText)
-    {
-      attributes.add(new PlaceOfBirthAttribute(((EIDInfoResultPlaceFreeText)placeOfBirth).getFreeTextPlace()));
-    }
-    else if (placeOfBirth instanceof EIDInfoResultPlaceNo)
-    {
-      attributes.add(new PlaceOfBirthAttribute(((EIDInfoResultPlaceNo)placeOfBirth).getNoPlaceInfo()));
-    }
-    else if (samlReqSession.getRequestedAttributes().get(EidasNaturalPersonAttributes.PLACE_OF_BIRTH.getName()) != null
-             && samlReqSession.getRequestedAttributes().get(EidasNaturalPersonAttributes.PLACE_OF_BIRTH.getName()))
+
+    if (!handlePlaceOfBirth(eidResponse, attributes, samlReqSession))
     {
       return prepareSAMLErrorResponse(reqSP,
                                       samlReqSession.getReqId(),
                                       ErrorCode.AUTHORIZATION_FAILED,
                                       REQUIRED_ATTRIBUTE_HAS_BEEN_DESELECTED);
     }
+
 
     if (!createPlaceOfResidence(eidResponse, attributes, samlReqSession))
     {
@@ -303,7 +291,7 @@ public class ResponseHandler
     }
 
     EidasNameId nameId;
-    EIDInfoResultRestrictedID restrID = (EIDInfoResultRestrictedID)eidResponse.getEIDInfo(EIDKeys.RESTRICTED_ID);
+    EIDInfoResultRestrictedID restrID = (EIDInfoResultRestrictedID)eidResponse.getEIDInfo(EIDAttributeName.RestrictedID);
     if (restrID == null)
     {
       if (samlReqSession.getRequestedAttributes().get(EidasNaturalPersonAttributes.PERSON_IDENTIFIER.getName()) != null
@@ -329,17 +317,14 @@ public class ResponseHandler
       nameId = new EidasUnspecifiedNameId(pi.getValue());
     }
 
-    EIDInfoResult nationality = eidResponse.getEIDInfo(EIDKeys.NATIONALITY);
-    if (nationality != null)
-    {
-      attributes.add(new NationalityAttribute(convertNationality(nationality)));
-    }
+    addNationality(eidResponse.getEIDInfo(EIDAttributeName.Nationality), attributes);
 
     try
     {
       EidasSigner signer = getEidasSigner();
 
-      EidasEncrypter encrypter = new EidasEncrypter(true, reqSP.getEncryptionCert());
+      EidasEncrypter encrypter = new EidasEncrypter(true, reqSP.getEncryptionCert(),
+                                                    reqSP.getSupportedEncryptionAlgorithms());
 
       byte[] eidasResp = EidasSaml.createResponse(attributes,
                                                   reqSP.getAssertionConsumerURL(),
@@ -356,6 +341,58 @@ public class ResponseHandler
     catch (Exception e)
     {
       throw new RequestProcessingException(CANNOT_CREATE_SAML_RESPONSE, e);
+    }
+  }
+
+  boolean handlePlaceOfBirth(EIDResultResponse eidResponse,
+                             List<EidasAttribute> attributes,
+                             RequestSession samlReqSession)
+  {
+    EIDInfoResult placeOfBirth = eidResponse.getEIDInfo(EIDAttributeName.PlaceOfBirth);
+    if (placeOfBirth != null)
+    {
+      String placeOfBirthString = null;
+      if (placeOfBirth instanceof EIDInfoResultPlaceStructured structuredPlaceOfBirth)
+      {
+        placeOfBirthString = structuredPlaceOfBirth.getCity();
+      }
+      else if (placeOfBirth instanceof EIDInfoResultPlaceFreeText freeTextPlaceOfBirth)
+      {
+        placeOfBirthString = freeTextPlaceOfBirth.getFreeTextPlace();
+      }
+      else if (placeOfBirth instanceof EIDInfoResultPlaceNo)
+      {
+        // If the placeOfBirth is a NoPlaceInfo we ignore the attribute and omit the PlaceOfBirth attribute.
+        return true;
+      }
+      if (StringUtils.isNotEmpty(placeOfBirthString))
+      {
+        attributes.add(new PlaceOfBirthAttribute(placeOfBirthString));
+      }
+    }
+    else if ((samlReqSession.getRequestedAttributes().get(EidasNaturalPersonAttributes.PLACE_OF_BIRTH.getName()) != null
+              && samlReqSession.getRequestedAttributes().get(EidasNaturalPersonAttributes.PLACE_OF_BIRTH.getName())))
+    {
+      return false;
+    }
+    return true;
+  }
+
+  /**
+   * Add nationality attribute if on chip and convertable
+   *
+   * @param nationality The nationality from chip
+   * @param attributes Attributes list to add the nationality, if on chip and convertable
+   */
+  protected void addNationality(EIDInfoResult nationality, ArrayList<EidasAttribute> attributes)
+  {
+    if (nationality != null)
+    {
+      String convertedNationality = convertNationality(nationality);
+      if (StringUtils.isNotBlank(convertedNationality))
+      {
+        attributes.add(new NationalityAttribute(convertedNationality));
+      }
     }
   }
 
@@ -378,7 +415,7 @@ public class ResponseHandler
     {
       return ICAOCountry.getInstance(nationalityString).toAlpha2Code();
     }
-    catch (IllegalArgumentException e)
+    catch (IllegalArgumentException _)
     {
       // invalid code found, null and empty included
       log.info("Nationality from ID could not be converted, continuing without");
@@ -430,7 +467,8 @@ public class ResponseHandler
     {
       EidasSigner signer = getEidasSigner();
 
-      EidasEncrypter encrypter = new EidasEncrypter(true, reqSP.getEncryptionCert());
+      EidasEncrypter encrypter = new EidasEncrypter(true, reqSP.getEncryptionCert(),
+                                                    reqSP.getSupportedEncryptionAlgorithms());
       byte[] eidasResp = EidasSaml.createResponse(dummyAttributes,
                                                   reqSP.getAssertionConsumerURL(),
                                                   reqSP.getEntityID(),
@@ -504,11 +542,11 @@ public class ResponseHandler
                                    List<EidasAttribute> attributes,
                                    RequestSession samlReqSession)
   {
-    EIDInfoResult birthName = eIDrespInt.getEIDInfo(EIDKeys.BIRTH_NAME);
-    EIDInfoResult familyNames = eIDrespInt.getEIDInfo(EIDKeys.FAMILY_NAMES);
+    EIDInfoResult birthName = eIDrespInt.getEIDInfo(EIDAttributeName.BirthName);
+    EIDInfoResult familyNames = eIDrespInt.getEIDInfo(EIDAttributeName.FamilyNames);
     String familyNamesStr = familyNames instanceof EIDInfoResultString ? ((EIDInfoResultString)familyNames).getResult()
       : "";
-    EIDInfoResult givenNames = eIDrespInt.getEIDInfo(EIDKeys.GIVEN_NAMES);
+    EIDInfoResult givenNames = eIDrespInt.getEIDInfo(EIDAttributeName.GivenNames);
     String givenNamesStr = givenNames instanceof EIDInfoResultString ? ((EIDInfoResultString)givenNames).getResult()
       : "";
 
@@ -579,23 +617,24 @@ public class ResponseHandler
                                            List<EidasAttribute> attributes,
                                            RequestSession samlReqSession)
   {
-    EIDInfoResult placeOfResidence = eIDrespInt.getEIDInfo(EIDKeys.PLACE_OF_RESIDENCE);
+    EIDInfoResult placeOfResidence = eIDrespInt.getEIDInfo(EIDAttributeName.PlaceOfResidence);
     if (placeOfResidence != null)
     {
-      CurrentAddressAttribute cA = null;
 
       // handle freetextPlace (when specified)
-      if (placeOfResidence instanceof EIDInfoResultPlaceStructured)
+      if (placeOfResidence instanceof EIDInfoResultPlaceStructured pt)
       {
-        EIDInfoResultPlaceStructured pt = (EIDInfoResultPlaceStructured)placeOfResidence;
+        CurrentAddressAttribute cA;
         cA = new CurrentAddressAttribute(null, null, null, null, pt.getStreet(), pt.getCity(), pt.getCountry(),
                                          pt.getState(), pt.getZipCode());
+        attributes.add(cA);
       }
       else if (placeOfResidence instanceof EIDInfoResultPlaceNo)
       {
-        cA = new CurrentAddressAttribute();
+        // The eIDAS Node can not handle an empty CurrentAddress value, therefore we do not add the currentAddress
+        // attribute in the response.
+        return true;
       }
-      attributes.add(cA);
     }
     else if (samlReqSession.getRequestedAttributes().get(EidasNaturalPersonAttributes.CURRENT_ADDRESS.getName()) != null
              && samlReqSession.getRequestedAttributes().get(EidasNaturalPersonAttributes.CURRENT_ADDRESS.getName()))

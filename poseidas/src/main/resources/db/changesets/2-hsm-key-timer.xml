@@ -1,0 +1,27 @@
+<?xml version="1.1" encoding="UTF-8" standalone="no"?>
+<databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+                   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                   xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd">
+
+<!-- Delete -->
+    <changeSet id="1756285283195-1" author="Ciwinski (generated)">
+        <preConditions onFail="MARK_RAN">
+            <sqlCheck expectedResult="1">
+                SELECT CASE
+                           WHEN EXISTS (SELECT 1
+                                        FROM information_schema.check_constraints cc
+                                        WHERE cc.CONSTRAINT_SCHEMA = 'PUBLIC'
+                                          AND cc.CHECK_CLAUSE LIKE '(PUBLIC.TIMERHISTORY.TIMERTYPE) IN %')
+                               THEN 1
+                           ELSE 0
+                           END
+                FROM (VALUES (0));
+            </sqlCheck>
+        </preConditions>
+
+        <customChange class="de.governikus.eumw.poseidas.server.database.DropTimerHistroyCheckCustomChange" />
+
+    </changeSet>
+
+
+</databaseChangeLog>

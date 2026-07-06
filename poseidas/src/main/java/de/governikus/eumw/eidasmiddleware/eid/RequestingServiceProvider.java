@@ -10,6 +10,9 @@
 package de.governikus.eumw.eidasmiddleware.eid;
 
 import java.security.cert.X509Certificate;
+import java.util.List;
+
+import de.governikus.eumw.eidasstarterkit.EncryptionAlgorithmInfo;
 
 import lombok.Getter;
 import lombok.Setter;
@@ -33,6 +36,12 @@ public class RequestingServiceProvider
   private X509Certificate encryptionCert = null;
 
   private SPTypeEnumeration sectorType;
+
+  /**
+   * The supported encryption algorithms from the metadata key desciptor
+   */
+  private List<EncryptionAlgorithmInfo> supportedEncryptionAlgorithms;
+
 
   public RequestingServiceProvider(String entityID)
   {

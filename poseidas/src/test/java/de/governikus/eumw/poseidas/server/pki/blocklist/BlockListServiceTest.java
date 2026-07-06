@@ -6,6 +6,7 @@ import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Base64;
 import java.util.List;
+import java.util.Optional;
 import java.util.Random;
 import java.util.stream.IntStream;
 
@@ -78,7 +79,7 @@ class BlockListServiceTest
 
     List<byte[]> entriesToAdd = generateRandomBlockListEntries(2);
     List<byte[]> entriesToRemove = blockListEntries.subList(0, 3);
-    blockListService.updateDeltaBlockList(terminalPermission, 43, entriesToAdd, entriesToRemove, null);
+    blockListService.updateDeltaBlockList(terminalPermission, 43, entriesToAdd, entriesToRemove, Optional.empty());
     long count = blockListService.count(SECTOR_ID);
     Assertions.assertEquals(9, count);
     Assertions.assertTrue(Files.exists(Path.of(tempDir.getPath(), ConfigurationTestHelper.CVC_REF_ID + ".version-43")));

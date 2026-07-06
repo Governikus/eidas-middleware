@@ -375,7 +375,7 @@ public class ConfigurationMigrationService
   private DvcaConfigurationType createNewDvcaConf(PkiConnectorConfigurationDto pkiConf)
   {
     DvcaConfigurationType newDvcaConfiguration = new DvcaConfigurationType();
-    UriComponents url = UriComponentsBuilder.fromHttpUrl(pkiConf.getPassiveAuthService().getUrl()).build();
+    UriComponents url = UriComponentsBuilder.fromUriString(pkiConf.getPassiveAuthService().getUrl()).build();
     newDvcaConfiguration.setName(url.getHost());
     newDvcaConfiguration.setPassiveAuthServiceUrl(pkiConf.getPassiveAuthService().getUrl());
 

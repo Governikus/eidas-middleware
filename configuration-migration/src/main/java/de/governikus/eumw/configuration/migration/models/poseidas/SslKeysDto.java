@@ -18,6 +18,7 @@ import java.security.spec.PKCS8EncodedKeySpec;
 import java.util.ArrayList;
 import java.util.List;
 
+import de.governikus.panstar.sdk.utils.constant.Common;
 import org.apache.commons.lang3.ArrayUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -71,7 +72,8 @@ public class SslKeysDto extends AbstractConfigDto<SslKeysType>
 
       if (jaxbConfig.getClientKey() != null && !clientCertificateChain.isEmpty())
       {
-        clientKey = KeyFactory.getInstance(clientCertificateChain.get(0).getPublicKey().getAlgorithm())
+        clientKey = KeyFactory.getInstance(clientCertificateChain.get(0).getPublicKey().getAlgorithm(),
+                                           Common.BOUNCY_PROVIDER)
                               .generatePrivate(new PKCS8EncodedKeySpec(jaxbConfig.getClientKey()));
       }
     }

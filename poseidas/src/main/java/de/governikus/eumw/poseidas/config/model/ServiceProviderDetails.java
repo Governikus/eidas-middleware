@@ -18,15 +18,14 @@ import java.util.Date;
 import java.util.Locale;
 import java.util.Map;
 
+import de.governikus.autent.asn1.CVC;
 import de.governikus.eumw.config.ServiceProviderType;
-import de.governikus.eumw.poseidas.cardbase.asn1.npa.ECCVCertificate;
 import de.governikus.eumw.poseidas.cardserver.certrequest.CvcRequestGenerator;
 import de.governikus.eumw.poseidas.gov2server.constants.admin.AdminPoseidasConstants;
 import de.governikus.eumw.poseidas.server.pki.CVCRequestHandler;
 import de.governikus.eumw.poseidas.server.pki.TerminalPermissionAOBean;
 import de.governikus.eumw.poseidas.server.pki.entities.PendingCertificateRequest;
 import de.governikus.eumw.poseidas.server.pki.entities.TerminalPermission;
-
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
@@ -332,7 +331,8 @@ public class ServiceProviderDetails
     }
 
     // If no last sequence or pending request but cvc is available, suggest increased cvc sequence number
-    return getNumberOfCHR(CvcRequestGenerator.increaseCHR(new ECCVCertificate(terminalPermission.getCvc()).getHolderReferenceString()));
+    return getNumberOfCHR(CvcRequestGenerator.increaseCHR(new CVC(terminalPermission.getCvc()).getBody()
+                                                                                              .getCertificateHolderReference()));
   }
 
   public static Integer getNumberOfCHR(String currentHolderReference)
@@ -382,27 +382,6 @@ public class ServiceProviderDetails
       if (log.isDebugEnabled())
       {
         log.debug("Failed to get issuer url", e);
-      }
-      return "";
-    }
-  }
-
-  /***
-   * Get the redirect URL from the CVC
-   *
-   * @return Redirect URL as string.
-   */
-  public String getRedirectURL()
-  {
-    try
-    {
-      return (String)info.get(AdminPoseidasConstants.VALUE_PERMISSION_DATA_REDIRECT_URL);
-    }
-    catch (NullPointerException e)
-    {
-      if (log.isDebugEnabled())
-      {
-        log.debug("Failed to get redirect url", e);
       }
       return "";
     }

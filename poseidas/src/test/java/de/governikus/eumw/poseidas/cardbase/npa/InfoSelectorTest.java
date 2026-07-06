@@ -18,10 +18,10 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.MethodSource;
 
+import de.governikus.autent.asn1.si.ChipAuthenticationDomainParameterInfo;
+import de.governikus.autent.asn1.si.ChipAuthenticationInfo;
+import de.governikus.autent.asn1.si.SecurityInfos;
 import de.governikus.eumw.poseidas.cardbase.Hex;
-import de.governikus.eumw.poseidas.cardbase.asn1.npa.SecurityInfos;
-import de.governikus.eumw.poseidas.cardbase.asn1.npa.si.ChipAuthenticationDomainParameterInfo;
-import de.governikus.eumw.poseidas.cardbase.asn1.npa.si.ChipAuthenticationInfo;
 
 
 class InfoSelectorTest
@@ -58,24 +58,23 @@ class InfoSelectorTest
   @MethodSource("parameterSource")
   void testNewEFCardAccess(byte[] source) throws IOException
   {
-    SecurityInfos efCardAccess = new SecurityInfos();
-    efCardAccess.decode(source);
+    SecurityInfos efCardAccess = new SecurityInfos(source);
 
-    List<ChipAuthenticationInfo> caInfoList = efCardAccess.getChipAuthenticationInfo();
-    List<ChipAuthenticationDomainParameterInfo> caDomParamList = efCardAccess.getChipAuthenticationDomainParameterInfo();
+    List<ChipAuthenticationInfo> caInfoList = efCardAccess.getChipAuthenticationInfoList();
+    List<ChipAuthenticationDomainParameterInfo> caDomParamList = efCardAccess.getChipAuthenticationDomainParameterInfoList();
 
     InfoSelector.ChipAuthenticationData caData = InfoSelector.selectCAData(caInfoList, caDomParamList);
-    Assertions.assertEquals(2, caData.getCaInfo().getVersion());
+    assert caData != null;
+    Assertions.assertEquals(2, caData.getCaInfo().getVersion().getValue().intValue());
   }
 
   @Test
   void testEFCardAccessNoCa2() throws IOException
   {
-    SecurityInfos efCardAccess = new SecurityInfos();
-    efCardAccess.decode(efCardAccessWithoutCa2);
+    SecurityInfos efCardAccess = new SecurityInfos(efCardAccessWithoutCa2);
 
-    List<ChipAuthenticationInfo> caInfoList = efCardAccess.getChipAuthenticationInfo();
-    List<ChipAuthenticationDomainParameterInfo> caDomParamList = efCardAccess.getChipAuthenticationDomainParameterInfo();
+    List<ChipAuthenticationInfo> caInfoList = efCardAccess.getChipAuthenticationInfoList();
+    List<ChipAuthenticationDomainParameterInfo> caDomParamList = efCardAccess.getChipAuthenticationDomainParameterInfoList();
 
     Assertions.assertThrows(Exception.class, () -> InfoSelector.selectCAData(caInfoList, caDomParamList));
   }
@@ -84,11 +83,10 @@ class InfoSelectorTest
   @MethodSource("parameterSourceUnsupported")
   void testEFCardAccessUnsupported() throws IOException
   {
-    SecurityInfos efCardAccess = new SecurityInfos();
-    efCardAccess.decode(efCardAccessWithExplicitDomainParameters);
+    SecurityInfos efCardAccess = new SecurityInfos(efCardAccessWithExplicitDomainParameters);
 
-    List<ChipAuthenticationInfo> caInfoList = efCardAccess.getChipAuthenticationInfo();
-    List<ChipAuthenticationDomainParameterInfo> caDomParamList = efCardAccess.getChipAuthenticationDomainParameterInfo();
+    List<ChipAuthenticationInfo> caInfoList = efCardAccess.getChipAuthenticationInfoList();
+    List<ChipAuthenticationDomainParameterInfo> caDomParamList = efCardAccess.getChipAuthenticationDomainParameterInfoList();
 
     Assertions.assertNull(InfoSelector.selectCAData(caInfoList, caDomParamList));
   }

@@ -11,15 +11,10 @@ package de.governikus.eumw.poseidas.server.idprovider.config;
 
 import java.io.IOException;
 import java.net.URI;
-import java.net.URL;
-import java.net.URLConnection;
-import java.security.KeyManagementException;
 import java.security.KeyStoreException;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.security.PublicKey;
-import java.security.SecureRandom;
-import java.security.cert.Certificate;
 import java.security.cert.CertificateEncodingException;
 import java.security.cert.CertificateExpiredException;
 import java.security.cert.CertificateNotYetValidException;
@@ -33,23 +28,17 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
-import javax.net.ssl.HttpsURLConnection;
-import javax.net.ssl.SSLContext;
-import javax.net.ssl.SSLSocketFactory;
-import javax.net.ssl.TrustManager;
-import javax.net.ssl.X509TrustManager;
-
-import org.apache.commons.lang3.StringUtils;
+import de.governikus.eumw.utils.key.SecurityProvider;
 import org.bouncycastle.asn1.x9.ECNamedCurveTable;
 import org.bouncycastle.asn1.x9.X9ECParameters;
 import org.bouncycastle.jcajce.provider.asymmetric.util.EC5Util;
 import org.springframework.stereotype.Component;
 import org.springframework.web.util.UriComponentsBuilder;
 
+import de.governikus.autent.asn1.utils.DigestUtil;
 import de.governikus.eumw.config.EidasMiddlewareConfig;
 import de.governikus.eumw.config.ServiceProviderType;
 import de.governikus.eumw.poseidas.cardbase.ByteUtil;
-import de.governikus.eumw.poseidas.cardbase.crypto.DigestUtil;
 import de.governikus.eumw.poseidas.eidmodel.TerminalData;
 import de.governikus.eumw.poseidas.server.pki.HSMServiceHolder;
 import de.governikus.eumw.poseidas.server.pki.TerminalPermissionAO;
@@ -81,6 +70,9 @@ public class CvcTlsCheck
 
   private final HSMServiceHolder hsmServiceHolder;
 
+  private final TLSCertificateRequester tlsCertificateRequester;
+
+
   /**
    * Performs the following checks: - TLS server certificate valid? - CVC valid? - server URL matches the one in CVC? -
    * TLS server certificate referenced in CVC?
@@ -110,7 +102,7 @@ public class CvcTlsCheck
     }
     EidasMiddlewareConfig config = configuration.get();
     CvcTlsCheckResult resultHolder = new CvcTlsCheckResult();
-    Optional<X509Certificate> certificate = getOwnTlsCertificate(config.getServerUrl());
+    Optional<X509Certificate> certificate = tlsCertificateRequester.requestTlsServerCertificate(config.getServerUrl());
 
     // Test TLS Certificates
     if (certificate.isPresent())
@@ -194,7 +186,8 @@ public class CvcTlsCheck
     if (serviceProvider.isPresent())
     {
       ServiceProviderType sp = serviceProvider.get();
-      Optional<X509Certificate> certificate = getOwnTlsCertificate(configuration.get().getServerUrl());
+      Optional<X509Certificate> certificate = tlsCertificateRequester.requestTlsServerCertificate((configuration.get()
+                                                                                                                .getServerUrl()));
       cvcResults = getCvcResultsForSp(sp, configuration.get(), certificate);
     }
     return cvcResults;
@@ -249,7 +242,9 @@ public class CvcTlsCheck
     byte[] digest;
     try
     {
-      MessageDigest md = DigestUtil.getDigestByOID(data.getPublicKey().getOID());
+      MessageDigest md = MessageDigest.getInstance(DigestUtil.getSUPPORTED_DIGEST_ALGORITHMS()
+                                                             .get(data.getPublicKey().getUsage()),
+                                                   SecurityProvider.BOUNCY_CASTLE_PROVIDER);
       digest = md.digest(certificate.get().getEncoded());
     }
     catch (IOException | NoSuchAlgorithmException | CertificateEncodingException e)
@@ -260,7 +255,10 @@ public class CvcTlsCheck
       return false;
     }
 
-    if (data.getCVCDescription().getCommunicationCertificateHashes().stream().anyMatch(h -> ByteUtil.equals(h, digest)))
+    if (data.getCVCDescription()
+            .getCommunicationCertificateDigestValues()
+            .stream()
+            .anyMatch(h -> ByteUtil.equals(h, digest)))
     {
       log.debug("TLS certificate is referenced in CVC {}", data.getHolderReferenceString());
       return true;
@@ -319,51 +317,7 @@ public class CvcTlsCheck
     return port;
   }
 
-  /**
-   * Tries to retrieve a TLS server certificate for a specific URL
-   *
-   * @param url The URL to get the TLS server certificate from
-   * @return
-   */
-  public Optional<X509Certificate> getOwnTlsCertificate(String url)
-  {
-    if (StringUtils.isBlank(url))
-    {
-      return Optional.empty();
-    }
-    Certificate[] certs;
-    try
-    {
-      URL currentUrl = new URL(url);
-      URLConnection urlConn = currentUrl.openConnection();
-      if (!(urlConn instanceof HttpsURLConnection))
-      {
-        log.warn("Unable to retrieve TLS certificate: no HTTPS connection");
-        return Optional.empty();
-      }
-      HttpsURLConnection conn = (HttpsURLConnection)urlConn;
-      conn.setSSLSocketFactory(getSSLSocketFactory());
-      conn.connect();
-      certs = conn.getServerCertificates();
-    }
-    catch (IOException | KeyManagementException | NoSuchAlgorithmException e)
-    {
-      log.warn("Unable to retrieve TLS certificate", e);
-      return Optional.empty();
-    }
 
-    if (certs == null || certs.length == 0)
-    {
-      log.warn("Unable to retrieve TLS certificate: no certificate returned");
-      return Optional.empty();
-    }
-
-    if (certs[0] instanceof X509Certificate)
-    {
-      return Optional.of((X509Certificate)certs[0]);
-    }
-    return Optional.empty();
-  }
 
   /**
    * Trys to retrieve the expiration date of the servers TLS certifiacte
@@ -373,39 +327,14 @@ public class CvcTlsCheck
    */
   public Date getTLSExpirationDate() throws IOException
   {
-    Optional<X509Certificate> ownTlsCertificate = getOwnTlsCertificate(configurationService.getConfiguration()
-                                                                                           .orElseThrow(() -> new ConfigurationException("Cannot retrieve own TLS certificate. No eumw configuration present"))
-                                                                                           .getServerUrl());
+    Optional<X509Certificate> ownTlsCertificate = tlsCertificateRequester.requestTlsServerCertificate((configurationService.getConfiguration()
+                                                                                                                           .orElseThrow(() -> new ConfigurationException("Cannot retrieve own TLS certificate. No eumw configuration present"))
+                                                                                                                           .getServerUrl()));
     return ownTlsCertificate.map(X509Certificate::getNotAfter)
                             .orElseThrow(() -> new IOException("Cannot retrieve own TLS certificate"));
   }
 
-  // get an SSLSocketFactory trusting all certificates
-  private static SSLSocketFactory getSSLSocketFactory() throws NoSuchAlgorithmException, KeyManagementException
-  {
-    TrustManager[] trustAllCerts = {new X509TrustManager()
-    {
 
-      public X509Certificate[] getAcceptedIssuers()
-      {
-        return null;
-      }
-
-      public void checkClientTrusted(X509Certificate[] certs, String authType)
-      {
-        // nothing
-      }
-
-      public void checkServerTrusted(X509Certificate[] certs, String authType)
-      {
-        // nothing
-      }
-    }};
-
-    SSLContext sc = SSLContext.getInstance("TLSv1.2");
-    sc.init(null, trustAllCerts, new SecureRandom());
-    return sc.getSocketFactory();
-  }
 
   private static boolean testTlsValidity(X509Certificate certificate)
   {
@@ -415,11 +344,11 @@ public class CvcTlsCheck
       log.debug("TLS certificate valid");
       return true;
     }
-    catch (CertificateExpiredException e)
+    catch (CertificateExpiredException _)
     {
       log.warn("TLS certificate is expired: {}", certificate.getSubjectX500Principal().toString());
     }
-    catch (CertificateNotYetValidException e)
+    catch (CertificateNotYetValidException _)
     {
       log.warn("TLS certificate is not yet valid: {}", certificate.getSubjectX500Principal().toString());
     }
@@ -492,7 +421,7 @@ public class CvcTlsCheck
       {
         certificate = (X509Certificate)hsmServiceHolder.getKeyStore().getCertificate(sp.getCVCRefID());
       }
-      catch (KeyStoreException e)
+      catch (KeyStoreException _)
       {
         log.warn(MESSAGE_NO_TLS_CLIENT_CERTIFICATE, sp.getName());
         return spCertWithLengthLowerThan3000;

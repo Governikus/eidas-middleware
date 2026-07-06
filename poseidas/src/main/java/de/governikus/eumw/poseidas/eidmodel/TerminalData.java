@@ -10,11 +10,13 @@
 package de.governikus.eumw.poseidas.eidmodel;
 
 import java.io.IOException;
-import java.io.ObjectInputStream;
+import java.nio.charset.StandardCharsets;
 import java.security.GeneralSecurityException;
 import java.security.interfaces.ECPublicKey;
 import java.security.spec.ECParameterSpec;
 import java.text.DateFormat;
+import java.time.Instant;
+import java.time.temporal.ChronoUnit;
 import java.util.Arrays;
 import java.util.Date;
 import java.util.LinkedList;
@@ -22,20 +24,18 @@ import java.util.List;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.bouncycastle.asn1.ASN1ObjectIdentifier;
+import org.bouncycastle.asn1.eac.ECDSAPublicKey;
 
-import de.governikus.eumw.poseidas.cardbase.asn1.ASN1;
-import de.governikus.eumw.poseidas.cardbase.asn1.OID;
-import de.governikus.eumw.poseidas.cardbase.asn1.npa.CertificateDescription;
-import de.governikus.eumw.poseidas.cardbase.asn1.npa.CertificateHolderAuthorizationTemplate;
-import de.governikus.eumw.poseidas.cardbase.asn1.npa.ECCVCPath;
-import de.governikus.eumw.poseidas.cardbase.asn1.npa.ECCVCertificate;
-import de.governikus.eumw.poseidas.cardbase.asn1.npa.ECPublicKeyPath;
-import de.governikus.eumw.poseidas.cardbase.constants.OIDConstants;
+import de.governikus.autent.asn1.CHAT;
+import de.governikus.autent.asn1.CVC;
+import de.governikus.autent.asn1.CVCDescription;
+import de.governikus.autent.asn1.crypto.ec.KeyHandlerEC;
+import de.governikus.autent.asn1.utils.CVCDescriptionChecker;
+import de.governikus.autent.asn1.utils.PublicKeyUtils;
 import de.governikus.eumw.poseidas.cardbase.crypto.ec.ECMath;
-import de.governikus.eumw.poseidas.cardbase.crypto.ec.ECUtil;
-import de.governikus.eumw.poseidas.cardbase.crypto.key.KeyHandler;
-import de.governikus.eumw.poseidas.cardbase.crypto.key.KeyHandlerFactory;
 import de.governikus.eumw.poseidas.eidserver.convenience.EIDSequence.Authorizations;
+import lombok.SneakyThrows;
 
 
 /**
@@ -60,14 +60,12 @@ public class TerminalData
   /**
    * CVC description if existing
    */
-  private CertificateDescription cvcDescription;
-
-  private final byte[] cvcDescriptionBytes;
+  private CVCDescription cvcDescription;
 
   /**
    * Inner wrapper for CVC bytes
    */
-  private final ECCVCertificate cvcWrapper;
+  private final CVC cvcWrapper;
 
   /**
    * Private key for this CVC
@@ -95,7 +93,7 @@ public class TerminalData
    * @throws IllegalArgumentException if one of the input parameter is malformed or can not be read or the CVC does not
    *           match the cvcDescription.
    */
-  private TerminalData(ECCVCertificate cvcWrapper,
+  private TerminalData(CVC cvcWrapper,
                        byte[] cvcDescriptionBytes,
                        byte[] pkcs8PrivateKeyBytes,
                        byte[] riKeyIBytes,
@@ -111,20 +109,19 @@ public class TerminalData
       this.cvcWrapper = cvcWrapper;
     }
 
-    this.cvcDescriptionBytes = cvcDescriptionBytes;
     // Set the description
     if (cvcDescriptionBytes != null && cvcDescriptionBytes.length > 0)
     {
       // Try to get description object and check against the CVC bytes
       try
       {
-        cvcDescription = new CertificateDescription(cvcDescriptionBytes);
-        if (!cvcWrapper.checkCVCDescriptionHash(cvcDescription))
+        cvcDescription = new CVCDescription(cvcDescriptionBytes);
+        if (!CVCDescriptionChecker.checkCertificateDescriptionHash(cvcWrapper, cvcDescription))
         {
           throw new IllegalArgumentException("Description does not match the terminal certificate: " + cvcDescription);
         }
       }
-      catch (IOException e)
+      catch (Exception e)
       {
         String message = "Unable to create CVC description object";
         LOG.debug(message, e);
@@ -168,7 +165,7 @@ public class TerminalData
                       byte[] psKeyBytes)
     throws IOException
   {
-    this(new ECCVCertificate(cvcBytes), cvcDescriptionBytes, pkcs8PrivateKeyBytes, riKeyIBytes, psKeyBytes);
+    this(new CVC(cvcBytes), cvcDescriptionBytes, pkcs8PrivateKeyBytes, riKeyIBytes, psKeyBytes);
   }
 
   /**
@@ -201,9 +198,12 @@ public class TerminalData
    *
    * @return the expiration date of the certificate as Date object
    */
+  @SneakyThrows
   public Date getExpirationDate()
   {
-    return cvcWrapper.getExpirationDateDate();
+    Date date = cvcWrapper.getBody().getCertificateExpirationDate().getDate();
+    Instant notOnOrAfterInstant = date.toInstant().plus(1, ChronoUnit.DAYS);
+    return Date.from(notOnOrAfterInstant);
   }
 
   /**
@@ -211,9 +211,10 @@ public class TerminalData
    *
    * @return the effective date of the certificate as Date object
    */
+  @SneakyThrows
   public Date getEffectiveDate()
   {
-    return cvcWrapper.getEffectiveDateDate();
+    return cvcWrapper.getBody().getCertificateEffectiveDate().getDate();
   }
 
   /**
@@ -221,7 +222,7 @@ public class TerminalData
    *
    * @return the CVC Description
    */
-  public CertificateDescription getCVCDescription()
+  public CVCDescription getCVCDescription()
   {
     return cvcDescription;
   }
@@ -231,14 +232,14 @@ public class TerminalData
    *
    * @return the Card Holder Authentication Template
    */
-  public CertificateHolderAuthorizationTemplate getCHAT()
+  public CHAT getCHAT()
   {
-    return cvcWrapper.getChat();
+    return cvcWrapper.getBody().getCertificateHolderAuthorizationTemplate();
   }
 
   public Authorizations getAuthorizations()
   {
-    return new Authorizations(this.cvcWrapper.getChat());
+    return new Authorizations(this.getCHAT());
   }
 
   /**
@@ -255,9 +256,9 @@ public class TerminalData
    * @return public key as ASN1
    * @throws IOException if read on CVC fails
    */
-  public de.governikus.eumw.poseidas.cardbase.asn1.npa.ECPublicKey getPublicKey() throws IOException
+  public ECDSAPublicKey getPublicKey() throws IOException
   {
-    return cvcWrapper.getPublicKey();
+    return (ECDSAPublicKey)cvcWrapper.getBody().getPublicKey();
   }
 
   /**
@@ -268,31 +269,7 @@ public class TerminalData
    */
   public byte[] getSignatureBytes() throws IOException
   {
-    return cvcWrapper.getChildElementByPath(ECCVCPath.SIGNATURE).getValue();
-  }
-
-  public byte[] getSectorPublicKeyHash()
-  {
-    return cvcWrapper.getSectorPublicKeyHash();
-  }
-
-  /**
-   * Get the hash value of the description-hash set for this certificate
-   *
-   * @return the hash value for an enveloped description
-   */
-  public byte[] getDescriptionHashBytes()
-  {
-    try
-    {
-      return cvcWrapper.getChildElementByPath(ECCVCPath.EXTENSIONS_DISCRETIONARY_DATA_CERTIFICATE_DESCRIPTION_HASH)
-                       .getValue();
-    }
-    catch (IOException e)
-    {
-      LOG.info("Cannot extract description from CVC: " + e.getMessage(), e);
-      return new byte[]{};
-    }
+    return cvcWrapper.getSignature();
   }
 
   /**
@@ -324,7 +301,7 @@ public class TerminalData
     if (containsCVCDescription())
     {
       String reference = "Siehe Details";
-      String text = getCVCDescription().getTermsOfUsagePlainText();
+      String text = getCVCDescription().getTermsOfUsage();
       if (text != null)
       {
         String[] purposes = {"Gesch\u00e4ftszweck:", "Zweck des Auslesevorgangs:", "Verwendung der Daten:"};
@@ -357,21 +334,12 @@ public class TerminalData
    */
   public byte[] getHolderReference()
   {
-    try
-    {
-      return cvcWrapper.getChildElementByPath(ECCVCPath.HOLDER_REFERENCE).getValue();
-    }
-    catch (IOException e)
-    {
-      String message = "CVC bytes are malformed";
-      LOG.error(message + ": " + e.getLocalizedMessage());
-      throw new IllegalArgumentException(message, e);
-    }
+    return getHolderReferenceString().getBytes(StandardCharsets.UTF_8);
   }
 
   public String getHolderReferenceString()
   {
-    return this.cvcWrapper.getHolderReferenceString();
+    return this.cvcWrapper.getBody().getCertificateHolderReference();
   }
 
   /**
@@ -381,21 +349,12 @@ public class TerminalData
    */
   public byte[] getCAReference()
   {
-    try
-    {
-      return cvcWrapper.getChildElementByPath(ECCVCPath.CA_REFERENCE).getValue();
-    }
-    catch (IOException e)
-    {
-      String message = "CVC bytes are malformed";
-      LOG.error(message + ": " + e.getLocalizedMessage());
-      throw new IllegalArgumentException(message, e);
-    }
+    return getCAReferenceString().getBytes(StandardCharsets.UTF_8);
   }
 
   public String getCAReferenceString()
   {
-    return this.cvcWrapper.getAuthorityReferenceString();
+    return this.cvcWrapper.getBody().getCertificationAuthorityReference();
   }
 
   /**
@@ -421,9 +380,9 @@ public class TerminalData
   /**
    * Returns the eService certificate
    *
-   * @see CVCWrapper#getEncoded()
    * @return byte array representing the eService certificate
    */
+  @SneakyThrows
   public byte[] getEncoded()
   {
     return cvcWrapper.getEncoded();
@@ -437,7 +396,7 @@ public class TerminalData
    */
   public byte[] getEncodedBody() throws IOException
   {
-    return cvcWrapper.getChildElementByPath(ECCVCPath.CV_CERTIFICATE_BODY).getEncoded();
+    return cvcWrapper.getBody().getEncoded();
   }
 
   /**
@@ -539,23 +498,20 @@ public class TerminalData
           for ( TerminalData paramSpecCVC : verifiedCertificates )
           {
             // Try to find the latest parameter specification
-            ECCVCertificate paramSpecCertificate = new ECCVCertificate(paramSpecCVC.getEncoded());
+            CVC paramSpecCertificate = new CVC(paramSpecCVC.getEncoded());
             ECParameterSpec paramSpec = null;
             try
             {
-              paramSpec = ECUtil.parameterSpecFromCVC(paramSpecCertificate);
+              paramSpec = PublicKeyUtils.extractParametersFromPublicKey((ECDSAPublicKey)paramSpecCertificate.getBody()
+                                                                                                            .getPublicKey());
             }
-            catch (NullPointerException e)
+            catch (NullPointerException _)
             {
               LOG.debug("Build Param Spec failed = Public key missing");
             }
-            catch (IllegalArgumentException e)
+            catch (IllegalArgumentException _)
             {
               LOG.debug("Build Param Spec failed for = " + paramSpecCVC.getHolderReferenceString());
-            }
-            catch (IOException e)
-            {
-              LOG.debug("No Param Spec available for = " + paramSpecCVC.getHolderReferenceString());
             }
             if (paramSpec != null)
             {
@@ -631,35 +587,19 @@ public class TerminalData
     }
     else
     {
-      // Get the latest param specification from CVC
-      ECCVCertificate paramSpecCertificate = new ECCVCertificate(paramSpecCVC.getEncoded());
-      ECParameterSpec paramSpec = ECUtil.parameterSpecFromCVC(paramSpecCertificate);
-      KeyHandler keyHandlerEC = KeyHandlerFactory.newKeyHandler("EC",
-                                                                paramSpec.getCurve().getField().getFieldSize() / 8);
+      // Get the public key from the CVC
+      KeyHandlerEC keyHandlerEC = new KeyHandlerEC(paramSpecCVC.getPublicKey());
+
       // Get the public key from signing CVC
-      de.governikus.eumw.poseidas.cardbase.asn1.npa.ECPublicKey publicKey = signingCVC.getPublicKey();
-      ASN1 child = publicKey.getChildElementByPath(ECPublicKeyPath.PUBLIC_POINT_Y);
-      ECPublicKey ecPublicKey = (ECPublicKey)keyHandlerEC.buildKeyFromBytes(paramSpec, child.getValue());
+      ECDSAPublicKey publicKey = signingCVC.getPublicKey();
+      byte[] publicPointY = publicKey.getPublicPointY();
+
+      // Rebuild public key from the signing CVC point
+      ECPublicKey signingPublicKey = (ECPublicKey)keyHandlerEC.buildKeyFromBytes(publicPointY);
+
       // Get the OID for used hash algorithm
-      OID oid = new OID(paramSpecCertificate.getChildElementByPath(ECCVCPath.PUBLIC_KEY_OID).getEncoded());
-      String hashAlgo;
-      if (oid.equals(OIDConstants.OID_TA_ECDSA_SHA_1))
-      {
-        hashAlgo = "SHA-1";
-      }
-      else if (oid.equals(OIDConstants.OID_TA_ECDSA_SHA_224))
-      {
-        hashAlgo = "SHA-224";
-      }
-      else if (oid.equals(OIDConstants.OID_TA_ECDSA_SHA_256))
-      {
-        hashAlgo = "SHA-256";
-      }
-      else
-      {
-        throw new GeneralSecurityException("Unknown OID for hash algorithm");
-      }
-      return ECMath.verifySignature(getSignatureBytes(), getEncodedBody(), ecPublicKey, hashAlgo);
+      ASN1ObjectIdentifier digestAlgorithm = paramSpecCVC.getPublicKey().getUsage();
+      return ECMath.verifySignature(getSignatureBytes(), getEncodedBody(), signingPublicKey, digestAlgorithm);
     }
   }
 
@@ -700,29 +640,13 @@ public class TerminalData
                  .append(" EXPIRATION DATE = ")
                  .append(DateFormat.getDateInstance().format(getExpirationDate()))
                  .append(" HOLDER REFERENCE = ")
-                 .append(this.cvcWrapper.getHolderReferenceString())
+                 .append(this.cvcWrapper.getBody().getCertificateHolderReference())
                  .append(" CA REFERENCE = ")
-                 .append(this.cvcWrapper.getAuthorityReferenceString());
+                 .append(this.cvcWrapper.getBody().getCertificationAuthorityReference());
     if (cvcDescription != null)
     {
       stringBuilder.append("\n CVC DESCRIPTION = ").append(cvcDescription);
     }
     return stringBuilder.toString();
-  }
-
-  /**
-   * After session is read, session input is restored from inner implementation
-   *
-   * @param is for this session
-   * @throws ClassNotFoundException
-   * @throws IOException
-   */
-  private void readObject(ObjectInputStream is) throws IOException, ClassNotFoundException
-  {
-    is.defaultReadObject();
-    if (cvcDescriptionBytes != null && cvcDescriptionBytes.length > 0)
-    {
-      cvcDescription = new CertificateDescription(cvcDescriptionBytes);
-    }
   }
 }

@@ -20,7 +20,6 @@ public class DvcaConfigModel
 {
 
   @CertificateNameExists
-  @NotBlank(message = "May not be empty")
   private String serverSSLCertificateName;
 
   @CertificateNameExists

@@ -4,17 +4,22 @@ import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 import java.util.Date;
 import java.util.Locale;
+import java.util.Objects;
 
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
 import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.Lob;
 import jakarta.persistence.Transient;
 
-import lombok.Data;
+import org.hibernate.proxy.HibernateProxy;
+
+import lombok.Getter;
 import lombok.NoArgsConstructor;
+import lombok.Setter;
 
 
 /**
@@ -23,7 +28,8 @@ import lombok.NoArgsConstructor;
  * @author tca
  */
 @Entity
-@Data
+@Getter
+@Setter
 @NoArgsConstructor
 public class TimerHistory
 {
@@ -42,8 +48,8 @@ public class TimerHistory
   }
 
   @Id
-  @GeneratedValue
-  private Long id;
+  @GeneratedValue(strategy = GenerationType.IDENTITY)
+  private long id;
 
   @Enumerated(EnumType.STRING)
   private TimerType timerType;
@@ -70,6 +76,7 @@ public class TimerHistory
    */
   public TimerHistory(TimerType timerType, String message, Date timestamp, boolean success)
   {
+    this.id = 0;
     this.timerType = timerType;
     this.message = message;
     this.timestamp = timestamp;
@@ -79,5 +86,29 @@ public class TimerHistory
   public String formatTimestamp()
   {
     return DATE_TIME_FORMATTER.format(timestamp.toInstant());
+  }
+
+  @Override
+  public final boolean equals(Object o)
+  {
+    if (this == o)
+      return true;
+    if (o == null)
+      return false;
+    Class<?> oEffectiveClass = o instanceof HibernateProxy hProxy
+      ? hProxy.getHibernateLazyInitializer().getPersistentClass() : o.getClass();
+    Class<?> thisEffectiveClass = this instanceof HibernateProxy hProxy
+      ? hProxy.getHibernateLazyInitializer().getPersistentClass() : this.getClass();
+    if (thisEffectiveClass != oEffectiveClass)
+      return false;
+    TimerHistory that = (TimerHistory)o;
+    return Objects.equals(getId(), that.getId());
+  }
+
+  @Override
+  public final int hashCode()
+  {
+    return this instanceof HibernateProxy hProxy ? hProxy.getHibernateLazyInitializer().getPersistentClass().hashCode()
+      : getClass().hashCode();
   }
 }

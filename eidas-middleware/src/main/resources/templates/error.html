@@ -67,7 +67,13 @@
     <!-- Container End -->
 </section>
 <footer>
-    <div class="text-center" th:text="#{footer.footer}"></div>
+    <div class="text-center mb-3" th:if="${!#strings.isEmpty(authorityAddress)}"
+         th:text="#{footer.authority} + ': ' + ${authorityAddress}"></div>
+    <div class="text-center mb-3" th:if="${!#strings.isEmpty(privacyPolicyUrl)}"><a th:href="${privacyPolicyUrl}"
+                                                                                    th:text="#{footer.privacy.policy}"
+                                                                                    th:title="#{footer.privacy.policy}"></a>
+    </div>
+    <div class="text-center" th:utext="#{footer.footer}"></div>
 </footer>
 </body>
 </html>

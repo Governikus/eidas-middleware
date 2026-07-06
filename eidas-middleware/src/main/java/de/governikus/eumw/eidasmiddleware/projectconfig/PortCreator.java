@@ -15,16 +15,16 @@ import java.util.Arrays;
 
 import org.apache.catalina.connector.Connector;
 import org.apache.coyote.http11.AbstractHttp11Protocol;
-import org.apache.coyote.http11.Http11NioProtocol;
 import org.apache.tomcat.util.net.SSLHostConfig;
 import org.apache.tomcat.util.net.SSLHostConfigCertificate;
+import org.jspecify.annotations.NonNull;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.boot.web.embedded.tomcat.TomcatServletWebServerFactory;
+import org.springframework.boot.tomcat.servlet.TomcatServletWebServerFactory;
 import org.springframework.boot.web.server.WebServerFactoryCustomizer;
-import org.springframework.boot.web.servlet.server.ServletWebServerFactory;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.io.ClassPathResource;
+import org.springframework.util.ResourceUtils;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -34,41 +34,58 @@ import lombok.extern.slf4j.Slf4j;
 public class PortCreator
 {
 
+  // PROPERTY CONSTANTS
+
+  static final String SERVER_ADMIN_INTERFACE_PORT_PROPERTY = "server.adminInterfacePort";
+
+  static final String SERVER_PORT_PROPERTY = "server.port";
+
+  static final String SERVER_SSL_KEY_STORE_PROPERTY = "server.ssl.key-store";
+
+  static final String SERVER_SSL_KEY_STORE_TYPE_PROPERTY = SERVER_SSL_KEY_STORE_PROPERTY + "-type";
+
+  static final String SERVER_SSL_KEY_STORE_PASSWORD_PROPERTY = SERVER_SSL_KEY_STORE_PROPERTY + "-password";
+
+  static final String SERVER_SSL_KEY_ALIAS_PROPERTY = "server.ssl.key-alias";
+
+  static final String SERVER_SSL_CIPHERS_PROPERTY = "server.ssl.ciphers";
+
+  static final String SERVER_SSL_ENABLED_PROTOCOLS_PROPERTY = "server.ssl.enabled-protocols";
 
   /**
    * The port for the admin interface
    */
-  @Value("#{${server.adminInterfacePort:}?:0}")
+  @Value("#{${" + SERVER_ADMIN_INTERFACE_PORT_PROPERTY + ":}?:0}")
   private int adminInterfacePort;
 
   /**
    * The port for the admin interface
    */
-  @Value("${server.port}")
+  @Value("${" + SERVER_PORT_PROPERTY + "}")
   private int eidasInterfacePort;
 
   /**
    * the path to the keystore file that is used for the TLS connections
    */
-  @Value("${server.ssl.key-store:}")
+  @Value("${" + SERVER_SSL_KEY_STORE_PROPERTY + ":}")
   private String keystoreFilePath;
 
   /**
-   * the password to access the keystore at {@link #keystorePassword}
+   * the password to access the keystore at {@link #keystoreFilePath}
    */
-  @Value("${server.ssl.key-store-password:}")
+  @Value("${" + SERVER_SSL_KEY_STORE_PASSWORD_PROPERTY + ":}")
   private String keystorePassword;
 
   /**
    * the type of the given keystore at {@link #keystoreFilePath}
    */
-  @Value("${server.ssl.key-store-type:}")
+  @Value("${" + SERVER_SSL_KEY_STORE_TYPE_PROPERTY + ":}")
   private String keystoreType;
 
   /**
    * the alias of the keystore entry that should be used from the keystore {@link #keystoreFilePath}
    */
-  @Value("${server.ssl.key-alias:}")
+  @Value("${" + SERVER_SSL_KEY_ALIAS_PROPERTY + ":}")
   private String keyAlias;
 
   /**
@@ -81,13 +98,13 @@ public class PortCreator
    * reads the valid ssl ciphers from the application.properties file or sets the following ciphers as default if none
    * have been entered
    */
-  @Value("${server.ssl.ciphers:}")
+  @Value("${" + SERVER_SSL_CIPHERS_PROPERTY + ":}")
   private String serverSslCiphers;
 
   /**
    * these are the supported ssl protocols that will be available on the tomcat connector
    */
-  @Value("${server.ssl.enabled-protocols:}")
+  @Value("${" + SERVER_SSL_ENABLED_PROTOCOLS_PROPERTY + ":}")
   private String serverSslProtocols;
 
   /**
@@ -115,54 +132,41 @@ public class PortCreator
    * creates a tomcat connector with TLS enabled for the admin interface
    */
   @Bean
-  public ServletWebServerFactory servletContainer()
+  public TomcatServletWebServerFactory servletContainer() throws IOException
   {
-    TomcatServletWebServerFactory tomcat = new TomcatServletWebServerFactory();
+    TomcatServletWebServerFactory tomcat = new TomcatServletWebServerFactory(eidasInterfacePort);
+    tomcat.setProtocol(CustomHttp11Protocol.PROTOCOL);
 
     if (adminInterfacePort == eidasInterfacePort || adminInterfacePort == 0)
     {
-      log.error("\"server.adminInterfacePort\" must be set in application.properties and can not be same as \"server.port\"!");
-      throw new IllegalStateException("\"server.adminInterfacePort\" must be set in application.properties and can not be same as \"server.port\"!");
+      log.error("\"%s\" must be set in application.properties and can not be same as \"%s\"!".formatted(SERVER_ADMIN_INTERFACE_PORT_PROPERTY,
+                                                                                                        SERVER_PORT_PROPERTY));
+      throw new IllegalStateException("\"%s\" must be set in application.properties and can not be same as \"%s\"!".formatted(SERVER_ADMIN_INTERFACE_PORT_PROPERTY,
+                                                                                                                              SERVER_PORT_PROPERTY));
     }
+
+    Connector connector = new Connector(CustomHttp11Protocol.PROTOCOL);
+    connector.setPort(adminInterfacePort);
 
     if (serverSslEnabled)
     {
-      return createHttpsAdminInterfaceConnector(tomcat);
+      connector.setScheme("https");
+      connector.setSecure(true);
+      configureSslProtocol((AbstractHttp11Protocol<?>)connector.getProtocolHandler());
     }
-    else
-    {
-      return createHttpAdminInterfaceConnector(tomcat);
-    }
-  }
 
-  private ServletWebServerFactory createHttpAdminInterfaceConnector(TomcatServletWebServerFactory tomcat)
-  {
-    Connector connector = new Connector(TomcatServletWebServerFactory.DEFAULT_PROTOCOL);
-    connector.setPort(adminInterfacePort);
-    tomcat.addAdditionalTomcatConnectors(connector);
+    tomcat.addAdditionalConnectors(connector);
+
     return tomcat;
   }
 
-  private ServletWebServerFactory createHttpsAdminInterfaceConnector(TomcatServletWebServerFactory tomcat)
-  {
-    Connector connector = new Connector(TomcatServletWebServerFactory.DEFAULT_PROTOCOL);
-    connector.setPort(adminInterfacePort);
-    connector.setScheme("https");
-    connector.setSecure(true);
-
-    Http11NioProtocol protocol = (Http11NioProtocol)connector.getProtocolHandler();
-    configureSslProtocol(protocol);
-
-    tomcat.addAdditionalTomcatConnectors(connector);
-    return tomcat;
-  }
 
   /**
    * will configure the TLS protocol instance of the tomcat-connector
    *
    * @param protocol the protocol instance of the tomcat connector
    */
-  private void configureSslProtocol(Http11NioProtocol protocol)
+  private void configureSslProtocol(AbstractHttp11Protocol<?> protocol) throws IOException
   {
     protocol.setSSLEnabled(true);
     protocol.setSecure(true);
@@ -178,7 +182,15 @@ public class PortCreator
     sslHostConfig.setHonorCipherOrder(true);
     sslHostConfig.setTls13RenegotiationAvailable(false);
 
+    sslHostConfig.addCertificate(createSslHostConfigCertificate(sslHostConfig, keystoreFile));
 
+    protocol.addSslHostConfig(sslHostConfig);
+    protocol.setMaxHttpHeaderSize(maxHeaderSize);
+  }
+
+  private @NonNull SSLHostConfigCertificate createSslHostConfigCertificate(SSLHostConfig sslHostConfig,
+                                                                           File keystoreFile)
+  {
     SSLHostConfigCertificate sslHostConfigCertificate = new SSLHostConfigCertificate(sslHostConfig,
                                                                                      SSLHostConfigCertificate.Type.UNDEFINED);
     sslHostConfigCertificate.setCertificateKeystoreFile(keystoreFile.getAbsolutePath());
@@ -186,43 +198,30 @@ public class PortCreator
     sslHostConfigCertificate.setCertificateKeystorePassword(keystorePassword);
     sslHostConfigCertificate.setCertificateKeyAlias(keyAlias);
     sslHostConfigCertificate.setCertificateKeyPassword(keystorePassword);
-
-    sslHostConfig.addCertificate(sslHostConfigCertificate);
-
-    protocol.addSslHostConfig(sslHostConfig);
-    protocol.setMaxHttpHeaderSize(maxHeaderSize);
+    return sslHostConfigCertificate;
   }
 
   /**
    * will try to get the keystore file that is used for setting up the TLS connection
    */
-  private File getSslConnectorKeystoreFile()
+  private File getSslConnectorKeystoreFile() throws IOException
   {
-    File keystoreFile;
-    String[] keystoreFilePathParts = keystoreFilePath.split(":", 2);
-    if ("classpath".equals(keystoreFilePathParts[0]))
+    if (keystoreFilePath.startsWith(ResourceUtils.CLASSPATH_URL_PREFIX))
     {
-      try
-      {
-        keystoreFile = new ClassPathResource(keystoreFilePathParts[1]).getFile();
-      }
-      catch (IOException e)
-      {
-        throw new IllegalStateException(e.getMessage(), e);
-      }
+      return new ClassPathResource(keystoreFilePath.substring(ResourceUtils.CLASSPATH_URL_PREFIX.length())).getFile();
     }
-    else if ("file".equals(keystoreFilePathParts[0]))
+
+    if (keystoreFilePath.startsWith(ResourceUtils.FILE_URL_PREFIX))
     {
-      keystoreFile = new File(keystoreFilePathParts[1]);
+      return new File(keystoreFilePath.substring(ResourceUtils.FILE_URL_PREFIX.length()));
     }
-    else
-    {
-      // NOTE:
-      // If you run into this error during a spring-JUnit test use the annotation
-      // @SpringBootTest instead of @ContextConfiguration
-      throw new IllegalStateException("property 'server.ssl.key-store' must start with either 'classpath:' or 'file:'"
-                                      + " : " + keystoreFilePath);
-    }
-    return keystoreFile;
+
+    // NOTE:
+    // If you run into this error during a spring-JUnit test use the annotation
+    // @SpringBootTest instead of @ContextConfiguration
+    throw new IllegalStateException("property '%s' must start with either '%s' or '%s' : %s".formatted(SERVER_SSL_KEY_STORE_PROPERTY,
+                                                                                                       ResourceUtils.CLASSPATH_URL_PREFIX,
+                                                                                                       ResourceUtils.FILE_URL_PREFIX,
+                                                                                                       keystoreFilePath));
   }
 }

@@ -10,12 +10,16 @@
 package de.governikus.eumw.databasemigration.entities;
 
 import java.io.Serializable;
+import java.util.Objects;
 
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import jakarta.persistence.Lob;
 
-import lombok.Data;
+import org.hibernate.proxy.HibernateProxy;
+
+import lombok.Getter;
+import lombok.Setter;
 
 
 /**
@@ -24,7 +28,8 @@ import lombok.Data;
  * @author Arne Stahlbock, ast@bos-bremen.de
  */
 @Entity
-@Data
+@Getter
+@Setter
 public class KeyArchive implements Serializable
 {
 
@@ -48,6 +53,27 @@ public class KeyArchive implements Serializable
   @Lob
   private byte[] privateKey = null;
 
+  @Override
+  public final boolean equals(Object o)
+  {
+    if (this == o)
+      return true;
+    if (o == null)
+      return false;
+    Class<?> oEffectiveClass = o instanceof HibernateProxy hProxy
+      ? hProxy.getHibernateLazyInitializer().getPersistentClass() : o.getClass();
+    Class<?> thisEffectiveClass = this instanceof HibernateProxy hProxy
+      ? hProxy.getHibernateLazyInitializer().getPersistentClass() : this.getClass();
+    if (thisEffectiveClass != oEffectiveClass)
+      return false;
+    KeyArchive that = (KeyArchive)o;
+    return getKeyName() != null && Objects.equals(getKeyName(), that.getKeyName());
+  }
 
-
+  @Override
+  public final int hashCode()
+  {
+    return this instanceof HibernateProxy hProxy ? hProxy.getHibernateLazyInitializer().getPersistentClass().hashCode()
+      : getClass().hashCode();
+  }
 }

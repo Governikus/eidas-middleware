@@ -15,9 +15,8 @@ import java.util.Map;
 import de.governikus.eumw.poseidas.ecardcore.model.ResultMajor;
 import de.governikus.eumw.poseidas.ecardcore.model.ResultMinor;
 import de.governikus.eumw.poseidas.ecardcore.utilities.ECardCoreUtil;
-import de.governikus.eumw.poseidas.eidmodel.data.EIDKeys;
 import de.governikus.eumw.poseidas.eidserver.ecardid.EIDInfoContainer;
-
+import de.governikus.panstar.sdk.utils.constant.EIDAttributeName;
 import oasis.names.tc.dss._1_0.core.schema.ObjectFactory;
 import oasis.names.tc.dss._1_0.core.schema.Result;
 
@@ -30,7 +29,7 @@ import oasis.names.tc.dss._1_0.core.schema.Result;
 public class EIDInfoContainerImpl implements EIDInfoContainer
 {
 
-  private final Map<EIDKeys, EIDInfoResult> infoContainer = new EnumMap<>(EIDKeys.class);
+  private final Map<EIDAttributeName, EIDInfoResult> infoContainer = new EnumMap<>(EIDAttributeName.class);
 
   private static final ObjectFactory FACTORY = new ObjectFactory();
 
@@ -45,7 +44,7 @@ public class EIDInfoContainerImpl implements EIDInfoContainer
   }
 
   @Override
-  public Map<EIDKeys, EIDInfoResult> getInfoMap()
+  public Map<EIDAttributeName, EIDInfoResult> getInfoMap()
   {
     return infoContainer;
   }

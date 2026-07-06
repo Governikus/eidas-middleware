@@ -22,16 +22,16 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mockito;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.context.annotation.Import;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 import org.w3c.dom.NodeList;
 
-import com.gargoylesoftware.htmlunit.html.DomElement;
-import com.gargoylesoftware.htmlunit.html.DomNodeList;
-import com.gargoylesoftware.htmlunit.html.HtmlDivision;
-import com.gargoylesoftware.htmlunit.html.HtmlElement;
-import com.gargoylesoftware.htmlunit.html.HtmlPage;
+import org.htmlunit.html.DomElement;
+import org.htmlunit.html.DomNodeList;
+import org.htmlunit.html.HtmlDivision;
+import org.htmlunit.html.HtmlElement;
+import org.htmlunit.html.HtmlPage;
 
 import de.governikus.eumw.config.EidasMiddlewareConfig;
 import de.governikus.eumw.config.ServiceProviderType;
@@ -56,7 +56,7 @@ import de.governikus.eumw.utils.key.SecurityProvider;
 class DashboardControllerTest extends WebAdminTestBase
 {
 
-  private final static String CVC_DESCRIPTION = "MIGQBgoEAH8ABwMBAwEBoRYMFEdvdmVybmlrdXMgVGVzdCBEVkNBohoTGGh0dHA6Ly93d3cuZ292ZXJuaWt1cy5kZaMKDAhCUFIgODQ0OKQYExZodHRwczovL2xvY2FsaG9zdDo4NDQ4pQIMAKckMSIEIF2fEYwONIdvuJzSQKQU1n+8ch2iQHhs5f0cLrQsx8ok";
+  private static final String CVC_DESCRIPTION = "MIGQBgoEAH8ABwMBAwEBoRYMFEdvdmVybmlrdXMgVGVzdCBEVkNBohoTGGh0dHA6Ly93d3cuZ292ZXJuaWt1cy5kZaMKDAhCUFIgODQ0OKQYExZodHRwczovL2xvY2FsaG9zdDo4NDQ4pQIMAKckMSIEIF2fEYwONIdvuJzSQKQU1n+8ch2iQHhs5f0cLrQsx8ok";
 
   private static final String OK = "✔";
 
@@ -70,24 +70,23 @@ class DashboardControllerTest extends WebAdminTestBase
 
   public static final String SP1_CHR_REF_STRING = "CHR-Ref-String";
 
-  @MockBean
+  @MockitoBean
   CvcTlsCheck cvcTlsCheck;
 
-  @MockBean
+  @MockitoBean
   TerminalPermissionAOBean terminalPermissionAO;
 
-  @MockBean
+  @MockitoBean
   PermissionDataHandling permissionDataHandling;
 
-  @MockBean
+  @MockitoBean
   RequestSignerCertificateService rscService;
 
-  @MockBean
+  @MockitoBean
   ConfigurationService configurationService;
 
-  @MockBean
+  @MockitoBean
   TlsClientRenewalService tlsClientRenewalService;
-
 
   @Test
   void testWhenCvcTlsCheckEmptyThenStatusPageWithMessageAndNoValues() throws Exception
@@ -159,7 +158,6 @@ class DashboardControllerTest extends WebAdminTestBase
                             + expectedDate.toInstant().atZone(ZoneId.systemDefault()).toLocalDateTime().toString(),
                             actualValueServerTlsValid);
     String crlAvailable = statusPage.getElementById("crlAvailable").asNormalizedText();
-    // To test CRL available with last retrieval Powermock must be used.
     Assertions.assertEquals("Available: ❌\n Last successful retrieval:\n-", crlAvailable);
     assertFirstServiceProvider(statusPage.getElementById(firstSp), expectedDate);
     assertSecondServiceProvider(statusPage.getElementById(secondSp));

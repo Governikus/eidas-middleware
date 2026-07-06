@@ -11,7 +11,6 @@ package de.governikus.eumw.poseidas.cardbase;
 
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 
 import de.governikus.eumw.poseidas.cardbase.constants.ByteConstants;
@@ -732,7 +731,7 @@ public final class ByteUtil
    */
   public static boolean equals(byte[] bytes1, byte[] bytes2)
   {
-    return Arrays.equals(bytes1, bytes2);
+    return org.bouncycastle.util.Arrays.areEqual(bytes1, bytes2);
   }
 
 }

@@ -97,7 +97,7 @@ public class AESEncSSCIvParameterSpec extends IvParameterSpec
     byte[] result = ByteUtil.copy(iv);
     try
     {
-      result = CipherUtil.encipherAES(CipherUtil.ALGORITHM_AES + "/ECB/NoPadding", keyEnc, null, result, null);
+      result = CipherUtil.encipherAES(CipherUtil.ALGORITHM_AES + "/ECB/NoPadding", keyEnc, null, result);
     }
     catch (IllegalArgumentException | IllegalBlockSizeException | BadPaddingException e)
     {

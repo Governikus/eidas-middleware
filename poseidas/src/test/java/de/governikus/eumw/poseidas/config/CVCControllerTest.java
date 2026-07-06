@@ -33,17 +33,17 @@ import org.springframework.http.MediaType;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 
-import com.gargoylesoftware.htmlunit.UnexpectedPage;
-import com.gargoylesoftware.htmlunit.html.DomElement;
-import com.gargoylesoftware.htmlunit.html.DomNode;
-import com.gargoylesoftware.htmlunit.html.DomText;
-import com.gargoylesoftware.htmlunit.html.HtmlDivision;
-import com.gargoylesoftware.htmlunit.html.HtmlPage;
+import org.htmlunit.UnexpectedPage;
+import org.htmlunit.html.DomElement;
+import org.htmlunit.html.DomNode;
+import org.htmlunit.html.DomText;
+import org.htmlunit.html.HtmlDivision;
+import org.htmlunit.html.HtmlPage;
 
 import de.governikus.eumw.poseidas.config.base.TestConfiguration;
 import de.governikus.eumw.poseidas.config.model.ServiceProviderStatus;
-import de.governikus.eumw.poseidas.gov2server.constants.admin.GlobalManagementCodes;
 import de.governikus.eumw.poseidas.gov2server.GovManagementException;
+import de.governikus.eumw.poseidas.gov2server.constants.admin.GlobalManagementCodes;
 import de.governikus.eumw.poseidas.server.pki.RequestSignerCertificateService;
 import de.governikus.eumw.poseidas.server.pki.ServiceProviderStatusService;
 import de.governikus.eumw.poseidas.server.pki.TlsClientRenewalService;
@@ -118,13 +118,12 @@ class CVCControllerTest extends ServiceProviderTestBase
     {
       getInfoFromTable(cvcInfo, htmlDivision);
     }
-    Assertions.assertEquals(12, cvcInfo.size());
+    Assertions.assertEquals(11, cvcInfo.size());
     Assertions.assertEquals(INFO_MAP.get(CHR), cvcInfo.get(CHR));
     Assertions.assertEquals(INFO_MAP.get(CAR), cvcInfo.get(CAR));
     Assertions.assertEquals(INFO_MAP.get(VALID_FROM), cvcInfo.get(VALID_FROM));
     Assertions.assertEquals(INFO_MAP.get(VALID_UNTIL), cvcInfo.get(VALID_UNTIL));
     Assertions.assertEquals(INFO_MAP.get(TERMS_OF_USAGE), cvcInfo.get(TERMS_OF_USAGE));
-    Assertions.assertEquals(INFO_MAP.get(REDIRECT_URL), cvcInfo.get(REDIRECT_URL));
     Assertions.assertEquals(INFO_MAP.get(SUBJECT), cvcInfo.get(SUBJECT));
     Assertions.assertEquals(INFO_MAP.get(SUBJECT_URL), cvcInfo.get(SUBJECT_URL));
     Assertions.assertEquals(INFO_MAP.get(ISSUER), cvcInfo.get(ISSUER));

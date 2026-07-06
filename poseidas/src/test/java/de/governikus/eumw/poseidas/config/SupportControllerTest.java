@@ -18,13 +18,13 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mockito;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.context.annotation.Import;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 
-import com.gargoylesoftware.htmlunit.html.HtmlAnchor;
-import com.gargoylesoftware.htmlunit.html.HtmlPage;
-import com.gargoylesoftware.htmlunit.html.HtmlTextArea;
+import org.htmlunit.html.HtmlAnchor;
+import org.htmlunit.html.HtmlPage;
+import org.htmlunit.html.HtmlTextArea;
 
 import de.governikus.eumw.config.ServiceProviderType;
 import de.governikus.eumw.poseidas.config.base.TestConfiguration;
@@ -49,7 +49,7 @@ class SupportControllerTest extends ServiceProviderTestBase
                                                + "ServiceProviderID: disabledProvider\n" + "\t CVC is present: false\n"
                                                + "\t RSC is present: false\n" + "\t Pending RSC is present: false";
 
-  @MockBean
+  @MockitoBean
   ServiceProviderStatusService serviceProviderStatusService;
 
   @SneakyThrows

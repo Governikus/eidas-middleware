@@ -1,0 +1,467 @@
+<?xml version="1.1" encoding="UTF-8" standalone="no"?>
+<databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+                   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                   xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd">
+
+    <!--
+    Each changeset in this file has a precondition.
+    The precondition checks whether the change has already been made and, if so, marks it as complete in the database
+    changelog. This is necessary to ensure that databases created before Liquibase was introduced can be schema checked
+    and updated via Liquibase.
+    -->
+
+    <changeSet author="Ciwinski (generated)" id="1756214084678-2">
+
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <tableExists tableName="CERTINCHAIN"/>
+            </not>
+        </preConditions>
+
+        <createTable tableName="CERTINCHAIN">
+            <column name="POSINCHAIN" type="INT">
+                <constraints nullable="false" primaryKey="true" primaryKeyName="SYS_PK_10092"/>
+            </column>
+            <column name="REFID" type="VARCHAR(255)">
+                <constraints nullable="false" primaryKey="true" primaryKeyName="SYS_PK_10092"/>
+            </column>
+            <column name="DATA" type="BLOB"/>
+        </createTable>
+    </changeSet>
+    <changeSet author="Ciwinski (generated)" id="1756214084678-3">
+
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <tableExists tableName="CHANGEKEYLOCK"/>
+            </not>
+        </preConditions>
+
+        <createTable tableName="CHANGEKEYLOCK">
+            <column name="KEYNAME" type="VARCHAR(255)">
+                <constraints nullable="false" primaryKey="true" primaryKeyName="SYS_PK_10096"/>
+            </column>
+            <column name="AUTENTIP" type="VARCHAR(255)"/>
+            <column name="LOCKEDAT" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="TYPE" type="INT">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+    </changeSet>
+    <changeSet author="Ciwinski (generated)" id="1756214084678-4">
+
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <tableExists tableName="CONFIGURATION"/>
+            </not>
+        </preConditions>
+
+        <createTable tableName="CONFIGURATION">
+            <column name="ID" type="BIGINT">
+                <constraints nullable="false" primaryKey="true" primaryKeyName="SYS_PK_10103"/>
+            </column>
+            <column name="XMLCONFIGBLOB" type="BLOB"/>
+        </createTable>
+    </changeSet>
+    <changeSet author="Ciwinski (generated)" id="1756214084678-5">
+
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <tableExists tableName="CVCUPDATELOCK"/>
+            </not>
+        </preConditions>
+
+        <createTable tableName="CVCUPDATELOCK">
+            <column name="TRUSTCENTERURL" type="VARCHAR(255)">
+                <constraints nullable="false" primaryKey="true" primaryKeyName="SYS_PK_10106"/>
+            </column>
+            <column name="LOCKEDAT" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+    </changeSet>
+    <changeSet author="Ciwinski (generated)" id="1756214084678-6">
+
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <tableExists tableName="KEYARCHIVE"/>
+            </not>
+        </preConditions>
+
+        <createTable tableName="KEYARCHIVE">
+            <column name="KEYNAME" type="VARCHAR(255)">
+                <constraints nullable="false" primaryKey="true" primaryKeyName="SYS_PK_10111"/>
+            </column>
+            <column name="CVC" type="BLOB"/>
+            <column name="PRIVATEKEY" type="BLOB"/>
+        </createTable>
+    </changeSet>
+    <changeSet author="Ciwinski (generated)" id="1756214084678-7">
+
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <tableExists tableName="PENDINGCERTIFICATEREQUEST"/>
+            </not>
+        </preConditions>
+
+        <createTable tableName="PENDINGCERTIFICATEREQUEST">
+            <column name="REFID" type="VARCHAR(255)">
+                <constraints nullable="false" primaryKey="true" primaryKeyName="SYS_PK_10114"/>
+            </column>
+            <column name="ADDITIONALINFO" type="VARCHAR(1024)"/>
+            <column defaultValueBoolean="false" name="CANBESENTAGAIN" type="BOOLEAN"/>
+            <column name="LASTCHANGED" type="TIMESTAMP"/>
+            <column name="MESSAGEID" type="VARCHAR(255)"/>
+            <column name="NEWCVCDESCRIPTION" type="BLOB"/>
+            <column name="PRIVATEKEY" type="BLOB"/>
+            <column name="REQUESTDATA" type="BLOB"/>
+            <column name="STATUS" type="VARCHAR(255)"/>
+        </createTable>
+    </changeSet>
+    <changeSet author="Ciwinski (generated)" id="1756214084678-8">
+
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <tableExists tableName="PENDINGCSR"/>
+            </not>
+        </preConditions>
+
+        <createTable tableName="PENDINGCSR">
+            <column name="SPID" type="VARCHAR(255)">
+                <constraints nullable="false" primaryKey="true" primaryKeyName="SYS_PK_10120"/>
+            </column>
+            <column name="MESSAGEID" type="VARCHAR(255)"/>
+            <column name="NOTPOLLBEFORE" type="TIMESTAMP"/>
+        </createTable>
+    </changeSet>
+    <changeSet author="Ciwinski (generated)" id="1756214084678-9">
+
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <tableExists tableName="REQUESTIDSTORE"/>
+            </not>
+        </preConditions>
+
+        <createTable tableName="REQUESTIDSTORE">
+            <column name="REQUESTID" type="VARCHAR(255)">
+                <constraints nullable="false" primaryKey="true" primaryKeyName="SYS_PK_10123"/>
+            </column>
+        </createTable>
+    </changeSet>
+    <changeSet author="Ciwinski (generated)" id="1756214084678-10">
+
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <tableExists tableName="REQUESTSESSION"/>
+            </not>
+        </preConditions>
+
+        <createTable tableName="REQUESTSESSION">
+            <column name="REQID" type="VARCHAR(255)">
+                <constraints nullable="false" primaryKey="true" primaryKeyName="SYS_PK_10126"/>
+            </column>
+            <column name="CREATIONTIME" type="TIMESTAMP"/>
+            <column name="EIDREF" type="VARCHAR(255)"/>
+            <column name="RELAYSTATE" type="VARCHAR(255)"/>
+            <column name="REQDESTINATION" type="VARCHAR(255)"/>
+            <column name="REQPROVIDERENTITYID" type="VARCHAR(255)"/>
+            <column name="REQPROVIDERNAME" type="VARCHAR(255)"/>
+        </createTable>
+    </changeSet>
+    <changeSet author="Ciwinski (generated)" id="1756214084678-11">
+
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <tableExists tableName="REQUESTSESSION_REQUESTEDATTRIBUTES"/>
+            </not>
+        </preConditions>
+
+        <createTable tableName="REQUESTSESSION_REQUESTEDATTRIBUTES">
+            <column name="REQUESTSESSION_REQID" type="VARCHAR(255)">
+                <constraints nullable="false" primaryKey="true" primaryKeyName="SYS_PK_10130"/>
+            </column>
+            <column name="REQUESTEDATTRIBUTES" type="BOOLEAN"/>
+            <column name="REQUESTEDATTRIBUTES_KEY" type="VARCHAR(255)">
+                <constraints nullable="false" primaryKey="true" primaryKeyName="SYS_PK_10130"/>
+            </column>
+        </createTable>
+    </changeSet>
+    <changeSet author="Ciwinski (generated)" id="1756214084678-12">
+
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <tableExists tableName="REQUESTSIGNERCERTIFICATE"/>
+            </not>
+        </preConditions>
+
+        <createTable tableName="REQUESTSIGNERCERTIFICATE">
+            <column name="POSINCHAIN" type="INT">
+                <constraints nullable="false" primaryKey="true" primaryKeyName="SYS_PK_10136"/>
+            </column>
+            <column name="REFID" type="VARCHAR(255)">
+                <constraints nullable="false" primaryKey="true" primaryKeyName="SYS_PK_10136"/>
+            </column>
+            <column name="PRIVATEKEY" type="BLOB"/>
+            <column name="STATUS" type="TINYINT"/>
+            <column name="X509REQUESTSIGNERCERTIFICATE" type="BLOB"/>
+        </createTable>
+    </changeSet>
+    <changeSet author="Ciwinski (generated)" id="1756214084678-13">
+
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <tableExists tableName="SESSIONINSTORE"/>
+            </not>
+        </preConditions>
+
+        <createTable tableName="SESSIONINSTORE">
+            <column name="CLASSNAME" type="VARCHAR(255)">
+                <constraints nullable="false" primaryKey="true" primaryKeyName="SYS_PK_10144"/>
+            </column>
+            <column name="SESSIONID" type="VARCHAR(255)">
+                <constraints nullable="false" primaryKey="true" primaryKeyName="SYS_PK_10144"/>
+            </column>
+            <column name="CREATIONTIME" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="REQUESTID" type="VARCHAR(255)"/>
+            <column name="STOREDSESSION" type="BLOB"/>
+        </createTable>
+    </changeSet>
+    <changeSet author="Ciwinski (generated)" id="1756214084678-14">
+
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <tableExists tableName="TERMINALPERMISSION"/>
+            </not>
+        </preConditions>
+
+        <createTable tableName="TERMINALPERMISSION">
+            <column name="REFID" type="VARCHAR(255)">
+                <constraints nullable="false" primaryKey="true" primaryKeyName="SYS_PK_10149"/>
+            </column>
+            <column defaultValueBoolean="false" name="AUTOMATICCVCRENEWFAILED" type="BOOLEAN"/>
+            <column name="AUTOMATICRSCRENEWFAILED" type="VARCHAR(255)"/>
+            <column name="BLACKLISTSTOREDATE" type="TIMESTAMP"/>
+            <column name="BLACKLISTVERSION" type="BIGINT"/>
+            <column name="CVC" type="BLOB"/>
+            <column name="CVCDESCRIPTION" type="BLOB"/>
+            <column name="CVCPRIVATEKEY" type="BLOB"/>
+            <column name="DEFECTLIST" type="BLOB"/>
+            <column name="DEFECTLISTSTOREDATE" type="TIMESTAMP"/>
+            <column name="MASTERLIST" type="BLOB"/>
+            <column name="MASTERLISTSTOREDATE" type="TIMESTAMP"/>
+            <column name="NEXTCVCSEQUENCENUMBER" type="INT"/>
+            <column name="NEXTRSCSEQUENCENUMBER" type="INT"/>
+            <column name="NOTONORAFTER" type="TIMESTAMP"/>
+            <column name="PSKEY" type="BLOB"/>
+            <column name="RIKEY1" type="BLOB"/>
+            <column name="RSCCHR" type="VARCHAR(255)"/>
+            <column name="SECTORID" type="BLOB"/>
+            <column name="CURRENTREQUESTSIGNERCERTIFICATE_POSINCHAIN" type="INT"/>
+            <column name="CURRENTREQUESTSIGNERCERTIFICATE_REFID" type="VARCHAR(255)"/>
+            <column name="PENDINGREQUESTSIGNERCERTIFICATE_POSINCHAIN" type="INT"/>
+            <column name="PENDINGREQUESTSIGNERCERTIFICATE_REFID" type="VARCHAR(255)"/>
+        </createTable>
+    </changeSet>
+    <changeSet author="Ciwinski (generated)" id="1756214084678-15">
+
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <tableExists tableName="TIMERHISTORY"/>
+            </not>
+        </preConditions>
+
+        <createTable tableName="TIMERHISTORY">
+            <column name="ID" type="BIGINT" autoIncrement="true" incrementBy="1">
+                <constraints nullable="false" primaryKey="true" primaryKeyName="SYS_PK_10154"/>
+            </column>
+            <column name="MESSAGE" type="CLOB"/>
+            <column name="SUCCESS" type="BOOLEAN">
+                <constraints nullable="false"/>
+            </column>
+            <column name="TIMERTYPE" type="VARCHAR(255)"/>
+            <column name="TIMESTAMP" type="TIMESTAMP"/>
+        </createTable>
+        <addAutoIncrement tableName="TIMERHISTORY" columnName="ID" columnDataType="BIGINT" />
+    </changeSet>
+
+    <changeSet author="Ciwinski (generated)" id="1756214084678-16">
+
+        <preConditions onFail="MARK_RAN">
+            <!-- The precondition uniqueConstraintExists does not seem to work.
+             So here is a workaround for a unique constraint for two columns. -->
+            <sqlCheck expectedResult="0">
+                SELECT CASE
+                           WHEN EXISTS (SELECT 1
+                                        FROM information_schema.table_constraints tc
+                                                 JOIN information_schema.constraint_column_usage ccu
+                                                      ON tc.constraint_name = ccu.constraint_name
+                                        WHERE tc.constraint_type = 'UNIQUE'
+                                          AND tc.table_name = 'TERMINALPERMISSION'
+                                          AND ccu.column_name IN
+                                              ('PENDINGREQUESTSIGNERCERTIFICATE_POSINCHAIN',
+                                               'PENDINGREQUESTSIGNERCERTIFICATE_REFID')
+                                        GROUP BY tc.constraint_name
+                                        HAVING COUNT(*) = 2
+                                           AND SUM(CASE
+                                                       WHEN ccu.column_name IN
+                                                            ('PENDINGREQUESTSIGNERCERTIFICATE_POSINCHAIN',
+                                                             'PENDINGREQUESTSIGNERCERTIFICATE_REFID') THEN 1
+                                                       ELSE 0 END) = 2)
+                               THEN 1
+                           ELSE 0
+                           END
+                FROM (VALUES (0));
+            </sqlCheck>
+        </preConditions>
+
+        <addUniqueConstraint
+                columnNames="PENDINGREQUESTSIGNERCERTIFICATE_POSINCHAIN, PENDINGREQUESTSIGNERCERTIFICATE_REFID"
+                constraintName="UK7HSG3L8HHIEVWC3A25XINX5K7" tableName="TERMINALPERMISSION"/>
+    </changeSet>
+
+    <changeSet author="Ciwinski (generated)" id="1756214084678-17">
+
+        <preConditions onFail="MARK_RAN">
+            <!-- The precondition uniqueConstraintExists does not seem to work.
+            So here is a workaround for a unique constraint. -->
+            <sqlCheck expectedResult="0">
+                SELECT count(tc.constraint_name)
+                FROM information_schema.table_constraints tc
+                         JOIN information_schema.constraint_column_usage ccu
+                              ON tc.constraint_name = ccu.constraint_name
+                WHERE tc.constraint_type = 'UNIQUE'
+                  AND tc.table_name = 'REQUESTSESSION'
+                  AND ccu.column_name = 'EIDREF';
+            </sqlCheck>
+        </preConditions>
+
+        <addUniqueConstraint columnNames="EIDREF" constraintName="UKDXSQTYYKMVMUEVDF6K1SGJGC6"
+                             tableName="REQUESTSESSION"/>
+    </changeSet>
+    <changeSet author="Ciwinski (generated)" id="1756214084678-18">
+
+        <preConditions onFail="MARK_RAN">
+            <!-- The precondition uniqueConstraintExists does not seem to work.
+            So here is a workaround for a unique constraint for two columns. -->
+            <sqlCheck expectedResult="0">
+                SELECT CASE
+                           WHEN EXISTS (SELECT 1
+                                        FROM information_schema.table_constraints tc
+                                                 JOIN information_schema.constraint_column_usage ccu
+                                                      ON tc.constraint_name = ccu.constraint_name
+                                        WHERE tc.constraint_type = 'UNIQUE'
+                                          AND tc.table_name = 'TERMINALPERMISSION'
+                                          AND ccu.column_name IN
+                                              ('CURRENTREQUESTSIGNERCERTIFICATE_POSINCHAIN',
+                                               'CURRENTREQUESTSIGNERCERTIFICATE_REFID')
+                                        GROUP BY tc.constraint_name
+                                        HAVING COUNT(*) = 2
+                                           AND SUM(CASE
+                                                       WHEN ccu.column_name IN
+                                                            ('CURRENTREQUESTSIGNERCERTIFICATE_POSINCHAIN',
+                                                             'CURRENTREQUESTSIGNERCERTIFICATE_REFID') THEN 1
+                                                       ELSE 0 END) = 2)
+                               THEN 1
+                           ELSE 0
+                           END
+                FROM (VALUES (0));
+            </sqlCheck>
+        </preConditions>
+
+        <addUniqueConstraint
+                columnNames="CURRENTREQUESTSIGNERCERTIFICATE_POSINCHAIN, CURRENTREQUESTSIGNERCERTIFICATE_REFID"
+                constraintName="UKEFSTVKWWBDE9GP57YLFEU2C61" tableName="TERMINALPERMISSION"/>
+    </changeSet>
+
+    <changeSet author="Ciwinski (generated)" id="1756214084678-19">
+
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <indexExists tableName="REQUESTSESSION_REQUESTEDATTRIBUTES" indexName="FKP66XME9L2CMHED6H930A5TPR3"/>
+            </not>
+        </preConditions>
+
+        <createIndex indexName="FKP66XME9L2CMHED6H930A5TPR3" tableName="REQUESTSESSION_REQUESTEDATTRIBUTES">
+            <column name="REQUESTSESSION_REQID"/>
+        </createIndex>
+    </changeSet>
+
+    <changeSet author="Ciwinski (generated)" id="1756214084678-20">
+
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <indexExists tableName="CERTINCHAIN" indexName="FKQWE8MW19SWJNVTOKR3E2FBOCO"/>
+            </not>
+        </preConditions>
+
+        <createIndex indexName="FKQWE8MW19SWJNVTOKR3E2FBOCO" tableName="CERTINCHAIN">
+            <column name="REFID"/>
+        </createIndex>
+    </changeSet>
+
+    <changeSet author="Ciwinski (generated)" id="1756214084678-21">
+
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <foreignKeyConstraintExists foreignKeyName="FK9NTIMP5015GK5XAQJACWMA6FI"
+                                            foreignKeyTableName="TERMINALPERMISSION"/>
+            </not>
+        </preConditions>
+
+        <addForeignKeyConstraint
+                baseColumnNames="CURRENTREQUESTSIGNERCERTIFICATE_POSINCHAIN,CURRENTREQUESTSIGNERCERTIFICATE_REFID"
+                baseTableName="TERMINALPERMISSION" constraintName="FK9NTIMP5015GK5XAQJACWMA6FI" deferrable="false"
+                initiallyDeferred="false" onDelete="NO ACTION" onUpdate="NO ACTION"
+                referencedColumnNames="POSINCHAIN,REFID" referencedTableName="REQUESTSIGNERCERTIFICATE"
+                validate="true"/>
+    </changeSet>
+    <changeSet author="Ciwinski (generated)" id="1756214084678-22">
+
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <foreignKeyConstraintExists foreignKeyName="FKAFU50A3K2V2G0SP49VF8H0QUR"
+                                            foreignKeyTableName="TERMINALPERMISSION"/>
+            </not>
+        </preConditions>
+
+        <addForeignKeyConstraint
+                baseColumnNames="PENDINGREQUESTSIGNERCERTIFICATE_POSINCHAIN,PENDINGREQUESTSIGNERCERTIFICATE_REFID"
+                baseTableName="TERMINALPERMISSION" constraintName="FKAFU50A3K2V2G0SP49VF8H0QUR" deferrable="false"
+                initiallyDeferred="false" onDelete="NO ACTION" onUpdate="NO ACTION"
+                referencedColumnNames="POSINCHAIN,REFID" referencedTableName="REQUESTSIGNERCERTIFICATE"
+                validate="true"/>
+    </changeSet>
+    <changeSet author="Ciwinski (generated)" id="1756214084678-23">
+
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <foreignKeyConstraintExists foreignKeyName="FKP66XME9L2CMHED6H930A5TPR3"
+                                            foreignKeyTableName="REQUESTSESSION_REQUESTEDATTRIBUTES"/>
+            </not>
+        </preConditions>
+
+        <addForeignKeyConstraint baseColumnNames="REQUESTSESSION_REQID"
+                                 baseTableName="REQUESTSESSION_REQUESTEDATTRIBUTES"
+                                 constraintName="FKP66XME9L2CMHED6H930A5TPR3" deferrable="false"
+                                 initiallyDeferred="false" onDelete="NO ACTION" onUpdate="NO ACTION"
+                                 referencedColumnNames="REQID" referencedTableName="REQUESTSESSION" validate="true"/>
+    </changeSet>
+    <changeSet author="Ciwinski (generated)" id="1756214084678-24">
+
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <foreignKeyConstraintExists foreignKeyName="FKQWE8MW19SWJNVTOKR3E2FBOCO"
+                                            foreignKeyTableName="CERTINCHAIN"/>
+            </not>
+        </preConditions>
+
+        <addForeignKeyConstraint baseColumnNames="REFID" baseTableName="CERTINCHAIN"
+                                 constraintName="FKQWE8MW19SWJNVTOKR3E2FBOCO" deferrable="false"
+                                 initiallyDeferred="false" onDelete="NO ACTION" onUpdate="NO ACTION"
+                                 referencedColumnNames="REFID" referencedTableName="TERMINALPERMISSION"
+                                 validate="true"/>
+    </changeSet>
+</databaseChangeLog>

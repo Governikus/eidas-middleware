@@ -6,7 +6,9 @@ import java.security.GeneralSecurityException;
 import java.security.KeyStore;
 import java.security.cert.X509Certificate;
 import java.util.List;
+import java.util.Optional;
 
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.stereotype.Service;
 
 import de.governikus.eumw.config.DvcaConfigurationType;
@@ -54,7 +56,7 @@ public class DvcaServiceFactory
       log.error("{}: problem with crypto data of SP", serviceProvider.getCVCRefID(), e);
       throw new GovManagementException(GlobalManagementCodes.EC_UNEXPECTED_ERROR, e.getMessage());
     }
-    catch (URISyntaxException e)
+    catch (URISyntaxException _)
     {
       throw new GovManagementException(IDManagementCodes.INVALID_URL, "ID.value.service.termAuth.url");
     }
@@ -114,7 +116,7 @@ public class DvcaServiceFactory
       log.error("{}: problem with crypto data of this SP", serviceProvider.getCVCRefID(), e);
       throw new GovManagementException(GlobalManagementCodes.EC_UNEXPECTED_ERROR, e.getMessage());
     }
-    catch (URISyntaxException e)
+    catch (URISyntaxException _)
     {
       throw new GovManagementException(IDManagementCodes.INVALID_URL, "ID.value.service.termAuth.url");
     }
@@ -126,7 +128,13 @@ public class DvcaServiceFactory
                                                     int timeout)
     throws GeneralSecurityException
   {
-    X509Certificate dvcaCertificate = configurationService.getCertificate(dvcaConfiguration.getServerSSLCertificateName());
+    Optional<X509Certificate> optionalDvcaServerCert = Optional.empty();
+    String serverSSLCertificateName = dvcaConfiguration.getServerSSLCertificateName();
+    if (StringUtils.isNotBlank(serverSSLCertificateName))
+    {
+
+      optionalDvcaServerCert = Optional.of(configurationService.getCertificate(serverSSLCertificateName));
+    }
 
     String cvcRefId = serviceProvider.getCVCRefID();
     PKIServiceConnector connector;
@@ -134,12 +142,12 @@ public class DvcaServiceFactory
     {
       KeyPair clientKeyPair = configurationService.getKeyPair(serviceProvider.getClientKeyPairName());
       List<X509Certificate> clientCertificate = List.of(clientKeyPair.getCertificate());
-      connector = new PKIServiceConnector(timeout, dvcaCertificate, clientKeyPair.getKey(), clientCertificate,
-                                          cvcRefId);
+      connector = new PKIServiceConnector(timeout, optionalDvcaServerCert.orElse(null), clientKeyPair.getKey(),
+                                          clientCertificate, cvcRefId);
     }
     else
     {
-      connector = new PKIServiceConnector(timeout, dvcaCertificate, hsmKeyStore, null, cvcRefId);
+      connector = new PKIServiceConnector(timeout, optionalDvcaServerCert.orElse(null), hsmKeyStore, null, cvcRefId);
     }
     return connector;
   }

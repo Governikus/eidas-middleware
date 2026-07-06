@@ -22,7 +22,7 @@
 
             <h4>Trust anchors and certificates</h4>
 
-            <div th:replace="~{fragments/configOptions :: certificates('DVCA server certificate', 'serverSSLCertificateName', 'DVCA TLS certificate')}"/>
+            <div th:replace="~{fragments/configOptions :: certificates('DVCA server certificate', 'serverSSLCertificateName', 'DVCA TLS certificate. Leave empty to use the default Java cacerts trust store.')}"/>
             <div th:replace="~{fragments/configOptions :: certificates('Block List trust anchor', 'blackListTrustAnchorCertificateName', 'Block List trust anchor certificate')}"/>
             <div th:replace="~{fragments/configOptions :: certificates('Master List trust anchor', 'masterListTrustAnchorCertificateName', 'Master List trust anchor certificate')}"/>
 

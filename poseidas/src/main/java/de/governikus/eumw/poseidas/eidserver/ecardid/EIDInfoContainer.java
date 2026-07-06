@@ -11,8 +11,8 @@ package de.governikus.eumw.poseidas.eidserver.ecardid;
 
 import java.util.Map;
 
-import de.governikus.eumw.poseidas.eidmodel.data.EIDKeys;
 import de.governikus.eumw.poseidas.eidserver.convenience.EIDInfoResult;
+import de.governikus.panstar.sdk.utils.constant.EIDAttributeName;
 import oasis.names.tc.dss._1_0.core.schema.Result;
 
 
@@ -53,7 +53,7 @@ public interface EIDInfoContainer
    *
    * @return
    */
-  public Map<EIDKeys, EIDInfoResult> getInfoMap();
+  public Map<EIDAttributeName, EIDInfoResult> getInfoMap();
 
   /**
    * Returns the validation status see {@link EIDStatus}
