@@ -2,6 +2,7 @@ package de.governikus.eumw.eidasstarterkit;
 
 import java.security.PrivateKey;
 import java.security.cert.X509Certificate;
+import java.util.List;
 
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
@@ -12,6 +13,7 @@ import org.opensaml.saml.saml2.core.impl.ResponseBuilder;
 
 import de.governikus.eumw.eidascommon.ErrorCode;
 import de.governikus.eumw.eidascommon.Utils;
+
 import se.swedenconnect.opensaml.OpenSAMLInitializer;
 import se.swedenconnect.opensaml.OpenSAMLSecurityDefaultsConfig;
 import se.swedenconnect.opensaml.OpenSAMLSecurityExtensionConfig;
@@ -37,14 +39,15 @@ class EidasResponseTest
                                                     "123456".toCharArray())};
     PrivateKey pk = keypair[0].getKey();
     X509Certificate cert = keypair[0].getCert();
-    EidasEncrypter encrypter = new EidasEncrypter(true, cert);
+    EidasEncrypter encrypter = new EidasEncrypter(true, cert,
+                                                  List.of(new EncryptionAlgorithmInfo(EidasEncrypter.DEFAULT_ALGO_KEYAGREEMENT)));
     EidasSigner signer = new EidasSigner(true, pk, cert);
 
     EidasResponse eidasResponse = new EidasResponse("destination", "recipient",
                                                     new EidasPersistentNameId("eidasnameidTest"), "inResponseTo",
                                                     "issuer", EidasLoaEnum.LOA_HIGH, signer, encrypter);
 
-    eidasResponse.setSamlStatusError(response, ErrorCode.CANCELLATION_BY_USER, null);
+    eidasResponse.setSamlStatusError(response, ErrorCode.CANCELLATION_BY_USER, (String)null);
     Assertions.assertEquals(response.getStatus().getStatusCode().getValue(), StatusCode.RESPONDER);
     Assertions.assertEquals(response.getStatus().getStatusCode().getStatusCode().getValue(), StatusCode.AUTHN_FAILED);
     Assertions.assertNotNull(response.getStatus().getStatusCode().getStatusCode());
@@ -58,14 +61,15 @@ class EidasResponseTest
                                                     "123456".toCharArray())};
     PrivateKey pk = keypair[0].getKey();
     X509Certificate cert = keypair[0].getCert();
-    EidasEncrypter encrypter = new EidasEncrypter(true, cert);
+    EidasEncrypter encrypter = new EidasEncrypter(true, cert,
+                                                  List.of(new EncryptionAlgorithmInfo(EidasEncrypter.DEFAULT_ALGO_KEYAGREEMENT)));
     EidasSigner signer = new EidasSigner(true, pk, cert);
 
     EidasResponse eidasResponse = new EidasResponse("destination", "recipient",
                                                     new EidasPersistentNameId("eidasnameidTest"), "inResponseTo",
                                                     "issuer", EidasLoaEnum.LOA_HIGH, signer, encrypter);
 
-    eidasResponse.setSamlStatusError(response, ErrorCode.SUCCESS, null);
+    eidasResponse.setSamlStatusError(response, ErrorCode.SUCCESS, (String)null);
     Assertions.assertEquals(response.getStatus().getStatusCode().getValue(), StatusCode.SUCCESS);
     Assertions.assertNull(response.getStatus().getStatusCode().getStatusCode());
   }

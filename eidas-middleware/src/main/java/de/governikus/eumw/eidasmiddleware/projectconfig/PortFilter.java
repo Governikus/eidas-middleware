@@ -10,6 +10,7 @@
 package de.governikus.eumw.eidasmiddleware.projectconfig;
 
 import java.io.IOException;
+import java.util.Set;
 
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
@@ -17,6 +18,7 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.HttpMethod;
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 
@@ -38,15 +40,25 @@ public class PortFilter extends OncePerRequestFilter
   @Value("${server.port}")
   private int eidasInterfacePort;
 
+  @Value("${server.maxRequestSize:100}")
+  private int maxRequestSize;
+
+  // Endpoints for which request body size limits are enforced.
+  private static final Set<String> PROTECTED_ENDPOINTS = Set.of(ContextPaths.EIDAS_CONTEXT_PATH
+                                                                + ContextPaths.REQUEST_RECEIVER,
+                                                                ContextPaths.EIDAS_CONTEXT_PATH + ContextPaths.PAOS_SERVLET);
+
+
   // Default constructor for spring
   public PortFilter()
   {}
 
   // Constructor for testing purpose
-  PortFilter(int eidasInterfacePort, int adminInterfacePort)
+  PortFilter(int eidasInterfacePort, int adminInterfacePort, int maxRequestSize)
   {
     this.adminInterfacePort = adminInterfacePort;
     this.eidasInterfacePort = eidasInterfacePort;
+    this.maxRequestSize = maxRequestSize;
   }
 
   @Override
@@ -68,6 +80,36 @@ public class PortFilter extends OncePerRequestFilter
     else if (httpServletRequest.getLocalPort() == eidasInterfacePort
              && httpServletRequest.getServletPath().startsWith(ContextPaths.EIDAS_CONTEXT_PATH))
     {
+      if (!HttpMethod.POST.name().equals(httpServletRequest.getMethod()))
+      {
+        filterChain.doFilter(httpServletRequest, httpServletResponse);
+        return;
+      }
+
+      String uri = httpServletRequest.getRequestURI();
+
+      if (PROTECTED_ENDPOINTS.stream().noneMatch(uri::startsWith))
+      {
+        filterChain.doFilter(httpServletRequest, httpServletResponse);
+        return;
+      }
+
+      long contentLength = httpServletRequest.getContentLengthLong();
+
+      // -1 means: no Content-Length (e.g. chunked transfer encoding)
+      if (contentLength < 0)
+      {
+        httpServletResponse.sendError(HttpServletResponse.SC_LENGTH_REQUIRED, "Content-Length header required");
+        return;
+      }
+
+      if (contentLength > (maxRequestSize * 1024L)) // in kb
+      {
+        httpServletResponse.sendError(HttpServletResponse.SC_REQUEST_ENTITY_TOO_LARGE,
+                                      "POST body exceeds allowed size");
+        return;
+      }
+
       filterChain.doFilter(httpServletRequest, httpServletResponse);
     }
     else

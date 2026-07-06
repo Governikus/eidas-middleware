@@ -11,6 +11,7 @@ package de.governikus.eumw.databasemigration.entities;
 
 import java.io.Serializable;
 import java.util.Date;
+import java.util.Objects;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -21,7 +22,10 @@ import jakarta.persistence.Lob;
 import jakarta.persistence.Temporal;
 import jakarta.persistence.TemporalType;
 
-import lombok.Data;
+import org.hibernate.proxy.HibernateProxy;
+
+import lombok.Getter;
+import lombok.Setter;
 
 
 /**
@@ -31,7 +35,8 @@ import lombok.Data;
  * @author tautenhahn
  */
 @Entity
-@Data
+@Getter
+@Setter
 public class PendingCertificateRequest implements Serializable
 {
 
@@ -75,4 +80,27 @@ public class PendingCertificateRequest implements Serializable
   @Lob
   private byte[] newCvcDescription;
 
+  @Override
+  public final boolean equals(Object o)
+  {
+    if (this == o)
+      return true;
+    if (o == null)
+      return false;
+    Class<?> oEffectiveClass = o instanceof HibernateProxy hProxy
+      ? hProxy.getHibernateLazyInitializer().getPersistentClass() : o.getClass();
+    Class<?> thisEffectiveClass = this instanceof HibernateProxy hProxy
+      ? hProxy.getHibernateLazyInitializer().getPersistentClass() : this.getClass();
+    if (thisEffectiveClass != oEffectiveClass)
+      return false;
+    PendingCertificateRequest that = (PendingCertificateRequest)o;
+    return getRefID() != null && Objects.equals(getRefID(), that.getRefID());
+  }
+
+  @Override
+  public final int hashCode()
+  {
+    return this instanceof HibernateProxy hProxy ? hProxy.getHibernateLazyInitializer().getPersistentClass().hashCode()
+      : getClass().hashCode();
+  }
 }

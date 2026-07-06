@@ -10,12 +10,17 @@
 package de.governikus.eumw.poseidas.server.pki.entities;
 
 import java.io.Serializable;
+import java.util.Objects;
 
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import jakarta.persistence.Lob;
 
+import org.hibernate.proxy.HibernateProxy;
+
 import de.governikus.eumw.poseidas.cardbase.AssertUtil;
+
+import lombok.Getter;
 
 
 /**
@@ -23,6 +28,7 @@ import de.governikus.eumw.poseidas.cardbase.AssertUtil;
  *
  * @author Arne Stahlbock, ast@bos-bremen.de
  */
+@Getter
 @Entity
 public class KeyArchive implements Serializable
 {
@@ -83,26 +89,6 @@ public class KeyArchive implements Serializable
   }
 
   /**
-   * Get name of key.
-   *
-   * @return name of key
-   */
-  public String getKeyName()
-  {
-    return this.keyName;
-  }
-
-  /**
-   * Gets CVC as bytes.
-   *
-   * @return cvc bytes
-   */
-  public byte[] getCvc()
-  {
-    return this.cvc;
-  }
-
-  /**
    * Sets CVC.
    *
    * @param cvcBytes CVC as byte-array, <code>null</code> or empty not permitted
@@ -115,16 +101,6 @@ public class KeyArchive implements Serializable
   }
 
   /**
-   * Get key data.
-   *
-   * @return key data
-   */
-  public byte[] getPrivateKey()
-  {
-    return this.privateKey;
-  }
-
-  /**
    * Sets private key.
    *
    * @param pkBytes private key as byte-array, <code>null</code> or empty not permitted
@@ -134,5 +110,29 @@ public class KeyArchive implements Serializable
   {
     AssertUtil.notNullOrEmpty(pkBytes, "private key bytes");
     this.privateKey = pkBytes;
+  }
+
+  @Override
+  public final boolean equals(Object o)
+  {
+    if (this == o)
+      return true;
+    if (o == null)
+      return false;
+    Class<?> oEffectiveClass = o instanceof HibernateProxy hProxy
+      ? hProxy.getHibernateLazyInitializer().getPersistentClass() : o.getClass();
+    Class<?> thisEffectiveClass = this instanceof HibernateProxy hProxy
+      ? hProxy.getHibernateLazyInitializer().getPersistentClass() : this.getClass();
+    if (thisEffectiveClass != oEffectiveClass)
+      return false;
+    KeyArchive that = (KeyArchive)o;
+    return getKeyName() != null && Objects.equals(getKeyName(), that.getKeyName());
+  }
+
+  @Override
+  public final int hashCode()
+  {
+    return this instanceof HibernateProxy hProxy ? hProxy.getHibernateLazyInitializer().getPersistentClass().hashCode()
+      : getClass().hashCode();
   }
 }

@@ -9,8 +9,8 @@
 
 package de.governikus.eumw.poseidas.cardserver.eac.functions.ri;
 
+import de.governikus.autent.asn1.si.RestrictedIdentificationInfo;
 import de.governikus.eumw.poseidas.cardbase.AssertUtil;
-import de.governikus.eumw.poseidas.cardbase.asn1.npa.si.RestrictedIdentificationInfo;
 import de.governikus.eumw.poseidas.cardserver.eac.Parameter;
 import de.governikus.eumw.poseidas.cardserver.eac.functions.FunctionParameter;
 

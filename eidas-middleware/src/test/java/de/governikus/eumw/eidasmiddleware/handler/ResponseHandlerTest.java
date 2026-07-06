@@ -18,6 +18,7 @@ import java.security.KeyStore;
 import java.security.cert.X509Certificate;
 import java.sql.SQLException;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -25,6 +26,8 @@ import java.util.stream.Stream;
 
 import jakarta.xml.bind.DatatypeConverter;
 
+import org.apache.commons.lang3.StringUtils;
+import org.junit.Assert;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
@@ -62,10 +65,11 @@ import de.governikus.eumw.eidasstarterkit.person_attributes.natural_persons_attr
 import de.governikus.eumw.eidasstarterkit.person_attributes.natural_persons_attribute.PersonIdentifierAttribute;
 import de.governikus.eumw.eidasstarterkit.person_attributes.natural_persons_attribute.PlaceOfBirthAttribute;
 import de.governikus.eumw.poseidas.ecardcore.model.ResultMinor;
-import de.governikus.eumw.poseidas.eidmodel.data.EIDKeys;
 import de.governikus.eumw.poseidas.eidserver.convenience.EIDInfoResult;
 import de.governikus.eumw.poseidas.eidserver.convenience.EIDInfoResultDeselected;
 import de.governikus.eumw.poseidas.eidserver.convenience.EIDInfoResultNotOnChip;
+import de.governikus.eumw.poseidas.eidserver.convenience.EIDInfoResultPlaceFreeText;
+import de.governikus.eumw.poseidas.eidserver.convenience.EIDInfoResultPlaceNo;
 import de.governikus.eumw.poseidas.eidserver.convenience.EIDInfoResultPlaceStructured;
 import de.governikus.eumw.poseidas.eidserver.convenience.EIDInfoResultString;
 import de.governikus.eumw.poseidas.server.eidservice.EIDInternal;
@@ -75,6 +79,7 @@ import de.governikus.eumw.poseidas.server.idprovider.config.CvcTlsCheck;
 import de.governikus.eumw.poseidas.server.idprovider.config.KeyPair;
 import de.governikus.eumw.poseidas.server.pki.HSMServiceHolder;
 import de.governikus.eumw.utils.key.KeyStoreSupporter;
+import de.governikus.panstar.sdk.utils.constant.EIDAttributeName;
 import lombok.extern.slf4j.Slf4j;
 import oasis.names.tc.dss._1_0.core.schema.Result;
 import se.swedenconnect.opensaml.OpenSAMLInitializer;
@@ -189,11 +194,11 @@ class ResponseHandlerTest
     // Mock EidInfo
     EIDInfoResultPlaceStructured mockPlaceOfBirthEidInfoResult = mock(EIDInfoResultPlaceStructured.class);
     when(mockEidResultResponse.getEIDInfo(any())).thenReturn(null);
-    when(mockEidResultResponse.getEIDInfo(EIDKeys.PLACE_OF_RESIDENCE)).thenReturn(mockPlaceOfBirthEidInfoResult);
+    when(mockEidResultResponse.getEIDInfo(EIDAttributeName.PlaceOfResidence)).thenReturn(mockPlaceOfBirthEidInfoResult);
     EIDInfoResultNotOnChip mockBirthNameEidInfoResult = mock(EIDInfoResultNotOnChip.class);
-    when(mockEidResultResponse.getEIDInfo(EIDKeys.BIRTH_NAME)).thenReturn(mockBirthNameEidInfoResult);
+    when(mockEidResultResponse.getEIDInfo(EIDAttributeName.BirthName)).thenReturn(mockBirthNameEidInfoResult);
     EIDInfoResultNotOnChip mockNationalityEidInfoResult = mock(EIDInfoResultNotOnChip.class);
-    when(mockEidResultResponse.getEIDInfo(EIDKeys.NATIONALITY)).thenReturn(mockNationalityEidInfoResult);
+    when(mockEidResultResponse.getEIDInfo(EIDAttributeName.Nationality)).thenReturn(mockNationalityEidInfoResult);
 
     // Mock EID Reponse Result
     Result mockEidResultResponseResult = mock(Result.class);
@@ -219,19 +224,51 @@ class ResponseHandlerTest
   }
 
   @ParameterizedTest
-  @MethodSource("testNationalityConvesionParameters")
-  void testNationalityConvesion(EIDInfoResult nationalityResult, String expected)
+  @MethodSource("testNationalityConversionParameters")
+  void testNationalityConversion(EIDInfoResult nationalityResult, String expected)
   {
     Assertions.assertEquals(expected, systemUnderTest.convertNationality(nationalityResult));
   }
 
-  private static Stream<Arguments> testNationalityConvesionParameters()
+  private static Stream<Arguments> testNationalityConversionParameters()
   {
     return Stream.of(Arguments.of(new EIDInfoResultNotOnChip(), ""),
                      Arguments.of(new EIDInfoResultString("D"), "DE"),
                      Arguments.of(new EIDInfoResultString(""), "DE"),
                      Arguments.of(new EIDInfoResultString("GRC"), "EL"),
                      Arguments.of(new EIDInfoResultString("RKS"), "KS"));
+  }
+
+  @Test
+  void testNationalitySamlResponse()
+  {
+    ArrayList<EidasAttribute> attributes = new ArrayList<>();
+
+    systemUnderTest.addNationality(new EIDInfoResultNotOnChip(), attributes);
+    Assert.assertEquals(0, attributes.size());
+
+    systemUnderTest.addNationality(new EIDInfoResultString("Wurst"), attributes);
+    Assert.assertEquals(0, attributes.size());
+
+    systemUnderTest.addNationality(new EIDInfoResultString(""), attributes);
+    Assert.assertEquals(1, attributes.size());
+    Assert.assertEquals("DE", attributes.get(0).getValue());
+    attributes.clear();
+
+    systemUnderTest.addNationality(new EIDInfoResultString("D"), attributes);
+    Assert.assertEquals(1, attributes.size());
+    Assert.assertEquals("DE", attributes.get(0).getValue());
+    attributes.clear();
+
+    systemUnderTest.addNationality(new EIDInfoResultString("GRC"), attributes);
+    Assert.assertEquals(1, attributes.size());
+    Assert.assertEquals("EL", attributes.get(0).getValue());
+    attributes.clear();
+
+    systemUnderTest.addNationality(new EIDInfoResultString("RKS"), attributes);
+    Assert.assertEquals(1, attributes.size());
+    Assert.assertEquals("KS", attributes.get(0).getValue());
+    attributes.clear();
   }
 
   @Test
@@ -423,7 +460,7 @@ class ResponseHandlerTest
     when(eidResultResponse.getEIDInfo(any())).thenReturn(null);
     // BirthName
     EIDInfoResultDeselected birthName = mock(EIDInfoResultDeselected.class);
-    when(eidResultResponse.getEIDInfo(EIDKeys.BIRTH_NAME)).thenReturn(birthName);
+    when(eidResultResponse.getEIDInfo(EIDAttributeName.BirthName)).thenReturn(birthName);
 
     // Mock SamlRequestSession
     Map<String, Boolean> requestedAtributes = mock(Map.class);
@@ -446,18 +483,18 @@ class ResponseHandlerTest
 
     // BirthName
     EIDInfoResultString birthName = mock(EIDInfoResultString.class);
-    when(eidResultResponse.getEIDInfo(EIDKeys.BIRTH_NAME)).thenReturn(birthName);
+    when(eidResultResponse.getEIDInfo(EIDAttributeName.BirthName)).thenReturn(birthName);
     when(birthName.getResult()).thenReturn(BIRTHNAME);
 
     // FamilyNames
     EIDInfoResultString familyNames = mock(EIDInfoResultString.class);
     when(familyNames.getResult()).thenReturn(FAMILY_NAME);
-    when(eidResultResponse.getEIDInfo(EIDKeys.FAMILY_NAMES)).thenReturn(familyNames);
+    when(eidResultResponse.getEIDInfo(EIDAttributeName.FamilyNames)).thenReturn(familyNames);
 
     // GivenNames
     EIDInfoResultString givenNames = mock(EIDInfoResultString.class);
     when(givenNames.getResult()).thenReturn(GIVEN_NAME);
-    when(eidResultResponse.getEIDInfo(EIDKeys.GIVEN_NAMES)).thenReturn(givenNames);
+    when(eidResultResponse.getEIDInfo(EIDAttributeName.GivenNames)).thenReturn(givenNames);
 
 
     // Mock SamlRequestSession
@@ -483,18 +520,18 @@ class ResponseHandlerTest
 
     // BirthName
     EIDInfoResultString birthName = mock(EIDInfoResultString.class);
-    when(eidResultResponse.getEIDInfo(EIDKeys.BIRTH_NAME)).thenReturn(birthName);
+    when(eidResultResponse.getEIDInfo(EIDAttributeName.BirthName)).thenReturn(birthName);
     when(birthName.getResult()).thenReturn(""); // No Birthname
 
     // FamilyNames
     EIDInfoResultString familyNames = mock(EIDInfoResultString.class);
     when(familyNames.getResult()).thenReturn(FAMILY_NAME);
-    when(eidResultResponse.getEIDInfo(EIDKeys.FAMILY_NAMES)).thenReturn(familyNames);
+    when(eidResultResponse.getEIDInfo(EIDAttributeName.FamilyNames)).thenReturn(familyNames);
 
     // GivenNames
     EIDInfoResultString givenNames = mock(EIDInfoResultString.class);
     when(givenNames.getResult()).thenReturn(GIVEN_NAME);
-    when(eidResultResponse.getEIDInfo(EIDKeys.GIVEN_NAMES)).thenReturn(givenNames);
+    when(eidResultResponse.getEIDInfo(EIDAttributeName.GivenNames)).thenReturn(givenNames);
 
 
     // Mock SamlRequestSession
@@ -521,11 +558,11 @@ class ResponseHandlerTest
     // FamilyNames
     EIDInfoResultString familyNames = mock(EIDInfoResultString.class);
     when(familyNames.getResult()).thenReturn(FAMILY_NAME);
-    when(eidResultResponse.getEIDInfo(EIDKeys.FAMILY_NAMES)).thenReturn(familyNames);
+    when(eidResultResponse.getEIDInfo(EIDAttributeName.FamilyNames)).thenReturn(familyNames);
     // GivenNames
     EIDInfoResultString givenNames = mock(EIDInfoResultString.class);
     when(givenNames.getResult()).thenReturn(GIVEN_NAME);
-    when(eidResultResponse.getEIDInfo(EIDKeys.GIVEN_NAMES)).thenReturn(givenNames);
+    when(eidResultResponse.getEIDInfo(EIDAttributeName.GivenNames)).thenReturn(givenNames);
 
     // Mock SamlRequestSession
     Map<String, Boolean> requestedAtributes = mock(Map.class);
@@ -550,11 +587,11 @@ class ResponseHandlerTest
 
     // FamilyNames
     EIDInfoResultNotOnChip familyNames = mock(EIDInfoResultNotOnChip.class);
-    when(eidResultResponse.getEIDInfo(EIDKeys.FAMILY_NAMES)).thenReturn(familyNames);
+    when(eidResultResponse.getEIDInfo(EIDAttributeName.FamilyNames)).thenReturn(familyNames);
     // GivenNames
     EIDInfoResultString givenNames = mock(EIDInfoResultString.class);
     when(givenNames.getResult()).thenReturn(GIVEN_NAME);
-    when(eidResultResponse.getEIDInfo(EIDKeys.GIVEN_NAMES)).thenReturn(givenNames);
+    when(eidResultResponse.getEIDInfo(EIDAttributeName.GivenNames)).thenReturn(givenNames);
 
     // Mock SamlRequestSession
     Map<String, Boolean> requestedAtributes = mock(Map.class);
@@ -581,11 +618,11 @@ class ResponseHandlerTest
     // FamilyNames
     EIDInfoResultString familyNames = mock(EIDInfoResultString.class);
     when(familyNames.getResult()).thenReturn(FAMILY_NAME);
-    when(eidResultResponse.getEIDInfo(EIDKeys.FAMILY_NAMES)).thenReturn(familyNames);
+    when(eidResultResponse.getEIDInfo(EIDAttributeName.FamilyNames)).thenReturn(familyNames);
     // GivenNames
     EIDInfoResultString givenNames = mock(EIDInfoResultString.class);
     when(givenNames.getResult()).thenReturn(GIVEN_NAME);
-    when(eidResultResponse.getEIDInfo(EIDKeys.GIVEN_NAMES)).thenReturn(givenNames);
+    when(eidResultResponse.getEIDInfo(EIDAttributeName.GivenNames)).thenReturn(givenNames);
 
     // Mock SamlRequestSession
     Map<String, Boolean> requestedAtributes = mock(Map.class);
@@ -610,10 +647,10 @@ class ResponseHandlerTest
 
     // FamilyNames
     EIDInfoResultString familyNames = mock(EIDInfoResultString.class);
-    when(eidResultResponse.getEIDInfo(EIDKeys.FAMILY_NAMES)).thenReturn(familyNames);
+    when(eidResultResponse.getEIDInfo(EIDAttributeName.FamilyNames)).thenReturn(familyNames);
     // GivenNames
     EIDInfoResultNotOnChip givenNames = mock(EIDInfoResultNotOnChip.class);
-    when(eidResultResponse.getEIDInfo(EIDKeys.GIVEN_NAMES)).thenReturn(givenNames);
+    when(eidResultResponse.getEIDInfo(EIDAttributeName.GivenNames)).thenReturn(givenNames);
 
     // Mock SamlRequestSession
     Map<String, Boolean> requestedAttributes = mock(Map.class);
@@ -666,7 +703,7 @@ class ResponseHandlerTest
     when(place.getZipCode()).thenReturn(zipCode);
     when(place.getState()).thenReturn(state);
     when(place.getCountry()).thenReturn(country);
-    when(eidResultResponse.getEIDInfo(EIDKeys.PLACE_OF_RESIDENCE)).thenReturn(place);
+    when(eidResultResponse.getEIDInfo(EIDAttributeName.PlaceOfResidence)).thenReturn(place);
 
     Assertions.assertTrue(systemUnderTest.createPlaceOfResidence(eidResultResponse, attributes, samlReqSession));
     EidasAttribute attr = attributes.get(0);
@@ -677,6 +714,135 @@ class ResponseHandlerTest
     Assertions.assertEquals(zipCode, addrAttr.getPostCode());
     Assertions.assertEquals(state, addrAttr.getAdminunitSecondline());
     Assertions.assertEquals(country, addrAttr.getAdminunitFirstline());
+  }
+
+  @Test
+  void testCreatePlaceOfResidenceNoPlaceInfo()
+  {
+    EIDResultResponse eidResultResponse = mock(EIDResultResponse.class);
+    List<EidasAttribute> attributes = spy(new ArrayList<>());
+    RequestSession samlReqSession = mock(RequestSession.class);
+
+    // Mock EidResultResponse
+    EIDInfoResultPlaceNo noPlace = mock(EIDInfoResultPlaceNo.class);
+    when(eidResultResponse.getEIDInfo(EIDAttributeName.PlaceOfResidence)).thenReturn(noPlace);
+
+    Assertions.assertTrue(systemUnderTest.createPlaceOfResidence(eidResultResponse, attributes, samlReqSession));
+    Assertions.assertTrue(attributes.isEmpty());
+  }
+
+  @Test
+  void testHandlePlaceOfBirthAsFreeTextWithValue()
+  {
+    EIDResultResponse eidResultResponse = mock(EIDResultResponse.class);
+    List<EidasAttribute> attributes = spy(new ArrayList<>());
+    RequestSession samlReqSession = mock(RequestSession.class);
+
+    // Mock EidResultResponse
+    EIDInfoResultPlaceFreeText freeText = mock(EIDInfoResultPlaceFreeText.class);
+    when(eidResultResponse.getEIDInfo(EIDAttributeName.PlaceOfBirth)).thenReturn(freeText);
+    when(freeText.getFreeTextPlace()).thenReturn("Berlin");
+
+
+    Assertions.assertTrue(systemUnderTest.handlePlaceOfBirth(eidResultResponse, attributes, samlReqSession));
+    Assertions.assertFalse(attributes.isEmpty());
+    Assertions.assertEquals(1, attributes.size());
+    Assertions.assertEquals("Berlin", attributes.get(0).getValue());
+  }
+
+  @Test
+  void testHandlePlaceOfBirthAsStructuredPlacetWithValue()
+  {
+    EIDResultResponse eidResultResponse = mock(EIDResultResponse.class);
+    List<EidasAttribute> attributes = spy(new ArrayList<>());
+    RequestSession samlReqSession = mock(RequestSession.class);
+
+    // Mock EidResultResponse
+    EIDInfoResultPlaceStructured structured = mock(EIDInfoResultPlaceStructured.class);
+    when(eidResultResponse.getEIDInfo(EIDAttributeName.PlaceOfBirth)).thenReturn(structured);
+    when(structured.getCity()).thenReturn("Berlin");
+
+
+    Assertions.assertTrue(systemUnderTest.handlePlaceOfBirth(eidResultResponse, attributes, samlReqSession));
+    Assertions.assertFalse(attributes.isEmpty());
+    Assertions.assertEquals(1, attributes.size());
+    Assertions.assertEquals("Berlin", attributes.get(0).getValue());
+  }
+
+  @Test
+  void testHandlePlaceOfBirthAsStructuredPlacetWithEmptyString()
+  {
+    EIDResultResponse eidResultResponse = mock(EIDResultResponse.class);
+    List<EidasAttribute> attributes = spy(new ArrayList<>());
+    RequestSession samlReqSession = mock(RequestSession.class);
+
+    // Mock EidResultResponse
+    EIDInfoResultPlaceStructured structured = mock(EIDInfoResultPlaceStructured.class);
+    when(eidResultResponse.getEIDInfo(EIDAttributeName.PlaceOfBirth)).thenReturn(structured);
+    when(structured.getCity()).thenReturn(StringUtils.EMPTY);
+
+    Assertions.assertTrue(systemUnderTest.handlePlaceOfBirth(eidResultResponse, attributes, samlReqSession));
+    Assertions.assertTrue(attributes.isEmpty());
+  }
+
+  @Test
+  void testHandlePlaceOfBirthAsFreeTextWithEmptyString()
+  {
+    EIDResultResponse eidResultResponse = mock(EIDResultResponse.class);
+    List<EidasAttribute> attributes = spy(new ArrayList<>());
+    RequestSession samlReqSession = mock(RequestSession.class);
+
+    // Mock EidResultResponse
+    EIDInfoResultPlaceFreeText freeText = mock(EIDInfoResultPlaceFreeText.class);
+    when(eidResultResponse.getEIDInfo(EIDAttributeName.PlaceOfBirth)).thenReturn(freeText);
+    when(freeText.getFreeTextPlace()).thenReturn(StringUtils.EMPTY);
+
+    Assertions.assertTrue(systemUnderTest.handlePlaceOfBirth(eidResultResponse, attributes, samlReqSession));
+    Assertions.assertTrue(attributes.isEmpty());
+  }
+
+  @Test
+  void testHandlePlaceOfBirthAsNoPlaceInfo()
+  {
+    EIDResultResponse eidResultResponse = mock(EIDResultResponse.class);
+    List<EidasAttribute> attributes = spy(new ArrayList<>());
+    RequestSession samlReqSession = mock(RequestSession.class);
+
+    // Mock EidResultResponse
+    EIDInfoResultPlaceNo structured = mock(EIDInfoResultPlaceNo.class);
+    when(eidResultResponse.getEIDInfo(EIDAttributeName.PlaceOfBirth)).thenReturn(structured);
+
+    Assertions.assertTrue(systemUnderTest.handlePlaceOfBirth(eidResultResponse, attributes, samlReqSession));
+    Assertions.assertTrue(attributes.isEmpty());
+  }
+
+  @Test
+  void testHandlePlaceOfBirthWhenRequestedButNotPresent()
+  {
+    EIDResultResponse eidResultResponse = mock(EIDResultResponse.class);
+    List<EidasAttribute> attributes = spy(new ArrayList<>());
+    RequestSession samlReqSession = mock(RequestSession.class);
+    Map<String, Boolean> requestedAttributes = Map.of(EidasNaturalPersonAttributes.PLACE_OF_BIRTH.getName(),
+                                                      Boolean.TRUE);
+
+    when(eidResultResponse.getEIDInfo(EIDAttributeName.PlaceOfBirth)).thenReturn(null);
+    when(samlReqSession.getRequestedAttributes()).thenReturn(requestedAttributes);
+    Assertions.assertFalse(systemUnderTest.handlePlaceOfBirth(eidResultResponse, attributes, samlReqSession));
+    Assertions.assertTrue(attributes.isEmpty());
+  }
+
+  @Test
+  void testHandlePlaceOfBirthWhenNotPresentAndNotRequested()
+  {
+    EIDResultResponse eidResultResponse = mock(EIDResultResponse.class);
+    List<EidasAttribute> attributes = spy(new ArrayList<>());
+    RequestSession samlReqSession = mock(RequestSession.class);
+    Map<String, Boolean> requestedAttributes = new HashMap<>();
+
+    when(eidResultResponse.getEIDInfo(EIDAttributeName.PlaceOfBirth)).thenReturn(null);
+    when(samlReqSession.getRequestedAttributes()).thenReturn(requestedAttributes);
+    Assertions.assertTrue(systemUnderTest.handlePlaceOfBirth(eidResultResponse, attributes, samlReqSession));
+    Assertions.assertTrue(attributes.isEmpty());
   }
 
   @Disabled("This test has UTF-8 characters which are not decoded correctly under systems with a different "

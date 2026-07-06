@@ -331,14 +331,14 @@ public final class AssertUtil
    * @return formatted String, <code>null</code> if format failed
    * @see Formatter#format(String, Object...)
    */
-  private static final String format(String format, Object... args)
+  private static String format(String format, Object... args)
   {
     ByteArrayOutputStream baos = new ByteArrayOutputStream();
     try (Formatter f = new Formatter(baos))
     {
       f.format(format, args);
     }
-    return new String(baos.toByteArray());
+    return baos.toString();
   }
 
   private static String makeSpaceMessageSpace(String message)

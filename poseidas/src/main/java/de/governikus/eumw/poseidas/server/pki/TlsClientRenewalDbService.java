@@ -131,7 +131,7 @@ public class TlsClientRenewalDbService extends TlsClientRenewalService
     {
       kp = configurationService.getKeyPair(sp.getClientKeyPairName());
     }
-    catch (ConfigurationException e)
+    catch (ConfigurationException _)
     {
       log.info("SP {} has no TLS client certificate, no update performed", sp.getName());
       renewalNotNeeded.add(sp.getName());

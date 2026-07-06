@@ -10,25 +10,26 @@
 package de.governikus.eumw.poseidas.cardbase.npa;
 
 import java.io.IOException;
+import java.math.BigInteger;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
 
+import de.governikus.autent.asn1.OIDConstants;
+import de.governikus.autent.asn1.si.AlgorithmIdentifier;
+import de.governikus.autent.asn1.si.ChipAuthenticationDomainParameterInfo;
+import de.governikus.autent.asn1.si.ChipAuthenticationInfo;
+import de.governikus.autent.asn1.si.ChipAuthenticationPublicKeyInfo;
+import de.governikus.autent.asn1.si.PACEDomainParameterInfo;
+import de.governikus.autent.asn1.si.PACEInfo;
+import de.governikus.autent.asn1.si.TerminalAuthenticationInfo;
 import de.governikus.eumw.poseidas.cardbase.AssertUtil;
-import de.governikus.eumw.poseidas.cardbase.asn1.npa.si.AlgorithmIdentifier;
-import de.governikus.eumw.poseidas.cardbase.asn1.npa.si.ChipAuthenticationDomainParameterInfo;
-import de.governikus.eumw.poseidas.cardbase.asn1.npa.si.ChipAuthenticationInfo;
-import de.governikus.eumw.poseidas.cardbase.asn1.npa.si.ChipAuthenticationPublicKeyInfo;
-import de.governikus.eumw.poseidas.cardbase.asn1.npa.si.DomainParameterInfo;
-import de.governikus.eumw.poseidas.cardbase.asn1.npa.si.PACEDomainParameterInfo;
-import de.governikus.eumw.poseidas.cardbase.asn1.npa.si.PACEInfo;
-import de.governikus.eumw.poseidas.cardbase.asn1.npa.si.TerminalAuthenticationInfo;
-import de.governikus.eumw.poseidas.cardbase.constants.OIDConstants;
+import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
 
 /**
- * Selector for several kinds of info as {@link PACEInfo}, {@link PACEDomainParameterInfo}, {@link DomainParameterInfo},
+ * Selector for several kinds of info as {@link PACEInfo}, {@link PACEDomainParameterInfo},
  * {@link TerminalAuthenticationInfo}, {@link ChipAuthenticationInfo} and {@link ChipAuthenticationDomainParameterInfo}.
  *
  * @author Arne Stahlbock, ast@bos-bremen.de
@@ -37,6 +38,16 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public final class InfoSelector
 {
+
+  /**
+   * Current lowest domain parameter ID.
+   */
+  public static final int MIN_DOMAIN_PARAMETER_ID = 8;
+
+  /**
+   * Current highest domain parameter ID.
+   */
+  public static final int MAX_DOMAIN_PARAMETER_ID = 18;
 
   /**
    * Selects a set of domain parameters for CA.
@@ -54,23 +65,12 @@ public final class InfoSelector
     // only use standardized parameters in specified range
     for ( ChipAuthenticationDomainParameterInfo info : setCADomainParameterInfos )
     {
-      try
+      AlgorithmIdentifier ai = info.getDomainParameter();
+      if (OIDConstants.OID_STANDARDIZED_DOMAIN_PARAMETERS.equals(ai.getAlgorithm())
+          && ai.getParameterId().compareTo(BigInteger.valueOf(MIN_DOMAIN_PARAMETER_ID)) >= 0
+          && ai.getParameterId().compareTo(BigInteger.valueOf(MAX_DOMAIN_PARAMETER_ID)) <= 0)
       {
-        AlgorithmIdentifier ai = info.getDomainParameter();
-        if (OIDConstants.OID_STANDARDIZED_DOMAIN_PARAMETERS.equals(ai.getAlgorithm())
-            && ai.getParameterID() >= DomainParameterInfo.MIN_DOMAIN_PARAMETER_ID
-            && ai.getParameterID() <= DomainParameterInfo.MAX_DOMAIN_PARAMETER_ID)
-        {
-          return info;
-        }
-      }
-      catch (IOException e)
-      {
-        if (log.isDebugEnabled())
-        {
-          log.debug("Could not parse domain parameter info", e);
-        }
-        // nothing
+        return info;
       }
     }
     return null;
@@ -81,8 +81,6 @@ public final class InfoSelector
    *
    * @param listCAInfos list of {@link ChipAuthenticationInfo} from which to select, <code>null</code> or empty not
    *          permitted
-   * @param caDomainParameterInfo previously selected {@link ChipAuthenticationDomainParameterInfo}, <code>null</code>
-   *          not permitted
    * @return selected {@link ChipAuthenticationData}, <code>null</code> if no selection possible
    * @throws IllegalArgumentException if any parameter <code>null</code> or empty
    */
@@ -98,8 +96,9 @@ public final class InfoSelector
     {
       for ( ChipAuthenticationDomainParameterInfo cadpi : listCaDomParams )
       {
-        if (caInfo.getVersion() == 2 && ((caInfo.getKeyID() == null && cadpi.getKeyID() == null)
-                                         || (caInfo.getKeyID() != null && caInfo.getKeyID().equals(cadpi.getKeyID()))))
+        if (caInfo.getVersion().hasValue(2)
+            && ((caInfo.getKeyId() == null && cadpi.getKeyId() == null)
+                || (caInfo.getKeyId() != null && caInfo.getKeyId().equals(cadpi.getKeyId()))))
         {
           matchingDomParamInfoMap.put(cadpi, caInfo);
         }
@@ -133,23 +132,10 @@ public final class InfoSelector
 
     for ( PACEInfo info : listPACEInfos )
     {
-      Integer pID = null;
-      try
-      {
-        pID = info.getParameterID();
-      }
-      catch (IOException e)
-      {
-        if (log.isDebugEnabled())
-        {
-          log.debug("Could not parse parameter ID", e);
-        }
-        continue;
-      }
+      int pID = info.getParameterId().intValueExact();
 
       // prefer standard domain parameters
-      if (pID != null && pID >= DomainParameterInfo.MIN_DOMAIN_PARAMETER_ID
-          && pID <= DomainParameterInfo.MAX_DOMAIN_PARAMETER_ID)
+      if (pID >= MIN_DOMAIN_PARAMETER_ID && pID <= MAX_DOMAIN_PARAMETER_ID)
       {
         return info;
       }
@@ -173,39 +159,18 @@ public final class InfoSelector
     AssertUtil.notNullOrEmpty(caPubKeyList, "list of chip authentication public keys");
     AssertUtil.notNull(caInfo, "chip authentication info");
 
-    try
+    if (caInfo.getKeyId() != null)
     {
-      if (caInfo.getKeyID() != null)
+      for ( ChipAuthenticationPublicKeyInfo caPK : caPubKeyList )
       {
-        for ( ChipAuthenticationPublicKeyInfo caPK : caPubKeyList )
+        if (caInfo.getKeyId().equals(caPK.getKeyId()))
         {
-          try
-          {
-            if (caInfo.getKeyID().equals(caPK.getKeyID()))
-            {
-              return caPK;
-            }
-          }
-          catch (IOException e)
-          {
-            if (log.isDebugEnabled())
-            {
-              log.debug("Could not parse key ID", e);
-            }
-            // nothing
-          }
+          return caPK;
         }
-        // coming here would mean inconsistent data
-        return null;
       }
-    }
-    catch (IOException e)
-    {
-      if (log.isDebugEnabled())
-      {
-        log.debug("Could not parse key ID", e);
-      }
-      // nothing to do
+      // coming here would mean inconsistent data
+      log.debug("No matching ChipAuthenticationPublicKeyInfo found for keyId {}", caInfo.getKeyId());
+      return null;
     }
 
     if (caPubKeyList.size() == 1)
@@ -228,6 +193,7 @@ public final class InfoSelector
    * Container class holding a pair of {@link ChipAuthenticationData} and matching
    * {@link ChipAuthenticationDomainParameterInfo}.
    */
+  @Getter
   public static class ChipAuthenticationData
   {
 
@@ -245,14 +211,5 @@ public final class InfoSelector
       this.caDomParamInfo = caDomParamInfo;
     }
 
-    public ChipAuthenticationInfo getCaInfo()
-    {
-      return this.caInfo;
-    }
-
-    public ChipAuthenticationDomainParameterInfo getCaDomParamInfo()
-    {
-      return this.caDomParamInfo;
-    }
   }
 }

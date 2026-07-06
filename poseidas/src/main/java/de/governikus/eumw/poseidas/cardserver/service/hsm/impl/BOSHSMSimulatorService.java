@@ -28,9 +28,10 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 
+import org.bouncycastle.asn1.ASN1ObjectIdentifier;
+
+import de.governikus.autent.asn1.utils.SignatureUtil;
 import de.governikus.eumw.poseidas.cardbase.AssertUtil;
-import de.governikus.eumw.poseidas.cardbase.asn1.OID;
-import de.governikus.eumw.poseidas.cardserver.SignatureUtil;
 import de.governikus.eumw.utils.key.SecurityProvider;
 import lombok.extern.slf4j.Slf4j;
 
@@ -104,17 +105,22 @@ public class BOSHSMSimulatorService implements HSMService
 
   /** {@inheritDoc} */
   @Override
-  public byte[] sign(String alias, OID sigAlgOID, byte[] data)
+  public byte[] sign(String alias, ASN1ObjectIdentifier sigAlgorithm, byte[] data)
     throws NoSuchAlgorithmException, InvalidKeyException, SignatureException, InvalidKeySpecException
   {
     AssertUtil.notNullOrEmpty(alias, "alias of key");
-    AssertUtil.notNull(sigAlgOID, "OID for signature algorithm");
+    AssertUtil.notNull(sigAlgorithm, "OID for signature algorithm");
     AssertUtil.notNullOrEmpty(data, "data to be signed");
 
     byte[] keyBytes = this.lcakp.getKeyByHolder(alias);
     PrivateKey privSignKey = buildPrivateKey(keyBytes);
 
-    Signature signature = SignatureUtil.createSignature(sigAlgOID);
+    String bcSignatureAlgorithm = SignatureUtil.getSUPPORTED_BOUNCY_SIGNATURE_ALGORITHMS().get(sigAlgorithm);
+    if (bcSignatureAlgorithm == null)
+    {
+      throw new NoSuchAlgorithmException("Signature algorithm not supported: " + sigAlgorithm);
+    }
+    Signature signature = Signature.getInstance(bcSignatureAlgorithm, SecurityProvider.BOUNCY_CASTLE_PROVIDER);
     signature.initSign(privSignKey);
     signature.update(data);
     return signature.sign();

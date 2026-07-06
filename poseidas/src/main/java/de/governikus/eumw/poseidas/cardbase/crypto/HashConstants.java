@@ -18,7 +18,6 @@ import lombok.experimental.UtilityClass;
  * Constants related to algorithm.
  *
  * @see DigestInfo
- * @see HashAlgorithmEnum
  * @author Jens Wothe, jw@bos-bremen.de
  */
 @UtilityClass

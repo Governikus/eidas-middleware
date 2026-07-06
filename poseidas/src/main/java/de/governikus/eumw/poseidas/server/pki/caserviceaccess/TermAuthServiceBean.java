@@ -6,7 +6,9 @@ import java.security.GeneralSecurityException;
 import java.security.KeyStore;
 import java.security.cert.X509Certificate;
 import java.util.List;
+import java.util.Optional;
 
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.stereotype.Service;
 
 import de.governikus.eumw.config.DvcaConfigurationType;
@@ -47,7 +49,12 @@ public class TermAuthServiceBean
     ServiceProviderType serviceProviderType = getServiceProvider(entityID);
     DvcaConfigurationType dvcaConfiguration = configurationService.getDvcaConfiguration(serviceProviderType);
     String serviceUrl = dvcaConfiguration.getTerminalAuthServiceUrl();
-    X509Certificate dvcaCertificate = configurationService.getCertificate(dvcaConfiguration.getServerSSLCertificateName());
+    Optional<X509Certificate> optionalDvcaServerCert = Optional.empty();
+    String serverSSLCertificateName = dvcaConfiguration.getServerSSLCertificateName();
+    if (StringUtils.isNotBlank(serverSSLCertificateName))
+    {
+      optionalDvcaServerCert = Optional.of(configurationService.getCertificate(serverSSLCertificateName));
+    }
 
     try
     {
@@ -57,13 +64,14 @@ public class TermAuthServiceBean
       {
         de.governikus.eumw.poseidas.server.idprovider.config.KeyPair clientKeyPair = configurationService.getKeyPair(serviceProviderType.getClientKeyPairName());
         List<X509Certificate> clientCertificate = List.of(clientKeyPair.getCertificate());
-        connector = new PKIServiceConnector(600, dvcaCertificate, clientKeyPair.getKey(), clientCertificate,
-                                            serviceProviderType.getCVCRefID());
+        connector = new PKIServiceConnector(600, optionalDvcaServerCert.orElse(null), clientKeyPair.getKey(),
+                                            clientCertificate, serviceProviderType.getCVCRefID());
 
       }
       else
       {
-        connector = new PKIServiceConnector(600, dvcaCertificate, hsmKeyStore, null, serviceProviderType.getCVCRefID());
+        connector = new PKIServiceConnector(600, optionalDvcaServerCert.orElse(null), hsmKeyStore, null,
+                                            serviceProviderType.getCVCRefID());
       }
       return new TermAuthService(connector, serviceUrl);
     }

@@ -13,10 +13,13 @@ import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
 
-import de.governikus.eumw.poseidas.cardbase.ByteUtil;
-import de.governikus.eumw.poseidas.cardbase.Hex;
-import de.governikus.eumw.poseidas.cardbase.asn1.ASN1;
-import de.governikus.eumw.poseidas.cardbase.asn1.OID;
+import org.bouncycastle.asn1.ASN1EncodableVector;
+import org.bouncycastle.asn1.ASN1ObjectIdentifier;
+import org.bouncycastle.asn1.ASN1Primitive;
+import org.bouncycastle.asn1.DEROctetString;
+import org.bouncycastle.asn1.DERSequence;
+import org.bouncycastle.asn1.DERTaggedObject;
+import org.bouncycastle.util.encoders.Hex;
 
 
 /**
@@ -178,54 +181,66 @@ public class AuthenticatedAuxiliaryData
   }
 
   /**
-   * Encode the object to a asn1 byte[].
+   * Encode the object to an asn1 byte[].
    *
    * @return the asn1 structured AuthenticatedAuxiliaryData as byte[]
    */
   public byte[] getEncoded()
   {
-    List<ASN1> childs = new ArrayList<>();
+    List<ASN1Primitive> children = new ArrayList<>();
+
     if (ageVerification != null)
     {
-      ASN1 iod = new OID(OID_STR_AGE_VERIFICATION);
-      ASN1 data = new ASN1(ASN1_ASN1_DISCRETIONARY_DATA_TAG, ageVerification.getBytes(StandardCharsets.UTF_8));
-      byte[] bytes = ByteUtil.combine(iod.getEncoded(), data.getEncoded());
-      ASN1 dataTemplate = new ASN1(ASN1_DISCRETIONARY_DATA_TEMPLATE_TAG, bytes);
-      childs.add(dataTemplate);
+      ASN1EncodableVector ageVector = new ASN1EncodableVector();
+      ageVector.add(new ASN1ObjectIdentifier(OID_STR_AGE_VERIFICATION));
+      ageVector.add(new DEROctetString(ageVerification.getBytes(StandardCharsets.UTF_8)));
+      DERSequence ageSeq = new DERSequence(ageVector);
+      children.add(new DERTaggedObject(false, ASN1_ASN1_DISCRETIONARY_DATA_TAG, ageSeq));
     }
     if (documentVerification != null)
     {
-      ASN1 iod = new OID(OID_STR_DOCUMENT_VERIFICATION);
-      ASN1 data = new ASN1(ASN1_ASN1_DISCRETIONARY_DATA_TAG, documentVerification.getBytes(StandardCharsets.UTF_8));
-      byte[] bytes = ByteUtil.combine(iod.getEncoded(), data.getEncoded());
-      ASN1 dataTemplate = new ASN1(ASN1_DISCRETIONARY_DATA_TEMPLATE_TAG, bytes);
-      childs.add(dataTemplate);
+      ASN1EncodableVector docVector = new ASN1EncodableVector();
+      docVector.add(new ASN1ObjectIdentifier(OID_STR_DOCUMENT_VERIFICATION));
+      docVector.add(new DEROctetString(documentVerification.getBytes(StandardCharsets.UTF_8)));
+      DERSequence docSeq = new DERSequence(docVector);
+      children.add(new DERTaggedObject(false, ASN1_ASN1_DISCRETIONARY_DATA_TAG, docSeq));
     }
-    if (communityVerification != null && !communityVerification.equals(""))
+
+    if (communityVerification != null && !communityVerification.isEmpty())
     {
-      ASN1 iod = new OID(OID_STR_COMMUNITY_VERIFICATION);
-      ASN1 data = new ASN1(ASN1_ASN1_DISCRETIONARY_DATA_TAG, Hex.parse(communityVerification));
-      byte[] bytes = ByteUtil.combine(iod.getEncoded(), data.getEncoded());
-      ASN1 dataTemplate = new ASN1(ASN1_DISCRETIONARY_DATA_TEMPLATE_TAG, bytes);
-      childs.add(dataTemplate);
+      ASN1EncodableVector commVector = new ASN1EncodableVector();
+      commVector.add(new ASN1ObjectIdentifier(OID_STR_COMMUNITY_VERIFICATION));
+      commVector.add(new DEROctetString(Hex.decode(communityVerification)));
+      DERSequence commSeq = new DERSequence(commVector);
+      children.add(new DERTaggedObject(false, ASN1_ASN1_DISCRETIONARY_DATA_TAG, commSeq));
     }
-    if (this.psMessage != null && this.psMessage.length > 0)
+
+    if (psMessage != null && psMessage.length > 0)
     {
-      ASN1 oid = new OID(OID_STR_PS_MESSAGE);
-      ASN1 data = new ASN1(ASN1_ASN1_DISCRETIONARY_DATA_TAG, this.psMessage);
-      byte[] bytes = ByteUtil.combine(oid.getEncoded(), data.getEncoded());
-      ASN1 dataTemplate = new ASN1(ASN1_DISCRETIONARY_DATA_TEMPLATE_TAG, bytes);
-      childs.add(dataTemplate);
+      ASN1EncodableVector psVector = new ASN1EncodableVector();
+      psVector.add(new ASN1ObjectIdentifier(OID_STR_PS_MESSAGE));
+      psVector.add(new DEROctetString(psMessage));
+      DERSequence psSeq = new DERSequence(psVector);
+      children.add(new DERTaggedObject(false, ASN1_ASN1_DISCRETIONARY_DATA_TAG, psSeq));
     }
-    if (!childs.isEmpty())
+
+    if (!children.isEmpty())
     {
-      byte[] childBytes = childs.get(0).getEncoded();
-      for ( int i = 1 ; i < childs.size() ; i++ )
+      ASN1EncodableVector mainVector = new ASN1EncodableVector();
+      for ( ASN1Primitive child : children )
       {
-        childBytes = ByteUtil.combine(childBytes, childs.get(i).getEncoded());
+        mainVector.add(child);
       }
-      ASN1 authenticationAsn1 = new ASN1(ASN1_AUTHENTICATION_TAG, childBytes);
-      return authenticationAsn1.getEncoded();
+      DERSequence mainSeq = new DERSequence(mainVector);
+      DERTaggedObject authenticationAsn1 = new DERTaggedObject(false, ASN1_AUTHENTICATION_TAG, mainSeq);
+      try
+      {
+        return authenticationAsn1.getEncoded();
+      }
+      catch (Exception e)
+      {
+        throw new RuntimeException("Failed to encode AuthenticatedAuxiliaryData", e);
+      }
     }
     else
     {

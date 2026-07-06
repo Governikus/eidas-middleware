@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<saml2p:AuthnRequest
+	xmlns:eidas="http://eidas.europa.eu/saml-extensions"
+	xmlns:saml2p="urn:oasis:names:tc:SAML:2.0:protocol"
+	Destination="http://localhost:8080/NewReceiverServlet"
+	ForceAuthn="true" ID="pfx60022a9b-2871-66e7-969a-4494f951fe69"
+	IsPassive="false" IssueInstant="2019-12-20T12:29:26.293Z"
+	ProviderName="DefaultProvider" Version="2.0">
+	<saml2:Issuer
+		xmlns:saml2="urn:oasis:names:tc:SAML:2.0:assertion"
+		Format="urn:oasis:names:tc:SAML:2.0:nameid-format:entity">http://localhost:8080/Metadata</saml2:Issuer>
+	<saml2p:Extensions>
+		<eidas:RequestedAttributes>
+			<eidas:RequestedAttribute
+				Name="http://eidas.europa.eu/attributes/naturalperson/BirthName"
+				NameFormat="urn:oasis:names:tc:SAML:2.0:attrname-format:uri"
+				isRequired="false" />
+			<eidas:RequestedAttribute
+				Name="http://eidas.europa.eu/attributes/naturalperson/CurrentAddress"
+				NameFormat="urn:oasis:names:tc:SAML:2.0:attrname-format:uri"
+				isRequired="false" />
+			<eidas:RequestedAttribute
+				Name="http://eidas.europa.eu/attributes/naturalperson/CurrentGivenName"
+				NameFormat="urn:oasis:names:tc:SAML:2.0:attrname-format:uri"
+				isRequired="true" />
+			<eidas:RequestedAttribute
+				Name="http://eidas.europa.eu/attributes/naturalperson/PlaceOfBirth"
+				NameFormat="urn:oasis:names:tc:SAML:2.0:attrname-format:uri"
+				isRequired="false" />
+			<eidas:RequestedAttribute
+				Name="http://eidas.europa.eu/attributes/naturalperson/DateOfBirth"
+				NameFormat="urn:oasis:names:tc:SAML:2.0:attrname-format:uri"
+				isRequired="false" />
+			<eidas:RequestedAttribute
+				Name="http://eidas.europa.eu/attributes/naturalperson/PersonIdentifier"
+				NameFormat="urn:oasis:names:tc:SAML:2.0:attrname-format:uri"
+				isRequired="true" />
+			<eidas:RequestedAttribute
+				Name="http://eidas.europa.eu/attributes/naturalperson/CurrentFamilyName"
+				NameFormat="urn:oasis:names:tc:SAML:2.0:attrname-format:uri"
+				xmlns:s="bla" s:wurst1="w" s:wurst2="w" s:wurst3="w" s:wurst4="w"
+				s:wurst5="w" s:wurst6="w" s:wurst7="w" s:wurst8="w" s:wurst9="w"
+				s:wurst10="w" s:wurst11="w" s:wurst12="w" s:wurst13="w"
+				s:wurst14="w" s:wurst15="w" s:wurst16="w" s:wurst17="w"
+				s:wurst18="w" s:wurst19="w" s:wurst20="w" isRequired="true" />
+		</eidas:RequestedAttributes>
+	</saml2p:Extensions>
+	<saml2p:Scoping>
+		<saml2p:RequesterID>Requester Provider</saml2p:RequesterID>
+	</saml2p:Scoping>
+	<saml2p:NameIDPolicy AllowCreate="true"
+		Format="urn:oasis:names:tc:SAML:2.0:nameid-format:transient" />
+	<saml2p:RequestedAuthnContext
+		Comparison="minimum">
+		<saml2:AuthnContextClassRef
+			xmlns:saml2="urn:oasis:names:tc:SAML:2.0:assertion">http://eidas.europa.eu/LoA/high
+		</saml2:AuthnContextClassRef>
+	</saml2p:RequestedAuthnContext>
+</saml2p:AuthnRequest>

@@ -10,15 +10,19 @@
 package de.governikus.eumw.eidasmiddleware.projectconfig;
 
 import org.junit.jupiter.api.Test;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RestController;
 
 import de.governikus.eumw.eidascommon.ContextPaths;
-import de.governikus.eumw.eidasmiddleware.controller.RequestReceiver;
 
 
 /**
@@ -30,8 +34,8 @@ class PortFilterTest
   @Test
   void testPortsAndPaths() throws Exception
   {
-    MockMvc requestReceiver = MockMvcBuilders.standaloneSetup(new RequestReceiver(null, null, null))
-                                             .addFilters(new PortFilter(8443, 10000))
+    MockMvc requestReceiver = MockMvcBuilders.standaloneSetup(new MockRequestReceiverController())
+                                             .addFilters(new PortFilter(8443, 10000, 1000))
                                              .build();
     // eidas request on port 8443
     requestReceiver.perform(MockMvcRequestBuilders.get(ContextPaths.EIDAS_CONTEXT_PATH + ContextPaths.REQUEST_RECEIVER)
@@ -41,7 +45,7 @@ class PortFilterTest
                                                     mockHttpServletRequest.setLocalPort(8443);
                                                     return mockHttpServletRequest;
                                                   }))
-                   .andExpect(MockMvcResultMatchers.status().isBadRequest());
+                   .andExpect(MockMvcResultMatchers.status().isOk());
 
     // eidas request on port 10000
     requestReceiver.perform(MockMvcRequestBuilders.get(ContextPaths.EIDAS_CONTEXT_PATH + ContextPaths.REQUEST_RECEIVER)
@@ -54,7 +58,7 @@ class PortFilterTest
                    .andExpect(MockMvcResultMatchers.status().isForbidden());
 
     requestReceiver = MockMvcBuilders.standaloneSetup(new MockAdminController())
-                                     .addFilters(new PortFilter(8443, 10000))
+                                     .addFilters(new PortFilter(8443, 10000, 1000))
                                      .build();
 
     // admin request on port 8443
@@ -76,6 +80,62 @@ class PortFilterTest
                    .andExpect(MockMvcResultMatchers.status().isOk());
   }
 
+  @Test
+  void testRequestBodySizeLimit() throws Exception
+  {
+
+    MockMvc requestReceiver = MockMvcBuilders.standaloneSetup(new MockRequestReceiverController())
+                                             .addFilters(new PortFilter(8443, 10000, 100))
+                                             .build();
+
+    // valid request
+    requestReceiver.perform(MockMvcRequestBuilders.post(ContextPaths.EIDAS_CONTEXT_PATH + ContextPaths.REQUEST_RECEIVER)
+                                                  .servletPath(ContextPaths.EIDAS_CONTEXT_PATH
+                                                               + ContextPaths.REQUEST_RECEIVER)
+                                                  .content(new byte[1 * 1024])
+                                                  .contentType(MediaType.APPLICATION_XML)
+                                                  .with(req -> {
+                                                    req.setLocalPort(8443);
+                                                    return req;
+                                                  }))
+                   .andExpect(MockMvcResultMatchers.status().isOk());
+
+    // Oversized request
+    requestReceiver.perform(MockMvcRequestBuilders.post(ContextPaths.EIDAS_CONTEXT_PATH + ContextPaths.REQUEST_RECEIVER)
+                                                  .servletPath(ContextPaths.EIDAS_CONTEXT_PATH
+                                                               + ContextPaths.REQUEST_RECEIVER)
+                                                  .content(new byte[101 * 1024])
+                                                  .contentType(MediaType.APPLICATION_XML)
+                                                  .with(req -> {
+                                                    req.setLocalPort(8443);
+                                                    return req;
+                                                  }))
+                   .andExpect(MockMvcResultMatchers.status().is(HttpStatus.CONTENT_TOO_LARGE.value()));
+
+    // No content in request
+    requestReceiver.perform(MockMvcRequestBuilders.post(ContextPaths.EIDAS_CONTEXT_PATH + ContextPaths.REQUEST_RECEIVER)
+                                                  .servletPath(ContextPaths.EIDAS_CONTEXT_PATH
+                                                               + ContextPaths.REQUEST_RECEIVER)
+                                                  .contentType(MediaType.APPLICATION_XML)
+                                                  .with(req -> {
+                                                    req.setLocalPort(8443);
+                                                    return req;
+                                                  }))
+                   .andExpect(MockMvcResultMatchers.status().is(HttpStatus.LENGTH_REQUIRED.value()));
+
+    // oversized request but other path, where it is allowed
+    requestReceiver.perform(MockMvcRequestBuilders.post(ContextPaths.EIDAS_CONTEXT_PATH + "TEST")
+                                                  .servletPath(ContextPaths.EIDAS_CONTEXT_PATH + "TEST")
+                                                  .content(new byte[101 * 1024])
+                                                  .contentType(MediaType.APPLICATION_XML)
+                                                  .with(req -> {
+                                                    req.setLocalPort(8443);
+                                                    return req;
+                                                  }))
+                   .andExpect(MockMvcResultMatchers.status().isOk());
+  }
+
+
   /**
    * Mock class because other admin interface controllers are not available
    */
@@ -89,4 +149,31 @@ class PortFilterTest
       return "logged in";
     }
   }
+
+  /**
+   * Mock class to test PortFilter
+   */
+  @RestController
+  private static class MockRequestReceiverController
+  {
+
+    @PostMapping(ContextPaths.EIDAS_CONTEXT_PATH + ContextPaths.REQUEST_RECEIVER)
+    public ResponseEntity<Void> doPost()
+    {
+      return ResponseEntity.ok().build();
+    }
+
+    @GetMapping(ContextPaths.EIDAS_CONTEXT_PATH + ContextPaths.REQUEST_RECEIVER)
+    public ResponseEntity<Void> doGet()
+    {
+      return ResponseEntity.ok().build();
+    }
+
+    @PostMapping(ContextPaths.EIDAS_CONTEXT_PATH + "TEST")
+    public ResponseEntity<Void> doPost2()
+    {
+      return ResponseEntity.ok().build();
+    }
+  }
+
 }

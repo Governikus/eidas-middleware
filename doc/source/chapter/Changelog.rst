@@ -306,3 +306,19 @@ Changelog
       correctly, as it is necessary for the status detection of the AusweisApp.
     - eIDAS Middleware: Set XML parser properties jdk.xml.elementAttributeLimit and jdk.xml.maxElementDepth to 20 to
       deny SAML or PAOS requests with too large contents.
+
+* 4.1.0
+
+    - eIDAS Middleware: Updated to Spring Boot 4.
+    - eIDAS Middleware: Updated JDK to version 25.
+    - eIDAS Middleware: Refactoring of ASN.1 handling, using Bouncy Castle.
+    - eIDAS Middleware: Improved the automatic TLS certificate entanglement.
+    - eIDAS Middleware: Added URL to footer to BSI imprint.
+    - eIDAS Middleware: Added optional properties ``eidas.middleware.authority.address`` and ``eidas.middleware.privacy.policy.url`` to application.properties to configure footer information.
+    - eIDAS Middleware: Added database schema management. The property ``spring.jpa.hibernate.ddl-auto`` should not be used anymore!
+    - eIDAS Middleware: Added optional property ``server.maxRequestSize`` to limit the request size in KB for POST
+      requests on specific endpoints
+    - eIDAS Middleware: In the DVCA configuration, the DVCA server certificate is optional. If no certificate is configured, the Java Trust Store is used.
+    - eIDAS Middleware: Information on cryptographic algorithms from the connectors metadata is now given priority over
+      the default values provided as long as it meets the requirements.
+    - eIDAS Middleware: The “Nationality”, "CurrentAddress" and "PlaceOfBirth" attributes are no longer present in the response if these attributes have an empty string as their value.

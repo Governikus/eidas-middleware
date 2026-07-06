@@ -13,15 +13,15 @@ import java.util.EnumMap;
 import java.util.Map;
 
 import de.governikus.eumw.poseidas.ecardcore.utilities.ECardCoreUtil;
-import de.governikus.eumw.poseidas.eidmodel.data.EIDKeys;
 import de.governikus.eumw.poseidas.eidserver.convenience.EIDInfoResult;
+import de.governikus.panstar.sdk.utils.constant.EIDAttributeName;
 
 import oasis.names.tc.dss._1_0.core.schema.Result;
 
 
 /**
- * A object of this class contains the response for a eID Result Request like a getResultRequest. This data is provided
- * by the {@link EIDInternal} class an then handled by the SAML validator or the eID-Webservice.
+ * An object of this class contains the response for a eID Result Request like a getResultRequest. This data is provided
+ * by the {@link EIDInternal} class and then handled by the SAML validator or the eID-Webservice.
  *
  * @author Hauke Mehrtens
  */
@@ -36,7 +36,7 @@ public class EIDResultResponse
 
   private final String logPrefix;
 
-  private final Map<EIDKeys, EIDInfoResult> infoMap = new EnumMap<>(EIDKeys.class);
+  private final Map<EIDAttributeName, EIDInfoResult> infoMap = new EnumMap<>(EIDAttributeName.class);
 
   EIDResultResponse(String resultMajor, String resultMinor, String resultMessage, String logPrefix)
   {
@@ -46,7 +46,7 @@ public class EIDResultResponse
     this.logPrefix = logPrefix;
   }
 
-  EIDResultResponse(Result result, Map<EIDKeys, EIDInfoResult> infoMap, String logPrefix)
+  EIDResultResponse(Result result, Map<EIDAttributeName, EIDInfoResult> infoMap, String logPrefix)
   {
     this.resultMajor = result.getResultMajor();
     this.resultMinor = result.getResultMinor();
@@ -90,12 +90,12 @@ public class EIDResultResponse
     this.resultMessage = resultMessage;
   }
 
-  public Map<EIDKeys, EIDInfoResult> getInfoMap()
+  public Map<EIDAttributeName, EIDInfoResult> getInfoMap()
   {
     return infoMap;
   }
 
-  public EIDInfoResult getEIDInfo(EIDKeys key)
+  public EIDInfoResult getEIDInfo(EIDAttributeName key)
   {
     return infoMap.get(key);
   }

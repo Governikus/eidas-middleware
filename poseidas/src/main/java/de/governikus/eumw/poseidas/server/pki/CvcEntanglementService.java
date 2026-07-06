@@ -23,10 +23,12 @@ import de.governikus.eumw.poseidas.gov2server.constants.admin.GlobalManagementCo
 import de.governikus.eumw.poseidas.gov2server.constants.admin.ManagementMessage;
 import de.governikus.eumw.poseidas.server.idprovider.config.ConfigurationService;
 import de.governikus.eumw.poseidas.server.idprovider.config.CvcTlsCheck;
+import de.governikus.eumw.poseidas.server.idprovider.config.TLSCertificateRequester;
 import de.governikus.eumw.poseidas.server.pki.blocklist.BlockListService;
 import de.governikus.eumw.poseidas.server.pki.caserviceaccess.DvcaServiceFactory;
 import de.governikus.eumw.poseidas.server.pki.caserviceaccess.TermAuthService;
 import de.governikus.eumw.poseidas.server.pki.entities.TimerHistory;
+
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
@@ -55,6 +57,8 @@ public class CvcEntanglementService
 
   private final BlockListService blockListService;
 
+  private final TLSCertificateRequester tLSCertificateRequester;
+
   /**
    * Checks if the current TLS certificate is entangled with the current CVCs. An entanglement request is sent to the
    * DVCA followed by a subsequent CVC request if the entanglement needs to be renewed.
@@ -67,7 +71,7 @@ public class CvcEntanglementService
     Optional<EidasMiddlewareConfig> configOptional = configurationService.getConfiguration();
 
     Optional<X509Certificate> optionalServerCertificate = configOptional.map(EidasMiddlewareConfig::getServerUrl)
-                                                                        .flatMap(cvcTlsCheck::getOwnTlsCertificate);
+                                                                        .flatMap(tLSCertificateRequester::requestTlsServerCertificate);
 
     // Check TLS certificate
     if (optionalServerCertificate.map(certificate -> certificate.getNotAfter().before(new Date())).orElse(true))

@@ -11,8 +11,8 @@ package de.governikus.eumw.eidasmiddleware;
 
 import static org.junit.Assert.assertTrue;
 
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
+import org.opensaml.core.config.InitializationException;
 import org.opensaml.core.xml.config.XMLObjectProviderRegistrySupport;
 import org.opensaml.core.xml.io.Unmarshaller;
 import org.opensaml.core.xml.io.UnmarshallerFactory;
@@ -23,6 +23,7 @@ import org.w3c.dom.Element;
 
 import de.governikus.eumw.eidascommon.Utils;
 import de.governikus.eumw.eidasstarterkit.EidasSaml;
+
 import net.shibboleth.utilities.java.support.component.ComponentInitializationException;
 import net.shibboleth.utilities.java.support.xml.BasicParserPool;
 import net.shibboleth.utilities.java.support.xml.XMLParserException;
@@ -32,15 +33,12 @@ import net.shibboleth.utilities.java.support.xml.XMLParserException;
 public class AssoParseTest
 {
 
-  @Before
-  public void setUp() throws Exception
+  @Test
+  void test()
+    throws XMLParserException, UnmarshallingException, ComponentInitializationException, InitializationException
   {
     EidasSaml.init();
-  }
 
-  @Test
-  public void test() throws XMLParserException, UnmarshallingException, ComponentInitializationException
-  {
     BasicParserPool ppMgr = Utils.getBasicParserPool();
     Assertion ass;
     Document inCommonMDDoc = ppMgr.parse(AssoParseTest.class.getResourceAsStream("Assotest.xml"));

@@ -97,8 +97,3 @@ Now you can follow the steps above to configure and test the eIDAS Middleware.
 
 To stop the eIDAS Demo Application, execute ``CTRL+C``.
 
-There is also a docker compose file available at `GitHub <https://github.com/Governikus/eidas-middleware/blob/master/eidas-demo/docker-compose/docker-compose.yaml>`_.
-You can copy this file on your local machine and create a directory called configuration in your working directory.
-Then copy the configuration file and the certificate and key stores in the configuration directory.
-Afterwards you can run the container by executing ``docker-compose up``.
-To stop and remove the container, first execute ``CTRL+C`` followed by ``docker-compose down``.

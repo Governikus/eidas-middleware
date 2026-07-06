@@ -13,8 +13,7 @@ import static org.junit.Assert.assertTrue;
 
 import java.util.Calendar;
 
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 import de.governikus.eumw.eidasstarterkit.person_attributes.natural_persons_attribute.DateOfBirthAttribute;
 
@@ -24,12 +23,8 @@ import de.governikus.eumw.eidasstarterkit.person_attributes.natural_persons_attr
 public class NPADateParseTest
 {
 
-  @Before
-  public void setUp() throws Exception
-  {}
-
   @Test
-  public void test()
+  void test()
   {
     String dateString = "201510XX";
 

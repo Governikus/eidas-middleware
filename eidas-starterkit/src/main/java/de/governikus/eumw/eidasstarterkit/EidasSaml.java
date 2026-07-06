@@ -11,6 +11,7 @@ package de.governikus.eumw.eidasstarterkit;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.security.KeyStore;
 import java.security.cert.CertificateEncodingException;
 import java.security.cert.CertificateException;
 import java.security.cert.X509Certificate;
@@ -32,7 +33,10 @@ import org.opensaml.core.xml.io.Unmarshaller;
 import org.opensaml.core.xml.io.UnmarshallerFactory;
 import org.opensaml.core.xml.io.UnmarshallingException;
 import org.opensaml.saml.saml2.metadata.EntityDescriptor;
+import org.opensaml.xmlsec.agreement.KeyAgreementSupport;
+import org.opensaml.xmlsec.encryption.support.EncryptionConstants;
 import org.opensaml.xmlsec.encryption.support.EncryptionException;
+import org.opensaml.xmlsec.signature.Signature;
 import org.opensaml.xmlsec.signature.support.SignatureException;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
@@ -42,7 +46,10 @@ import de.governikus.eumw.eidascommon.ErrorCodeException;
 import de.governikus.eumw.eidascommon.Utils;
 import de.governikus.eumw.eidascommon.Utils.X509KeyPair;
 import de.governikus.eumw.eidasstarterkit.person_attributes.EidasPersonAttributes;
-
+import de.governikus.eumw.utils.key.SecurityProvider;
+import de.governikus.opensaml.extension.CustomECDHKeyAgreementProcessor;
+import de.governikus.opensaml.extension.CustomSignatureMarshaller;
+import de.governikus.opensaml.extension.CustomSignatureUnmarshaller;
 import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
 import net.shibboleth.utilities.java.support.component.ComponentInitializationException;
@@ -65,24 +72,53 @@ public class EidasSaml
 
   private static boolean isInit = false;
 
+  private static boolean isProviderSet = false;
+
   /**
-   * Inits the OpenSAML library and the EidasSaml Starterkit library. It is necessary to call this method!
+   * Init the OpenSAML library and the EidasSaml Starterkit library. It is necessary to call this method!
+   */
+  public static synchronized void init(KeyStore ks) throws InitializationException
+  {
+    init();
+    if (isProviderSet)
+    {
+      return;
+    }
+
+    XMLObjectProviderRegistrySupport.getMarshallerFactory()
+                                    .registerMarshaller(Signature.DEFAULT_ELEMENT_NAME,
+                                                        new CustomSignatureMarshaller(ks == null
+                                                          ? SecurityProvider.BOUNCY_CASTLE_PROVIDER
+                                                          : ks.getProvider()));
+    isProviderSet = true;
+  }
+
+  /**
+   * Init the OpenSAML library and the EidasSaml Starterkit library. It is necessary to call this method!
    */
   public static synchronized void init() throws InitializationException
   {
-    if (!isInit)
+    if (isInit)
     {
-      try
-      {
-        OpenSAMLInitializer.getInstance().initialize(new OpenSAMLSecurityExtensionConfig());
-        XMLObjectProviderRegistrySupport.deregisterObjectProvider(EidasNaturalPersonAttributes.DATE_OF_BIRTH.getQName());
-      }
-      catch (Exception e)
-      {
-        throw new InitializationException("EidasSaml: Can not init OpenSAML", e);
-      }
-      isInit = true;
+      return;
     }
+
+    try
+    {
+      OpenSAMLInitializer.getInstance().initialize(new OpenSAMLSecurityExtensionConfig());
+    }
+    catch (Exception e)
+    {
+      throw new InitializationException("EidasSaml: Can not init OpenSAML", e);
+    }
+    XMLObjectProviderRegistrySupport.deregisterObjectProvider(EidasNaturalPersonAttributes.DATE_OF_BIRTH.getQName());
+    XMLObjectProviderRegistrySupport.getUnmarshallerFactory()
+                                    .registerUnmarshaller(Signature.DEFAULT_ELEMENT_NAME,
+                                                          new CustomSignatureUnmarshaller(SecurityProvider.BOUNCY_CASTLE_PROVIDER));
+    KeyAgreementSupport.getGlobalProcessorRegistry().deregister(EncryptionConstants.ALGO_ID_KEYAGREEMENT_ECDH_ES);
+    KeyAgreementSupport.getGlobalProcessorRegistry()
+                       .register(new CustomECDHKeyAgreementProcessor(SecurityProvider.BOUNCY_CASTLE_PROVIDER));
+    isInit = true;
   }
 
   /**

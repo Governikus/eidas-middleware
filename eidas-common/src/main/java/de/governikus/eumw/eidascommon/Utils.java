@@ -348,7 +348,7 @@ public final class Utils
       {
         log.debug("Failed to load key store", e);
       }
-      keyStore = KeyStore.getInstance(type);
+      keyStore = KeyStore.getInstance(type, SecurityProvider.BOUNCY_CASTLE_PROVIDER);
     }
     keyStore.load(ins, pin);
     PrivateKey key = (PrivateKey)keyStore.getKey(alias, keyPin);

@@ -19,7 +19,6 @@ import java.security.KeyManagementException;
 import java.security.KeyStore;
 import java.security.KeyStoreException;
 import java.security.NoSuchAlgorithmException;
-import java.security.NoSuchProviderException;
 import java.security.Principal;
 import java.security.PrivateKey;
 import java.security.SecureRandom;
@@ -28,11 +27,11 @@ import java.security.cert.CertificateException;
 import java.security.cert.X509Certificate;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Optional;
 
 import javax.net.ssl.KeyManager;
 import javax.net.ssl.KeyManagerFactory;
 import javax.net.ssl.SSLContext;
-import javax.net.ssl.TrustManager;
 import javax.net.ssl.TrustManagerFactory;
 import javax.net.ssl.X509KeyManager;
 
@@ -276,7 +275,7 @@ public class PKIServiceConnector
       client = HttpClients.custom().useSystemProperties().setSSLSocketFactory(sslSocketFactory).build();
     }
     catch (CertificateException | NoSuchAlgorithmException | UnrecoverableKeyException | KeyStoreException
-      | KeyManagementException | NoSuchProviderException e)
+      | KeyManagementException e)
     {
       throw new IOException("Cannot create http client", e);
     }
@@ -286,28 +285,33 @@ public class PKIServiceConnector
     }
   }
 
-  private SSLContext createSSLContext() throws NoSuchAlgorithmException, KeyStoreException, UnrecoverableKeyException,
-    KeyManagementException, IOException, CertificateException, NoSuchProviderException
+  SSLContext createSSLContext() throws NoSuchAlgorithmException, KeyStoreException, UnrecoverableKeyException,
+    KeyManagementException, IOException, CertificateException
   {
     SSLContext ctx = SSLContext.getInstance(Constants.SSL_PROTO_TLSv1_2,
                                             hsmMode ? SecurityProvider.SUN_JSSE_PROVIDER
                                               : SecurityProvider.BOUNCY_CASTLE_JSSE_PROVIDER);
     KeyManager[] km = createKeyManager();
-    ctx.init(km, createTrustManager(), new SecureRandom());
+    Optional<TrustManagerFactory> trustManagerFactory = createTrustManager();
+    ctx.init(km, trustManagerFactory.map(TrustManagerFactory::getTrustManagers).orElse(null), new SecureRandom());
     return ctx;
   }
 
-  private TrustManager[] createTrustManager()
-    throws NoSuchAlgorithmException, KeyStoreException, IOException, CertificateException, NoSuchProviderException
+  private Optional<TrustManagerFactory> createTrustManager()
+    throws NoSuchAlgorithmException, KeyStoreException, IOException, CertificateException
   {
-    TrustManagerFactory tmf = TrustManagerFactory.getInstance(TrustManagerFactory.getDefaultAlgorithm(),
-                                                              hsmMode ? SecurityProvider.SUN_JSSE_PROVIDER
-                                                                : SecurityProvider.BOUNCY_CASTLE_JSSE_PROVIDER);
-    KeyStore trustStore = KeyStore.getInstance("jks");
-    trustStore.load(null, null);
-    trustStore.setCertificateEntry("alias", sslServersCert);
-    tmf.init(trustStore);
-    return tmf.getTrustManagers();
+    if (sslServersCert != null)
+    {
+      TrustManagerFactory tmf = TrustManagerFactory.getInstance(TrustManagerFactory.getDefaultAlgorithm(),
+                                                                hsmMode ? SecurityProvider.SUN_JSSE_PROVIDER
+                                                                  : SecurityProvider.BOUNCY_CASTLE_JSSE_PROVIDER);
+      KeyStore trustStore = KeyStore.getInstance("jks");
+      trustStore.load(null, null);
+      trustStore.setCertificateEntry("alias", sslServersCert);
+      tmf.init(trustStore);
+      return Optional.of(tmf);
+    }
+    return Optional.empty();
   }
 
   private KeyManager[] createKeyManager() throws NoSuchAlgorithmException, KeyStoreException, UnrecoverableKeyException
@@ -335,9 +339,8 @@ public class PKIServiceConnector
     return kmf.getKeyManagers();
   }
 
-  void setHttpsConnectionSetting(BindingProvider port, String uri)
-    throws URISyntaxException, IOException, UnrecoverableKeyException, CertificateException, NoSuchAlgorithmException,
-    KeyStoreException, NoSuchProviderException, KeyManagementException
+  void setHttpsConnectionSetting(BindingProvider port, String uri) throws URISyntaxException, IOException,
+    UnrecoverableKeyException, CertificateException, NoSuchAlgorithmException, KeyStoreException, KeyManagementException
   {
     try
     {

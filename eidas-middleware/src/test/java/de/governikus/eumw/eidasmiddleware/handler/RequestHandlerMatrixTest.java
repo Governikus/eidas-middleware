@@ -37,7 +37,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.opensaml.core.config.InitializationException;
 import org.opensaml.core.xml.io.MarshallingException;
 import org.opensaml.xmlsec.signature.support.SignatureException;
-import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 
 import de.governikus.eumw.config.EidasMiddlewareConfig;
@@ -53,6 +53,7 @@ import de.governikus.eumw.eidasstarterkit.EidasSaml;
 import de.governikus.eumw.eidasstarterkit.EidasSigner;
 import de.governikus.eumw.eidasstarterkit.person_attributes.EidasPersonAttributes;
 import de.governikus.eumw.poseidas.server.idprovider.config.ConfigurationService;
+import de.governikus.eumw.poseidas.server.pki.HSMServiceHolder;
 import de.governikus.eumw.utils.key.KeyStoreSupporter;
 import lombok.AllArgsConstructor;
 import lombok.ToString;
@@ -74,11 +75,14 @@ class RequestHandlerMatrixTest
 
   private static final String DEFAULT_PASSWORD = "123456";
 
-  @MockBean
+  @MockitoBean
   private RequestSessionRepository requestSessionRepository;
 
-  @MockBean
+  @MockitoBean
   private ConfigurationService mockConfigurationService;
+
+  @MockitoBean
+  private HSMServiceHolder hsmServiceHolder;
 
 
   public static List<TestPrerequisites> testValidRequest()
@@ -128,7 +132,8 @@ class RequestHandlerMatrixTest
                                            testPrerequisites.requesterId,
                                            testPrerequisites.spTypeRequest);
 
-    RequestHandler requestHandler = new RequestHandler(requestSessionRepository, mockConfigurationService);
+    RequestHandler requestHandler = new RequestHandler(requestSessionRepository, mockConfigurationService,
+                                                       hsmServiceHolder);
     EidasRequest eIDASRequest = requestHandler.handleSAMLPostRequest("RELAY_STATE", samlRequest);
     Assertions.assertNotNull(eIDASRequest.getId());
   }
@@ -145,7 +150,8 @@ class RequestHandlerMatrixTest
                                            testPrerequisites.requesterId,
                                            testPrerequisites.spTypeRequest);
 
-    RequestHandler requestHandler = new RequestHandler(requestSessionRepository, mockConfigurationService);
+    RequestHandler requestHandler = new RequestHandler(requestSessionRepository, mockConfigurationService,
+                                                       hsmServiceHolder);
     Assertions.assertThrows(ErrorCodeWithResponseException.class,
                             () -> requestHandler.handleSAMLPostRequest("RELAY_STATE", samlRequest));
   }

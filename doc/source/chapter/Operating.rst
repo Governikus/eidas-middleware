@@ -77,13 +77,41 @@ If you want to change the TLS key store or disable HTTPS because you are using a
 you should use the admin interface to modify the configuration
 instead of adding environment variables to the Docker run command.
 
-To use this container with Docker Compose, see the example Docker Compose file at `GitHub <https://github.com/Governikus/eidas-middleware/blob/master/eidas-middleware/docker-compose/docker-compose.yaml>`_.
-You can use docker-compose.yaml out of the box to start the eIDAS Middleware application. ::
+Database maintenance
+--------------------
 
-    cd eidas-middleware/docker-compose
-    docker-compose up
+The Middleware utilizes an embedded database called HSQL.
+It is initialized and managed by the Middleware and primarily operates in memory.
+The data is persisted on disk occasionally at runtime or on shutdown.
 
-To stop the container, hit ``CTRL+C``. To remove the container afterwards, execute ``docker-compose down``.
+Binary data is stored in a file with the extension .lob.
+Over time, this file may grow larger than expected due to the behavior of the HSQL database.
+
+To address this, we provide a tool to clean up the database and reduce the size of the .lob file.
+This tool is called ``database-cleanup`` and is available both as a JAR file and as a Docker image.
+
+By executing the tool in the workspace of the **stopped Middleware** four operations are performed:
+
+1. A backup of the current database will be created in the workspace of the Middleware.
+2. A new, optimized database will be created in the directory of the current database.
+3. All data will be migrated from the current to the new database (which leads to the resized database).
+4. The old database will be deleted (not the backup) and replaced by the new database.
+
+After the process is completed, the Middleware should start normally without any additional steps.
+
+.. hint::
+    As a precaution, a manual backup should be created between stopping the Middleware and running the database cleanup
+    tool. This is especially important for Docker deployments, as the working directory is usually not persisted, which
+    could lead to the loss of the automatically created database backup.
+
+Execution of the JAR::
+
+    java -jar database-cleanup.jar --spring.config.additional-location=file:/path/to/your/configuration-directory/
+
+Execution of the docker image::
+
+    docker run --rm -v eidas-configuration:/opt/eidas-middleware/configuration -v eidas-database:/opt/eidas-middleware/database --name eidas-middleware-database-cleanup governikus/database-cleanup:4.0.0
+
 
 
 Obtain authorization certificate
@@ -396,20 +424,30 @@ md5, sha, hmac128sha224, hmac192sha256, hmac256sha384, hmac384sha512 (hmac384sha
 There are two different ways to use the SNMP agent to monitor the application. It is divided in ``GET`` and ``TRAP``.
 
 Optional properties for ``GET`` and ``GET NEXT`` requests can be set in the application.properties:
-``poseidas.snmp.agenthost`` with the default value set to localhost and ``poseidas.snmp.agentport`` with the default
-value set to port 161.
+``poseidas.snmp.agenthost`` with the default value set to ``localhost`` and ``poseidas.snmp.agentport`` with the default
+value set to port ``161``.
+
+All existing SNMP ``GET`` values are explained in detail in the MIB located at
+``https://github.com/Governikus/eidas-middleware/blob/4.1.0/poseidas/snmp/EIDASMW-SNMP-MIB.mib``.
+
 
 For monitoring the ``TRAPs`` it is also necessary to set ``poseidas.snmp.managementhost`` in the
 application.properties.
 
-Optional property for ``TRAP`` is ``poseidas.snmp.managementport`` (port 162 is the default value when not
-set).
+Optional properties for ``TRAP`` are ``poseidas.snmp.managementport`` and ``poseidas.snmp.engineid``.
 
-All existing SNMP GET values are explained in detail in the MIB located at
-``https://github.com/Governikus/eidas-middleware/blob/4.0.2/poseidas/snmp/EIDASMW-SNMP-MIB.mib``.
+The property ``poseidas.snmp.managementport`` defines the SNMP management port and defaults to ``162`` if not configured.
+
+The property ``poseidas.snmp.engineid`` defines the textual part of the SNMP engine ID and defaults to ``eidasmw``.
+
+The complete engine ID is generated according to the scheme ``Enterprise ID + 4 + engineid-property``.
+For the eIDAS Middleware, the Enterprise ID is ``28939`` (0x710b). Using the default value ``eidasmw``,
+the resulting engine ID is ``8000710b0465696461736d77``.
 
 Global GET
-''''''''''
+""""""""""
+
+The following table lists the OIDs for retrieving global information.
 
 .. csv-table::
     :widths: 75 50 45
@@ -422,7 +460,9 @@ Global GET
 
 
 Provider specific GET
-'''''''''''''''''''''
+"""""""""""""""""""""
+
+The following table lists the OIDs for retrieving provider specific information.
 
 Governikus OID = |GOVERNIKUS_OID|
 eIDAS Middleware prefix = |EUMW_PREFIX|
@@ -452,9 +492,9 @@ Get prefix = |GET_PREFIX|
     |GET_TLS_CLIENT_CERTIFICATE_VALID_UNTIL|; tlsClientCertificateValidUntil (DateAndTime); Expiry date of the TLS client certificate
 
 TRAP
-''''
+""""
 
-The following table will show the OIDs and their meaning.
+The following table lists the OIDs that can appear in SNMP ``TRAPs``.
 
 Governikus OID = |GOVERNIKUS_OID|
 eIDAS Middleware prefix = |EUMW_PREFIX|

@@ -12,18 +12,14 @@ package de.governikus.eumw.eidascommon;
 import static org.junit.Assert.assertTrue;
 
 import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 
 public class ErrorCodeTest
 {
 
-  @Before
-  public void setUp() throws Exception
-  {}
-
   @Test
-  public void test()
+  void test()
   {
     String s = ErrorCode.AUTHORIZATION_FAILED.toDescription("");
     assertTrue(s != null);

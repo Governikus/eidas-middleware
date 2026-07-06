@@ -11,6 +11,7 @@ import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.http.HttpStatus;
 import org.springframework.mock.web.MockHttpSession;
+import org.springframework.test.util.ReflectionTestUtils;
 import org.springframework.ui.ModelMap;
 import org.springframework.web.servlet.ModelAndView;
 
@@ -46,6 +47,10 @@ class RequestReceiverTest
 
   private static final String RELAY_STATE = "relayState";
 
+  public static final String AUTHORITY_ADDRESS = "Address in nowhere";
+
+  public static final String PRIVACY_POLICY_URL = "http://test-url";
+
   @Mock
   private RequestHandler requestHandler;
 
@@ -74,12 +79,54 @@ class RequestReceiverTest
 
     Assertions.assertEquals("middleware", landingPage.getViewName());
     ModelMap modelMap = landingPage.getModelMap();
-    Assertions.assertEquals(3, modelMap.size());
+    Assertions.assertEquals(5, modelMap.size());
     Assertions.assertEquals(EID_CLIENT_URL + URLEncoder.encode(TC_TOKEN_URL + REQUEST_ID, StandardCharsets.UTF_8),
                             modelMap.getAttribute("ausweisapp"));
     Assertions.assertEquals(ContextPaths.EIDAS_CONTEXT_PATH + ContextPaths.REQUEST_RECEIVER + "?sessionId="
                             + REQUEST_ID,
                             modelMap.getAttribute("linkToSelf"));
+  }
+
+  @Test
+  void testDoGetWithoutAuthorityAddressSet() throws Exception
+  {
+    prepareMocks();
+    Mockito.when(requestHandler.getTcTokenURL(REQUEST_ID)).thenReturn(TC_TOKEN_URL + REQUEST_ID);
+    RequestReceiver requestReceiver = new RequestReceiver(requestHandler, responseHandler, configurationService);
+    ReflectionTestUtils.setField(requestReceiver, "privacyPolicyUrl", PRIVACY_POLICY_URL);
+    ModelAndView landingPage = requestReceiver.doGet(RELAY_STATE,
+                                                     SAML_REQUEST_BASE_64_MOCK,
+                                                     null,
+                                                     null,
+                                                     null,
+                                                     null,
+                                                     new MockHttpSession());
+
+    Assertions.assertEquals("middleware", landingPage.getViewName());
+    ModelMap modelMap = landingPage.getModelMap();
+    Assertions.assertNull(modelMap.getAttribute("authorityAddress"));
+    Assertions.assertEquals(PRIVACY_POLICY_URL, modelMap.getAttribute("privacyPolicyUrl"));
+  }
+
+  @Test
+  void testDoGetWithoutPrivacyPolicyUrlSet() throws Exception
+  {
+    prepareMocks();
+    Mockito.when(requestHandler.getTcTokenURL(REQUEST_ID)).thenReturn(TC_TOKEN_URL + REQUEST_ID);
+    RequestReceiver requestReceiver = new RequestReceiver(requestHandler, responseHandler, configurationService);
+    ReflectionTestUtils.setField(requestReceiver, "authorityAddress", AUTHORITY_ADDRESS);
+    ModelAndView landingPage = requestReceiver.doGet(RELAY_STATE,
+                                                     SAML_REQUEST_BASE_64_MOCK,
+                                                     null,
+                                                     null,
+                                                     null,
+                                                     null,
+                                                     new MockHttpSession());
+
+    Assertions.assertEquals("middleware", landingPage.getViewName());
+    ModelMap modelMap = landingPage.getModelMap();
+    Assertions.assertNull(modelMap.getAttribute("privacyPolicyUrl"));
+    Assertions.assertEquals(AUTHORITY_ADDRESS, modelMap.getAttribute("authorityAddress"));
   }
 
   @Test
@@ -92,7 +139,7 @@ class RequestReceiverTest
     Mockito.verify(requestHandler, Mockito.never()).handleSAMLPostRequest(Mockito.anyString(), Mockito.anyString());
     Assertions.assertEquals("middleware", landingPage.getViewName());
     ModelMap modelMap = landingPage.getModelMap();
-    Assertions.assertEquals(3, modelMap.size());
+    Assertions.assertEquals(5, modelMap.size());
     Assertions.assertEquals(EID_CLIENT_URL + URLEncoder.encode(TC_TOKEN_URL + REQUEST_ID, StandardCharsets.UTF_8),
                             modelMap.getAttribute("ausweisapp"));
     Assertions.assertEquals(ContextPaths.EIDAS_CONTEXT_PATH + ContextPaths.REQUEST_RECEIVER + "?sessionId="
@@ -110,6 +157,7 @@ class RequestReceiverTest
     Mockito.when(responseHandler.prepareDummyResponse(REQUEST_ID, null)).thenReturn(SAML_RESPONSE);
     Mockito.when(responseHandler.getConsumerURLForRequestID(REQUEST_ID)).thenReturn(CONSUMER_URL);
     RequestReceiver requestReceiver = new RequestReceiver(requestHandler, responseHandler, configurationService);
+    setApplicationProperties(requestReceiver);
     ModelAndView responsePage = requestReceiver.doGet(RELAY_STATE,
                                                       SAML_REQUEST_BASE_64_MOCK,
                                                       null,
@@ -120,13 +168,15 @@ class RequestReceiverTest
 
     Assertions.assertEquals("response", responsePage.getViewName());
     ModelMap modelMap = responsePage.getModelMap();
-    Assertions.assertEquals(5, modelMap.size());
+    Assertions.assertEquals(7, modelMap.size());
     Assertions.assertEquals(SAML_RESPONSE, modelMap.getAttribute("SAML"));
     Assertions.assertEquals(CONSUMER_URL, modelMap.getAttribute("consumerURL"));
     Assertions.assertEquals(RELAY_STATE, modelMap.getAttribute("relayState"));
     Assertions.assertEquals(REQUEST_ID, modelMap.getAttribute("authnRequestId"));
     Assertions.assertEquals(ContextPaths.EIDAS_CONTEXT_PATH + ContextPaths.RESPONSE_SENDER,
                             modelMap.getAttribute("linkToSelf"));
+    Assertions.assertEquals(AUTHORITY_ADDRESS, modelMap.getAttribute("authorityAddress"));
+    Assertions.assertEquals(PRIVACY_POLICY_URL, modelMap.getAttribute("privacyPolicyUrl"));
   }
 
   @Test
@@ -159,6 +209,7 @@ class RequestReceiverTest
                                                           "error Message"))
            .thenReturn(SAML_RESPONSE);
     RequestReceiver requestReceiver = new RequestReceiver(requestHandler, responseHandler, configurationService);
+    setApplicationProperties(requestReceiver);
     ModelAndView errorPageWithResponse = requestReceiver.doGet(RELAY_STATE,
                                                                SAML_REQUEST_BASE_64_MOCK,
                                                                null,
@@ -169,13 +220,15 @@ class RequestReceiverTest
 
     Assertions.assertEquals("response", errorPageWithResponse.getViewName());
     ModelMap modelMap = errorPageWithResponse.getModelMap();
-    Assertions.assertEquals(5, modelMap.size());
+    Assertions.assertEquals(7, modelMap.size());
     Assertions.assertEquals(SAML_RESPONSE, modelMap.getAttribute("SAML"));
     Assertions.assertEquals(CONSUMER_URL, modelMap.getAttribute("consumerURL"));
     Assertions.assertEquals(RELAY_STATE, modelMap.getAttribute("relayState"));
     Assertions.assertEquals(REQUEST_ID, modelMap.getAttribute("authnRequestId"));
     Assertions.assertEquals(ContextPaths.EIDAS_CONTEXT_PATH + ContextPaths.RESPONSE_SENDER,
                             modelMap.getAttribute("linkToSelf"));
+    Assertions.assertEquals(AUTHORITY_ADDRESS, modelMap.getAttribute("authorityAddress"));
+    Assertions.assertEquals(PRIVACY_POLICY_URL, modelMap.getAttribute("privacyPolicyUrl"));
   }
 
   @Test
@@ -188,6 +241,7 @@ class RequestReceiverTest
                                                           Mockito.isNull()))
            .thenThrow(new RequestProcessingException(errorMessage));
     RequestReceiver requestReceiver = new RequestReceiver(requestHandler, responseHandler, configurationService);
+    setApplicationProperties(requestReceiver);
     ModelAndView errorPage = requestReceiver.doGet(RELAY_STATE,
                                                    SAML_REQUEST_BASE_64_MOCK,
                                                    null,
@@ -198,8 +252,10 @@ class RequestReceiverTest
 
     Assertions.assertEquals("error", errorPage.getViewName());
     ModelMap modelMap = errorPage.getModelMap();
-    Assertions.assertEquals(1, modelMap.size());
+    Assertions.assertEquals(3, modelMap.size());
     Assertions.assertEquals(errorMessage, modelMap.getAttribute("errorMessage"));
+    Assertions.assertEquals(AUTHORITY_ADDRESS, modelMap.getAttribute("authorityAddress"));
+    Assertions.assertEquals(PRIVACY_POLICY_URL, modelMap.getAttribute("privacyPolicyUrl"));
     Assertions.assertEquals(HttpStatus.BAD_REQUEST, errorPage.getStatus());
   }
 
@@ -216,7 +272,7 @@ class RequestReceiverTest
 
     Assertions.assertEquals("middleware", landingPage.getViewName());
     ModelMap modelMap = landingPage.getModelMap();
-    Assertions.assertEquals(3, modelMap.size());
+    Assertions.assertEquals(5, modelMap.size());
     Assertions.assertEquals(EID_CLIENT_MOBIL_URL + URLEncoder.encode(TC_TOKEN_URL + REQUEST_ID, StandardCharsets.UTF_8),
                             modelMap.getAttribute("ausweisapp"));
     Assertions.assertEquals(ContextPaths.EIDAS_CONTEXT_PATH + ContextPaths.REQUEST_RECEIVER + "?sessionId="
@@ -240,6 +296,7 @@ class RequestReceiverTest
                                                           "error Message"))
            .thenReturn(SAML_RESPONSE);
     RequestReceiver requestReceiver = new RequestReceiver(requestHandler, responseHandler, configurationService);
+    setApplicationProperties(requestReceiver);
     ModelAndView errorPageWithResponse = requestReceiver.doPost(RELAY_STATE,
                                                                 SAML_REQUEST_BASE_64_MOCK,
                                                                 null,
@@ -247,13 +304,15 @@ class RequestReceiverTest
 
     Assertions.assertEquals("response", errorPageWithResponse.getViewName());
     ModelMap modelMap = errorPageWithResponse.getModelMap();
-    Assertions.assertEquals(5, modelMap.size());
+    Assertions.assertEquals(7, modelMap.size());
     Assertions.assertEquals(SAML_RESPONSE, modelMap.getAttribute("SAML"));
     Assertions.assertEquals(CONSUMER_URL, modelMap.getAttribute("consumerURL"));
     Assertions.assertEquals(RELAY_STATE, modelMap.getAttribute("relayState"));
     Assertions.assertEquals(REQUEST_ID, modelMap.getAttribute("authnRequestId"));
     Assertions.assertEquals(ContextPaths.EIDAS_CONTEXT_PATH + ContextPaths.RESPONSE_SENDER,
                             modelMap.getAttribute("linkToSelf"));
+    Assertions.assertEquals(AUTHORITY_ADDRESS, modelMap.getAttribute("authorityAddress"));
+    Assertions.assertEquals(PRIVACY_POLICY_URL, modelMap.getAttribute("privacyPolicyUrl"));
   }
 
   @Test
@@ -263,6 +322,7 @@ class RequestReceiverTest
     Mockito.when(requestHandler.handleSAMLPostRequest(Mockito.anyString(), Mockito.anyString()))
            .thenThrow(new RequestProcessingException(errorMessage));
     RequestReceiver requestReceiver = new RequestReceiver(requestHandler, responseHandler, configurationService);
+    setApplicationProperties(requestReceiver);
     ModelAndView errorPage = requestReceiver.doPost(RELAY_STATE,
                                                     SAML_REQUEST_BASE_64_MOCK,
                                                     null,
@@ -270,8 +330,10 @@ class RequestReceiverTest
 
     Assertions.assertEquals("error", errorPage.getViewName());
     ModelMap modelMap = errorPage.getModelMap();
-    Assertions.assertEquals(1, modelMap.size());
+    Assertions.assertEquals(3, modelMap.size());
     Assertions.assertEquals(errorMessage, modelMap.getAttribute("errorMessage"));
+    Assertions.assertEquals(AUTHORITY_ADDRESS, modelMap.getAttribute("authorityAddress"));
+    Assertions.assertEquals(PRIVACY_POLICY_URL, modelMap.getAttribute("privacyPolicyUrl"));
     Assertions.assertEquals(HttpStatus.BAD_REQUEST, errorPage.getStatus());
   }
 
@@ -285,5 +347,11 @@ class RequestReceiverTest
            .thenReturn(eIDASRequest);
     Mockito.when(eIDASRequest.getId()).thenReturn(REQUEST_ID);
     Mockito.when(eIDASRequest.getAuthClassRef()).thenReturn(EidasLoaEnum.LOA_HIGH);
+  }
+
+  void setApplicationProperties(RequestReceiver requestReceiver)
+  {
+    ReflectionTestUtils.setField(requestReceiver, "authorityAddress", AUTHORITY_ADDRESS);
+    ReflectionTestUtils.setField(requestReceiver, "privacyPolicyUrl", PRIVACY_POLICY_URL);
   }
 }

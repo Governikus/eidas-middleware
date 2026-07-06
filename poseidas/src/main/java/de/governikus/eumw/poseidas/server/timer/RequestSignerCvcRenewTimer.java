@@ -1,6 +1,5 @@
 package de.governikus.eumw.poseidas.server.timer;
 
-import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.security.cert.CertificateEncodingException;
 import java.security.cert.X509Certificate;
@@ -22,9 +21,9 @@ import org.bouncycastle.jce.X509Principal;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
+import de.governikus.autent.asn1.CVCRequest;
 import de.governikus.eumw.config.EidasMiddlewareConfig;
 import de.governikus.eumw.config.ServiceProviderType;
-import de.governikus.eumw.poseidas.cardserver.certrequest.CertificateRequest;
 import de.governikus.eumw.poseidas.server.idprovider.config.ConfigurationService;
 import de.governikus.eumw.poseidas.server.pki.PermissionDataHandling;
 import de.governikus.eumw.poseidas.server.pki.RequestSignerCertificateService;
@@ -33,6 +32,7 @@ import de.governikus.eumw.poseidas.server.pki.TimerHistoryService;
 import de.governikus.eumw.poseidas.server.pki.entities.PendingCertificateRequest;
 import de.governikus.eumw.poseidas.server.pki.entities.TimerHistory;
 import de.governikus.eumw.poseidas.server.pki.repositories.PendingCertificateRequestRepository;
+
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
@@ -177,8 +177,8 @@ public class RequestSignerCvcRenewTimer
     String outerAuthorityReferenceString;
     try
     {
-      CertificateRequest certificateRequest = new CertificateRequest(new ByteArrayInputStream(pendingCertificateRequest.getRequestData()));
-      outerAuthorityReferenceString = certificateRequest.getOuterAuthorityReferenceString();
+      CVCRequest certificateRequest = new CVCRequest(pendingCertificateRequest.getRequestData());
+      outerAuthorityReferenceString = certificateRequest.getAuthorityReference().toString();
     }
     catch (IOException e)
     {

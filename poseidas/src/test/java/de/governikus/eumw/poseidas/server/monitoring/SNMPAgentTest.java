@@ -1,10 +1,12 @@
 package de.governikus.eumw.poseidas.server.monitoring;
 
+import java.security.cert.X509Certificate;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.util.Date;
 import java.util.GregorianCalendar;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Optional;
 import java.util.TimeZone;
 
@@ -44,11 +46,11 @@ import org.springframework.test.context.DynamicPropertySource;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.util.TestSocketUtils;
 
+import de.governikus.autent.asn1.masterlist.MasterListParser;
 import de.governikus.eumw.config.EidasMiddlewareConfig;
 import de.governikus.eumw.config.ServiceProviderType;
 import de.governikus.eumw.poseidas.config.IndexController;
 import de.governikus.eumw.poseidas.eidserver.crl.CertificationRevocationListImpl;
-import de.governikus.eumw.poseidas.eidserver.model.signeddata.MasterList;
 import de.governikus.eumw.poseidas.server.idprovider.config.ConfigurationService;
 import de.governikus.eumw.poseidas.server.idprovider.config.ConfigurationTestHelper;
 import de.governikus.eumw.poseidas.server.pki.TerminalPermissionAO;
@@ -406,8 +408,8 @@ class SNMPAgentTest
   {
     CertificationRevocationListImpl.reset();
     TerminalPermission terminalPermission = facade.getTerminalPermission("A");
-    MasterList ml = new MasterList(terminalPermission.getMasterList());
-    CertificationRevocationListImpl.initialize(new HashSet<>(ml.getCertificates()), configurationService);
+    List<X509Certificate> masterListCertificates = MasterListParser.getMasterListCertificates(terminalPermission.getMasterList());
+    CertificationRevocationListImpl.initialize(new HashSet<>(masterListCertificates), configurationService);
     PDU pdu = new ScopedPDU();
     pdu.add(new VariableBinding(new OID(SNMPConstants.GetOID.CRL_GET_AVAILABLE.getValue())));
     pdu.setType(PDU.GET);
@@ -422,8 +424,8 @@ class SNMPAgentTest
   void testWhenCRLLastSuccessfulRetrievalNotSuccessfulThenReturnErrorStatusResourceUnavailable() throws Exception
   {
     TerminalPermission terminalPermission = facade.getTerminalPermission("A");
-    MasterList ml = new MasterList(terminalPermission.getMasterList());
-    CertificationRevocationListImpl.initialize(new HashSet<>(ml.getCertificates()), configurationService);
+    List<X509Certificate> masterListCertificates = MasterListParser.getMasterListCertificates(terminalPermission.getMasterList());
+    CertificationRevocationListImpl.initialize(new HashSet<>(masterListCertificates), configurationService);
     PDU pdu = new ScopedPDU();
     pdu.add(new VariableBinding(new OID(SNMPConstants.GetOID.CRL_GET_LAST_SUCCESSFUL_RETRIEVAL.getValue())));
     pdu.setType(PDU.GET);

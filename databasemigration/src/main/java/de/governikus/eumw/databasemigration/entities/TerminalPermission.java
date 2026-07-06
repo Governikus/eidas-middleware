@@ -12,9 +12,9 @@ package de.governikus.eumw.databasemigration.entities;
 import java.io.Serializable;
 import java.util.Date;
 import java.util.HashSet;
+import java.util.Objects;
 import java.util.Set;
 
-import jakarta.annotation.Nullable;
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
@@ -26,11 +26,17 @@ import jakarta.persistence.OneToOne;
 import jakarta.persistence.Temporal;
 import jakarta.persistence.TemporalType;
 
-import lombok.Data;
+import org.hibernate.proxy.HibernateProxy;
+
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
 
 
 @Entity
-@Data
+@Getter
+@Setter
+@NoArgsConstructor
 public class TerminalPermission implements Serializable
 {
 
@@ -95,14 +101,6 @@ public class TerminalPermission implements Serializable
   private RequestSignerCertificate pendingRequestSignerCertificate;
 
   /**
-   * Constructor needed by hibernate
-   */
-  public TerminalPermission()
-  {
-    // nothing to do here
-  }
-
-  /**
    * Create an instance setting the always requested attributes
    *
    * @param refID artificial primary key
@@ -114,4 +112,27 @@ public class TerminalPermission implements Serializable
     chain = new HashSet<>();
   }
 
+  @Override
+  public final boolean equals(Object o)
+  {
+    if (this == o)
+      return true;
+    if (o == null)
+      return false;
+    Class<?> oEffectiveClass = o instanceof HibernateProxy hProxy
+      ? hProxy.getHibernateLazyInitializer().getPersistentClass() : o.getClass();
+    Class<?> thisEffectiveClass = this instanceof HibernateProxy hProxy
+      ? hProxy.getHibernateLazyInitializer().getPersistentClass() : this.getClass();
+    if (thisEffectiveClass != oEffectiveClass)
+      return false;
+    TerminalPermission that = (TerminalPermission)o;
+    return getRefID() != null && Objects.equals(getRefID(), that.getRefID());
+  }
+
+  @Override
+  public final int hashCode()
+  {
+    return this instanceof HibernateProxy hProxy ? hProxy.getHibernateLazyInitializer().getPersistentClass().hashCode()
+      : getClass().hashCode();
+  }
 }

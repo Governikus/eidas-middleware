@@ -21,7 +21,7 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.Optional;
 
-import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 
 import de.governikus.eumw.config.CertificateType;
 import de.governikus.eumw.config.ConnectorMetadataType;
@@ -61,8 +61,6 @@ class ServiceProviderTestBase extends WebAdminTestBase
 
   static final String TERMS_OF_USAGE = "Terms of usage:";
 
-  static final String REDIRECT_URL = "Redirect URL:";
-
   static final String ISSUER = "Issuer:";
 
   static final String MATCH_URL = "Matches URL:";
@@ -85,7 +83,6 @@ class ServiceProviderTestBase extends WebAdminTestBase
     INFO_MAP.put(SUBJECT, "Subject");
     INFO_MAP.put(SUBJECT_URL, "SubjectURL");
     INFO_MAP.put(TERMS_OF_USAGE, "Terms");
-    INFO_MAP.put(REDIRECT_URL, "RedirectURL");
     INFO_MAP.put(ISSUER, "Issuer");
     INFO_MAP.put(ISSUER_URL, "IssuerURL");
     INFO_MAP.put(MATCH_URL, "✔");
@@ -93,10 +90,10 @@ class ServiceProviderTestBase extends WebAdminTestBase
 
   }
 
-  @MockBean
+  @MockitoBean
   PermissionDataHandling data;
 
-  @MockBean
+  @MockitoBean
   ConfigurationService configurationService;
 
   Map<String, Object> createPermissionDataInfo() throws ParseException
@@ -112,7 +109,6 @@ class ServiceProviderTestBase extends WebAdminTestBase
     info.put(AdminPoseidasConstants.VALUE_PERMISSION_DATA_ISSUER_NAME, INFO_MAP.get(ISSUER));
     info.put(AdminPoseidasConstants.VALUE_PERMISSION_DATA_ISSUER_URL, INFO_MAP.get(ISSUER_URL));
     info.put(AdminPoseidasConstants.VALUE_PERMISSION_DATA_TERMS_OF_USAGE_PLAIN_TEXT, INFO_MAP.get(TERMS_OF_USAGE));
-    info.put(AdminPoseidasConstants.VALUE_PERMISSION_DATA_REDIRECT_URL, INFO_MAP.get(REDIRECT_URL));
     info.put(AdminPoseidasConstants.VALUE_IS_PUBLIC_CLIENT, true);
     return info;
   }

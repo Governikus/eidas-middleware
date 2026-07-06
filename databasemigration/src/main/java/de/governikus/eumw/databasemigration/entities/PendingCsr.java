@@ -10,21 +10,22 @@ package de.governikus.eumw.databasemigration.entities;
 
 import java.io.Serializable;
 import java.util.Date;
+import java.util.Objects;
 
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import jakarta.persistence.Temporal;
 import jakarta.persistence.TemporalType;
 
-import lombok.AllArgsConstructor;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import org.hibernate.proxy.HibernateProxy;
+
+import lombok.Getter;
+import lombok.Setter;
 
 
 @Entity
-@NoArgsConstructor
-@AllArgsConstructor
-@Data
+@Getter
+@Setter
 public class PendingCsr implements Serializable
 {
 
@@ -37,4 +38,28 @@ public class PendingCsr implements Serializable
 
   @Temporal(TemporalType.TIMESTAMP)
   private Date notPollBefore;
+
+  @Override
+  public final boolean equals(Object o)
+  {
+    if (this == o)
+      return true;
+    if (o == null)
+      return false;
+    Class<?> oEffectiveClass = o instanceof HibernateProxy hProxy
+      ? hProxy.getHibernateLazyInitializer().getPersistentClass() : o.getClass();
+    Class<?> thisEffectiveClass = this instanceof HibernateProxy hProxy
+      ? hProxy.getHibernateLazyInitializer().getPersistentClass() : this.getClass();
+    if (thisEffectiveClass != oEffectiveClass)
+      return false;
+    PendingCsr that = (PendingCsr)o;
+    return getSpId() != null && Objects.equals(getSpId(), that.getSpId());
+  }
+
+  @Override
+  public final int hashCode()
+  {
+    return this instanceof HibernateProxy hProxy ? hProxy.getHibernateLazyInitializer().getPersistentClass().hashCode()
+      : getClass().hashCode();
+  }
 }

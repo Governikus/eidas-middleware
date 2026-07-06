@@ -3,6 +3,9 @@ package de.governikus.eumw.poseidas.server.idprovider.config;
 import java.nio.charset.StandardCharsets;
 import java.security.cert.CertificateFactory;
 import java.security.cert.X509Certificate;
+import java.util.Objects;
+
+import org.jspecify.annotations.NonNull;
 
 import de.governikus.eumw.config.CertificateType;
 import de.governikus.eumw.config.ConnectorMetadataType;
@@ -20,6 +23,7 @@ import de.governikus.eumw.config.TimerTypeCertRenewal;
 import de.governikus.eumw.config.TimerUnit;
 import de.governikus.eumw.utils.key.KeyStoreSupporter;
 import de.governikus.eumw.utils.key.SecurityProvider;
+
 import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
 
@@ -62,13 +66,7 @@ public final class ConfigurationTestHelper
     eidConfiguration.getDvcaConfiguration().add(dvcaConfiguration);
     eidConfiguration.getServiceProvider()
                     .add(new ServiceProviderType(SP_NAME, true, CVC_REF_ID, "dvcaConfName", "clientKeyName", null));
-    TimerConfigurationType timerConfigurationType = new TimerConfigurationType();
-    timerConfigurationType.setCertRenewal(new TimerTypeCertRenewal(1, TimerUnit.MINUTES, 1));
-    timerConfigurationType.setBlacklistRenewal(new TimerType(1, TimerUnit.MINUTES));
-    timerConfigurationType.setMasterAndDefectListRenewal(new TimerType(1, TimerUnit.MINUTES));
-    timerConfigurationType.setCrlRenewal(new TimerType(1, TimerUnit.MINUTES));
-    timerConfigurationType.setTlsEntangleRenewal(new EntanglementTimerType(1, TimerUnit.HOURS, true));
-    timerConfigurationType.setHsmKeyDeletion(new HsmKeyDeletionType(1, TimerUnit.HOURS, true));
+    TimerConfigurationType timerConfigurationType = createTimerConfigurationType();
     eidConfiguration.setTimerConfiguration(timerConfigurationType);
     config.setEidConfiguration(eidConfiguration);
     var keyData = new EidasMiddlewareConfig.KeyData();
@@ -83,6 +81,18 @@ public final class ConfigurationTestHelper
     keyData.getCertificate().add(blockListTrustAnchorCertificate);
     config.setKeyData(keyData);
     return config;
+  }
+
+  private static @NonNull TimerConfigurationType createTimerConfigurationType()
+  {
+    TimerConfigurationType timerConfigurationType = new TimerConfigurationType();
+    timerConfigurationType.setCertRenewal(new TimerTypeCertRenewal(1, TimerUnit.MINUTES, 1));
+    timerConfigurationType.setBlacklistRenewal(new TimerType(1, TimerUnit.MINUTES));
+    timerConfigurationType.setMasterAndDefectListRenewal(new TimerType(1, TimerUnit.MINUTES));
+    timerConfigurationType.setCrlRenewal(new TimerType(1, TimerUnit.MINUTES));
+    timerConfigurationType.setTlsEntangleRenewal(new EntanglementTimerType(1, TimerUnit.HOURS, true));
+    timerConfigurationType.setHsmKeyDeletion(new HsmKeyDeletionType(1, TimerUnit.HOURS, true));
+    return timerConfigurationType;
   }
 
   public static EidasMiddlewareConfig createInvalidConfiguration()
@@ -116,8 +126,8 @@ public final class ConfigurationTestHelper
     EidasMiddlewareConfig configuration = ConfigurationTestHelper.createValidConfiguration();
 
     KeyStoreType keyStoreType = new KeyStoreType("client-keystore",
-                                                 ConfigurationTestHelper.class.getResourceAsStream("/configuration/keystore.p12")
-                                                                              .readAllBytes(),
+                                                 Objects.requireNonNull(ConfigurationTestHelper.class.getResourceAsStream("/configuration/keystore.p12"))
+                                                        .readAllBytes(),
                                                  KeyStoreTypeType.PKCS_12, "123456");
     configuration.getKeyData().getKeyStore().add(keyStoreType);
     KeyPairType keyPairType = new KeyPairType("client-keypair", "pkcs12-keystore", "123456", "client-keystore");

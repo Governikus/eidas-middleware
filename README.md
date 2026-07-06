@@ -43,5 +43,5 @@ This work is provided under the terms of the EUPL 1.2. The terms of the LICENSE.
 release of the eIDAS Middleware, which is provided by Governikus GmbH & Co. KG on behalf of the German Federal
 Government. 
 
-The overview of the used third party dependecies and their licenses is available in the release documents.
+The overview of the used third party dependencies and their licenses is available in the release documents.
  

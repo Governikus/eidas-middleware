@@ -101,7 +101,7 @@ public class TlsClientRenewalHsmService extends TlsClientRenewalService
       succeeded.add(sp.getName());
       return Optional.empty();
     }
-    catch (Exception e)
+    catch (Exception _)
     {
       String message = "Unable to store new certificate";
       log.warn(LOG_MESSAGE_DEFAULT_FORMAT, sp.getName(), message);
@@ -114,7 +114,7 @@ public class TlsClientRenewalHsmService extends TlsClientRenewalService
       {
         hsmStore.deleteEntry(pendingName);
       }
-      catch (KeyStoreException e)
+      catch (KeyStoreException _)
       {
         log.warn(LOG_MESSAGE_DEFAULT_FORMAT, sp.getName(), "Unable to delete pending certificate");
       }
@@ -131,7 +131,7 @@ public class TlsClientRenewalHsmService extends TlsClientRenewalService
     {
       cert = (X509Certificate)hsm.getKeyStore().getCertificate(defaultName);
     }
-    catch (KeyStoreException e)
+    catch (KeyStoreException _)
     {
       log.info("SP {} has no TLS client certificate, no update performed", sp.getName());
       renewalNotNeeded.add(sp.getName());

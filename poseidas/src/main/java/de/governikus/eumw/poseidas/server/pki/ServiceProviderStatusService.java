@@ -9,7 +9,6 @@
 
 package de.governikus.eumw.poseidas.server.pki;
 
-import java.io.IOException;
 import java.security.cert.X509Certificate;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -21,12 +20,11 @@ import java.util.Optional;
 
 import org.springframework.stereotype.Service;
 
+import de.governikus.autent.asn1.CVCDescription;
 import de.governikus.eumw.config.ServiceProviderType;
-import de.governikus.eumw.poseidas.cardbase.asn1.npa.CertificateDescription;
 import de.governikus.eumw.poseidas.config.model.ServiceProviderStatus;
 import de.governikus.eumw.poseidas.server.idprovider.config.CvcTlsCheck;
 import de.governikus.eumw.poseidas.server.pki.entities.TerminalPermission;
-
 import lombok.extern.slf4j.Slf4j;
 
 
@@ -92,14 +90,7 @@ public class ServiceProviderStatusService
              .pendingCertificateRequestPresent(terminalPermission.getPendingRequest() != null);
       if (terminalPermission.getCvcDescription() != null)
       {
-        try
-        {
-          builder.cvcSubjectUrl(new CertificateDescription(terminalPermission.getCvcDescription()).getSubjectUrl());
-        }
-        catch (IOException e)
-        {
-          log.debug("Cannot read subject URL from CVC description", e);
-        }
+        builder.cvcSubjectUrl(new CVCDescription(terminalPermission.getCvcDescription()).getSubjectUrl());
       }
     }
     builder.blackListPresent(terminalPermission.getBlackListVersion() != null)

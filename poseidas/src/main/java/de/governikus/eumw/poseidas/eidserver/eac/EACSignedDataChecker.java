@@ -19,17 +19,23 @@ import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 
+import org.bouncycastle.asn1.ASN1Encodable;
+import org.bouncycastle.asn1.ASN1OctetString;
+import org.bouncycastle.asn1.ASN1Primitive;
+import org.bouncycastle.asn1.ASN1PrintableString;
+import org.bouncycastle.asn1.ASN1Sequence;
+import org.bouncycastle.asn1.ASN1Set;
 import org.bouncycastle.cms.CMSException;
 
+import de.governikus.autent.asn1.OIDConstants;
 import de.governikus.eumw.config.EidasMiddlewareConfig;
 import de.governikus.eumw.poseidas.SpringApplicationContextHelper;
-import de.governikus.eumw.poseidas.cardbase.asn1.ASN1;
-import de.governikus.eumw.poseidas.cardbase.constants.OIDConstants;
 import de.governikus.eumw.poseidas.cardbase.crypto.HashConstants;
 import de.governikus.eumw.poseidas.cardserver.eac.crypto.SignedDataChecker;
 import de.governikus.eumw.poseidas.eidserver.crl.CertificationRevocationListImpl;
 import de.governikus.eumw.poseidas.server.idprovider.config.ConfigurationService;
 import de.governikus.eumw.poseidas.server.pki.CmsSignatureChecker;
+
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
@@ -64,9 +70,9 @@ public class EACSignedDataChecker extends EACSignedDataParser implements SignedD
                                                   Set.of(HashConstants.SHA256_OID_STRING,
                                                          HashConstants.SHA384_OID_STRING,
                                                          HashConstants.SHA512_OID_STRING),
-                                                  Set.of(OIDConstants.OID_ECDSA_SHA256.getOIDString(),
-                                                         OIDConstants.OID_ECDSA_SHA384.getOIDString(),
-                                                         OIDConstants.OID_ECDSA_SHA512.getOIDString()),
+                                                  Set.of(OIDConstants.OID_ECDSA_SHA256.getId(),
+                                                         OIDConstants.OID_ECDSA_SHA384.getId(),
+                                                         OIDConstants.OID_ECDSA_SHA512.getId()),
                                                   Set.of("brainpoolP256r1", "brainpoolP384r1", "brainpoolP512r1"));
     this.allowedDocumentTypes = getAllowedDocuments();
   }
@@ -84,7 +90,7 @@ public class EACSignedDataChecker extends EACSignedDataParser implements SignedD
       Certificate verifier = cmsSignatureChecker.getVerifierCertificate();
       return checkForDocumentType((X509Certificate)verifier) ? verifier : null;
     }
-    catch (SignatureException | CMSException e)
+    catch (SignatureException | CMSException | IOException e)
     {
       log.debug("{}Passive Authentication: Check NEGATIVE", logPrefix, e);
       return null;
@@ -106,11 +112,22 @@ public class EACSignedDataChecker extends EACSignedDataParser implements SignedD
     }
     try
     {
-      ASN1 sequence = new ASN1(new ASN1(extValue).getValue());
-      ASN1 set = sequence.getChildElements()[1];
-      for ( ASN1 printableStr : set.getChildElements() )
+      // extValue is the octet string inside the extension
+      ASN1OctetString octetString = ASN1OctetString.getInstance(extValue);
+      byte[] octets = octetString.getOctets();
+
+      // parse the inner SEQUENCE
+      ASN1Sequence sequence = ASN1Sequence.getInstance(ASN1Primitive.fromByteArray(octets));
+
+      // The SET is child element #1
+      ASN1Set set = ASN1Set.getInstance(sequence.getObjectAt(1));
+
+      // Iterate through PrintableStrings in the SET
+      for ( ASN1Encodable elem : set )
       {
-        String type = new String(printableStr.getValue());
+        ASN1PrintableString ps = ASN1PrintableString.getInstance(elem);
+        String type = ps.getString();
+
         if (allowedDocumentTypes.contains(type))
         {
           continue;

@@ -22,24 +22,22 @@ import javax.crypto.SecretKey;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.bouncycastle.asn1.ASN1ObjectIdentifier;
 
+import de.governikus.autent.asn1.OIDConstants;
+import de.governikus.autent.asn1.crypto.KeyHandlerException;
+import de.governikus.autent.asn1.crypto.ec.KeyHandlerEC;
+import de.governikus.autent.asn1.si.ChipAuthenticationDomainParameterInfo;
+import de.governikus.autent.asn1.si.ChipAuthenticationPublicKeyInfo;
+import de.governikus.autent.asn1.si.PACEInfo;
+import de.governikus.autent.asn1.si.SubjectPublicKeyInfo;
 import de.governikus.eumw.poseidas.cardbase.AssertUtil;
 import de.governikus.eumw.poseidas.cardbase.ByteUtil;
 import de.governikus.eumw.poseidas.cardbase.Hex;
-import de.governikus.eumw.poseidas.cardbase.asn1.OID;
-import de.governikus.eumw.poseidas.cardbase.asn1.npa.si.ChipAuthenticationDomainParameterInfo;
-import de.governikus.eumw.poseidas.cardbase.asn1.npa.si.ChipAuthenticationInfo;
-import de.governikus.eumw.poseidas.cardbase.asn1.npa.si.ChipAuthenticationPublicKeyInfo;
-import de.governikus.eumw.poseidas.cardbase.asn1.npa.si.PACEInfo;
-import de.governikus.eumw.poseidas.cardbase.asn1.npa.si.SubjectPublicKeyInfo;
-import de.governikus.eumw.poseidas.cardbase.constants.OIDConstants;
 import de.governikus.eumw.poseidas.cardbase.crypto.CipherUtil;
-import de.governikus.eumw.poseidas.cardbase.crypto.ec.ECUtil;
 import de.governikus.eumw.poseidas.cardbase.crypto.kdf.KeyDerivationHandler;
 import de.governikus.eumw.poseidas.cardbase.crypto.kdf.KeyDerivationHandlerFactory;
-import de.governikus.eumw.poseidas.cardbase.crypto.key.KeyHandler;
 import de.governikus.eumw.poseidas.cardbase.npa.InfoSelector.ChipAuthenticationData;
-import de.governikus.eumw.poseidas.cardserver.eac.crypto.impl.KeyHandlerEC;
 import de.governikus.eumw.poseidas.cardserver.eac.protocol.InvalidEidException;
 
 
@@ -62,9 +60,9 @@ public class ChipAuthentication
   private final int caVersion;
 
   /**
-   * Reference to the {@link OID} of the specific CA subprotocol to be used.
+   * Reference to the {@link ASN1ObjectIdentifier} of the specific CA subprotocol to be used.
    */
-  private final OID oid;
+  private final ASN1ObjectIdentifier oid;
 
   /**
    * Reference to the {@link ChipAuthenticationDomainParameterInfo}.
@@ -89,7 +87,7 @@ public class ChipAuthentication
   /**
    * Reference to the handler for key operations.
    */
-  private KeyHandler kh = null;
+  private KeyHandlerEC kh = null;
 
   /**
    * Reference to the MAC key established during CA run.
@@ -110,8 +108,6 @@ public class ChipAuthentication
   /**
    * Constructor.
    *
-   * @param caInfo {@link ChipAuthenticationInfo}, <code>null</code> not permitted
-   * @param caDomParamInfo {@link ChipAuthenticationDomainParameterInfo}, <code>null</code> not permitted
    * @param caPubKeyInfo {@link ChipAuthenticationPublicKeyInfo}, <code>null</code> permitted for CA version 3
    * @param paceInfo {@link PACEInfo} or previously executed PACE, <code>null</code> permitted
    * @throws IllegalArgumentException if any argument <code>null</code>
@@ -121,7 +117,7 @@ public class ChipAuthentication
   public ChipAuthentication(ChipAuthenticationData caData,
                             ChipAuthenticationPublicKeyInfo caPubKeyInfo,
                             PACEInfo paceInfo)
-    throws IOException, NoSuchAlgorithmException
+    throws IOException, NoSuchAlgorithmException, KeyHandlerException
   {
     super();
     if (caData == null)
@@ -129,14 +125,7 @@ public class ChipAuthentication
       throw new IllegalArgumentException("null not permitted");
     }
 
-    try
-    {
-      this.caVersion = caData.getCaInfo().getVersion();
-    }
-    catch (IOException e)
-    {
-      throw new IllegalArgumentException("Unable to construct CA: cannot read version", e);
-    }
+    this.caVersion = caData.getCaInfo().getVersion().getValue().intValue();
     if (this.caVersion < 1 || this.caVersion > 3)
     {
       throw new IllegalArgumentException("Unable to construct CA: unknown version");
@@ -158,38 +147,25 @@ public class ChipAuthentication
    * Initializes instance by constructing the appropriate handlers.
    *
    * @throws IllegalArgumentException if unsupported protocol detected
-   * @throws IOException
    * @throws NoSuchAlgorithmException
    */
-  private void initCA() throws IOException, NoSuchAlgorithmException
+  private void initCA() throws NoSuchAlgorithmException, KeyHandlerException
   {
     LOG.debug("Initializing CA version " + this.caVersion + " for protocol " + this.oid);
     if (this.oid.equals(OIDConstants.OID_CA_ECDH_AES_CBC_CMAC_128))
     {
       this.kdh = KeyDerivationHandlerFactory.newKeyDerivationHandler("AES", 128);
-      this.kh = new KeyHandlerEC(ECUtil.parameterSpecFromDomainParameters(this.caDomParamInfo)
-                                       .getCurve()
-                                       .getField()
-                                       .getFieldSize()
-                                 / 8);
+      this.kh = new KeyHandlerEC(this.caDomParamInfo);
     }
     else if (this.oid.equals(OIDConstants.OID_CA_ECDH_AES_CBC_CMAC_192))
     {
       this.kdh = KeyDerivationHandlerFactory.newKeyDerivationHandler("AES", 192);
-      this.kh = new KeyHandlerEC(ECUtil.parameterSpecFromDomainParameters(this.caDomParamInfo)
-                                       .getCurve()
-                                       .getField()
-                                       .getFieldSize()
-                                 / 8);
+      this.kh = new KeyHandlerEC(this.caDomParamInfo);
     }
     else if (this.oid.equals(OIDConstants.OID_CA_ECDH_AES_CBC_CMAC_256))
     {
       this.kdh = KeyDerivationHandlerFactory.newKeyDerivationHandler("AES", 256);
-      this.kh = new KeyHandlerEC(ECUtil.parameterSpecFromDomainParameters(this.caDomParamInfo)
-                                       .getCurve()
-                                       .getField()
-                                       .getFieldSize()
-                                 / 8);
+      this.kh = new KeyHandlerEC(this.caDomParamInfo);
     }
     else
     {
@@ -227,7 +203,6 @@ public class ChipAuthentication
    * @param tacaKeyPair key pair, <code>null</code> not permitted
    * @param nonce nonce, must be non-null and non-empty for CA version 2
    * @param authToken authentication token, must be non-null and non-empty for CA version 2
-   * @param cardKeyBytes public key of card, must be non-null and non-empty for CA version 3
    * @return
    * @throws IOException
    * @throws InvalidKeyException
@@ -245,7 +220,7 @@ public class ChipAuthentication
     {
       SubjectPublicKeyInfo keyInfo = this.caPubKeyInfo.getChipAuthenticationPublicKey();
       // remove leading zero is ok here for current card generation, may be different for future cards
-      cardKeyBytes = ByteUtil.removeLeadingZero(keyInfo.getSubjectPublicKey().getValue());
+      cardKeyBytes = ByteUtil.removeLeadingZero(keyInfo.getSubjectPublicKey().getBytes());
     }
     else
     {
@@ -256,7 +231,7 @@ public class ChipAuthentication
     PublicKey chipKey = null;
     try
     {
-      chipKey = this.kh.buildKeyFromBytes(this.caDomParamInfo, cardKeyBytes);
+      chipKey = this.kh.buildKeyFromBytes(cardKeyBytes);
     }
     catch (IllegalArgumentException e)
     {
@@ -274,7 +249,7 @@ public class ChipAuthentication
     int paceVersion = 2;
     if (this.paceInfo != null)
     {
-      paceVersion = this.paceInfo.getVersion();
+      paceVersion = this.paceInfo.getVersion().getValue().intValue();
     }
 
     byte[] structure = this.kh.convertPublicKey(tacaKeyPair.getPublic(), this.oid, paceVersion == 1);

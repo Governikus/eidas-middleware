@@ -1,7 +1,7 @@
 package de.governikus.eumw.poseidas.eidserver.eac;
 
-import static org.junit.Assert.assertNull;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
 
 import java.io.ByteArrayInputStream;
 import java.security.cert.CertificateException;
@@ -12,6 +12,7 @@ import java.util.List;
 import java.util.Set;
 import java.util.stream.Stream;
 
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -50,6 +51,12 @@ class EACSignedDataCheckerTest
     {
       CertificationRevocationListImpl.initialize(Set.of(masterListTrustAnchor), cs);
     }
+  }
+
+  @AfterEach
+  void reset()
+  {
+    CertificationRevocationListImpl.reset();
   }
 
   @Test

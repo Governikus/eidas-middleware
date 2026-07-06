@@ -11,11 +11,11 @@ package de.governikus.eumw.poseidas.server.eidservice;
 
 import java.util.Map;
 
-import de.governikus.eumw.poseidas.eidmodel.data.EIDKeys;
 import de.governikus.eumw.poseidas.eidserver.convenience.EIDInfoResult;
 import de.governikus.eumw.poseidas.eidserver.ecardid.EIDInfoContainer.EIDStatus;
 import de.governikus.eumw.poseidas.eidserver.ecardid.SessionInput;
 import de.governikus.eumw.poseidas.server.idprovider.core.StoreableSession;
+import de.governikus.panstar.sdk.utils.constant.EIDAttributeName;
 
 import oasis.names.tc.dss._1_0.core.schema.Result;
 
@@ -34,7 +34,7 @@ public class EIDSession implements StoreableSession
 
   private Result result;
 
-  private Map<EIDKeys, EIDInfoResult> infoMap;
+  private Map<EIDAttributeName, EIDInfoResult> infoMap;
 
   private final long creationTime;
 
@@ -95,12 +95,12 @@ public class EIDSession implements StoreableSession
   /**
    * This contains the attributes read form the nPA.
    */
-  Map<EIDKeys, EIDInfoResult> getInfoMap()
+  Map<EIDAttributeName, EIDInfoResult> getInfoMap()
   {
     return infoMap;
   }
 
-  void setInfoMap(Map<EIDKeys, EIDInfoResult> infoMap)
+  void setInfoMap(Map<EIDAttributeName, EIDInfoResult> infoMap)
   {
     this.infoMap = infoMap;
   }

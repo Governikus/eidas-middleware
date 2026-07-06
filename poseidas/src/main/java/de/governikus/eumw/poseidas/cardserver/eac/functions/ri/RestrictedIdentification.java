@@ -12,16 +12,20 @@ package de.governikus.eumw.poseidas.cardserver.eac.functions.ri;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 import javax.smartcardio.CommandAPDU;
 import javax.smartcardio.ResponseAPDU;
 
+import org.bouncycastle.asn1.ASN1ObjectIdentifier;
+import org.bouncycastle.asn1.ASN1OctetString;
+import org.bouncycastle.asn1.ASN1Primitive;
+import org.bouncycastle.asn1.ASN1TaggedObject;
+
+import de.governikus.autent.asn1.OIDConstants;
+import de.governikus.autent.asn1.si.RestrictedIdentificationInfo;
 import de.governikus.eumw.poseidas.cardbase.AssertUtil;
 import de.governikus.eumw.poseidas.cardbase.Hex;
-import de.governikus.eumw.poseidas.cardbase.asn1.ASN1;
-import de.governikus.eumw.poseidas.cardbase.asn1.OID;
-import de.governikus.eumw.poseidas.cardbase.asn1.npa.si.RestrictedIdentificationInfo;
-import de.governikus.eumw.poseidas.cardbase.constants.OIDConstants;
 import de.governikus.eumw.poseidas.cardserver.EACServerUtil;
 import de.governikus.eumw.poseidas.cardserver.eac.InputAPDUInfoTypeUtil;
 import de.governikus.eumw.poseidas.cardserver.eac.functions.FunctionStep;
@@ -38,10 +42,10 @@ import lombok.extern.slf4j.Slf4j;
 
 
 /**
- * Implementation of RetrictedIdentification function.
+ * Implementation of RestrictedIdentification function.
  *
- * @see RetrictedIdentificationParameter
- * @see RetrictedIdentificationResult
+ * @see RestrictedIdentificationParameter
+ * @see RestrictedIdentificationResult
  * @author Jens Wothe, jw@bos-bremen.de
  */
 @Slf4j
@@ -60,16 +64,6 @@ public class RestrictedIdentification
    * Tag for sending second sector key to card.
    */
   private static final String SECOND_KEY_TAG = "A2";
-
-  /**
-   * Tag for first sector specific ID received from card.
-   */
-  private static final byte[] FIRST_ID_TAG = new byte[]{(byte)0x81};
-
-  /**
-   * Tag for second sector specific ID received from card.
-   */
-  private static final byte[] SECOND_ID_TAG = new byte[]{(byte)0x83};
 
   /**
    * Constructor with transmit.
@@ -138,9 +132,9 @@ public class RestrictedIdentification
 
     RestrictedIdentificationInfo riInfo = parameter.getRiInfo();
     String dataFieldString = EACServerUtil.makeTag(EACServerUtil.MSE_OID_TAG,
-                                                   Hex.hexify(riInfo.getProtocol().getValue()))
+                                                   allowedOidsAsn1Values.get(riInfo.getProtocol()))
                              + EACServerUtil.makeTag(EACServerUtil.MSE_PRIVATE_KEY_REFERENCE_TAG,
-                                                     Hex.hexify(riInfo.getParams().getKeyID()));
+                                                     Hex.hexify(riInfo.getKeyId()));
     CommandAPDU cmd = EACServerUtil.commandFromString(EACServerUtil.COMMAND_CHAINING_DISABLED + EACServerUtil.MSE_INS
                                                       + EACServerUtil.MSE_SET_AT_PARAM_RI,
                                                       dataFieldString,
@@ -151,7 +145,7 @@ public class RestrictedIdentification
     tcList.add(tc);
 
     // calculate expected length: length of ID plus 4 bytes for TLV structure
-    OID oid = new OID(riInfo.getProtocol().getEncoded());
+    ASN1ObjectIdentifier oid = new ASN1ObjectIdentifier(riInfo.getProtocol().getId());
     String expectedIDLength = "";
     if (oid.equals(OIDConstants.OID_RI_DH_SHA_1) || oid.equals(OIDConstants.OID_RI_ECDH_SHA_1))
     {
@@ -211,25 +205,12 @@ public class RestrictedIdentification
     RestrictedIdentificationResult riResult = new RestrictedIdentificationResult();
     try
     {
-      for ( int responseIndice : responseIndices )
+      for ( int responseIndex : responseIndices )
       {
-        ResponseAPDU r = new ResponseAPDU(transmitResult.getData().getOutputAPDU().get(responseIndice));
-        byte[] data = r.getData();
-        if (data == null)
-        {
-          continue;
-        }
-        ASN1 resASN1 = new ASN1(data);
-        ASN1[] idData = resASN1.getChildElementsByDTagBytes(FIRST_ID_TAG);
-        if (idData != null && idData.length == 1)
-        {
-          riResult.setFirstID(idData[0].getValue());
-        }
-        idData = resASN1.getChildElementsByDTagBytes(SECOND_ID_TAG);
-        if (idData != null && idData.length == 1)
-        {
-          riResult.setSecondID(idData[0].getValue());
-        }
+        ResponseAPDU r = new ResponseAPDU(transmitResult.getData().getOutputAPDU().get(responseIndex));
+        ASN1TaggedObject responseData = (ASN1TaggedObject)ASN1Primitive.fromByteArray(r.getData());
+
+        riResult = updateRiResult(responseData, riResult);
       }
     }
     catch (Exception e)
@@ -239,6 +220,34 @@ public class RestrictedIdentification
         log.debug("Error while evaluating transmit APDU", e);
       }
       riResult = new RestrictedIdentificationResult(e);
+    }
+    return riResult;
+  }
+
+  private RestrictedIdentificationResult updateRiResult(ASN1TaggedObject responseData,
+                                                        RestrictedIdentificationResult riResult)
+  {
+    if (responseData.getBaseObject() instanceof ASN1TaggedObject innerTaggedObject
+        && innerTaggedObject.getBaseObject() instanceof ASN1OctetString octetString)
+    {
+      int tagNo = innerTaggedObject.getTagNo();
+
+      if (tagNo == 1)
+      { // FIRST_ID_TAG = 0x81 -> tag number 1
+        riResult.setFirstID(octetString.getOctets());
+      }
+      else if (tagNo == 3)
+      { // SECOND_ID_TAG = 0x83 -> tag number 3
+        riResult.setSecondID(octetString.getOctets());
+      }
+    }
+    else
+    {
+      if (log.isDebugEnabled())
+      {
+        log.debug("Unexpected ASN1 object while evaluating transmit APDU");
+      }
+      riResult = new RestrictedIdentificationResult(new IllegalArgumentException("Unexpected ASN1 object while evaluating transmit APDU"));
     }
     return riResult;
   }
@@ -256,4 +265,26 @@ public class RestrictedIdentification
   {
     return 2;
   }
+
+  // From TR3110 P3 A.1.1.4
+  private static Map<ASN1ObjectIdentifier, String> allowedOidsAsn1Values = Map.of(OIDConstants.OID_RI_DH_SHA_1,
+                                                                                  "04007f00070202050101",
+                                                                                  OIDConstants.OID_RI_DH_SHA_224,
+                                                                                  "04007f00070202050102",
+                                                                                  OIDConstants.OID_RI_DH_SHA_256,
+                                                                                  "04007f00070202050103",
+                                                                                  OIDConstants.OID_RI_DH_SHA_384,
+                                                                                  "04007f00070202050104",
+                                                                                  OIDConstants.OID_RI_DH_SHA_512,
+                                                                                  "04007f00070202050105",
+                                                                                  OIDConstants.OID_RI_ECDH_SHA_1,
+                                                                                  "04007f00070202050201",
+                                                                                  OIDConstants.OID_RI_ECDH_SHA_224,
+                                                                                  "04007f00070202050202",
+                                                                                  OIDConstants.OID_RI_ECDH_SHA_256,
+                                                                                  "04007f00070202050203",
+                                                                                  OIDConstants.OID_RI_ECDH_SHA_384,
+                                                                                  "04007f00070202050204",
+                                                                                  OIDConstants.OID_RI_ECDH_SHA_512,
+                                                                                  "04007f00070202050205");
 }

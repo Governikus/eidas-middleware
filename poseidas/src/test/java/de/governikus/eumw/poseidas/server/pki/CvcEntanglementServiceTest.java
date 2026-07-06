@@ -24,6 +24,7 @@ import de.governikus.eumw.poseidas.gov2server.constants.admin.GlobalManagementCo
 import de.governikus.eumw.poseidas.gov2server.constants.admin.ManagementMessage;
 import de.governikus.eumw.poseidas.server.idprovider.config.ConfigurationService;
 import de.governikus.eumw.poseidas.server.idprovider.config.CvcTlsCheck;
+import de.governikus.eumw.poseidas.server.idprovider.config.TLSCertificateRequester;
 import de.governikus.eumw.poseidas.server.pki.caserviceaccess.DvcaServiceFactory;
 import de.governikus.eumw.poseidas.server.pki.caserviceaccess.TermAuthService;
 import de.governikus.eumw.poseidas.server.pki.entities.RequestSignerCertificate;
@@ -39,6 +40,9 @@ class CvcEntanglementServiceTest
 
   @Mock
   CvcTlsCheck cvcTlsCheck;
+
+  @Mock
+  TLSCertificateRequester tlsCertificateRequester;
 
   @Mock
   ConfigurationService configurationService;
@@ -92,7 +96,8 @@ class CvcEntanglementServiceTest
     Mockito.when(serverCertificate.getNotAfter()).thenReturn(DateUtil.tomorrow());
     Mockito.when(serverCertificate.getEncoded()).thenReturn(new byte[]{1, 2, 3});
 
-    Mockito.when(cvcTlsCheck.getOwnTlsCertificate(Mockito.anyString())).thenReturn(Optional.of(serverCertificate));
+    Mockito.when(tlsCertificateRequester.requestTlsServerCertificate(Mockito.anyString()))
+           .thenReturn(Optional.of(serverCertificate));
     Mockito.when(cvcTlsCheck.getCvcResultsForSp(Mockito.eq(serviceProvider2), Mockito.any(), Mockito.any()))
            .thenReturn(CvcTlsCheck.CvcCheckResults.builder().cvcPresent(true).cvcTlsMatch(true).build());
     Mockito.when(cvcTlsCheck.getCvcResultsForSp(Mockito.eq(serviceProvider3), Mockito.any(), Mockito.any()))
@@ -121,7 +126,7 @@ class CvcEntanglementServiceTest
   @Test
   void checkEntanglement() throws Exception
   {
-    List<ServiceProviderType> entanglementIsNecessary = entanglementService.getSpWhereEntanglementIsNecessary(cvcTlsCheck.getOwnTlsCertificate(""),
+    List<ServiceProviderType> entanglementIsNecessary = entanglementService.getSpWhereEntanglementIsNecessary(tlsCertificateRequester.requestTlsServerCertificate(""),
                                                                                                               entanglementService.getActiveServiceProviders());
     Assertions.assertEquals(1, entanglementIsNecessary.size());
 
@@ -135,7 +140,7 @@ class CvcEntanglementServiceTest
     assertEquals(GlobalManagementCodes.EC_UNEXPECTED_ERROR, managementMessage.getCode());
     assertEquals("no suitable certificate stored in chain", managementMessage.getDetails());
 
-    Mockito.verify(cvcTlsCheck, Mockito.atLeastOnce()).getOwnTlsCertificate(Mockito.anyString());
+    Mockito.verify(tlsCertificateRequester, Mockito.atLeastOnce()).requestTlsServerCertificate(Mockito.anyString());
     Mockito.verify(termAuthService, Mockito.atLeastOnce()).sendeIDServerCerts(Mockito.any());
     Mockito.verify(facade, Mockito.atLeastOnce()).archiveCVC(Mockito.any(), Mockito.any());
   }

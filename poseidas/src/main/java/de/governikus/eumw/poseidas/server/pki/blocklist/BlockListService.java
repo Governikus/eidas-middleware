@@ -4,6 +4,7 @@ import java.io.BufferedWriter;
 import java.io.File;
 import java.io.IOException;
 import java.io.PrintWriter;
+import java.math.BigInteger;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
@@ -15,6 +16,7 @@ import java.util.Arrays;
 import java.util.Date;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Optional;
 import java.util.Random;
 import java.util.Set;
 import java.util.stream.Stream;
@@ -30,6 +32,7 @@ import com.google.common.collect.Multimap;
 
 import de.governikus.eumw.poseidas.server.pki.entities.TerminalPermission;
 import de.governikus.eumw.poseidas.server.pki.repositories.TerminalPermissionRepository;
+
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
@@ -156,7 +159,7 @@ public class BlockListService
                                                 Number blockListID,
                                                 List<byte[]> entriesToAdd,
                                                 List<byte[]> entriesToRemove,
-                                                Integer expectedSize)
+                                                Optional<BigInteger> expectedSize)
     throws BlockListStorageException, BlockListConsistencyException
   {
     var newBlockList = new ArrayList<>(blockListStorage.get(encodeSectorIdToBase64String(terminalPermission.getSectorID())));
@@ -165,11 +168,11 @@ public class BlockListService
     List<String> entriesToAddAsBase64 = entriesToAdd.parallelStream().map(Base64::encodeBase64String).toList();
     newBlockList.removeAll(entriesToRemoveAsBase64);
     newBlockList.addAll(entriesToAddAsBase64);
-    if (expectedSize != null && expectedSize != newBlockList.size())
+
+    if (expectedSize.isPresent() && expectedSize.get().intValue() != newBlockList.size())
     {
       throw new BlockListConsistencyException();
     }
-
     updateBlockList(terminalPermission, blockListID, newBlockList, terminalPermission.getSectorID());
   }
 
@@ -253,7 +256,7 @@ public class BlockListService
       {
         Files.deleteIfExists(path);
       }
-      catch (IOException e)
+      catch (IOException _)
       {
         log.info("Could not delete old Block List file: {}", path);
       }

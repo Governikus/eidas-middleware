@@ -17,6 +17,7 @@ import java.util.Locale;
 import jakarta.servlet.http.HttpSession;
 
 import org.apache.commons.lang3.StringUtils;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -37,6 +38,7 @@ import de.governikus.eumw.eidasstarterkit.EidasLoaEnum;
 import de.governikus.eumw.eidasstarterkit.EidasRequest;
 import de.governikus.eumw.poseidas.cardbase.StringUtil;
 import de.governikus.eumw.poseidas.server.idprovider.config.ConfigurationService;
+
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
@@ -51,11 +53,21 @@ import lombok.extern.slf4j.Slf4j;
 public class RequestReceiver
 {
 
+  public static final String AUTHORITY_ADDRESS = "authorityAddress";
+
+  public static final String PRIVACY_POLICY_URL = "privacyPolicyUrl";
+
   private final RequestHandler requestHandler;
 
   private final ResponseHandler responseHandler;
 
   private final ConfigurationService configurationService;
+
+  @Value("${eidas.middleware.authority.address:}")
+  private String authorityAddress;
+
+  @Value("${eidas.middleware.privacy.policy.url:}")
+  private String privacyPolicyUrl;
 
   /**
    * This endpoint accepts incoming SAML requests using the SAML redirect binding protocol. The endpoint can also be
@@ -169,6 +181,9 @@ public class RequestReceiver
     response.addObject("relayState", relayState);
     response.addObject("authnRequestId", authnRequestId);
     response.addObject("linkToSelf", ContextPaths.EIDAS_CONTEXT_PATH + ContextPaths.RESPONSE_SENDER);
+    response.addObject(AUTHORITY_ADDRESS, authorityAddress);
+    response.addObject(PRIVACY_POLICY_URL, privacyPolicyUrl);
+
     return response;
   }
 
@@ -182,6 +197,8 @@ public class RequestReceiver
     {
       error.addObject("errorMessage", errorMessage);
     }
+    error.addObject(AUTHORITY_ADDRESS, authorityAddress);
+    error.addObject(PRIVACY_POLICY_URL, privacyPolicyUrl);
     error.setStatus(HttpStatus.BAD_REQUEST);
     return error;
   }
@@ -215,6 +232,8 @@ public class RequestReceiver
 
     String linkToSelf = ContextPaths.EIDAS_CONTEXT_PATH + ContextPaths.REQUEST_RECEIVER + "?sessionId=" + sessionId;
     modelAndView.addObject("linkToSelf", linkToSelf);
+    modelAndView.addObject(AUTHORITY_ADDRESS, authorityAddress);
+    modelAndView.addObject(PRIVACY_POLICY_URL, privacyPolicyUrl);
     return modelAndView;
   }
 

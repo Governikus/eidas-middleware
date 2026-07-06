@@ -9,6 +9,7 @@
 
 package de.governikus.eumw.poseidas.config.base;
 
+import java.util.ArrayDeque;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Optional;
@@ -16,13 +17,13 @@ import java.util.Queue;
 import java.util.function.Predicate;
 import java.util.stream.StreamSupport;
 
-import com.gargoylesoftware.htmlunit.html.DomElement;
+import org.htmlunit.html.DomElement;
 
 
 /**
- * Search for elements in a {@link com.gargoylesoftware.htmlunit.html.HtmlPage}
+ * Search for elements in a {@link org.htmlunit.html.HtmlPage}
  *
- * @param <T> Any element of a {@link com.gargoylesoftware.htmlunit.html.HtmlPage}
+ * @param <T> Any element of a {@link org.htmlunit.html.HtmlPage}
  */
 public class HtmlPageSearch<T extends DomElement>
 {
@@ -56,30 +57,34 @@ public class HtmlPageSearch<T extends DomElement>
   }
 
   /**
-   * Search for an element that fits to the given predicate. This search is not deterministic if there are multiple
-   * possible results.
+   * Searches the first element that matches the given predicate. If multiple elements match, the first encountered in
+   * BFS order is returned. The search stops immediately once a match is found.
    *
-   * @param rootElement the root of the search
+   * @param rootElement the root of the search tree
    * @param filter the filter predicate to identify the wanted element
-   * @param clazz the {@link Class} of the wanted element. Used to identify and cast.
-   * @return
+   * @param clazz the class of the wanted element type, used for filtering and casting
+   * @return an {@link Optional} containing the first matching element, or {@link Optional#empty()} if none found
    */
   public Optional<T> searchFirstInTree(DomElement rootElement, Predicate<T> filter, Class<T> clazz)
   {
 
-    Queue<DomElement> toVisit = new LinkedList<>(List.of(rootElement));
+    Queue<DomElement> toVisit = new ArrayDeque<>(List.of(rootElement));
 
     while (!toVisit.isEmpty())
     {
       DomElement toCheck = toVisit.poll();
-      toVisit.remove(toCheck);
 
-      if (clazz.isInstance(toCheck) && filter.test((T)toCheck))
+      if (clazz.isInstance(toCheck))
       {
-        return Optional.of((T)toCheck);
+        T value = clazz.cast(toCheck);
+
+        if (filter.test(value))
+        {
+          return Optional.of(value);
+        }
       }
 
-      StreamSupport.stream(toCheck.getChildElements().spliterator(), true).forEach(e -> toVisit.add((T)e));
+      StreamSupport.stream(toCheck.getChildElements().spliterator(), false).forEach(toVisit::add);
     }
     return Optional.empty();
   }

@@ -21,6 +21,10 @@ import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 
+import org.htmlunit.UnexpectedPage;
+import org.htmlunit.html.HtmlFileInput;
+import org.htmlunit.html.HtmlForm;
+import org.htmlunit.html.HtmlPage;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -31,11 +35,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.context.annotation.Import;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
-
-import com.gargoylesoftware.htmlunit.UnexpectedPage;
-import com.gargoylesoftware.htmlunit.html.HtmlFileInput;
-import com.gargoylesoftware.htmlunit.html.HtmlForm;
-import com.gargoylesoftware.htmlunit.html.HtmlPage;
 
 import de.governikus.eumw.config.EidasMiddlewareConfig;
 import de.governikus.eumw.config.KeyPairType;
@@ -84,7 +83,7 @@ class ImportExportConfigurationControllerTest extends WebAdminTestBase
     HtmlFileInput inputField = uploadForm.getInputByName("configurationFile");
     String pathToConfigFile = Objects.requireNonNull(ImportExportConfigurationControllerTest.class.getResource("/configuration/Configuration.xml"))
                                      .toExternalForm();
-    inputField.setValueAttribute(pathToConfigFile);
+    inputField.setValue(pathToConfigFile);
     HtmlPage savedConfig = configurationPage.getHtmlElementById("save").click();
     assertTrue(savedConfig.asNormalizedText().contains("Configuration successfully imported!"));
     assertTrue(configurationService.getConfiguration().isPresent());
@@ -107,7 +106,7 @@ class ImportExportConfigurationControllerTest extends WebAdminTestBase
     HtmlFileInput inputField = uploadForm.getInputByName("configurationFile");
     String pathToConfigFile = Objects.requireNonNull(ImportExportConfigurationControllerTest.class.getResource("/configuration/metadata-9443.xml"))
                                      .toExternalForm();
-    inputField.setValueAttribute(pathToConfigFile);
+    inputField.setValue(pathToConfigFile);
     HtmlPage savedConfig = configurationPage.getHtmlElementById("save").click();
     assertNotNull(savedConfig.getHtmlElementById("alertERROR"));
     assertTrue(savedConfig.asNormalizedText()
@@ -123,7 +122,7 @@ class ImportExportConfigurationControllerTest extends WebAdminTestBase
     HtmlFileInput inputField = uploadForm.getInputByName("configurationFile");
     String pathToConfigFile = Objects.requireNonNull(ImportExportConfigurationControllerTest.class.getResource("/configuration/eIDAS_Middleware_configuration_noKeys.xml"))
                                      .toExternalForm();
-    inputField.setValueAttribute(pathToConfigFile);
+    inputField.setValue(pathToConfigFile);
     HtmlPage savedConfig = configurationPage.getHtmlElementById("save").click();
     assertErrorAlert(savedConfig,
                      "Key store SamlKeystore has missing data. (Name/Type/Bytes)",
@@ -153,7 +152,7 @@ class ImportExportConfigurationControllerTest extends WebAdminTestBase
     HtmlFileInput inputField = uploadForm.getInputByName("configurationFile");
     String pathToConfigFile = Objects.requireNonNull(ImportExportConfigurationControllerTest.class.getResource("/configuration/Configuration_with_supportdata.xml"))
                                      .toExternalForm();
-    inputField.setValueAttribute(pathToConfigFile);
+    inputField.setValue(pathToConfigFile);
     HtmlPage savedConfig = configurationPage.getHtmlElementById("save").click();
     assertTrue(savedConfig.asNormalizedText().contains("Configuration successfully imported!"));
     assertTrue(configurationService.getConfiguration().isPresent());
@@ -179,7 +178,7 @@ class ImportExportConfigurationControllerTest extends WebAdminTestBase
     HtmlFileInput inputField = uploadForm.getInputByName("configurationFile");
     String pathToConfigFile = Objects.requireNonNull(ImportExportConfigurationControllerTest.class.getResource("/configuration/Configuration.xml"))
                                      .toExternalForm();
-    inputField.setValueAttribute(pathToConfigFile);
+    inputField.setValue(pathToConfigFile);
     HtmlPage savedConfig = configurationPage.getHtmlElementById("save").click();
     assertTrue(savedConfig.asNormalizedText().contains("Configuration successfully imported!"));
     assertTrue(configurationService.getConfiguration().isPresent());
@@ -232,7 +231,7 @@ class ImportExportConfigurationControllerTest extends WebAdminTestBase
     HtmlFileInput inputField = uploadForm.getInputByName("configurationFile");
     String pathToConfigFile = Objects.requireNonNull(ImportExportConfigurationControllerTest.class.getResource("/configuration/Configuration.xml"))
                                      .toExternalForm();
-    inputField.setValueAttribute(pathToConfigFile);
+    inputField.setValue(pathToConfigFile);
     HtmlPage savedConfig = configurationPage.getHtmlElementById("save").click();
     assertTrue(savedConfig.asNormalizedText().contains("Configuration successfully imported!"));
     assertTrue(configurationService.getConfiguration().isPresent());

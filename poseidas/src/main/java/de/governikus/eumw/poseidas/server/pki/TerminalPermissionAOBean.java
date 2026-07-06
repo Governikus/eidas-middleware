@@ -15,6 +15,8 @@ import java.net.UnknownHostException;
 import java.security.cert.CertificateException;
 import java.security.cert.CertificateFactory;
 import java.security.cert.X509Certificate;
+import java.time.Instant;
+import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
@@ -30,10 +32,10 @@ import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Repository;
 import org.springframework.transaction.annotation.Transactional;
 
+import de.governikus.autent.asn1.CVC;
 import de.governikus.eumw.config.EidasMiddlewareConfig;
 import de.governikus.eumw.poseidas.cardbase.ArrayUtil;
 import de.governikus.eumw.poseidas.cardbase.AssertUtil;
-import de.governikus.eumw.poseidas.cardbase.asn1.npa.ECCVCertificate;
 import de.governikus.eumw.poseidas.config.model.ServiceProviderDetails;
 import de.governikus.eumw.poseidas.eidmodel.TerminalData;
 import de.governikus.eumw.poseidas.server.idprovider.config.ConfigurationService;
@@ -57,7 +59,6 @@ import de.governikus.eumw.poseidas.server.pki.repositories.PendingCertificateReq
 import de.governikus.eumw.poseidas.server.pki.repositories.RequestSignerCertificateRepository;
 import de.governikus.eumw.poseidas.server.pki.repositories.TerminalPermissionRepository;
 import de.governikus.eumw.utils.key.SecurityProvider;
-
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
@@ -323,8 +324,10 @@ public class TerminalPermissionAOBean implements TerminalPermissionAO
     tp.setCvc(cvc);
     try
     {
-      ECCVCertificate parsed = new ECCVCertificate(cvc);
-      tp.setNotOnOrAfter(parsed.getExpirationDateDate());
+      CVC parsed = new CVC(cvc);
+      Date date = parsed.getBody().getCertificateExpirationDate().getDate();
+      Instant notOnOrAfterInstant = date.toInstant().plus(1, ChronoUnit.DAYS);
+      tp.setNotOnOrAfter(Date.from(notOnOrAfterInstant));
       // call constructor for side effect (parsing)
       new TerminalData(cvc, tp.getCvcDescription());
     }

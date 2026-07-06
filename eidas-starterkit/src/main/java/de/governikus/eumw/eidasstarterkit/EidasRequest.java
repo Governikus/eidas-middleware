@@ -412,7 +412,7 @@ public class EidasRequest
     {
       return EidasNameIdType.getValueOf(nameIDPolicy.getFormat());
     }
-    catch (ErrorCodeException e)
+    catch (ErrorCodeException _)
     {
       throw new ErrorCodeWithResponseException(ErrorCode.INVALID_NAME_ID_TYPE, eidasReq.issuer, eidasReq.getId());
     }

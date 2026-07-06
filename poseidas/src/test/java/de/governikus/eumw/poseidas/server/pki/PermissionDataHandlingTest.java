@@ -11,6 +11,7 @@ import java.nio.file.Path;
 import java.sql.Date;
 import java.time.LocalDate;
 import java.util.Base64;
+import java.util.Objects;
 import java.util.Optional;
 
 import org.junit.jupiter.api.AfterEach;
@@ -20,7 +21,6 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
-import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -102,10 +102,10 @@ class PermissionDataHandlingTest
   @MockitoSpyBean
   DvcaServiceFactory dvcaServiceFactory;
 
-  @Mock
+  @MockitoBean
   RestrictedIdService restrictedIdService;
 
-  @Mock
+  @MockitoBean
   PKIServiceConnector pkiServiceConnector;
 
   @BeforeEach
@@ -183,14 +183,16 @@ class PermissionDataHandlingTest
            .when(dvcaServiceFactory)
            .createRestrictedIdService(Mockito.any(), Mockito.any());
     // Mock BLResult from DVCA
-    byte[] deltaAdded = PermissionDataHandlingTest.class.getResourceAsStream("/blockList/blacklist"
-                                                                             + (version == 2 ? "v2" : "")
-                                                                             + "-delta+10x2")
-                                                        .readAllBytes();
-    byte[] deltaRemoved = PermissionDataHandlingTest.class.getResourceAsStream("/blockList/blacklist"
-                                                                               + (version == 2 ? "v2" : "")
-                                                                               + "-delta-5x2")
-                                                          .readAllBytes();
+    byte[] deltaAdded = Objects.requireNonNull(PermissionDataHandlingTest.class.getResourceAsStream("/blockList/blacklist"
+                                                                                                    + (version == 2
+                                                                                                      ? "v2" : "")
+                                                                                                    + "-delta+10x2"))
+                               .readAllBytes();
+    byte[] deltaRemoved = Objects.requireNonNull(PermissionDataHandlingTest.class.getResourceAsStream("/blockList/blacklist"
+                                                                                                      + (version == 2
+                                                                                                        ? "v2" : "")
+                                                                                                      + "-delta-5x2"))
+                                 .readAllBytes();
     Mockito.when(restrictedIdService.getBlacklistResult(Mockito.eq(BigInteger.valueOf(BL_VERSION_COMPLETE)
                                                                              .toByteArray()),
                                                         Mockito.any()))
@@ -253,11 +255,13 @@ class PermissionDataHandlingTest
            .when(dvcaServiceFactory)
            .createRestrictedIdService(Mockito.any(), Mockito.any());
     // Mock BLResult from DVCA
-    byte[] deltaAdded = PermissionDataHandlingTest.class.getResourceAsStream("/blockList/blacklistv2-delta+10x2-error")
-                                                        .readAllBytes();
-    byte[] deltaRemoved = PermissionDataHandlingTest.class.getResourceAsStream("/blockList/blacklistv2-delta-5x2"
-                                                                               + (secondError ? "-error" : ""))
-                                                          .readAllBytes();
+    byte[] deltaAdded = Objects.requireNonNull(PermissionDataHandlingTest.class.getResourceAsStream("/blockList/blacklistv2-delta+10x2-error"))
+                               .readAllBytes();
+    byte[] deltaRemoved = Objects.requireNonNull(PermissionDataHandlingTest.class.getResourceAsStream("/blockList/blacklistv2-delta-5x2"
+                                                                                                      + (secondError
+                                                                                                        ? "-error"
+                                                                                                        : "")))
+                                 .readAllBytes();
     Mockito.when(restrictedIdService.getBlacklistResult(Mockito.eq(BigInteger.valueOf(BL_VERSION_COMPLETE)
                                                                              .toByteArray()),
                                                         Mockito.any()))
@@ -344,8 +348,8 @@ class PermissionDataHandlingTest
 
   private void saveConfiguration() throws IOException
   {
-    String configString = new String(PermissionDataHandlingTest.class.getResourceAsStream("/blockList/eIDAS_Middleware_Config-for-BL-Tests.xml")
-                                                                     .readAllBytes());
+    String configString = new String(Objects.requireNonNull(PermissionDataHandlingTest.class.getResourceAsStream("/blockList/eIDAS_Middleware_Config-for-BL-Tests.xml"))
+                                            .readAllBytes());
     configurationService.saveConfiguration(configString, false);
   }
 
@@ -385,10 +389,11 @@ class PermissionDataHandlingTest
                                    Mockito.eq(180));
 
     // Mock BL download
-    byte[] blockListBytes = PermissionDataHandlingTest.class.getResourceAsStream("/blockList/blacklist"
-                                                                                 + (version == 2 ? "v2" : "")
-                                                                                 + "-complete30x2")
-                                                            .readAllBytes();
+    byte[] blockListBytes = Objects.requireNonNull(PermissionDataHandlingTest.class.getResourceAsStream("/blockList/blacklist"
+                                                                                                        + (version == 2
+                                                                                                          ? "v2" : "")
+                                                                                                        + "-complete30x2"))
+                                   .readAllBytes();
     Mockito.when(pkiServiceConnector.getFile("https://downloadBLHere.de")).thenReturn(blockListBytes);
 
     // Renew BL for all SP

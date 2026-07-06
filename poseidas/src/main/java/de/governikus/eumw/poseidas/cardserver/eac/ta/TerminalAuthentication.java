@@ -19,13 +19,15 @@ import java.security.UnrecoverableKeyException;
 import java.security.cert.CertificateException;
 import java.security.spec.InvalidKeySpecException;
 
+import org.bouncycastle.asn1.ASN1ObjectIdentifier;
+
 import de.governikus.eumw.poseidas.cardbase.AssertUtil;
 import de.governikus.eumw.poseidas.cardbase.ByteUtil;
-import de.governikus.eumw.poseidas.cardbase.asn1.OID;
 import de.governikus.eumw.poseidas.cardserver.service.ServiceRegistry;
 import de.governikus.eumw.poseidas.cardserver.service.hsm.HSMServiceFactory;
 import de.governikus.eumw.poseidas.cardserver.service.hsm.impl.HSMException;
 import de.governikus.eumw.poseidas.cardserver.service.hsm.impl.HSMService;
+
 import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
 
@@ -61,7 +63,7 @@ public class TerminalAuthentication
    * @throws UnrecoverableKeyException
    */
   public static byte[] sign(String alias,
-                            OID algorithm,
+                            ASN1ObjectIdentifier algorithm,
                             byte[] idPicc,
                             byte[] rPicc,
                             byte[] compOwnEphPubKey,

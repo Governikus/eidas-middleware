@@ -1,19 +1,17 @@
 package de.governikus.eumw.poseidas.service;
 
-import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertTrue;
-
 import java.io.File;
 import java.io.IOException;
 
 import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.security.crypto.bcrypt.BCrypt;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 
 import de.governikus.eumw.poseidas.config.IndexController;
 
@@ -24,7 +22,7 @@ class PasswordHandlerTest
 
   public static final String PASSWORD = "wurst";
 
-  @MockBean
+  @MockitoBean
   private IndexController overviewController;
 
   @Autowired
@@ -46,35 +44,45 @@ class PasswordHandlerTest
   }
 
   @Test
-  void passwordNotSet()
+  void testUpdatePassword() throws IOException
   {
-    PasswordHandler passwordHandler = new PasswordHandler();
-    assertFalse(passwordHandler.isPasswordSet());
+    PasswordHandler pwHandler = new PasswordHandler();
+    Assertions.assertFalse(pwHandler.isPasswordSet());
+    pwHandler.updatePassword(PASSWORD, false);
+    Assertions.assertTrue(pwHandler.isPasswordSet());
+    Assertions.assertTrue(BCrypt.checkpw(PASSWORD, pwHandler.getHashedPassword()));
   }
 
   @Test
-  void updatePassword() throws IOException
+  void testThrows()
   {
-    PasswordHandler passwordHandler = new PasswordHandler();
-    passwordHandler.updatePassword(PASSWORD, false);
-    assertTrue(passwordHandler.isPasswordSet());
-    assertTrue(BCrypt.checkpw(PASSWORD, passwordHandler.getHashedPassword()));
+    Assertions.assertThrows(IOException.class, () -> passwordHandler.updatePassword(PASSWORD, false));
   }
 
   @Test
-  void passwordMigrationWithDefaultPassword()
+  void testVerifyOldPassword() throws IOException
+  {
+    PasswordHandler pwName = new PasswordHandler();
+    pwName.updatePassword(PASSWORD, false);
+    Assertions.assertTrue(pwName.verifyOldPassword(PASSWORD));
+    Assertions.assertFalse(pwName.verifyOldPassword("123"));
+    Assertions.assertFalse(pwName.verifyOldPassword(null));
+  }
+
+  @Test
+  void testPasswortMigration()
   {
     // This test uses @Autowired instance of PasswordHandler because it fetches the hashed password set in
     // application.properties. This should be: $2a$10$lRmdsCOtjoBLb8bKDrviueoW1aUkIcUmnImu4xZlOzvfc5k9WcKAi
-    assertTrue(passwordHandler.isApplicationPropertiesPasswordSet());
+    Assertions.assertTrue(passwordHandler.isApplicationPropertiesPasswordSet());
     // This method also tries to migrate the password, which is the forbidden default password
-    assertFalse(passwordHandler.isPasswordSet());
+    Assertions.assertFalse(passwordHandler.isPasswordSet());
   }
 
   @Test
-  void userIsNotSet()
+  void testUserIsNotSet()
   {
     // In this application.properties no user is set
-    assertFalse(passwordHandler.isApplicationPropertiesUserSet());
+    Assertions.assertFalse(passwordHandler.isApplicationPropertiesUserSet());
   }
 }

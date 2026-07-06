@@ -27,6 +27,8 @@ import java.util.Set;
 
 import javax.security.auth.x500.X500Principal;
 
+import org.bouncycastle.asn1.ASN1InputStream;
+import org.bouncycastle.asn1.ASN1Primitive;
 import org.bouncycastle.asn1.pkcs.IssuerAndSerialNumber;
 import org.bouncycastle.asn1.x509.Extension;
 import org.bouncycastle.asn1.x9.ECNamedCurveTable;
@@ -45,6 +47,7 @@ import de.governikus.eumw.poseidas.cardserver.CertificateUtil;
 import de.governikus.eumw.poseidas.eidserver.crl.CertificationRevocationListImpl;
 import de.governikus.eumw.utils.key.KeyReader;
 import de.governikus.eumw.utils.key.SecurityProvider;
+
 import lombok.Getter;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
@@ -130,7 +133,7 @@ public class CmsSignatureChecker
    *          validate the signature. The trust anchor is used to check if the certificates are valid
    * @throws CMSException if the given datablock is not valid CMS data
    */
-  public void checkEnvelopedSignature(byte[] signedCmsData) throws CMSException, SignatureException
+  public void checkEnvelopedSignature(byte[] signedCmsData) throws CMSException, SignatureException, IOException
   {
     checkEnvelopedSignature(signedCmsData, null);
   }
@@ -143,7 +146,7 @@ public class CmsSignatureChecker
    *          validate the signature. The trust anchor is used to check if the certificates are valid
    * @throws CMSException if the given datablock is not valid CMS data
    */
-  public void checkEnvelopedSignature(InputStream signedCmsData) throws CMSException, SignatureException
+  public void checkEnvelopedSignature(InputStream signedCmsData) throws CMSException, SignatureException, IOException
   {
     checkEnvelopedSignature(signedCmsData, null);
   }
@@ -158,14 +161,14 @@ public class CmsSignatureChecker
    * @throws CMSException if the given datablock is not valid CMS data
    */
   public void checkEnvelopedSignature(byte[] signedCmsData, CertificationRevocationListImpl crlService)
-    throws CMSException, SignatureException
+    throws CMSException, SignatureException, IOException
   {
     // ByteArrayInputStreams do not need to be closed, so don't worry
     checkEnvelopedSignature(new ByteArrayInputStream(signedCmsData), crlService);
   }
 
   private void checkEnvelopedSignature(InputStream signedCmsData, CertificationRevocationListImpl crlService)
-    throws CMSException, SignatureException
+    throws CMSException, SignatureException, IOException
   {
     CMSSignedData cmsSignedData = new CMSSignedData(signedCmsData);
     SignerInformationStore signers = cmsSignedData.getSignerInfos();
@@ -196,7 +199,7 @@ public class CmsSignatureChecker
         X509CertificateHolder holder = (X509CertificateHolder)certificateStorage.getMatches(signer.getSID())
                                                                                 .iterator()
                                                                                 .next();
-        ByteArrayInputStream certInputStream = getInputStreamOfCertificateData(holder);
+        ASN1InputStream certInputStream = getInputStreamOfCertificateData(holder);
         signatureVerificationCertificate = KeyReader.readX509Certificate(certInputStream);
 
       }
@@ -291,18 +294,19 @@ public class CmsSignatureChecker
    * @param holder the certificate data
    * @return the input stream
    */
-  private ByteArrayInputStream getInputStreamOfCertificateData(X509CertificateHolder holder) throws SignatureException
+  private ASN1InputStream getInputStreamOfCertificateData(X509CertificateHolder holder)
+    throws SignatureException, IOException
   {
-    byte[] certificateData;
+    ASN1Primitive certificateData;
     try
     {
-      certificateData = holder.getEncoded();
+      certificateData = ASN1Primitive.fromByteArray(holder.getEncoded());
     }
     catch (IOException e)
     {
       throw new SignatureException("Cannot get bytes of signature certificate", e);
     }
-    return new ByteArrayInputStream(certificateData);
+    return new ASN1InputStream(certificateData.getEncoded());
   }
 
   /**

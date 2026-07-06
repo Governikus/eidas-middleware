@@ -15,7 +15,7 @@ import java.util.List;
 import java.util.Set;
 
 import de.governikus.eumw.poseidas.eidmodel.TerminalData;
-import de.governikus.eumw.poseidas.eidmodel.data.EIDKeys;
+import de.governikus.panstar.sdk.utils.constant.EIDAttributeName;
 
 
 /**
@@ -61,14 +61,14 @@ public interface SessionInput extends Serializable
    * Furthermore, this information should be used together with {@link #getOptionalFields()} to build the
    * DataSetToBeRead.
    */
-  public abstract Set<EIDKeys> getRequiredFields();
+  public abstract Set<EIDAttributeName> getRequiredFields();
 
   /**
    * Return the set of all fields which are requested but not required by the server. Use this information to create the
    * OptionalCHAT. Furthermore, this information should be used together with {@link #getRequiredFields()} to build the
    * DataSetToBeRead.
    */
-  public abstract Set<EIDKeys> getOptionalFields();
+  public abstract Set<EIDAttributeName> getOptionalFields();
 
   /**
    * Return the list with all Certificates expect the terminal certificate to build the chain: DV certificate and all

@@ -1,5 +1,6 @@
 package de.governikus.eumw.poseidas.server.pki.caserviceaccess;
 
+import java.net.URL;
 import java.nio.charset.StandardCharsets;
 
 import org.apache.commons.lang3.ArrayUtils;
@@ -23,11 +24,16 @@ import de.governikus.eumw.poseidas.services.restricted.id.wsdl.v1_4_0.GetSectorP
 import de.governikus.eumw.poseidas.services.restricted.id.wsdl.v1_4_0.GetSectorPublicKeyResult;
 import de.governikus.eumw.poseidas.services.restricted.id.wsdl.v1_4_0.GetSectorPublicKeyReturnCodeType;
 import de.governikus.eumw.poseidas.services.restricted.id.wsdl.v1_4_0.RestrictedIdWebService_1_4_0;
+import de.governikus.eumw.utils.xml.XmlHelper;
 
 
 @ExtendWith(MockitoExtension.class)
 class RestrictedIdService140Test
 {
+
+  public static final byte[] SECTOR_PK = "MySectorPublicKey".getBytes(StandardCharsets.UTF_8);
+
+  public static final URL schemaUrl = RestrictedIdService140Test.class.getResource("/META-INF/wsdl/CA-Services-1-4-0/part-3/restrictedID/BasicTypes_DV_RestrictedIdentification.xsd");
 
   @Mock
   PKIServiceConnector connector;
@@ -95,8 +101,7 @@ class RestrictedIdService140Test
     GetSectorPublicKeyResult sectorPublicKeyResult = new GetSectorPublicKeyResult();
     sectorPublicKeyResult.setReturnCode(GetSectorPublicKeyReturnCodeType.OK_PK_AVAILABLE);
     ConditionalSectorPK conditionalSectorPK = new ConditionalSectorPK();
-    byte[] sectorPK = "MySectorPublicKey".getBytes(StandardCharsets.UTF_8);
-    conditionalSectorPK.setSectorPK(sectorPK);
+    conditionalSectorPK.setSectorPK(SECTOR_PK);
     sectorPublicKeyResult.setSectorPK(conditionalSectorPK);
     Mockito.when(port.getSectorPublicKey(Mockito.any(GetSectorPublicKeyRequest.class)))
            .thenReturn(sectorPublicKeyResult);
@@ -111,5 +116,36 @@ class RestrictedIdService140Test
                             govManagementException.getManagementMessage().getCode());
     Assertions.assertEquals("getSectorPublicKey returned " + GetSectorPublicKeyReturnCodeType.FAILURE_INTERNAL_ERROR,
                             govManagementException.getManagementMessage().getDetails());
+  }
+
+  @Test
+  void testGetBlocklistSchemaConformance()
+  {
+    Mockito.when(port.getBlockList(Mockito.any(GetBlockListRequest.class))).thenAnswer(invocation -> {
+      String requestString = XmlHelper.marshalObject(invocation.getArgument(0));
+      XmlHelper.validateWithSchema(requestString, schemaUrl);
+      GetBlockListResult getBlockListResult = new GetBlockListResult();
+      getBlockListResult.setReturnCode(GetBlockListReturnCodeType.OK_NO_UPDATE_NEEDED);
+      return getBlockListResult;
+    });
+    Assertions.assertDoesNotThrow(() -> restrictedIdService140.getBlacklistResult(null, SECTOR_PK));
+    Assertions.assertDoesNotThrow(() -> restrictedIdService140.getBlacklistResult("deltabase".getBytes(StandardCharsets.UTF_8),
+                                                                                  SECTOR_PK));
+  }
+
+  @Test
+  void testGetSectorPublicKeySchemaConformance()
+  {
+    Mockito.when(port.getSectorPublicKey(Mockito.any(GetSectorPublicKeyRequest.class))).thenAnswer(invocation -> {
+      String requestString = XmlHelper.marshalObject(invocation.getArgument(0));
+      XmlHelper.validateWithSchema(requestString, schemaUrl);
+      GetSectorPublicKeyResult getSectorPublicKeyResult = new GetSectorPublicKeyResult();
+      getSectorPublicKeyResult.setReturnCode(GetSectorPublicKeyReturnCodeType.OK_PK_AVAILABLE);
+      ConditionalSectorPK sectorPK = new ConditionalSectorPK();
+      sectorPK.setSectorPK("key".getBytes(StandardCharsets.UTF_8));
+      getSectorPublicKeyResult.setSectorPK(sectorPK);
+      return getSectorPublicKeyResult;
+    });
+    Assertions.assertDoesNotThrow(() -> restrictedIdService140.getSectorPublicKey(SECTOR_PK));
   }
 }
